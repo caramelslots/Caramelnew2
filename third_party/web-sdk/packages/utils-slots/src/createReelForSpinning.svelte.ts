@@ -188,7 +188,12 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 				? reelState.spinOptions().reelSpinSpeed
 				: reelState.spinOptions().reelPreSpinSpeed;
 			const easing = started || isTurboBeforeAll ? linear : backIn;
-			await slideY({ reelY: defaultY, speed, easing });
+			const preSpinRotations = reelState.spinOptions().reelPreSpinRotations;
+			const preSpinTargetY =
+				preSpinRotations === undefined
+					? defaultY
+					: reelY.current + preSpinRotations * reelOptions.symbolHeight;
+			await slideY({ reelY: preSpinTargetY, speed, easing });
 			await preSpinPadding({ preSpinPaddingRawReel });
 			if (!started) {
 				reelState.motion = 'spinning';
@@ -258,13 +263,19 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			},
 		});
 
+	const getMainSpinTargetY = () => {
+		const spinRotations = reelState.spinOptions().reelSpinRotations;
+		if (spinRotations === undefined) return defaultY * basePaddingSize();
+		return reelY.current + spinRotations * reelOptions.symbolHeight;
+	};
+
 	const normalSpin = () =>
 		generalSpinWith({
 			slideDown: async () => {
 				const bounceSize = reelOptions.symbolHeight * reelState.spinOptions().reelBounceSizeMulti;
 
 				await slideY({
-					reelY: defaultY * basePaddingSize(),
+					reelY: getMainSpinTargetY(),
 					speed: reelState.spinOptions().reelSpinSpeed,
 				});
 				await slideY({
@@ -280,7 +291,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 				const bounceSize = reelOptions.symbolHeight * reelState.spinOptions().reelBounceSizeMulti;
 
 				await slideY({
-					reelY: defaultY * basePaddingSize(),
+					reelY: getMainSpinTargetY(),
 					speed: reelState.spinOptions().reelSpinSpeed,
 				});
 				await slideY({

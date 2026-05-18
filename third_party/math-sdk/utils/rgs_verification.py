@@ -257,7 +257,9 @@ def execute_all_tests(config, excluded_modes=[]):
         if max_rtp_diff > 0.05:
             warnings.warn(f"\n\nMode RTP difference exceedes allowed difference for approvals: {max_rtp_diff}\n")
 
-    fname = f"games/{config.game_id}/library/stats_summary.json"
+    # Use config.library_path so the file is written correctly regardless of
+    # cwd (running from math-sdk root vs from games/<id>/).
+    fname = os.path.join(config.library_path, "stats_summary.json")
     write_all_stats(mode_stats, fname)
 
 

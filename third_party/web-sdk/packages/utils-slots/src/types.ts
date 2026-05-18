@@ -17,6 +17,10 @@ export type SpinningReelSpinOptions = {
 	reelPaddingMultiplierNormal: number;
 	reelPaddingMultiplierAnticipated: number;
 	reelSpinDelay: number;
+	/** Symbol heights on the main spin slide (overrides defaultY × padding when set). */
+	reelSpinRotations?: number;
+	/** Symbol heights per pre-spin loop (default: full slide to defaultY). */
+	reelPreSpinRotations?: number;
 };
 
 export type CascadingReelSpinOptions = {

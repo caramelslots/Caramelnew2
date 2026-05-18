@@ -258,6 +258,9 @@ class GeneralGameState(ABC):
         self.win_manager = WinManager(self.config.basegame_type, self.config.freegame_type, mode_max_win)
         self.library = {}
         self.recorded_events = {}
+        # Reset payout sidecar accumulator so each batch/mode writes only its own
+        # simulation payouts (otherwise verification.json drifts vs LUT hash).
+        self._payout_ints = []
         self.betmode = betmode
         self.num_sims = num_sims
         for sim in range(
