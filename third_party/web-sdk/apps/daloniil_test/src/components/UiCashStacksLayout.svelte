@@ -44,6 +44,7 @@
 	import CashStacksTurboButton from './CashStacksTurboButton.svelte';
 	import ButtonIncrease from 'components-ui-pixi/src/components/ButtonIncrease.svelte';
 	import ButtonDecrease from 'components-ui-pixi/src/components/ButtonDecrease.svelte';
+	import ButtonAutoSpin from 'components-ui-pixi/src/components/ButtonAutoSpin.svelte';
 	import ButtonMenu from 'components-ui-pixi/src/components/ButtonMenu.svelte';
 	import ButtonMenuClose from 'components-ui-pixi/src/components/ButtonMenuClose.svelte';
 	import ButtonSoundSwitch from 'components-ui-pixi/src/components/ButtonSoundSwitch.svelte';

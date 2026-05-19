@@ -125,8 +125,23 @@ export const zIndexes = {
 
 /** Purple FS pulse (`reelhouse_glow` in BoardFrame) — separate from frame bezel padding. */
 export const REELHOUSE_GLOW_SCALE = { width: 0.62, height: 0.66 } as const;
-/** Whole slot block offset from screen center (px): +x right, −y up. */
-export const BOARD_LAYOUT_OFFSET = { x: 0, y: -20 } as const;
+/**
+ * Per-layout board center offsets (game design-space px, +x right, −y up).
+ * Each value shifts the reel block so it is visually centred inside the
+ * playfield area that remains after subtracting the UI control bar for that
+ * layout type.
+ *
+ * Desktop  (1422×800 game space):  UI bar ~140 px → game-area centre ≈ y 346 → offset -54
+ * Tablet   (1000×1000):            UI bar ~86 px  → game-area centre ≈ y 457 → offset -43
+ * Landscape(1600×900  mobile):     UI bar ~75 px  → game-area centre ≈ y 158 → offset -85
+ * Portrait (800×1422):             drawer ~144 px → game-area centre ≈ y 350 → offset -150
+ */
+export const BOARD_LAYOUT_OFFSETS = {
+	desktop: { x: 0, y: -55 },
+	tablet: { x: 0, y: -45 },
+	landscape: { x: 0, y: -85 },
+	portrait: { x: 0, y: -150 },
+} as const;
 /** Frame bezel + glow offset from board center (px): +x right, +y down. */
 export const BOARD_FRAME_OFFSET = { x: 6, y: 8 } as const;
 
