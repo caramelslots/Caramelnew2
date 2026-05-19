@@ -1,6 +1,6 @@
 """Cash Stacks (daloniil_test) — game configuration.
 
-5 reels × 5 rows, 30 paylines, RTP 96.01%, max win ×50000.
+5 reels × 5 rows, 30 paylines, RTP 96.01%, max win ×25000.
 Donor: 0_0_lines. См. games/0_0_daloniil_test/readme.txt.
 """
 
@@ -24,7 +24,7 @@ class GameConfig(Config):
         self.game_id = "0_0_daloniil_test"
         self.provider_number = 0
         self.working_name = "Cash Stacks"
-        self.wincap = 50_000.0
+        self.wincap = 25_000.0
         self.win_type = "lines"
         self.rtp = 0.9601
         self.construct_paths()
@@ -246,11 +246,11 @@ class GameConfig(Config):
 
         # WINCAP CRITERION
         # ────────────────
-        # Design choice: wincap (max win ×50,000) достижим в Cash Stacks
+        # Design choice: wincap (max win ×25,000) достижим в Cash Stacks
         # ТОЛЬКО через Free Spins path, потому что:
         #
-        #   - max basegame line win = 5×W (×150) × 30 paylines = 4500 за спин;
-        #   - до wincap (50,000) нужен мультипликатор ≥ 11×;
+        #   - max basegame line win = 5×W (×150) × 20 paylines = 3000 за спин;
+        #   - до wincap (25,000) нужен мультипликатор ≥ 9×;
         #   - W в base всегда multiplier=1 (см. assign_mult_property + mult_values
         #     для basegame_type = {1:1});
         #   - W в FS получает multiplier ×2..×50 (см. padding_symbol_values),
@@ -264,7 +264,7 @@ class GameConfig(Config):
         # Это **не** означает «wincap эксклюзивно через FS в проде» — это quota
         # для distribution sampling. После optimization-а реальная вероятность
         # wincap в production будет соответствовать естественной частоте
-        # достижения ×50,000 в FS path с учётом всех multiplier-комбинаций.
+        # достижения ×25,000 в FS path с учётом всех multiplier-комбинаций.
         #
         # См. MATH_BLOCKERS.md M6.
         wincap_condition = {
