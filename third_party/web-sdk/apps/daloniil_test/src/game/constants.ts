@@ -290,12 +290,7 @@ export const SYMBOL_INFO_MAP = {
 		static: wStatic,
 		spin: wStatic,
 		win: { type: 'spine', assetKey: 'W', animationName: 'wild_dynamite', sizeRatios: wSizeRatios },
-		land: {
-			type: 'spine',
-			assetKey: 'W',
-			animationName: 'wild_dynamite_land',
-			sizeRatios: wSizeRatios,
-		},
+		land: wStatic,
 	},
 	B: {
 		explosion,
