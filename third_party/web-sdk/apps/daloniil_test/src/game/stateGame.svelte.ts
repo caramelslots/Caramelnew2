@@ -73,7 +73,6 @@ import {
 	BOARD_DIMENSIONS,
 	SPIN_OPTIONS_DEFAULT,
 	SPIN_OPTIONS_FAST,
-	REEL_SPIN_ROTATIONS,
 	INITIAL_SYMBOL_STATE,
 	SCATTER_LAND_SOUND_MAP,
 } from './constants';
@@ -111,15 +110,8 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 		onSymbolLand,
 	});
 
-	reel.reelState.spinOptions = () => {
-		const base =
-			reel.reelState.spinType === 'fast' ? SPIN_OPTIONS_FAST : SPIN_OPTIONS_DEFAULT;
-		return {
-			...base,
-			reelSpinRotations: REEL_SPIN_ROTATIONS,
-			// Pre-spin must slide to defaultY so readyToSpin resolves (see utils-slots).
-		};
-	};
+	reel.reelState.spinOptions = () =>
+		reel.reelState.spinType === 'fast' ? SPIN_OPTIONS_FAST : SPIN_OPTIONS_DEFAULT;
 
 	return reel;
 });

@@ -90,26 +90,25 @@ const HIGH_SYMBOL_SIZE = 0.9;
 const LOW_SYMBOL_SIZE = 0.9;
 const SPECIAL_SYMBOL_SIZE = 1;
 
-/** Main stop travel (symbols). All reels use `reelSpinRotations` in stateGame. */
-export const REEL_SPIN_ROTATIONS = 2;
+/** Shared reel timing — padding distance must match scroll (see utils-slots getMainSpinTargetY). */
 const SPIN_OPTIONS_SHARED = {
-	reelBounceBackSpeed: 0.12,
-	reelSpinSpeedBeforeBounce: 2.4,
-	reelPaddingMultiplierNormal: REEL_SPIN_ROTATIONS / 7,
-	reelPaddingMultiplierAnticipated: 3 / 7,
+	reelBounceBackSpeed: 2.5,
+	reelSpinSpeedBeforeBounce: 2.5,
+	reelPaddingMultiplierNormal: 1.2,
+	reelPaddingMultiplierAnticipated: 10,
 	reelSpinDelay: 100,
 };
 
 export const SPIN_OPTIONS_DEFAULT = {
 	...SPIN_OPTIONS_SHARED,
-	reelPreSpinSpeed: 1.6,
-	reelSpinSpeed: 1.8,
+	reelPreSpinSpeed: 2.5,
+	reelSpinSpeed: 2.5,
 	reelBounceSizeMulti: 0.22,
 };
 
 export const SPIN_OPTIONS_FAST = {
 	...SPIN_OPTIONS_SHARED,
-	reelPreSpinSpeed: 3.2,
+	reelPreSpinSpeed: 4,
 	reelSpinSpeed: 4,
 	reelBounceSizeMulti: 0.06,
 };
