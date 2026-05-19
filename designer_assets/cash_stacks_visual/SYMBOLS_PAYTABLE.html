@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cash Stacks — символы и выплаты</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f4ef;
+      --card: #ffffff;
+      --text: #1f1a14;
+      --muted: #5c5348;
+      --border: #d9d0c3;
+      --accent: #8b5a2b;
+      --code-bg: #efe8dc;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14110f;
+        --card: #1f1a17;
+        --text: #f2ebe1;
+        --muted: #b9aea0;
+        --border: #3a322b;
+        --accent: #d4a574;
+        --code-bg: #2a231d;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 2rem 1rem 3rem;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      line-height: 1.55;
+      color: var(--text);
+      background: var(--bg);
+    }
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem 2.25rem;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+    }
+    h1, h2 {
+      line-height: 1.2;
+      margin: 0 0 1rem;
+    }
+    h2 {
+      margin-top: 2rem;
+      padding-top: 0.25rem;
+      border-top: 1px solid var(--border);
+      color: var(--accent);
+    }
+    p { margin: 0 0 1rem; }
+    hr {
+      border: 0;
+      border-top: 1px solid var(--border);
+      margin: 1.5rem 0;
+    }
+    ul {
+      margin: 0 0 1rem;
+      padding-left: 1.35rem;
+    }
+    li { margin: 0.35rem 0; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.92em;
+      background: var(--code-bg);
+      padding: 0.1em 0.35em;
+      border-radius: 4px;
+    }
+    a { color: var(--accent); }
+    table.md-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 0 1.25rem;
+      font-size: 0.95rem;
+    }
+    table.md-table th,
+    table.md-table td {
+      border: 1px solid var(--border);
+      padding: 0.55rem 0.65rem;
+      vertical-align: top;
+      text-align: left;
+    }
+    table.md-table th {
+      background: var(--code-bg);
+      font-weight: 600;
+    }
+    table.md-table tbody tr:nth-child(even) {
+      background: color-mix(in srgb, var(--code-bg) 35%, transparent);
+    }
+    footer {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Cash Stacks — символы и выплаты</h1>
+    <p>&gt; <strong>HTML:</strong> <code>python3 md_to_html.py</code> → <code>SYMBOLS_PAYTABLE.html</code> (скрипт в этой же папке).</p>
+    <p>Слот: <strong>daloniil_test</strong> / <strong>0_0_daloniil_test</strong> Источник math: <code>third_party/math-sdk/games/0_0_daloniil_test/game_config.py</code> Выплаты — <strong>множитель к ставке (bet)</strong> за <strong>одну линию</strong> (20 paylines, сетка 5×5).</p>
+    <hr>
+    <h2>Таблица символов</h2>
+    <table class="md-table"><thead><tr><th>Код</th><th>Визуал</th><th>×3</th><th>×4</th><th>×5</th><th>Примечание</th></tr></thead><tbody><tr><td><strong>W</strong></td><td>Wild (динамит с «W»)</td><td>—</td><td>—</td><td><strong>225</strong></td><td>Платит только на 5-of-a-kind. В FS на линии дополнительно множитель ×2…×50</td></tr><tr><td><strong>H1</strong></td><td>Шахтёр (каска, борода)</td><td>3</td><td>15</td><td><strong>150</strong></td><td>Самый дорогой обычный символ</td></tr><tr><td><strong>H2</strong></td><td>Вагонетка с золотом</td><td>1.8</td><td>7.5</td><td><strong>75</strong></td><td></td></tr><tr><td><strong>H3</strong></td><td>Молот (красный круг)</td><td>1.2</td><td>4.5</td><td><strong>45</strong></td><td></td></tr><tr><td><strong>H4</strong></td><td>Лопата (синий круг)</td><td>0.7</td><td>3</td><td><strong>30</strong></td><td></td></tr><tr><td><strong>L1</strong></td><td>Сердце (красный гем)</td><td>0.1</td><td>0.3</td><td><strong>1.5</strong></td><td>Все низкие одинаковые</td></tr><tr><td><strong>L2</strong></td><td>Трефа (зелёный гем)</td><td>0.1</td><td>0.3</td><td><strong>1.5</strong></td><td></td></tr><tr><td><strong>L3</strong></td><td>Пика (фиолетовый гем)</td><td>0.1</td><td>0.3</td><td><strong>1.5</strong></td><td></td></tr><tr><td><strong>L4</strong></td><td>Бубна (голубой гем)</td><td>0.1</td><td>0.3</td><td><strong>1.5</strong></td><td></td></tr><tr><td><strong>B</strong></td><td>Bonus / Scatter (кристалл «SCATTER»)</td><td>—</td><td>—</td><td>—</td><td>Без line-pay. 3+ в base → 10 FS</td></tr><tr><td><strong>M</strong></td><td>Mystery (липкий барабан «?»)</td><td>—</td><td>—</td><td>—</td><td>Без line-pay. Раскрывается в W / H / L</td></tr></tbody></table>
+    <hr>
+    <h2>Иерархия (5-of-a-kind)</h2>
+    <table class="md-table"><thead><tr><th>Место</th><th>Код</th><th>Визуал</th><th>×5</th></tr></thead><tbody><tr><td>1</td><td>W</td><td>Wild</td><td>225</td></tr><tr><td>2</td><td>H1</td><td>Шахтёр</td><td>150</td></tr><tr><td>3</td><td>H2</td><td>Вагонетка</td><td>75</td></tr><tr><td>4</td><td>H3</td><td>Молот</td><td>45</td></tr><tr><td>5</td><td>H4</td><td>Лопата</td><td>30</td></tr><tr><td>6</td><td>L1–L4</td><td>Гемы (♥ ♣ ♠ ♦)</td><td>1.5</td></tr></tbody></table>
+    <hr>
+    <h2>Символы на спрайт-листе, но не на ленте</h2>
+    <table class="md-table"><thead><tr><th>Визуал на ассетах</th><th>Роль</th></tr></thead><tbody><tr><td>Золотая буква <strong>W</strong></td><td>Статика Wild</td></tr><tr><td>Бейджи <strong>2x, 4x, 5x, 7x, 10x</strong></td><td>Отображение множителя на Wild во фриспинах (не отдельные символы)</td></tr><tr><td><strong>explodedW</strong></td><td>Wild после выигрыша</td></tr></tbody></table>
+    <hr>
+    <h2>Связанные файлы</h2>
+    <ul><li>Math: <code>third_party/math-sdk/games/0_0_daloniil_test/game_config.py</code></li><li>Спрайты барабана: <code>designer_assets/cash_stacks_visual/sample/01_simvoly_barabana/</code></li><li>Spine win-анимации: <code>designer_assets/cash_stacks_visual/sample/spines/symbols/</code></li></ul>
+    <footer>Сгенерировано из <code>SYMBOLS_PAYTABLE.md</code></footer>
+  </main>
+</body>
+</html>

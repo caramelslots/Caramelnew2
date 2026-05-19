@@ -1,5 +1,7 @@
 # Cash Stacks — символы и выплаты
 
+> **HTML:** `python3 md_to_html.py` → `SYMBOLS_PAYTABLE.html` (скрипт в этой же папке).
+
 Слот: **daloniil_test** / **0_0_daloniil_test**  
 Источник math: `third_party/math-sdk/games/0_0_daloniil_test/game_config.py`  
 Выплаты — **множитель к ставке (bet)** за **одну линию** (20 paylines, сетка 5×5).
