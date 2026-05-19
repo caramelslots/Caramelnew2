@@ -169,22 +169,10 @@ export const MYSTERY_REVEAL_POST_DELAY_MS = 1000;
 /** Shared M spine clip when multiple mystery columns reveal at once. */
 export const MYSTERY_REVEAL_SYNC_ANIMATION = 'mid_multiplier_pay';
 
-// Bonus и Mystery — без стоковых спрайтов, используется AssetPlaceholder (см. §5.4).
-// type 'placeholder' обрабатывается рендером SymbolBonus / SymbolMystery в components-pixi-overrides.
-const bStatic = {
-	type: 'placeholder',
-	assetKey: 'bonus',
-	label: 'B',
-	sizeRatios: { width: 1, height: 1 },
-};
-const mStatic = {
-	type: 'placeholder',
-	assetKey: 'mystery',
-	label: 'M',
-	sizeRatios: { width: 1, height: 1 },
-};
+const bStatic = { type: 'sprite', assetKey: 's.png', sizeRatios: { width: 1, height: 1 } };
+const mStatic = { type: 'sprite', assetKey: 'm.png', sizeRatios: { width: 1, height: 1 } };
 
-const wStatic = { type: 'sprite', assetKey: 'w.png', sizeRatios: { width: 1.12, height: 1.12 } };
+const wStatic = { type: 'sprite', assetKey: 'w.png', sizeRatios: { width: 1, height: 1 } };
 const wSizeRatios = { width: 1.5 * 0.9, height: SPECIAL_SYMBOL_SIZE * 1.15 };
 
 export const SYMBOL_INFO_MAP = {
