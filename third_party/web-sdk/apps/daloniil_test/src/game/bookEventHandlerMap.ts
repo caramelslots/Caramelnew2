@@ -70,11 +70,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		// All winning paylines render simultaneously — PaylineOverlay keeps an
 		// array of active lines so multiple `paylineShow` events stack.
+		// `paylineRows` — полный rows-паттерн линии через ВСЕ катушки (5),
+		// чтобы overlay рисовал линию от левого до правого края, а не только
+		// до последнего выигрышного символа (см. скриншот референса).
 		for (const win of bookEvent.wins) {
+			const paylineRows = config.paylines[String(win.meta.lineIndex) as keyof typeof config.paylines];
 			eventEmitter.broadcast({
 				type: 'paylineShow',
 				lineIndex: win.meta.lineIndex,
 				positions: win.positions,
+				paylineRows,
 			});
 		}
 

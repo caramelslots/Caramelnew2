@@ -1,6 +1,6 @@
 """Cash Stacks (daloniil_test) — game configuration.
 
-5 reels × 5 rows, 30 paylines, RTP 96.01%, max win ×25000.
+5 reels × 5 rows, 30 paylines, RTP 96.01%, max win ×2500.
 Donor: 0_0_lines. См. games/0_0_daloniil_test/readme.txt.
 """
 
@@ -24,7 +24,7 @@ class GameConfig(Config):
         self.game_id = "0_0_daloniil_test"
         self.provider_number = 0
         self.working_name = "Cash Stacks"
-        self.wincap = 25_000.0
+        self.wincap = 2_500.0
         self.win_type = "lines"
         self.rtp = 0.9601
         self.construct_paths()
@@ -246,27 +246,23 @@ class GameConfig(Config):
 
         # WINCAP CRITERION
         # ────────────────
-        # Design choice: wincap (max win ×25,000) достижим в Cash Stacks
-        # ТОЛЬКО через Free Spins path, потому что:
+        # Wincap снижен с 25,000 до 2,500. С таким лимитом wincap **достижим
+        # и в base, и в FS** (max basegame line win ≈ 5×W (×225) × 20 paylines
+        # = 4,500 за спин, что уже превышает 2,500). Тем не менее distribution
+        # sampling по-прежнему гонит wincap-сэмплы через FS path:
         #
-        #   - max basegame line win = 5×W (×150) × 20 paylines = 3000 за спин;
-        #   - до wincap (25,000) нужен мультипликатор ≥ 9×;
-        #   - W в base всегда multiplier=1 (см. assign_mult_property + mult_values
-        #     для basegame_type = {1:1});
+        #   - `force_freegame: True` — quota для покрытия FS-tail событий;
+        #   - `force_wincap: True`   — симуляция обязана дойти до wincap-trigger
+        #     (`evaluate_wincap` в SDK executables);
         #   - W в FS получает multiplier ×2..×50 (см. padding_symbol_values),
-        #     которые накладываются на line wins.
+        #     поэтому wincap легко набирается на одной линии в FS.
         #
-        # Поэтому `force_freegame: True` структурно корректен — wincap сэмплы
-        # обязаны пройти через FS чтобы накопить multiplier до wincap-уровня.
-        # Force_wincap дополнительно гарантирует, что симуляция дойдёт до
-        # wincap-trigger (`evaluate_wincap` в SDK executables).
-        #
-        # Это **не** означает «wincap эксклюзивно через FS в проде» — это quota
-        # для distribution sampling. После optimization-а реальная вероятность
-        # wincap в production будет соответствовать естественной частоте
-        # достижения ×25,000 в FS path с учётом всех multiplier-комбинаций.
-        #
-        # См. MATH_BLOCKERS.md M6.
+        # NOTE (после уменьшения wincap): force_freegame в `wincap_condition`
+        # больше не является структурной необходимостью — wincap теперь может
+        # выпадать и в base. Если хочется естественнее распределять wincap
+        # между base и FS path, можно ослабить эти флаги; пока сохраняем
+        # текущее поведение, чтобы не ломать сэмплинг до полного rerun-а
+        # optimization-а.
         wincap_condition = {
             "reel_weights": {
                 self.basegame_type: {"BR0": 1},
