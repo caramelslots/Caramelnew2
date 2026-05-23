@@ -90,28 +90,33 @@ const HIGH_SYMBOL_SIZE = 0.9;
 const LOW_SYMBOL_SIZE = 0.9;
 const SPECIAL_SYMBOL_SIZE = 1;
 
-/** Shared reel timing — padding distance must match scroll (see utils-slots getMainSpinTargetY). */
+/**
+ * Reel timing — padding distance must match scroll (see utils-slots
+ * getMainSpinTargetY). All four speed channels are kept equal so there is
+ * no acceleration discontinuity between pre-spin, main slide, slide-before-
+ * bounce and bounce-back — that's what produces a "jerk".
+ *
+ * Same options are used in base game and free spins (spinOptions are
+ * picked by `spinType` only, never by `gameType`, see stateGame.svelte.ts).
+ */
+const REEL_SPEED = 1.5;
 const SPIN_OPTIONS_SHARED = {
-	reelBounceBackSpeed: 2.5,
-	reelSpinSpeedBeforeBounce: 2.5,
+	reelBounceBackSpeed: REEL_SPEED,
+	reelSpinSpeedBeforeBounce: REEL_SPEED,
 	reelPaddingMultiplierNormal: 1.2,
 	reelPaddingMultiplierAnticipated: 10,
 	reelSpinDelay: 100,
+	reelPreSpinSpeed: REEL_SPEED,
+	reelSpinSpeed: REEL_SPEED,
+	reelBounceSizeMulti: 0.12,
 };
 
-export const SPIN_OPTIONS_DEFAULT = {
-	...SPIN_OPTIONS_SHARED,
-	reelPreSpinSpeed: 2.5,
-	reelSpinSpeed: 2.5,
-	reelBounceSizeMulti: 0.22,
-};
+export const SPIN_OPTIONS_DEFAULT = { ...SPIN_OPTIONS_SHARED };
 
-export const SPIN_OPTIONS_FAST = {
-	...SPIN_OPTIONS_SHARED,
-	reelPreSpinSpeed: 4,
-	reelSpinSpeed: 4,
-	reelBounceSizeMulti: 0.06,
-};
+/** Turbo mode keeps the same spin speed (request: "одинаковая скорость")
+ * but still short-circuits the pre-spin hold via `stateBet.isTurbo` in
+ * `generalSpinWith`, so turbo still snaps to result faster. */
+export const SPIN_OPTIONS_FAST = { ...SPIN_OPTIONS_SHARED };
 
 export const MOTION_BLUR_VELOCITY = 31;
 
@@ -196,6 +201,9 @@ export const MYSTERY_REVEAL_TIER: Record<string, 'high' | 'mid' | 'low'> = {
 
 /** Pause after mystery cells finish reveal, before winInfo / next reveal spin. */
 export const MYSTERY_REVEAL_POST_DELAY_MS = 1000;
+
+/** Pause after reels finish landing, before paylines/win animation start. */
+export const WIN_INFO_PRE_DELAY_MS = 100;
 
 /** Shared M spine clip when multiple mystery columns reveal at once. */
 export const MYSTERY_REVEAL_SYNC_ANIMATION = 'mid_multiplier_pay';

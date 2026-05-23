@@ -18,6 +18,16 @@ export default {
 		src: new URL('../../assets/sprites/background/n1.jpg', import.meta.url).href,
 		preload: true,
 	},
+	lanternDay: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/background/lantern_day.png', import.meta.url).href,
+		preload: true,
+	},
+	lanternNight: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/background/lantern_night.png', import.meta.url).href,
+		preload: true,
+	},
 	pressToContinueText: {
 		type: 'sprites',
 		src: new URL('../../assets/sprites/pressToContinueText/MM_pressanywhere.json', import.meta.url)

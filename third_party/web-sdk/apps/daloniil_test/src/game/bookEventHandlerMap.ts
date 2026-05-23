@@ -2,6 +2,8 @@ import _ from 'lodash';
 
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
 import { stateBet, stateUi } from 'state-shared';
+import { waitForTimeout } from 'utils-shared/wait';
+
 import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
@@ -9,6 +11,7 @@ import { stateGame, stateGameDerived } from './stateGame.svelte';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
 import config from './config';
+import { WIN_INFO_PRE_DELAY_MS } from './constants';
 import { toRevealedRawSymbol } from './utils';
 
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
@@ -59,6 +62,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
 	},
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
+		// Breathing room after the reels land before the win celebration kicks
+		// in (also lets the symbol bounce animation finish landing).
+		await waitForTimeout(WIN_INFO_PRE_DELAY_MS);
+
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 
 		// All winning paylines render simultaneously — PaylineOverlay keeps an
