@@ -2,7 +2,6 @@ import _ from 'lodash';
 
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
 import { stateBet, stateUi } from 'state-shared';
-import { sequence } from 'utils-shared/sequence';
 import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
@@ -61,15 +60,26 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-		await sequence(bookEvent.wins, async (win) => {
+
+		// All winning paylines render simultaneously — PaylineOverlay keeps an
+		// array of active lines so multiple `paylineShow` events stack.
+		for (const win of bookEvent.wins) {
 			eventEmitter.broadcast({
 				type: 'paylineShow',
 				lineIndex: win.meta.lineIndex,
 				positions: win.positions,
 			});
-			await animateSymbols({ positions: win.positions });
-			eventEmitter.broadcast({ type: 'paylineHide', lineIndex: win.meta.lineIndex });
-		});
+		}
+
+		// Symbols repeating across multiple paylines must animate only once;
+		// `boardWithAnimateSymbols` swaps `oncomplete` per position, so two
+		// concurrent calls on the same cell would race and leave it hanging.
+		const allPositions = _.uniqWith(
+			bookEvent.wins.flatMap((win) => win.positions),
+			(a, b) => a.reel === b.reel && a.row === b.row,
+		);
+		await animateSymbols({ positions: allPositions });
+
 		eventEmitter.broadcast({ type: 'paylineClearAll' });
 	},
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {

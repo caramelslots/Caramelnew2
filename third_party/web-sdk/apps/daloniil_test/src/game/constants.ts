@@ -152,6 +152,23 @@ const explosion = {
 	sizeRatios: { width: 1, height: 1 },
 };
 
+/** Designer's bounce spine (`symbolsBounce/*.json`) — single `bounce` clip per file. */
+const bounce = (assetKey: string) => ({
+	type: 'spine' as const,
+	assetKey,
+	animationName: 'bounce',
+	sizeRatios: { width: 1, height: 1 },
+});
+
+const h1Bounce = bounce('H1Bounce');
+const h2Bounce = bounce('H2Bounce');
+const h3Bounce = bounce('H3Bounce');
+const h4Bounce = bounce('H4Bounce');
+const l1Bounce = bounce('L1Bounce');
+const l2Bounce = bounce('L2Bounce');
+const l3Bounce = bounce('L3Bounce');
+const l4Bounce = bounce('L4Bounce');
+
 const h1Static = { type: 'sprite', assetKey: 'h1.webp', sizeRatios: { width: 1, height: 1 } };
 const h2Static = { type: 'sprite', assetKey: 'h2.webp', sizeRatios: { width: 1, height: 1 } };
 const h3Static = { type: 'sprite', assetKey: 'h3.webp', sizeRatios: { width: 1, height: 1 } };
@@ -201,7 +218,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: h1Static,
 		static: h1Static,
 		spin: h1Static,
-		land: h1Static,
+		land: h1Bounce,
 	},
 	H2: {
 		explosion,
@@ -214,7 +231,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: h2Static,
 		static: h2Static,
 		spin: h2Static,
-		land: h2Static,
+		land: h2Bounce,
 	},
 	H3: {
 		explosion,
@@ -227,7 +244,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: h3Static,
 		static: h3Static,
 		spin: h3Static,
-		land: h3Static,
+		land: h3Bounce,
 	},
 	H4: {
 		explosion,
@@ -240,7 +257,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: h4Static,
 		static: h4Static,
 		spin: h4Static,
-		land: h4Static,
+		land: h4Bounce,
 	},
 	L1: {
 		explosion,
@@ -253,7 +270,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: l1Static,
 		static: l1Static,
 		spin: l1Static,
-		land: l1Static,
+		land: l1Bounce,
 	},
 	L2: {
 		explosion,
@@ -266,7 +283,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: l2Static,
 		static: l2Static,
 		spin: l2Static,
-		land: l2Static,
+		land: l2Bounce,
 	},
 	L3: {
 		explosion,
@@ -279,7 +296,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: l3Static,
 		static: l3Static,
 		spin: l3Static,
-		land: l3Static,
+		land: l3Bounce,
 	},
 	L4: {
 		explosion,
@@ -292,7 +309,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: l4Static,
 		static: l4Static,
 		spin: l4Static,
-		land: l4Static,
+		land: l4Bounce,
 	},
 	W: {
 		explosion,

@@ -8,9 +8,20 @@ export default {
 		},
 		preload: true,
 	},
+	mainBackground: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/background/d1.jpg', import.meta.url).href,
+		preload: true,
+	},
+	featureBackground: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/background/n1.jpg', import.meta.url).href,
+		preload: true,
+	},
 	pressToContinueText: {
 		type: 'sprites',
-		src: new URL('../../assets/sprites/pressToContinueText/MM_pressanywhere.json', import.meta.url).href,
+		src: new URL('../../assets/sprites/pressToContinueText/MM_pressanywhere.json', import.meta.url)
+			.href,
 		preload: true,
 	},
 	H1: {
@@ -85,6 +96,70 @@ export default {
 			scale: 2,
 		},
 	},
+	H1Bounce: {
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolsBounce/symbols.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolsBounce/High_1.json', import.meta.url).href,
+			scale: 1,
+		},
+	},
+	H2Bounce: {
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolsBounce/symbols.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolsBounce/High_2.json', import.meta.url).href,
+			scale: 1,
+		},
+	},
+	H3Bounce: {
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolsBounce/symbols.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolsBounce/High_3.json', import.meta.url).href,
+			scale: 1,
+		},
+	},
+	H4Bounce: {
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolsBounce/symbols.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolsBounce/High_4.json', import.meta.url).href,
+			scale: 1,
+		},
+	},
+	L1Bounce: {
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolsBounce/symbols.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolsBounce/Low_1.json', import.meta.url).href,
+			scale: 1,
+		},
+	},
+	L2Bounce: {
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolsBounce/symbols.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolsBounce/Low_2.json', import.meta.url).href,
+			scale: 1,
+		},
+	},
+	L3Bounce: {
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolsBounce/symbols.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolsBounce/Low_3.json', import.meta.url).href,
+			scale: 1,
+		},
+	},
+	L4Bounce: {
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/symbolsBounce/symbols.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/symbolsBounce/Low_4.json', import.meta.url).href,
+			scale: 1,
+		},
+	},
 	W: {
 		type: 'spine',
 		src: {
@@ -145,7 +220,8 @@ export default {
 		type: 'spine',
 		src: {
 			atlas: new URL('../../assets/spines/globalMultiplier/multiframe.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/globalMultiplier/multiframe.json', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/globalMultiplier/multiframe.json', import.meta.url)
+				.href,
 			scale: 2,
 		},
 	},
@@ -185,8 +261,14 @@ export default {
 	foregroundFeatureAnimation: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/foregroundFeatureAnimation/mm_bg_feature.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/foregroundFeatureAnimation/mm_bg_feature.json', import.meta.url).href,
+			atlas: new URL(
+				'../../assets/spines/foregroundFeatureAnimation/mm_bg_feature.atlas',
+				import.meta.url,
+			).href,
+			skeleton: new URL(
+				'../../assets/spines/foregroundFeatureAnimation/mm_bg_feature.json',
+				import.meta.url,
+			).href,
 			scale: 2,
 		},
 		preload: true,
@@ -195,7 +277,8 @@ export default {
 		type: 'spine',
 		src: {
 			atlas: new URL('../../assets/spines/tumbleWin/tumble_win.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/tumbleWin/tumble_multiplier.json', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/tumbleWin/tumble_multiplier.json', import.meta.url)
+				.href,
 			scale: 2,
 		},
 	},
@@ -226,7 +309,8 @@ export default {
 	},
 	winSmall: {
 		type: 'sprites',
-		src: new URL('../../assets/sprites/winSmall/MM_Localisation_winsmall.json', import.meta.url).href,
+		src: new URL('../../assets/sprites/winSmall/MM_Localisation_winsmall.json', import.meta.url)
+			.href,
 	},
 	clusterWin: {
 		type: 'spine',
