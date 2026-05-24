@@ -18,6 +18,8 @@
 <SymbolWrap
 	x={getSymbolX(props.reelIndex)}
 	y={props.reelSymbol.symbolY()}
+	scaleX={props.reelSymbol.landScaleX()}
+	scaleY={props.reelSymbol.landScaleY()}
 	animating={symbolInfo.type === 'spine' &&
 		(props.reelSymbol.symbolState === 'land' ||
 			props.reelSymbol.symbolState === 'win' ||

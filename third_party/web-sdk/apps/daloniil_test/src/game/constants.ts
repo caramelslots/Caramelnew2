@@ -92,23 +92,58 @@ const SPECIAL_SYMBOL_SIZE = 1;
 
 /**
  * Reel timing — padding distance must match scroll (see utils-slots
- * getMainSpinTargetY). All four speed channels are kept equal so there is
- * no acceleration discontinuity between pre-spin, main slide, slide-before-
- * bounce and bounce-back — that's what produces a "jerk".
+ * getMainSpinTargetY). Spin/pre-spin/slide-before-bounce speeds are kept
+ * equal so there's no acceleration discontinuity during the main slide.
+ *
+ * Landing combines a Y-axis inertial drop on the reel with a Y-axis
+ * vertical squash on each symbol — done by `removePaddingAndBounceBack`
+ * in `createReelForSpinning.svelte.ts`:
+ *
+ *   1. Reel snaps to `defaultY + bounceSize` (initial overshoot below
+ *      final position) — this is the "drop landed past the target".
+ *   2. All symbols snap to scaleY = `reelLandSquashY` (vertical squash on
+ *      impact) and ease back to scaleY = 1 over `reelLandSquashRecoveryMs`.
+ *   3. Reel eases UP past `defaultY` to `−bounceSize × reelSettleSecondaryMulti`
+ *      (secondary rebound — the visible inertia kick).
+ *   4. Reel eases DOWN back to `defaultY` at `reelBounceBackSpeed ×
+ *      reelSettleSecondarySpeedMulti` (final settle, sineOut for smoothness).
+ *
+ * Knobs:
+ *   - `reelBounceSizeMulti`: initial overshoot as fraction of symbol
+ *     height (bigger = stronger "drop").
+ *   - `reelBounceBackSpeed`: speed of stage 2 (smaller = weightier).
+ *   - `reelSettleSecondaryMulti`: rebound size as fraction of initial
+ *     overshoot (0 = legacy single-ease behavior).
+ *   - `reelSettleSecondarySpeedMulti`: speed multiplier for stage 3
+ *     (smaller = slower & smoother final settle).
+ *   - `reelLandSquashY`: vertical scale at impact (1 = no squash, 0.68
+ *     = compress to 68% height — strong jelly hit).
+ *   - `reelLandSquashRecoveryMs`: how long the unsquash takes
+ *     (smaller = snappier rebound, bigger = softer recovery).
+ *   - `reelLandSquashStretchMulti`: jelly factor — how much the symbol
+ *     stretches horizontally as it squashes vertically (0 = no stretch,
+ *     0.5 = subtle jelly, 1.0 = true area preservation). Synchronised
+ *     automatically with the squash Tween.
  *
  * Same options are used in base game and free spins (spinOptions are
  * picked by `spinType` only, never by `gameType`, see stateGame.svelte.ts).
  */
 const REEL_SPEED = 1.5;
+const REEL_SETTLE_SPEED = REEL_SPEED * 0.42;
 const SPIN_OPTIONS_SHARED = {
-	reelBounceBackSpeed: REEL_SPEED,
+	reelBounceBackSpeed: REEL_SETTLE_SPEED,
 	reelSpinSpeedBeforeBounce: REEL_SPEED,
 	reelPaddingMultiplierNormal: 1.2,
 	reelPaddingMultiplierAnticipated: 10,
 	reelSpinDelay: 100,
 	reelPreSpinSpeed: REEL_SPEED,
 	reelSpinSpeed: REEL_SPEED,
-	reelBounceSizeMulti: 0.12,
+	reelBounceSizeMulti: 0.28,
+	reelSettleSecondaryMulti: 0.4,
+	reelSettleSecondarySpeedMulti: 1.2,
+	reelLandSquashY: 0.68,
+	reelLandSquashRecoveryMs: 260,
+	reelLandSquashStretchMulti: 0.55,
 };
 
 export const SPIN_OPTIONS_DEFAULT = { ...SPIN_OPTIONS_SHARED };
@@ -157,22 +192,11 @@ const explosion = {
 	sizeRatios: { width: 1, height: 1 },
 };
 
-/** Designer's bounce spine (`symbolsBounce/*.json`) — single `bounce` clip per file. */
-const bounce = (assetKey: string) => ({
-	type: 'spine' as const,
-	assetKey,
-	animationName: 'bounce',
-	sizeRatios: { width: 1, height: 1 },
-});
-
-const h1Bounce = bounce('H1Bounce');
-const h2Bounce = bounce('H2Bounce');
-const h3Bounce = bounce('H3Bounce');
-const h4Bounce = bounce('H4Bounce');
-const l1Bounce = bounce('L1Bounce');
-const l2Bounce = bounce('L2Bounce');
-const l3Bounce = bounce('L3Bounce');
-const l4Bounce = bounce('L4Bounce');
+// Symbol-level squash spine (`symbolsBounce/*.json`) is no longer used.
+// Landing animation is now a pure Y-axis inertial drop done at the reel
+// level (`removePaddingAndBounceBack` in createReelForSpinning); each
+// symbol stays as its static sprite from spin → land → static, so its
+// width/height never changes. See `BOUNCE_REDESIGN_PLAN.md`.
 
 const h1Static = { type: 'sprite', assetKey: 'h1.webp', sizeRatios: { width: 1, height: 1 } };
 const h2Static = { type: 'sprite', assetKey: 'h2.webp', sizeRatios: { width: 1, height: 1 } };
@@ -226,7 +250,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: h1Static,
 		static: h1Static,
 		spin: h1Static,
-		land: h1Bounce,
+		land: h1Static,
 	},
 	H2: {
 		explosion,
@@ -239,7 +263,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: h2Static,
 		static: h2Static,
 		spin: h2Static,
-		land: h2Bounce,
+		land: h2Static,
 	},
 	H3: {
 		explosion,
@@ -252,7 +276,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: h3Static,
 		static: h3Static,
 		spin: h3Static,
-		land: h3Bounce,
+		land: h3Static,
 	},
 	H4: {
 		explosion,
@@ -265,7 +289,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: h4Static,
 		static: h4Static,
 		spin: h4Static,
-		land: h4Bounce,
+		land: h4Static,
 	},
 	L1: {
 		explosion,
@@ -278,7 +302,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: l1Static,
 		static: l1Static,
 		spin: l1Static,
-		land: l1Bounce,
+		land: l1Static,
 	},
 	L2: {
 		explosion,
@@ -291,7 +315,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: l2Static,
 		static: l2Static,
 		spin: l2Static,
-		land: l2Bounce,
+		land: l2Static,
 	},
 	L3: {
 		explosion,
@@ -304,7 +328,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: l3Static,
 		static: l3Static,
 		spin: l3Static,
-		land: l3Bounce,
+		land: l3Static,
 	},
 	L4: {
 		explosion,
@@ -317,7 +341,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: l4Static,
 		static: l4Static,
 		spin: l4Static,
-		land: l4Bounce,
+		land: l4Static,
 	},
 	W: {
 		explosion,

@@ -20,6 +20,18 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		const symbolIndex = reelSymbolOptions.symbolIndex;
 		const symbolState = reelOptions.initialSymbolState;
 		const symbolY = () => reelY.current + (reelSymbol.symbolIndex + 0.5) * reelOptions.symbolHeight;
+		// Per-symbol vertical squash factor driven by the reel-level landSquashY
+		// Tween. 1 = no squash; < 1 = compressed vertically.
+		const landScaleY = () => landSquashY.current;
+		// Horizontal stretch derived from the same landSquashY Tween for a
+		// jelly / volume-preservation feel: scaleX = 1 + (1 − scaleY) × multi.
+		// Multi = 0 → no stretch (pure Y squash). The two axes are perfectly
+		// synchronised because they read the same underlying tween value.
+		const landScaleX = () => {
+			const stretchMulti = reelState.spinOptions().reelLandSquashStretchMulti ?? 0;
+			if (stretchMulti === 0) return 1;
+			return 1 + (1 - landSquashY.current) * stretchMulti;
+		};
 		const oncomplete = () => {};
 
 		const reelSymbol = $state({
@@ -28,6 +40,8 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			symbolIndex,
 			symbolState,
 			symbolY,
+			landScaleY,
+			landScaleX,
 			oncomplete,
 		});
 
@@ -62,6 +76,10 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 
 	// reactive states
 	const reelY = new Tween(defaultY);
+	// Vertical squash factor (1 = no squash). All symbols on the reel read
+	// `.current` via `reelSymbol.landScaleY()` and apply it as scaleY to
+	// their wrapper Container — see SymbolWrap. Driven by removePaddingAndBounceBack.
+	const landSquashY = new Tween(1);
 	const reelState = $state({
 		symbols: createReelSymbols(reelOptions.initialSymbols),
 		motion: 'stopped' as SpinningReelMotion,
@@ -149,12 +167,47 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 
 	const removePaddingAndBounceBack = async () => {
 		reelState.symbols = [...targetSymbols];
-		placeY(defaultY + reelOptions.symbolHeight * reelState.spinOptions().reelBounceSizeMulti);
-		await slideY({
-			reelY: defaultY,
-			speed: reelState.spinOptions().reelBounceBackSpeed,
-			easing: sineOut,
-		});
+		const opts = reelState.spinOptions();
+		const overshoot = reelOptions.symbolHeight * opts.reelBounceSizeMulti;
+
+		placeY(defaultY + overshoot);
+
+		// Vertical squash on impact (Y-only, X is unaffected). Snap to the
+		// squashed scale at the moment the reel hits its overshoot, then
+		// fire-and-forget ease back to 1 in parallel with the bounce-back.
+		const squashTarget = opts.reelLandSquashY ?? 1;
+		const squashRecoveryMs = opts.reelLandSquashRecoveryMs ?? 220;
+		if (squashTarget < 1) {
+			landSquashY.set(squashTarget, { duration: 0 });
+			void landSquashY.set(1, { duration: squashRecoveryMs, easing: sineOut });
+		}
+
+		// Optional damped-oscillation settle (opt-in via spinOptions).
+		// secondaryMulti > 0 → two-stage settle: ease past defaultY upward
+		// to a smaller secondary overshoot, then ease back down to defaultY.
+		// This produces the classic slot-machine "drop and rebound" inertia.
+		const secondaryMulti = opts.reelSettleSecondaryMulti ?? 0;
+		const secondarySpeedMulti = opts.reelSettleSecondarySpeedMulti ?? 1;
+
+		if (secondaryMulti > 0) {
+			await slideY({
+				reelY: defaultY - overshoot * secondaryMulti,
+				speed: opts.reelBounceBackSpeed,
+				easing: sineOut,
+			});
+			await slideY({
+				reelY: defaultY,
+				speed: opts.reelBounceBackSpeed * secondarySpeedMulti,
+				easing: sineOut,
+			});
+		} else {
+			await slideY({
+				reelY: defaultY,
+				speed: opts.reelBounceBackSpeed,
+				easing: sineOut,
+			});
+		}
+
 		setSymbolsWithReelSymbols(targetSymbols);
 	};
 

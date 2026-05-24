@@ -11,6 +11,17 @@
 		x: number;
 		y: number;
 		animating: boolean;
+		/**
+		 * Per-axis scale on the wrapping Container. Defaults to 1.
+		 * The inner sprite/spine is centred at the container origin (anchor
+		 * 0.5 at 0,0), so scaling compresses/stretches the symbol around its
+		 * own centre without shifting its on-screen position.
+		 *
+		 * Used together by the reel-level landing squash (`landScaleY`) and
+		 * the derived jelly stretch (`landScaleX`) — see createReelForSpinning.
+		 */
+		scaleX?: number;
+		scaleY?: number;
 		children: Snippet;
 	};
 
@@ -25,7 +36,11 @@
 </script>
 
 {#if props.debug || (show && inFrame)}
-	<Container x={props.x} y={props.y}>
+	<Container
+		x={props.x}
+		y={props.y}
+		scale={{ x: props.scaleX ?? 1, y: props.scaleY ?? 1 }}
+	>
 		{@render props.children()}
 	</Container>
 {/if}
