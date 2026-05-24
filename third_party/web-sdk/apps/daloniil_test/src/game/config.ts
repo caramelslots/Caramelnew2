@@ -74,7 +74,13 @@ export default {
 		},
 	},
 
-	// 30 paylines (5×5, rows 0..4) — синхронно с math game_config.py
+	// 20 paylines (5×5, rows 0..4) — **MUST mirror math `game_config.py:paylines`
+	// key-for-key**. Math emits `meta.lineIndex` = this key; PaylineOverlay looks
+	// up rows via `config.paylines[String(lineIndex)]` to draw the visual line
+	// across all reels. Any divergence between math and this map produces a
+	// payline drawn through wrong cells (e.g. diagonal rendered as swoosh).
+	// See math `third_party/math-sdk/games/0_0_daloniil_test/game_config.py`
+	// REDESIGN_PLAN §2.1 — reduced 30 → 20 paylines.
 	paylines: {
 		// Группа 1: 5 горизонталей
 		'1': [0, 0, 0, 0, 0],
@@ -82,38 +88,24 @@ export default {
 		'3': [2, 2, 2, 2, 2],
 		'4': [3, 3, 3, 3, 3],
 		'5': [4, 4, 4, 4, 4],
-		// Группа 2: 4 V-shapes
+		// Группа 2: V-family (V-shapes + zigzag M)
 		'6': [0, 1, 2, 1, 0],
 		'7': [1, 2, 3, 2, 1],
 		'8': [2, 3, 4, 3, 2],
 		'9': [0, 2, 4, 2, 0],
-		// Группа 3: 4 ^-shapes (inverted V)
-		'10': [4, 3, 2, 3, 4],
-		'11': [3, 2, 1, 2, 3],
-		'12': [2, 1, 0, 1, 2],
-		'13': [4, 2, 0, 2, 4],
-		// Группа 4: 4 диагонали / swooshes
-		'14': [0, 1, 2, 3, 4],
-		'15': [4, 3, 2, 1, 0],
-		'16': [0, 0, 2, 4, 4],
-		'17': [4, 4, 2, 0, 0],
-		// Группа 5: 4 step-shapes
-		'18': [0, 0, 1, 2, 2],
-		'19': [2, 2, 1, 0, 0],
+		'10': [0, 2, 0, 2, 0],
+		// Группа 3: ^-family (inverted V + zigzag W)
+		'11': [4, 3, 2, 3, 4],
+		'12': [3, 2, 1, 2, 3],
+		'13': [2, 1, 0, 1, 2],
+		'14': [4, 2, 0, 2, 4],
+		'15': [4, 2, 4, 2, 4],
+		// Группа 4: diagonals & swooshes
+		'16': [0, 1, 2, 3, 4],
+		'17': [4, 3, 2, 1, 0],
+		'18': [0, 0, 2, 4, 4],
+		'19': [4, 4, 2, 0, 0],
 		'20': [2, 2, 3, 4, 4],
-		'21': [4, 4, 3, 2, 2],
-		// Группа 6: 4 U-shapes
-		'22': [0, 1, 1, 1, 0],
-		'23': [1, 2, 2, 2, 1],
-		'24': [2, 3, 3, 3, 2],
-		'25': [3, 4, 4, 4, 3],
-		// Группа 7: 3 inverted U-shapes
-		'26': [4, 3, 3, 3, 4],
-		'27': [3, 2, 2, 2, 3],
-		'28': [2, 1, 1, 1, 2],
-		// Группа 8: 2 zigzag
-		'29': [0, 2, 0, 2, 0],
-		'30': [4, 2, 4, 2, 4],
 	},
 
 	symbols: {

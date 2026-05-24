@@ -3,11 +3,15 @@
 // `static` sprite's visible size — the land → static transition becomes
 // seamless.
 //
-// Timeline (per the designer's source bounce):
+// Timeline matches the designer's source (`designer_assets/Export/symbols.json`,
+// the `<Symbol>/bounce` clips) keyframe-for-keyframe — single source of truth.
+// The only thing this script adds is a final SETTLE keyframe so the spine's
+// last visible frame matches the static-sprite size (otherwise there is a
+// visible "snap" when the land state hands off to the static state):
 //   0.0000  (1.00, 1.00)   setup pose, bounce starts at full natural size
 //   0.0667  (1.15, 0.85)   squash 1
 //   0.1333  (1.00, 1.00)
-//   0.2000  (0.85, 1.15)   stretch
+//   0.2000  (0.85, 1.15)   counter-stretch
 //   0.2667  (1.00, 1.00)
 //   0.3333  (1.10, 0.90)   squash 2
 //   0.4000  (0.95, 1.05)
@@ -95,7 +99,11 @@ for (const file of FILES) {
 	json.skins = (json.skins || []).map(centreAttachments);
 	bounce.bones.scale.scale = timeline;
 	writeFileSync(path, JSON.stringify(json));
+	const peak = CANONICAL_BOUNCE.reduce(
+		(m, kf) => Math.max(m, Math.abs((kf.x ?? 1) - 1), Math.abs((kf.y ?? 1) - 1)),
+		0,
+	);
 	console.log(
-		`Wrote ${file} — bounce peak 1.15, settle ${SETTLE_SCALE} at ${settleTime}s, pivot centred`,
+		`Wrote ${file} — peak ±${peak.toFixed(2)}, settle ${SETTLE_SCALE} at ${settleTime}s, pivot centred`,
 	);
 }
