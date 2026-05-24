@@ -1,11 +1,13 @@
 <script lang="ts">
+	import { SpineProvider, SpineTrack, BitmapText } from 'pixi-svelte';
+
 	import SymbolSpine from './SymbolSpine.svelte';
 	import SymbolSprite from './SymbolSprite.svelte';
 	import SymbolPlaceholder from './SymbolPlaceholder.svelte';
 	import { getSymbolInfo } from '../game/utils';
+	import { SYMBOL_SIZE } from '../game/constants';
 	import type { SymbolState, RawSymbol } from '../game/types';
 	import { getContext } from '../game/context';
-	import { BitmapText } from 'pixi-svelte';
 
 	type Props = {
 		x?: number;
@@ -21,6 +23,13 @@
 	const symbolInfo = $derived(getSymbolInfo({ rawSymbol: props.rawSymbol, state: props.state }));
 	const isSprite = $derived(symbolInfo.type === 'sprite');
 	const isPlaceholder = $derived(symbolInfo.type === 'placeholder');
+	// Payframe glow overlay rendered around win symbols. Lives at the
+	// `Symbol` level (not inside SymbolSpine) so it shows for both sprite
+	// (H/L pay symbols) and spine (W) win renders. Excluded for B and M
+	// — historically those bonus tokens never had a payframe.
+	const showWinFrame = $derived(
+		props.state === 'win' && !['B', 'M'].includes(props.rawSymbol.name),
+	);
 </script>
 
 {#if isPlaceholder}
@@ -33,7 +42,7 @@
 		{symbolInfo}
 		x={props.x}
 		y={props.y}
-		showWinFrame={props.state === 'win' && !['B', 'M'].includes(props.rawSymbol.name)}
+		showWinFrame={false}
 		listener={{
 			complete: props.oncomplete,
 			event: (_, event) => {
@@ -43,6 +52,12 @@
 			},
 		}}
 	/>
+{/if}
+
+{#if showWinFrame}
+	<SpineProvider x={props.x} y={props.y} key="anticipation" width={SYMBOL_SIZE * 0.19}>
+		<SpineTrack trackIndex={0} animationName={'payframe'} loop />
+	</SpineProvider>
 {/if}
 
 {#if props.rawSymbol.multiplier && props.rawSymbol.name !== 'W'}

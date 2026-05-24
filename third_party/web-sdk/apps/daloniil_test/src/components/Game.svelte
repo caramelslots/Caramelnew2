@@ -35,6 +35,7 @@
 	import BuyBonusOverlay from './BuyBonusOverlay.svelte';
 	import BuyBonusConfirmOverlay from './BuyBonusConfirmOverlay.svelte';
 	import DevCheats from './DevCheats.svelte';
+	import DevButtons from './DevButtons.svelte';
 
 	const context = getContext();
 
@@ -116,3 +117,4 @@
 <ProgressLadder />
 <MysteryReelUnlockOverlay />
 <DevCheats />
+<DevButtons />
