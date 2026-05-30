@@ -11,7 +11,11 @@ import { stateGame, stateGameDerived } from './stateGame.svelte';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
 import config from './config';
-import { WIN_INFO_PRE_DELAY_MS, MYSTERY_REVEAL_PRE_DELAY_MS } from './constants';
+import { WIN_INFO_PRE_DELAY_MS, MYSTERY_REVEAL_PRE_DELAY_MS, WIN_SPOTLIGHT_CLEAR_DELAY_MS } from './constants';
+
+// Таймер фонового снятия затемнения/paylines. Хранится здесь, чтобы
+// `reveal` мог отменить его при старте нового спина раньше истечения задержки.
+let spotlightClearTimer: ReturnType<typeof setTimeout> | null = null;
 import { toRevealedRawSymbol } from './utils';
 
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
@@ -62,12 +66,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			recordBookEvent({ bookEvent });
 		}
 
-		// Сброс подсветки от предыдущего спина: пока крутятся барабаны и
-		// символы заново «приземляются», alpha должен быть 1 — иначе турбо-
-		// skip оставит часть символов затемнёнными в новом спине.
+		// Если фоновый таймер снятия затемнения ещё не сработал — отменяем его:
+		// новый спин сам восстановит alpha и очистит paylines немедленно.
+		if (spotlightClearTimer !== null) {
+			clearTimeout(spotlightClearTimer);
+			spotlightClearTimer = null;
+		}
 		stateGame.winSpotlightActive = false;
-		// Очищаем paylines предыдущего спина здесь, а не сразу после анимации,
-		// чтобы линии оставались видимыми до начала нового спина.
 		eventEmitter.broadcast({ type: 'paylineClearAll' });
 
 		stateGame.gameType = bookEvent.gameType;
@@ -107,7 +112,17 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			(a, b) => a.reel === b.reel && a.row === b.row,
 		);
 		await animateSymbols({ positions: allPositions });
-		// Paylines remain visible until the next spin starts (cleared in `reveal`).
+
+		// Запускаем фоновый таймер (не блокирует pipeline — игрок может делать
+		// ставку сразу). По истечении WIN_SPOTLIGHT_CLEAR_DELAY_MS снимаем
+		// затемнение и paylines. Если до этого стартует новый спин, `reveal`
+		// отменит таймер через clearTimeout выше.
+		if (spotlightClearTimer !== null) clearTimeout(spotlightClearTimer);
+		spotlightClearTimer = setTimeout(() => {
+			spotlightClearTimer = null;
+			stateGame.winSpotlightActive = false;
+			eventEmitter.broadcast({ type: 'paylineClearAll' });
+		}, WIN_SPOTLIGHT_CLEAR_DELAY_MS);
 	},
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
 		stateBet.winBookEventAmount = bookEvent.amount;
@@ -195,8 +210,19 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// (см. books_*.ts), поэтому последующий setTotalWin становится no-op'ом.
 		stateBet.winBookEventAmount = stateBet.winBookEventAmount + bookEvent.amount;
 
+		// For big wins above level 6, the visual ladder starts at Big Win and
+		// advances upward. Start BGM from the first ladder tier (Big Win) so the
+		// sound progression matches the banner progression. Win.svelte's $effect
+		// will advance the BGM as each tier unlocks. For level 6 (Big Win itself)
+		// and small wins there is no ladder, so play the target level's sound as usual.
+		const BIG_WIN_LEVEL = 6 as const;
+		const firstTierData =
+			winLevelData.type === 'big' && winLevelData.level > BIG_WIN_LEVEL
+				? winLevelMap[BIG_WIN_LEVEL]
+				: winLevelData;
+
 		eventEmitter.broadcast({ type: 'winShow' });
-		winLevelSoundsPlay({ winLevelData });
+		winLevelSoundsPlay({ winLevelData: firstTierData });
 		await eventEmitter.broadcastAsync({
 			type: 'winUpdate',
 			amount: bookEvent.amount,

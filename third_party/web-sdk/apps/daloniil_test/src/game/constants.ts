@@ -368,6 +368,13 @@ export const MYSTERY_REVEAL_POST_DELAY_MS = 1000;
 /** Pause after reels finish landing, before paylines/win animation start. */
 export const WIN_INFO_PRE_DELAY_MS = 100;
 
+/**
+ * Пауза после того, как выигрышные символы полностью отыграли анимацию,
+ * перед снятием затемнения и скрытием paylines.
+ * Даёт игроку момент полюбоваться результатом до следующего этапа.
+ */
+export const WIN_SPOTLIGHT_CLEAR_DELAY_MS = 10_000;
+
 /** Shared Mystery spine clip — designer combined skeleton has a single
  * explosion track for all reveal types, so synced and independent reveals
  * use the same animation name. */

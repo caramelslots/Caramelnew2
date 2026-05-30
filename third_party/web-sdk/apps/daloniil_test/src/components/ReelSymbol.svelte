@@ -5,7 +5,7 @@
 
 	import Symbol from './Symbol.svelte';
 	import SymbolWrap from './SymbolWrap.svelte';
-	import { getSymbolInfo, getSymbolX } from '../game/utils';
+	import { getSymbolInfo, getSymbolX, toRevealedRawSymbol } from '../game/utils';
 	import { WIN_BOUNCE, DIM_NON_WINNING } from '../game/constants';
 	import { stateGame } from '../game/stateGame.svelte';
 	import type { ReelSymbol } from '../game/stateGame.svelte';
@@ -74,7 +74,45 @@
 			}
 		});
 	});
+
+	// Background revealed symbol shown under mystery explosion.
+	// Plays the `land` bounce as soon as the reveal starts, then
+	// settles to `static` so it stays visible through the explosion.
+	let bgSymbolState = $state<'land' | 'static'>('land');
+
+	$effect(() => {
+		if (props.reelSymbol.symbolState === 'mysteryReveal') {
+			untrack(() => {
+				bgSymbolState = 'land';
+			});
+		}
+	});
+
+	const revealedRawSymbol = $derived(
+		props.reelSymbol.rawSymbol.mysteryRevealTo
+			? toRevealedRawSymbol(props.reelSymbol.rawSymbol.mysteryRevealTo)
+			: null,
+	);
+	const showBgSymbol = $derived(
+		props.reelSymbol.symbolState === 'mysteryReveal' && revealedRawSymbol !== null,
+	);
 </script>
+
+{#if showBgSymbol && revealedRawSymbol}
+	<SymbolWrap
+		x={getSymbolX(props.reelIndex)}
+		y={props.reelSymbol.symbolY()}
+		animating={true}
+	>
+		<Symbol
+			state={bgSymbolState}
+			rawSymbol={revealedRawSymbol}
+			oncomplete={() => {
+				bgSymbolState = 'static';
+			}}
+		/>
+	</SymbolWrap>
+{/if}
 
 <SymbolWrap
 	x={getSymbolX(props.reelIndex)}

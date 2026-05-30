@@ -56,7 +56,7 @@
 	const DRAW_DURATION_MS = 480;
 	// Total idle cycle: the line draws left→right over DRAW_DURATION_MS,
 	// holds fully visible for the remainder, then redraws every CYCLE_MS.
-	const CYCLE_MS = 3000;
+	const CYCLE_MS = 1500;
 
 	// Halo-слои: рисуются от внешнего (широкий, прозрачный) к внутреннему
 	// (узкий, плотный). Толщина настроена под референс — линия выглядит
