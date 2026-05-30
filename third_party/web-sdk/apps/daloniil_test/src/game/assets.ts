@@ -10,12 +10,12 @@ export default {
 	},
 	mainBackground: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/background/d1.jpg', import.meta.url).href,
+		src: new URL('../../assets/sprites/background/day.png', import.meta.url).href,
 		preload: true,
 	},
 	featureBackground: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/background/n1.jpg', import.meta.url).href,
+		src: new URL('../../assets/sprites/background/night.png', import.meta.url).href,
 		preload: true,
 	},
 	lanternDay: {

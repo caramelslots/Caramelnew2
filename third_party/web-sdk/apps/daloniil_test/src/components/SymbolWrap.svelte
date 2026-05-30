@@ -43,12 +43,13 @@ const bottom = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
 const inFrame = $derived(props.y >= top && props.y <= bottom);
 </script>
 
-{#if props.debug || (show && inFrame)}
+{#if props.debug || show}
 	<Container
 		x={props.x}
 		y={props.y}
 		scale={{ x: props.scaleX ?? 1, y: props.scaleY ?? 1 }}
 		alpha={props.alpha ?? 1}
+		visible={props.debug || inFrame}
 	>
 		{@render props.children()}
 	</Container>

@@ -19,7 +19,16 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		const rawSymbol = reelSymbolOptions.rawSymbol;
 		const symbolIndex = reelSymbolOptions.symbolIndex;
 		const symbolState = reelOptions.initialSymbolState;
-		const symbolY = () => reelY.current + (reelSymbol.symbolIndex + 0.5) * reelOptions.symbolHeight;
+		const symbolY = () => {
+			// Inactive pool items use a large sentinel symbolIndex (POOL_INACTIVE_SENTINEL)
+			// so we can skip the reelY.current read entirely — avoiding a per-RAF reactive
+			// subscription for every off-screen pre-allocated slot.
+			// Active items (symbolIndex < POOL_INACTIVE_SENTINEL) animate normally.
+			if (reelSymbol.symbolIndex >= POOL_INACTIVE_SENTINEL) {
+				return (reelLength + 1) * reelOptions.symbolHeight;
+			}
+			return reelY.current + (reelSymbol.symbolIndex + 0.5) * reelOptions.symbolHeight;
+		};
 		// Per-symbol vertical squash factor driven by the reel-level landSquashY
 		// Tween. 1 = no squash; < 1 = compressed vertically.
 		const landScaleY = () => landSquashY.current;
@@ -59,17 +68,49 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	};
 
 	const updateAllReelSymbolState = (value: SpinningReelSymbolState) => {
-		reelState.symbols.forEach((reelSymbol) => {
+		// Iterate only the active portion of the pool (first activeSymbolCount items).
+		// Off-screen pool items beyond activeSymbolCount are excluded to avoid
+		// triggering their $effects unnecessarily.
+		// onSymbolLand fires only for the final settled symbols (first reelLength items).
+		for (let i = 0; i < reelState.activeSymbolCount; i++) {
+			const reelSymbol = reelState.symbols[i];
 			reelSymbol.symbolState = value as TSymbolState;
-			if (value === 'land') {
+			if (value === 'land' && i < reelLength) {
 				reelOptions.onSymbolLand({ rawSymbol: reelSymbol.rawSymbol });
 			}
-		});
+		}
 	};
 
 	// constants
 	const defaultY = -reelOptions.symbolHeight;
 	const reelLength = reelOptions.initialSymbols.length;
+	// Sentinel symbolIndex for pool items that are currently inactive.
+	// Must be larger than any symbolIndex an active spinning symbol can ever have.
+	// Max active symbolIndex ≈ maxPoolSize ≈ 60 for a 5-reel anticipated spin,
+	// so 100_000 is safely distinct from any real spin layout index.
+	const POOL_INACTIVE_SENTINEL = 100_000;
+
+	// Symbol pool pre-allocation.
+	// During each spin, reels accumulate padding from previous reels:
+	//   reel i needs: reelLength(prev) + (i+1)*paddingPerReel + reelLength(target)
+	// Pre-allocating here avoids creating/destroying ReelSymbol components on every
+	// spin — component creation triggers $effect initialization which is the main
+	// source of the flush_queued_root_effects spikes observed in performance traces.
+	// reelPaddingMultiplierNormal = 1.2 (from SPIN_OPTIONS constants).
+	const PADDING_PER_REEL_ESTIMATE = Math.ceil(reelLength * 1.2);
+	const maxPoolSize =
+		reelLength + // prevSymbols
+		(reelOptions.reelIndex + 1) * PADDING_PER_REEL_ESTIMATE + // accumulated padding
+		reelLength; // targetSymbols
+	const extraPoolCount = Math.max(0, maxPoolSize - reelLength);
+	const poolExtension = Array.from({ length: extraPoolCount }, (_, i) =>
+		createReelSymbol({
+			rawSymbol: reelOptions.initialSymbols[i % reelLength],
+			// POOL_INACTIVE_SENTINEL keeps these off-screen until activated by updateSymbolsPool.
+			// symbolY() short-circuits for sentinel values so they don't subscribe to reelY.
+			symbolIndex: POOL_INACTIVE_SENTINEL + i,
+		}),
+	);
 
 	// interruptible
 	const interruptible = createInterruptible();
@@ -81,7 +122,8 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	// their wrapper Container — see SymbolWrap. Driven by removePaddingAndBounceBack.
 	const landSquashY = new Tween(1);
 	const reelState = $state({
-		symbols: createReelSymbols(reelOptions.initialSymbols),
+		symbols: [...createReelSymbols(reelOptions.initialSymbols), ...poolExtension],
+		activeSymbolCount: reelLength,
 		motion: 'stopped' as SpinningReelMotion,
 		spinType: 'normal' as SpinType,
 		anticipating: false,
@@ -95,8 +137,10 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	// internal states
 	let isPreSpinning = false;
 	let targetPaddingPosition = reelLength - 1;
-	let prevSymbols: ReelSymbol[] = createReelSymbols(reelOptions.initialSymbols);
-	let targetSymbols: ReelSymbol[] = createReelSymbols(reelOptions.initialSymbols);
+	// Keep prev/target as plain raw-symbol arrays (no $state objects) to avoid
+	// creating and immediately discarding $state proxies every pre-spin loop tick.
+	let prevRawSymbols: TRawSymbol[] = [...reelOptions.initialSymbols];
+	let targetRawSymbols: TRawSymbol[] = [...reelOptions.initialSymbols];
 	let paddingRawReel: TRawSymbol[] = reelOptions.initialSymbols;
 	let onSpinFinishing: () => void = () => {};
 	let noStop = false;
@@ -129,20 +173,66 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			return getPaddingRawSymbol({ paddingRawReel, index: targetIndex });
 		});
 
+	// Updates pool items in-place instead of replacing the array.
+	// Takes a flat layout of raw symbols — no intermediate ReelSymbol[] allocations.
+	//   - rawSymbol and symbolIndex are set directly from layout
+	//   - symbolState is NOT touched — managed by updateAllReelSymbolState
+	//   - pool items beyond layout.length get a large symbolIndex → inFrame = false
+	//   - pool grows (push) only when an anticipated spin exceeds pre-allocated size
+	const updateSymbolsPool = (layout: TRawSymbol[]) => {
+		const newLen = layout.length;
+
+		// Grow only when needed (anticipated spin exceeds pre-allocated pool size)
+		while (reelState.symbols.length < newLen) {
+			reelState.symbols.push(
+				createReelSymbol({
+					rawSymbol: reelOptions.initialSymbols[0],
+					// Start with sentinel so symbolY doesn't subscribe to reelY until activated.
+					symbolIndex: POOL_INACTIVE_SENTINEL + reelState.symbols.length,
+				}),
+			);
+		}
+
+		// Update active items in-place: rawSymbol + position.
+		// Write rawSymbol unconditionally (content changes every spin).
+		// Write symbolIndex only when it actually changes to avoid triggering
+		// symbolY() re-evaluation on items that are staying in the same slot.
+		for (let i = 0; i < newLen; i++) {
+			reelState.symbols[i].rawSymbol = layout[i];
+			if (reelState.symbols[i].symbolIndex !== i) {
+				reelState.symbols[i].symbolIndex = i;
+			}
+		}
+
+		// Deactivate items beyond the new layout — but only those that are NOT
+		// already at their sentinel value. This avoids reactive writes (and the
+		// downstream symbolY / inFrame / visible recomputations) for pool items
+		// that are already parked off-screen from a previous updateSymbolsPool call.
+		for (let i = newLen; i < reelState.symbols.length; i++) {
+			if (reelState.symbols[i].symbolIndex < POOL_INACTIVE_SENTINEL) {
+				reelState.symbols[i].symbolIndex = POOL_INACTIVE_SENTINEL + i;
+			}
+		}
+
+		// Skip the write when the count didn't change (common during pre-spin loop).
+		if (reelState.activeSymbolCount !== newLen) {
+			reelState.activeSymbolCount = newLen;
+		}
+	};
+
 	const addPadding = async (paddingSizeValue: number) => {
 		const paddingRawSymbols = getPaddingRawSymbols({
 			paddingRawReel,
 			start: targetPaddingPosition,
 			length: paddingSizeValue,
 		});
-		const paddingSymbols = createReelSymbols(paddingRawSymbols);
-		const symbolsForSpin: ReelSymbol[] = [...targetSymbols, ...paddingSymbols, ...prevSymbols];
-		symbolsForSpin.forEach((symbol, newSymbolIndex) => (symbol.symbolIndex = newSymbolIndex));
-		reelState.symbols = [...symbolsForSpin];
+		// Build flat layout: [target, padding, prev] — all plain TRawSymbol[], no $state allocation
+		const layout: TRawSymbol[] = [...targetRawSymbols, ...paddingRawSymbols, ...prevRawSymbols];
+		updateSymbolsPool(layout);
 
 		const topY =
 			defaultY -
-			symbolsForSpin.length * reelOptions.symbolHeight +
+			layout.length * reelOptions.symbolHeight +
 			reelLength * reelOptions.symbolHeight;
 		return topY;
 	};
@@ -166,7 +256,8 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	const placeY = (targetY: number) => reelY.set(targetY, { duration: 0 });
 
 	const removePaddingAndBounceBack = async () => {
-		reelState.symbols = [...targetSymbols];
+		// Deactivate padding — pool items beyond targetRawSymbols move off-screen.
+		updateSymbolsPool(targetRawSymbols);
 		const opts = reelState.spinOptions();
 		const overshoot = reelOptions.symbolHeight * opts.reelBounceSizeMulti;
 
@@ -208,7 +299,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			});
 		}
 
-		setSymbolsWithReelSymbols(targetSymbols);
+		setSymbolsWithReelSymbols(targetRawSymbols);
 	};
 
 	const preSpinPadding = async ({
@@ -217,13 +308,12 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		preSpinPaddingRawReel: TRawSymbol[];
 	}) => {
 		const randomStart = Math.floor(Math.random() * preSpinPaddingRawReel.length);
-		prevSymbols = targetSymbols;
-		const targetRawSymbols = getPaddingRawSymbols({
+		prevRawSymbols = targetRawSymbols;
+		targetRawSymbols = getPaddingRawSymbols({
 			paddingRawReel: preSpinPaddingRawReel,
 			start: randomStart,
 			length: reelLength,
 		});
-		targetSymbols = createReelSymbols(targetRawSymbols);
 		const topY = await addPadding(0);
 		await placeY(topY);
 	};
@@ -247,6 +337,13 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 					? defaultY
 					: reelY.current + preSpinRotations * reelOptions.symbolHeight;
 			await slideY({ reelY: preSpinTargetY, speed, easing });
+			// Signal readiness directly instead of polling via $effect.
+			// waitForResolve in createEnhanceBoardSpin sets readyToSpin = resolve;
+			// calling it here (instead of from the polling effect) is safe because:
+			//   - when readyToSpin = () => {} (default): no-op
+			//   - when readyToSpin = resolve (set by waitForResolve): resolves the promise
+			//   - after the promise resolves the second call is harmless
+			reelState.readyToSpin();
 			await preSpinPadding({ preSpinPaddingRawReel });
 			if (!started) {
 				reelState.motion = 'spinning';
@@ -372,9 +469,9 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		reelState.spinType = prepareToSpinOptions.spinType;
 
 		noStop = prepareToSpinOptions.noStop;
-		prevSymbols = targetSymbols;
+		prevRawSymbols = targetRawSymbols;
 		targetPaddingPosition = prepareToSpinOptions.paddingPosition;
-		targetSymbols = createReelSymbols(prepareToSpinOptions.symbols);
+		targetRawSymbols = prepareToSpinOptions.symbols;
 		paddingRawReel = prepareToSpinOptions.paddingReel;
 		onSpinFinishing = prepareToSpinOptions.onSpinFinishing;
 
@@ -397,20 +494,21 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		interruptible.clear();
 	};
 
-	const setSymbolsWithReelSymbols = (reelSymbols?: ReelSymbol[]) => {
+	const setSymbolsWithReelSymbols = (rawSymbols?: TRawSymbol[]) => {
 		reelState.motion = 'stopped';
 		placeY(defaultY);
-		if (reelSymbols) {
-			prevSymbols = [...reelSymbols];
-			targetSymbols = [...reelSymbols];
+		// Direct call replaces the polling $effect approach.
+		reelState.readyToSpin();
+		if (rawSymbols) {
+			prevRawSymbols = [...rawSymbols];
+			targetRawSymbols = [...rawSymbols];
 			paddingRawReel = reelOptions.initialSymbols;
-			reelState.symbols = [...reelSymbols];
+			updateSymbolsPool(rawSymbols);
 		}
 	};
 
 	const setSymbolsWithRawSymbols = (rawSymbols?: TRawSymbol[]) => {
-		const newSymbols = rawSymbols ? createReelSymbols(rawSymbols) : undefined;
-		setSymbolsWithReelSymbols(newSymbols);
+		setSymbolsWithReelSymbols(rawSymbols);
 	};
 
 	const stop = () => {
@@ -418,11 +516,8 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	};
 
 	const readyToSpinEffect = () => {
-		$effect(() => {
-			if (reelY.current === defaultY) {
-				reelState.readyToSpin();
-			}
-		});
+		// readyToSpin() is now called directly in preSpinSlideDownLoop (after each
+		// slideY) and in setSymbolsWithReelSymbols — no polling $effect needed.
 	};
 
 	return {

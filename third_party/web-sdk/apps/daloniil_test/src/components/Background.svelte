@@ -8,7 +8,7 @@
 
 	const context = getContext();
 
-	// Source artwork dimensions (designer_assets/d1.jpg, n1.jpg). Both are
+	// Source artwork dimensions (designer_assets/day.png, night.png). Both are
 	// 1920×940, so cover-fit math is shared.
 	const BG_RATIO = 1920 / 940;
 

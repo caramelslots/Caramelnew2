@@ -326,4 +326,12 @@ export const playMysteryRevealBatch = async (bookEvents: BookEventOfType<'myster
 			reelSymbol.symbolState = 'static';
 		}
 	}
+
+	// Mystery reveal updates reelSymbol.rawSymbol in place, but the reel
+	// engine's prev/target arrays still hold the pre-reveal M stack. The
+	// next preSpin scrolls those stale symbols back through the column.
+	const settledBoard = stateGame.board.map((reel) =>
+		reel.reelState.symbols.slice(0, reel.reelLength).map(({ rawSymbol }) => ({ ...rawSymbol })),
+	);
+	stateGameDerived.enhancedBoard.settle(settledBoard);
 };
