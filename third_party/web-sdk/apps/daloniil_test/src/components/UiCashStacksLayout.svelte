@@ -100,7 +100,12 @@
 	// Win amount приходит в book event как int (cents), нужен свой форматтер.
 	const formatWinAmount = (v: number) => bookEventAmountToCurrencyString(v);
 
-	// WIN в HUD: показываем после setTotalWin, скрываем при следующем bet (winBookEventAmount → 0).
+	// WIN в HUD: значение просто появляется (без tween/count-up). Синхронность
+	// с доской обеспечивается тем, что setWin-хендлер обновляет
+	// stateBet.winBookEventAmount ДО await'а доски — поэтому цифра в баре
+	// возникает в момент начала целебрации и совпадает с конечным значением
+	// count-up'а на доске. Скрывается на следующем bet'е, когда playBet
+	// /onNewGameStart сбрасывают winBookEventAmount → 0.
 	const showWin = $derived(stateBet.winBookEventAmount > 0);
 
 	const LABEL_STYLE = {

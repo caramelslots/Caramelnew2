@@ -11,11 +11,15 @@ import { stateGame, stateGameDerived } from './stateGame.svelte';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
 import config from './config';
-import { WIN_INFO_PRE_DELAY_MS } from './constants';
+import { WIN_INFO_PRE_DELAY_MS, MYSTERY_REVEAL_PRE_DELAY_MS } from './constants';
 import { toRevealedRawSymbol } from './utils';
 
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
-	if (winLevelData?.alias === 'max') eventEmitter.broadcastAsync({ type: 'uiHide' });
+	// Wincap (level 10) hides UI — the count-up runs ~32s and a visible HUD
+	// would otherwise stay live during the celebration. After the 4-tier
+	// rework the wincap alias is `sensational` (shared with level 9), so we
+	// gate on `level === 10` instead of an alias string.
+	if (winLevelData?.level === 10) eventEmitter.broadcastAsync({ type: 'uiHide' });
 	if (winLevelData?.sound?.sfx) {
 		eventEmitter.broadcast({ type: 'soundOnce', name: winLevelData.sound.sfx });
 	}
@@ -40,6 +44,10 @@ const winLevelSoundsStop = () => {
 
 const animateSymbols = async ({ positions }: { positions: Position[] }) => {
 	eventEmitter.broadcast({ type: 'boardShow' });
+	// Поднимаем флаг ДО broadcast'а — символы вне выигрыша начнут плавно
+	// затемняться синхронно со стартом win-bounce. Сбрасывается в `reveal`
+	// при старте следующего спина (см. ниже).
+	stateGame.winSpotlightActive = true;
 	await eventEmitter.broadcastAsync({
 		type: 'boardWithAnimateSymbols',
 		symbolPositions: positions,
@@ -53,6 +61,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			eventEmitter.broadcast({ type: 'stopButtonEnable' });
 			recordBookEvent({ bookEvent });
 		}
+
+		// Сброс подсветки от предыдущего спина: пока крутятся барабаны и
+		// символы заново «приземляются», alpha должен быть 1 — иначе турбо-
+		// skip оставит часть символов затемнёнными в новом спине.
+		stateGame.winSpotlightActive = false;
 
 		stateGame.gameType = bookEvent.gameType;
 		await stateGameDerived.enhancedBoard.spin({
@@ -173,6 +186,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	setWin: async (bookEvent: BookEventOfType<'setWin'>) => {
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
 
+		// Цифра WIN в HUD должна появляться в момент старта целебрации, а не
+		// после её окончания. По умолчанию pipeline такой: setWin (await доски)
+		// → setTotalWin (обновляет бар). Поднимаем кумулятив ДО await'а:
+		// math-инвариант гарантирует, что (prev + setWin.amount) ≡ setTotalWin.amount
+		// (см. books_*.ts), поэтому последующий setTotalWin становится no-op'ом.
+		stateBet.winBookEventAmount = stateBet.winBookEventAmount + bookEvent.amount;
+
 		eventEmitter.broadcast({ type: 'winShow' });
 		winLevelSoundsPlay({ winLevelData });
 		await eventEmitter.broadcastAsync({
@@ -250,6 +270,14 @@ export const playMysteryRevealBatch = async (bookEvents: BookEventOfType<'myster
 	if (bookEvents.length === 0) return;
 
 	const syncAnimation = bookEvents.length > 1;
+
+	// Reels stagger their landing (later reels carry more padding), so the
+	// last-stopping reel transitions to `land` in the same tick as
+	// `enhancedBoard.spin()` resolves. Without this pause, M-cells on that
+	// reel skip the `?` static frame entirely and snap straight into the
+	// reveal spine. Pause once for the whole batch so all reels show the
+	// question mark for a guaranteed window before the reveal.
+	await waitForTimeout(MYSTERY_REVEAL_PRE_DELAY_MS);
 
 	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_win' });
 	await eventEmitter.broadcastAsync({

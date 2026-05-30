@@ -1,5 +1,31 @@
 import { SECOND } from 'constants-shared/time';
 
+/**
+ * Cash Stacks 4-tier win-level visual map.
+ *
+ * MUST stay in sync with math-sdk override in
+ * `third_party/math-sdk/games/0_0_daloniil_test/game_config.py`
+ * (`GameConfig.get_win_level`):
+ *
+ *   1..5  → no full-screen banner, just count-up ticker
+ *   6     → BIG WIN          (10x..50x)
+ *   7     → SUPER WIN        (50x..100x)
+ *   8     → EPIC WIN         (100x..250x)
+ *   9..10 → SENSATIONAL WIN  (250x..wincap..∞)
+ *
+ * Spine animation names (`big_win_*`, `super_win_*`, `epic_win_*`,
+ * `max_win_*`) reference baked-in sets inside
+ * `static/assets/spines/bigwin/mm_bigwin.json`. The `mega_win_*` set is
+ * still present in the spine but no longer referenced (kept as dead
+ * asset to avoid an art rebuild).
+ *
+ * TODO (art):
+ *   `sensational` reuses `max_win_*` spine, so the on-screen banner
+ *   currently renders as "MAX WIN" (baked into the atlas). Replace with
+ *   a dedicated `sensational_win_*` set when art delivers it. The
+ *   in-data `text` field is already 'SENSATIONAL WIN' so DevButtons /
+ *   logging surfaces the new label correctly.
+ */
 export const winLevelMap = {
 	1: {
 		level: 1,
@@ -51,7 +77,7 @@ export const winLevelMap = {
 		alias: 'big',
 		type: 'big',
 		text: 'BIG WIN',
-		presentDuration: 6 * SECOND,
+		presentDuration: 7 * SECOND,
 		sound: { sfx: undefined, bgm: 'bgm_winlevel_big' },
 		animation: { intro: 'big_win_intro', idle: 'big_win_idle', outro: 'big_win_exit' },
 	},
@@ -60,33 +86,33 @@ export const winLevelMap = {
 		alias: 'superwin',
 		type: 'big',
 		text: 'SUPER WIN',
-		presentDuration: 18 * SECOND,
+		presentDuration: 16 * SECOND,
 		sound: { sfx: undefined, bgm: 'bgm_winlevel_superwin' },
 		animation: { intro: 'super_win_intro', idle: 'super_win_idle', outro: 'super_win_exit' },
 	},
 	8: {
 		level: 8,
-		alias: 'mega',
-		type: 'big',
-		text: 'MEGA WIN',
-		presentDuration: 20 * SECOND,
-		sound: { sfx: undefined, bgm: 'bgm_winlevel_mega' },
-		animation: { intro: 'mega_win_intro', idle: 'mega_win_idle', outro: 'mega_win_exit' },
-	},
-	9: {
-		level: 9,
 		alias: 'epic',
 		type: 'big',
-		text: 'EPIC WIN!',
-		presentDuration: 26 * SECOND,
+		text: 'EPIC WIN',
+		presentDuration: 22 * SECOND,
 		sound: { sfx: undefined, bgm: 'bgm_winlevel_epic' },
 		animation: { intro: 'epic_win_intro', idle: 'epic_win_idle', outro: 'epic_win_exit' },
 	},
+	9: {
+		level: 9,
+		alias: 'sensational',
+		type: 'big',
+		text: 'SENSATIONAL WIN',
+		presentDuration: 30 * SECOND,
+		sound: { sfx: undefined, bgm: 'bgm_winlevel_max' },
+		animation: { intro: 'max_win_intro', idle: 'max_win_idle', outro: 'max_win_exit' },
+	},
 	10: {
 		level: 10,
-		alias: 'max',
+		alias: 'sensational',
 		type: 'big',
-		text: 'MAX WIN',
+		text: 'SENSATIONAL WIN',
 		presentDuration: 32 * SECOND,
 		sound: { sfx: undefined, bgm: 'bgm_winlevel_max' },
 		animation: { intro: 'max_win_intro', idle: 'max_win_idle', outro: 'max_win_exit' },

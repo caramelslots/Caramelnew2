@@ -91,16 +91,17 @@
 	};
 
 	// === Win Levels (setWin) ===
-	// Суммы — ориентировочные для демо countup. amount в долях ставки
-	// (см. bookEventAmountToCurrencyString). Реальные пороги winLevel
-	// определяет math (game_config.wincap_thresholds).
+	// Cash Stacks 4-tier rework: см. winLevelMap.ts и
+	// math-sdk/games/0_0_daloniil_test/game_config.py (`get_win_level`).
+	// `amount` — book-event units (BOOK_AMOUNT_MULTIPLIER=100 → 1x = 100).
+	// Каждое демо-значение лежит в середине соответствующего диапазона
+	// (по умолчанию проигрывается на ставке $1, так что 30x = $30 и т. д.).
+	const x = 100; // 1x in book-event units
 	const WIN_LEVEL_PRESETS: Array<{ level: WinLevel; amount: number; label: string }> = [
-		{ level: 3, amount: 500, label: 'Small' },
-		{ level: 6, amount: 50_000, label: 'BIG WIN' },
-		{ level: 7, amount: 120_000, label: 'SUPER WIN' },
-		{ level: 8, amount: 300_000, label: 'MEGA WIN' },
-		{ level: 9, amount: 800_000, label: 'EPIC WIN' },
-		{ level: 10, amount: 2_500_000, label: 'MAX WIN' },
+		{ level: 6, amount: 30 * x, label: 'BIG WIN (30x)' },
+		{ level: 7, amount: 75 * x, label: 'SUPER WIN (75x)' },
+		{ level: 8, amount: 175 * x, label: 'EPIC WIN (175x)' },
+		{ level: 9, amount: 1000 * x, label: 'SENSATIONAL (1000x)' },
 	];
 
 	const playSetWin = (level: WinLevel, amount: number) =>
@@ -171,6 +172,40 @@
 		reel(['H4', 'H3', 'L4', 'L2', 'L1']),
 		reel(['H3', 'L3', 'L4', 'H1', 'H1']),
 	];
+
+	/*
+		Mystery per-reel: M-стек кладётся только на указанный reelIndex,
+		на остальных барабанах — нейтральная "обычная" комбинация без B,
+		чтобы reveal не триггерил FS-intro и не было выигрышей по линиям.
+		Каждая кнопка демонстрирует mysteryReveal на конкретной полосе.
+
+		`revealedSymbol` подобран так, чтобы каждый reel раскрывался
+		разным символом — полезно для визуальной проверки спайн-трэков
+		`mid_multiplier_pay` (high/mid/low tier по MYSTERY_REVEAL_TIER).
+	*/
+	const NEUTRAL_REEL_FILL: string[][] = [
+		['L1', 'L2', 'L3', 'L4', 'L1'],
+		['L4', 'L3', 'L2', 'L1', 'L4'],
+		['L2', 'L1', 'L4', 'L3', 'L2'],
+		['L3', 'L4', 'L1', 'L2', 'L3'],
+		['L1', 'L2', 'L3', 'L4', 'L1'],
+	];
+
+	const buildMysteryBoardForReel = (reelIndex: number) =>
+		NEUTRAL_REEL_FILL.map((symbols, idx) =>
+			idx === reelIndex ? reel(['M', 'M', 'M', 'M', 'M']) : reel(symbols),
+		);
+
+	// Тир раскрытия по reelIndex (см. MYSTERY_REVEAL_TIER в constants.ts).
+	// 0→H2 (high), 1→H4 (high), 2→L1 (low), 3→W (high+wild_dynamite), 4→L3 (low).
+	const MYSTERY_REVEAL_DEMO: Record<number, string> = {
+		0: 'H2',
+		1: 'H4',
+		2: 'L1',
+		3: 'W',
+		4: 'L3',
+	};
+	const MYSTERY_REEL_INDICES = [0, 1, 2, 3, 4] as const;
 
 	const playLineWin = () =>
 		guard(async () => {
@@ -269,6 +304,28 @@
 			await playBookEvents([
 				reveal(FS_MYSTERY_BOARD_3, 'freegame'),
 				...asEvents(baseEvents.mysteryRevealTriple),
+			]);
+		});
+
+	/*
+		Один M-стек на выбранном барабане → mysteryReveal на нём же.
+		Всё в padded-координатах (row 1..5 = visible 0..4); MYSTERY_REVEAL_TIER
+		подбирает high/mid/low spine-clip автоматически по revealedSymbol.
+
+		FS gameType (а не basegame) — потому что mysteryReveal handler в
+		bookEventHandlerMap проигрывает spine-анимацию на reel mask, и в
+		basegame reels-mask не активен (см. stateGame.mysteryReels).
+	*/
+	const playMysteryOnReel = (reelIndex: number) =>
+		guard(async () => {
+			const revealedSymbol = MYSTERY_REVEAL_DEMO[reelIndex] ?? 'H2';
+			await playBookEvents([
+				reveal(buildMysteryBoardForReel(reelIndex), 'freegame'),
+				asEvent({
+					type: 'mysteryReveal',
+					revealedSymbol,
+					positions: [1, 2, 3, 4, 5].map((row) => ({ reel: reelIndex, row })),
+				}),
 			]);
 		});
 
@@ -406,14 +463,31 @@
 					>
 						Mystery Reveal (1 reel)
 					</button>
-					<button
-						type="button"
-						disabled={busy}
-						title="3 sticky reels параллельный reveal (super bonus)"
-						onclick={playMysteryRevealTriple}
-					>
-						Mystery Reveal ×3
-					</button>
+				<button
+					type="button"
+					disabled={busy}
+					title="3 sticky reels параллельный reveal (super bonus)"
+					onclick={playMysteryRevealTriple}
+				>
+					Mystery Reveal ×3
+				</button>
+				</div>
+			</section>
+
+			<section>
+				<h4>Mystery (per reel)</h4>
+				<div class="grid">
+					{#each MYSTERY_REEL_INDICES as reelIndex (reelIndex)}
+						{@const revealedSymbol = MYSTERY_REVEAL_DEMO[reelIndex] ?? 'H2'}
+						<button
+							type="button"
+							disabled={busy}
+							title={`reveal с M-стеком на reel ${reelIndex} → mysteryReveal раскрывает ${revealedSymbol}`}
+							onclick={() => playMysteryOnReel(reelIndex)}
+						>
+							Mystery {reelIndex + 1}
+						</button>
+					{/each}
 				</div>
 			</section>
 

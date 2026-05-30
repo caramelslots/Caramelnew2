@@ -20,19 +20,27 @@
 		 * Used together by the reel-level landing squash (`landScaleY`) and
 		 * the derived jelly stretch (`landScaleX`) — see createReelForSpinning.
 		 */
-		scaleX?: number;
-		scaleY?: number;
-		children: Snippet;
-	};
+	scaleX?: number;
+	scaleY?: number;
+	/**
+	 * Прозрачность всей символьной обёртки. Используется для затемнения
+	 * невыигрышных символов во время win-анимации — см. DIM_NON_WINNING и
+	 * stateGame.winSpotlightActive. Применяется на уровне родительского
+	 * Container'а, поэтому автоматически касается sprite/spine/multiplier-
+	 * текста — отдельно править вложенные компоненты не нужно.
+	 */
+	alpha?: number;
+	children: Snippet;
+};
 
-	const props: Props = $props();
-	const boardContext = getContextBoard();
-	const show = $derived(
-		(boardContext.animate && props.animating) || (!boardContext.animate && !props.animating),
-	);
-	const top = 0;
-	const bottom = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
-	const inFrame = $derived(props.y >= top && props.y <= bottom);
+const props: Props = $props();
+const boardContext = getContextBoard();
+const show = $derived(
+	(boardContext.animate && props.animating) || (!boardContext.animate && !props.animating),
+);
+const top = 0;
+const bottom = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
+const inFrame = $derived(props.y >= top && props.y <= bottom);
 </script>
 
 {#if props.debug || (show && inFrame)}
@@ -40,6 +48,7 @@
 		x={props.x}
 		y={props.y}
 		scale={{ x: props.scaleX ?? 1, y: props.scaleY ?? 1 }}
+		alpha={props.alpha ?? 1}
 	>
 		{@render props.children()}
 	</Container>

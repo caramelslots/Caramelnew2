@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { Tween } from 'svelte/motion';
-	import { sineOut, sineIn } from 'svelte/easing';
+	import { sineOut, sineIn, sineInOut } from 'svelte/easing';
 	import { untrack } from 'svelte';
 
 	import Symbol from './Symbol.svelte';
 	import SymbolWrap from './SymbolWrap.svelte';
 	import { getSymbolInfo, getSymbolX } from '../game/utils';
-	import { WIN_BOUNCE } from '../game/constants';
+	import { WIN_BOUNCE, DIM_NON_WINNING } from '../game/constants';
+	import { stateGame } from '../game/stateGame.svelte';
 	import type { ReelSymbol } from '../game/stateGame.svelte';
 
 	type Props = {
@@ -25,6 +26,23 @@
 	// scale doesn't fight the wild_dynamite animation.
 	const winScale = new Tween(1);
 	const winYOffset = new Tween(0);
+
+	// Затемнение невыигрышных символов на время подсветки выигрыша.
+	// `winSpotlightActive` поднимается хелпером `animateSymbols`
+	// (bookEventHandlerMap) и сбрасывается в `reveal` следующего спина.
+	// Сам символ остаётся ярким, если он сам в 'win'/'postWinStatic'.
+	const isWinningState = $derived(
+		props.reelSymbol.symbolState === 'win' || props.reelSymbol.symbolState === 'postWinStatic',
+	);
+	const dimAlphaTween = new Tween(1);
+
+	$effect(() => {
+		const target = stateGame.winSpotlightActive && !isWinningState ? DIM_NON_WINNING.alpha : 1;
+		const duration = target < 1 ? DIM_NON_WINNING.fadeInMs : DIM_NON_WINNING.fadeOutMs;
+		untrack(() => {
+			void dimAlphaTween.set(target, { duration, easing: sineInOut });
+		});
+	});
 
 	const runWinBounce = async () => {
 		const peak = WIN_BOUNCE.scalePeak;
@@ -63,6 +81,7 @@
 	y={props.reelSymbol.symbolY() + winYOffset.current}
 	scaleX={props.reelSymbol.landScaleX() * winScale.current}
 	scaleY={props.reelSymbol.landScaleY() * winScale.current}
+	alpha={dimAlphaTween.current}
 	animating={symbolInfo.type === 'spine' &&
 		(props.reelSymbol.symbolState === 'land' ||
 			props.reelSymbol.symbolState === 'win' ||

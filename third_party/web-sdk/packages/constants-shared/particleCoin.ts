@@ -69,6 +69,20 @@ export const LEVEL_PARTICLE_COIN_MAP = {
 		emitterLifetime: -1,
 		spawnOption: { type: 'rect', spawnRect: { x: -250, y: 0, w: 500, h: 0 } },
 	},
+	// Cash Stacks 4-tier rework — `sensational` is the top win banner
+	// (250x..wincap+). Slightly denser/faster than `max` to read as the
+	// crescendo above `epic`.
+	sensational: {
+		speedOption: {
+			list: [
+				{ value: 1150, time: 0 },
+				{ value: 1250, time: 0 },
+			],
+		},
+		frequency: 0.09,
+		emitterLifetime: -1,
+		spawnOption: { type: 'rect', spawnRect: { x: -260, y: 0, w: 520, h: 0 } },
+	},
 } as const;
 
 export const LEVEL_PARTICLE_COIN_MAP_BURST = {
@@ -146,5 +160,17 @@ export const LEVEL_PARTICLE_COIN_MAP_BURST = {
 		emitterLifetime: 1,
 		scaleOption: { list: [{ value: 0.35 }, { value: 0.35 }] },
 		spawnOption: { type: 'rect', spawnRect: { x: -225, y: 0, w: 450, h: 0 } },
+	},
+	sensational: {
+		speedOption: {
+			list: [
+				{ value: 1200, time: 0 },
+				{ value: 1300, time: 0 },
+			],
+		},
+		frequency: 0.018,
+		emitterLifetime: 1,
+		scaleOption: { list: [{ value: 0.35 }, { value: 0.35 }] },
+		spawnOption: { type: 'rect', spawnRect: { x: -240, y: 0, w: 480, h: 0 } },
 	},
 } as const;

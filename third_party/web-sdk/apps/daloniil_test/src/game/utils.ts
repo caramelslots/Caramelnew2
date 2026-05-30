@@ -8,7 +8,7 @@ import {
 	REEL_PADDING,
 	SYMBOL_INFO_MAP,
 	BOARD_DIMENSIONS,
-	MYSTERY_REVEAL_TIER,
+	MYSTERY_REVEAL_ANIMATION,
 	MYSTERY_REVEAL_SYNC_ANIMATION,
 	M_SIZE,
 } from './constants';
@@ -93,10 +93,14 @@ export const getMysteryRevealSymbolInfo = (
 	revealedSymbol: SymbolName,
 	options?: { syncAnimation?: boolean },
 ) => {
-	const tier = MYSTERY_REVEAL_TIER[revealedSymbol] ?? 'mid';
+	// Designer combined skeleton ships a single `Mystery/explosion` track
+	// that handles every reveal — `revealedSymbol` is no longer used to
+	// pick a tier-specific animation. We still take it as a parameter so
+	// the caller signature stays stable for math-emitted reveal events.
+	void revealedSymbol;
 	const animationName = options?.syncAnimation
 		? MYSTERY_REVEAL_SYNC_ANIMATION
-		: `${tier}_multiplier_pay`;
+		: MYSTERY_REVEAL_ANIMATION;
 	return {
 		type: 'spine' as const,
 		assetKey: 'M' as const,

@@ -1,7 +1,8 @@
 """Cash Stacks (daloniil_test) — game configuration.
 
-5 reels × 5 rows, 30 paylines, RTP 96.01%, max win ×2500.
-Donor: 0_0_lines. См. games/0_0_daloniil_test/readme.txt.
+5 reels × 5 rows, 25 paylines (smooth-only), RTP 96.01%, max win ×2500.
+Donor: 0_0_lines. См. games/0_0_daloniil_test/readme.txt и
+MATH_REDESIGN_PLAN.md (volatility / no-jump paylines).
 """
 
 import os
@@ -37,13 +38,19 @@ class GameConfig(Config):
         # Wild платит только на 5 of a kind (см. 0_0_lines readme).
         # B (Bonus) — scatter-like trigger, без line-pay.
         #
-        # M1 (REDESIGN_PLAN §2.1): rescale ×1.5 для компенсации уменьшения
-        # количества линий с 30 до 20 (см. self.paylines ниже). Точные
-        # значения подкрутит optimization-run; первое приближение —
-        # пропорциональное масштабирование старых выплат.
+        # MATH_REDESIGN_PLAN.md §2.2 (Опция A): убрали 3-of-a-kind у Low
+        # символов — это решает «много линий горит, выигрыш < ставки».
+        # Минимум 3-OAK low был 0.1 × bet (Stake RGS: payout cents %10 == 0)
+        # × ~5–8 линий на хит → +0.5–0.8 bet, что меньше ставки даже при
+        # «ярком» визуале. Удалив 3OAK low, мы перебрасываем эту RTP-долю
+        # в 4-OAK (×1.67) и 5-OAK (×2) low, поэтому минимальный выигрыш
+        # становится 4×L = 0.5 × bet × N линий.
+        #
+        # High-tier paytable не трогаем (§2.3 — отдельный шаг).
+        # Финальные веса (RTP=96.01%) — подкрутит optimization-run.
         self.paytable = {
             (5, "W"): 225.0,
-            # H1 (highest)
+            # H1 (highest) — без изменений
             (5, "H1"): 150.0,
             (4, "H1"): 15.0,
             (3, "H1"): 3.0,
@@ -56,26 +63,27 @@ class GameConfig(Config):
             (5, "H4"): 30.0,
             (4, "H4"): 3.0,
             (3, "H4"): 0.7,  # Stake RGS: payout cents must be multiple of 10
-            # Low symbols — все одинаковые в Cash Stacks paytable
-            (5, "L1"): 1.5,
-            (4, "L1"): 0.3,
-            (3, "L1"): 0.1,  # было 0.15 → невалидно (15c % 10 != 0)
-            (5, "L2"): 1.5,
-            (4, "L2"): 0.3,
-            (3, "L2"): 0.1,
-            (5, "L3"): 1.5,
-            (4, "L3"): 0.3,
-            (3, "L3"): 0.1,
-            (5, "L4"): 1.5,
-            (4, "L4"): 0.3,
-            (3, "L4"): 0.1,
+            # Low symbols — все одинаковые. 3-OAK УДАЛЁН (Опция A).
+            # 4-OAK ×1.67 (0.3 → 0.5), 5-OAK ×2 (1.5 → 3.0).
+            (5, "L1"): 3.0,
+            (4, "L1"): 0.5,
+            (5, "L2"): 3.0,
+            (4, "L2"): 0.5,
+            (5, "L3"): 3.0,
+            (4, "L3"): 0.5,
+            (5, "L4"): 3.0,
+            (4, "L4"): 0.5,
         }
 
-        # === 20 paylines (5×5, rows 0..4) ===
-        # M1 (REDESIGN_PLAN §2.1): уменьшено с 30 до 20 для hi-vol профиля,
-        # лучше сочетающегося с Mystery Reels механикой и buy-bonus
-        # позиционированием. Сгруппировано в 4 семейства × 5 линий для
-        # симметрии и читаемости. Каждая линия — 5 индексов рядов.
+        # === 25 paylines (5×5, rows 0..4) — все smooth ===
+        # MATH_REDESIGN_PLAN.md §2.1: убрали 6 «прыгающих» линий (с
+        # delta=2 между соседними барабанами) и расширили набор до 25
+        # smooth-линий, разбитых на 7 семейств. Все линии: |Δ row| ≤ 1
+        # между соседними барабанами — глаз «считает» их без прыжков.
+        #
+        # ВАЖНО: web-sdk apps/daloniil_test/src/game/config.ts:paylines
+        # ДОЛЖЕН зеркалить этот dict ключ-в-ключ. PaylineOverlay смотрит
+        # rows по ключу из meta.lineIndex (см. config.ts:78-83).
         self.paylines = {
             # Группа 1: 5 горизонталей
             1: [0, 0, 0, 0, 0],
@@ -83,24 +91,32 @@ class GameConfig(Config):
             3: [2, 2, 2, 2, 2],
             4: [3, 3, 3, 3, 3],
             5: [4, 4, 4, 4, 4],
-            # Группа 2: V-family (V-shapes + zigzag M, все «опускаются вниз»)
+            # Группа 2: V «улыбка»
             6: [0, 1, 2, 1, 0],
             7: [1, 2, 3, 2, 1],
             8: [2, 3, 4, 3, 2],
-            9: [0, 2, 4, 2, 0],   # wide V
-            10: [0, 2, 0, 2, 0],  # zigzag M
-            # Группа 3: ^-family (inverted V + zigzag W, все «поднимаются вверх»)
-            11: [4, 3, 2, 3, 4],
-            12: [3, 2, 1, 2, 3],
-            13: [2, 1, 0, 1, 2],
-            14: [4, 2, 0, 2, 4],  # wide ^
-            15: [4, 2, 4, 2, 4],  # zigzag W
-            # Группа 4: Diagonals & swooshes
-            16: [0, 1, 2, 3, 4],  # diagonal down
-            17: [4, 3, 2, 1, 0],  # diagonal up
-            18: [0, 0, 2, 4, 4],  # swoosh down
-            19: [4, 4, 2, 0, 0],  # swoosh up
-            20: [2, 2, 3, 4, 4],  # step-shape
+            # Группа 3: ^ «бровь»
+            9:  [4, 3, 2, 3, 4],
+            10: [3, 2, 1, 2, 3],
+            11: [2, 1, 0, 1, 2],
+            # Группа 4: диагонали
+            12: [0, 1, 2, 3, 4],
+            13: [4, 3, 2, 1, 0],
+            # Группа 5: hooks край → центр
+            14: [0, 1, 2, 2, 2],
+            15: [4, 3, 2, 2, 2],
+            16: [2, 2, 2, 1, 0],
+            17: [2, 2, 2, 3, 4],
+            # Группа 6: ступеньки от края
+            18: [0, 0, 1, 2, 2],
+            19: [4, 4, 3, 2, 2],
+            20: [2, 2, 1, 0, 0],
+            21: [2, 2, 3, 4, 4],
+            # Группа 7: горизонталь с провалом в центр
+            22: [0, 1, 1, 1, 0],
+            23: [4, 3, 3, 3, 4],
+            24: [1, 0, 0, 0, 1],
+            25: [3, 4, 4, 4, 3],
         }
 
         self.include_padding = True
@@ -459,3 +475,39 @@ class GameConfig(Config):
                 ],
             ),
         ]
+
+    # NOTE: Cash Stacks 4-tier win-level map (overrides SDK default 10-tier
+    # `standard`/`endFeature` tables in src/config/config.py).
+    #
+    # Front-end (web-sdk apps/daloniil_test/src/game/winLevelMap.ts) interprets
+    # the integer level returned here, so any change MUST be mirrored there.
+    #
+    #   1..5 → no full-screen banner, just count-up ticker
+    #   6    → BIG WIN          (10x..50x)
+    #   7    → SUPER WIN        (50x..100x)
+    #   8    → EPIC WIN         (100x..250x)
+    #   9    → SENSATIONAL WIN  (250x..wincap=2500x)
+    #   10   → SENSATIONAL WIN  (wincap..∞ — same visual tier as 9)
+    #
+    # Same table is used for both base game (`setWin`) and FS outro
+    # (`freeSpinEnd`); `winlevel_key` is accepted for SDK signature
+    # compatibility but ignored.
+    def get_win_level(self, win_amount: float, winlevel_key: str = "standard") -> int:
+        levels = {
+            1: (0.0, 0.1),
+            2: (0.1, 1.0),
+            3: (1.0, 3.0),
+            4: (3.0, 6.0),
+            5: (6.0, 10.0),
+            6: (10.0, 50.0),
+            7: (50.0, 100.0),
+            8: (100.0, 250.0),
+            9: (250.0, self.wincap),
+            10: (self.wincap, float("inf")),
+        }
+        for idx, (lo, hi) in levels.items():
+            if win_amount >= lo and win_amount < hi:
+                return idx
+        # Fallback for floating-point edge at exactly wincap+ε already covered
+        # by level 10 (open upper bound). Anything below 0 → level 1.
+        return 1

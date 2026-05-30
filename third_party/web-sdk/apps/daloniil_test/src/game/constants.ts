@@ -165,6 +165,34 @@ export const zIndexes = {
 
 /** Purple FS pulse (`reelhouse_glow` in BoardFrame) — separate from frame bezel padding. */
 export const REELHOUSE_GLOW_SCALE = { width: 0.62, height: 0.66 } as const;
+
+/**
+ * Geometry of the parchment playfield inside the desk artwork
+ * (`boardDay` / `boardNight`, 1920×940). Measured from the day variant —
+ * night uses the same composition. Values are fractions of the source image.
+ *
+ *   PARCH_*_FRAC     — parchment bbox size as a fraction of image size.
+ *   PARCH_OFFSET_*   — parchment-center offset from image-center
+ *                      (positive = right / down).
+ *
+ * Used by `BoardFrame.svelte` to scale the desk image so the parchment
+ * wraps the 5×5 board, and to position it so the parchment center coincides
+ * with the board-frame center.
+ */
+export const DESK_PARCHMENT = {
+	widthFrac: 0.3042,
+	heightFrac: 0.5277,
+	offsetXFrac: 0.0078,
+	offsetYFrac: 0.0819,
+} as const;
+
+/**
+ * Padding around the 5×5 board for the parchment area (the playable cream
+ * region inside the neon border). 1.0 = parchment exactly matches the board;
+ * >1.0 leaves a margin around the symbols. Independent X/Y so the parchment
+ * (which is wider than tall) can grow asymmetrically.
+ */
+export const DESK_PARCHMENT_PADDING = { width: 1.04, height: 1.04 } as const;
 /**
  * Per-layout board center offsets (game design-space px, +x right, −y up).
  * Each value shifts the reel block so it is visually centred inside the
@@ -177,10 +205,10 @@ export const REELHOUSE_GLOW_SCALE = { width: 0.62, height: 0.66 } as const;
  * Portrait (800×1422):             drawer ~144 px → game-area centre ≈ y 350 → offset -150
  */
 export const BOARD_LAYOUT_OFFSETS = {
-	desktop: { x: 0, y: -55 },
-	tablet: { x: 0, y: -45 },
-	landscape: { x: 0, y: -85 },
-	portrait: { x: 0, y: -150 },
+	desktop: { x: 0, y: 5 },
+	tablet: { x: 0, y: 15 },
+	landscape: { x: 0, y: -25 },
+	portrait: { x: 0, y: -90 },
 } as const;
 /** Frame bezel + glow offset from board center (px): +x right, +y down. */
 export const BOARD_FRAME_OFFSET = { x: 6, y: 8 } as const;
@@ -192,21 +220,75 @@ const explosion = {
 	sizeRatios: { width: 1, height: 1 },
 };
 
-// Symbol-level squash spine (`symbolsBounce/*.json`) is no longer used.
-// Landing animation is now a pure Y-axis inertial drop done at the reel
-// level (`removePaddingAndBounceBack` in createReelForSpinning); each
-// symbol stays as its static sprite from spin → land → static, so its
-// width/height never changes. See `BOUNCE_REDESIGN_PLAN.md`.
+// New designer artwork comes from `designer_assets/Symbols/export/` — a
+// single combined spine with bounce/win/explosion animations + per-symbol
+// images. Static frames render as plain sprites (`*Img` assets in
+// `assets.ts`) so spin → land → static stays cheap; only `land`/`win`/
+// `mysteryReveal` instantiate the spine. The reel-level inertial squash
+// (`removePaddingAndBounceBack` in createReelForSpinning) is preserved on
+// top of the per-symbol bounce — they stack visually on landing.
 
-const h1Static = { type: 'sprite', assetKey: 'h1.webp', sizeRatios: { width: 1, height: 1 } };
-const h2Static = { type: 'sprite', assetKey: 'h2.webp', sizeRatios: { width: 1, height: 1 } };
-const h3Static = { type: 'sprite', assetKey: 'h3.webp', sizeRatios: { width: 1, height: 1 } };
-const h4Static = { type: 'sprite', assetKey: 'h4.webp', sizeRatios: { width: 1, height: 1 } };
+const h1Static = { type: 'sprite', assetKey: 'H1Img', sizeRatios: { width: 1, height: 1 } };
+const h2Static = { type: 'sprite', assetKey: 'H2Img', sizeRatios: { width: 1, height: 1 } };
+const h3Static = { type: 'sprite', assetKey: 'H3Img', sizeRatios: { width: 1, height: 1 } };
+const h4Static = { type: 'sprite', assetKey: 'H4Img', sizeRatios: { width: 1, height: 1 } };
 
-const l1Static = { type: 'sprite', assetKey: 'l1.webp', sizeRatios: { width: 1, height: 1 } };
-const l2Static = { type: 'sprite', assetKey: 'l2.webp', sizeRatios: { width: 1, height: 1 } };
-const l3Static = { type: 'sprite', assetKey: 'l3.webp', sizeRatios: { width: 1, height: 1 } };
-const l4Static = { type: 'sprite', assetKey: 'l4.webp', sizeRatios: { width: 1, height: 1 } };
+const l1Static = { type: 'sprite', assetKey: 'L1Img', sizeRatios: { width: 1, height: 1 } };
+const l2Static = { type: 'sprite', assetKey: 'L2Img', sizeRatios: { width: 1, height: 1 } };
+const l3Static = { type: 'sprite', assetKey: 'L3Img', sizeRatios: { width: 1, height: 1 } };
+const l4Static = { type: 'sprite', assetKey: 'L4Img', sizeRatios: { width: 1, height: 1 } };
+
+// Per-symbol bounce on landing — slot-driven attachment matches the
+// asset key, so each spine animates only the H_/L_ image we want.
+const bounceSizeRatios = { width: 1, height: 1 };
+const h1Bounce = {
+	type: 'spine',
+	assetKey: 'H1',
+	animationName: 'High_1/bounce',
+	sizeRatios: bounceSizeRatios,
+};
+const h2Bounce = {
+	type: 'spine',
+	assetKey: 'H2',
+	animationName: 'High_2/bounce',
+	sizeRatios: bounceSizeRatios,
+};
+const h3Bounce = {
+	type: 'spine',
+	assetKey: 'H3',
+	animationName: 'High_3/bounce',
+	sizeRatios: bounceSizeRatios,
+};
+const h4Bounce = {
+	type: 'spine',
+	assetKey: 'H4',
+	animationName: 'High_4/bounce',
+	sizeRatios: bounceSizeRatios,
+};
+const l1Bounce = {
+	type: 'spine',
+	assetKey: 'L1',
+	animationName: 'Low_1/bounce',
+	sizeRatios: bounceSizeRatios,
+};
+const l2Bounce = {
+	type: 'spine',
+	assetKey: 'L2',
+	animationName: 'Low_2/bounce',
+	sizeRatios: bounceSizeRatios,
+};
+const l3Bounce = {
+	type: 'spine',
+	assetKey: 'L3',
+	animationName: 'Low_3/bounce',
+	sizeRatios: bounceSizeRatios,
+};
+const l4Bounce = {
+	type: 'spine',
+	assetKey: 'L4',
+	animationName: 'Low_4/bounce',
+	sizeRatios: bounceSizeRatios,
+};
 
 /**
  * Per-symbol win animation — used for any symbol whose `win` entry is
@@ -230,8 +312,27 @@ export const WIN_BOUNCE = {
 	downMs: 280,
 };
 
-/** M spine pay-tier during `mysteryReveal` (symbols2/M.json). */
-export const M_SIZE = 0.35;
+/**
+ * Затемнение невыигрышных символов во время win-анимации.
+ * Пока проигрываются paylines / scatter highlight / bonus collect,
+ * все символы вне состояния `win`/`postWinStatic` получают пониженный
+ * alpha на уровне родительского Container — игроку проще считать,
+ * какие позиции «сыграли».
+ *
+ * Управляется флагом `stateGame.winSpotlightActive` (см. stateGame.svelte.ts),
+ * который поднимается хелпером `animateSymbols` в bookEventHandlerMap.ts
+ * и сбрасывается при старте следующего спина (`reveal` handler).
+ */
+export const DIM_NON_WINNING = {
+	alpha: 0.35,
+	fadeInMs: 180,
+	fadeOutMs: 240,
+};
+
+/** Mystery reveal spine size — `Mystery/explosion` from designer combined
+ * skeleton renders aura + sign + flying parts; container scales the whole
+ * thing relative to SYMBOL_SIZE. 1.0 keeps the explosion within one cell. */
+export const M_SIZE = 1.0;
 
 export const MYSTERY_REVEAL_TIER: Record<string, 'high' | 'mid' | 'low'> = {
 	H1: 'high',
@@ -245,35 +346,97 @@ export const MYSTERY_REVEAL_TIER: Record<string, 'high' | 'mid' | 'low'> = {
 	L4: 'low',
 };
 
+/**
+ * Pause between reels finishing landing and mystery reveal animation
+ * starting. Without it, M-cells on the last-stopping reel transition
+ * into the reveal spine in the same tick they enter `land` state, so
+ * the static `?` sprite is invisible to the player. Mirrors the same
+ * idea as `WIN_INFO_PRE_DELAY_MS` for paylines.
+ */
+export const MYSTERY_REVEAL_PRE_DELAY_MS = 400;
+
 /** Pause after mystery cells finish reveal, before winInfo / next reveal spin. */
 export const MYSTERY_REVEAL_POST_DELAY_MS = 1000;
 
 /** Pause after reels finish landing, before paylines/win animation start. */
 export const WIN_INFO_PRE_DELAY_MS = 100;
 
-/** Shared M spine clip when multiple mystery columns reveal at once. */
-export const MYSTERY_REVEAL_SYNC_ANIMATION = 'mid_multiplier_pay';
+/** Shared Mystery spine clip — designer combined skeleton has a single
+ * explosion track for all reveal types, so synced and independent reveals
+ * use the same animation name. */
+export const MYSTERY_REVEAL_SYNC_ANIMATION = 'Mystery/explosion';
+/** Standalone clip name for one-off reveals (kept distinct so it could be
+ * pointed at a different animation later without touching the sync path). */
+export const MYSTERY_REVEAL_ANIMATION = 'Mystery/explosion';
 
-const bStatic = { type: 'sprite', assetKey: 's.png', sizeRatios: { width: 1, height: 1 } };
-const mStatic = { type: 'sprite', assetKey: 'm.png', sizeRatios: { width: 1, height: 1 } };
+// Bonus rest pose — the kitty's paw lives in a *separate* atlas region
+// from the body in the spine (`Paw` slot vs `Special_1` slot), positioned
+// via the `Paw` bone. The legacy static PNG (`Special_1.png`) bakes both
+// together at slightly different coordinates, so swapping sprite ⇄ spine
+// caused the paw to "jump" / disappear at every state transition. We
+// instead render the same spine in every state and play a synthesised
+// zero-movement `Special_1/idle` clip for static/spin/postWinStatic, so
+// the paw is always pinned at the spine's rest position.
+const bStatic = {
+	type: 'spine' as const,
+	assetKey: 'B' as const,
+	animationName: 'Special_1/idle',
+	sizeRatios: { width: 1, height: 1 },
+};
+const mStatic = { type: 'sprite', assetKey: 'MImg', sizeRatios: { width: 1, height: 1 } };
 
-const wStatic = { type: 'sprite', assetKey: 'w.png', sizeRatios: { width: 1, height: 1 } };
-const wSizeRatios = { width: 1.5 * 0.9, height: SPECIAL_SYMBOL_SIZE * 1.15 };
+const wStatic = { type: 'sprite', assetKey: 'WImg', sizeRatios: { width: 1, height: 1 } };
+const wWinSizeRatios = { width: SPECIAL_SYMBOL_SIZE, height: SPECIAL_SYMBOL_SIZE };
+const bWinSizeRatios = { width: SPECIAL_SYMBOL_SIZE, height: SPECIAL_SYMBOL_SIZE };
+const mRevealSizeRatios = { width: M_SIZE, height: M_SIZE };
+
+// Win celebrations use the dedicated `*Win` skeletons so the win track's
+// rgba timelines drive the text letters; landing/idle uses the slim
+// skeletons (no text slots) so default-skin attachments never leak.
+const wWin = {
+	type: 'spine' as const,
+	assetKey: 'WWin' as const,
+	animationName: 'Special_2/win',
+	sizeRatios: wWinSizeRatios,
+};
+const wBounce = {
+	type: 'spine' as const,
+	assetKey: 'W' as const,
+	animationName: 'Special_2/bounce',
+	sizeRatios: bounceSizeRatios,
+};
+// Bonus landing plays the paw `wave` (parent bone idle) — the cat actually
+// flexes its paw + ears + whiskers on impact instead of just the parent
+// scale squash from `Special_1/bounce`. The reel-level Y-axis squash
+// already provides the impact bounce, so a flat `wave` reads as "kitty
+// settled and waved hello", which matches the designer's reference.
+const bBounce = {
+	type: 'spine' as const,
+	assetKey: 'B' as const,
+	animationName: 'Special_1/wave',
+	sizeRatios: bounceSizeRatios,
+};
+const bWin = {
+	type: 'spine' as const,
+	assetKey: 'BWin' as const,
+	animationName: 'Special_1/win',
+	sizeRatios: bWinSizeRatios,
+};
 
 export const SYMBOL_INFO_MAP = {
-	// H1..H4, L1..L4: same static sprite for spin / land / win / postWin.
-	// On win the icon is animated by a per-symbol Tween in ReelSymbol
-	// (grow + jump up — see WIN_BOUNCE below). The dedicated win spines
-	// (`symbols/h1.json`, `l1.json` etc.) are no longer used for these
-	// symbols. W keeps its win spine (`wild_dynamite`) because gameplay
-	// hooks into the `wildExplode` spine event for sound.
+	// H1..H4, L1..L4: render as the new static PNG everywhere except
+	// `land` — landing plays the per-symbol designer bounce spine
+	// (`High_x/bounce` or `Low_x/bounce`). Win celebration also reuses the
+	// bounce spine so the symbol springs again when it scores; this keeps
+	// the visual consistent with WIN_BOUNCE's translate Tween that
+	// ReelSymbol still applies on top.
 	H1: {
 		explosion,
 		win: h1Static,
 		postWinStatic: h1Static,
 		static: h1Static,
 		spin: h1Static,
-		land: h1Static,
+		land: h1Bounce,
 	},
 	H2: {
 		explosion,
@@ -281,7 +444,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: h2Static,
 		static: h2Static,
 		spin: h2Static,
-		land: h2Static,
+		land: h2Bounce,
 	},
 	H3: {
 		explosion,
@@ -289,7 +452,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: h3Static,
 		static: h3Static,
 		spin: h3Static,
-		land: h3Static,
+		land: h3Bounce,
 	},
 	H4: {
 		explosion,
@@ -297,7 +460,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: h4Static,
 		static: h4Static,
 		spin: h4Static,
-		land: h4Static,
+		land: h4Bounce,
 	},
 	L1: {
 		explosion,
@@ -305,7 +468,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: l1Static,
 		static: l1Static,
 		spin: l1Static,
-		land: l1Static,
+		land: l1Bounce,
 	},
 	L2: {
 		explosion,
@@ -313,7 +476,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: l2Static,
 		static: l2Static,
 		spin: l2Static,
-		land: l2Static,
+		land: l2Bounce,
 	},
 	L3: {
 		explosion,
@@ -321,7 +484,7 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: l3Static,
 		static: l3Static,
 		spin: l3Static,
-		land: l3Static,
+		land: l3Bounce,
 	},
 	L4: {
 		explosion,
@@ -329,28 +492,32 @@ export const SYMBOL_INFO_MAP = {
 		postWinStatic: l4Static,
 		static: l4Static,
 		spin: l4Static,
-		land: l4Static,
+		land: l4Bounce,
 	},
+	// Wild — bounce spine on land, dedicated `Special_2/win` celebration
+	// spine on win (lights up the W/I/L/D letters). Static frames keep the
+	// new `WImg` PNG so spinning is cheap.
 	W: {
 		explosion,
-		postWinStatic: {
-			type: 'sprite',
-			assetKey: 'explodedW.png',
-			sizeRatios: { width: 0.85, height: 0.85 },
-		},
+		postWinStatic: wStatic,
 		static: wStatic,
 		spin: wStatic,
-		win: { type: 'spine', assetKey: 'W', animationName: 'wild_dynamite', sizeRatios: wSizeRatios },
-		land: wStatic,
+		win: wWin,
+		land: wBounce,
 	},
+	// Bonus — same pattern as Wild but with `Special_1/win` (lights up
+	// B/O/N/U/S letters with paw mascot wave).
 	B: {
 		explosion,
 		postWinStatic: bStatic,
 		static: bStatic,
 		spin: bStatic,
-		win: bStatic,
-		land: bStatic,
+		win: bWin,
+		land: bBounce,
 	},
+	// Mystery — `?` sign sprite while waiting for reveal; designer
+	// `Mystery/explosion` spine plays during `mysteryReveal` (handled
+	// dynamically in `getMysteryRevealSymbolInfo`).
 	M: {
 		explosion,
 		postWinStatic: mStatic,
@@ -360,6 +527,17 @@ export const SYMBOL_INFO_MAP = {
 		land: mStatic,
 	},
 } as const;
+
+/** Mystery reveal spine descriptor — exposed so `getSymbolInfo` can
+ * splice it into the M cell when state flips to `mysteryReveal`. The
+ * designer-handoff explosion is tier-agnostic (same animation regardless
+ * of revealed symbol), so we no longer key by `MYSTERY_REVEAL_TIER`. */
+export const MYSTERY_REVEAL_SPINE = {
+	type: 'spine' as const,
+	assetKey: 'M' as const,
+	animationName: MYSTERY_REVEAL_ANIMATION,
+	sizeRatios: mRevealSizeRatios,
+};
 
 export const SCATTER_LAND_SOUND_MAP = {
 	1: 'sfx_scatter_stop_1',

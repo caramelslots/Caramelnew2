@@ -149,6 +149,10 @@ export const stateGame = $state({
 	gameSpeed: 1 as 1 | 2 | 3,
 	// Музыка вкл/выкл для меню Информация. Связана со stateSound.volumeValueMusic.
 	musicEnabled: true,
+	// Подсветка выигрыша: пока true — все символы вне 'win'/'postWinStatic'
+	// затемняются (см. DIM_NON_WINNING + ReelSymbol.svelte). Поднимается
+	// хелпером animateSymbols в bookEventHandlerMap, сбрасывается в reveal.
+	winSpotlightActive: false,
 });
 
 const boardLayout = () => {

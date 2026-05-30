@@ -1,5 +1,5 @@
 // Cash Stacks (daloniil_test) — game config
-// Lines-based slot, 5 reels x 5 rows, 30 paylines, 4 high + 4 low + Wild + Bonus.
+// Lines-based slot, 5 reels x 5 rows, 25 paylines (smooth-only), 4 high + 4 low + Wild + Bonus.
 
 const makePaddingReel = (symbols: string[]): { name: string }[] =>
 	symbols.map((name) => ({ name }));
@@ -74,13 +74,13 @@ export default {
 		},
 	},
 
-	// 20 paylines (5×5, rows 0..4) — **MUST mirror math `game_config.py:paylines`
+	// 25 paylines (5×5, rows 0..4) — **MUST mirror math `game_config.py:paylines`
 	// key-for-key**. Math emits `meta.lineIndex` = this key; PaylineOverlay looks
 	// up rows via `config.paylines[String(lineIndex)]` to draw the visual line
 	// across all reels. Any divergence between math and this map produces a
 	// payline drawn through wrong cells (e.g. diagonal rendered as swoosh).
-	// See math `third_party/math-sdk/games/0_0_daloniil_test/game_config.py`
-	// REDESIGN_PLAN §2.1 — reduced 30 → 20 paylines.
+	// See math `third_party/math-sdk/games/0_0_daloniil_test/game_config.py` и
+	// MATH_REDESIGN_PLAN.md §2.1 — все линии smooth (|Δ row| ≤ 1).
 	paylines: {
 		// Группа 1: 5 горизонталей
 		'1': [0, 0, 0, 0, 0],
@@ -88,56 +88,65 @@ export default {
 		'3': [2, 2, 2, 2, 2],
 		'4': [3, 3, 3, 3, 3],
 		'5': [4, 4, 4, 4, 4],
-		// Группа 2: V-family (V-shapes + zigzag M)
+		// Группа 2: V «улыбка»
 		'6': [0, 1, 2, 1, 0],
 		'7': [1, 2, 3, 2, 1],
 		'8': [2, 3, 4, 3, 2],
-		'9': [0, 2, 4, 2, 0],
-		'10': [0, 2, 0, 2, 0],
-		// Группа 3: ^-family (inverted V + zigzag W)
-		'11': [4, 3, 2, 3, 4],
-		'12': [3, 2, 1, 2, 3],
-		'13': [2, 1, 0, 1, 2],
-		'14': [4, 2, 0, 2, 4],
-		'15': [4, 2, 4, 2, 4],
-		// Группа 4: diagonals & swooshes
-		'16': [0, 1, 2, 3, 4],
-		'17': [4, 3, 2, 1, 0],
-		'18': [0, 0, 2, 4, 4],
-		'19': [4, 4, 2, 0, 0],
-		'20': [2, 2, 3, 4, 4],
+		// Группа 3: ^ «бровь»
+		'9': [4, 3, 2, 3, 4],
+		'10': [3, 2, 1, 2, 3],
+		'11': [2, 1, 0, 1, 2],
+		// Группа 4: диагонали
+		'12': [0, 1, 2, 3, 4],
+		'13': [4, 3, 2, 1, 0],
+		// Группа 5: hooks край → центр
+		'14': [0, 1, 2, 2, 2],
+		'15': [4, 3, 2, 2, 2],
+		'16': [2, 2, 2, 1, 0],
+		'17': [2, 2, 2, 3, 4],
+		// Группа 6: ступеньки от края
+		'18': [0, 0, 1, 2, 2],
+		'19': [4, 4, 3, 2, 2],
+		'20': [2, 2, 1, 0, 0],
+		'21': [2, 2, 3, 4, 4],
+		// Группа 7: горизонталь с провалом в центр
+		'22': [0, 1, 1, 1, 0],
+		'23': [4, 3, 3, 3, 4],
+		'24': [1, 0, 0, 0, 1],
+		'25': [3, 4, 4, 4, 3],
 	},
 
 	symbols: {
-		// Low symbols — все 4 одинаковые в paytable
+		// Low symbols — все 4 одинаковые. 3-OAK УДАЛЁН (MATH_REDESIGN_PLAN §2.2 Опция A).
+		// Зеркалит math `game_config.py:paytable`.
 		L1: {
-			paytable: [{ '5': 1.0 }, { '4': 0.2 }, { '3': 0.1 }],
+			paytable: [{ '5': 3.0 }, { '4': 0.5 }],
 		},
 		L2: {
-			paytable: [{ '5': 1.0 }, { '4': 0.2 }, { '3': 0.1 }],
+			paytable: [{ '5': 3.0 }, { '4': 0.5 }],
 		},
 		L3: {
-			paytable: [{ '5': 1.0 }, { '4': 0.2 }, { '3': 0.1 }],
+			paytable: [{ '5': 3.0 }, { '4': 0.5 }],
 		},
 		L4: {
-			paytable: [{ '5': 1.0 }, { '4': 0.2 }, { '3': 0.1 }],
+			paytable: [{ '5': 3.0 }, { '4': 0.5 }],
 		},
 		// High symbols
 		H4: {
-			paytable: [{ '5': 20.0 }, { '4': 2.0 }, { '3': 0.5 }],
+			paytable: [{ '5': 30.0 }, { '4': 3.0 }, { '3': 0.7 }],
 		},
 		H3: {
-			paytable: [{ '5': 30.0 }, { '4': 3.0 }, { '3': 0.8 }],
+			paytable: [{ '5': 45.0 }, { '4': 4.5 }, { '3': 1.2 }],
 		},
 		H2: {
-			paytable: [{ '5': 50.0 }, { '4': 5.0 }, { '3': 1.2 }],
+			paytable: [{ '5': 75.0 }, { '4': 7.5 }, { '3': 1.8 }],
 		},
 		H1: {
-			paytable: [{ '5': 100.0 }, { '4': 10.0 }, { '3': 2.0 }],
+			paytable: [{ '5': 150.0 }, { '4': 15.0 }, { '3': 3.0 }],
 		},
 		// Wild — платит только на 5-of-a-kind
 		W: {
-			paytable: [{ '5': 150.0 }],
+			paytable: [{ '5': 225.0 }],
 			special_properties: ['wild'],
 		},
 		// Bonus — триггер FS, без line-pay

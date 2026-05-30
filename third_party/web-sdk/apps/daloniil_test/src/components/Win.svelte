@@ -64,7 +64,12 @@
 						y={context.stateGameDerived.boardLayout().y}
 					>
 						{#if winLevelData?.animation}
-							<WinAnimation animationMap={winLevelData.animation}>
+							<WinAnimation
+								animationMap={winLevelData.animation}
+								bannerOverrideText={winLevelData.alias === 'sensational'
+									? winLevelData.text
+									: undefined}
+							>
 								<ResponsiveBitmapText
 									anchor={0.5}
 									maxWidth={2130}
