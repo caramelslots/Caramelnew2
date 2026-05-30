@@ -115,6 +115,53 @@ def remap_attachments(attachments: dict, bone_remap: dict[int, int]) -> dict:
     return out
 
 
+def filter_animation(animation: dict, bone_names: set[str], slot_names: set[str]) -> dict:
+    """Strip animation timelines that reference bones/slots not in this symbol.
+
+    The combined skeleton's animations (e.g. `Mystery/explosion`) sometimes
+    reference bones/slots from other symbols that were kept by the designer
+    in the same clip but that we filter out per-symbol. Spine's
+    `SkeletonJson.readAnimation` looks up every referenced bone/slot by
+    name and throws "Bone not found: L" / "Slot not found: ..." when a
+    timeline points at something we removed — that exception is swallowed
+    by `AssetsLoader.svelte`'s `try/catch`, so the asset never makes it
+    into `loadedAssets` and `SpineProvider` crashes later with
+    `Cannot read properties of undefined (reading 'skeletonData')`.
+    """
+    filtered: dict = {}
+    for section, payload in animation.items():
+        if section == "bones":
+            kept = {name: timeline for name, timeline in payload.items() if name in bone_names}
+            if kept:
+                filtered[section] = kept
+        elif section == "slots":
+            kept = {name: timeline for name, timeline in payload.items() if name in slot_names}
+            if kept:
+                filtered[section] = kept
+        elif section == "ik" or section == "transform" or section == "path":
+            # Constraint timelines reference constraint names; combined skeleton
+            # has no constraints today, but if they're added we keep them all
+            # since the per-symbol skeletons inherit the same constraint names.
+            filtered[section] = payload
+        elif section == "deform":
+            # Deform timelines are nested as skin -> slot -> attachment. Keep
+            # only the slots we actually have to avoid dangling references.
+            kept_skins: dict = {}
+            for skin_name, slot_map in payload.items():
+                kept_slots = {
+                    slot: deform for slot, deform in slot_map.items() if slot in slot_names
+                }
+                if kept_slots:
+                    kept_skins[skin_name] = kept_slots
+            if kept_skins:
+                filtered[section] = kept_skins
+        elif section == "drawOrder" or section == "events":
+            filtered[section] = payload
+        else:
+            filtered[section] = payload
+    return filtered
+
+
 def build_skeleton(
     *,
     combined: dict,
@@ -150,7 +197,13 @@ def build_skeleton(
     # bone that no longer exists at the original index.
     attachments = remap_attachments(attachments, bone_remap)
 
-    animations = {name: combined["animations"][name] for name in animation_names if name in combined["animations"]}
+    bone_name_set = set(bone_names)
+    slot_name_set = set(slot_names)
+    animations = {
+        name: filter_animation(combined["animations"][name], bone_name_set, slot_name_set)
+        for name in animation_names
+        if name in combined["animations"]
+    }
     if extra_animations:
         # Synthesised clips (e.g. `Special_1/idle`) keep the spine in its rest
         # pose with the right slot attachments visible — used for static/spin
@@ -306,6 +359,11 @@ def main() -> None:
     )
 
     # Mystery: full reveal explosion sequence with sign + parts + glow + particles.
+    # `Mystery/idle` is a synthetic zero-movement clip that only sets
+    # Mystery_bg + Mystery_sign + Sign_glow attachments — used for the
+    # static state so the dark hexagonal frame and `?` glyph render via
+    # the same skeleton the explosion uses, eliminating a sprite/spine
+    # transition flash and giving the symbol its proper background.
     mystery_bones = [
         "root", "scale", "Mystery", "Mystery_sign",
         "Mystery_p1", "Mystery_p2", "Mystery_p3", "Mystery_p4", "Mystery_p5",
@@ -318,6 +376,10 @@ def main() -> None:
         "Mystery_part", "Mystery_part2", "Mystery_part3",
         "Aura", "Aura2", "Sign_glow", "Particles",
     ]
+    mystery_idle = make_idle_animation([
+        ("Mystery_bg", "Mystery_bg"),
+        ("Mystery_sign", "Mystery_sign"),
+    ])
     write_json(
         SPINE_DIR / "Mystery.json",
         build_skeleton(
@@ -325,6 +387,7 @@ def main() -> None:
             bone_names=mystery_bones,
             slot_names=mystery_slots,
             animation_names=["Mystery/explosion"],
+            extra_animations={"Mystery/idle": mystery_idle},
             skeleton_overrides={"width": 256, "height": 256, "x": -128, "y": -128},
         ),
     )

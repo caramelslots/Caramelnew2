@@ -329,10 +329,17 @@ export const DIM_NON_WINNING = {
 	fadeOutMs: 240,
 };
 
-/** Mystery reveal spine size — `Mystery/explosion` from designer combined
- * skeleton renders aura + sign + flying parts; container scales the whole
- * thing relative to SYMBOL_SIZE. 1.0 keeps the explosion within one cell. */
-export const M_SIZE = 1.0;
+/** Mystery spine size — both static `?` (idle clip) and reveal explosion
+ * share the same skeleton, so the size ratio also has to fit `Mystery_bg`
+ * (196² in the atlas) into the 100² cell. SpineProvider scales by
+ * `height / spineData.height` (256), so `M_SIZE = 1.3` → render scale
+ * 1.3 × 100 / 256 ≈ 0.508, which renders Mystery_bg at ≈99 px — almost
+ * exactly the cell. Smaller values left a gap of empty parchment around
+ * the bg; larger values clipped the bg under the reel mask. The
+ * explosion's flying parts naturally inherit the same scale, which is
+ * what we want — they should occupy the same visual footprint as the
+ * resting symbol. */
+export const M_SIZE = 1.3;
 
 export const MYSTERY_REVEAL_TIER: Record<string, 'high' | 'mid' | 'low'> = {
 	H1: 'high',
@@ -383,7 +390,18 @@ const bStatic = {
 	animationName: 'Special_1/idle',
 	sizeRatios: { width: 1, height: 1 },
 };
-const mStatic = { type: 'sprite', assetKey: 'MImg', sizeRatios: { width: 1, height: 1 } };
+// Mystery rest pose — render via the same Mystery spine (idle clip pins
+// `Mystery_bg` + `Mystery_sign` attachments visible). The legacy static
+// PNG was just `Mystery_sign.png` (the `?` glyph alone), so the dark
+// hexagonal background was missing in static state. Using the spine
+// guarantees both bg + glyph are rendered at the right relative offset
+// and lines up perfectly with the explosion sequence on reveal.
+const mStatic = {
+	type: 'spine' as const,
+	assetKey: 'M' as const,
+	animationName: 'Mystery/idle',
+	sizeRatios: { width: M_SIZE, height: M_SIZE },
+};
 
 const wStatic = { type: 'sprite', assetKey: 'WImg', sizeRatios: { width: 1, height: 1 } };
 const wWinSizeRatios = { width: SPECIAL_SYMBOL_SIZE, height: SPECIAL_SYMBOL_SIZE };
