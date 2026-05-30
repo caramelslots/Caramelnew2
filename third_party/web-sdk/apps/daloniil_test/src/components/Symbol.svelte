@@ -27,8 +27,10 @@
 	// `Symbol` level (not inside SymbolSpine) so it shows for both sprite
 	// (H/L pay symbols) and spine (W) win renders. Excluded for B and M
 	// — historically those bonus tokens never had a payframe.
+	// W (wild) plays its own `Special_2/win` spine which provides the full
+	// celebration visual — the payframe glow would overlap the spine art.
 	const showWinFrame = $derived(
-		props.state === 'win' && !['B', 'M'].includes(props.rawSymbol.name),
+		props.state === 'win' && !['B', 'M', 'W'].includes(props.rawSymbol.name),
 	);
 </script>
 

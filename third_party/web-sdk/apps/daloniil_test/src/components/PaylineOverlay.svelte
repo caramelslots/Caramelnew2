@@ -54,6 +54,9 @@
 
 	const NEON_PURPLE = 0xb936ff;
 	const DRAW_DURATION_MS = 480;
+	// Total idle cycle: the line draws left→right over DRAW_DURATION_MS,
+	// holds fully visible for the remainder, then redraws every CYCLE_MS.
+	const CYCLE_MS = 3000;
 
 	// Halo-слои: рисуются от внешнего (широкий, прозрачный) к внутреннему
 	// (узкий, плотный). Толщина настроена под референс — линия выглядит
@@ -93,9 +96,10 @@
 		let raf = 0;
 		const tick = (now: number) => {
 			for (const line of activeLines) {
-				if (line.progress < 1) {
-					line.progress = Math.min(1, (now - line.startTime) / DRAW_DURATION_MS);
-				}
+				// Use modulo so after the first draw the line re-animates left→right
+				// every CYCLE_MS: 0..DRAW_DURATION_MS = drawing, rest = fully visible.
+				const elapsed = (now - line.startTime) % CYCLE_MS;
+				line.progress = Math.min(1, elapsed / DRAW_DURATION_MS);
 			}
 			raf = requestAnimationFrame(tick);
 		};

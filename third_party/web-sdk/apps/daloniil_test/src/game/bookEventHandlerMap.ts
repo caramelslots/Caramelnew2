@@ -66,6 +66,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// символы заново «приземляются», alpha должен быть 1 — иначе турбо-
 		// skip оставит часть символов затемнёнными в новом спине.
 		stateGame.winSpotlightActive = false;
+		// Очищаем paylines предыдущего спина здесь, а не сразу после анимации,
+		// чтобы линии оставались видимыми до начала нового спина.
+		eventEmitter.broadcast({ type: 'paylineClearAll' });
 
 		stateGame.gameType = bookEvent.gameType;
 		await stateGameDerived.enhancedBoard.spin({
@@ -104,8 +107,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			(a, b) => a.reel === b.reel && a.row === b.row,
 		);
 		await animateSymbols({ positions: allPositions });
-
-		eventEmitter.broadcast({ type: 'paylineClearAll' });
+		// Paylines remain visible until the next spin starts (cleared in `reveal`).
 	},
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
 		stateBet.winBookEventAmount = bookEvent.amount;
