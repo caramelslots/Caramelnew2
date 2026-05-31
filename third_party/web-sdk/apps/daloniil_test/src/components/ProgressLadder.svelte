@@ -66,10 +66,19 @@
 <script lang="ts">
 	import { getContext } from '../game/context';
 	import { devPreview } from '../game/devPreview.svelte';
+	import { BOARD_SIZES, BOARD_LAYOUT_OFFSETS } from '../game/constants';
 
 	const context = getContext();
 
 	const BONUSES_PER_TIER = 4;
+
+	// Rendered pixel sizes of the bar PNGs (must match the .bar-v / .bar-h CSS).
+	const BAR_DIMS = {
+		v: { w: 130, h: 311.6 },
+		h: { w: 340, h: 112.3 },
+	};
+	// Gap (px) between the board edge and the bar.
+	const GAP = 16;
 
 	let pulse = $state(false);
 
@@ -113,6 +122,28 @@
 
 	const boxStyle = (b: Box) =>
 		`left:${b.left}%;top:${b.top}%;width:${b.width}%;height:${b.height}%;`;
+
+	// The bar is a fixed DOM overlay on top of the Pixi canvas. The board lives
+	// in Pixi "main" coordinates, so map its rect to screen px via mainLayout()
+	// (canvas center + uniform scale) to anchor the bar to the board:
+	//   vertical bar  → right of the board, vertically centered on it
+	//   horizontal bar → under the board, horizontally centered on it
+	const barPos = $derived.by(() => {
+		const ml = context.stateLayoutDerived.mainLayout();
+		const layoutType = context.stateLayoutDerived.layoutType();
+		const off = BOARD_LAYOUT_OFFSETS[layoutType] ?? { x: 0, y: 0 };
+		const boardCenterX = ml.x + off.x * ml.scale;
+		const boardCenterY = ml.y + off.y * ml.scale;
+		const halfW = (BOARD_SIZES.width / 2) * ml.scale;
+		const halfH = (BOARD_SIZES.height / 2) * ml.scale;
+
+		if (isDesktop) {
+			const d = BAR_DIMS.v;
+			return { left: boardCenterX + halfW + GAP, top: boardCenterY - d.h / 2 };
+		}
+		const d = BAR_DIMS.h;
+		return { left: boardCenterX - d.w / 2, top: boardCenterY + halfH + GAP };
+	});
 </script>
 
 {#if isVisible}
@@ -122,6 +153,7 @@
 		class:bar-h={!isDesktop}
 		class:pulse
 		data-test="progress-ladder"
+		style="left:{barPos.left}px;top:{barPos.top}px;"
 	>
 		{#each placements as p, i (i)}
 			{@const filled = i < bonusInCurrentTier}
@@ -152,14 +184,12 @@
 	}
 
 	/* ─── Vertical bar (desktop / PC) — bar_v.png (247×592) ────────── */
+	/* left/top are set inline (JS) to anchor the bar to the game board. */
 	.bar-v {
 		background-image: url('/assets/sprites/bonusBar/bar_v.png');
 		/* keep PNG aspect ratio 247:592 */
 		width: 130px;
 		height: 311.6px;
-		right: 0.75vw;
-		top: 50%;
-		transform: translateY(-50%);
 	}
 
 	/* ─── Horizontal bar (tablet / landscape / portrait) — bar_h.png (657×217) ─ */
@@ -168,9 +198,6 @@
 		/* keep PNG aspect ratio 657:217 */
 		width: 340px;
 		height: 112.3px;
-		bottom: 13vh;
-		left: 50%;
-		transform: translateX(-50%);
 	}
 
 	/* ─── Cat (overlay on silhouette) ─────────────────────────────── */
