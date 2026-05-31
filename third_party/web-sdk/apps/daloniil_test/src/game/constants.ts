@@ -71,6 +71,17 @@ export const BOARD_SIZES = {
  */
 export const BOARD_SIZE_TRIM = { right: 0, bottom: 0 } as const;
 
+/**
+ * Extra mask coverage (px) beyond the visible board grid so spinning symbols
+ * slide *behind* the board edge instead of vanishing over the parchment
+ * ("in the air"). top/bottom are measured from the grid edges outward.
+ *
+ * NOTE: at rest the reel parks one padding symbol just below the grid
+ * (top edge ~10px under the grid bottom). Keep `bottom` ≲ 10 so that parked
+ * symbol stays hidden in the idle state.
+ */
+export const BOARD_MASK_OVERFLOW = { top: 0, bottom: 10 } as const;
+
 export const BACKGROUND_RATIO = 2039 / 1000;
 export const PORTRAIT_BACKGROUND_RATIO = 1242 / 2208;
 const PORTRAIT_RATIO = 800 / 1422;

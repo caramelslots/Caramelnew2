@@ -2,7 +2,7 @@
 	import { Rectangle } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { SYMBOL_SIZE, BOARD_MASK_OVERFLOW } from '../game/constants';
 
 	type Props = { debug?: boolean };
 
@@ -23,6 +23,7 @@
 <Rectangle
 	isMask
 	x={-SYMBOL_SIZE}
+	y={-BOARD_MASK_OVERFLOW.top}
 	width={layout.width + SYMBOL_SIZE * 2}
-	height={layout.height}
+	height={layout.height + BOARD_MASK_OVERFLOW.top + BOARD_MASK_OVERFLOW.bottom}
 />
