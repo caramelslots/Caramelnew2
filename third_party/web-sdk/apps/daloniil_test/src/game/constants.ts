@@ -80,7 +80,7 @@ export const BOARD_SIZE_TRIM = { right: 0, bottom: 0 } as const;
  * (top edge ~10px under the grid bottom). Keep `bottom` ≲ 10 so that parked
  * symbol stays hidden in the idle state.
  */
-export const BOARD_MASK_OVERFLOW = { top: 0, bottom: 10 } as const;
+export const BOARD_MASK_OVERFLOW = { top: 0, bottom: 12.5 } as const;
 
 export const BACKGROUND_RATIO = 2039 / 1000;
 export const PORTRAIT_BACKGROUND_RATIO = 1242 / 2208;
