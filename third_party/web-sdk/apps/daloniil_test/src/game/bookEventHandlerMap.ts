@@ -18,6 +18,21 @@ import { WIN_INFO_PRE_DELAY_MS, MYSTERY_REVEAL_PRE_DELAY_MS, WIN_SPOTLIGHT_CLEAR
 let spotlightClearTimer: ReturnType<typeof setTimeout> | null = null;
 import { toRevealedRawSymbol } from './utils';
 
+/**
+ * Немедленно снимает затемнение невыигрышных символов и скрывает paylines,
+ * отменяя фоновый таймер. Вызывается при старте нового спина (как только
+ * игрок нажал Bet — см. actor.onNewGameStart), чтобы линии/затемнение
+ * пропадали одновременно со стартом барабанов, а не после него.
+ */
+export const clearWinSpotlight = () => {
+	if (spotlightClearTimer !== null) {
+		clearTimeout(spotlightClearTimer);
+		spotlightClearTimer = null;
+	}
+	stateGame.winSpotlightActive = false;
+	eventEmitter.broadcast({ type: 'paylineClearAll' });
+};
+
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
 	// Wincap (level 10) hides UI — the count-up runs ~32s and a visible HUD
 	// would otherwise stay live during the celebration. After the 4-tier
@@ -66,14 +81,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			recordBookEvent({ bookEvent });
 		}
 
-		// Если фоновый таймер снятия затемнения ещё не сработал — отменяем его:
-		// новый спин сам восстановит alpha и очистит paylines немедленно.
-		if (spotlightClearTimer !== null) {
-			clearTimeout(spotlightClearTimer);
-			spotlightClearTimer = null;
-		}
-		stateGame.winSpotlightActive = false;
-		eventEmitter.broadcast({ type: 'paylineClearAll' });
+		// Снимаем затемнение/paylines немедленно (на случай резюма или
+		// последующих reveal внутри одного бета). При нажатии Bet это уже
+		// сделано в actor.onNewGameStart, поэтому здесь — идемпотентный no-op.
+		clearWinSpotlight();
 
 		stateGame.gameType = bookEvent.gameType;
 		await stateGameDerived.enhancedBoard.spin({
