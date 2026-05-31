@@ -127,22 +127,26 @@ const SPECIAL_SYMBOL_SIZE = 1;
  *
  * Same options are used in base game and free spins (spinOptions are
  * picked by `spinType` only, never by `gameType`, see stateGame.svelte.ts).
+ *
+ * Target: ~2.5 s from Bet click to last reel stopped (instant RGS).
+ * Tuned via REEL_SPEED + reelSpinDelay; pre-spin / main-spin / settle
+ * speeds stay equal (or proportionally linked) so motion stays smooth.
  */
-const REEL_SPEED = 1.5;
+const REEL_SPEED = 2.5;
 const REEL_SETTLE_SPEED = REEL_SPEED * 0.42;
 const SPIN_OPTIONS_SHARED = {
 	reelBounceBackSpeed: REEL_SETTLE_SPEED,
 	reelSpinSpeedBeforeBounce: REEL_SPEED,
 	reelPaddingMultiplierNormal: 1.2,
 	reelPaddingMultiplierAnticipated: 10,
-	reelSpinDelay: 100,
+	reelSpinDelay: 50,
 	reelPreSpinSpeed: REEL_SPEED,
 	reelSpinSpeed: REEL_SPEED,
 	reelBounceSizeMulti: 0.28,
 	reelSettleSecondaryMulti: 0.4,
 	reelSettleSecondarySpeedMulti: 1.2,
 	reelLandSquashY: 0.68,
-	reelLandSquashRecoveryMs: 260,
+	reelLandSquashRecoveryMs: 160,
 	reelLandSquashStretchMulti: 0.55,
 };
 
@@ -153,7 +157,7 @@ export const SPIN_OPTIONS_DEFAULT = { ...SPIN_OPTIONS_SHARED };
  * `generalSpinWith`, so turbo still snaps to result faster. */
 export const SPIN_OPTIONS_FAST = { ...SPIN_OPTIONS_SHARED };
 
-export const MOTION_BLUR_VELOCITY = 31;
+export const MOTION_BLUR_VELOCITY = 52;
 
 export const zIndexes = {
 	background: {
