@@ -130,6 +130,7 @@
 
 	<BoardContext animate={true}>
 		<BoardContainer>
+			<BoardMask />
 			<BoardBase />
 			<PaylineOverlay />
 		</BoardContainer>

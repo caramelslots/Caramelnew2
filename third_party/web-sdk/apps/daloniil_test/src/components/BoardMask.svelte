@@ -8,20 +8,21 @@
 
 	const props: Props = $props();
 	const context = getContext();
+	const layout = $derived(context.stateGameDerived.boardLayout());
 </script>
 
 {#if props.debug}
 	<Rectangle
 		alpha={0.5}
 		backgroundColor={0xffffff}
-		width={context.stateGameDerived.boardLayout().width}
-		height={context.stateGameDerived.boardLayout().height}
+		width={layout.width}
+		height={layout.height}
 	/>
 {/if}
 
 <Rectangle
 	isMask
 	x={-SYMBOL_SIZE}
-	width={context.stateGameDerived.boardLayout().width + SYMBOL_SIZE * 2}
-	height={context.stateGameDerived.boardLayout().height}
+	width={layout.width + SYMBOL_SIZE * 2}
+	height={layout.height}
 />

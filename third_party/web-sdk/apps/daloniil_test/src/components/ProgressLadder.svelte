@@ -1,26 +1,75 @@
 <!--
-	ProgressLadder.svelte — HTML-overlay прогресс-метра во Free Spins.
+	ProgressLadder.svelte — Bonus collection bar for Free Spins.
 
-	REDESIGN_PLAN §2.5.1: переделан с focus на Mystery Reels.
-	Каждые 4 собранных Bonus символа = +1 Sticky Mystery Reel + 3 фриспина.
-	Отображается фикс. позицией СПРАВА сверху, видна только в gameType='freegame'.
+	Desktop (PC)  → bar_v.png  (vertical, right side of screen)
+	Other layouts → bar_h.png  (horizontal, bottom of screen)
 
-	Подписывается на bonusCollect / ladderTierUp book-events через context.
+	As the player collects Bonus (kitty) symbols, slots fill top→bottom / left→right
+	with the colored Bonus cat (cat_static.png — extracted from the symbolsStatic
+	atlas, already includes the raised paw + BONUS medallion), placed to sit exactly
+	on top of the grey cat silhouettes baked into the bar texture.
+	Every BONUSES_PER_TIER collected = tier-up.
+
+	All geometry below is expressed as a percentage of the FULL bar PNG (the element
+	uses background-size:100% 100%), derived by measuring the silhouettes / counter
+	rectangle directly from bar_v.png (247×592) and bar_h.png (657×217).
 -->
 <script lang="ts" module>
 	export type EmitterEventProgressLadder =
 		| { type: 'ladderShow' }
 		| { type: 'ladderHide' }
 		| { type: 'ladderPulse' };
+
+	type Box = { left: number; top: number; width: number; height: number };
+
+	type Layout = {
+		/** cat box (% of bar) — the cat sprite already includes the raised paw */
+		catW: number;
+		catH: number;
+		/** per-slot cat-center coordinates (% of bar) */
+		slots: { cx: number; cy: number }[];
+		/** progress counter rectangle (% of bar) */
+		counter: Box;
+		/** corner radius of the counter fill, in CSS px (≈30% of its rendered height) */
+		counterRadius: number;
+	};
+
+	// Vertical bar — bar_v.png (247 × 592). 4 cats stacked, counter at bottom.
+	const LAYOUT_V: Layout = {
+		catW: 30.3,
+		catH: 15.2,
+		slots: [
+			{ cx: 46.5, cy: 18.6 },
+			{ cx: 46.5, cy: 35.1 },
+			{ cx: 46.5, cy: 51.6 },
+			{ cx: 46.5, cy: 68.2 },
+		],
+		counter: { left: 29.15, top: 80.07, width: 35.4, height: 5.57 },
+		counterRadius: 5.3,
+	};
+
+	// Horizontal bar — bar_h.png (657 × 217). 4 cats in a row, counter on the right.
+	const LAYOUT_H: Layout = {
+		catW: 11.5,
+		catH: 40.5,
+		slots: [
+			{ cx: 18.04, cy: 58 },
+			{ cx: 32.88, cy: 58 },
+			{ cx: 47.95, cy: 58 },
+			{ cx: 63.32, cy: 58 },
+		],
+		counter: { left: 72.9, top: 49.2, width: 15.6, height: 20.2 },
+		counterRadius: 5.7,
+	};
 </script>
 
 <script lang="ts">
 	import { getContext } from '../game/context';
+	import { devPreview } from '../game/devPreview.svelte';
 
 	const context = getContext();
 
 	const BONUSES_PER_TIER = 4;
-	const TOTAL_TIERS = 5;
 
 	let pulse = $state(false);
 
@@ -29,116 +78,180 @@
 		ladderHide: () => {},
 		ladderPulse: () => {
 			pulse = true;
-			setTimeout(() => (pulse = false), 600);
+			setTimeout(() => (pulse = false), 700);
 		},
 	});
 
-	const isVisible = $derived(context.stateGame.gameType === 'freegame');
-	const bonusInCurrentTier = $derived(context.stateGame.bonusCollected % BONUSES_PER_TIER);
-	const bonusToNext = $derived(BONUSES_PER_TIER - bonusInCurrentTier);
-	const progressPct = $derived((bonusInCurrentTier / BONUSES_PER_TIER) * 100);
-	const isMaxTier = $derived(context.stateGame.ladderTier >= TOTAL_TIERS);
+	// devPreview.ladder toggled from the DEV panel (DevButtons.svelte).
+	const isVisible = $derived(devPreview.ladder || context.stateGame.gameType === 'freegame');
+	const isDesktop = $derived(
+		devPreview.ladder
+			? !devPreview.ladderHorizontal
+			: context.stateLayoutDerived.layoutType() === 'desktop',
+	);
+	const bonusInCurrentTier = $derived(
+		devPreview.ladder
+			? devPreview.ladderFilled
+			: context.stateGame.bonusCollected % BONUSES_PER_TIER,
+	);
+	// 0..1 fraction used by clip-path fill
+	const progressScale = $derived(bonusInCurrentTier / BONUSES_PER_TIER);
+
+	const layout = $derived(isDesktop ? LAYOUT_V : LAYOUT_H);
+
+	// Pre-compute the absolute cat box (% of bar) for each of the 4 slots.
+	const placements = $derived(
+		layout.slots.map(({ cx, cy }) => ({
+			cat: {
+				left: cx - layout.catW / 2,
+				top: cy - layout.catH / 2,
+				width: layout.catW,
+				height: layout.catH,
+			} as Box,
+		})),
+	);
+
+	const boxStyle = (b: Box) =>
+		`left:${b.left}%;top:${b.top}%;width:${b.width}%;height:${b.height}%;`;
 </script>
 
 {#if isVisible}
-	<div class="ladder" class:pulse data-test="progress-ladder">
-		<div class="header">
-			<span class="title">{context.i18nDerived.mysteryReelMeter()}</span>
-		</div>
+	<div
+		class="bonus-bar"
+		class:bar-v={isDesktop}
+		class:bar-h={!isDesktop}
+		class:pulse
+		data-test="progress-ladder"
+	>
+		{#each placements as p, i (i)}
+			{@const filled = i < bonusInCurrentTier}
+			<!--
+				Vertical bar fills top→bottom, horizontal fills left→right.
+				cat_static (extracted from the symbolsStatic atlas) already includes the
+				raised paw + BONUS medallion, so it sits on the whole grey silhouette.
+			-->
+			<div class="cat-wrap" class:filled style={boxStyle(p.cat)}>
+				<img class="kitty" src="/assets/sprites/bonusBar/cat_static.png" alt="" />
+			</div>
+		{/each}
 
-		<div class="bar">
-			<div class="bar-fill" style:width="{progressPct}%"></div>
-		</div>
-
-		<div class="footer">
-			<span class="collected">
-				<strong>{bonusInCurrentTier}</strong>/{BONUSES_PER_TIER} ✦
-			</span>
-			{#if !isMaxTier}
-				<span class="next-tier">
-					{bonusToNext} {context.i18nDerived.bonusToNextReel()}
-				</span>
-			{:else}
-				<span class="next-tier max-tier">{context.i18nDerived.maxTierReached()}</span>
-			{/if}
+		<div class="progress-rect" style="{boxStyle(layout.counter)}--cr:{layout.counterRadius}px;">
+			<div class="progress-fill" style:--pscale={progressScale}></div>
 		</div>
 	</div>
 {/if}
 
 <style lang="scss">
-	.ladder {
+	/* ─── Wrapper ──────────────────────────────────────────────────── */
+	.bonus-bar {
 		position: fixed;
-		top: 1rem;
-		right: 1rem;
-		width: 240px;
-		padding: 0.85rem 1rem;
-		background: rgba(20, 20, 30, 0.92);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 10px;
-		color: #fff;
-		font-family: 'proxima-nova', sans-serif;
 		z-index: 40;
-		display: flex;
-		flex-direction: column;
-		gap: 0.55rem;
-		box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
-		transition:
-			transform 0.18s,
-			box-shadow 0.18s;
+		background-repeat: no-repeat;
+		background-size: 100% 100%;
+		transition: filter 0.15s ease;
 	}
 
-	.ladder.pulse {
-		transform: scale(1.04);
-		box-shadow: 0 6px 32px rgba(255, 208, 0, 0.55);
+	/* ─── Vertical bar (desktop / PC) — bar_v.png (247×592) ────────── */
+	.bar-v {
+		background-image: url('/assets/sprites/bonusBar/bar_v.png');
+		/* keep PNG aspect ratio 247:592 */
+		width: 130px;
+		height: 311.6px;
+		right: 0.75vw;
+		top: 50%;
+		transform: translateY(-50%);
 	}
 
-	.header {
+	/* ─── Horizontal bar (tablet / landscape / portrait) — bar_h.png (657×217) ─ */
+	.bar-h {
+		background-image: url('/assets/sprites/bonusBar/bar_h.png');
+		/* keep PNG aspect ratio 657:217 */
+		width: 340px;
+		height: 112.3px;
+		bottom: 13vh;
+		left: 50%;
+		transform: translateX(-50%);
+	}
+
+	/* ─── Cat (overlay on silhouette) ─────────────────────────────── */
+	.cat-wrap {
+		position: absolute;
 		display: flex;
 		align-items: center;
-		font-size: 0.75rem;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
+		justify-content: center;
+		pointer-events: none;
 	}
 
-	.title {
-		color: rgba(255, 255, 255, 0.7);
+	.kitty {
+		max-width: 100%;
+		max-height: 100%;
+		width: auto;
+		height: auto;
+		object-fit: contain;
+		opacity: 0;
+		filter: drop-shadow(0 0 4px rgba(255, 210, 60, 0.9));
 	}
 
-	.bar {
-		height: 8px;
-		background: rgba(255, 255, 255, 0.1);
-		border-radius: 4px;
+	.cat-wrap.filled .kitty {
+		animation: kitty-appear 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+	}
+
+	@keyframes kitty-appear {
+		0% {
+			opacity: 0;
+			transform: scale(0.2) rotate(-15deg);
+		}
+		55% {
+			opacity: 1;
+			transform: scale(1.15) rotate(4deg);
+		}
+		75% {
+			transform: scale(0.92) rotate(-2deg);
+		}
+		90% {
+			transform: scale(1.04) rotate(1deg);
+		}
+		100% {
+			opacity: 1;
+			transform: scale(1) rotate(0deg);
+		}
+	}
+
+	/* ─── Progress counter rectangle ──────────────────────────────── */
+	/* pill-shaped to match the rounded counter window baked into the bar */
+	.progress-rect {
+		position: absolute;
+		border-radius: var(--cr, 6px);
 		overflow: hidden;
+		padding: 0;
 	}
 
-	.bar-fill {
+	.progress-fill {
+		width: 100%;
 		height: 100%;
-		background: linear-gradient(90deg, #ff9a3c, #ffd000);
-		transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+		background: linear-gradient(90deg, #ff9a2e 0%, #ffd84a 60%, #fff8a0 100%);
+		border-radius: var(--cr, 6px);
+		/* fill left → right */
+		clip-path: inset(0 calc(100% * (1 - var(--pscale, 0))) 0 0 round var(--cr, 6px));
+		transition: clip-path 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+		box-shadow: 0 0 6px rgba(255, 210, 60, 0.8);
 	}
 
-	.footer {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		font-size: 0.7rem;
-		color: rgba(255, 255, 255, 0.65);
+	/* ─── Tier-up pulse ───────────────────────────────────────────── */
+	.pulse {
+		filter: drop-shadow(0 0 14px rgba(255, 210, 60, 1));
+		animation: bar-pulse 0.7s ease-out forwards;
 	}
 
-	.collected strong {
-		color: #fff;
-		font-weight: 700;
-		font-size: 0.9rem;
-	}
-
-	.next-tier {
-		color: rgba(255, 208, 0, 0.85);
-		font-weight: 700;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-	}
-
-	.next-tier.max-tier {
-		color: rgba(120, 255, 120, 0.85);
+	@keyframes bar-pulse {
+		0% {
+			filter: drop-shadow(0 0 0px rgba(255, 210, 60, 0));
+		}
+		40% {
+			filter: drop-shadow(0 0 18px rgba(255, 210, 60, 1));
+		}
+		100% {
+			filter: drop-shadow(0 0 0px rgba(255, 210, 60, 0));
+		}
 	}
 </style>

@@ -59,9 +59,17 @@ export const INITIAL_BOARD: RawSymbol[][] = [
 export const BOARD_DIMENSIONS = { x: INITIAL_BOARD.length, y: INITIAL_BOARD[0].length - 2 };
 
 export const BOARD_SIZES = {
-	width: SYMBOL_SIZE * BOARD_DIMENSIONS.x,
-	height: SYMBOL_SIZE * BOARD_DIMENSIONS.y,
+	width: SYMBOL_SIZE * BOARD_DIMENSIONS.x - 10,
+	height: SYMBOL_SIZE * BOARD_DIMENSIONS.y - 10,
 };
+
+/**
+ * Trims the visible board area from specific edges (px).
+ * right  — shrinks the right edge inward.
+ * bottom — shrinks the bottom edge inward.
+ * The board center shifts by half the trim to keep the opposite edge fixed.
+ */
+export const BOARD_SIZE_TRIM = { right: 0, bottom: 0 } as const;
 
 export const BACKGROUND_RATIO = 2039 / 1000;
 export const PORTRAIT_BACKGROUND_RATIO = 1242 / 2208;
@@ -209,10 +217,10 @@ export const DESK_PARCHMENT_PADDING = { width: 1.04, height: 1.04 } as const;
  * Portrait (800×1422):             drawer ~144 px → game-area centre ≈ y 350 → offset -150
  */
 export const BOARD_LAYOUT_OFFSETS = {
-	desktop: { x: 0, y: 5 },
-	tablet: { x: 0, y: 15 },
-	landscape: { x: 0, y: -25 },
-	portrait: { x: 0, y: -90 },
+	desktop: { x: 0, y: -54 },
+	tablet: { x: 0, y: -43 },
+	landscape: { x: 0, y: -85 },
+	portrait: { x: 0, y: -150 },
 } as const;
 /** Frame bezel + glow offset from board center (px): +x right, +y down. */
 export const BOARD_FRAME_OFFSET = { x: 6, y: 8 } as const;

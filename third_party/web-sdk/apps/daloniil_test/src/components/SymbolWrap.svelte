@@ -38,8 +38,16 @@ const boardContext = getContextBoard();
 const show = $derived(
 	(boardContext.animate && props.animating) || (!boardContext.animate && !props.animating),
 );
-const top = 0;
-const bottom = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
+// Culling window: keep a symbol rendered while any part of it may be
+// visible through the BoardMask (y=0 … boardHeight).
+// TOP  — one full symbol above the mask so the Pixi mask smoothly clips
+//         symbols entering from above the board edge.
+// BOTTOM — one full symbol BELOW the mask bottom so symbols exiting at the
+//         bottom are smoothly clipped by the mask instead of abruptly
+//         disappearing (the inFrame check used to fire at y=boardHeight+1
+//         while 49 px were still inside the mask).
+const top = -SYMBOL_SIZE;
+const bottom = SYMBOL_SIZE * (BOARD_DIMENSIONS.y + 1);
 const inFrame = $derived(props.y >= top && props.y <= bottom);
 </script>
 

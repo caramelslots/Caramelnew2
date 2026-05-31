@@ -24,6 +24,7 @@
 	import { stateBet } from 'state-shared';
 
 	import { playBet, playBookEvent, playBookEvents } from '../game/utils';
+	import { devPreview } from '../game/devPreview.svelte';
 	import baseEvents from '../stories/data/base_events';
 	import baseBooks from '../stories/data/base_books';
 	import bonusBooks from '../stories/data/bonus_books';
@@ -53,10 +54,7 @@
 		Positions в мок-event'ах УЖЕ в padded-координатах (row=1..5 = visible
 		0..4), так что после padding позиции совпадают с ячейками.
 	*/
-	const padBoard = (
-		visibleBoard: { name: string }[][],
-		gameType: GameType,
-	): RawSymbol[][] => {
+	const padBoard = (visibleBoard: { name: string }[][], gameType: GameType): RawSymbol[][] => {
 		const paddingReels = config.paddingReels[gameType];
 		return visibleBoard.map((reel, reelIndex) => {
 			const pad = paddingReels[reelIndex];
@@ -438,7 +436,38 @@
 						title="freeSpinEnd с big-win-анимацией (level=6)"
 						onclick={() => playFsEnd(6, 75_000)}
 					>
-						FS End (BIG)
+						FS End (B)
+					</button>
+				</div>
+			</section>
+
+			<section>
+				<h4>Bonus Bar Preview</h4>
+				<div class="grid">
+					<button
+						type="button"
+						class:active={devPreview.ladder}
+						title="Показать/скрыть прогресс-бар бонусов поверх игры (dev)"
+						onclick={() => (devPreview.ladder = !devPreview.ladder)}
+					>
+						{devPreview.ladder ? 'Bonus Bar: ON' : 'Bonus Bar: OFF'}
+					</button>
+					<button
+						type="button"
+						disabled={!devPreview.ladder}
+						title="Сколько котиков залито (0..4)"
+						onclick={() => (devPreview.ladderFilled = (devPreview.ladderFilled + 1) % 5)}
+					>
+						Cats: {devPreview.ladderFilled}/4
+					</button>
+					<button
+						type="button"
+						disabled={!devPreview.ladder}
+						class:active={devPreview.ladder && devPreview.ladderHorizontal}
+						title="Переключить вертикальный / горизонтальный бар"
+						onclick={() => (devPreview.ladderHorizontal = !devPreview.ladderHorizontal)}
+					>
+						{devPreview.ladderHorizontal ? 'Bar: Horizontal' : 'Bar: Vertical'}
 					</button>
 				</div>
 			</section>
@@ -463,14 +492,14 @@
 					>
 						Mystery Reveal (1 reel)
 					</button>
-				<button
-					type="button"
-					disabled={busy}
-					title="3 sticky reels параллельный reveal (super bonus)"
-					onclick={playMysteryRevealTriple}
-				>
-					Mystery Reveal ×3
-				</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="3 sticky reels параллельный reveal (super bonus)"
+						onclick={playMysteryRevealTriple}
+					>
+						Mystery Reveal ×3
+					</button>
 				</div>
 			</section>
 
@@ -593,7 +622,9 @@
 		letter-spacing: 0.02em;
 		border-radius: 4px;
 		cursor: pointer;
-		transition: background 80ms, border-color 80ms;
+		transition:
+			background 80ms,
+			border-color 80ms;
 		text-align: center;
 	}
 	.dev-body button:hover:not(:disabled) {
@@ -603,6 +634,11 @@
 	.dev-body button:disabled {
 		opacity: 0.4;
 		cursor: not-allowed;
+	}
+	.dev-body button.active {
+		background: rgba(34, 197, 94, 0.45);
+		border-color: rgba(74, 222, 128, 0.9);
+		color: #fff;
 	}
 
 	.hint {
