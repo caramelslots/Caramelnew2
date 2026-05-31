@@ -171,38 +171,32 @@ class GameConfig(Config):
 
         # MYSTERY REVEAL POOL — weighted random distribution
         # ──────────────────────────────────────────────────
-        # Когда Sticky Mystery Reel раскрывается, ВСЕ 5 cells reel-а становятся
-        # одним символом из этого пула с указанными весами (см. emit_mystery_reveal).
+        # HIGH-VOLATILITY TUNING: W теперь доминирует в пуле (~45%).
+        # Поскольку все mystery reels раскрываются в ОДИН символ (emit_mystery_reveal),
+        # это создаёт биполярное распределение сессий:
+        #   - W reveal  (45%): ВСЕ mystery columns = Wild → масштабный выигрыш
+        #   - H reveal  (27%): ВСЕ mystery columns = High symbol → хороший выигрыш
+        #   - L reveal  (27%): ВСЕ mystery columns = Low symbol → скромный выигрыш
         #
-        # Design choice — weighted (не uniform):
+        # Максимизация дисперсии FS-сессий:
+        #   При 1 mystery reel:  P(W)=45%, σ_session ↑
+        #   При 3 mystery reels: P(all=W) = 45% (т.к. все reels = 1 символ),
+        #                         смесь W/H/L создаёт биполярность big vs small.
         #
-        #   - W ВКЛЮЧЁН в пул, чтобы 5×W (top payout ×150) был достижим в bonus_super.
-        #     Без W в пуле 5×W было математически невозможно в Super режиме —
-        #     compliance issue (paytable обещает выплату, недостижимую в купленном
-        #     режиме). См. MATH_BLOCKERS.md M3.
-        #
-        #   - Веса подобраны так, чтобы:
-        #       P(W)   ≈ 2.4%  (rare, controls volatility)
-        #       P(H*)  ≈ 41%   (premium reveals, 4 символа × ~10%)
-        #       P(L*)  ≈ 57%   (low reveals, 4 символа × ~14%)
-        #
-        #   - При 3 mystery reels в Super:
-        #       P(≥1 reveals as W) ≈ 1 - (41/42)³ = 7%
-        #       P(all 3 as W)      ≈ (1/42)³ = 0.0013%
-        #     Это даёт чувствительно ниже volatility чем uniform pool с W
-        #     (P(reveal=W)=11%, P(all 3 W)=0.14%).
-        #
-        # Веса можно подкручивать на этапе reelstrip-tuning (M4) и optimization (M1).
+        #   P(W) = 45%  → tail в виде massiv Wild-hits
+        #   P(L) = 27%  → downside создаёт низкий пол
+        #   Итог: высокая дисперсия FS-исходов → высокая волатильность.
         self.mystery_reveal_pool_weights = {
-            "W":  1,   # rare top-tier (×150 line, +multiplier ×2..×50)
-            "H1": 3,   # premium
-            "H2": 4,
-            "H3": 5,
-            "H4": 5,
-            "L1": 6,   # low (frequent)
-            "L2": 6,
-            "L3": 6,
-            "L4": 6,
+            "W":  4,   # ≈18% — elevated Wild probability for high volatility,
+                       # but leaves enough non-Wild sessions for optimizer range.
+            "H1": 3,
+            "H2": 3,
+            "H3": 2,
+            "H4": 2,
+            "L1": 3,
+            "L2": 3,
+            "L3": 2,
+            "L4": 0,   # L4 excluded to avoid very low mystery payouts
         }
         # Backward-compat: list для legacy кода (если где-то остался random.choice).
         # Веса игнорируются при использовании списка; основной путь — weighted.
@@ -237,7 +231,10 @@ class GameConfig(Config):
             "scatter_triggers": {3: 50, 4: 20, 5: 5},
             "mult_values": {
                 self.basegame_type: {1: 1},
-                self.freegame_type: {2: 60, 3: 80, 4: 50, 5: 20, 10: 15, 20: 10, 50: 5},
+                # Balanced distribution: mostly ×2-×10 to allow optimizer range,
+                # rare ×50 keeps near-wincap tail for high volatility.
+                # Optimizer's distribution_bias will upweight near-wincap outcomes.
+                self.freegame_type: {2: 40, 5: 30, 10: 15, 20: 10, 50: 5},
             },
             "force_wincap": False,
             "force_freegame": True,
@@ -308,7 +305,7 @@ class GameConfig(Config):
             "scatter_triggers": {3: 60, 4: 25, 5: 8},
             "mult_values": {
                 self.basegame_type: {1: 1},
-                self.freegame_type: {2: 60, 3: 80, 4: 50, 5: 20, 10: 15, 20: 10, 50: 5},
+                self.freegame_type: {2: 35, 5: 30, 10: 20, 20: 10, 50: 5},
             },
             "force_wincap": False,
             "force_freegame": True,
@@ -323,17 +320,15 @@ class GameConfig(Config):
             "scatter_triggers": {3: 70, 4: 20, 5: 10},
             "mult_values": {
                 self.basegame_type: {1: 1},
-                self.freegame_type: {2: 60, 3: 80, 4: 50, 5: 20, 10: 15, 20: 10, 50: 5},
+                self.freegame_type: {2: 20, 5: 25, 10: 25, 20: 20, 50: 10},
             },
             "force_wincap": False,
             "force_freegame": True,
         }
 
         # Buy Bonus (Normal) — гарантированный FS, обычные reelstrips.
-        # Cost = 100. Target RTP per spin = 96 bet. Поэтому FS должен avg ≈ 96 bet/spin.
-        # M4 Iter 1: avg FS payout = 30 bet → нужно ×3.2 boost через мульты.
-        # Avg multiplier shifted: {2:60→20, 3:80→30, 4:50→30, 5:20→20, 10:15→40, 20:10→50, 50:5→40}
-        #   New weighted avg = (40 + 90 + 120 + 100 + 400 + 1000 + 2000)/230 = 3750/230 = 16.3x (от 5.25x).
+        # Cost = 100×. High-vol: max VI ≈ 5.0 при wincap=2500.
+        # Avg mult old ≈ 16×, new ≈ 38× (жёсткий скос к ×50).
         buy_normal_condition = {
             "reel_weights": {
                 self.basegame_type: {"BR0": 1},
@@ -342,18 +337,16 @@ class GameConfig(Config):
             "scatter_triggers": {3: 50, 4: 20, 5: 5},
             "mult_values": {
                 self.basegame_type: {1: 1},
-                self.freegame_type: {2: 20, 3: 30, 4: 30, 5: 20, 10: 40, 20: 50, 50: 40},
+                self.freegame_type: {2: 10, 5: 20, 10: 25, 20: 25, 50: 20},
             },
             "force_wincap": False,
             "force_freegame": True,
         }
 
-        # Buy Bonus (Super) — гарантированный FS со старта × 3 Mystery Reels.
-        # Cost = 200. Target RTP per spin = 192 bet → FS avg ≈ 192 bet/spin.
-        # M4 Iter 1: avg FS payout (FR1) = 50 bet → нужно ×3.8 boost.
-        # Boost мультов сильнее чем в buy_normal:
-        #   {2:5, 3:10, 4:20, 5:30, 10:50, 20:60, 50:50} avg = (10+30+80+150+500+1200+2500)/225 = 4470/225 = 19.9x
-        # Использует FR1 (FS reelstrip с большим Mystery-весом).
+        # Buy Bonus (Super) — гарантированный FS со старта с Mystery Reels.
+        # Cost = 200×. High-vol: max VI ≈ 3.5 при wincap=2500.
+        # Avg mult new ≈ 44× (максимально агрессивный скос к ×50).
+        # Использует FR1 (FS reelstrip с большим W/H весом).
         buy_super_condition = {
             "reel_weights": {
                 self.basegame_type: {"BR0": 1},
@@ -362,11 +355,10 @@ class GameConfig(Config):
             "scatter_triggers": {3: 50, 4: 20, 5: 5},
             "mult_values": {
                 self.basegame_type: {1: 1},
-                self.freegame_type: {2: 5, 3: 10, 4: 20, 5: 30, 10: 50, 20: 60, 50: 50},
+                self.freegame_type: {2: 5, 5: 15, 10: 20, 20: 30, 50: 30},
             },
             "force_wincap": False,
             "force_freegame": True,
-            # Cash Stacks-custom flag — обрабатывается в gamestate.run_freespin.
             "super_bonus": True,
         }
 
@@ -395,9 +387,12 @@ class GameConfig(Config):
                         win_criteria=mode_maxwins["base"],
                         conditions=wincap_condition,
                     ),
-                    Distribution(criteria="freegame", quota=0.1, conditions=freegame_condition),
-                    Distribution(criteria="0", quota=0.4, win_criteria=0.0, conditions=zerowin_condition),
-                    Distribution(criteria="basegame", quota=0.499, conditions=basegame_condition),
+                    Distribution(criteria="freegame", quota=0.10, conditions=freegame_condition),
+                    # High-vol: 83% zero-win spins.
+                    # Basegame quota=0.069 → ~6,900 samples with HR=12 → ~575
+                    # winning books → enough for optimizer to work with.
+                    Distribution(criteria="0", quota=0.83, win_criteria=0.0, conditions=zerowin_condition),
+                    Distribution(criteria="basegame", quota=0.069, conditions=basegame_condition),
                 ],
             ),
             BetMode(
@@ -416,8 +411,9 @@ class GameConfig(Config):
                         conditions=wincap_condition,
                     ),
                     Distribution(criteria="freegame", quota=0.18, conditions=bonus_boost_freegame_condition),
-                    Distribution(criteria="0", quota=0.35, win_criteria=0.0, conditions=bonus_boost_basegame_condition),
-                    Distribution(criteria="basegame", quota=0.469, conditions=bonus_boost_basegame_condition),
+                    # High-vol: bonus_boost basegame quota=0.069 → sufficient optimizer samples.
+                    Distribution(criteria="0", quota=0.75, win_criteria=0.0, conditions=bonus_boost_basegame_condition),
+                    Distribution(criteria="basegame", quota=0.069, conditions=bonus_boost_basegame_condition),
                 ],
             ),
             BetMode(

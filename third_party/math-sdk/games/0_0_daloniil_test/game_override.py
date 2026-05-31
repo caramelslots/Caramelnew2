@@ -232,8 +232,12 @@ class GameStateOverride(GameExecutables):
         self.get_special_symbols_on_board()
 
     def emit_mystery_reveal(self) -> None:
-        """Для каждого активного mystery reel выбрать символ, ЗАМЕНИТЬ на нём
-        реальные клетки и эмитнуть mystery_reveal_event.
+        """Для каждого активного mystery reel ЗАМЕНИТЬ клетки одним символом
+        и эмитнуть mystery_reveal_event.
+
+        Все активные mystery reels раскрываются в ОДИН и тот же символ —
+        это ключевое правило механики: игрок видит, что все маски скрывали
+        одинаковый символ (единый «destiny reveal»).
 
         Использует weighted random из `mystery_reveal_pool_weights` (см.
         game_config.py). W включён в пул с малым весом, чтобы 5×W был
@@ -247,15 +251,17 @@ class GameStateOverride(GameExecutables):
         weights_map = self.config.mystery_reveal_pool_weights
         symbols = list(weights_map.keys())
         weights = list(weights_map.values())
+
+        # Один символ для ВСЕХ mystery reels на этом спине.
+        revealed_symbol = random.choices(symbols, weights=weights, k=1)[0]
+
         for reel_idx in self.mystery_reels:
-            # weighted random: P(symbol) = weight / sum(weights).
-            revealed_symbol = random.choices(symbols, weights=weights, k=1)[0]
             positions = [
                 {"reel": reel_idx, "row": row}
                 for row in range(self.config.num_rows[reel_idx])
             ]
             # Подмена символов на доске: M → revealed_symbol.
-            # NB: для W это означает, что ВСЕ 5 cells reel-а становятся Wild.
+            # NB: для W это означает, что ВСЕ cells mystery reels становятся Wild.
             # Wild substitution на линиях обрабатывается стандартным Lines.get_lines.
             # Wild multiplier (×2..×50 в FS) приходит из assign_mult_property
             # в game_override (на создание символа в create_symbol).
