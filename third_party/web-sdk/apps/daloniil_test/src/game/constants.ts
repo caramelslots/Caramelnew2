@@ -217,10 +217,10 @@ export const DESK_PARCHMENT_PADDING = { width: 1.04, height: 1.04 } as const;
  * Portrait (800×1422):             drawer ~144 px → game-area centre ≈ y 350 → offset -150
  */
 export const BOARD_LAYOUT_OFFSETS = {
-	desktop: { x: 0, y: -54 },
-	tablet: { x: 0, y: -43 },
-	landscape: { x: 0, y: -85 },
-	portrait: { x: 0, y: -150 },
+	desktop: { x: 0, y: -4 },
+	tablet: { x: 0, y: 7 },
+	landscape: { x: 0, y: -35 },
+	portrait: { x: 0, y: -100 },
 } as const;
 /** Frame bezel + glow offset from board center (px): +x right, +y down. */
 export const BOARD_FRAME_OFFSET = { x: 6, y: 8 } as const;
