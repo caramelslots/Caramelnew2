@@ -22,6 +22,21 @@ export type SpinningReelSpinOptions = {
 	/** Symbol heights per pre-spin loop (default: full slide to defaultY). */
 	reelPreSpinRotations?: number;
 	/**
+	 * Whether the first pre-spin slide winds up with `backIn` easing (a slight
+	 * dip-back then a burst past the steady speed). Defaults to `true` (legacy
+	 * behavior). Set `false` to start the spin at a constant speed — useful
+	 * when the wind-up burst reads as the whole slot "surging" to swap symbols.
+	 */
+	reelPreSpinWindup?: boolean;
+	/**
+	 * Whether the main spin starts seamlessly by injecting the result + padding
+	 * ABOVE the symbols currently on screen (which keep their place) and scrolling
+	 * them in, instead of teleporting the reel to a fresh padded stack. Defaults
+	 * to `false` (legacy teleport). Set `true` to avoid the visible "symbols
+	 * swap in place on the board" artifact at the pre-spin → result handoff.
+	 */
+	reelSeamlessSpinStart?: boolean;
+	/**
 	 * Optional damped-oscillation settle.
 	 *
 	 * When set, after the reel snaps to `defaultY + bounceSize` (initial overshoot

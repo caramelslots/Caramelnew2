@@ -163,22 +163,28 @@ const SPECIAL_SYMBOL_SIZE = 1;
  * paddingMult 1.2 → 0.7, which keeps the last reel's main slide at
  * ~1.97 s (≈2.5 s total incl. stagger + settle).
  */
-const REEL_SPEED = 1.6;
+const REEL_SPEED = 1.2;
 const REEL_SETTLE_SPEED = REEL_SPEED * 0.42;
 const SPIN_OPTIONS_SHARED = {
 	reelBounceBackSpeed: REEL_SETTLE_SPEED,
 	reelSpinSpeedBeforeBounce: REEL_SPEED,
 	reelPaddingMultiplierNormal: 0.7,
 	reelPaddingMultiplierAnticipated: 10,
-	// Per-reel START stagger (ms × reelIndex) for the pre-spin launch. Kept at
-	// 0 so all reels wind up and start together — otherwise later reels launch
-	// (with the `backIn` wind-up) while earlier reels are already streaming,
-	// which reads as the last columns "rushing to catch up", especially at the
-	// slower REEL_SPEED. The left-to-right STOP order is independent of this:
-	// it comes from each reel's accumulated padding distance, so it stays.
-	reelSpinDelay: 0,
+	// Per-reel START stagger (ms × reelIndex) for the pre-spin launch. A small
+	// 10ms gives a subtle left-to-right cascade at the start without the
+	// "rushing to catch up" look that a larger delay produced at the slower
+	// REEL_SPEED. The left-to-right STOP order is independent of this — it
+	// comes from each reel's accumulated padding distance, so it stays.
+	reelSpinDelay: 30,
 	reelPreSpinSpeed: REEL_SPEED,
 	reelSpinSpeed: REEL_SPEED,
+	// Start at a constant speed (no `backIn` wind-up burst) so the slot doesn't
+	// visibly "surge" to swap symbols at the start of the spin.
+	reelPreSpinWindup: false,
+	// Inject the result above the on-screen symbols and scroll it in, instead of
+	// teleporting to a fresh stack — avoids symbols visibly swapping in place on
+	// the board at the pre-spin → result handoff.
+	reelSeamlessSpinStart: true,
 	reelBounceSizeMulti: 0.28,
 	reelSettleSecondaryMulti: 0.4,
 	reelSettleSecondarySpeedMulti: 1.2,

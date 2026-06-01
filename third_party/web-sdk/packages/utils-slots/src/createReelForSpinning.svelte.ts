@@ -220,7 +220,12 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		}
 	};
 
-	const addPadding = async (paddingSizeValue: number) => {
+	// Synchronous on purpose: the pool swap (updateSymbolsPool) must be applied
+	// in the SAME synchronous batch as the follow-up reel reposition (placeY).
+	// If an `await` sits between them, Svelte can flush a render with the new
+	// symbols still at the old reel position — i.e. symbols visibly "swap in
+	// place" on the board before the reel snaps offscreen.
+	const addPadding = (paddingSizeValue: number) => {
 		const paddingRawSymbols = getPaddingRawSymbols({
 			paddingRawReel,
 			start: targetPaddingPosition,
@@ -314,8 +319,11 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			start: randomStart,
 			length: reelLength,
 		});
-		const topY = await addPadding(0);
-		await placeY(topY);
+		// Keep the pool swap (addPadding) and the reposition (placeY) in one
+		// synchronous batch so no frame renders the new symbols at the old
+		// position — see addPadding's note on in-place symbol swaps.
+		const topY = addPadding(0);
+		placeY(topY);
 	};
 
 	const preSpinSlideDownLoop = async ({
@@ -330,7 +338,12 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			const speed = started
 				? reelState.spinOptions().reelSpinSpeed
 				: reelState.spinOptions().reelPreSpinSpeed;
-			const easing = started || isTurboBeforeAll ? linear : backIn;
+			// First slide normally winds up with `backIn` (a dip-back then a
+			// burst past the steady speed). Opt out via `reelPreSpinWindup: false`
+			// to start at a constant speed — avoids the "whole slot surges to
+			// swap symbols" look. Subsequent loops / turbo are always linear.
+			const useWindup = reelState.spinOptions().reelPreSpinWindup ?? true;
+			const easing = started || isTurboBeforeAll || !useWindup ? linear : backIn;
 			const preSpinRotations = reelState.spinOptions().reelPreSpinRotations;
 			const preSpinTargetY =
 				preSpinRotations === undefined
@@ -375,9 +388,46 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 
 	const generalSpinWith = async ({ slideDown }: { slideDown: () => Promise<void> }) => {
 		const isSpinning = reelState.motion === 'spinning';
+		const symbolHeight = reelOptions.symbolHeight;
 
-		const topY = await addPadding(paddingSize);
-		await placeY(topY);
+		// IMPORTANT: the pool swap and the reel reposition must stay in ONE
+		// synchronous batch — no `await` between them — otherwise Svelte can render
+		// a frame with the new symbols at the old position (an in-place swap).
+		if (reelState.spinOptions().reelSeamlessSpinStart) {
+			// Seamless start: instead of teleporting to a fresh padded stack
+			// (which makes the visible board "swap" symbols in place because the
+			// window shows a different slice of a different layout), inject
+			// [result, padding] ABOVE the symbols currently on screen and keep
+			// those on-screen symbols exactly where they are. We shift the reel up
+			// by the number of prepended symbols (a whole-symbol offset, so the
+			// move is invisible), then the normal slideDown scrolls the result in
+			// from off-screen — the player never sees symbols replaced on the board.
+			const currentContent = reelState.symbols
+				.slice(0, reelState.activeSymbolCount)
+				.map((reelSymbol) => reelSymbol.rawSymbol);
+			const paddingRawSymbols = getPaddingRawSymbols({
+				paddingRawReel,
+				start: targetPaddingPosition,
+				length: paddingSize,
+			});
+			const prependCount = targetRawSymbols.length + paddingRawSymbols.length;
+			const layout: TRawSymbol[] = [
+				...targetRawSymbols,
+				...paddingRawSymbols,
+				...currentContent,
+			];
+			updateSymbolsPool(layout);
+			placeY(reelY.current - prependCount * symbolHeight);
+		} else {
+			// Legacy: teleport to a freshly padded stack. `topY` is a whole
+			// multiple of symbolHeight while the pre-spin position is mid-slide
+			// (fractional), so carry the fractional phase over to keep the jump a
+			// whole number of symbol heights (no sub-symbol hitch).
+			const phaseOffset =
+				reelY.current - Math.round(reelY.current / symbolHeight) * symbolHeight;
+			const topY = addPadding(paddingSize);
+			placeY(topY + phaseOffset);
+		}
 
 		if (!isSpinning) {
 			reelState.motion = 'spinning';
