@@ -5,12 +5,11 @@ import { checkIsMultipleRevealEvents } from 'utils-book';
 import { createPrimaryMachines, createIntermediateMachines, createGameActor } from 'utils-xstate';
 
 import type { Bet } from './typesBookEvent';
-import { stateXstateDerived } from './stateXstate';
 import { playBet, convertTorResumableBet } from './utils';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
 import { eventEmitter } from './eventEmitter';
 import { clearWinSpotlight } from './bookEventHandlerMap';
-import config from './config';
+import { runPreSpin } from './spinPadding';
 
 const primaryMachines = createPrimaryMachines<Bet>({
 	onResumeGameActive: (betToResume) => convertTorResumableBet(betToResume),
@@ -29,10 +28,7 @@ const primaryMachines = createPrimaryMachines<Bet>({
 		clearWinSpotlight();
 		stateBet.winBookEventAmount = 0;
 		eventEmitter.broadcast({ type: 'winHide' });
-		if ((stateBet.isTurbo && stateXstateDerived.isAutoBetting()) || stateBet.isSpaceHold) return;
-		await stateGameDerived.enhancedBoard.preSpin({
-			paddingBoard: config.paddingReels[stateGame.gameType],
-		});
+		await runPreSpin(stateGame.gameType);
 	},
 	onNewGameError: () => stateGameDerived.enhancedBoard.settle(),
 	onPlayGame: async (bet) => await playBet(bet),

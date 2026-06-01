@@ -11,6 +11,7 @@ import { stateGame, stateGameDerived } from './stateGame.svelte';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
 import config from './config';
+import { runPreSpin } from './spinPadding';
 import { WIN_INFO_PRE_DELAY_MS, MYSTERY_REVEAL_PRE_DELAY_MS, WIN_SPOTLIGHT_CLEAR_DELAY_MS } from './constants';
 
 // Таймер фонового снятия затемнения/paylines. Хранится здесь, чтобы
@@ -85,6 +86,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// последующих reveal внутри одного бета). При нажатии Bet это уже
 		// сделано в actor.onNewGameStart, поэтому здесь — идемпотентный no-op.
 		clearWinSpotlight();
+
+		// FS reveals share one bet — only the first spin got preSpin in
+		// onNewGameStart. Run the same pre-spin before each freegame reveal.
+		if (bookEvent.gameType === 'freegame') {
+			await runPreSpin('freegame');
+		}
 
 		stateGame.gameType = bookEvent.gameType;
 		await stateGameDerived.enhancedBoard.spin({
