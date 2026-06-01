@@ -38,6 +38,18 @@ export default {
 		src: new URL('../../assets/sprites/boardFrame/desk_night.png', import.meta.url).href,
 		preload: true,
 	},
+	bonusBarV: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/bonusBar/bar_v.png', import.meta.url).href,
+	},
+	bonusBarH: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/bonusBar/bar_h.png', import.meta.url).href,
+	},
+	bonusBarCat: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/bonusBar/cat_static.png', import.meta.url).href,
+	},
 	pressToContinueText: {
 		type: 'sprites',
 		src: new URL('../../assets/sprites/pressToContinueText/MM_pressanywhere.json', import.meta.url)

@@ -67,8 +67,13 @@
 	import { getContext } from '../game/context';
 	import { devPreview } from '../game/devPreview.svelte';
 	import { BOARD_SIZES, BOARD_LAYOUT_OFFSETS } from '../game/constants';
+	import assets from '../game/assets';
 
 	const context = getContext();
+
+	const barVUrl = assets.bonusBarV.src;
+	const barHUrl = assets.bonusBarH.src;
+	const catStaticUrl = assets.bonusBarCat.src;
 
 	const BONUSES_PER_TIER = 4;
 
@@ -153,7 +158,7 @@
 		class:bar-h={!isDesktop}
 		class:pulse
 		data-test="progress-ladder"
-		style="left:{barPos.left}px;top:{barPos.top}px;"
+		style="left:{barPos.left}px;top:{barPos.top}px;background-image:url({isDesktop ? barVUrl : barHUrl});"
 	>
 		{#each placements as p, i (i)}
 			{@const filled = i < bonusInCurrentTier}
@@ -163,7 +168,7 @@
 				raised paw + BONUS medallion, so it sits on the whole grey silhouette.
 			-->
 			<div class="cat-wrap" class:filled style={boxStyle(p.cat)}>
-				<img class="kitty" src="/assets/sprites/bonusBar/cat_static.png" alt="" />
+				<img class="kitty" src={catStaticUrl} alt="" />
 			</div>
 		{/each}
 
@@ -186,7 +191,6 @@
 	/* ─── Vertical bar (desktop / PC) — bar_v.png (247×592) ────────── */
 	/* left/top are set inline (JS) to anchor the bar to the game board. */
 	.bar-v {
-		background-image: url('/assets/sprites/bonusBar/bar_v.png');
 		/* keep PNG aspect ratio 247:592 */
 		width: 130px;
 		height: 311.6px;
@@ -194,7 +198,6 @@
 
 	/* ─── Horizontal bar (tablet / landscape / portrait) — bar_h.png (657×217) ─ */
 	.bar-h {
-		background-image: url('/assets/sprites/bonusBar/bar_h.png');
 		/* keep PNG aspect ratio 657:217 */
 		width: 340px;
 		height: 112.3px;
