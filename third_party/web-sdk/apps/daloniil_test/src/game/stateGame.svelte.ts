@@ -153,6 +153,8 @@ export const stateGame = $state({
 	// затемняются (см. DIM_NON_WINNING + ReelSymbol.svelte). Поднимается
 	// хелпером animateSymbols в bookEventHandlerMap, сбрасывается в reveal.
 	winSpotlightActive: false,
+	// Cloud transition covers HTML overlays (e.g. ProgressLadder) while active.
+	transitionActive: false,
 });
 
 const boardLayout = () => {

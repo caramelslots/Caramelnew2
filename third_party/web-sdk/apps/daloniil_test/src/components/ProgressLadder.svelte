@@ -64,6 +64,8 @@
 </script>
 
 <script lang="ts">
+	import { cubicOut } from 'svelte/easing';
+	import type { TransitionConfig } from 'svelte/transition';
 	import { getContext } from '../game/context';
 	import { devPreview } from '../game/devPreview.svelte';
 	import { BOARD_SIZES, BOARD_LAYOUT_OFFSETS } from '../game/constants';
@@ -76,14 +78,37 @@
 	const catStaticUrl = assets.bonusBarCat.src;
 
 	const BONUSES_PER_TIER = 4;
+	const BAR_ENTER_MS = 550;
+	const BAR_LEAVE_MS = 400;
 
-	// Rendered pixel sizes of the bar PNGs (must match the .bar-v / .bar-h CSS).
-	const BAR_DIMS = {
-		v: { w: 130, h: 311.6 },
-		h: { w: 340, h: 112.3 },
+	const barOffsets = (node: Element) => {
+		const vertical = node.classList.contains('bar-v');
+		return vertical ? { x: 72, y: 0 } : { x: 0, y: 48 };
 	};
-	// Gap (px) between the board edge and the bar.
-	const GAP = 16;
+
+	const barEnter = (node: Element): TransitionConfig => {
+		const { x, y } = barOffsets(node);
+		return {
+			duration: BAR_ENTER_MS,
+			easing: cubicOut,
+			css: (t) => {
+				const scale = 0.82 + 0.18 * t;
+				return `opacity:${t};transform:translate(${(1 - t) * x}px,${(1 - t) * y}px) scale(${scale});`;
+			},
+		};
+	};
+
+	const barLeave = (node: Element): TransitionConfig => {
+		const { x, y } = barOffsets(node);
+		return {
+			duration: BAR_LEAVE_MS,
+			easing: cubicOut,
+			css: (t) => {
+				const scale = 0.82 + 0.18 * t;
+				return `opacity:${t};transform:translate(${(1 - t) * x}px,${(1 - t) * y}px) scale(${scale});`;
+			},
+		};
+	};
 
 	let pulse = $state(false);
 
@@ -95,6 +120,14 @@
 			setTimeout(() => (pulse = false), 700);
 		},
 	});
+
+	// Rendered pixel sizes of the bar PNGs (must match the .bar-v / .bar-h CSS).
+	const BAR_DIMS = {
+		v: { w: 130, h: 311.6 },
+		h: { w: 340, h: 112.3 },
+	};
+	// Gap (px) between the board edge and the bar.
+	const GAP = 16;
 
 	// devPreview.ladder toggled from the DEV panel (DevButtons.svelte).
 	const isVisible = $derived(devPreview.ladder || context.stateGame.gameType === 'freegame');
@@ -158,6 +191,8 @@
 		class:bar-h={!isDesktop}
 		class:pulse
 		data-test="progress-ladder"
+		in:barEnter
+		out:barLeave
 		style="left:{barPos.left}px;top:{barPos.top}px;background-image:url({isDesktop ? barVUrl : barHUrl});"
 	>
 		{#each placements as p, i (i)}

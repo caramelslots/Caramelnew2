@@ -48,6 +48,7 @@
 	});
 </script>
 
+<div class="pixi-stage" class:above-html-ui={context.stateGame.transitionActive}>
 <App maxResolution={2}>
 	<EnableSound />
 	<EnableHotkey />
@@ -103,6 +104,7 @@
 		<Transition />
 	{/if}
 </App>
+</div>
 
 <CashStacksModals>
 	{#snippet version()}
@@ -118,3 +120,14 @@
 <MysteryReelUnlockOverlay />
 <DevCheats />
 <DevButtons />
+
+<style lang="scss">
+	.pixi-stage {
+		position: relative;
+	}
+
+	/* ProgressLadder is HTML (z-index 40); raise Pixi canvas during cloud transition. */
+	.pixi-stage.above-html-ui {
+		z-index: 50;
+	}
+</style>

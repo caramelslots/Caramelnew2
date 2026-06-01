@@ -1,5 +1,7 @@
 <script lang="ts" module>
-	export type EmitterEventTransition = { type: 'transition' };
+	import type { GameType } from '../game/types';
+
+	export type EmitterEventTransition = { type: 'transition'; gameType?: GameType };
 </script>
 
 <script lang="ts">
@@ -7,15 +9,19 @@
 
 	import TransitionAnimation from './TransitionAnimation.svelte';
 	import { getContext } from '../game/context';
+	import { stateGame } from '../game/stateGame.svelte';
 
 	const context = getContext();
 
 	let transitioning = $state(false);
 	let oncomplete = $state(() => {});
+	let pendingGameType = $state<GameType | undefined>(undefined);
 
 	context.eventEmitter.subscribeOnMount({
-		transition: async () => {
+		transition: async (event) => {
 			transitioning = true;
+			stateGame.transitionActive = true;
+			pendingGameType = event.gameType;
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},
 	});
@@ -23,9 +29,17 @@
 
 {#if transitioning}
 	<TransitionAnimation
+		onThemeSwitch={() => {
+			if (pendingGameType) {
+				stateGame.gameType = pendingGameType;
+				pendingGameType = undefined;
+			}
+		}}
 		oncomplete={() => {
 			oncomplete();
 			transitioning = false;
+			stateGame.transitionActive = false;
+			pendingGameType = undefined;
 		}}
 	/>
 {/if}

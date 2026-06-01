@@ -85,45 +85,48 @@
 	});
 </script>
 
-{#if alphaDay.current > 0}
-	<Container alpha={alphaDay.current}>
-		<Sprite key="boardDay" {...deskProps} />
-	</Container>
-{/if}
+<Container sortableChildren={true}>
+	{#if animationName}
+		<SpineProvider
+			zIndex={-1}
+			key="reelhouse"
+			x={frameX}
+			y={frameY}
+			width={GLOW_SIZE.width}
+			height={GLOW_SIZE.height}
+		>
+			<SpineTrack
+				trackIndex={0}
+				{animationName}
+				{loop}
+				listener={{
+					complete: (entry) => {
+						if (entry.animation) {
+							if (entry.animation.name === 'reelhouse_glow_start') {
+								animationName = 'reelhouse_glow_idle';
+								loop = true;
+							}
 
-{#if alphaNight.current > 0}
-	<Container alpha={alphaNight.current}>
-		<Sprite key="boardNight" {...deskProps} />
-	</Container>
-{/if}
-
-{#if animationName}
-	<SpineProvider
-		key="reelhouse"
-		x={frameX}
-		y={frameY}
-		width={GLOW_SIZE.width}
-		height={GLOW_SIZE.height}
-	>
-		<SpineTrack
-			trackIndex={0}
-			{animationName}
-			{loop}
-			listener={{
-				complete: (entry) => {
-					if (entry.animation) {
-						if (entry.animation.name === 'reelhouse_glow_start') {
-							animationName = 'reelhouse_glow_idle';
-							loop = true;
+							if (entry.animation.name === 'reelhouse_glow_exit') {
+								animationName = undefined;
+								loop = false;
+							}
 						}
+					},
+				}}
+			/>
+		</SpineProvider>
+	{/if}
 
-						if (entry.animation.name === 'reelhouse_glow_exit') {
-							animationName = undefined;
-							loop = false;
-						}
-					}
-				},
-			}}
-		/>
-	</SpineProvider>
-{/if}
+	{#if alphaDay.current > 0}
+		<Container alpha={alphaDay.current} zIndex={0}>
+			<Sprite key="boardDay" {...deskProps} />
+		</Container>
+	{/if}
+
+	{#if alphaNight.current > 0}
+		<Container alpha={alphaNight.current} zIndex={0}>
+			<Sprite key="boardNight" {...deskProps} />
+		</Container>
+	{/if}
+</Container>
