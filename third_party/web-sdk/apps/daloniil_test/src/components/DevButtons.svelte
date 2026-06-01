@@ -252,6 +252,21 @@
 			]);
 		});
 
+	// === Финальная доска + дождь монеток (для профайлинга лагов монеток) ===
+	// reveal (доска с выигрышем) → winInfo (линия H1×3) → setWin (big win + монетки).
+	// Используем тот же проверенный путь, что и playLineWin, плюс setWin, который
+	// поднимает winShow/winUpdate → Win-панель с count-up и эмиттером WinCoins.
+	// Sensational (level 9) — самый плотный и долгий дождь монеток
+	// (presentDuration 30s, particle frequency 0.09), удобно ловить лаги.
+	const playBoardWithCoins = (level: WinLevel, amount: number) =>
+		guard(async () => {
+			await playBookEvents([reveal(LINE_WIN_BOARD), asEvent(baseEvents.winInfo)]);
+			stateBet.winBookEventAmount = amount;
+			await playBookEvent(asEvent({ type: 'setWin', amount, winLevel: level }), {
+				bookEvents: [],
+			});
+		});
+
 	// === Free Spins ===
 	const playFsTrigger = () =>
 		guard(async () => {
@@ -399,6 +414,28 @@
 						onclick={playVShapeWin}
 					>
 						V-Shape Win (5-of-a-kind)
+					</button>
+				</div>
+			</section>
+
+			<section>
+				<h4>Финальная доска + монетки (perf)</h4>
+				<div class="grid">
+					<button
+						type="button"
+						disabled={busy}
+						title="reveal доски с выигрышем → дождь монеток (Sensational, ~30с) — для профайлинга лагов монеток"
+						onclick={() => playBoardWithCoins(9, 1000 * x)}
+					>
+						Board + Coin Rain
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="reveal доски с выигрышем → монетки (Big Win, ~7с)"
+						onclick={() => playBoardWithCoins(6, 30 * x)}
+					>
+						Board + Coins (Big)
 					</button>
 				</div>
 			</section>

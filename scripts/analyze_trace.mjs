@@ -163,6 +163,38 @@ const keyForNode = (id) => {
 	return n ? callFrameKey(n.callFrame) : '(unknown)';
 };
 
+// ---- 5. Time-bucketed self-time for specific functions (leak/growth check) ----
+// Splits the whole sample timeline into N equal windows and reports, per window,
+// the self-time of functions whose name matches a watch list. If a per-frame
+// listener is leaking, its self-time grows window over window.
+{
+	const WATCH = ['_tick', 'requestAnimationFrame', 'updateParticle', '(garbage collector)'];
+	const N = 10;
+	const firstTs = sampleTs[0] ?? 0;
+	const lastTs = sampleTs[totalSamples - 1] ?? 0;
+	const span = lastTs - firstTs || 1;
+	const bucketUs = span / N;
+	const buckets = Array.from({ length: N }, () => new Map());
+	for (let i = 0; i < totalSamples; i++) {
+		let bi = Math.floor((sampleTs[i] - firstTs) / bucketUs);
+		if (bi < 0) bi = 0;
+		if (bi >= N) bi = N - 1;
+		const name = (nodeById.get(pendingSamples[i])?.callFrame?.functionName) || '';
+		for (const w of WATCH) {
+			if (name === w) {
+				const m = buckets[bi];
+				m.set(w, (m.get(w) || 0) + (pendingDeltas[i] || 0));
+			}
+		}
+	}
+	console.log(`\n=== SELF-TIME OVER TIME (${N} windows, ~${(bucketUs / 1000).toFixed(0)}ms each) ===`);
+	console.log('window  ' + WATCH.map((w) => w.padStart(14)).join(''));
+	for (let b = 0; b < N; b++) {
+		const row = WATCH.map((w) => `${((buckets[b].get(w) || 0) / 1000).toFixed(0)}ms`.padStart(14)).join('');
+		console.log(`  #${String(b + 1).padStart(2)}  ${row}`);
+	}
+}
+
 console.log('\n=== SELF TIME INSIDE THE 6 LONGEST RunTasks (jank windows) ===');
 for (const t of taskWindows) {
 	const start = t.ts;

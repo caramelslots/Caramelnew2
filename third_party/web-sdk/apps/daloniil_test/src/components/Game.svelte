@@ -116,7 +116,9 @@
 <CashStacksMenuOverlay />
 <BuyBonusOverlay />
 <BuyBonusConfirmOverlay />
-<ProgressLadder />
+<div class="html-underlays">
+	<ProgressLadder />
+</div>
 <MysteryReelUnlockOverlay />
 <DevCheats />
 <DevButtons />
@@ -126,7 +128,12 @@
 		position: relative;
 	}
 
-	/* ProgressLadder is HTML (z-index 40); raise Pixi canvas during cloud transition. */
+	/* ProgressLadder lives in .html-underlays (z-index 40); raise Pixi during cloud transition. */
+	.html-underlays {
+		position: relative;
+		z-index: 40;
+	}
+
 	.pixi-stage.above-html-ui {
 		z-index: 50;
 	}

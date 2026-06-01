@@ -47,6 +47,7 @@
 		data: {},
 		action: async () => {
 			stateGame.gameType = 'freegame';
+			stateGame.ladderVisible = true;
 			stateGame.bonusCollected = 0;
 			stateGame.ladderTier = 0;
 			stateGame.mysteryReels = [];
@@ -62,6 +63,7 @@
 		data: {},
 		action: async () => {
 			stateGame.gameType = 'freegame';
+			stateGame.ladderVisible = true;
 			stateGame.bonusCollected = 1;
 			stateGame.ladderTier = 0;
 			stateGame.mysteryReels = [];
@@ -77,6 +79,7 @@
 		data: {},
 		action: async () => {
 			stateGame.gameType = 'freegame';
+			stateGame.ladderVisible = true;
 			stateGame.bonusCollected = 7;
 			stateGame.ladderTier = 1;
 			stateGame.mysteryReels = [2];
@@ -92,6 +95,7 @@
 		data: {},
 		action: async () => {
 			stateGame.gameType = 'freegame';
+			stateGame.ladderVisible = true;
 			stateGame.bonusCollected = 12;
 			stateGame.ladderTier = 3;
 			stateGame.mysteryReels = [0, 2, 4];
@@ -108,6 +112,7 @@
 		data: {},
 		action: async () => {
 			stateGame.gameType = 'freegame';
+			stateGame.ladderVisible = true;
 			stateGame.bonusCollected = 22;
 			stateGame.ladderTier = 5;
 			stateGame.mysteryReels = [0, 1, 2, 3, 4];
@@ -123,6 +128,7 @@
 		data: {},
 		action: async () => {
 			stateGame.gameType = 'basegame';
+			stateGame.ladderVisible = false;
 			stateGame.bonusCollected = 2;
 			stateGame.ladderTier = 0;
 			stateGame.mysteryReels = [];

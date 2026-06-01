@@ -155,6 +155,8 @@ export const stateGame = $state({
 	winSpotlightActive: false,
 	// Cloud transition covers HTML overlays (e.g. ProgressLadder) while active.
 	transitionActive: false,
+	// Bonus bar during FS — decoupled from gameType so background can switch under smoke first.
+	ladderVisible: false,
 });
 
 const boardLayout = () => {

@@ -68,6 +68,7 @@
 	import type { TransitionConfig } from 'svelte/transition';
 	import { getContext } from '../game/context';
 	import { devPreview } from '../game/devPreview.svelte';
+	import { stateGame } from '../game/stateGame.svelte';
 	import { BOARD_SIZES, BOARD_LAYOUT_OFFSETS } from '../game/constants';
 	import assets from '../game/assets';
 
@@ -113,8 +114,12 @@
 	let pulse = $state(false);
 
 	context.eventEmitter.subscribeOnMount({
-		ladderShow: () => {},
-		ladderHide: () => {},
+		ladderShow: () => {
+			stateGame.ladderVisible = true;
+		},
+		ladderHide: () => {
+			stateGame.ladderVisible = false;
+		},
 		ladderPulse: () => {
 			pulse = true;
 			setTimeout(() => (pulse = false), 700);
@@ -130,7 +135,7 @@
 	const GAP = 16;
 
 	// devPreview.ladder toggled from the DEV panel (DevButtons.svelte).
-	const isVisible = $derived(devPreview.ladder || context.stateGame.gameType === 'freegame');
+	const isVisible = $derived(devPreview.ladder || stateGame.ladderVisible);
 	const isDesktop = $derived(
 		devPreview.ladder
 			? !devPreview.ladderHorizontal
@@ -190,6 +195,7 @@
 		class:bar-v={isDesktop}
 		class:bar-h={!isDesktop}
 		class:pulse
+		class:under-smoke={stateGame.transitionActive}
 		data-test="progress-ladder"
 		in:barEnter
 		out:barLeave
@@ -221,6 +227,11 @@
 		background-repeat: no-repeat;
 		background-size: 100% 100%;
 		transition: filter 0.15s ease;
+	}
+
+	/* While cloud transition plays, Pixi canvas sits at z-index 50 — keep bar below it. */
+	.bonus-bar.under-smoke {
+		z-index: 30;
 	}
 
 	/* ─── Vertical bar (desktop / PC) — bar_v.png (247×592) ────────── */

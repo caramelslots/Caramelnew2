@@ -150,6 +150,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.bonusCollected = 0;
 		stateGame.ladderTier = 0;
 		stateGame.mysteryReels = [];
+		stateGame.ladderVisible = false;
 		// animate bonus symbols (former scatters)
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
 		await animateSymbols({ positions: bookEvent.positions });
@@ -196,6 +197,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.bonusCollected = 0;
 		stateGame.ladderTier = 0;
 		stateGame.mysteryReels = [];
+		stateGame.ladderVisible = false;
 
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		eventEmitter.broadcast({ type: 'boardFrameGlowHide' });

@@ -391,8 +391,14 @@ export const MYSTERY_REVEAL_POST_DELAY_MS = 1000;
 /** Pause after reels finish landing, before paylines/win animation start. */
 export const WIN_INFO_PRE_DELAY_MS = 100;
 
-/** When the cloud transition starts becoming opaque (`transition` spine ~0.3s). */
+/** Full cloud transition spine duration. */
+export const TRANSITION_DURATION_MS = 2333;
+
+/** When the cloud transition starts becoming opaque (~0.3s in the 2.33s spine). */
 export const TRANSITION_THEME_SWITCH_DELAY_MS = 300;
+
+/** When the bonus bar mounts — 1s before smoke clears, under the cloud layer. */
+export const TRANSITION_LADDER_SHOW_DELAY_MS = TRANSITION_DURATION_MS - 2000;
 
 /**
  * Пауза после того, как выигрышные символы полностью отыграли анимацию,
