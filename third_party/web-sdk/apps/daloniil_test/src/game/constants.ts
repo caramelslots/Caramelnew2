@@ -150,15 +150,33 @@ const SPECIAL_SYMBOL_SIZE = 1;
  * Target: ~2.5 s from Bet click to last reel stopped (instant RGS).
  * Tuned via REEL_SPEED + reelSpinDelay; pre-spin / main-spin / settle
  * speeds stay equal (or proportionally linked) so motion stays smooth.
+ *
+ * Speed ↔ duration coupling: the last reel's main slide takes roughly
+ *   t ≈ (728 + 500 × B) / REEL_SPEED   (px/ms, B = reelLength × paddingMult),
+ * so the symbols' visual speed and the total spin time are linked through
+ * the scroll distance B. To make the spin *slower* (symbols travel at a
+ * lower px/ms) WITHOUT dragging past ~2.5 s, we lower REEL_SPEED and shrink
+ * the scroll distance (reelPaddingMultiplierNormal) by a matching amount.
+ * Lowering only the speed would inflate the spin to ~3.4 s.
+ *
+ * Current tuning: REEL_SPEED 2.5 → 1.6 (≈36% slower symbols) with
+ * paddingMult 1.2 → 0.7, which keeps the last reel's main slide at
+ * ~1.97 s (≈2.5 s total incl. stagger + settle).
  */
-const REEL_SPEED = 2.5;
+const REEL_SPEED = 1.6;
 const REEL_SETTLE_SPEED = REEL_SPEED * 0.42;
 const SPIN_OPTIONS_SHARED = {
 	reelBounceBackSpeed: REEL_SETTLE_SPEED,
 	reelSpinSpeedBeforeBounce: REEL_SPEED,
-	reelPaddingMultiplierNormal: 1.2,
+	reelPaddingMultiplierNormal: 0.7,
 	reelPaddingMultiplierAnticipated: 10,
-	reelSpinDelay: 50,
+	// Per-reel START stagger (ms × reelIndex) for the pre-spin launch. Kept at
+	// 0 so all reels wind up and start together — otherwise later reels launch
+	// (with the `backIn` wind-up) while earlier reels are already streaming,
+	// which reads as the last columns "rushing to catch up", especially at the
+	// slower REEL_SPEED. The left-to-right STOP order is independent of this:
+	// it comes from each reel's accumulated padding distance, so it stays.
+	reelSpinDelay: 0,
 	reelPreSpinSpeed: REEL_SPEED,
 	reelSpinSpeed: REEL_SPEED,
 	reelBounceSizeMulti: 0.28,
