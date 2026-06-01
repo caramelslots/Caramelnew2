@@ -97,18 +97,24 @@ export function propsSyncEffect<TProps extends object, TTarget>({
 	const keys = (Object.keys(props) as (keyof TProps)[]).filter(
 		(key) => (ignoreSet ? !ignoreSet.has(key) : true),
 	);
-	$effect(() => {
-		// Reading props[key] below is what makes this effect react to every
-		// individual prop update.
-		let targetInstance = target instanceof Function ? target() : target;
-		if (targetInstance) {
-			for (const key of keys) {
-				const value = props[key];
-				if (value !== undefined) {
-					// @ts-ignore
-					targetInstance[key] = value;
-				}
+
+	// One effect per prop instead of a single effect reading every prop.
+	// A combined effect re-runs (and re-writes all props) whenever ANY prop
+	// changes — so during a spin, where only `y` updates each frame, it would
+	// still re-read and re-write x/scale/alpha/visible for every symbol every
+	// frame. Splitting per prop means only the prop that actually changed
+	// re-runs, cutting per-frame work for animated objects roughly N-fold.
+	// Keys are static (see above), so the number of effects is fixed at init.
+	for (const key of keys) {
+		$effect(() => {
+			const targetInstance = target instanceof Function ? target() : target;
+			// Reading props[key] here is what subscribes this effect to that
+			// single prop.
+			const value = props[key];
+			if (targetInstance && value !== undefined) {
+				// @ts-ignore
+				targetInstance[key] = value;
 			}
-		}
-	});
+		});
+	}
 }
