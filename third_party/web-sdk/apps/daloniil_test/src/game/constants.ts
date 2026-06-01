@@ -392,13 +392,13 @@ export const MYSTERY_REVEAL_POST_DELAY_MS = 1000;
 export const WIN_INFO_PRE_DELAY_MS = 100;
 
 /** Full cloud transition spine duration. */
-export const TRANSITION_DURATION_MS = 2333;
+export const TRANSITION_DURATION_MS = 1800;
 
-/** When the cloud transition starts becoming opaque (~0.3s in the 2.33s spine). */
-export const TRANSITION_THEME_SWITCH_DELAY_MS = 300;
+/** When the cloud transition starts becoming opaque (~0.3s in the 1.5s spine). */
+export const TRANSITION_THEME_SWITCH_DELAY_MS = 193;
 
 /** When the bonus bar mounts — 1s before smoke clears, under the cloud layer. */
-export const TRANSITION_LADDER_SHOW_DELAY_MS = TRANSITION_DURATION_MS - 2000;
+export const TRANSITION_LADDER_SHOW_DELAY_MS = TRANSITION_DURATION_MS - 1000;
 
 /**
  * Пауза после того, как выигрышные символы полностью отыграли анимацию,
