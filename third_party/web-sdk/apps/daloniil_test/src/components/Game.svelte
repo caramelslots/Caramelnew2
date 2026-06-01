@@ -48,7 +48,7 @@
 	});
 </script>
 
-<App>
+<App maxResolution={2}>
 	<EnableSound />
 	<EnableHotkey />
 	<EnableGameActor />

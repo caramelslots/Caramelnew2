@@ -71,6 +71,31 @@
 
 	let activeLines = $state<ActiveLine[]>([]);
 
+	// rAF управляется наличием активных линий: петля крутится только пока
+	// есть что анимировать. В простое (нет линий) кадры не тратятся вообще —
+	// раньше tick планировался каждый кадр всё время жизни компонента.
+	let raf = 0;
+	const tick = (now: number) => {
+		for (const line of activeLines) {
+			// Use modulo so after the first draw the line re-animates left→right
+			// every CYCLE_MS: 0..DRAW_DURATION_MS = drawing, rest = fully visible.
+			const elapsed = (now - line.startTime) % CYCLE_MS;
+			line.progress = Math.min(1, elapsed / DRAW_DURATION_MS);
+		}
+		// Останавливаемся, когда анимировать больше нечего — следующий кадр
+		// планируется только при наличии активных линий.
+		if (activeLines.length > 0) {
+			raf = requestAnimationFrame(tick);
+		} else {
+			raf = 0;
+		}
+	};
+	const ensureLoop = () => {
+		if (raf === 0 && activeLines.length > 0) {
+			raf = requestAnimationFrame(tick);
+		}
+	};
+
 	context.eventEmitter.subscribeOnMount({
 		paylineShow: ({ lineIndex, positions, color, paylineRows }) => {
 			const next = activeLines.filter((l) => l.lineIndex !== lineIndex);
@@ -83,6 +108,7 @@
 				startTime: performance.now(),
 			});
 			activeLines = next;
+			ensureLoop();
 		},
 		paylineHide: ({ lineIndex }) => {
 			activeLines = activeLines.filter((l) => l.lineIndex !== lineIndex);
@@ -93,18 +119,9 @@
 	});
 
 	onMount(() => {
-		let raf = 0;
-		const tick = (now: number) => {
-			for (const line of activeLines) {
-				// Use modulo so after the first draw the line re-animates left→right
-				// every CYCLE_MS: 0..DRAW_DURATION_MS = drawing, rest = fully visible.
-				const elapsed = (now - line.startTime) % CYCLE_MS;
-				line.progress = Math.min(1, elapsed / DRAW_DURATION_MS);
-			}
-			raf = requestAnimationFrame(tick);
+		return () => {
+			if (raf !== 0) cancelAnimationFrame(raf);
 		};
-		raf = requestAnimationFrame(tick);
-		return () => cancelAnimationFrame(raf);
 	});
 
 	// SDK math-events эмитят `positions` в PADDED координатах

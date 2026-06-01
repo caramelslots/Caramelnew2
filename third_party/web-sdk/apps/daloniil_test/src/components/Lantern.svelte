@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type * as PIXI from 'pixi.js';
 	import { onMount } from 'svelte';
 	import { Sprite } from 'pixi-svelte';
 
@@ -30,14 +31,20 @@
 	const ASPECT = 330 / 966;
 	const width = $derived(height * ASPECT);
 
-	let rotation = $state(0);
+	// Драйвим поворот НАПРЯМУЮ на PIXI-спрайте из rAF — НЕ через Svelte `$state`.
+	// Раньше покадровая запись `rotation` в `$state` прогоняла тяжёлый реактивный
+	// каскад (propsSyncEffect переназначал все пропсы спрайту + churn эффектов),
+	// и это съедало ~48% CPU при двух фонарях. Прямая запись `sprite.rotation`
+	// только помечает трансформ грязным — практически бесплатно. Тайминг
+	// остаётся wall-clock (performance.now), поэтому визуально идентично.
+	let spriteRef: PIXI.Sprite | undefined;
 	let raf = 0;
 
 	onMount(() => {
 		const start = performance.now();
 		const tick = (now: number) => {
 			const t = (now - start) / period;
-			rotation = amplitude * Math.sin(2 * Math.PI * t + phase);
+			if (spriteRef) spriteRef.rotation = amplitude * Math.sin(2 * Math.PI * t + phase);
 			raf = requestAnimationFrame(tick);
 		};
 		raf = requestAnimationFrame(tick);
@@ -52,5 +59,5 @@
 	{width}
 	{height}
 	anchor={{ x: 0.5, y: 0 }}
-	{rotation}
+	oncreate={(sprite) => (spriteRef = sprite)}
 />

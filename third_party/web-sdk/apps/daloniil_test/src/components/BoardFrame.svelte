@@ -5,6 +5,7 @@
 </script>
 
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { Sprite, SpineProvider, SpineTrack, Container } from 'pixi-svelte';
 	import { Tween } from 'svelte/motion';
 	import { SECOND } from 'constants-shared/time';
@@ -55,8 +56,11 @@
 	// Crossfade alphas. `Tween` is seeded with the current value so the
 	// matching variant is fully opaque on first mount — no fade-in lag
 	// behind the symbols. Only base ↔ feature switches animate.
-	const alphaDay = new Tween(showBaseBoard ? 1 : 0, { duration: SECOND });
-	const alphaNight = new Tween(showFeatureBoard ? 1 : 0, { duration: SECOND });
+	// `untrack` reads the derived value once for the initial seed without
+	// creating a (never-updating) reactive read in the init scope — the
+	// $effect blocks below keep the alphas in sync afterwards.
+	const alphaDay = new Tween(untrack(() => showBaseBoard) ? 1 : 0, { duration: SECOND });
+	const alphaNight = new Tween(untrack(() => showFeatureBoard) ? 1 : 0, { duration: SECOND });
 
 	$effect(() => {
 		alphaDay.set(showBaseBoard ? 1 : 0);

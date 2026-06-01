@@ -88,19 +88,27 @@ export function propsSyncEffect<TProps extends object, TTarget>({
 	target?: TTarget | (() => TTarget);
 	ignore?: (keyof TProps)[];
 }) {
+	// Enumerate the synced keys once. The prop shape of a pixi-svelte component
+	// is static for the lifetime of the instance, so we avoid calling
+	// Object.keys(props) on every effect run — that triggers the $state proxy's
+	// ownKeys/getOwnPropertyDescriptor traps each frame for every object and shows
+	// up as a real cost during spins.
+	const ignoreSet = ignore ? new Set<keyof TProps>(ignore) : undefined;
+	const keys = (Object.keys(props) as (keyof TProps)[]).filter(
+		(key) => (ignoreSet ? !ignoreSet.has(key) : true),
+	);
 	$effect(() => {
-		// The whole thing is wrapped inside an $effect
-		// and because of ”props[key]“，it will react with every single props updated.
+		// Reading props[key] below is what makes this effect react to every
+		// individual prop update.
 		let targetInstance = target instanceof Function ? target() : target;
 		if (targetInstance) {
-			(Object.keys(props) as (keyof TProps)[])
-				.filter((key) => (ignore ? !ignore.includes(key) : true))
-				.forEach((key) => {
-					if (props[key] !== undefined) {
-						// @ts-ignore
-						targetInstance[key] = props[key];
-					}
-				});
+			for (const key of keys) {
+				const value = props[key];
+				if (value !== undefined) {
+					// @ts-ignore
+					targetInstance[key] = value;
+				}
+			}
 		}
 	});
 }

@@ -14,6 +14,13 @@
 	};
 
 	const props: Props = $props();
+
+	// Idle clips (B `Special_1/idle`, M `Mystery/idle`) are zero-movement rest
+	// poses — they only need to be applied once. Freezing them (autoUpdate=false)
+	// stops the Pixi ticker from recomputing the skeleton every frame for every
+	// resting/scrolling B/M cell, which is pure waste. Animated clips
+	// (bounce/wave/win/explosion) keep autoUpdate=true.
+	const autoUpdate = $derived(!props.symbolInfo.animationName?.endsWith('/idle'));
 </script>
 
 <SpineProvider
@@ -21,6 +28,7 @@
 	y={props.y}
 	key={props.symbolInfo.assetKey}
 	height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height}
+	{autoUpdate}
 >
 	<SpineTrack
 		loop={props.loop}

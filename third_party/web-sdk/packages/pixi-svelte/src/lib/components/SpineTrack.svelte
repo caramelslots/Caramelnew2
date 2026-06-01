@@ -26,6 +26,13 @@
 			if (track) spine.state.setEmptyAnimation(track.trackIndex, 0);
 			try {
 				track = spine.state.setAnimation(props.trackIndex, props.animationName, props.loop);
+				// When the parent Spine is frozen (autoUpdate === false, e.g. a
+				// zero-movement idle pose), the Pixi ticker will not advance the
+				// skeleton, so the newly-set animation would never be applied.
+				// Pose it once here so the rest frame renders correctly.
+				if (spine.autoUpdate === false) {
+					spine.update(0);
+				}
 			} catch (error) {
 				console.error(error);
 				const animations = spine?.state?.data?.skeletonData?.animations;

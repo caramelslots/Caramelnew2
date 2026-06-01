@@ -7,7 +7,11 @@
 	import InitialiseParent from './InitialiseParent.svelte';
 	import AssetsLoader from './AssetsLoader.svelte';
 
-	type Props = { children: Snippet };
+	type Props = {
+		children: Snippet;
+		// Forwarded to InitialiseApplication — caps renderer resolution (DPR).
+		maxResolution?: number;
+	};
 
 	const props: Props = $props();
 	const context = getContextApp();
@@ -16,7 +20,7 @@
 	onDestroy(() => context.stateApp.reset());
 </script>
 
-<InitialiseApplication>
+<InitialiseApplication maxResolution={props.maxResolution}>
 	<InitialiseParent>
 		<AssetsLoader>
 			{@render props.children()}
