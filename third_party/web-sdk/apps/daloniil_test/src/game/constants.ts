@@ -163,7 +163,7 @@ const SPECIAL_SYMBOL_SIZE = 1;
  * paddingMult 1.2 → 0.7, which keeps the last reel's main slide at
  * ~1.97 s (≈2.5 s total incl. stagger + settle).
  */
-const REEL_SPEED = 1.2;
+const REEL_SPEED = 1.4;
 const REEL_SETTLE_SPEED = REEL_SPEED * 0.42;
 const SPIN_OPTIONS_SHARED = {
 	reelBounceBackSpeed: REEL_SETTLE_SPEED,
