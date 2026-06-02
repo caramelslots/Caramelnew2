@@ -97,7 +97,6 @@
 		onkeydown={(e) => e.stopPropagation()}
 	>
 		<header class="menu-header">
-			<div class="title-icon" aria-hidden="true">i</div>
 			<h3 class="menu-title">ИНФОРМАЦИЯ</h3>
 		</header>
 
@@ -234,22 +233,6 @@
 		justify-content: center;
 		gap: 0.5rem;
 		margin-bottom: 0.15rem;
-	}
-
-	.title-icon {
-		width: 24px;
-		height: 24px;
-		border-radius: 50%;
-		background: #fff;
-		color: #4b8eb0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-style: italic;
-		font-weight: 800;
-		font-size: 1rem;
-		line-height: 1;
-		flex-shrink: 0;
 	}
 
 	.menu-title {

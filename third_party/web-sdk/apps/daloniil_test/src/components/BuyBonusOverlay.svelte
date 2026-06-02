@@ -18,7 +18,7 @@
 	import { stateBonus } from 'components-ui-html/src/stateBonus.svelte';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
-	import { clearActiveFeature } from '../game/activeFeature';
+	import { clearActiveFeature, isAnyBonusActive } from '../game/activeFeature';
 	import { getContext } from '../game/context';
 	import AssetPlaceholder from './AssetPlaceholder.svelte';
 	import CashStacksFeatureToggles from './CashStacksFeatureToggles.svelte';
@@ -26,6 +26,7 @@
 	const context = getContext();
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonus');
+	const buyDisabled = $derived(isAnyBonusActive());
 
 	type BonusVariant = 'normal' | 'super';
 
@@ -62,6 +63,7 @@
 	};
 
 	const onBuy = (variant: BonusVariant) => {
+		if (buyDisabled) return;
 		clearActiveFeature();
 		/*
 			НЕ трогаем stateBet.activeBetModeKey здесь — иначе HUD сразу же
@@ -113,7 +115,7 @@
 					</div>
 					<div class="card-desc">{context.i18nDerived.buyNormalDesc()}</div>
 					<div class="card-price" data-test="bonus-price-normal">{normalPrice}</div>
-					<button class="buy-button" onclick={() => onBuy('normal')}>
+					<button class="buy-button" disabled={buyDisabled} onclick={() => onBuy('normal')}>
 						{context.i18nDerived.buyConfirm()}
 					</button>
 				</div>
@@ -126,7 +128,7 @@
 					</div>
 					<div class="card-desc">{context.i18nDerived.buySuperDesc()}</div>
 					<div class="card-price" data-test="bonus-price-super">{superPrice}</div>
-					<button class="buy-button" onclick={() => onBuy('super')}>
+					<button class="buy-button" disabled={buyDisabled} onclick={() => onBuy('super')}>
 						{context.i18nDerived.buyConfirm()}
 					</button>
 				</div>
@@ -313,8 +315,14 @@
 		box-shadow: 0 3px 0 rgba(0, 0, 0, 0.22);
 		min-width: 140px;
 
-		&:hover { filter: brightness(1.08); }
-		&:active { transform: translateY(1px); }
+		&:hover:not(:disabled) { filter: brightness(1.08); }
+		&:active:not(:disabled) { transform: translateY(1px); }
+
+		&:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+			pointer-events: none;
+		}
 	}
 
 	/*

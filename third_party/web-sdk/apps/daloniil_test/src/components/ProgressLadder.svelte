@@ -69,7 +69,13 @@
 	import { getContext } from '../game/context';
 	import { devPreview } from '../game/devPreview.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
-	import { BOARD_SIZES, BOARD_LAYOUT_OFFSETS } from '../game/constants';
+	import {
+		BONUS_BAR_H_SHIFT_SCREEN_X,
+		BOARD_LAYOUT_OFFSETS,
+		getPortraitBonusBarHeightPx,
+		getPortraitBonusBarWidthPx,
+		getPortraitSmallMobileScaleFactor,
+	} from '../game/constants';
 	import assets from '../game/assets';
 
 	const context = getContext();
@@ -126,13 +132,19 @@
 		},
 	});
 
-	// Rendered pixel sizes of the bar PNGs (must match the .bar-v / .bar-h CSS).
-	const BAR_DIMS = {
+	const canvasSizeType = $derived(context.stateLayoutDerived.canvasSizeType());
+	const portraitCompactScale = $derived(getPortraitSmallMobileScaleFactor(canvasSizeType));
+
+	// Rendered pixel sizes of the bar PNGs (must match inline / .bar-v / .bar-h CSS).
+	const BAR_DIMS = $derived({
 		v: { w: 130, h: 311.6 },
-		h: { w: 340, h: 112.3 },
-	};
+		h: {
+			w: getPortraitBonusBarWidthPx(canvasSizeType),
+			h: getPortraitBonusBarHeightPx(canvasSizeType),
+		},
+	});
 	// Gap (px) between the board edge and the bar.
-	const GAP = 16;
+	const GAP = $derived(16 * portraitCompactScale);
 
 	// devPreview.ladder toggled from the DEV panel (DevButtons.svelte).
 	const isVisible = $derived(devPreview.ladder || stateGame.ladderVisible);
@@ -166,27 +178,43 @@
 	const boxStyle = (b: Box) =>
 		`left:${b.left}%;top:${b.top}%;width:${b.width}%;height:${b.height}%;`;
 
-	// The bar is a fixed DOM overlay on top of the Pixi canvas. The board lives
-	// in Pixi "main" coordinates, so map its rect to screen px via mainLayout()
-	// (canvas center + uniform scale) to anchor the bar to the board:
-	//   vertical bar  → right of the board, vertically centered on it
-	//   horizontal bar → under the board, horizontally centered on it
+	// Fixed DOM overlay. Vertical bar follows the board; horizontal bar (portrait /
+	// tablet / landscape) is centered on the screen — board may use BOARD_LAYOUT_OFFSETS.x.
 	const barPos = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
 		const layoutType = context.stateLayoutDerived.layoutType();
 		const off = BOARD_LAYOUT_OFFSETS[layoutType] ?? { x: 0, y: 0 };
 		const boardCenterX = ml.x + off.x * ml.scale;
 		const boardCenterY = ml.y + off.y * ml.scale;
-		const halfW = (BOARD_SIZES.width / 2) * ml.scale;
-		const halfH = (BOARD_SIZES.height / 2) * ml.scale;
+		const board = context.stateGameDerived.boardLayout();
+		const halfW = (board.visualWidth / 2) * ml.scale;
+		const halfH = (board.visualHeight / 2) * ml.scale;
 
 		if (isDesktop) {
 			const d = BAR_DIMS.v;
-			return { left: boardCenterX + halfW + GAP, top: boardCenterY - d.h / 2 };
+			return {
+				left: boardCenterX + halfW + GAP,
+				top: boardCenterY - d.h / 2,
+				width: d.w,
+				height: d.h,
+			};
 		}
 		const d = BAR_DIMS.h;
-		return { left: boardCenterX - d.w / 2, top: boardCenterY + halfH + GAP };
+		return {
+			left: ml.x - d.w / 2 + BONUS_BAR_H_SHIFT_SCREEN_X * portraitCompactScale,
+			top: boardCenterY + halfH + GAP,
+			width: d.w,
+			height: d.h,
+		};
 	});
+
+	const barBoxStyle = $derived.by(() => {
+		const p = barPos;
+		const bg = isDesktop ? barVUrl : barHUrl;
+		return `left:${p.left}px;top:${p.top}px;width:${p.width}px;height:${p.height}px;background-image:url(${bg});`;
+	});
+
+	const counterRadiusPx = $derived(layout.counterRadius * portraitCompactScale);
 </script>
 
 {#if isVisible}
@@ -199,7 +227,7 @@
 		data-test="progress-ladder"
 		in:barEnter
 		out:barLeave
-		style="left:{barPos.left}px;top:{barPos.top}px;background-image:url({isDesktop ? barVUrl : barHUrl});"
+		style={barBoxStyle}
 	>
 		{#each placements as p, i (i)}
 			{@const filled = i < bonusInCurrentTier}
@@ -213,7 +241,7 @@
 			</div>
 		{/each}
 
-		<div class="progress-rect" style="{boxStyle(layout.counter)}--cr:{layout.counterRadius}px;">
+		<div class="progress-rect" style="{boxStyle(layout.counter)}--cr:{counterRadiusPx}px;">
 			<div class="progress-fill" style:--pscale={progressScale}></div>
 		</div>
 	</div>
@@ -240,13 +268,6 @@
 		/* keep PNG aspect ratio 247:592 */
 		width: 130px;
 		height: 311.6px;
-	}
-
-	/* ─── Horizontal bar (tablet / landscape / portrait) — bar_h.png (657×217) ─ */
-	.bar-h {
-		/* keep PNG aspect ratio 657:217 */
-		width: 340px;
-		height: 112.3px;
 	}
 
 	/* ─── Cat (overlay on silhouette) ─────────────────────────────── */

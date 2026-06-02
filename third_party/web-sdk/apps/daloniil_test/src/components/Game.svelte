@@ -33,6 +33,7 @@
 	import FeaturesAutoSpinOverlay from './FeaturesAutoSpinOverlay.svelte';
 	import CashStacksMenuOverlay from './CashStacksMenuOverlay.svelte';
 	import BuyBonusOverlay from './BuyBonusOverlay.svelte';
+	import CashStacksBuyBonusPanel from './CashStacksBuyBonusPanel.svelte';
 	import BuyBonusConfirmOverlay from './BuyBonusConfirmOverlay.svelte';
 	import DevCheats from './DevCheats.svelte';
 	import DevButtons from './DevButtons.svelte';
@@ -113,6 +114,7 @@
 </CashStacksModals>
 
 <FeaturesAutoSpinOverlay />
+<CashStacksBuyBonusPanel />
 <CashStacksMenuOverlay />
 <BuyBonusOverlay />
 <BuyBonusConfirmOverlay />

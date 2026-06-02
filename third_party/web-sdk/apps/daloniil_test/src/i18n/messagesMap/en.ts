@@ -12,6 +12,8 @@ export default {
 	BUY_SUPER_DESC: '10 Free Spins. Starts with 1 Sticky Mystery Reel.',
 	BUY_CONFIRM: 'BUY',
 	BUY_CANCEL: 'CANCEL',
+	BUY_BONUS_PANEL_BUTTON: 'Buy bonus',
+	BONUS_BOOST_PANEL_DESC: 'Increased bonus chance ×2',
 	// Autoplay menu
 	AUTOPLAY_TITLE: 'Autoplay',
 	AUTOPLAY_FEATURES: 'Features',

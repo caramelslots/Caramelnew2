@@ -10,6 +10,8 @@ export default {
 	BUY_SUPER_DESC: '10 фриспинов. Старт с 1 Sticky Mystery Reel.',
 	BUY_CONFIRM: 'КУПИТЬ',
 	BUY_CANCEL: 'ОТМЕНА',
+	BUY_BONUS_PANEL_BUTTON: 'КУПИТЬ БОНУС',
+	BONUS_BOOST_PANEL_DESC: 'шанс на бонус ×2 (свитч)',
 	AUTOPLAY_TITLE: 'Автоигра',
 	AUTOPLAY_FEATURES: 'Функции',
 	AUTOPLAY_ROUNDS: 'Раунды',

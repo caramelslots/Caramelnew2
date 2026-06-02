@@ -7,6 +7,8 @@
 	  2. Автоигра запущена (stateBet.autoSpinsCounter > 0) → стандартный
 	     stop autospin (как в SDK).
 	  3. Idle → открывает модалку выбора параметров автоигры.
+
+	portraitPill — широкая капсула «автоигра» (ref. portrait mockup).
 -->
 <script lang="ts">
 	import { Container, Text } from 'pixi-svelte';
@@ -17,22 +19,38 @@
 	import { UI_BASE_FONT_SIZE, UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
 	import ButtonBetAutoSpinsCounter from 'components-ui-pixi/src/components/ButtonBetAutoSpinsCounter.svelte';
 
+	import { PORTRAIT_AUTOPLAY_PILL_BASE } from '../game/constants';
 	import { getContext } from '../game/context';
 
-	const props: { anchor?: number } = $props();
+	type Props = {
+		anchor?: number;
+		portraitPill?: boolean;
+	};
+
+	const { anchor, portraitPill = false }: Props = $props();
 	const context = getContext();
-	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
+
+	const sizes = $derived(
+		portraitPill
+			? { ...PORTRAIT_AUTOPLAY_PILL_BASE }
+			: { width: UI_BASE_SIZE, height: UI_BASE_SIZE },
+	);
 
 	const isModalOpen = $derived(stateModal.modal?.name === 'autoSpin');
 	const hasCounter = $derived(stateBetDerived.hasAutoBetCounter());
 
 	const disabled = $derived.by(() => {
 		if (stateBet.isSpaceHold) return true;
-		// При открытой модалке кнопка всегда активна (закрытие = отмена выбора).
 		if (isModalOpen) return false;
 		if (!context.stateXstateDerived.isIdle() && !hasCounter) return true;
 		if (!stateBetDerived.isBetCostAvailable()) return true;
 		return false;
+	});
+
+	const label = $derived.by(() => {
+		if (isModalOpen) return '×';
+		if (portraitPill) return context.i18nDerived.autoplayTitle().toLowerCase();
+		return 'AUTO';
 	});
 
 	const onpress = () => {
@@ -43,28 +61,33 @@
 			stateBet.autoSpinsCounter = 0;
 		} else {
 			stateModal.modal = { name: 'autoSpin' };
-		}
+		};
 	};
 </script>
 
-<Button {...props} {sizes} {onpress} {disabled}>
+<Button {anchor} {sizes} {onpress} {disabled}>
 	{#snippet children({ center })}
 		<Container {...center}>
 			<UiSprite
 				width={sizes.width}
 				height={sizes.height}
 				anchor={0.5}
-				backgroundColor={isModalOpen ? 0xd32f2f : 0x000000}
+				backgroundColor={isModalOpen ? 0xd32f2f : 0x2e2e2e}
+				borderRadius={portraitPill ? sizes.height / 2 : 0}
 				{...disabled && !isModalOpen ? { backgroundColor: 0xaaaaaa } : {}}
 			/>
 			<Text
 				anchor={0.5}
-				text={isModalOpen ? '×' : 'AUTO'}
+				text={label}
 				style={{
 					align: 'center',
 					fontFamily: 'proxima-nova',
-					fontWeight: '700',
-					fontSize: isModalOpen ? UI_BASE_FONT_SIZE * 1.8 : UI_BASE_FONT_SIZE * 0.9,
+					fontWeight: portraitPill ? '600' : '700',
+					fontSize: isModalOpen
+						? UI_BASE_FONT_SIZE * (portraitPill ? 1.4 : 1.8)
+						: portraitPill
+							? sizes.height * 0.38
+							: UI_BASE_FONT_SIZE * 0.9,
 					fill: 0xffffff,
 				}}
 			/>

@@ -19,9 +19,20 @@
 	type Props = {
 		/** Заголовок секции «Функции» (только в меню автоигры). */
 		showSectionTitle?: boolean;
+		/** Какие фичи показывать (по умолчанию обе). */
+		features?: ActiveFeature[];
+		/** Компактная строка: название + тумблер, без cost. */
+		compact?: boolean;
+		/** Подпись как на портретной панели (BONUS_BOOST_PANEL_DESC). */
+		panelDesc?: boolean;
 	};
 
-	const { showSectionTitle = false }: Props = $props();
+	const {
+		showSectionTitle = false,
+		features = ['bonus_boost', 'special_spins'],
+		compact = false,
+		panelDesc = false,
+	}: Props = $props();
 
 	const context = getContext();
 
@@ -42,41 +53,55 @@
 	<div class="section-title">{context.i18nDerived.autoplayFeatures()}</div>
 {/if}
 
-<button
-	type="button"
-	class="feature-row"
-	class:active={stateGame.activeFeature === 'bonus_boost'}
-	onclick={() => onToggle('bonus_boost')}
-	data-test="feature-bonus-boost"
->
-	<div class="feature-info">
-		<div class="feature-name">{context.i18nDerived.bonusBoost()}</div>
-		<div class="feature-cost">
-			{context.i18nDerived.featurePerSpinCost(bonusBoostCost)}
+{#if features.includes('bonus_boost')}
+	<button
+		type="button"
+		class="feature-row"
+		class:compact
+		class:active={stateGame.activeFeature === 'bonus_boost'}
+		onclick={() => onToggle('bonus_boost')}
+		data-test="feature-bonus-boost"
+	>
+		<div class="feature-info">
+			<div class="feature-name">
+				{panelDesc
+					? context.i18nDerived.bonusBoostPanelDesc()
+					: context.i18nDerived.bonusBoost()}
+			</div>
+			{#if !compact}
+				<div class="feature-cost">
+					{context.i18nDerived.featurePerSpinCost(bonusBoostCost)}
+				</div>
+			{/if}
 		</div>
-	</div>
-	<div class="feature-toggle" class:on={stateGame.activeFeature === 'bonus_boost'}>
-		<span class="knob"></span>
-	</div>
-</button>
+		<div class="feature-toggle" class:on={stateGame.activeFeature === 'bonus_boost'}>
+			<span class="knob"></span>
+		</div>
+	</button>
+{/if}
 
-<button
-	type="button"
-	class="feature-row"
-	class:active={stateGame.activeFeature === 'special_spins'}
-	onclick={() => onToggle('special_spins')}
-	data-test="feature-special-spins"
->
-	<div class="feature-info">
-		<div class="feature-name">{context.i18nDerived.specialSpins()}</div>
-		<div class="feature-cost">
-			{context.i18nDerived.featurePerSpinCost(specialSpinsCost)}
+{#if features.includes('special_spins')}
+	<button
+		type="button"
+		class="feature-row"
+		class:compact
+		class:active={stateGame.activeFeature === 'special_spins'}
+		onclick={() => onToggle('special_spins')}
+		data-test="feature-special-spins"
+	>
+		<div class="feature-info">
+			<div class="feature-name">{context.i18nDerived.specialSpins()}</div>
+			{#if !compact}
+				<div class="feature-cost">
+					{context.i18nDerived.featurePerSpinCost(specialSpinsCost)}
+				</div>
+			{/if}
 		</div>
-	</div>
-	<div class="feature-toggle" class:on={stateGame.activeFeature === 'special_spins'}>
-		<span class="knob"></span>
-	</div>
-</button>
+		<div class="feature-toggle" class:on={stateGame.activeFeature === 'special_spins'}>
+			<span class="knob"></span>
+		</div>
+	</button>
+{/if}
 
 <style lang="scss">
 	.section-title {
@@ -109,6 +134,16 @@
 		&.active {
 			border-color: rgba(76, 200, 120, 0.45);
 		}
+
+		&.compact {
+			padding: 0.5rem 0.6rem;
+		}
+	}
+
+	.feature-row.compact .feature-name {
+		font-size: 0.78rem;
+		font-weight: 600;
+		line-height: 1.25;
 	}
 
 	.feature-info {

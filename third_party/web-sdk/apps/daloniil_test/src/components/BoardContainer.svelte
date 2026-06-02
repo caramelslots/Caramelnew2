@@ -12,12 +12,12 @@
 	const props: Props = $props();
 
 	const context = getContext();
+	const boardLayout = $derived(context.stateGameDerived.boardLayout());
 </script>
 
-<Container
-	x={context.stateGameDerived.boardLayout().x}
-	y={context.stateGameDerived.boardLayout().y}
-	pivot={context.stateGameDerived.boardLayout().pivot}
->
-	{@render props.children()}
+<!-- Scale from board center: outer = center point, inner = top-left origin -->
+<Container x={boardLayout.x} y={boardLayout.y} scale={boardLayout.scale}>
+	<Container x={-boardLayout.pivot.x} y={-boardLayout.pivot.y}>
+		{@render props.children()}
+	</Container>
 </Container>

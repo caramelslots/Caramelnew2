@@ -69,6 +69,8 @@ import {
 	SYMBOL_SIZE,
 	BOARD_SIZES,
 	BOARD_LAYOUT_OFFSETS,
+	getPortraitBoardScale,
+	getPortraitParchmentSize,
 	INITIAL_BOARD,
 	BOARD_DIMENSIONS,
 	SPIN_OPTIONS_DEFAULT,
@@ -160,13 +162,25 @@ export const stateGame = $state({
 });
 
 const boardLayout = () => {
-	const offset = BOARD_LAYOUT_OFFSETS[stateLayoutDerived.layoutType()];
+	const layoutType = stateLayoutDerived.layoutType();
+	const offset = BOARD_LAYOUT_OFFSETS[layoutType];
+	const ml = stateLayoutDerived.mainLayout();
+	const parchment = layoutType === 'portrait' ? getPortraitParchmentSize() : null;
+	const scale =
+		layoutType === 'portrait'
+			? getPortraitBoardScale(ml.scale, stateLayoutDerived.canvasSizeType())
+			: 1;
+
 	return {
-		x: stateLayoutDerived.mainLayout().width * 0.5 + offset.x,
-		y: stateLayoutDerived.mainLayout().height * 0.5 + offset.y,
+		x: ml.width * 0.5 + offset.x,
+		y: ml.height * 0.5 + offset.y,
 		anchor: { x: 0.5, y: 0.5 },
 		pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
-		...BOARD_SIZES,
+		width: BOARD_SIZES.width,
+		height: BOARD_SIZES.height,
+		scale,
+		visualWidth: parchment ? parchment.width * scale : BOARD_SIZES.width,
+		visualHeight: parchment ? parchment.height * scale : BOARD_SIZES.height,
 	};
 };
 

@@ -268,10 +268,104 @@ export const BOARD_LAYOUT_OFFSETS = {
 	desktop: { x: 0, y: -4 },
 	tablet: { x: 0, y: 7 },
 	landscape: { x: 0, y: -35 },
-	portrait: { x: 0, y: -100 },
+	portrait: { x: -14, y: -176 },
 } as const;
 /** Frame bezel + glow offset from board center (px): +x right, +y down. */
 export const BOARD_FRAME_OFFSET = { x: 6, y: 8 } as const;
+
+/**
+ * ProgressLadder `.bar-h` rendered width (px). Portrait desk parchment width
+ * on screen is matched to this value (not the raw reel grid width).
+ */
+export const PORTRAIT_BONUS_BAR_WIDTH_PX = 340;
+/** ProgressLadder `.bar-h` height (px), aspect ratio matches bar_h.png 657×217. */
+export const PORTRAIT_BONUS_BAR_HEIGHT_PX = 112.3;
+
+/**
+ * iPhone SE / Mobile S (canvasSizeType `smallMobile`, width ≤375px): scale board +
+ * bonus bar together so HUD fits vertically.
+ */
+export const PORTRAIT_SMALL_MOBILE_SCALE = 0.86;
+
+export type PortraitCanvasSizeType =
+	| 'smallMobile'
+	| 'mobile'
+	| 'tablet'
+	| 'largeTablet'
+	| 'desktop';
+
+export const getPortraitSmallMobileScaleFactor = (canvasSizeType: PortraitCanvasSizeType) =>
+	canvasSizeType === 'smallMobile' ? PORTRAIT_SMALL_MOBILE_SCALE : 1;
+
+export const getPortraitBonusBarWidthPx = (canvasSizeType: PortraitCanvasSizeType) =>
+	PORTRAIT_BONUS_BAR_WIDTH_PX * getPortraitSmallMobileScaleFactor(canvasSizeType);
+
+export const getPortraitBonusBarHeightPx = (canvasSizeType: PortraitCanvasSizeType) =>
+	PORTRAIT_BONUS_BAR_HEIGHT_PX * getPortraitSmallMobileScaleFactor(canvasSizeType);
+
+/** ProgressLadder horizontal bar nudge from screen center (screen px, + = right). */
+export const BONUS_BAR_H_SHIFT_SCREEN_X = 6;
+
+/** Portrait board parchment trim vs bonus bar (screen px) — neon frame reads slightly wider. */
+export const PORTRAIT_BOARD_WIDTH_TRIM_PX = 14;
+
+/** Visible parchment + neon frame (game coords), not full desk texture asset size. */
+export const getPortraitParchmentSize = () => ({
+	width: BOARD_SIZES.width * DESK_PARCHMENT_PADDING.width,
+	height: BOARD_SIZES.height * DESK_PARCHMENT_PADDING.height,
+});
+
+/** Uniform board scale for portrait: parchment width on screen ≈ bonus bar − trim. */
+export const getPortraitBoardTargetWidthPx = (canvasSizeType: PortraitCanvasSizeType) =>
+	(PORTRAIT_BONUS_BAR_WIDTH_PX - PORTRAIT_BOARD_WIDTH_TRIM_PX) *
+	getPortraitSmallMobileScaleFactor(canvasSizeType);
+
+export const getPortraitBoardScale = (
+	mainLayoutScale: number,
+	canvasSizeType: PortraitCanvasSizeType,
+) =>
+	getPortraitBoardTargetWidthPx(canvasSizeType) /
+	(getPortraitParchmentSize().width * mainLayoutScale);
+
+/**
+ * Portrait / Popup S HUD (ref. designer_assets/IMAGE 2026-06-02 13:11:58, 800×1422).
+ * Distances in ref px; components scale by mainLayoutStandard width/height.
+ */
+export const PORTRAIT_UI_LAYOUT = {
+	refWidth: 800,
+	refHeight: 1422,
+	/** WIN text under board (ref px). */
+	winBelowBoardGap: 76,
+	/** Buy/boost row top offset from board bottom (ref px, independent of WIN). */
+	buyPanelBelowBoard: 112,
+	/** Spin stack anchor below board when buy/boost hidden (free spins). */
+	freeSpinsSpinBelowBoard: 48,
+	/** Min gap between buy/boost row bottom and spin cluster top (ref px). */
+	spinAboveBuyGap: 42,
+	spinFromBottom: 282,
+	spinNudgeDown: 20,
+	utilBelowSpinGap: 14,
+	utilFromBottom: 178,
+	utilNudgeDown: 0,
+	footerBelowUtilGap: 18,
+	footerFromBottom: 44,
+	utilX: { info: 100, menu: 186, turbo: 662 },
+	/** Ref px (800×1422 mockup) — scaled in UiCashStacksPortraitLayout. */
+	buttons: {
+		spinDiam: 152,
+		spinBetDiam: 66,
+		spinBetGap: 12,
+		utilIconDiam: 62,
+		autoplayW: 238,
+		autoplayH: 60,
+		buyRowMinH: 46,
+	},
+} as const;
+
+/** Base Pixi sizes for portrait util buttons (before container scale), ref UI_BASE_SIZE 150. */
+export const PORTRAIT_UTIL_ICON_BASE = 108;
+export const PORTRAIT_AUTOPLAY_PILL_BASE = { width: 210, height: 57 } as const;
+export const PORTRAIT_TURBO_ICON_BASE = 108;
 
 const explosion = {
 	type: 'spine',

@@ -22,6 +22,8 @@ export const i18nDerived = {
 	buySuperDesc: () => t('BUY_SUPER_DESC'),
 	buyConfirm: () => t('BUY_CONFIRM'),
 	buyCancel: () => t('BUY_CANCEL'),
+	buyBonusPanelButton: () => t('BUY_BONUS_PANEL_BUTTON'),
+	bonusBoostPanelDesc: () => t('BONUS_BOOST_PANEL_DESC'),
 	// Autoplay
 	autoplayTitle: () => t('AUTOPLAY_TITLE'),
 	autoplayFeatures: () => t('AUTOPLAY_FEATURES'),

@@ -27,3 +27,18 @@ export const clearActiveFeature = () => {
 	stateGame.activeFeature = null;
 	syncActiveBetModeKey();
 };
+
+/** Bonus Boost, Special Spins или активный buy-bonus bet-mode. */
+export const isAnyBonusActive = () => {
+	if (stateGame.activeFeature != null) return true;
+	const key = stateBet.activeBetModeKey;
+	return (
+		key === 'bonus_boost' ||
+		key === 'special_spins' ||
+		key === 'bonus_normal' ||
+		key === 'bonus_super'
+	);
+};
+
+/** Free Spins feature round — only bet / info / menu / turbo in HUD. */
+export const isFreeSpinsActive = () => stateGame.gameType === 'freegame';
