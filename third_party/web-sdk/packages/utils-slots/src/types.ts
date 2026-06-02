@@ -65,6 +65,14 @@ export type SpinningReelSpinOptions = {
 	reelSettleSecondaryMulti?: number;
 	reelSettleSecondarySpeedMulti?: number;
 	/**
+	 * Fixed total duration (ms) of the bounce-back settle. When set, the rebound
+	 * lasts exactly this long regardless of `reelBounceBackSpeed` (which is then
+	 * ignored for the settle). For the two-stage settle the time is split between
+	 * stages by travel distance so the motion stays continuous. Leave undefined to
+	 * keep the speed-derived timing.
+	 */
+	reelSettleDurationMs?: number;
+	/**
 	 * Optional vertical squash on landing (Y-axis only by default; X can
 	 * stretch in sync via `reelLandSquashStretchMulti`).
 	 *

@@ -245,15 +245,19 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	const slideY = async ({
 		reelY: targetY,
 		speed,
+		durationMs,
 		easing = undefined,
 	}: {
 		reelY: number;
-		speed: number;
+		speed?: number;
+		durationMs?: number;
 		easing?: (value: number) => number;
 	}) => {
 		const currentY = reelY.current;
 		const distance = Math.abs(targetY - currentY);
-		const duration = distance / speed; // (speed unit: pixel / ms)
+		// `durationMs` (when provided) pins the slide to a fixed time; otherwise the
+		// time is derived from `speed` (pixel / ms) as distance / speed.
+		const duration = durationMs ?? distance / (speed as number);
 
 		await reelY.set(targetY, { duration, easing });
 	};
@@ -285,21 +289,39 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		const secondaryMulti = opts.reelSettleSecondaryMulti ?? 0;
 		const secondarySpeedMulti = opts.reelSettleSecondarySpeedMulti ?? 1;
 
+		// When `reelSettleDurationMs` is set, the whole bounce-back lasts exactly
+		// that many ms (speed no longer matters). For the two-stage settle the
+		// time is split between the stages in proportion to their travel distance,
+		// so the motion stays continuous.
+		const settleDurationMs = opts.reelSettleDurationMs;
+
 		if (secondaryMulti > 0) {
+			const distanceStage1 = overshoot * (1 + secondaryMulti);
+			const distanceStage2 = overshoot * secondaryMulti;
+			const distanceTotal = distanceStage1 + distanceStage2;
 			await slideY({
 				reelY: defaultY - overshoot * secondaryMulti,
 				speed: opts.reelBounceBackSpeed,
+				durationMs:
+					settleDurationMs === undefined
+						? undefined
+						: settleDurationMs * (distanceStage1 / distanceTotal),
 				easing: sineOut,
 			});
 			await slideY({
 				reelY: defaultY,
 				speed: opts.reelBounceBackSpeed * secondarySpeedMulti,
+				durationMs:
+					settleDurationMs === undefined
+						? undefined
+						: settleDurationMs * (distanceStage2 / distanceTotal),
 				easing: sineOut,
 			});
 		} else {
 			await slideY({
 				reelY: defaultY,
 				speed: opts.reelBounceBackSpeed,
+				durationMs: settleDurationMs,
 				easing: sineOut,
 			});
 		}

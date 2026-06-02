@@ -164,7 +164,7 @@ const SPECIAL_SYMBOL_SIZE = 1;
  * ~1.97 s (≈2.5 s total incl. stagger + settle).
  */
 const REEL_SPEED = 1.4;
-const REEL_SETTLE_SPEED = REEL_SPEED * 0.42;
+const REEL_SETTLE_SPEED = REEL_SPEED * 0.62;
 const SPIN_OPTIONS_SHARED = {
 	reelBounceBackSpeed: REEL_SETTLE_SPEED,
 	reelSpinSpeedBeforeBounce: REEL_SPEED,
@@ -194,8 +194,15 @@ const SPIN_OPTIONS_SHARED = {
 	reelBounceSizeMulti: 0.28,
 	reelSettleSecondaryMulti: 0.4,
 	reelSettleSecondarySpeedMulti: 1.2,
-	reelLandSquashY: 0.68,
-	reelLandSquashRecoveryMs: 160,
+	// Fixed total bounce-back time in ms (overrides REEL_SETTLE_SPEED for the
+	// settle). Set the bounce duration directly here. The jelly squash runs in
+	// parallel — match reelLandSquashRecoveryMs to it for one unified duration.
+	reelSettleDurationMs: 90,
+	// 1 = код-сквош выключен. Единственный источник сжатия на приземлении —
+	// дизайнерский bounce-spine (SYMBOL_INFO_MAP.land = *Bounce). Так сжатие
+	// происходит ровно один раз и не «дёргается» от наложения двух анимаций.
+	reelLandSquashY: 1,
+	reelLandSquashRecoveryMs: 110,
 	reelLandSquashStretchMulti: 0.55,
 };
 
