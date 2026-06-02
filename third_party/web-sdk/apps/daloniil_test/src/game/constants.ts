@@ -191,13 +191,13 @@ const SPIN_OPTIONS_SHARED = {
 	// reelPaddingMultiplierNormal. ~5 rows ≈ one board height ≈ "1 оборот", so
 	// 15 ≈ 3 оборота. Lower = fewer rotations for every column, no symbol swap.
 	reelMainSpinRows: 10,
-	reelBounceSizeMulti: 0.28,
-	reelSettleSecondaryMulti: 0.4,
-	reelSettleSecondarySpeedMulti: 1.2,
+	reelBounceSizeMulti: 0,
+	reelSettleSecondaryMulti: 0,
+	reelSettleSecondarySpeedMulti: 0,
 	// Fixed total bounce-back time in ms (overrides REEL_SETTLE_SPEED for the
 	// settle). Set the bounce duration directly here. The jelly squash runs in
 	// parallel — match reelLandSquashRecoveryMs to it for one unified duration.
-	reelSettleDurationMs: 90,
+	reelSettleDurationMs: 0,
 	// 1 = код-сквош выключен. Единственный источник сжатия на приземлении —
 	// дизайнерский bounce-spine (SYMBOL_INFO_MAP.land = *Bounce). Так сжатие
 	// происходит ровно один раз и не «дёргается» от наложения двух анимаций.
