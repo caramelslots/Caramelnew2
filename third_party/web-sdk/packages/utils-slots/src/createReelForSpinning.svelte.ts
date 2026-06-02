@@ -394,30 +394,83 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		// synchronous batch — no `await` between them — otherwise Svelte can render
 		// a frame with the new symbols at the old position (an in-place swap).
 		if (reelState.spinOptions().reelSeamlessSpinStart) {
-			// Seamless start: instead of teleporting to a fresh padded stack
-			// (which makes the visible board "swap" symbols in place because the
-			// window shows a different slice of a different layout), inject
-			// [result, padding] ABOVE the symbols currently on screen and keep
-			// those on-screen symbols exactly where they are. We shift the reel up
-			// by the number of prepended symbols (a whole-symbol offset, so the
-			// move is invisible), then the normal slideDown scrolls the result in
-			// from off-screen — the player never sees symbols replaced on the board.
-			const currentContent = reelState.symbols
-				.slice(0, reelState.activeSymbolCount)
-				.map((reelSymbol) => reelSymbol.rawSymbol);
-			const paddingRawSymbols = getPaddingRawSymbols({
-				paddingRawReel,
-				start: targetPaddingPosition,
-				length: paddingSize,
-			});
-			const prependCount = targetRawSymbols.length + paddingRawSymbols.length;
-			const layout: TRawSymbol[] = [
-				...targetRawSymbols,
-				...paddingRawSymbols,
-				...currentContent,
-			];
-			updateSymbolsPool(layout);
-			placeY(reelY.current - prependCount * symbolHeight);
+			const opts = reelState.spinOptions();
+			const mainSpinRows = opts.reelMainSpinRows;
+			if (mainSpinRows !== undefined) {
+				// Controlled seamless start: scroll an EXACT number of symbol rows.
+				// reel 0 scrolls `reelMainSpinRows`; each later reel adds the padding
+				// accumulated from previous reels (the left-to-right stop cascade).
+				// The currently-visible symbols keep their exact on-screen position
+				// (no in-place swap): we drop the symbols that have already scrolled
+				// above the board, inject [result, filler] above the still-visible
+				// ones, and park the reel so the slide lands the result after exactly
+				// `scrollRows` whole rows. The anchor is derived from reelY.current,
+				// so the scroll is also robust to whatever sub-position the pre-spin
+				// happened to hand off at.
+				const cascadeRows = paddingSize - basePaddingSize();
+				const scrollRows = mainSpinRows + cascadeRows;
+				const landingY = defaultY + symbolHeight * opts.reelBounceSizeMulti;
+
+				// Symbols already scrolled above the top of the board won't be seen
+				// again — drop them so they don't inflate the scroll distance.
+				const dropCount = Math.max(
+					0,
+					Math.round((defaultY - reelY.current) / symbolHeight),
+				);
+				const visibleContent = reelState.symbols
+					.slice(dropCount, reelState.activeSymbolCount)
+					.map((reelSymbol) => reelSymbol.rawSymbol);
+
+				// Filler rows between the result block and the still-visible symbols,
+				// sized so those symbols keep their position while the total slide is
+				// ≈ `scrollRows` whole rows.
+				const desiredStartY = landingY - scrollRows * symbolHeight;
+				const fillerCount = Math.max(
+					0,
+					Math.round((reelY.current - desiredStartY) / symbolHeight) +
+						dropCount -
+						targetRawSymbols.length,
+				);
+				const fillerRawSymbols = getPaddingRawSymbols({
+					paddingRawReel,
+					start: targetPaddingPosition,
+					length: fillerCount,
+				});
+				const layout: TRawSymbol[] = [
+					...targetRawSymbols,
+					...fillerRawSymbols,
+					...visibleContent,
+				];
+				updateSymbolsPool(layout);
+				// Exact seamless anchor: keep the first kept symbol (old index
+				// `dropCount`) at its current screen position — a whole-symbol shift,
+				// so the move is invisible.
+				const startY =
+					reelY.current -
+					(targetRawSymbols.length + fillerCount - dropCount) * symbolHeight;
+				placeY(startY);
+			} else {
+				// Legacy seamless start: inject [result, padding] ABOVE the symbols
+				// currently on screen and keep those on-screen symbols exactly where
+				// they are, shifting the reel up by the prepended count. The normal
+				// slideDown then scrolls the result in from off-screen.
+				const currentContent = reelState.symbols
+					.slice(0, reelState.activeSymbolCount)
+					.map((reelSymbol) => reelSymbol.rawSymbol);
+				const paddingRawSymbols = getPaddingRawSymbols({
+					paddingRawReel,
+					start: targetPaddingPosition,
+					length: paddingSize,
+				});
+				const prependCount = targetRawSymbols.length + paddingRawSymbols.length;
+				const layout: TRawSymbol[] = [
+					...targetRawSymbols,
+					...paddingRawSymbols,
+					...currentContent,
+				];
+				updateSymbolsPool(layout);
+				placeY(reelY.current - prependCount * symbolHeight);
+			}
 		} else {
 			// Legacy: teleport to a freshly padded stack. `topY` is a whole
 			// multiple of symbolHeight while the pre-spin position is mid-slide
@@ -464,7 +517,15 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		});
 
 	const getMainSpinTargetY = () => {
-		const spinRotations = reelState.spinOptions().reelSpinRotations;
+		const opts = reelState.spinOptions();
+		// Controlled seamless scroll: the start position (set in generalSpinWith)
+		// already encodes the exact `reelMainSpinRows` distance, so the first
+		// slide just heads straight to defaultY and the bounce slide finishes the
+		// approach — no padding-derived target that would over- or under-shoot.
+		if (opts.reelSeamlessSpinStart && opts.reelMainSpinRows !== undefined) {
+			return defaultY;
+		}
+		const spinRotations = opts.reelSpinRotations;
 		if (spinRotations === undefined) return defaultY * basePaddingSize();
 		return reelY.current + spinRotations * reelOptions.symbolHeight;
 	};

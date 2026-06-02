@@ -175,7 +175,7 @@ const SPIN_OPTIONS_SHARED = {
 	// "rushing to catch up" look that a larger delay produced at the slower
 	// REEL_SPEED. The left-to-right STOP order is independent of this — it
 	// comes from each reel's accumulated padding distance, so it stays.
-	reelSpinDelay: 30,
+	reelSpinDelay: 60,
 	reelPreSpinSpeed: REEL_SPEED,
 	reelSpinSpeed: REEL_SPEED,
 	// Start at a constant speed (no `backIn` wind-up burst) so the slot doesn't
@@ -185,6 +185,12 @@ const SPIN_OPTIONS_SHARED = {
 	// teleporting to a fresh stack — avoids symbols visibly swapping in place on
 	// the board at the pre-spin → result handoff.
 	reelSeamlessSpinStart: true,
+	// EXACT number of rows the FIRST column scrolls on the main spin (later
+	// columns add the padding cascade). This is the real "how many rotations"
+	// knob — it does NOT change speed (REEL_SPEED) and is independent of
+	// reelPaddingMultiplierNormal. ~5 rows ≈ one board height ≈ "1 оборот", so
+	// 15 ≈ 3 оборота. Lower = fewer rotations for every column, no symbol swap.
+	reelMainSpinRows: 10,
 	reelBounceSizeMulti: 0.28,
 	reelSettleSecondaryMulti: 0.4,
 	reelSettleSecondarySpeedMulti: 1.2,

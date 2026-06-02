@@ -37,6 +37,20 @@ export type SpinningReelSpinOptions = {
 	 */
 	reelSeamlessSpinStart?: boolean;
 	/**
+	 * EXACT number of symbol rows the main spin scrolls on reel 0 (the first
+	 * column), when `reelSeamlessSpinStart` is on. Each later reel adds the
+	 * padding accumulated from previous reels for the left-to-right stop cascade.
+	 *
+	 * This is the direct "how many rotations" knob: with the seamless start the
+	 * scroll distance is otherwise dominated by a fixed floor (pre-spin park
+	 * depth + the injected result block), which is why `reelPaddingMultiplierNormal`
+	 * barely changes the first column. Lower = fewer rotations for every column;
+	 * the visible symbols still keep their place (no in-place swap). Leave
+	 * undefined to keep the legacy seamless behavior (distance = pre-spin depth +
+	 * result block + padding).
+	 */
+	reelMainSpinRows?: number;
+	/**
 	 * Optional damped-oscillation settle.
 	 *
 	 * When set, after the reel snaps to `defaultY + bounceSize` (initial overshoot
