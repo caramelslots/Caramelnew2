@@ -135,6 +135,15 @@
 		reel(['H3', 'L1', 'L4', 'H1', 'L2']),
 	];
 
+	// 1×B по центру (reel 2, visible row=2 = padded row=3) — land-анимация.
+	const SINGLE_BONUS_CAT_BOARD = [
+		reel(['L2', 'L1', 'L4', 'H2', 'L1']),
+		reel(['H1', 'L4', 'L2', 'H3', 'L4']),
+		reel(['L3', 'L1', 'B', 'H4', 'L4']),
+		reel(['H4', 'H3', 'L4', 'L2', 'L1']),
+		reel(['H3', 'L3', 'L4', 'H1', 'H1']),
+	];
+
 	// Bonus-trigger: 3 × B (reels 0,1,2 на visible row=2 = padded row=3).
 	const FS_TRIGGER_BOARD = [
 		reel(['L2', 'L1', 'B', 'H2', 'L1']),
@@ -280,6 +289,11 @@
 		guard(() =>
 			playBookEvent(asEvent({ type: 'freeSpinEnd', amount, winLevel }), { bookEvents: [] }),
 		);
+
+	const playSingleBonusCat = () =>
+		guard(async () => {
+			await playBookEvent(reveal(SINGLE_BONUS_CAT_BOARD), { bookEvents: [] });
+		});
 
 	// === Cash Stacks specifics ===
 	const playBonusCollect = () =>
@@ -512,6 +526,14 @@
 			<section>
 				<h4>Cash Stacks</h4>
 				<div class="grid">
+					<button
+						type="button"
+						disabled={busy}
+						title="reveal с 1× B по центру — land-анимация бонус-кота"
+						onclick={playSingleBonusCat}
+					>
+						1× Bonus Cat
+					</button>
 					<button
 						type="button"
 						disabled={busy}

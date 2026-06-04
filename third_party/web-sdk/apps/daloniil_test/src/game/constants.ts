@@ -268,7 +268,7 @@ export const BOARD_LAYOUT_OFFSETS = {
 	desktop: { x: 0, y: -4 },
 	tablet: { x: 0, y: 7 },
 	landscape: { x: 0, y: -35 },
-	portrait: { x: -14, y: -176 },
+	portrait: { x: -14, y: -222 },
 } as const;
 /** Frame bezel + glow offset from board center (px): +x right, +y down. */
 export const BOARD_FRAME_OFFSET = { x: 6, y: 8 } as const;
@@ -285,7 +285,7 @@ export const PORTRAIT_BONUS_BAR_HEIGHT_PX = 112.3;
  * iPhone SE / Mobile S (canvasSizeType `smallMobile`, width ≤375px): scale board +
  * bonus bar together so HUD fits vertically.
  */
-export const PORTRAIT_SMALL_MOBILE_SCALE = 0.86;
+export const PORTRAIT_SMALL_MOBILE_SCALE = 0.72;
 
 export type PortraitCanvasSizeType =
 	| 'smallMobile'
@@ -337,7 +337,7 @@ export const PORTRAIT_UI_LAYOUT = {
 	/** WIN text under board (ref px). */
 	winBelowBoardGap: 76,
 	/** Buy/boost row top offset from board bottom (ref px, independent of WIN). */
-	buyPanelBelowBoard: 112,
+	buyPanelBelowBoard: 148,
 	/** Spin stack anchor below board when buy/boost hidden (free spins). */
 	freeSpinsSpinBelowBoard: 48,
 	/** Min gap between buy/boost row bottom and spin cluster top (ref px). */
@@ -358,7 +358,7 @@ export const PORTRAIT_UI_LAYOUT = {
 		utilIconDiam: 62,
 		autoplayW: 238,
 		autoplayH: 60,
-		buyRowMinH: 46,
+		buyRowMinH: 50,
 	},
 } as const;
 
@@ -522,6 +522,13 @@ export const MYSTERY_REVEAL_POST_DELAY_MS = 1000;
 /** Pause after reels finish landing, before paylines/win animation start. */
 export const WIN_INFO_PRE_DELAY_MS = 100;
 
+/**
+ * Pause after reels finish landing, before bonus cats play the paw-wave
+ * win animation (freeSpinTrigger / bonusCollect). Lets the BONUS-letter
+ * land clip finish before scatter/collect highlight starts.
+ */
+export const BONUS_WIN_PRE_DELAY_MS = 400;
+
 /** Full cloud transition spine duration. */
 export const TRANSITION_DURATION_MS = 1800;
 
@@ -593,21 +600,20 @@ const wBounce = {
 	animationName: 'Special_2/bounce',
 	sizeRatios: bounceSizeRatios,
 };
-// Bonus landing plays the paw `wave` (parent bone idle) — the cat actually
-// flexes its paw + ears + whiskers on impact instead of just the parent
-// scale squash from `Special_1/bounce`. The reel-level Y-axis squash
-// already provides the impact bounce, so a flat `wave` reads as "kitty
-// settled and waved hello", which matches the designer's reference.
+// Bonus landing plays the BONUS-letter reveal (`Special_1/win` on the
+// text skeleton) when the kitty settles on the reel.
 const bBounce = {
-	type: 'spine' as const,
-	assetKey: 'B' as const,
-	animationName: 'Special_1/wave',
-	sizeRatios: bounceSizeRatios,
-};
-const bWin = {
 	type: 'spine' as const,
 	assetKey: 'BWin' as const,
 	animationName: 'Special_1/win',
+	sizeRatios: bounceSizeRatios,
+};
+// Scatter / bonus-collect highlight plays the paw `wave` on the slim
+// body skeleton (no text slots).
+const bWin = {
+	type: 'spine' as const,
+	assetKey: 'B' as const,
+	animationName: 'Special_1/wave',
 	sizeRatios: bWinSizeRatios,
 };
 
@@ -693,8 +699,7 @@ export const SYMBOL_INFO_MAP = {
 		win: wWin,
 		land: wBounce,
 	},
-	// Bonus — same pattern as Wild but with `Special_1/win` (lights up
-	// B/O/N/U/S letters with paw mascot wave).
+	// Bonus — landing shows BONUS letters; scatter/collect win plays paw wave.
 	B: {
 		explosion,
 		postWinStatic: bStatic,

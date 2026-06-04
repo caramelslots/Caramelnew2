@@ -117,9 +117,9 @@
 	}
 
 	.portrait .buy-bonus-btn {
-		min-height: 46px;
+		min-height: 50px;
 		padding: 0.45rem 0.4rem;
-		font-size: 0.7rem;
+		font-size: 0.82rem;
 		text-transform: uppercase;
 		background: rgba(0, 0, 0, 0.35);
 		border-radius: 10px;
@@ -165,15 +165,15 @@
 
 	/* Portrait boost — тот же вид, что desktop (название + cost + toggle). */
 	.portrait .boost-section :global(.feature-row) {
-		min-height: 46px;
+		min-height: 50px;
 		padding: 0.4rem 0.45rem;
 	}
 
 	.portrait .boost-section :global(.feature-name) {
-		font-size: 0.75rem;
+		font-size: 0.85rem;
 	}
 
 	.portrait .boost-section :global(.feature-cost) {
-		font-size: 0.62rem;
+		font-size: 0.72rem;
 	}
 </style>

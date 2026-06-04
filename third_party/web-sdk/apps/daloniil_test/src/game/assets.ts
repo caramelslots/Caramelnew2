@@ -155,9 +155,7 @@ export default {
 			scale: 1,
 		},
 	},
-	// Bonus — `Special_1` skeleton keeps just the kitty body + paw chain so
-	// `Special_1/wave` can play on landing without bleeding BONUS letters
-	// through the default skin.
+	// Bonus — `Special_1` skeleton (body + paw) for idle/spin and `wave` win.
 	B: {
 		type: 'spine',
 		src: {
@@ -166,8 +164,7 @@ export default {
 			scale: 1,
 		},
 	},
-	// Win-only Bonus skeleton — used during scatter/bonus-collect win so
-	// each letter (B/O/N/U/S) reveals via the spine's win track.
+	// BONUS-letter skeleton — `Special_1/win` plays on reel landing.
 	BWin: {
 		type: 'spine',
 		src: {

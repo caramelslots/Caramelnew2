@@ -12,7 +12,12 @@ import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEv
 import type { Position } from './types';
 import config from './config';
 import { runPreSpin } from './spinPadding';
-import { WIN_INFO_PRE_DELAY_MS, MYSTERY_REVEAL_PRE_DELAY_MS, WIN_SPOTLIGHT_CLEAR_DELAY_MS } from './constants';
+import {
+	WIN_INFO_PRE_DELAY_MS,
+	BONUS_WIN_PRE_DELAY_MS,
+	MYSTERY_REVEAL_PRE_DELAY_MS,
+	WIN_SPOTLIGHT_CLEAR_DELAY_MS,
+} from './constants';
 
 // Таймер фонового снятия затемнения/paylines. Хранится здесь, чтобы
 // `reveal` мог отменить его при старте нового спина раньше истечения задержки.
@@ -72,6 +77,13 @@ const animateSymbols = async ({ positions }: { positions: Position[] }) => {
 		type: 'boardWithAnimateSymbols',
 		symbolPositions: positions,
 	});
+};
+
+/** Bonus scatter/collect paw-wave — delayed after reel landing. */
+const animateBonusSymbols = async ({ positions }: { positions: Position[] }) => {
+	await waitForTimeout(BONUS_WIN_PRE_DELAY_MS);
+	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
+	await animateSymbols({ positions });
 };
 
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
@@ -151,9 +163,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.ladderTier = 0;
 		stateGame.mysteryReels = [];
 		stateGame.ladderVisible = false;
-		// animate bonus symbols (former scatters)
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
-		await animateSymbols({ positions: bookEvent.positions });
+		await animateBonusSymbols({ positions: bookEvent.positions });
 		// show free spin intro
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
@@ -255,9 +265,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// === Cash Stacks custom events ===
 	bonusCollect: async (bookEvent: BookEventOfType<'bonusCollect'>) => {
 		stateGame.bonusCollected = bookEvent.collectedTotal;
-		// Анимация символов на позициях Bonus (как при scatter-win).
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
-		await animateSymbols({ positions: bookEvent.positions });
+		await animateBonusSymbols({ positions: bookEvent.positions });
 	},
 	ladderTierUp: async (bookEvent: BookEventOfType<'ladderTierUp'>) => {
 		stateGame.ladderTier = bookEvent.newTier;
