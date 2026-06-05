@@ -529,6 +529,9 @@ export const WIN_INFO_PRE_DELAY_MS = 100;
  */
 export const BONUS_WIN_PRE_DELAY_MS = 400;
 
+/** Pause after bonus paw-wave animation, before the next spin/reveal. */
+export const BONUS_WIN_POST_DELAY_MS = 400;
+
 /** Full cloud transition spine duration. */
 export const TRANSITION_DURATION_MS = 1800;
 

@@ -15,6 +15,7 @@ import { runPreSpin } from './spinPadding';
 import {
 	WIN_INFO_PRE_DELAY_MS,
 	BONUS_WIN_PRE_DELAY_MS,
+	BONUS_WIN_POST_DELAY_MS,
 	MYSTERY_REVEAL_PRE_DELAY_MS,
 	WIN_SPOTLIGHT_CLEAR_DELAY_MS,
 } from './constants';
@@ -84,6 +85,7 @@ const animateBonusSymbols = async ({ positions }: { positions: Position[] }) => 
 	await waitForTimeout(BONUS_WIN_PRE_DELAY_MS);
 	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
 	await animateSymbols({ positions });
+	await waitForTimeout(BONUS_WIN_POST_DELAY_MS);
 };
 
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
