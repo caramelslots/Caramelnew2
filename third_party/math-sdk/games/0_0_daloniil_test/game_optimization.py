@@ -1,7 +1,7 @@
 """Optimization-program setup для Cash Stacks (5 bet-modes).
 
-MATH_RETENTION_PLAN Stage 1: higher basegame hit rate (~19%), lower avg win
-per hit, RTP 96%. FS optimizer profile unchanged.
+MATH_LOW_VOL_PLAN Stage 3: line hit ~37%, low avg win per hit (~1.08× base),
+RTP 96%. FS optimizer profile unchanged (Q2).
 """
 
 from optimization_program.optimization_config import (
@@ -42,14 +42,14 @@ def _bonus_parameters():
 
 
 def _basegame_scaling():
-    # RETENTION tuning: reward small/medium base hits, penalize large base tails.
-    # With basegame quota=0.19 and HR=5.5: ~9500 winning books for optimizer.
+    # LOW-VOL tuning: boost micro-wins (0.1–1×), penalize base tails >1.5×.
+    # With basegame quota=0.37 and HR=3.2: ~18500 winning books for optimizer.
     return ConstructScaling(
         [
-            {"criteria": "basegame", "scale_factor": 1.5, "win_range": (1, 2), "probability": 1.0},
-            {"criteria": "basegame", "scale_factor": 1.2, "win_range": (2, 5), "probability": 1.0},
-            {"criteria": "basegame", "scale_factor": 0.8, "win_range": (5, 20), "probability": 1.0},
-            {"criteria": "basegame", "scale_factor": 0.5, "win_range": (20, 50), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 1.5, "win_range": (0.1, 0.5), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 1.3, "win_range": (0.5, 1.0), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 0.7, "win_range": (1.5, 5), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 0.4, "win_range": (5, 50), "probability": 1.0},
             {"criteria": "freegame", "scale_factor": 0.5, "win_range": (1, 100), "probability": 1.0},
             {"criteria": "freegame", "scale_factor": 2.0, "win_range": (500, 2500), "probability": 1.0},
         ]
@@ -85,7 +85,7 @@ class OptimizationSetup:
                     "freegame": ConstructConditions(
                         rtp=0.55, hr=200, search_conditions={"symbol": "scatter"}
                     ).return_dict(),
-                    "basegame": ConstructConditions(hr=5.5, rtp=0.40).return_dict(),
+                    "basegame": ConstructConditions(hr=3.2, rtp=0.40).return_dict(),
                 },
                 "scaling": _basegame_scaling(),
                 "parameters": _common_parameters(),
@@ -104,7 +104,7 @@ class OptimizationSetup:
                     "freegame": ConstructConditions(
                         rtp=0.65, hr=120, search_conditions={"symbol": "scatter"}
                     ).return_dict(),
-                    "basegame": ConstructConditions(hr=5.5, rtp=0.30).return_dict(),
+                    "basegame": ConstructConditions(hr=3.2, rtp=0.30).return_dict(),
                 },
                 "scaling": _basegame_scaling(),
                 "parameters": _common_parameters(),

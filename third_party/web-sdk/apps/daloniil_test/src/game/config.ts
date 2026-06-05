@@ -117,19 +117,19 @@ export default {
 	},
 
 	symbols: {
-		// Low symbols — все 4 одинаковые. 3-OAK УДАЛЁН (MATH_REDESIGN_PLAN §2.2 Опция A).
+		// Low symbols — 3-OAK @ 0.1× (MATH_LOW_VOL_PLAN Stage 3).
 		// Зеркалит math `game_config.py:paytable`.
 		L1: {
-			paytable: [{ '5': 3.0 }, { '4': 0.5 }],
+			paytable: [{ '5': 3.0 }, { '4': 0.5 }, { '3': 0.1 }],
 		},
 		L2: {
-			paytable: [{ '5': 3.0 }, { '4': 0.5 }],
+			paytable: [{ '5': 3.0 }, { '4': 0.5 }, { '3': 0.1 }],
 		},
 		L3: {
-			paytable: [{ '5': 3.0 }, { '4': 0.5 }],
+			paytable: [{ '5': 3.0 }, { '4': 0.5 }, { '3': 0.1 }],
 		},
 		L4: {
-			paytable: [{ '5': 3.0 }, { '4': 0.5 }],
+			paytable: [{ '5': 3.0 }, { '4': 0.5 }, { '3': 0.1 }],
 		},
 		// High symbols
 		H4: {

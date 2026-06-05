@@ -38,9 +38,8 @@ class GameConfig(Config):
         # Wild платит только на 5 of a kind (см. 0_0_lines readme).
         # B (Bonus) — scatter-like trigger, без line-pay.
         #
-        # MATH_RETENTION_PLAN Stage 1 (Variant C): вернули 3-OAK только для
-        # L3/L4 @ 0.1× — частые мелкие hits без «яркий экран, win < bet».
-        # L1/L2 без 3-OAK (минимум 4-OAK = 0.5×). High-tier без изменений.
+        # MATH_LOW_VOL_PLAN Stage 3: 3-OAK L1–L4 @ 0.1× for dense micro-hits;
+        # avg win/hit ~1.08× @ 37% line hit. High-tier без изменений.
         self.paytable = {
             (5, "W"): 225.0,
             # H1 (highest) — без изменений
@@ -58,8 +57,10 @@ class GameConfig(Config):
             (3, "H4"): 0.7,  # Stake RGS: payout cents must be multiple of 10
             (5, "L1"): 3.0,
             (4, "L1"): 0.5,
+            (3, "L1"): 0.1,
             (5, "L2"): 3.0,
             (4, "L2"): 0.5,
+            (3, "L2"): 0.1,
             (5, "L3"): 3.0,
             (4, "L3"): 0.5,
             (3, "L3"): 0.1,
@@ -162,9 +163,9 @@ class GameConfig(Config):
         # бонус за покупку», эквивалентный «уже собранным 4 B».
         self.super_bonus_starting_mystery_reels = 1
 
-        # MATH_RETENTION_PLAN Stage 2 — visual cluster on dead spins.
-        self.dead_cluster_fraction = 0.40  # share of dead spins that use cluster layout
-        self.fs_cluster_on_dead_fraction = 0.40  # FS: cluster among zero-win spins only
+        # MATH_LOW_VOL_PLAN Stage 3 — cluster ~10% of all spins (A2).
+        self.dead_cluster_fraction = 0.19  # 10% / 52.9% dead (base); quotas are explicit below
+        self.fs_cluster_on_dead_fraction = 0.40  # FS unchanged (Q2)
 
         # MYSTERY REVEAL POOL — weighted random distribution
         # ──────────────────────────────────────────────────
@@ -399,15 +400,13 @@ class GameConfig(Config):
             "bonus_super": self.wincap,
         }
 
-        # Dead quota split (Stage 2): plain 60% / cluster 40% of total dead.
-        # base dead total = 1 - wincap - FS - basegame = 0.709 (must sum to 1.0).
-        base_dead_total = 0.709
-        base_dead_plain = round(base_dead_total * 0.6, 4)   # 0.4254
-        base_dead_cluster = round(base_dead_total * 0.4, 4)  # 0.2836
+        # Dead quota split (Stage 3 / A2): cluster 10% all spins; plain dead remainder.
+        # base dead total = 1 - wincap - FS - basegame = 0.529.
+        base_dead_cluster = 0.10
+        base_dead_plain = round(0.529 - base_dead_cluster, 4)  # 0.429
 
-        bonus_dead_total = 0.629
-        bonus_dead_plain = round(bonus_dead_total * 0.6, 4)   # 0.3774
-        bonus_dead_cluster = round(bonus_dead_total * 0.4, 4)  # 0.2516
+        bonus_dead_cluster = 0.10
+        bonus_dead_plain = round(0.449 - bonus_dead_cluster, 4)  # 0.349
 
         self.bet_modes = [
             BetMode(
@@ -433,7 +432,7 @@ class GameConfig(Config):
                         win_criteria=0.0,
                         conditions=zerowin_cluster_condition,
                     ),
-                    Distribution(criteria="basegame", quota=0.19, conditions=basegame_condition),
+                    Distribution(criteria="basegame", quota=0.37, conditions=basegame_condition),
                 ],
             ),
             BetMode(
@@ -464,7 +463,7 @@ class GameConfig(Config):
                         win_criteria=0.0,
                         conditions=bonus_boost_zerowin_cluster_condition,
                     ),
-                    Distribution(criteria="basegame", quota=0.19, conditions=bonus_boost_basegame_condition),
+                    Distribution(criteria="basegame", quota=0.37, conditions=bonus_boost_basegame_condition),
                 ],
             ),
             BetMode(
