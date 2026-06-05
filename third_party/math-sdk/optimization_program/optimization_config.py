@@ -166,7 +166,18 @@ def verify_optimization_input(game_config, opt_dict):
         for dist in bm._distributions:
             dist_keys.append(dist._criteria)
 
-        assert all(x in criteria_list for x in dist_keys), "Distribution criteria must match 'conditions' keys"
+        # Zero-win sub-criteria (e.g. 0_cluster) share the "0" optimizer fence.
+        zero_fence_aliases = {"0_cluster": "0"}
+        for criteria in dist_keys:
+            if criteria in zero_fence_aliases:
+                assert zero_fence_aliases[criteria] in criteria_list, (
+                    f"Distribution '{criteria}' maps to optimizer fence "
+                    f"'{zero_fence_aliases[criteria]}' which must exist in conditions."
+                )
+                continue
+            assert criteria in criteria_list, (
+                f"Distribution criteria '{criteria}' must match 'conditions' keys"
+            )
 
         # Verify optimization segmentation matches target RTP
         bm_rtp = bm.get_rtp()

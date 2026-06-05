@@ -1,6 +1,6 @@
 """Cash Stacks (daloniil_test) — game configuration.
 
-5 reels × 5 rows, 25 paylines (smooth-only), RTP 96.01%, max win ×2500.
+5 reels × 5 rows, 25 paylines (smooth-only), RTP 96%, max win ×2500.
 Donor: 0_0_lines. См. games/0_0_daloniil_test/readme.txt и
 MATH_REDESIGN_PLAN.md (volatility / no-jump paylines).
 """
@@ -27,7 +27,7 @@ class GameConfig(Config):
         self.working_name = "Cash Stacks"
         self.wincap = 2_500.0
         self.win_type = "lines"
-        self.rtp = 0.9601
+        self.rtp = 0.96
         self.construct_paths()
 
         # === Cash Stacks dimensions ===
@@ -38,16 +38,9 @@ class GameConfig(Config):
         # Wild платит только на 5 of a kind (см. 0_0_lines readme).
         # B (Bonus) — scatter-like trigger, без line-pay.
         #
-        # MATH_REDESIGN_PLAN.md §2.2 (Опция A): убрали 3-of-a-kind у Low
-        # символов — это решает «много линий горит, выигрыш < ставки».
-        # Минимум 3-OAK low был 0.1 × bet (Stake RGS: payout cents %10 == 0)
-        # × ~5–8 линий на хит → +0.5–0.8 bet, что меньше ставки даже при
-        # «ярком» визуале. Удалив 3OAK low, мы перебрасываем эту RTP-долю
-        # в 4-OAK (×1.67) и 5-OAK (×2) low, поэтому минимальный выигрыш
-        # становится 4×L = 0.5 × bet × N линий.
-        #
-        # High-tier paytable не трогаем (§2.3 — отдельный шаг).
-        # Финальные веса (RTP=96.01%) — подкрутит optimization-run.
+        # MATH_RETENTION_PLAN Stage 1 (Variant C): вернули 3-OAK только для
+        # L3/L4 @ 0.1× — частые мелкие hits без «яркий экран, win < bet».
+        # L1/L2 без 3-OAK (минимум 4-OAK = 0.5×). High-tier без изменений.
         self.paytable = {
             (5, "W"): 225.0,
             # H1 (highest) — без изменений
@@ -63,16 +56,16 @@ class GameConfig(Config):
             (5, "H4"): 30.0,
             (4, "H4"): 3.0,
             (3, "H4"): 0.7,  # Stake RGS: payout cents must be multiple of 10
-            # Low symbols — все одинаковые. 3-OAK УДАЛЁН (Опция A).
-            # 4-OAK ×1.67 (0.3 → 0.5), 5-OAK ×2 (1.5 → 3.0).
             (5, "L1"): 3.0,
             (4, "L1"): 0.5,
             (5, "L2"): 3.0,
             (4, "L2"): 0.5,
             (5, "L3"): 3.0,
             (4, "L3"): 0.5,
+            (3, "L3"): 0.1,
             (5, "L4"): 3.0,
             (4, "L4"): 0.5,
+            (3, "L4"): 0.1,
         }
 
         # === 25 paylines (5×5, rows 0..4) — все smooth ===
@@ -169,6 +162,10 @@ class GameConfig(Config):
         # бонус за покупку», эквивалентный «уже собранным 4 B».
         self.super_bonus_starting_mystery_reels = 1
 
+        # MATH_RETENTION_PLAN Stage 2 — visual cluster on dead spins.
+        self.dead_cluster_fraction = 0.40  # share of dead spins that use cluster layout
+        self.fs_cluster_on_dead_fraction = 0.40  # FS: cluster among zero-win spins only
+
         # MYSTERY REVEAL POOL — weighted random distribution
         # ──────────────────────────────────────────────────
         # HIGH-VOLATILITY TUNING: W теперь доминирует в пуле (~45%).
@@ -207,8 +204,13 @@ class GameConfig(Config):
             "BR0": "BR0.csv",  # basegame default
             "BR1": "BR1.csv",  # bonus_boost basegame (агрессивнее)
             "BR2": "BR2.csv",  # special_spins basegame (гарантированный FS)
+            "BR0_ZW": "BR0_ZW.csv",  # base zerowin (plain dead)
+            "BR1_ZW": "BR1_ZW.csv",  # bonus_boost zerowin (plain dead)
+            "BR2_ZW": "BR2_ZW.csv",  # special_spins zerowin (plain dead)
             "FR0": "FR0.csv",  # freegame default
             "FR1": "FR1.csv",  # freegame для super bonus (больше Mystery)
+            "FR0_ZW": "FR0_ZW.csv",  # FS zerowin reference strip (cluster is programmatic)
+            "FR1_ZW": "FR1_ZW.csv",  # FS zerowin for bonus_super
             "WCAP": "FRWCAP.csv",
         }
         self.reels = {}
@@ -248,13 +250,39 @@ class GameConfig(Config):
         }
 
         zerowin_condition = {
-            "reel_weights": {self.basegame_type: {"BR0": 1}},
+            "reel_weights": {self.basegame_type: {"BR0_ZW": 1}},
             "mult_values": {
                 self.basegame_type: {1: 1},
                 self.freegame_type: {2: 100, 3: 80, 4: 50, 5: 20, 10: 10, 20: 5, 50: 1},
             },
             "force_wincap": False,
             "force_freegame": False,
+        }
+
+        zerowin_cluster_condition = {
+            "reel_weights": {self.basegame_type: {"BR0_ZW": 1}},
+            "mult_values": {
+                self.basegame_type: {1: 1},
+                self.freegame_type: {2: 100, 3: 80, 4: 50, 5: 20, 10: 10, 20: 5, 50: 1},
+            },
+            "force_wincap": False,
+            "force_freegame": False,
+            "cluster_board": True,
+        }
+
+        bonus_boost_zerowin_condition = {
+            "reel_weights": {self.basegame_type: {"BR1_ZW": 1}},
+            "mult_values": {self.basegame_type: {1: 1}},
+            "force_wincap": False,
+            "force_freegame": False,
+        }
+
+        bonus_boost_zerowin_cluster_condition = {
+            "reel_weights": {self.basegame_type: {"BR1_ZW": 1}},
+            "mult_values": {self.basegame_type: {1: 1}},
+            "force_wincap": False,
+            "force_freegame": False,
+            "cluster_board": True,
         }
 
         # WINCAP CRITERION
@@ -371,6 +399,16 @@ class GameConfig(Config):
             "bonus_super": self.wincap,
         }
 
+        # Dead quota split (Stage 2): plain 60% / cluster 40% of total dead.
+        # base dead total = 1 - wincap - FS - basegame = 0.709 (must sum to 1.0).
+        base_dead_total = 0.709
+        base_dead_plain = round(base_dead_total * 0.6, 4)   # 0.4254
+        base_dead_cluster = round(base_dead_total * 0.4, 4)  # 0.2836
+
+        bonus_dead_total = 0.629
+        bonus_dead_plain = round(bonus_dead_total * 0.6, 4)   # 0.3774
+        bonus_dead_cluster = round(bonus_dead_total * 0.4, 4)  # 0.2516
+
         self.bet_modes = [
             BetMode(
                 name="base",
@@ -388,11 +426,14 @@ class GameConfig(Config):
                         conditions=wincap_condition,
                     ),
                     Distribution(criteria="freegame", quota=0.10, conditions=freegame_condition),
-                    # High-vol: 83% zero-win spins.
-                    # Basegame quota=0.069 → ~6,900 samples with HR=12 → ~575
-                    # winning books → enough for optimizer to work with.
-                    Distribution(criteria="0", quota=0.83, win_criteria=0.0, conditions=zerowin_condition),
-                    Distribution(criteria="basegame", quota=0.069, conditions=basegame_condition),
+                    Distribution(criteria="0", quota=base_dead_plain, win_criteria=0.0, conditions=zerowin_condition),
+                    Distribution(
+                        criteria="0_cluster",
+                        quota=base_dead_cluster,
+                        win_criteria=0.0,
+                        conditions=zerowin_cluster_condition,
+                    ),
+                    Distribution(criteria="basegame", quota=0.19, conditions=basegame_condition),
                 ],
             ),
             BetMode(
@@ -411,9 +452,19 @@ class GameConfig(Config):
                         conditions=wincap_condition,
                     ),
                     Distribution(criteria="freegame", quota=0.18, conditions=bonus_boost_freegame_condition),
-                    # High-vol: bonus_boost basegame quota=0.069 → sufficient optimizer samples.
-                    Distribution(criteria="0", quota=0.75, win_criteria=0.0, conditions=bonus_boost_basegame_condition),
-                    Distribution(criteria="basegame", quota=0.069, conditions=bonus_boost_basegame_condition),
+                    Distribution(
+                        criteria="0",
+                        quota=bonus_dead_plain,
+                        win_criteria=0.0,
+                        conditions=bonus_boost_zerowin_condition,
+                    ),
+                    Distribution(
+                        criteria="0_cluster",
+                        quota=bonus_dead_cluster,
+                        win_criteria=0.0,
+                        conditions=bonus_boost_zerowin_cluster_condition,
+                    ),
+                    Distribution(criteria="basegame", quota=0.19, conditions=bonus_boost_basegame_condition),
                 ],
             ),
             BetMode(
@@ -507,3 +558,21 @@ class GameConfig(Config):
         # Fallback for floating-point edge at exactly wincap+ε already covered
         # by level 10 (open upper bound). Anything below 0 → level 1.
         return 1
+
+    def get_cluster_symbol_weights(self, gametype: str, betmode: str) -> dict[str, int]:
+        """Weighted cluster symbol picker for current mode / gametype."""
+        from game_cluster import (
+            CLUSTER_SYMBOL_WEIGHTS_BR0,
+            CLUSTER_SYMBOL_WEIGHTS_BR1,
+            CLUSTER_SYMBOL_WEIGHTS_FR0,
+            CLUSTER_SYMBOL_WEIGHTS_FR1,
+        )
+
+        if gametype == self.freegame_type:
+            if betmode == "bonus_super":
+                return CLUSTER_SYMBOL_WEIGHTS_FR1
+            return CLUSTER_SYMBOL_WEIGHTS_FR0
+
+        if betmode == "bonus_boost":
+            return CLUSTER_SYMBOL_WEIGHTS_BR1
+        return CLUSTER_SYMBOL_WEIGHTS_BR0

@@ -16,7 +16,7 @@
 	import { UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
 	import UiFadeContainer from 'components-ui-pixi/src/components/UiFadeContainer.svelte';
 
-	import ButtonBet from 'components-ui-pixi/src/components/ButtonBet.svelte';
+	import CashStacksBetButton from './CashStacksBetButton.svelte';
 	import ButtonIncrease from 'components-ui-pixi/src/components/ButtonIncrease.svelte';
 	import ButtonDecrease from 'components-ui-pixi/src/components/ButtonDecrease.svelte';
 
@@ -152,7 +152,7 @@
 				</Container>
 			{/if}
 			<Container x={0} y={0} scale={spinScale}>
-				<ButtonBet anchor={0.5} />
+				<CashStacksBetButton anchor={0.5} />
 			</Container>
 			{#if !isFreeSpins}
 				<Container x={betControlOffsetX} y={0} scale={spinSmallScale}>

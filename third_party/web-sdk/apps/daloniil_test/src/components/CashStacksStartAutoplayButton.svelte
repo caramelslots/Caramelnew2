@@ -9,6 +9,7 @@
 <script lang="ts">
 	import { Container, Text } from 'pixi-svelte';
 	import { Button } from 'components-pixi';
+	import { OnHotkey } from 'components-shared';
 	import {
 		stateUi,
 		stateBet,
@@ -46,23 +47,27 @@
 	};
 </script>
 
+<OnHotkey hotkey="Space" {disabled} onpress={startAutoplay} />
 <Button {...props} {sizes} onpress={startAutoplay} {disabled}>
 	{#snippet children({ center })}
 		<Container {...center}>
 			<UiSprite
+				key="bet"
 				width={sizes.width}
 				height={sizes.height}
 				anchor={0.5}
-				backgroundColor={disabled ? 0xaaaaaa : 0x000000}
+				{...disabled ? { backgroundColor: 0xaaaaaa } : {}}
 			/>
 			<Text
 				anchor={0.5}
-				text="▶"
+				text={context.i18nDerived.autobet()}
 				style={{
 					align: 'center',
+					wordWrap: true,
+					wordWrapWidth: 200,
 					fontFamily: 'proxima-nova',
-					fontWeight: '700',
-					fontSize: UI_BASE_FONT_SIZE * 1.2,
+					fontWeight: '600',
+					fontSize: UI_BASE_FONT_SIZE * 0.9,
 					fill: 0xffffff,
 				}}
 			/>

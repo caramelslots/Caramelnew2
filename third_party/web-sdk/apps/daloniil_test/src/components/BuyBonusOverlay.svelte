@@ -18,7 +18,7 @@
 	import { stateBonus } from 'components-ui-html/src/stateBonus.svelte';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
-	import { clearActiveFeature, isAnyBonusActive } from '../game/activeFeature';
+	import { clearActiveFeature } from '../game/activeFeature';
 	import { getContext } from '../game/context';
 	import AssetPlaceholder from './AssetPlaceholder.svelte';
 	import CashStacksFeatureToggles from './CashStacksFeatureToggles.svelte';
@@ -26,7 +26,6 @@
 	const context = getContext();
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonus');
-	const buyDisabled = $derived(isAnyBonusActive());
 
 	type BonusVariant = 'normal' | 'super';
 
@@ -63,7 +62,6 @@
 	};
 
 	const onBuy = (variant: BonusVariant) => {
-		if (buyDisabled) return;
 		clearActiveFeature();
 		/*
 			НЕ трогаем stateBet.activeBetModeKey здесь — иначе HUD сразу же
@@ -115,7 +113,7 @@
 					</div>
 					<div class="card-desc">{context.i18nDerived.buyNormalDesc()}</div>
 					<div class="card-price" data-test="bonus-price-normal">{normalPrice}</div>
-					<button class="buy-button" disabled={buyDisabled} onclick={() => onBuy('normal')}>
+					<button class="buy-button" onclick={() => onBuy('normal')}>
 						{context.i18nDerived.buyConfirm()}
 					</button>
 				</div>
@@ -128,7 +126,7 @@
 					</div>
 					<div class="card-desc">{context.i18nDerived.buySuperDesc()}</div>
 					<div class="card-price" data-test="bonus-price-super">{superPrice}</div>
-					<button class="buy-button" disabled={buyDisabled} onclick={() => onBuy('super')}>
+					<button class="buy-button" onclick={() => onBuy('super')}>
 						{context.i18nDerived.buyConfirm()}
 					</button>
 				</div>

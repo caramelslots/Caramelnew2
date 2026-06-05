@@ -17,6 +17,7 @@
 	import { stateBonus } from 'components-ui-html/src/stateBonus.svelte';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
+	import { clearActiveFeature } from '../game/activeFeature';
 	import { getContext } from '../game/context';
 	import AssetPlaceholder from './AssetPlaceholder.svelte';
 
@@ -53,6 +54,7 @@
 	};
 
 	const confirm = () => {
+		clearActiveFeature();
 		/*
 			Финальный set activeBetModeKey происходит ТОЛЬКО здесь, после
 			явного подтверждения. До этого HUD продолжает работать в режиме

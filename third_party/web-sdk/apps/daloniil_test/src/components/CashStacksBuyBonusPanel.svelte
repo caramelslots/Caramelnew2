@@ -7,7 +7,7 @@
 	import { stateModal } from 'state-shared';
 
 	import CashStacksFeatureToggles from './CashStacksFeatureToggles.svelte';
-	import { isAnyBonusActive, isFreeSpinsActive } from '../game/activeFeature';
+	import { isFreeSpinsActive } from '../game/activeFeature';
 	import { BOARD_LAYOUT_OFFSETS, BOARD_SIZES } from '../game/constants';
 	import { portraitBuyPanelCanvasTop } from '../game/portraitHudLayout';
 	import { getContext } from '../game/context';
@@ -24,7 +24,7 @@
 			!isFreeSpinsActive(),
 	);
 
-	const buyDisabled = $derived(!context.stateXstateDerived.isIdle() || isAnyBonusActive());
+	const buyDisabled = $derived(!context.stateXstateDerived.isIdle());
 
 	const PANEL_GAP = 12;
 	const PANEL_W = 210;

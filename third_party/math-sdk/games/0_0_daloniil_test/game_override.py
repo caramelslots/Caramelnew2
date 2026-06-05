@@ -17,6 +17,9 @@ import random
 
 from game_executables import GameExecutables
 from src.calculations.statistics import get_random_outcome
+from src.calculations.lines import Lines
+from src.events.events import reveal_event
+from game_cluster import generate_cluster_board_names
 from game_events import (
     bonus_collect_event,
     ladder_tier_up_event,
@@ -64,6 +67,71 @@ class GameStateOverride(GameExecutables):
             if win_criteria is None and self.final_win == 0:
                 self.repeat = True
                 return
+
+    def draw_board(self, emit_event: bool = True, trigger_symbol: str = "scatter") -> None:
+        """Override: cluster dead boards + FS zero-win cluster replacement."""
+        conditions = self.get_current_distribution_conditions()
+        if conditions.get("cluster_board") or self.criteria == "0_cluster":
+            if self.draw_cluster_board(emit_event=emit_event):
+                return
+
+        if self.gametype == self.config.freegame_type:
+            super().draw_board(emit_event=False, trigger_symbol=trigger_symbol)
+            win_data = Lines.get_lines(
+                self.board,
+                self.config,
+                global_multiplier=self.global_multiplier,
+            )
+            if (
+                win_data["totalWin"] == 0
+                and random.random() < self.config.fs_cluster_on_dead_fraction
+            ):
+                self.draw_cluster_board(emit_event=False)
+            if emit_event:
+                reveal_event(self)
+            return
+
+        super().draw_board(emit_event=emit_event, trigger_symbol=trigger_symbol)
+
+    def draw_cluster_board(self, emit_event: bool = True) -> bool:
+        """Build a validated zero-win visual cluster board."""
+        betmode = self.get_current_betmode().get_name()
+        weights = self.config.get_cluster_symbol_weights(self.gametype, betmode)
+        board_names = generate_cluster_board_names(
+            self.config,
+            weights,
+            self.create_symbol,
+            global_multiplier=self.global_multiplier,
+            max_scatters=2,
+        )
+        if board_names is None:
+            return False
+
+        board = []
+        for reel in range(self.config.num_reels):
+            col = []
+            for row in range(self.config.num_rows[reel]):
+                col.append(self.create_symbol(board_names[reel][row]))
+            board.append(col)
+        self.board = board
+        self.get_special_symbols_on_board()
+        self.anticipation = [0] * self.config.num_reels
+        self.reel_positions = [0] * self.config.num_reels
+        self.padding_position = [0] * self.config.num_reels
+        self.reelstrip_id = "CLUSTER"
+        if self.config.include_padding:
+            pool = ["L1", "L2", "L3", "L4", "H4", "H3"]
+            self.top_symbols = [self.create_symbol(random.choice(pool)) for _ in range(self.config.num_reels)]
+            self.bottom_symbols = [self.create_symbol(random.choice(pool)) for _ in range(self.config.num_reels)]
+        if emit_event:
+            reveal_event(self)
+        return True
+
+    def imprint_wins(self) -> None:
+        """Tag cluster dead books so the optimizer can split 0 vs 0_cluster fences."""
+        if self.criteria == "0_cluster":
+            self.record({"criteria": self.criteria})
+        super().imprint_wins()
 
     # ---- Cash Stacks specific ----
 

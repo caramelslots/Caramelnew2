@@ -12,7 +12,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	import { stateUi, stateBet, stateModal } from 'state-shared';
+	import { stateBet } from 'state-shared';
 	import { MainContainer } from 'components-layout';
 	import { Container, Text, anchorToPivot } from 'pixi-svelte';
 	import { EnableSpaceHold } from 'components-shared';
@@ -34,7 +34,7 @@
 	import CashStacksInfoButton from './CashStacksInfoButton.svelte';
 	import ButtonSettings from 'components-ui-pixi/src/components/ButtonSettings.svelte';
 	import ButtonBuyBonus from 'components-ui-pixi/src/components/ButtonBuyBonus.svelte';
-	import ButtonBet from 'components-ui-pixi/src/components/ButtonBet.svelte';
+	import CashStacksBetButton from './CashStacksBetButton.svelte';
 	import ButtonTurbo from 'components-ui-pixi/src/components/ButtonTurbo.svelte';
 	// SDK-шный ButtonAutoSpin/ButtonTurbo не используем — заменены на кастомные.
 	// Старт автоигры по клику на Spin кнопку (CashStacksStartAutoplayButton
@@ -233,7 +233,7 @@
 				{/if}
 
 				<Container x={0} y={0} scale={SPIN_CLUSTER.spinScale}>
-					<ButtonBet anchor={0.5} />
+					<CashStacksBetButton anchor={0.5} />
 				</Container>
 
 				{#if !isFreeSpins}
@@ -284,7 +284,7 @@
 			{#snippet amountWin(labelProps)}<LabelWin {...labelProps} />{/snippet}
 			{#snippet amountBet(labelProps)}<LabelBet {...labelProps} />{/snippet}
 			{#snippet buttonBuyBonus(buttonProps)}<ButtonBuyBonus {...buttonProps} />{/snippet}
-			{#snippet buttonBet(buttonProps)}<ButtonBet {...buttonProps} />{/snippet}
+			{#snippet buttonBet(buttonProps)}<CashStacksBetButton {...buttonProps} />{/snippet}
 			{#snippet buttonTurbo(buttonProps)}<ButtonTurbo {...buttonProps} />{/snippet}
 			{#snippet buttonAutoSpin(buttonProps)}<ButtonAutoSpin {...buttonProps} />{/snippet}
 			{#snippet buttonIncrease(buttonProps)}<ButtonIncrease {...buttonProps} />{/snippet}
@@ -310,7 +310,7 @@
 			{#snippet amountWin(labelProps)}<LabelWin {...labelProps} />{/snippet}
 			{#snippet amountBet(labelProps)}<LabelBet {...labelProps} />{/snippet}
 			{#snippet buttonBuyBonus(buttonProps)}<ButtonBuyBonus {...buttonProps} />{/snippet}
-			{#snippet buttonBet(buttonProps)}<ButtonBet {...buttonProps} />{/snippet}
+			{#snippet buttonBet(buttonProps)}<CashStacksBetButton {...buttonProps} />{/snippet}
 			{#snippet buttonTurbo(buttonProps)}<ButtonTurbo {...buttonProps} />{/snippet}
 			{#snippet buttonAutoSpin(buttonProps)}<ButtonAutoSpin {...buttonProps} />{/snippet}
 			{#snippet buttonIncrease(buttonProps)}<ButtonIncrease {...buttonProps} />{/snippet}

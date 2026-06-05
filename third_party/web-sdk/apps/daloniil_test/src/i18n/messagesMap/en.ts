@@ -19,6 +19,7 @@ export default {
 	AUTOPLAY_FEATURES: 'Features',
 	AUTOPLAY_ROUNDS: 'Rounds',
 	AUTOPLAY_START: 'Start',
+	AUTO_BET: 'Autobet',
 	BONUS_BOOST: 'Bonus Boost',
 	BONUS_BOOST_DESC: 'Players can activate Bonus Boost for ×2.',
 	BONUS_BOOST_COST: '{cost} per spin',
