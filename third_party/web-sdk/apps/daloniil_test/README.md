@@ -36,7 +36,7 @@ pnpm --filter daloniil_test storybook    # → http://localhost:6007
 
 ### Free Spins / Progress Ladder
 
-- 3+ `B` в base → 10 FS (8/12 FS если в Bonus Boost)
+- 3+ `B` в base → FS: **3× B = Normal Bonus** (10 FS, FR0), **4+× B = Super Bonus** (10 FS, FR1, 1 sticky mystery reel)
 - В FS: каждые **4** собранных `B` = новый **tier**, +3 FS, +1 Sticky Mystery Reel
 - Super Bonus = старт с **×4 Sticky Mystery Reels** (Tier 4 effect)
 

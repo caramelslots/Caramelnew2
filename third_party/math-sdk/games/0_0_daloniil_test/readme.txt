@@ -15,18 +15,16 @@ Donor: `0_0_lines`. Cash Stacks adds:
       bonus_normal (buy)  ×100   (10 FS, гарантированный bonus trigger)
       bonus_super (buy)   ×200   (10 FS, старт с ×3 sticky Mystery Reels)
 
-Natural FS trigger из base также даёт стартовые Mystery Reels:
-      3× B → 10 FS, 0 starting MR
-      4× B → 10 FS, 1 starting MR
-      5× B → 10 FS, 2 starting MR
-
+Natural FS trigger из base (по числу B на trigger-доске):
+      3× B → bonusCollect ceremony → Normal Bonus (10 FS, FR0, 0 starting MR)
+      4× B → bonusCollect ceremony → Super Bonus  (10 FS, FR1, 1 starting MR)
 ## Symbol pool
 
 ```
 W      Wild      — wild + multiplier (×2..×50 в FS, см. padding_symbol_values)
 H1-H4  High      — H1=top, H4=lowest premium
 L1-L4  Low       — все равноценные (1.0 / 0.2 / 0.1 для 5/4/3-of-a-kind)
-B      Bonus     — scatter, collectible, max 1 per reel (enforce на draw + collect)
+B      Bonus     — scatter, collectible, max 1 per reel / max 4 on board (enforce на draw + collect)
 M      Mystery   — appears only via Sticky Mystery Reel mechanic, не в reelstrip напрямую
 ```
 

@@ -159,13 +159,20 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
 		stateBet.winBookEventAmount = bookEvent.amount;
 	},
-	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
+	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>, { bookEvents }: BookEventContext) => {
 		// Сброс Cash Stacks FS-state при входе в FS.
 		stateGame.bonusCollected = 0;
 		stateGame.ladderTier = 0;
 		stateGame.mysteryReels = [];
 		stateGame.ladderVisible = false;
-		await animateBonusSymbols({ positions: bookEvent.positions });
+		// Math emits `bonusCollect` immediately before `freeSpinTrigger` when
+		// 3+ B land on the trigger board. Skip the duplicate paw-wave on old
+		// books that only carry positions on this event.
+		const eventIdx = bookEvents.indexOf(bookEvent);
+		const prevEvent = eventIdx > 0 ? bookEvents[eventIdx - 1] : undefined;
+		if (prevEvent?.type !== 'bonusCollect') {
+			await animateBonusSymbols({ positions: bookEvent.positions });
+		}
 		// show free spin intro
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });

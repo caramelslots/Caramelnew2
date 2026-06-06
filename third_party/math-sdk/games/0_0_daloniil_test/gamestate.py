@@ -17,22 +17,17 @@ class GameState(GameStateOverride):
         while self.repeat:
             self.reset_book()
             self.draw_board()
-            # Cash Stacks spec: max 1 B per reel. Reelstrip может случайно дать
-            # 2+ B на одном reel — снимаем дубликаты до line-eval и FS-проверки.
-            self.enforce_one_bonus_per_reel()
+            # Cash Stacks spec: max 1 B per reel, max 4 B on board.
+            self.enforce_bonus_symbol_rules()
 
             # Base game line evaluation.
             self.evaluate_lines_board()
 
             self.win_manager.update_gametype_wins(self.gametype)
             if self.check_fs_condition():
-                # REDESIGN_PLAN §2.3: fs_trigger_bonus_count теперь не
-                # влияет на стартовые mystery reels (они выдаются только
-                # через ladder). Поле сохранено для аналитики /
-                # backward-compat с book-event consumers.
-                self.fs_trigger_bonus_count = len(
-                    self.special_syms_on_board.get("scatter", [])
-                )
+                # 3× B → Normal Bonus FS profile; 4× B → Super Bonus FS profile.
+                self.apply_fs_profile_from_trigger()
+                self.emit_fs_trigger_bonus_collect()
                 self.run_freespin_from_base()
 
             self.evaluate_finalwin()
@@ -42,10 +37,8 @@ class GameState(GameStateOverride):
     def run_freespin(self):
         self.reset_fs_spin()
 
-        # REDESIGN_PLAN §2.2 + §2.3:
-        #   - bonus_super: 1 sticky mystery reel на случайной позиции (M3).
-        #   - Все остальные пути в FS: 0 starting mystery reels. Mystery
-        #     reels накапливаются ТОЛЬКО через collect-ladder (4 B = +1 reel).
+        # Super Bonus (4+ B trigger or purchased bonus_super): 1 sticky
+        # mystery reel at a random position. Normal Bonus (3 B): none at start.
         if self.is_super_bonus():
             self.init_super_bonus_mystery_reels()
 
@@ -59,12 +52,12 @@ class GameState(GameStateOverride):
                 self.draw_board(emit_event=False)
                 # Mystery reels замаскируют целиком — но B вне mystery reels
                 # всё ещё нужно дедупить (1 per reel spec).
-                self.enforce_one_bonus_per_reel()
+                self.enforce_bonus_symbol_rules()
                 self.apply_mystery_reels()
                 reveal_event(self)
             else:
                 self.draw_board()
-                self.enforce_one_bonus_per_reel()
+                self.enforce_bonus_symbol_rules()
 
             # 1. Раскрытие Sticky Mystery Reels: M → revealed symbol (real substitution).
             #    Клиент анимирует reveal, math продолжает счёт по раскрытой доске.

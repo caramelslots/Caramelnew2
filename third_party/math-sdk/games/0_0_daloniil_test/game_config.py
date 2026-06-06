@@ -123,7 +123,8 @@ class GameConfig(Config):
             "mystery": ["M"],
         }
 
-        # FS triggers: 3+ Bonus в base = 10 spins.
+        # FS triggers: 3× B → Normal Bonus (10 FS), 4× B → Super Bonus (10 FS).
+        # На доске максимум 4 B (см. max_bonus_on_board + enforce_bonus_symbol_rules).
         #
         # ВАЖНО: в Cash Stacks **единственный** retrigger source — Progress Ladder
         # (+3 spins per tier, max 5 tier-ов; см. game_override.check_ladder_tier_up).
@@ -133,9 +134,11 @@ class GameConfig(Config):
         # Поэтому `freespin_triggers[freegame_type]` = {} — никаких ретриггеров от B в FS.
         # См. MATH_BLOCKERS.md M7.
         self.freespin_triggers = {
-            self.basegame_type: {3: 10, 4: 10, 5: 10},
+            self.basegame_type: {3: 10, 4: 10},
             self.freegame_type: {},
         }
+        # Cash Stacks spec: max B symbols visible on board at once (also max 1 per reel).
+        self.max_bonus_on_board = 4
         # anticipation_triggers — порог для anticipation animation.
         # M4b (REDESIGN_PLAN §2.4): anticipation полностью отключён в обоих
         # gametype. Условие в SDK `len(scatters) >= threshold` никогда не
@@ -231,7 +234,7 @@ class GameConfig(Config):
                 self.basegame_type: {"BR0": 1},
                 self.freegame_type: {"FR0": 1},
             },
-            "scatter_triggers": {3: 50, 4: 20, 5: 5},
+            "scatter_triggers": {3: 55, 4: 25},
             "mult_values": {
                 self.basegame_type: {1: 1},
                 # Balanced distribution: mostly ×2-×10 to allow optimizer range,
@@ -314,7 +317,7 @@ class GameConfig(Config):
                 self.basegame_type: {1: 1},
                 self.freegame_type: {2: 10, 3: 20, 4: 50, 5: 60, 10: 100, 20: 90, 50: 50},
             },
-            "scatter_triggers": {4: 1, 5: 2},
+            "scatter_triggers": {3: 1, 4: 1},
             "force_wincap": True,
             "force_freegame": True,
         }
@@ -331,7 +334,7 @@ class GameConfig(Config):
                 self.basegame_type: {"BR1": 1},
                 self.freegame_type: {"FR0": 1},
             },
-            "scatter_triggers": {3: 60, 4: 25, 5: 8},
+            "scatter_triggers": {3: 60, 4: 33},
             "mult_values": {
                 self.basegame_type: {1: 1},
                 self.freegame_type: {2: 35, 5: 30, 10: 20, 20: 10, 50: 5},
@@ -346,7 +349,7 @@ class GameConfig(Config):
                 self.basegame_type: {"BR2": 1},
                 self.freegame_type: {"FR0": 1},
             },
-            "scatter_triggers": {3: 70, 4: 20, 5: 10},
+            "scatter_triggers": {3: 70, 4: 30},
             "mult_values": {
                 self.basegame_type: {1: 1},
                 self.freegame_type: {2: 20, 5: 25, 10: 25, 20: 20, 50: 10},
@@ -363,7 +366,7 @@ class GameConfig(Config):
                 self.basegame_type: {"BR0": 1},
                 self.freegame_type: {"FR0": 1},
             },
-            "scatter_triggers": {3: 50, 4: 20, 5: 5},
+            "scatter_triggers": {3: 55, 4: 25},
             "mult_values": {
                 self.basegame_type: {1: 1},
                 self.freegame_type: {2: 10, 5: 20, 10: 25, 20: 25, 50: 20},
@@ -381,7 +384,7 @@ class GameConfig(Config):
                 self.basegame_type: {"BR0": 1},
                 self.freegame_type: {"FR1": 1},
             },
-            "scatter_triggers": {3: 50, 4: 20, 5: 5},
+            "scatter_triggers": {3: 55, 4: 25},
             "mult_values": {
                 self.basegame_type: {1: 1},
                 self.freegame_type: {2: 5, 5: 15, 10: 20, 20: 30, 50: 30},

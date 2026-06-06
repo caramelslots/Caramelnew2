@@ -2,12 +2,12 @@
 	CashStacksStartAutoplayButton.svelte — кастомная замена ButtonBet,
 	которая рендерится в позиции центральной кнопки спина, КОГДА открыта
 	модалка автоигры (stateModal.modal?.name === 'autoSpin').
-	Клик по ней запускает автоигру с текущими выбранными параметрами,
-	визуально выглядит как обычная Spin-кнопка чтобы игроку было понятно
-	что это та же кнопка только в режиме "стартовать автоигру".
+	Клик по ней запускает автоигру с текущими выбранными параметрами.
+
+	Ref. designer_assets/spin_1.png
 -->
 <script lang="ts">
-	import { Container, Text } from 'pixi-svelte';
+	import { Container, Sprite } from 'pixi-svelte';
 	import { Button } from 'components-pixi';
 	import { OnHotkey } from 'components-shared';
 	import {
@@ -18,14 +18,9 @@
 		AUTO_SPINS_LOSS_LIMIT_MULTIPLIER_MAP,
 		AUTO_SPINS_SINGLE_WIN_LIMIT_MULTIPLIER_MAP,
 	} from 'state-shared';
-	// Импорт UiSprite напрямую — даёт нам тот же спрайт что у ButtonBet
-	// (см. ButtonBet.svelte → key="bet"), чтобы кнопка выглядела идентично.
-	import UiSprite from 'components-ui-pixi/src/components/UiSprite.svelte';
-	import { UI_BASE_FONT_SIZE, UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
+	import { UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
 
 	import { getContext } from '../game/context';
-	// Используем единый источник правды для значений раундов (см.
-	// FeaturesAutoSpinOverlay.svelte — там тот же helper).
 	import { getRoundsCounter } from '../game/autoplay';
 
 	const props: { anchor?: number } = $props();
@@ -51,25 +46,12 @@
 <Button {...props} {sizes} onpress={startAutoplay} {disabled}>
 	{#snippet children({ center })}
 		<Container {...center}>
-			<UiSprite
-				key="bet"
+			<Sprite
+				key="spin1"
 				width={sizes.width}
 				height={sizes.height}
 				anchor={0.5}
-				{...disabled ? { backgroundColor: 0xaaaaaa } : {}}
-			/>
-			<Text
-				anchor={0.5}
-				text={context.i18nDerived.autobet()}
-				style={{
-					align: 'center',
-					wordWrap: true,
-					wordWrapWidth: 200,
-					fontFamily: 'proxima-nova',
-					fontWeight: '600',
-					fontSize: UI_BASE_FONT_SIZE * 0.9,
-					fill: 0xffffff,
-				}}
+				alpha={disabled ? 0.45 : 1}
 			/>
 		</Container>
 	{/snippet}

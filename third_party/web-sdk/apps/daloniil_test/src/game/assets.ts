@@ -150,8 +150,7 @@ export default {
 		type: 'spine',
 		src: {
 			atlas: new URL('../../assets/spines/symbolsNew/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbolsNew/Special_2_win.json', import.meta.url)
-				.href,
+			skeleton: new URL('../../assets/spines/symbolsNew/Special_2_win.json', import.meta.url).href,
 			scale: 1,
 		},
 	},
@@ -169,8 +168,7 @@ export default {
 		type: 'spine',
 		src: {
 			atlas: new URL('../../assets/spines/symbolsNew/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbolsNew/Special_1_win.json', import.meta.url)
-				.href,
+			skeleton: new URL('../../assets/spines/symbolsNew/Special_1_win.json', import.meta.url).href,
 			scale: 1,
 		},
 	},
@@ -373,5 +371,49 @@ export default {
 		type: 'audio',
 		src: new URL('../../assets/audio/sounds.json', import.meta.url).href,
 		preload: true,
+	},
+	betPlus: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/ui/bet/plus.png', import.meta.url).href,
+	},
+	betMinus: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/ui/bet/minus.png', import.meta.url).href,
+	},
+	autoplayButton: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/ui/autoplay/autoplay.png', import.meta.url).href,
+	},
+	autoplayMobileButton: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/ui/autoplay/autoplay_mobile.png', import.meta.url).href,
+	},
+	spin1: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/ui/spin/spin_1.png', import.meta.url).href,
+	},
+	spin2: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/ui/spin/spin_2.png', import.meta.url).href,
+	},
+	menuButton: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/ui/menu/menu.png', import.meta.url).href,
+	},
+	infoButton: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/ui/info/info.png', import.meta.url).href,
+	},
+	turbo1: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/ui/turbo/turbo_1.png', import.meta.url).href,
+	},
+	turbo2: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/ui/turbo/turbo_3.png', import.meta.url).href,
+	},
+	turbo3: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/ui/turbo/turbo_2.png', import.meta.url).href,
 	},
 } as const;

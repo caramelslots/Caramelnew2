@@ -1,10 +1,9 @@
 <!--
-	UiCashStacksPortraitLayout.svelte — portrait / Popup S (ref. IMAGE 2026-06-02 13:11:58).
+	UiCashStacksPortraitLayout.svelte — portrait mobile (ref. IMAGE 2026-06-02 13:11:58).
 	  WIN под доской
 	  Buy + Bonus Boost — CashStacksBuyBonusPanel (HTML)
 	  − | Spin | + по центру
-	  i | ☰ | автоигра | turbo — нижний ряд
-	  баланс / ставка — одна строка внизу
+	  i | ☰ | balance/bet | автоигра | turbo — один нижний ряд
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -17,8 +16,8 @@
 	import UiFadeContainer from 'components-ui-pixi/src/components/UiFadeContainer.svelte';
 
 	import CashStacksBetButton from './CashStacksBetButton.svelte';
-	import ButtonIncrease from 'components-ui-pixi/src/components/ButtonIncrease.svelte';
-	import ButtonDecrease from 'components-ui-pixi/src/components/ButtonDecrease.svelte';
+	import CashStacksIncreaseButton from './CashStacksIncreaseButton.svelte';
+	import CashStacksDecreaseButton from './CashStacksDecreaseButton.svelte';
 
 	import CashStacksInfoButton from './CashStacksInfoButton.svelte';
 	import CashStacksMenuButton from './CashStacksMenuButton.svelte';
@@ -26,7 +25,6 @@
 	import CashStacksTurboButton from './CashStacksTurboButton.svelte';
 	import {
 		BOARD_FRAME_OFFSET,
-		PORTRAIT_AUTOPLAY_PILL_BASE,
 		PORTRAIT_UI_LAYOUT,
 		PORTRAIT_UTIL_ICON_BASE,
 		PORTRAIT_TURBO_ICON_BASE,
@@ -69,33 +67,30 @@
 	const spinScale = $derived(btn.spinDiam / UI_BASE_SIZE);
 	const spinSmallScale = $derived(btn.spinBetDiam / UI_BASE_SIZE);
 	const utilIconScale = $derived(btn.utilIconDiam / PORTRAIT_UTIL_ICON_BASE);
-	const autoplayScale = $derived({
-		x: btn.autoplayW / PORTRAIT_AUTOPLAY_PILL_BASE.width,
-		y: btn.autoplayH / PORTRAIT_AUTOPLAY_PILL_BASE.height,
-	});
 	const turboScale = $derived(btn.utilIconDiam / PORTRAIT_TURBO_ICON_BASE);
 
 	const spinHalf = $derived((UI_BASE_SIZE * spinScale) / 2);
 	const smallHalf = $derived((UI_BASE_SIZE * spinSmallScale) / 2);
 	const betControlOffsetX = $derived(spinHalf + btn.spinBetGap + smallHalf);
 	const utilRowHalf = $derived(
-		isFreeSpins
-			? portraitScaleY(btn.utilIconDiam, H) / 2
-			: Math.max(
-					portraitScaleY(btn.utilIconDiam, H) / 2,
-					portraitScaleY(btn.autoplayH, H) / 2,
-				),
+		Math.max(portraitScaleY(btn.utilIconDiam, H), portraitScaleY(26, H)) / 2,
 	);
 
 	const hudY = $derived(computePortraitHudY(stateLayoutDerived, spinHalf, utilRowHalf));
 	const spinCenterY = $derived(hudY.spinCenterY);
 	const Y_UTIL = $derived(hudY.utilCenterY);
-	const Y_FOOTER = $derived(hudY.footerCenterY);
 
+	const utilIconHalfX = $derived(scalePortraitX(btn.utilIconDiam) / 2);
 	const xInfo = $derived(scalePortraitX(PORTRAIT_UI_LAYOUT.utilX.info));
 	const xMenu = $derived(scalePortraitX(PORTRAIT_UI_LAYOUT.utilX.menu));
-	const xAutoplay = $derived(W * 0.5);
+	const xAutoplay = $derived(scalePortraitX(PORTRAIT_UI_LAYOUT.utilX.autoplay));
 	const xTurbo = $derived(scalePortraitX(PORTRAIT_UI_LAYOUT.utilX.turbo));
+	const xBalanceBet = $derived.by(() => {
+		const rightEdge = isFreeSpins
+			? xTurbo - utilIconHalfX
+			: xAutoplay - utilIconHalfX;
+		return (xMenu + utilIconHalfX + rightEdge) / 2;
+	});
 
 	const WIN_WORD_GAP = 10;
 	const WIN_TEXT_STYLE = {
@@ -106,10 +101,10 @@
 	};
 	const FOOTER_STYLE = {
 		fontFamily: 'proxima-nova',
-		fontSize: 22,
+		fontSize: 20,
 		fontWeight: '600' as const,
 		fill: 0xffffff,
-		letterSpacing: 0.5,
+		letterSpacing: 0.4,
 	};
 </script>
 
@@ -148,7 +143,7 @@
 		<Container x={W * 0.5} y={spinCenterY}>
 			{#if !isFreeSpins}
 				<Container x={-betControlOffsetX} y={0} scale={spinSmallScale}>
-					<ButtonDecrease anchor={0.5} />
+					<CashStacksDecreaseButton anchor={0.5} />
 				</Container>
 			{/if}
 			<Container x={0} y={0} scale={spinScale}>
@@ -156,35 +151,33 @@
 			</Container>
 			{#if !isFreeSpins}
 				<Container x={betControlOffsetX} y={0} scale={spinSmallScale}>
-					<ButtonIncrease anchor={0.5} />
+					<CashStacksIncreaseButton anchor={0.5} />
 				</Container>
 			{/if}
 		</Container>
 
-		<!-- Нижний ряд: i | ☰ | [автоигра] | turbo -->
+		<!-- Нижний ряд: i | ☰ | balance/bet | [автоигра] | turbo -->
 		<Container x={xInfo} y={Y_UTIL} scale={utilIconScale}>
 			<CashStacksInfoButton anchor={0.5} />
 		</Container>
 		<Container x={xMenu} y={Y_UTIL} scale={utilIconScale}>
 			<CashStacksMenuButton anchor={0.5} />
 		</Container>
+		<Text
+			anchor={0.5}
+			x={xBalanceBet}
+			y={Y_UTIL}
+			eventMode="none"
+			text={`${context.i18nDerived.balance()} ${formatAmount(stateBet.balanceAmount)}  ${context.i18nDerived.bet()} ${formatAmount(stateBet.betAmount)}`}
+			style={FOOTER_STYLE}
+		/>
 		{#if !isFreeSpins}
-			<Container x={xAutoplay} y={Y_UTIL} scale={autoplayScale}>
+			<Container x={xAutoplay} y={Y_UTIL} scale={utilIconScale}>
 				<CashStacksAutoSpinButton anchor={0.5} portraitPill />
 			</Container>
 		{/if}
 		<Container x={xTurbo} y={Y_UTIL} scale={turboScale}>
 			<CashStacksTurboButton anchor={0.5} portraitCompact />
 		</Container>
-
-		<!-- баланс / ставка -->
-		<Text
-			anchor={0.5}
-			x={W * 0.5}
-			y={Y_FOOTER}
-			eventMode="none"
-			text={`${context.i18nDerived.balance()} ${formatAmount(stateBet.balanceAmount)}  ${context.i18nDerived.bet()} ${formatAmount(stateBet.betAmount)}`}
-			style={FOOTER_STYLE}
-		/>
 	</MainContainer>
 </UiFadeContainer>

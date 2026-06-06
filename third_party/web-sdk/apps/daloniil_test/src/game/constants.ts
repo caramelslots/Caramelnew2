@@ -327,8 +327,22 @@ export const getPortraitBoardScale = (
 	getPortraitBoardTargetWidthPx(canvasSizeType) /
 	(getPortraitParchmentSize().width * mainLayoutScale);
 
+/** Stake popout embed — 400×225 (mini) or 800×450 (expanded). Not phone portrait. */
+export const isPopoutViewport = (sizes: { width: number; height: number }, tolerance = 12) => {
+	const { width, height } = sizes;
+	const match = (ew: number, eh: number) =>
+		Math.abs(width - ew) <= tolerance && Math.abs(height - eh) <= tolerance;
+	return match(400, 225) || match(800, 450);
+};
+
+/** Popout S only — stake mini player 400×225. */
+export const isPopoutSmallViewport = (sizes: { width: number; height: number }, tolerance = 12) => {
+	const { width, height } = sizes;
+	return Math.abs(width - 400) <= tolerance && Math.abs(height - 225) <= tolerance;
+};
+
 /**
- * Portrait / Popup S HUD (ref. designer_assets/IMAGE 2026-06-02 13:11:58, 800×1422).
+ * Portrait mobile HUD (ref. designer_assets/IMAGE 2026-06-02 13:11:58, 800×1422).
  * Distances in ref px; components scale by mainLayoutStandard width/height.
  */
 export const PORTRAIT_UI_LAYOUT = {
@@ -345,26 +359,30 @@ export const PORTRAIT_UI_LAYOUT = {
 	spinFromBottom: 282,
 	spinNudgeDown: 20,
 	utilBelowSpinGap: 14,
-	utilFromBottom: 178,
+	utilFromBottom: 52,
 	utilNudgeDown: 0,
-	footerBelowUtilGap: 18,
-	footerFromBottom: 44,
-	utilX: { info: 100, menu: 186, turbo: 662 },
+	utilX: { info: 100, menu: 186, autoplay: 588, turbo: 662 },
 	/** Ref px (800×1422 mockup) — scaled in UiCashStacksPortraitLayout. */
 	buttons: {
 		spinDiam: 152,
 		spinBetDiam: 66,
 		spinBetGap: 12,
 		utilIconDiam: 62,
-		autoplayW: 238,
-		autoplayH: 60,
+		autoplayW: 285,
+		autoplayH: 70,
 		buyRowMinH: 50,
 	},
 } as const;
 
 /** Base Pixi sizes for portrait util buttons (before container scale), ref UI_BASE_SIZE 150. */
+/** Designer autoplay pill — ref designer_assets/autoplay.png (1912×739). */
+export const AUTOPLAY_PILL_ASPECT = 1912 / 739;
+export const AUTOPLAY_PILL_BASE = {
+	width: Math.round(68 * AUTOPLAY_PILL_ASPECT),
+	height: 68,
+} as const;
 export const PORTRAIT_UTIL_ICON_BASE = 108;
-export const PORTRAIT_AUTOPLAY_PILL_BASE = { width: 210, height: 57 } as const;
+export const PORTRAIT_AUTOPLAY_PILL_BASE = AUTOPLAY_PILL_BASE;
 export const PORTRAIT_TURBO_ICON_BASE = 108;
 
 const explosion = {

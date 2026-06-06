@@ -6,13 +6,14 @@
                             = новый tier (+spins, +sticky mystery reel)
   - Sticky Mystery Reels:   список барабанов, которые во FS остаются "под маской"
                             и раскрываются в один обычный символ
-  - Super Bonus:            старт FS с ×4 mystery reels (только для bet_mode bonus_super)
+  - Super Bonus:            старт FS с 1 sticky mystery reel (bonus_super / natural 4× B)
 
 Эта реализация — UI-ceremonial для Этапа 2: эмитит правильные события,
 но фактическая линия-эвалюция продолжает работать на оригинальной доске,
 не подменяя символы. На production-этапе можно добавить full symbol-substitution.
 """
 
+import copy
 import random
 
 from game_executables import GameExecutables
@@ -39,9 +40,10 @@ class GameStateOverride(GameExecutables):
         self.bonus_collected = 0
         self.ladder_tier = 0
         self.mystery_reels: list[int] = []
-        # Запоминаем сколько B упало в base-триггер FS — для стартовых
-        # Mystery Reels при натуральном переходе FS (0/1/2 при 3/4/5 B).
+        # Запоминаем сколько B упало в base-триггер FS (3 = normal, 4 = super).
         self.fs_trigger_bonus_count = 0
+        # FS reel profile selected at trigger: "bonus_normal" (FR0) or "bonus_super" (FR1).
+        self.fs_profile: str | None = None
 
     def assign_special_sym_function(self):
         self.special_symbol_functions = {
@@ -135,8 +137,66 @@ class GameStateOverride(GameExecutables):
 
     # ---- Cash Stacks specific ----
 
+    def get_current_distribution_conditions(self) -> dict:
+        """Return distribution conditions, applying natural FS profile overrides."""
+        conditions = super().get_current_distribution_conditions()
+        if self.gametype != self.config.freegame_type or self.fs_profile is None:
+            return conditions
+
+        conditions = copy.copy(conditions)
+        reel_weights = copy.copy(conditions.get("reel_weights", {}))
+        if self.fs_profile == "bonus_super":
+            conditions["super_bonus"] = True
+            reel_weights[self.config.freegame_type] = {"FR1": 1}
+        else:
+            conditions["super_bonus"] = False
+            reel_weights[self.config.freegame_type] = {"FR0": 1}
+        conditions["reel_weights"] = reel_weights
+        return conditions
+
+    def count_bonus_on_board(self) -> int:
+        """Count Bonus symbols after spec dedupe (max 1 per reel)."""
+        return len(self.special_syms_on_board.get("scatter", []))
+
+    def apply_fs_profile_from_trigger(self) -> None:
+        """Pick FS reel profile from bet mode or natural trigger B count.
+
+        Natural trigger (base / bonus_boost / special_spins):
+          3× B → bonus_normal (FR0, no starting MR)
+          4× B → bonus_super  (FR1, 1 starting MR)
+
+        Buy bonus modes keep their purchased profile regardless of forced B count.
+        """
+        betmode = self.get_current_betmode().get_name()
+        if betmode == "bonus_normal":
+            self.fs_profile = "bonus_normal"
+        elif betmode == "bonus_super":
+            self.fs_profile = "bonus_super"
+        else:
+            count = self.count_bonus_on_board()
+            self.fs_trigger_bonus_count = count
+            self.fs_profile = "bonus_super" if count >= 4 else "bonus_normal"
+
+    def emit_fs_trigger_bonus_collect(self) -> None:
+        """Emit bonusCollect ceremony on the FS trigger board (basegame)."""
+        positions = [
+            {"reel": pos["reel"], "row": pos["row"]}
+            for pos in self.special_syms_on_board.get("scatter", [])
+        ]
+        if not positions:
+            return
+        positions = sorted(positions, key=lambda p: p["reel"])
+        bonus_collect_event(
+            self,
+            positions=positions,
+            collected_total=len(positions),
+            collected_delta=len(positions),
+        )
+
     def is_super_bonus(self) -> bool:
-        """True если текущий distribution conditions помечен как super_bonus."""
+        """True for purchased super bonus or natural 4× B FS trigger."""
+        if self.fs_profile == "bonus_super":
+            return True
         return bool(self.get_current_distribution_conditions().get("super_bonus", False))
 
     def init_super_bonus_mystery_reels(self) -> None:
@@ -247,37 +307,52 @@ class GameStateOverride(GameExecutables):
                     reward_spins=reward_spins,
                 )
 
-    def enforce_one_bonus_per_reel(self) -> None:
-        """Гарантирует, что на каждом reel-е максимум 1 B (Bonus).
+    def enforce_bonus_symbol_rules(self) -> None:
+        """Enforce Bonus symbol placement rules on the current board.
 
-        Если reelstrip случайно сгенерил 2+ B на одном reel — оставляем только
-        TOP-most B, остальные заменяем на random Low symbol. Поддерживает
-        consistency между board state (что видит игрок) и collect logic
-        (которая тоже dedupe-ит по reel).
-
-        Вызывается ПОСЛЕ draw_board в gamestate (как в base, так и в FS).
-        Перед apply_mystery_reels (mystery замаскирует reel целиком, и
-        количество B на нём уже неважно).
-
-        См. MATH_BLOCKERS.md M8.
+        Spec:
+          - max 1 B per reel (column)
+          - max 4 B total on board
         """
         replacement_pool = ["L1", "L2", "L3", "L4"]
         changed = False
+
         for reel in range(self.config.num_reels):
             b_rows = [
                 row for row in range(self.config.num_rows[reel])
                 if self.board[reel][row].name == "B"
             ]
             if len(b_rows) > 1:
-                # Оставляем top-most (b_rows[0]), остальные заменяем на random low.
                 for row in b_rows[1:]:
                     self.board[reel][row] = self.create_symbol(
                         random.choice(replacement_pool)
                     )
                 changed = True
-        # Пересобираем индекс спецсимволов если что-то изменили.
+
         if changed:
             self.get_special_symbols_on_board()
+
+        b_reels = sorted(
+            reel
+            for reel in range(self.config.num_reels)
+            if any(
+                self.board[reel][row].name == "B"
+                for row in range(self.config.num_rows[reel])
+            )
+        )
+        max_bonus = self.config.max_bonus_on_board
+        if len(b_reels) > max_bonus:
+            for reel in b_reels[max_bonus:]:
+                for row in range(self.config.num_rows[reel]):
+                    if self.board[reel][row].name == "B":
+                        self.board[reel][row] = self.create_symbol(
+                            random.choice(replacement_pool)
+                        )
+            self.get_special_symbols_on_board()
+
+    def enforce_one_bonus_per_reel(self) -> None:
+        """Backward-compatible alias for enforce_bonus_symbol_rules."""
+        self.enforce_bonus_symbol_rules()
 
     def apply_mystery_reels(self) -> None:
         """Накрыть все cells на активных Sticky Mystery Reels символом M.

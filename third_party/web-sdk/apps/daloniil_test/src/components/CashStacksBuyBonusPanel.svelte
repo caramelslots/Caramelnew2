@@ -1,14 +1,15 @@
 <!--
 	CashStacksBuyBonusPanel.svelte — Buy Bonus + Bonus Boost.
 	Desktop: слева от доски (вертикальный блок).
-	Portrait (Popup S): под WIN, два столбца в ряд (ref. IMAGE 2026-06-02 13:11:58).
+	Portrait (mobile): под WIN, два столбца в ряд (ref. IMAGE 2026-06-02 13:11:58).
+	Popout S/L — тот же блок что desktop (слева от доски).
 -->
 <script lang="ts">
 	import { stateModal } from 'state-shared';
 
 	import CashStacksFeatureToggles from './CashStacksFeatureToggles.svelte';
 	import { isFreeSpinsActive } from '../game/activeFeature';
-	import { BOARD_LAYOUT_OFFSETS, BOARD_SIZES } from '../game/constants';
+	import { BOARD_LAYOUT_OFFSETS, BOARD_SIZES, isPopoutViewport, isPopoutSmallViewport } from '../game/constants';
 	import { portraitBuyPanelCanvasTop } from '../game/portraitHudLayout';
 	import { getContext } from '../game/context';
 	import { getContextLayout } from 'utils-layout';
@@ -16,7 +17,9 @@
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 	const layoutType = $derived(stateLayoutDerived.layoutType());
-	const isDesktop = $derived(layoutType === 'desktop');
+	const isPopout = $derived(isPopoutViewport(stateLayoutDerived.canvasSizes()));
+	const isPopoutSmall = $derived(isPopoutSmallViewport(stateLayoutDerived.canvasSizes()));
+	const isDesktop = $derived(layoutType === 'desktop' || isPopout);
 	const isPortrait = $derived(layoutType === 'portrait');
 	const show = $derived(
 		(isDesktop || isPortrait) &&
@@ -28,7 +31,9 @@
 
 	const PANEL_GAP = 12;
 	const PANEL_W = 210;
+	const POPOUT_S_PANEL_W = 88;
 	const PANEL_SHIFT_LEFT = 36;
+	const panelWidth = $derived(isPopoutSmall ? POPOUT_S_PANEL_W : PANEL_W);
 	const desktopPanelPos = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
 		const off = BOARD_LAYOUT_OFFSETS.desktop;
@@ -36,7 +41,7 @@
 		const boardCenterY = ml.y + off.y * ml.scale;
 		const halfW = (BOARD_SIZES.width / 2) * ml.scale;
 		return {
-			left: boardCenterX - halfW - PANEL_GAP - PANEL_W - PANEL_SHIFT_LEFT,
+			left: boardCenterX - halfW - PANEL_GAP - panelWidth - PANEL_SHIFT_LEFT,
 			top: boardCenterY,
 		};
 	});
@@ -65,6 +70,7 @@
 		class="buy-bonus-panel"
 		class:portrait={isPortrait}
 		class:desktop={isDesktop}
+		class:popout-s={isPopoutSmall}
 		data-test="buy-bonus-panel"
 		aria-label="buy bonus"
 		style={panelStyle}
@@ -80,7 +86,7 @@
 		</button>
 
 		<div class="boost-section">
-			<CashStacksFeatureToggles features={['bonus_boost']} />
+			<CashStacksFeatureToggles features={['bonus_boost']} compact={isPopoutSmall} />
 		</div>
 	</aside>
 {/if}
@@ -103,6 +109,51 @@
 		background: rgba(20, 20, 20, 0.9);
 		border: 1px solid rgba(255, 255, 255, 0.06);
 		border-radius: 14px;
+	}
+
+	.buy-bonus-panel.desktop.popout-s {
+		width: min(88px, 22vw);
+		gap: 0.25rem;
+		padding: 0.28rem 0.28rem;
+		border-radius: 8px;
+	}
+
+	.popout-s .buy-bonus-btn {
+		padding: 0.28rem 0.22rem;
+		font-size: 0.54rem;
+		border-radius: 6px;
+		line-height: 1.1;
+	}
+
+	.popout-s .boost-section {
+		padding-top: 0.1rem;
+	}
+
+	.popout-s .boost-section :global(.feature-row) {
+		padding: 0.22rem 0.28rem;
+		gap: 0.25rem;
+		border-radius: 6px;
+	}
+
+	.popout-s .boost-section :global(.feature-row.compact .feature-name) {
+		font-size: 0.5rem;
+		line-height: 1.1;
+	}
+
+	.popout-s .boost-section :global(.feature-toggle) {
+		width: 24px;
+		height: 14px;
+	}
+
+	.popout-s .boost-section :global(.feature-toggle .knob) {
+		width: 10px;
+		height: 10px;
+		top: 2px;
+		left: 2px;
+	}
+
+	.popout-s .boost-section :global(.feature-toggle.on .knob) {
+		left: 12px;
 	}
 
 	.buy-bonus-panel.portrait {

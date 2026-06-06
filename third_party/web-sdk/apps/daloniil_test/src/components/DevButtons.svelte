@@ -75,6 +75,22 @@
 			anticipation: [0, 0, 0, 0, 0],
 		});
 
+	/** bonusCollect для visible-доски (padded row = visibleRow + 1). */
+	const bonusCollectForBoard = (visibleBoard: { name: string }[][]) => {
+		const positions: { reel: number; row: number }[] = [];
+		visibleBoard.forEach((reelSymbols, reelIndex) => {
+			reelSymbols.forEach((sym, visibleRow) => {
+				if (sym.name === 'B') positions.push({ reel: reelIndex, row: visibleRow + 1 });
+			});
+		});
+		return asEvent({
+			type: 'bonusCollect',
+			positions,
+			collectedTotal: positions.length,
+			collectedDelta: positions.length,
+		});
+	};
+
 	const guard = async (fn: () => Promise<void>) => {
 		if (busy) return;
 		busy = true;
@@ -144,7 +160,7 @@
 		reel(['H3', 'L3', 'L4', 'H1', 'H1']),
 	];
 
-	// Bonus-trigger: 3 × B (reels 0,1,2 на visible row=2 = padded row=3).
+	// Bonus-trigger: 3 × B (reels 0,1,2) → Normal Bonus FS.
 	const FS_TRIGGER_BOARD = [
 		reel(['L2', 'L1', 'B', 'H2', 'L1']),
 		reel(['H1', 'B', 'L2', 'H3', 'L4']),
@@ -153,14 +169,17 @@
 		reel(['H3', 'L3', 'L4', 'H1', 'H1']),
 	];
 
-	// 4×B для Bonus Collect (под Cash Stacks ladder-tier).
-	const BONUS_COLLECT_BOARD = [
+	// 4× B (reels 0..3) → Super Bonus FS (+ 1 starting mystery reel).
+	const FS_TRIGGER_SUPER_BOARD = [
 		reel(['L2', 'L1', 'B', 'H2', 'L1']),
 		reel(['H1', 'B', 'L2', 'H3', 'L4']),
 		reel(['L3', 'L1', 'L3', 'H4', 'B']),
 		reel(['H4', 'H3', 'L4', 'L2', 'B']),
 		reel(['H3', 'L3', 'L4', 'H1', 'H1']),
 	];
+
+	// 4×B для Bonus Collect (под Cash Stacks ladder-tier).
+	const BONUS_COLLECT_BOARD = FS_TRIGGER_SUPER_BOARD;
 
 	// 1 mystery reel (sticky на reel 0) — для mysteryReveal.
 	const FS_MYSTERY_BOARD_1 = [
@@ -277,9 +296,32 @@
 		});
 
 	// === Free Spins ===
-	const playFsTrigger = () =>
+	const playFsTriggerNormal = () =>
 		guard(async () => {
-			await playBookEvents([reveal(FS_TRIGGER_BOARD), asEvent(baseEvents.freeSpinTrigger)]);
+			await playBookEvents([
+				reveal(FS_TRIGGER_BOARD),
+				bonusCollectForBoard(FS_TRIGGER_BOARD),
+				asEvent(baseEvents.freeSpinTrigger),
+			]);
+		});
+
+	const playFsTriggerSuper = () =>
+		guard(async () => {
+			await playBookEvents([
+				reveal(FS_TRIGGER_SUPER_BOARD),
+				bonusCollectForBoard(FS_TRIGGER_SUPER_BOARD),
+				asEvent({
+					type: 'freeSpinTrigger',
+					totalFs: 10,
+					positions: [
+						{ reel: 0, row: 3 },
+						{ reel: 1, row: 2 },
+						{ reel: 2, row: 5 },
+						{ reel: 3, row: 5 },
+					],
+				}),
+				asEvent(baseEvents.mysteryReelActivate),
+			]);
 		});
 
 	const playFsCounterBump = () =>
@@ -293,6 +335,22 @@
 	const playSingleBonusCat = () =>
 		guard(async () => {
 			await playBookEvent(reveal(SINGLE_BONUS_CAT_BOARD), { bookEvents: [] });
+		});
+
+	const playTripleBonusCat = () =>
+		guard(async () => {
+			await playBookEvents([
+				reveal(FS_TRIGGER_BOARD),
+				bonusCollectForBoard(FS_TRIGGER_BOARD),
+			]);
+		});
+
+	const playQuadrupleBonusCat = () =>
+		guard(async () => {
+			await playBookEvents([
+				reveal(FS_TRIGGER_SUPER_BOARD),
+				bonusCollectForBoard(FS_TRIGGER_SUPER_BOARD),
+			]);
 		});
 
 	// === Cash Stacks specifics ===
@@ -460,10 +518,18 @@
 					<button
 						type="button"
 						disabled={busy}
-						title="3× B → freeSpinIntro + counter"
-						onclick={playFsTrigger}
+						title="3× B → Normal Bonus FS intro"
+						onclick={playFsTriggerNormal}
 					>
-						FS Trigger (intro)
+						FS Normal (3 B)
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="4× B → Super Bonus FS intro + 1 mystery reel"
+						onclick={playFsTriggerSuper}
+					>
+						FS Super (4 B)
 					</button>
 					<button
 						type="button"
@@ -533,6 +599,22 @@
 						onclick={playSingleBonusCat}
 					>
 						1× Bonus Cat
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="reveal с 3× B — land-анимация (Normal Bonus trigger board)"
+						onclick={playTripleBonusCat}
+					>
+						3× Bonus Cat
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="reveal с 4× B — land-анимация (Super Bonus trigger board)"
+						onclick={playQuadrupleBonusCat}
+					>
+						4× Bonus Cat
 					</button>
 					<button
 						type="button"

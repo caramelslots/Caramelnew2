@@ -37,7 +37,6 @@ export type PortraitHudY = {
 	buyPanelBottomLocal: number;
 	spinCenterY: number;
 	utilCenterY: number;
-	footerCenterY: number;
 };
 
 /** Stacked portrait HUD Y positions in game mainLayout space (no overlap). */
@@ -74,23 +73,10 @@ export const computePortraitHudY = (
 		utilFromStack,
 	);
 
-	const footerFromStack =
-		utilCenterY + utilRowHalf + portraitScaleY(PORTRAIT_UI_LAYOUT.footerBelowUtilGap, H);
-	let footerCenterY = Math.max(
-		portraitYFromBottom(PORTRAIT_UI_LAYOUT.footerFromBottom, H),
-		footerFromStack,
-	);
-
-	const footerMargin = portraitScaleY(28, H);
-	const maxFooterY = H - footerMargin;
-	if (footerCenterY > maxFooterY) {
-		footerCenterY = maxFooterY;
-		utilCenterY = Math.min(
-			utilCenterY,
-			footerCenterY -
-				portraitScaleY(PORTRAIT_UI_LAYOUT.footerBelowUtilGap, H) -
-				utilRowHalf,
-		);
+	const utilMargin = portraitScaleY(28, H);
+	const maxUtilY = H - utilMargin;
+	if (utilCenterY > maxUtilY) {
+		utilCenterY = maxUtilY;
 		spinCenterY = Math.min(
 			spinCenterY,
 			utilCenterY -
@@ -100,10 +86,6 @@ export const computePortraitHudY = (
 	}
 
 	utilCenterY += portraitScaleY(PORTRAIT_UI_LAYOUT.utilNudgeDown, H);
-	footerCenterY = Math.max(
-		footerCenterY,
-		utilCenterY + utilRowHalf + portraitScaleY(PORTRAIT_UI_LAYOUT.footerBelowUtilGap, H),
-	);
 
 	return {
 		boardBottomLocal,
@@ -111,7 +93,6 @@ export const computePortraitHudY = (
 		buyPanelBottomLocal,
 		spinCenterY,
 		utilCenterY,
-		footerCenterY,
 	};
 };
 

@@ -7,7 +7,9 @@
 	  - Labels    : Balance + Bet слева (две строки); Win — под доской по центру
 	  - Spin-кластер (desktop): − | Spin | + в правом нижнем углу, одна линия;
 	    «автоигра» — под Spin; Turbo — справа от +
-	Portrait (Popup S) — UiCashStacksPortraitLayout. Landscape/tablet — SDK.
+	Portrait (mobile) — UiCashStacksPortraitLayout.
+	Popout S/L (400×225, 800×450) + desktop — один HUD как на ПК.
+	Landscape/tablet — SDK.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -41,15 +43,15 @@
 	// рендерится вместо ButtonBet когда modal open).
 	import CashStacksAutoSpinButton from './CashStacksAutoSpinButton.svelte';
 	import CashStacksTurboButton from './CashStacksTurboButton.svelte';
-	import ButtonIncrease from 'components-ui-pixi/src/components/ButtonIncrease.svelte';
-	import ButtonDecrease from 'components-ui-pixi/src/components/ButtonDecrease.svelte';
+	import CashStacksIncreaseButton from './CashStacksIncreaseButton.svelte';
+	import CashStacksDecreaseButton from './CashStacksDecreaseButton.svelte';
 	import ButtonAutoSpin from 'components-ui-pixi/src/components/ButtonAutoSpin.svelte';
 	import ButtonMenu from 'components-ui-pixi/src/components/ButtonMenu.svelte';
 	import CashStacksMenuButton from './CashStacksMenuButton.svelte';
 	import ButtonMenuClose from 'components-ui-pixi/src/components/ButtonMenuClose.svelte';
 	import ButtonSoundSwitch from 'components-ui-pixi/src/components/ButtonSoundSwitch.svelte';
 
-	import { BOARD_FRAME_OFFSET } from '../game/constants';
+	import { BOARD_FRAME_OFFSET, AUTOPLAY_PILL_BASE, isPopoutViewport } from '../game/constants';
 	import { isFreeSpinsActive } from '../game/activeFeature';
 	import { getContext } from '../game/context';
 	import { getContextLayout } from 'utils-layout';
@@ -63,6 +65,8 @@
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 	const layoutType = $derived(stateLayoutDerived.layoutType());
+	const isPopout = $derived(isPopoutViewport(stateLayoutDerived.canvasSizes()));
+	const useDesktopHud = $derived(layoutType === 'desktop' || isPopout);
 	const isFreeSpins = $derived(isFreeSpinsActive());
 
 	const TOTAL_BAR_WIDTH = DESKTOP_BACKGROUND_WIDTH_LIST.reduce((sum, w) => sum + w, 0);
@@ -98,7 +102,7 @@
 		spinScale: 0.85,
 		smallScale: 0.48,
 		autoplayGap: 12,
-		autoplayScale: 0.52,
+		autoplayScale: 0.72,
 		turboGap: 8,
 		turboScale: 0.38,
 	};
@@ -107,12 +111,13 @@
 	const betControlOffsetX = $derived(
 		spinHalf + SPIN_CLUSTER.betControlsGap + smallHalf,
 	);
-	const autoplayHalf = (UI_BASE_SIZE * SPIN_CLUSTER.autoplayScale) / 2;
+	const autoplayHalfW = (AUTOPLAY_PILL_BASE.width * SPIN_CLUSTER.autoplayScale) / 2;
+	const autoplayHalfH = (AUTOPLAY_PILL_BASE.height * SPIN_CLUSTER.autoplayScale) / 2;
 	const turboHalf = (UI_BASE_SIZE * SPIN_CLUSTER.turboScale) / 2;
 	const autoplayOffsetY = $derived(
-		spinHalf + SPIN_CLUSTER.autoplayGap + autoplayHalf,
+		spinHalf + SPIN_CLUSTER.autoplayGap + autoplayHalfH,
 	);
-	const turboOffsetX = $derived(autoplayHalf + SPIN_CLUSTER.turboGap + turboHalf);
+	const turboOffsetX = $derived(autoplayHalfW + SPIN_CLUSTER.turboGap + turboHalf);
 	// Origin кластера = центр Spin; «+» — самый правый элемент.
 	const spinClusterCenterX = $derived(
 		mainLayout.width - SPIN_CLUSTER.rightPad - betControlOffsetX - smallHalf,
@@ -151,7 +156,7 @@
 
 <EnableSpaceHold />
 
-{#if layoutType === 'desktop'}
+{#if useDesktopHud}
 	<UiFadeContainer>
 		<!-- Top-left: game name + logo подряд -->
 		<Container x={20}>
@@ -228,7 +233,7 @@
 			<Container x={spinClusterCenterX} y={barBottomY + SPIN_CLUSTER.centerYOffset}>
 				{#if !isFreeSpins}
 					<Container x={-betControlOffsetX} y={0} scale={SPIN_CLUSTER.smallScale}>
-						<ButtonDecrease anchor={0.5} />
+						<CashStacksDecreaseButton anchor={0.5} />
 					</Container>
 				{/if}
 
@@ -238,7 +243,7 @@
 
 				{#if !isFreeSpins}
 					<Container x={betControlOffsetX} y={0} scale={SPIN_CLUSTER.smallScale}>
-						<ButtonIncrease anchor={0.5} />
+						<CashStacksIncreaseButton anchor={0.5} />
 					</Container>
 
 					<Container x={0} y={autoplayOffsetY} scale={SPIN_CLUSTER.autoplayScale}>
@@ -271,7 +276,7 @@
 			{#if props.logo}{@render props.logo()}{/if}
 		{/snippet}
 	</UiCashStacksPortraitLayout>
-{:else if layoutType === 'landscape'}
+{:else if layoutType === 'landscape' && !isPopout}
 	<UiFadeContainer>
 		<LayoutLandscape>
 			{#snippet gameName()}
@@ -287,8 +292,8 @@
 			{#snippet buttonBet(buttonProps)}<CashStacksBetButton {...buttonProps} />{/snippet}
 			{#snippet buttonTurbo(buttonProps)}<ButtonTurbo {...buttonProps} />{/snippet}
 			{#snippet buttonAutoSpin(buttonProps)}<ButtonAutoSpin {...buttonProps} />{/snippet}
-			{#snippet buttonIncrease(buttonProps)}<ButtonIncrease {...buttonProps} />{/snippet}
-			{#snippet buttonDecrease(buttonProps)}<ButtonDecrease {...buttonProps} />{/snippet}
+			{#snippet buttonIncrease(buttonProps)}<CashStacksIncreaseButton {...buttonProps} />{/snippet}
+			{#snippet buttonDecrease(buttonProps)}<CashStacksDecreaseButton {...buttonProps} />{/snippet}
 			{#snippet buttonMenu(buttonProps)}<ButtonMenu {...buttonProps} />{/snippet}
 			{#snippet buttonMenuClose(buttonProps)}<ButtonMenuClose {...buttonProps} />{/snippet}
 			{#snippet buttonPayTable(buttonProps)}<ButtonPayTable {...buttonProps} />{/snippet}
@@ -313,8 +318,8 @@
 			{#snippet buttonBet(buttonProps)}<CashStacksBetButton {...buttonProps} />{/snippet}
 			{#snippet buttonTurbo(buttonProps)}<ButtonTurbo {...buttonProps} />{/snippet}
 			{#snippet buttonAutoSpin(buttonProps)}<ButtonAutoSpin {...buttonProps} />{/snippet}
-			{#snippet buttonIncrease(buttonProps)}<ButtonIncrease {...buttonProps} />{/snippet}
-			{#snippet buttonDecrease(buttonProps)}<ButtonDecrease {...buttonProps} />{/snippet}
+			{#snippet buttonIncrease(buttonProps)}<CashStacksIncreaseButton {...buttonProps} />{/snippet}
+			{#snippet buttonDecrease(buttonProps)}<CashStacksDecreaseButton {...buttonProps} />{/snippet}
 			{#snippet buttonMenu(buttonProps)}<ButtonMenu {...buttonProps} />{/snippet}
 			{#snippet buttonMenuClose(buttonProps)}<ButtonMenuClose {...buttonProps} />{/snippet}
 			{#snippet buttonPayTable(buttonProps)}<ButtonPayTable {...buttonProps} />{/snippet}
