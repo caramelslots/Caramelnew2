@@ -8,7 +8,8 @@
 	  1. Header «Автоигра»
 	  2. «Функции» — Bonus Boost / Special Spin toggles (эксклюзивные)
 	  3. «Раунды» — выбор количества (10, 25, 50, 75, 100, 250, 500, 1000, ∞)
-	  + кнопки confirm / cancel внизу
+	  Portrait/mobile: кнопка «Начать автоигру (N)» внутри панели.
+	  Desktop/popout: старт через центральную Spin-кнопку.
 -->
 <script lang="ts">
 	import {
@@ -21,6 +22,7 @@
 	} from 'state-shared';
 
 	import { getContext } from '../game/context';
+	import { getContextLayout } from 'utils-layout';
 	import CashStacksFeatureToggles from './CashStacksFeatureToggles.svelte';
 	import {
 		CASH_STACKS_ROUND_OPTIONS,
@@ -30,8 +32,14 @@
 	} from '../game/autoplay';
 
 	const context = getContext();
+	const { stateLayoutDerived } = getContextLayout();
 
 	const isOpen = $derived(stateModal.modal?.name === 'autoSpin');
+	const isPortrait = $derived(stateLayoutDerived.layoutType() === 'portrait');
+	const startDisabled = $derived(!stateBetDerived.isBetCostAvailable());
+	const startLabel = $derived(
+		context.i18nDerived.autoplayStartWithRounds(String(stateUi.autoSpinsText)),
+	);
 
 	/* Источник правды для значений раундов — apps/.../game/autoplay.ts.
 	   Если в state хранится значение вне списка (например, '25' из SDK
@@ -171,12 +179,17 @@
 				</div>
 			</section>
 
-			<!--
-				Внутри модалки кнопки Start НЕТ — её роль выполняет центральная
-				Spin-кнопка (см. CashStacksStartAutoplayButton в UiCashStacksLayout).
-				Это явное требование дизайна: bet-кнопка стартует автоигру,
-				AUTO-кнопка превращается в красный крестик (отмена).
-			-->
+			{#if isPortrait}
+				<button
+					type="button"
+					class="start-button"
+					disabled={startDisabled}
+					onclick={startAutoplay}
+					data-test="autoplay-start-button"
+				>
+					{startLabel}
+				</button>
+			{/if}
 		</div>
 	</div>
 {/if}
@@ -306,5 +319,33 @@
 		height: 100%;
 		background: linear-gradient(180deg, #6ec1ff 0%, #3a93e0 100%);
 		transition: width 0.12s ease-out;
+	}
+
+	.start-button {
+		width: 100%;
+		margin-top: 0.15rem;
+		padding: 0.85rem 0.75rem;
+		border: 1px solid rgba(110, 193, 255, 0.55);
+		border-radius: 10px;
+		background: linear-gradient(180deg, #6ec1ff 0%, #3a93e0 100%);
+		color: #fff;
+		font-family: inherit;
+		font-size: 0.92rem;
+		font-weight: 800;
+		line-height: 1.2;
+		text-transform: uppercase;
+		letter-spacing: 0.03em;
+		cursor: pointer;
+		box-shadow: 0 4px 16px rgba(58, 147, 224, 0.4);
+		transition: filter 0.15s, opacity 0.15s;
+
+		&:hover:not(:disabled) {
+			filter: brightness(1.08);
+		}
+
+		&:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+		}
 	}
 </style>

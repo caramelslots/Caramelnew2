@@ -16,6 +16,7 @@ export default {
 	AUTOPLAY_FEATURES: 'Функции',
 	AUTOPLAY_ROUNDS: 'Раунды',
 	AUTOPLAY_START: 'Старт',
+	AUTOPLAY_START_LABEL: 'Начать автоигру',
 	AUTO_BET: 'Автоставка',
 	BONUS_BOOST: 'Bonus Boost',
 	BONUS_BOOST_DESC: 'Игроки могут активировать Bonus Boost за ×2.',

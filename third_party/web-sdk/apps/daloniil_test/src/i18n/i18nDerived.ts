@@ -29,6 +29,7 @@ export const i18nDerived = {
 	autoplayFeatures: () => t('AUTOPLAY_FEATURES'),
 	autoplayRounds: () => t('AUTOPLAY_ROUNDS'),
 	autoplayStart: () => t('AUTOPLAY_START'),
+	autoplayStartWithRounds: (rounds: string) => `${t('AUTOPLAY_START_LABEL')} (${rounds})`,
 	autobet: () => t('AUTO_BET'),
 	bonusBoost: () => t('BONUS_BOOST'),
 	bonusBoostDesc: () => t('BONUS_BOOST_DESC'),
