@@ -57,9 +57,11 @@ const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) =>
 	}
 };
 
-const winLevelSoundsStop = () => {
+const winLevelSoundsStop = (options?: { music?: 'bgm_main' | 'bgm_freespin' }) => {
 	eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_bigwin_coinloop' });
-	if (stateBet.activeBetModeKey === 'SUPERSPIN' || stateGame.gameType === 'freegame') {
+	if (options?.music) {
+		eventEmitter.broadcast({ type: 'soundMusic', name: options.music });
+	} else if (stateBet.activeBetModeKey === 'SUPERSPIN' || stateGame.gameType === 'freegame') {
 		// check if SUPERSPIN, when finishing a bet.
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
 	} else {
@@ -228,7 +230,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			amount: bookEvent.amount,
 			winLevelData,
 		});
-		winLevelSoundsStop();
+		// gameType is still `freegame` until the transition animation — force main BGM.
+		winLevelSoundsStop({ music: 'bgm_main' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
 		stateUi.freeSpinCounterShow = false;
