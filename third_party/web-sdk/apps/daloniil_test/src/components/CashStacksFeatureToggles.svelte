@@ -25,6 +25,8 @@
 		compact?: boolean;
 		/** Подпись как на портретной панели (BONUS_BOOST_PANEL_DESC). */
 		panelDesc?: boolean;
+		/** Фон designer_assets/bonus_switch.png (панель под Buy Bonus). */
+		usePanelBg?: boolean;
 	};
 
 	const {
@@ -32,7 +34,10 @@
 		features = ['bonus_boost', 'special_spins'],
 		compact = false,
 		panelDesc = false,
+		usePanelBg = false,
 	}: Props = $props();
+
+	const bonusSwitchBgUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/bonus_switch/bonus_switch.png`;
 
 	const context = getContext();
 
@@ -58,9 +63,11 @@
 		type="button"
 		class="feature-row"
 		class:compact
+		class:panel-bg={usePanelBg}
 		class:active={stateGame.activeFeature === 'bonus_boost'}
 		onclick={() => onToggle('bonus_boost')}
 		data-test="feature-bonus-boost"
+		style:background-image={usePanelBg ? `url("${bonusSwitchBgUrl}")` : undefined}
 	>
 		<div class="feature-info">
 			<div class="feature-name">
@@ -144,6 +151,51 @@
 		font-size: 0.78rem;
 		font-weight: 600;
 		line-height: 1.25;
+	}
+
+	.feature-row.panel-bg {
+		aspect-ratio: 1233 / 613;
+		padding: 0 12%;
+		background-color: transparent;
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: 100% 100%;
+		border: 0;
+		border-radius: 0;
+		transition: filter 0.15s, opacity 0.15s;
+
+		&:hover {
+			background-color: transparent;
+			filter: brightness(1.08);
+		}
+
+		&.active {
+			border-color: transparent;
+			filter: brightness(1.12);
+		}
+
+		&.compact {
+			padding: 0 8%;
+		}
+	}
+
+	.feature-row.panel-bg .feature-name {
+		font-weight: 800;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		text-shadow:
+			0 0 10px rgba(80, 200, 255, 0.75),
+			0 2px 6px rgba(0, 0, 0, 0.85);
+	}
+
+	.feature-row.panel-bg.compact .feature-name {
+		font-size: 0.48rem;
+		line-height: 1.1;
+		letter-spacing: 0.02em;
+	}
+
+	.feature-row.panel-bg .feature-cost {
+		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
 	}
 
 	.feature-info {

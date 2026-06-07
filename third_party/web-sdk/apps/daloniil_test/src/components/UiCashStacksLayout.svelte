@@ -14,7 +14,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	import { stateBet } from 'state-shared';
+	import { stateBet, stateUi } from 'state-shared';
 	import { MainContainer } from 'components-layout';
 	import { Container, Text, anchorToPivot } from 'pixi-svelte';
 	import { EnableSpaceHold } from 'components-shared';
@@ -51,9 +51,15 @@
 	import ButtonMenuClose from 'components-ui-pixi/src/components/ButtonMenuClose.svelte';
 	import ButtonSoundSwitch from 'components-ui-pixi/src/components/ButtonSoundSwitch.svelte';
 
-	import { BOARD_FRAME_OFFSET, AUTOPLAY_PILL_BASE, isPopoutViewport } from '../game/constants';
-	import { isFreeSpinsActive } from '../game/activeFeature';
+	import {
+		BOARD_FRAME_OFFSET,
+		AUTOPLAY_PILL_BASE,
+		DESKTOP_UI_LAYOUT,
+		isPopoutViewport,
+		isPopoutSmallViewport,
+	} from '../game/constants';
 	import { getContext } from '../game/context';
+	import { stateGame } from '../game/stateGame.svelte';
 	import { getContextLayout } from 'utils-layout';
 
 	type Props = {
@@ -66,19 +72,34 @@
 	const { stateLayoutDerived } = getContextLayout();
 	const layoutType = $derived(stateLayoutDerived.layoutType());
 	const isPopout = $derived(isPopoutViewport(stateLayoutDerived.canvasSizes()));
+	const isPopoutSmall = $derived(isPopoutSmallViewport(stateLayoutDerived.canvasSizes()));
 	const useDesktopHud = $derived(layoutType === 'desktop' || isPopout);
-	const isFreeSpins = $derived(isFreeSpinsActive());
+	const isFreeSpins = $derived(
+		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
+	);
+	const hudLayout = $derived(
+		isPopoutSmall
+			? {
+					utilScale: DESKTOP_UI_LAYOUT.popoutSmall.utilScale,
+					spinCluster: {
+						...DESKTOP_UI_LAYOUT.spinCluster,
+						...DESKTOP_UI_LAYOUT.popoutSmall.spinCluster,
+					},
+				}
+			: {
+					utilScale: DESKTOP_UI_LAYOUT.utilScale,
+					spinCluster: DESKTOP_UI_LAYOUT.spinCluster,
+				},
+	);
 
 	const TOTAL_BAR_WIDTH = DESKTOP_BACKGROUND_WIDTH_LIST.reduce((sum, w) => sum + w, 0);
 
 	// X-coords ВНУТРИ панели (origin = левый край панели после anchorToPivot).
 	//   [ i | ☰ ] баланс / ставка     WIN (под доской)    [− Spin + / авто]
 	// Buy Bonus — CashStacksBuyBonusPanel (HTML, слева от доски).
-	const X = {
-		info: 175,
-		menu: 248,
-		hudText: 298,
-	};
+	const X = $derived(
+		isPopoutSmall ? DESKTOP_UI_LAYOUT.popoutSmall.utilX : DESKTOP_UI_LAYOUT.utilX,
+	);
 
 	const Y_BUTTON = DESKTOP_BASE_SIZE * 0.5;
 	const Y_BALANCE_LINE = Y_BUTTON - 16;
@@ -95,30 +116,23 @@
 	// Spin-кластер: правый нижний угол (ref. designer_assets/IMAGE 2026-06-02 13:12:00).
 	const mainLayout = $derived(context.stateLayoutDerived.mainLayoutStandard());
 	const barBottomY = $derived(mainLayout.height - DESKTOP_BASE_SIZE - 10);
-	const SPIN_CLUSTER = {
-		rightPad: 210,
+	const SPIN_CLUSTER = $derived({
+		...hudLayout.spinCluster,
 		centerYOffset: Y_BUTTON - 74,
-		betControlsGap: 14,
-		spinScale: 0.85,
-		smallScale: 0.48,
-		autoplayGap: 12,
-		autoplayScale: 0.72,
-		turboGap: 8,
-		turboScale: 0.38,
-	};
-	const spinHalf = (UI_BASE_SIZE * SPIN_CLUSTER.spinScale) / 2;
-	const smallHalf = (UI_BASE_SIZE * SPIN_CLUSTER.smallScale) / 2;
+	});
+	const spinHalf = $derived((UI_BASE_SIZE * SPIN_CLUSTER.spinScale) / 2);
+	const smallHalf = $derived((UI_BASE_SIZE * SPIN_CLUSTER.smallScale) / 2);
 	const betControlOffsetX = $derived(
 		spinHalf + SPIN_CLUSTER.betControlsGap + smallHalf,
 	);
-	const autoplayHalfW = (AUTOPLAY_PILL_BASE.width * SPIN_CLUSTER.autoplayScale) / 2;
-	const autoplayHalfH = (AUTOPLAY_PILL_BASE.height * SPIN_CLUSTER.autoplayScale) / 2;
-	const turboHalf = (UI_BASE_SIZE * SPIN_CLUSTER.turboScale) / 2;
+	const autoplayHalfW = $derived((AUTOPLAY_PILL_BASE.width * SPIN_CLUSTER.autoplayScale) / 2);
+	const autoplayHalfH = $derived((AUTOPLAY_PILL_BASE.height * SPIN_CLUSTER.autoplayScale) / 2);
+	const turboHalf = $derived((UI_BASE_SIZE * SPIN_CLUSTER.turboScale) / 2);
 	const autoplayOffsetY = $derived(
 		spinHalf + SPIN_CLUSTER.autoplayGap + autoplayHalfH,
 	);
 	const turboOffsetX = $derived(autoplayHalfW + SPIN_CLUSTER.turboGap + turboHalf);
-	// Origin кластера = центр Spin; «+» — самый правый элемент.
+	// Origin кластера = центр Spin (не сдвигаем при FS — turbo остаётся на месте).
 	const spinClusterCenterX = $derived(
 		mainLayout.width - SPIN_CLUSTER.rightPad - betControlOffsetX - smallHalf,
 	);
@@ -137,9 +151,9 @@
 	const showWin = $derived(stateBet.winBookEventAmount > 0);
 
 	const HUD_LINE_STYLE = {
-		fontFamily: 'proxima-nova',
+		fontFamily: 'Arial',
 		fontSize: 24,
-		fontWeight: '600' as const,
+		fontWeight: '400' as const,
 		fill: 0xffffff,
 		letterSpacing: 0.5,
 	};
@@ -203,10 +217,10 @@
 				})}
 			>
 				<!-- Info + Menu — вне dark bar, рядом как на макете -->
-				<Container x={X.info} y={Y_BUTTON} scale={0.5}>
+				<Container x={X.info} y={Y_BUTTON} scale={hudLayout.utilScale}>
 					<CashStacksInfoButton anchor={0.5} />
 				</Container>
-				<Container x={X.menu} y={Y_BUTTON} scale={0.5}>
+				<Container x={X.menu} y={Y_BUTTON} scale={hudLayout.utilScale}>
 					<CashStacksMenuButton anchor={0.5} />
 				</Container>
 
@@ -229,33 +243,23 @@
 				/>
 			</Container>
 
-			<!-- Spin-кластер: FS — только Bet + Turbo; base — − | Spin | + / автоигра -->
+			<!-- Spin-кластер: FS скрывает −/Spin/+/авто; turbo всегда на том же месте -->
 			<Container x={spinClusterCenterX} y={barBottomY + SPIN_CLUSTER.centerYOffset}>
 				{#if !isFreeSpins}
 					<Container x={-betControlOffsetX} y={0} scale={SPIN_CLUSTER.smallScale}>
 						<CashStacksDecreaseButton anchor={0.5} />
 					</Container>
-				{/if}
-
-				<Container x={0} y={0} scale={SPIN_CLUSTER.spinScale}>
-					<CashStacksBetButton anchor={0.5} />
-				</Container>
-
-				{#if !isFreeSpins}
+					<Container x={0} y={0} scale={SPIN_CLUSTER.spinScale}>
+						<CashStacksBetButton anchor={0.5} />
+					</Container>
 					<Container x={betControlOffsetX} y={0} scale={SPIN_CLUSTER.smallScale}>
 						<CashStacksIncreaseButton anchor={0.5} />
 					</Container>
-
 					<Container x={0} y={autoplayOffsetY} scale={SPIN_CLUSTER.autoplayScale}>
 						<CashStacksAutoSpinButton anchor={0.5} />
 					</Container>
 				{/if}
-
-				<Container
-					x={isFreeSpins ? 0 : turboOffsetX}
-					y={autoplayOffsetY}
-					scale={SPIN_CLUSTER.turboScale}
-				>
+				<Container x={turboOffsetX} y={autoplayOffsetY} scale={SPIN_CLUSTER.turboScale}>
 					<CashStacksTurboButton anchor={0.5} />
 				</Container>
 			</Container>
@@ -289,7 +293,7 @@
 			{#snippet amountWin(labelProps)}<LabelWin {...labelProps} />{/snippet}
 			{#snippet amountBet(labelProps)}<LabelBet {...labelProps} />{/snippet}
 			{#snippet buttonBuyBonus(buttonProps)}<ButtonBuyBonus {...buttonProps} />{/snippet}
-			{#snippet buttonBet(buttonProps)}<CashStacksBetButton {...buttonProps} />{/snippet}
+			{#snippet buttonBet(buttonProps)}{#if !isFreeSpins}<CashStacksBetButton {...buttonProps} />{/if}{/snippet}
 			{#snippet buttonTurbo(buttonProps)}<ButtonTurbo {...buttonProps} />{/snippet}
 			{#snippet buttonAutoSpin(buttonProps)}<ButtonAutoSpin {...buttonProps} />{/snippet}
 			{#snippet buttonIncrease(buttonProps)}<CashStacksIncreaseButton {...buttonProps} />{/snippet}
@@ -315,7 +319,7 @@
 			{#snippet amountWin(labelProps)}<LabelWin {...labelProps} />{/snippet}
 			{#snippet amountBet(labelProps)}<LabelBet {...labelProps} />{/snippet}
 			{#snippet buttonBuyBonus(buttonProps)}<ButtonBuyBonus {...buttonProps} />{/snippet}
-			{#snippet buttonBet(buttonProps)}<CashStacksBetButton {...buttonProps} />{/snippet}
+			{#snippet buttonBet(buttonProps)}{#if !isFreeSpins}<CashStacksBetButton {...buttonProps} />{/if}{/snippet}
 			{#snippet buttonTurbo(buttonProps)}<ButtonTurbo {...buttonProps} />{/snippet}
 			{#snippet buttonAutoSpin(buttonProps)}<ButtonAutoSpin {...buttonProps} />{/snippet}
 			{#snippet buttonIncrease(buttonProps)}<CashStacksIncreaseButton {...buttonProps} />{/snippet}

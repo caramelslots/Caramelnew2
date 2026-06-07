@@ -342,6 +342,36 @@ export const isPopoutSmallViewport = (sizes: { width: number; height: number }, 
 };
 
 /**
+ * Desktop / Popout HUD scales (ref. designer_assets/IMAGE 2026-06-02 13:12:00).
+ * Popout S uses slightly smaller values so the cluster fits 400×225.
+ */
+export const DESKTOP_UI_LAYOUT = {
+	utilScale: 0.68,
+	utilX: { info: 172, menu: 256, hudText: 318 },
+	spinCluster: {
+		rightPad: 200,
+		betControlsGap: 16,
+		spinScale: 0.85,
+		smallScale: 0.62,
+		autoplayGap: 12,
+		autoplayScale: 0.9,
+		turboGap: 10,
+		turboScale: 0.56,
+	},
+	popoutSmall: {
+		utilScale: 0.58,
+		utilX: { info: 168, menu: 248, hudText: 298 },
+		spinCluster: {
+			rightPad: 188,
+			betControlsGap: 12,
+			smallScale: 0.55,
+			autoplayScale: 0.8,
+			turboScale: 0.48,
+		},
+	},
+} as const;
+
+/**
  * Portrait mobile HUD (ref. designer_assets/IMAGE 2026-06-02 13:11:58, 800×1422).
  * Distances in ref px; components scale by mainLayoutStandard width/height.
  */

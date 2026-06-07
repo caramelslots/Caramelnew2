@@ -8,12 +8,16 @@
 	import { Container, Sprite, Text } from 'pixi-svelte';
 	import { Button, type ButtonProps } from 'components-pixi';
 	import { OnHotkey } from 'components-shared';
-	import { stateBet, stateBetDerived } from 'state-shared';
+	import { stateBet, stateBetDerived, stateUi } from 'state-shared';
 
 	import ButtonBetProvider from 'components-ui-pixi/src/components/ButtonBetProvider.svelte';
 	import { UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
+	import { stateGame } from '../game/stateGame.svelte';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
+	const isFreeSpins = $derived(
+		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
+	);
 	const disabled = $derived(!stateBetDerived.isBetCostAvailable());
 	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
 	const hasCounter = $derived(stateBetDerived.hasAutoBetCounter());
@@ -30,37 +34,39 @@
 	const counterOffsetY = UI_BASE_SIZE * 0.012;
 </script>
 
-<ButtonBetProvider>
-	{#snippet children({ key, onpress })}
-		<OnHotkey hotkey="Space" {disabled} {onpress} />
-		<Button {...props} {sizes} {onpress} {disabled}>
-			{#snippet children({ center })}
-				<Container {...center}>
-					<Sprite
-						key={spriteKey}
-						width={sizes.width}
-						height={sizes.height}
-						anchor={0.5}
-						alpha={disabled || ['spin_disabled', 'stop_disabled'].includes(key) ? 0.45 : 1}
-					/>
-					{#if hasCounter}
-						<Text
+{#if !isFreeSpins}
+	<ButtonBetProvider>
+		{#snippet children({ key, onpress })}
+			<OnHotkey hotkey="Space" {disabled} {onpress} />
+			<Button {...props} {sizes} {onpress} {disabled}>
+				{#snippet children({ center })}
+					<Container {...center}>
+						<Sprite
+							key={spriteKey}
+							width={sizes.width}
+							height={sizes.height}
 							anchor={0.5}
-							x={0}
-							y={counterOffsetY}
-							text={stateBet.autoSpinsCounter === Infinity ? '∞' : stateBet.autoSpinsCounter}
-							style={{
-								align: 'center',
-								fontFamily: 'proxima-nova',
-								fill: 0xffffff,
-								fontWeight: 'bold',
-								fontSize: counterFontSize,
-								lineHeight: counterFontSize,
-							}}
+							alpha={disabled || ['spin_disabled', 'stop_disabled'].includes(key) ? 0.45 : 1}
 						/>
-					{/if}
-				</Container>
-			{/snippet}
-		</Button>
-	{/snippet}
-</ButtonBetProvider>
+						{#if hasCounter}
+							<Text
+								anchor={0.5}
+								x={0}
+								y={counterOffsetY}
+								text={stateBet.autoSpinsCounter === Infinity ? '∞' : stateBet.autoSpinsCounter}
+								style={{
+									align: 'center',
+									fontFamily: 'proxima-nova',
+									fill: 0xffffff,
+									fontWeight: 'bold',
+									fontSize: counterFontSize,
+									lineHeight: counterFontSize,
+								}}
+							/>
+						{/if}
+					</Container>
+				{/snippet}
+			</Button>
+		{/snippet}
+	</ButtonBetProvider>
+{/if}

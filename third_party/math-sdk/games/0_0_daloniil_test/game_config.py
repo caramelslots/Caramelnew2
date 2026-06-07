@@ -366,7 +366,8 @@ class GameConfig(Config):
                 self.basegame_type: {"BR0": 1},
                 self.freegame_type: {"FR0": 1},
             },
-            "scatter_triggers": {3: 55, 4: 25},
+            # Trigger board ceremony: always 3× B (matches natural normal bonus).
+            "scatter_triggers": {3: 1},
             "mult_values": {
                 self.basegame_type: {1: 1},
                 self.freegame_type: {2: 10, 5: 20, 10: 25, 20: 25, 50: 20},
@@ -384,7 +385,8 @@ class GameConfig(Config):
                 self.basegame_type: {"BR0": 1},
                 self.freegame_type: {"FR1": 1},
             },
-            "scatter_triggers": {3: 55, 4: 25},
+            # Trigger board ceremony: always 4× B (matches natural super bonus).
+            "scatter_triggers": {4: 1},
             "mult_values": {
                 self.basegame_type: {1: 1},
                 self.freegame_type: {2: 5, 5: 15, 10: 20, 20: 30, 50: 30},

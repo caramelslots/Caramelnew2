@@ -1,4 +1,4 @@
-import { stateBet } from 'state-shared';
+import { stateBet, stateUi } from 'state-shared';
 
 import { stateGame } from './stateGame.svelte';
 
@@ -40,5 +40,6 @@ export const isAnyBonusActive = () => {
 	);
 };
 
-/** Free Spins feature round — only bet / info / menu / turbo in HUD. */
-export const isFreeSpinsActive = () => stateGame.gameType === 'freegame';
+/** Free Spins feature round — hide spin button on all layouts. */
+export const isFreeSpinsActive = () =>
+	stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow;

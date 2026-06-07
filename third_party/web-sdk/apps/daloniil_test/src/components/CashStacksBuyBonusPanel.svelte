@@ -63,6 +63,9 @@
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		stateModal.modal = { name: 'buyBonus' };
 	};
+
+	const buyBonusBgUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/buy_bonus/buy_bonus.png`;
+	const buyBonusLabel = $derived(context.i18nDerived.buyBonusPanelButton());
 </script>
 
 {#if show}
@@ -81,12 +84,18 @@
 			disabled={buyDisabled}
 			onclick={onBuyBonusPress}
 			data-test="buy-bonus-panel-button"
+			style:background-image={`url("${buyBonusBgUrl}")`}
+			aria-label={buyBonusLabel}
 		>
-			{context.i18nDerived.buyBonusPanelButton()}
+			<span class="buy-bonus-label">{buyBonusLabel}</span>
 		</button>
 
 		<div class="boost-section">
-			<CashStacksFeatureToggles features={['bonus_boost']} compact={isPopoutSmall} />
+			<CashStacksFeatureToggles
+				features={['bonus_boost']}
+				compact={isPopoutSmall}
+				usePanelBg
+			/>
 		</div>
 	</aside>
 {/if}
@@ -118,26 +127,13 @@
 		border-radius: 8px;
 	}
 
-	.popout-s .buy-bonus-btn {
-		padding: 0.28rem 0.22rem;
-		font-size: 0.54rem;
-		border-radius: 6px;
-		line-height: 1.1;
+	.popout-s .buy-bonus-label {
+		font-size: 0.5rem;
+		letter-spacing: 0.02em;
 	}
 
 	.popout-s .boost-section {
 		padding-top: 0.1rem;
-	}
-
-	.popout-s .boost-section :global(.feature-row) {
-		padding: 0.22rem 0.28rem;
-		gap: 0.25rem;
-		border-radius: 6px;
-	}
-
-	.popout-s .boost-section :global(.feature-row.compact .feature-name) {
-		font-size: 0.5rem;
-		line-height: 1.1;
 	}
 
 	.popout-s .boost-section :global(.feature-toggle) {
@@ -167,32 +163,27 @@
 		border-radius: 0;
 	}
 
-	.portrait .buy-bonus-btn {
-		min-height: 50px;
-		padding: 0.45rem 0.4rem;
-		font-size: 0.82rem;
-		text-transform: uppercase;
-		background: rgba(0, 0, 0, 0.35);
-		border-radius: 10px;
+	.portrait .buy-bonus-label {
+		font-size: 0.78rem;
 	}
 
 	.buy-bonus-btn {
 		width: 100%;
-		padding: 0.7rem 0.85rem;
+		aspect-ratio: 1233 / 613;
 		border: 0;
-		border-radius: 10px;
-		background: rgba(0, 0, 0, 0.35);
-		color: #fff;
-		font-family: inherit;
-		font-size: 0.95rem;
-		font-weight: 700;
-		line-height: 1.2;
-		text-align: center;
+		padding: 0;
+		background-color: transparent;
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: 100% 100%;
 		cursor: pointer;
-		transition: background 0.15s, border-color 0.15s;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: filter 0.15s, opacity 0.15s;
 
 		&:hover:not(:disabled) {
-			background: rgba(0, 0, 0, 0.48);
+			filter: brightness(1.08);
 		}
 
 		&:disabled {
@@ -202,6 +193,22 @@
 		}
 	}
 
+	.buy-bonus-label {
+		color: #fff;
+		font-family: inherit;
+		font-size: 0.92rem;
+		font-weight: 800;
+		line-height: 1.1;
+		text-align: center;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		text-shadow:
+			0 0 10px rgba(255, 120, 220, 0.75),
+			0 2px 6px rgba(0, 0, 0, 0.85);
+		pointer-events: none;
+		user-select: none;
+	}
+
 	.boost-section {
 		display: flex;
 		flex-direction: column;
@@ -209,22 +216,11 @@
 		justify-content: center;
 	}
 
-	.desktop .boost-section {
-		padding-top: 0.15rem;
-		border-top: 1px solid rgba(255, 255, 255, 0.06);
-	}
-
-	/* Portrait boost — тот же вид, что desktop (название + cost + toggle). */
-	.portrait .boost-section :global(.feature-row) {
-		min-height: 50px;
-		padding: 0.4rem 0.45rem;
-	}
-
-	.portrait .boost-section :global(.feature-name) {
-		font-size: 0.85rem;
-	}
-
-	.portrait .boost-section :global(.feature-cost) {
+	.portrait .boost-section :global(.feature-row.panel-bg .feature-name) {
 		font-size: 0.72rem;
+	}
+
+	.portrait .boost-section :global(.feature-row.panel-bg .feature-cost) {
+		font-size: 0.62rem;
 	}
 </style>

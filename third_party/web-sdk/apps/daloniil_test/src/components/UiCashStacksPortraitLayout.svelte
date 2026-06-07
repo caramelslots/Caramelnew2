@@ -2,13 +2,13 @@
 	UiCashStacksPortraitLayout.svelte — portrait mobile (ref. IMAGE 2026-06-02 13:11:58).
 	  WIN под доской
 	  Buy + Bonus Boost — CashStacksBuyBonusPanel (HTML)
-	  − | Spin | + по центру
-	  i | ☰ | balance/bet | автоигра | turbo — один нижний ряд
+	  − | Spin | + по центру (в FS — spin-кластер скрыт)
+	  i | ☰ | balance + bet | автоигра | turbo — нижний ряд (в FS только balance)
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	import { stateBet } from 'state-shared';
+	import { stateBet, stateUi } from 'state-shared';
 	import { MainContainer } from 'components-layout';
 	import { Container, Text } from 'pixi-svelte';
 	import { numberToCurrencyString, bookEventAmountToCurrencyString } from 'utils-shared/amount';
@@ -29,9 +29,9 @@
 		PORTRAIT_UTIL_ICON_BASE,
 		PORTRAIT_TURBO_ICON_BASE,
 	} from '../game/constants';
-	import { isFreeSpinsActive } from '../game/activeFeature';
 	import { computePortraitHudY, portraitScaleY } from '../game/portraitHudLayout';
 	import { getContext } from '../game/context';
+	import { stateGame } from '../game/stateGame.svelte';
 	import { getContextLayout } from 'utils-layout';
 
 	type Props = {
@@ -58,7 +58,9 @@
 			portraitScaleY(PORTRAIT_UI_LAYOUT.winBelowBoardGap, H),
 	});
 
-	const isFreeSpins = $derived(isFreeSpinsActive());
+	const isFreeSpins = $derived(
+		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
+	);
 	const showWin = $derived(stateBet.winBookEventAmount > 0);
 	const formatAmount = (v: number) => numberToCurrencyString(v);
 	const formatWinAmount = (v: number) => bookEventAmountToCurrencyString(v);
@@ -76,7 +78,11 @@
 		Math.max(portraitScaleY(btn.utilIconDiam, H), portraitScaleY(26, H)) / 2,
 	);
 
-	const hudY = $derived(computePortraitHudY(stateLayoutDerived, spinHalf, utilRowHalf));
+	const hudY = $derived.by(() => {
+		void stateGame.gameType;
+		void stateUi.freeSpinCounterShow;
+		return computePortraitHudY(stateLayoutDerived, spinHalf, utilRowHalf);
+	});
 	const spinCenterY = $derived(hudY.spinCenterY);
 	const Y_UTIL = $derived(hudY.utilCenterY);
 
@@ -100,9 +106,9 @@
 		fill: 0xffd000,
 	};
 	const FOOTER_STYLE = {
-		fontFamily: 'proxima-nova',
+		fontFamily: 'Arial',
 		fontSize: 20,
-		fontWeight: '600' as const,
+		fontWeight: '400' as const,
 		fill: 0xffffff,
 		letterSpacing: 0.4,
 	};
@@ -139,22 +145,20 @@
 	{/if}
 
 	<MainContainer alignVertical="bottom">
-		<!-- Bet (FS: только Spin; base: − | Spin | +) -->
-		<Container x={W * 0.5} y={spinCenterY}>
-			{#if !isFreeSpins}
+		<!-- Spin-кластер: FS — без Spin (−/+ тоже скрыты); base — − | Spin | + -->
+		{#if !isFreeSpins}
+			<Container x={W * 0.5} y={spinCenterY}>
 				<Container x={-betControlOffsetX} y={0} scale={spinSmallScale}>
 					<CashStacksDecreaseButton anchor={0.5} />
 				</Container>
-			{/if}
-			<Container x={0} y={0} scale={spinScale}>
-				<CashStacksBetButton anchor={0.5} />
-			</Container>
-			{#if !isFreeSpins}
+				<Container x={0} y={0} scale={spinScale}>
+					<CashStacksBetButton anchor={0.5} />
+				</Container>
 				<Container x={betControlOffsetX} y={0} scale={spinSmallScale}>
 					<CashStacksIncreaseButton anchor={0.5} />
 				</Container>
-			{/if}
-		</Container>
+			</Container>
+		{/if}
 
 		<!-- Нижний ряд: i | ☰ | balance/bet | [автоигра] | turbo -->
 		<Container x={xInfo} y={Y_UTIL} scale={utilIconScale}>

@@ -1,6 +1,5 @@
 import type { createLayout } from 'utils-layout';
 
-import { isFreeSpinsActive } from './activeFeature';
 import {
 	BOARD_LAYOUT_OFFSETS,
 	BOARD_SIZES,
@@ -52,10 +51,8 @@ export const computePortraitHudY = (
 	const buyPanelTopLocal =
 		boardBottomLocal + portraitScaleY(PORTRAIT_UI_LAYOUT.buyPanelBelowBoard, H);
 	const buyPanelBottomLocal = buyPanelTopLocal + portraitScaleY(btn.buyRowMinH, H);
-	const spinStackAnchor = isFreeSpinsActive()
-		? boardBottomLocal + portraitScaleY(PORTRAIT_UI_LAYOUT.freeSpinsSpinBelowBoard, H)
-		: buyPanelBottomLocal;
-
+	// Позиции не меняем при FS — turbo/util-ряд остаётся на месте, скрывается только spin-кластер.
+	const spinStackAnchor = buyPanelBottomLocal;
 	const spinFromStack =
 		spinStackAnchor +
 		portraitScaleY(PORTRAIT_UI_LAYOUT.spinAboveBuyGap, H) +
