@@ -103,7 +103,7 @@
 	>
 		<button
 			type="button"
-			class="buy-bonus-btn"
+			class="buy-bonus-btn panel-sprite-btn"
 			disabled={buyDisabled}
 			onclick={onBuyBonusPress}
 			data-test="buy-bonus-panel-button"
@@ -121,6 +121,7 @@
 				features={['bonus_boost']}
 				compact={false}
 				usePanelBg
+				disabled={buyDisabled}
 				panelNameFontSize={panelText.boostName}
 				panelCostFontSize={panelText.boostCost}
 			/>
@@ -279,24 +280,15 @@
 		align-self: stretch;
 	}
 
-	.buy-bonus-btn {
-		width: 100%;
-		aspect-ratio: 1233 / 613;
-		border: 0;
-		padding: 16% 14%;
+	.buy-bonus-btn,
+	.boost-section :global(.panel-sprite-btn) {
 		box-sizing: border-box;
-		background-color: transparent;
-		background-repeat: no-repeat;
-		background-position: center;
-		background-size: 100% 100%;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
 		transition: filter 0.15s, opacity 0.15s, transform 0.1s;
 
-		&:hover:not(:disabled) {
-			filter: brightness(1.08);
+		&:hover:not(:disabled):not(:active) {
+			background-color: transparent;
+			filter: none;
+			transform: none;
 		}
 
 		&:active:not(:disabled) {
@@ -309,6 +301,21 @@
 			cursor: not-allowed;
 			pointer-events: none;
 		}
+	}
+
+	.buy-bonus-btn {
+		width: 100%;
+		aspect-ratio: 1233 / 613;
+		border: 0;
+		padding: 16% 14%;
+		background-color: transparent;
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: 100% 100%;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.buy-bonus-label {

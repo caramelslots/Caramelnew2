@@ -6,10 +6,9 @@
 
 	Состоит из трёх секций согласно дизайн-референсу:
 	  1. Header «Автоигра»
-	  2. «Функции» — Bonus Boost / Special Spin toggles (эксклюзивные)
+	  2. «Функции» — Bonus Boost toggle
 	  3. «Раунды» — выбор количества (10, 25, 50, 75, 100, 250, 500, 1000, ∞)
-	  Portrait/mobile: кнопка «Начать автоигру (N)» внутри панели.
-	  Desktop/popout: старт через центральную Spin-кнопку.
+	  4. «Начать автоигру (N)» — запуск с выбранными параметрами.
 -->
 <script lang="ts">
 	import {
@@ -22,7 +21,6 @@
 	} from 'state-shared';
 
 	import { getContext } from '../game/context';
-	import { getContextLayout } from 'utils-layout';
 	import CashStacksFeatureToggles from './CashStacksFeatureToggles.svelte';
 	import {
 		CASH_STACKS_ROUND_OPTIONS,
@@ -32,10 +30,9 @@
 	} from '../game/autoplay';
 
 	const context = getContext();
-	const { stateLayoutDerived } = getContextLayout();
 
 	const isOpen = $derived(stateModal.modal?.name === 'autoSpin');
-	const isPortrait = $derived(stateLayoutDerived.layoutType() === 'portrait');
+	const featureTogglesDisabled = $derived(!context.stateXstateDerived.isIdle());
 	const startDisabled = $derived(!stateBetDerived.isBetCostAvailable());
 	const startLabel = $derived(
 		context.i18nDerived.autoplayStartWithRounds(String(stateUi.autoSpinsText)),
@@ -137,7 +134,11 @@
 
 			<!-- === ФУНКЦИИ === -->
 			<section class="autoplay-section">
-				<CashStacksFeatureToggles showSectionTitle />
+				<CashStacksFeatureToggles
+					showSectionTitle
+					features={['bonus_boost']}
+					disabled={featureTogglesDisabled}
+				/>
 			</section>
 
 
@@ -179,17 +180,15 @@
 				</div>
 			</section>
 
-			{#if isPortrait}
-				<button
-					type="button"
-					class="start-button"
-					disabled={startDisabled}
-					onclick={startAutoplay}
-					data-test="autoplay-start-button"
-				>
-					{startLabel}
-				</button>
-			{/if}
+			<button
+				type="button"
+				class="start-button"
+				disabled={startDisabled}
+				onclick={startAutoplay}
+				data-test="autoplay-start-button"
+			>
+				{startLabel}
+			</button>
 		</div>
 	</div>
 {/if}

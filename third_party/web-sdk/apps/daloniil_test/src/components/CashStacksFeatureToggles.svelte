@@ -1,5 +1,5 @@
 <!--
-	Общие строки Bonus Boost / Special Spins с тумблерами.
+	Общие строки Bonus Boost / Special Spins с тумблерами (Special Spins скрыт в UI по умолчанию).
 	Используются в FeaturesAutoSpinOverlay и BuyBonusOverlay — одно состояние
 	через stateGame.activeFeature (см. game/activeFeature.ts).
 -->
@@ -30,16 +30,22 @@
 		/** Inline font-size для portrait buy panel (перебивает scoped CSS). */
 		panelNameFontSize?: string;
 		panelCostFontSize?: string;
+		/** Блокирует переключение во время спина (как buy bonus). */
+		disabled?: boolean;
+		/** Не менять фон при hover (карточки в BuyBonusOverlay). */
+		noHoverBg?: boolean;
 	};
 
 	const {
 		showSectionTitle = false,
-		features = ['bonus_boost', 'special_spins'],
+		features = ['bonus_boost'],
 		compact = false,
 		panelDesc = false,
 		usePanelBg = false,
 		panelNameFontSize,
 		panelCostFontSize,
+		disabled = false,
+		noHoverBg = false,
 	}: Props = $props();
 
 	const bonusSwitchBgUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/bonus_switch/bonus_switch.png`;
@@ -54,6 +60,7 @@
 	);
 
 	const onToggle = (feature: ActiveFeature) => {
+		if (disabled) return;
 		toggleActiveFeature(feature);
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 	};
@@ -66,10 +73,13 @@
 {#if features.includes('bonus_boost')}
 	<button
 		type="button"
-		class="feature-row"
+		class="feature-row bonus-boost"
 		class:compact
 		class:panel-bg={usePanelBg}
+		class:panel-sprite-btn={usePanelBg}
+		class:no-hover-bg={noHoverBg}
 		class:active={stateGame.activeFeature === 'bonus_boost'}
+		{disabled}
 		onclick={() => onToggle('bonus_boost')}
 		data-test="feature-bonus-boost"
 		style:background-image={usePanelBg ? `url("${bonusSwitchBgUrl}")` : undefined}
@@ -103,7 +113,9 @@
 		type="button"
 		class="feature-row"
 		class:compact
+		class:no-hover-bg={noHoverBg}
 		class:active={stateGame.activeFeature === 'special_spins'}
+		{disabled}
 		onclick={() => onToggle('special_spins')}
 		data-test="feature-special-spins"
 	>
@@ -145,13 +157,21 @@
 		text-align: left;
 		color: inherit;
 		font-family: inherit;
-		transition: background 0.15s, border-color 0.15s, transform 0.1s, filter 0.1s;
+		transition: background-color 0.15s, border-color 0.15s, transform 0.1s, filter 0.1s;
 
-		&:hover { background: rgba(0, 0, 0, 0.36); }
+		&:hover:not(:disabled):not(.panel-sprite-btn):not(.no-hover-bg) {
+			background-color: rgba(0, 0, 0, 0.36);
+		}
 
-		&:active {
+		&:not(.panel-sprite-btn):active:not(:disabled) {
 			transform: scale(0.98);
 			filter: brightness(0.9);
+		}
+
+		&:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+			pointer-events: none;
 		}
 
 		&.active {
@@ -169,6 +189,32 @@
 		line-height: 1.25;
 	}
 
+	.feature-row.bonus-boost:not(.panel-bg):hover:not(:disabled):not(.no-hover-bg) {
+		background-color: rgba(0, 0, 0, 0.28);
+		filter: none;
+	}
+
+	.feature-row.bonus-boost:not(.panel-sprite-btn):active:not(:disabled) {
+		transform: scale(0.97);
+		filter: brightness(0.9);
+	}
+
+	.feature-row.panel-bg.panel-sprite-btn {
+		box-sizing: border-box;
+		transition: filter 0.15s, opacity 0.15s, transform 0.1s;
+
+		&:hover:not(:disabled):not(:active) {
+			background-color: transparent;
+			filter: none;
+			transform: none;
+		}
+
+		&:active:not(:disabled) {
+			transform: scale(0.97);
+			filter: brightness(0.9);
+		}
+	}
+
 	.feature-row.panel-bg {
 		aspect-ratio: 1233 / 613;
 		padding: 0 12%;
@@ -178,21 +224,16 @@
 		background-size: 100% 100%;
 		border: 0;
 		border-radius: 0;
-		transition: filter 0.15s, opacity 0.15s, transform 0.1s;
 
-		&:hover {
-			background-color: transparent;
-			filter: brightness(1.08);
-		}
-
-		&:active {
-			transform: scale(0.97);
-			filter: brightness(0.9);
+		&:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+			pointer-events: none;
+			filter: none;
 		}
 
 		&.active {
 			border-color: transparent;
-			filter: brightness(1.12);
 		}
 
 		&.compact {

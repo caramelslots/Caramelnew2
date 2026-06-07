@@ -2,7 +2,7 @@
 	CashStacksAutoSpinButton.svelte — кастомная замена SDK-кнопки
 	ButtonAutoSpin для Cash Stacks. Имеет три состояния:
 
-	  1. autoSpin modal открыт → крестик поверх кнопки (отмена выбора).
+	  1. autoSpin modal открыт → клик закрывает модалку (вид кнопки без изменений).
 	  2. Автоигра запущена → клик останавливает автоигру.
 	  3. Idle → открывает модалку выбора параметров автоигры.
 
@@ -13,8 +13,6 @@
 	import { Container, Sprite, Text } from 'pixi-svelte';
 	import { Button } from 'components-pixi';
 	import { stateBet, stateBetDerived, stateModal } from 'state-shared';
-
-	import { UI_BASE_FONT_SIZE } from 'components-ui-pixi/src/constants';
 
 	import { AUTOPLAY_PILL_BASE, PORTRAIT_UTIL_ICON_BASE } from '../game/constants';
 	import { getContext } from '../game/context';
@@ -46,8 +44,8 @@
 		return false;
 	});
 
-	const showLabel = $derived(isModalOpen || !portraitPill);
-	const label = $derived(isModalOpen ? '×' : context.i18nDerived.autoplayTitle());
+	const showLabel = $derived(!portraitPill);
+	const label = $derived(context.i18nDerived.autoplayTitle());
 
 	const onpress = () => {
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
@@ -78,10 +76,8 @@
 					style={{
 						align: 'center',
 						fontFamily: 'proxima-nova',
-						fontWeight: isModalOpen ? '700' : '600',
-						fontSize: isModalOpen
-							? UI_BASE_FONT_SIZE * (portraitPill ? 1.4 : 1.8)
-							: sizes.height * 0.42,
+						fontWeight: '600',
+						fontSize: sizes.height * 0.42,
 						fill: 0xffffff,
 					}}
 				/>

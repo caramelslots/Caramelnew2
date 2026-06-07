@@ -9,18 +9,52 @@
 	import { Button, type ButtonProps } from 'components-pixi';
 	import { OnHotkey } from 'components-shared';
 	import { stateBet, stateBetDerived, stateUi } from 'state-shared';
+	import { stateSlots } from 'utils-slots';
 
 	import ButtonBetProvider from 'components-ui-pixi/src/components/ButtonBetProvider.svelte';
 	import { UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
+	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
+	const context = getContext();
 	const isFreeSpins = $derived(
 		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
 	);
 	const disabled = $derived(!stateBetDerived.isBetCostAvailable());
-	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
 	const hasCounter = $derived(stateBetDerived.hasAutoBetCounter());
+	let manualSpinHeld = $state(false);
+	let reelsWereSpinning = $state(false);
+
+	const isReelsSpinning = $derived(
+		stateSlots.isPreSpinning ||
+			context.stateGame.board.some((reel) => reel.reelState.motion !== 'stopped'),
+	);
+
+	$effect(() => {
+		if (isReelsSpinning) reelsWereSpinning = true;
+	});
+
+	$effect(() => {
+		if (manualSpinHeld && reelsWereSpinning && !isReelsSpinning) {
+			manualSpinHeld = false;
+			reelsWereSpinning = false;
+		}
+	});
+
+	$effect(() => {
+		if (hasCounter) {
+			manualSpinHeld = false;
+			reelsWereSpinning = false;
+		}
+	});
+
+	$effect(() => {
+		if (manualSpinHeld && context.stateXstateDerived.isIdle() && !reelsWereSpinning) {
+			manualSpinHeld = false;
+		}
+	});
+	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
 	const spriteKey = $derived(hasCounter ? 'spin2' : 'spin1');
 
 	const counterFontSize = $derived.by(() => {
@@ -37,16 +71,24 @@
 {#if !isFreeSpins}
 	<ButtonBetProvider>
 		{#snippet children({ key, onpress })}
-			<OnHotkey hotkey="Space" {disabled} {onpress} />
-			<Button {...props} {sizes} {onpress} {disabled}>
+			{@const handlePress = () => {
+				if (key === 'spin_default' && !hasCounter) manualSpinHeld = true;
+				onpress();
+			}}
+			<OnHotkey hotkey="Space" {disabled} onpress={handlePress} />
+			<Button {...props} {sizes} onpress={handlePress} {disabled}>
 				{#snippet children({ center })}
+					{@const isDimmed =
+						disabled ||
+						['spin_disabled', 'stop_disabled'].includes(key) ||
+						manualSpinHeld}
 					<Container {...center}>
 						<Sprite
 							key={spriteKey}
 							width={sizes.width}
 							height={sizes.height}
 							anchor={0.5}
-							alpha={disabled || ['spin_disabled', 'stop_disabled'].includes(key) ? 0.45 : 1}
+							alpha={isDimmed ? 0.45 : 1}
 						/>
 						{#if hasCounter}
 							<Text
