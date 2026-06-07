@@ -13,16 +13,23 @@
 
 	const SPLASH_DURATION_MS = 2300;
 
+	/** static/ asset path relative to deployed index.html (Stake CDN subpath-safe). */
+	const resolveStaticUrl = (path: string) =>
+		new URL(path.replace(/^\//, ''), window.location.href).href;
+
 	let loading = $state(true);
 	let playerContainer = $state<HTMLDivElement>();
+	let bgUrl = $state('');
 	let player: SpinePlayer | undefined;
 
 	onMount(() => {
 		if (!playerContainer) return;
 
+		bgUrl = resolveStaticUrl('assets/sprites/background/day.png');
+
 		player = new SpinePlayer(playerContainer, {
-			jsonUrl: '/logo-loader/skeleton.json',
-			atlasUrl: '/logo-loader/skeleton.atlas',
+			jsonUrl: resolveStaticUrl('logo-loader/skeleton.json'),
+			atlasUrl: resolveStaticUrl('logo-loader/skeleton.atlas'),
 			animation: 'appear',
 			showControls: false,
 			showLoading: false,
@@ -33,6 +40,9 @@
 			success: (spinePlayer) => {
 				spinePlayer.setAnimation('appear', false);
 				spinePlayer.addAnimation('static', true, 0);
+			},
+			error: () => {
+				/* Fail silently — splash still dismisses after timeout. */
 			},
 		});
 
@@ -50,7 +60,7 @@
 
 {#if loading}
 	<div class="wrap" transition:fade>
-		<div class="bg" aria-hidden="true"></div>
+		<div class="bg" style:background-image={bgUrl ? `url('${bgUrl}')` : undefined} aria-hidden="true"></div>
 		<div class="player" bind:this={playerContainer}></div>
 	</div>
 {/if}
@@ -70,7 +80,10 @@
 	.bg {
 		position: absolute;
 		inset: 0;
-		background: #000 url('/assets/sprites/background/day.png') center / cover no-repeat;
+		background-color: #000;
+		background-position: center;
+		background-size: cover;
+		background-repeat: no-repeat;
 	}
 
 	.player {
@@ -79,6 +92,7 @@
 		width: min(640px, 90vw);
 		height: min(640px, 60vh);
 		transform: scaleY(-1);
+		overflow: hidden;
 	}
 
 	.player :global(.spine-player),
@@ -86,7 +100,8 @@
 		background: transparent !important;
 	}
 
-	.player :global(.spine-player-controls) {
+	.player :global(.spine-player-controls),
+	.player :global(.spine-player-error) {
 		display: none;
 	}
 </style>
