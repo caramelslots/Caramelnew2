@@ -118,7 +118,7 @@
 	const barBottomY = $derived(mainLayout.height - DESKTOP_BASE_SIZE - 10);
 	const SPIN_CLUSTER = $derived({
 		...hudLayout.spinCluster,
-		centerYOffset: Y_BUTTON - 74,
+		centerYOffset: Y_BUTTON - 96,
 	});
 	const spinHalf = $derived((UI_BASE_SIZE * SPIN_CLUSTER.spinScale) / 2);
 	const smallHalf = $derived((UI_BASE_SIZE * SPIN_CLUSTER.smallScale) / 2);
@@ -131,7 +131,9 @@
 	const autoplayOffsetY = $derived(
 		spinHalf + SPIN_CLUSTER.autoplayGap + autoplayHalfH,
 	);
-	const turboOffsetX = $derived(autoplayHalfW + SPIN_CLUSTER.turboGap + turboHalf);
+	const turboOffsetX = $derived(
+		(SPIN_CLUSTER.shiftX ?? 0) + autoplayHalfW + SPIN_CLUSTER.turboGap + turboHalf,
+	);
 	// Origin кластера = центр Spin (не сдвигаем при FS — turbo остаётся на месте).
 	const spinClusterCenterX = $derived(
 		mainLayout.width - SPIN_CLUSTER.rightPad - betControlOffsetX - smallHalf,
@@ -243,19 +245,19 @@
 				/>
 			</Container>
 
-			<!-- Spin-кластер: FS скрывает −/Spin/+/авто; turbo всегда на том же месте -->
+			<!-- Spin-кластер: FS скрывает −/Spin/+/авто; turbo отдельно (без shiftX) -->
 			<Container x={spinClusterCenterX} y={barBottomY + SPIN_CLUSTER.centerYOffset}>
 				{#if !isFreeSpins}
-					<Container x={-betControlOffsetX} y={0} scale={SPIN_CLUSTER.smallScale}>
+					<Container x={(SPIN_CLUSTER.shiftX ?? 0) - betControlOffsetX} y={0} scale={SPIN_CLUSTER.smallScale}>
 						<CashStacksDecreaseButton anchor={0.5} />
 					</Container>
-					<Container x={0} y={0} scale={SPIN_CLUSTER.spinScale}>
+					<Container x={SPIN_CLUSTER.shiftX ?? 0} y={SPIN_CLUSTER.spinRaiseY ?? 0} scale={SPIN_CLUSTER.spinScale}>
 						<CashStacksBetButton anchor={0.5} />
 					</Container>
-					<Container x={betControlOffsetX} y={0} scale={SPIN_CLUSTER.smallScale}>
+					<Container x={(SPIN_CLUSTER.shiftX ?? 0) + betControlOffsetX} y={0} scale={SPIN_CLUSTER.smallScale}>
 						<CashStacksIncreaseButton anchor={0.5} />
 					</Container>
-					<Container x={0} y={autoplayOffsetY} scale={SPIN_CLUSTER.autoplayScale}>
+					<Container x={SPIN_CLUSTER.shiftX ?? 0} y={autoplayOffsetY} scale={SPIN_CLUSTER.autoplayScale}>
 						<CashStacksAutoSpinButton anchor={0.5} />
 					</Container>
 				{/if}

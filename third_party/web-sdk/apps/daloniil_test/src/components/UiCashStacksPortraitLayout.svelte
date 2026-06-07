@@ -27,7 +27,6 @@
 		BOARD_FRAME_OFFSET,
 		PORTRAIT_UI_LAYOUT,
 		PORTRAIT_UTIL_ICON_BASE,
-		PORTRAIT_TURBO_ICON_BASE,
 	} from '../game/constants';
 	import { computePortraitHudY, portraitScaleY } from '../game/portraitHudLayout';
 	import { getContext } from '../game/context';
@@ -69,11 +68,12 @@
 	const spinScale = $derived(btn.spinDiam / UI_BASE_SIZE);
 	const spinSmallScale = $derived(btn.spinBetDiam / UI_BASE_SIZE);
 	const utilIconScale = $derived(btn.utilIconDiam / PORTRAIT_UTIL_ICON_BASE);
-	const turboScale = $derived(btn.utilIconDiam / PORTRAIT_TURBO_ICON_BASE);
 
 	const spinHalf = $derived((UI_BASE_SIZE * spinScale) / 2);
 	const smallHalf = $derived((UI_BASE_SIZE * spinSmallScale) / 2);
 	const betControlOffsetX = $derived(spinHalf + btn.spinBetGap + smallHalf);
+	const spinRaiseY = $derived(portraitScaleY(btn.spinRaiseY, H));
+	const spinClusterShiftX = $derived(scalePortraitX(PORTRAIT_UI_LAYOUT.spinClusterShiftX));
 	const utilRowHalf = $derived(
 		Math.max(portraitScaleY(btn.utilIconDiam, H), portraitScaleY(26, H)) / 2,
 	);
@@ -86,17 +86,11 @@
 	const spinCenterY = $derived(hudY.spinCenterY);
 	const Y_UTIL = $derived(hudY.utilCenterY);
 
-	const utilIconHalfX = $derived(scalePortraitX(btn.utilIconDiam) / 2);
 	const xInfo = $derived(scalePortraitX(PORTRAIT_UI_LAYOUT.utilX.info));
 	const xMenu = $derived(scalePortraitX(PORTRAIT_UI_LAYOUT.utilX.menu));
 	const xAutoplay = $derived(scalePortraitX(PORTRAIT_UI_LAYOUT.utilX.autoplay));
 	const xTurbo = $derived(scalePortraitX(PORTRAIT_UI_LAYOUT.utilX.turbo));
-	const xBalanceBet = $derived.by(() => {
-		const rightEdge = isFreeSpins
-			? xTurbo - utilIconHalfX
-			: xAutoplay - utilIconHalfX;
-		return (xMenu + utilIconHalfX + rightEdge) / 2;
-	});
+	const xBalanceBet = $derived(W * 0.5);
 
 	const WIN_WORD_GAP = 10;
 	const WIN_TEXT_STYLE = {
@@ -147,11 +141,11 @@
 	<MainContainer alignVertical="bottom">
 		<!-- Spin-кластер: FS — без Spin (−/+ тоже скрыты); base — − | Spin | + -->
 		{#if !isFreeSpins}
-			<Container x={W * 0.5} y={spinCenterY}>
+			<Container x={W * 0.5 + spinClusterShiftX} y={spinCenterY}>
 				<Container x={-betControlOffsetX} y={0} scale={spinSmallScale}>
 					<CashStacksDecreaseButton anchor={0.5} />
 				</Container>
-				<Container x={0} y={0} scale={spinScale}>
+				<Container x={0} y={spinRaiseY} scale={spinScale}>
 					<CashStacksBetButton anchor={0.5} />
 				</Container>
 				<Container x={betControlOffsetX} y={0} scale={spinSmallScale}>
@@ -180,7 +174,7 @@
 				<CashStacksAutoSpinButton anchor={0.5} portraitPill />
 			</Container>
 		{/if}
-		<Container x={xTurbo} y={Y_UTIL} scale={turboScale}>
+		<Container x={xTurbo} y={Y_UTIL} scale={utilIconScale}>
 			<CashStacksTurboButton anchor={0.5} portraitCompact />
 		</Container>
 	</MainContainer>

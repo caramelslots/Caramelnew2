@@ -297,6 +297,111 @@ export type PortraitCanvasSizeType =
 export const getPortraitSmallMobileScaleFactor = (canvasSizeType: PortraitCanvasSizeType) =>
 	canvasSizeType === 'smallMobile' ? PORTRAIT_SMALL_MOBILE_SCALE : 1;
 
+/** Portrait width tiers (px) for buy panel text. */
+export const PORTRAIT_MOBILE_BREAKPOINT_M = 375;
+export const PORTRAIT_MOBILE_BREAKPOINT_L = 414;
+
+export type PortraitMobileTier = 'small' | 'medium' | 'large';
+export type BuyPanelLayoutKey =
+	| 'portrait-small'
+	| 'portrait-medium'
+	| 'portrait-large'
+	| 'desktop'
+	| 'popout-l'
+	| 'popout-s';
+
+export type BuyPanelTextPx = { buyBonus: number; boostName: number; boostCost: number };
+
+/** Общий aspect-ratio фона buy_bonus.png / bonus_switch.png. */
+export const BUY_PANEL_ASPECT = 1233 / 613;
+
+/** Пропорции текста Bonus Boost относительно Buy Bonus (стабильный масштаб). */
+export const BUY_PANEL_BOOST_TEXT_RATIO = {
+	name: 0.62,
+	cost: 0.5,
+} as const;
+
+const buyPanelText = (buyBonus: number): BuyPanelTextPx => ({
+	buyBonus,
+	boostName: Math.round(buyBonus * BUY_PANEL_BOOST_TEXT_RATIO.name),
+	boostCost: Math.max(7, Math.round(buyBonus * BUY_PANEL_BOOST_TEXT_RATIO.cost)),
+});
+
+/**
+ * Размеры текста Buy Bonus / Bonus Boost (px).
+ * Меняй buyBonus — boostName/boostCost пересчитаются автоматически.
+ */
+export const BUY_PANEL_TEXT_PX = {
+	portrait: {
+		small: buyPanelText(14),
+		medium: buyPanelText(16),
+		large: buyPanelText(18),
+	},
+	desktop: buyPanelText(17),
+	popoutL: buyPanelText(13),
+	popoutS: buyPanelText(6),
+} as const satisfies Record<string, BuyPanelTextPx | Record<PortraitMobileTier, BuyPanelTextPx>>;
+
+export const getPortraitMobileTier = (
+	_canvasSizeType: PortraitCanvasSizeType,
+	deviceWidth: number,
+): PortraitMobileTier => {
+	if (deviceWidth <= PORTRAIT_MOBILE_BREAKPOINT_M) return 'small';
+	if (deviceWidth <= PORTRAIT_MOBILE_BREAKPOINT_L) return 'medium';
+	return 'large';
+};
+
+const toPx = (n: number) => `${n}px`;
+
+export const resolveBuyPanelText = (options: {
+	layoutType: string;
+	isPopout: boolean;
+	isPopoutSmall: boolean;
+	deviceWidth: number;
+	canvasSizeType: PortraitCanvasSizeType;
+}): { key: BuyPanelLayoutKey; buyBonus: string; boostName: string; boostCost: string } => {
+	const { layoutType, isPopout, isPopoutSmall, deviceWidth, canvasSizeType } = options;
+
+	if (layoutType === 'portrait') {
+		const tier = getPortraitMobileTier(canvasSizeType, deviceWidth);
+		const sizes = BUY_PANEL_TEXT_PX.portrait[tier];
+		return {
+			key: `portrait-${tier}` as BuyPanelLayoutKey,
+			buyBonus: toPx(sizes.buyBonus),
+			boostName: toPx(sizes.boostName),
+			boostCost: toPx(sizes.boostCost),
+		};
+	}
+	if (isPopoutSmall) {
+		const sizes = BUY_PANEL_TEXT_PX.popoutS;
+		return {
+			key: 'popout-s',
+			buyBonus: toPx(sizes.buyBonus),
+			boostName: toPx(sizes.boostName),
+			boostCost: toPx(sizes.boostCost),
+		};
+	}
+	if (isPopout) {
+		const sizes = BUY_PANEL_TEXT_PX.popoutL;
+		return {
+			key: 'popout-l',
+			buyBonus: toPx(sizes.buyBonus),
+			boostName: toPx(sizes.boostName),
+			boostCost: toPx(sizes.boostCost),
+		};
+	}
+	const sizes = BUY_PANEL_TEXT_PX.desktop;
+	return {
+		key: 'desktop',
+		buyBonus: toPx(sizes.buyBonus),
+		boostName: toPx(sizes.boostName),
+		boostCost: toPx(sizes.boostCost),
+	};
+};
+
+/** @deprecated use BUY_PANEL_TEXT_PX.portrait */
+export const PORTRAIT_BUY_PANEL_TEXT = BUY_PANEL_TEXT_PX.portrait;
+
 export const getPortraitBonusBarWidthPx = (canvasSizeType: PortraitCanvasSizeType) =>
 	PORTRAIT_BONUS_BAR_WIDTH_PX * getPortraitSmallMobileScaleFactor(canvasSizeType);
 
@@ -347,25 +452,33 @@ export const isPopoutSmallViewport = (sizes: { width: number; height: number }, 
  */
 export const DESKTOP_UI_LAYOUT = {
 	utilScale: 0.68,
-	utilX: { info: 172, menu: 256, hudText: 318 },
+	utilX: { info: 140, menu: 224, hudText: 272 },
 	spinCluster: {
 		rightPad: 200,
+		/** Сдвиг − | Spin | + | Autoplay вправо (px). Turbo следует за Autoplay. */
+		shiftX: 40,
 		betControlsGap: 16,
-		spinScale: 0.85,
+		spinScale: 1.05,
+		/** Только Spin выше −/+ (отрицательный Y). */
+		spinRaiseY: -18,
 		smallScale: 0.62,
 		autoplayGap: 12,
 		autoplayScale: 0.9,
-		turboGap: 10,
+		turboGap: 22,
 		turboScale: 0.56,
 	},
 	popoutSmall: {
 		utilScale: 0.58,
-		utilX: { info: 168, menu: 248, hudText: 298 },
+		utilX: { info: 138, menu: 218, hudText: 256 },
 		spinCluster: {
 			rightPad: 188,
+			shiftX: 32,
 			betControlsGap: 12,
+			spinScale: 0.92,
+			spinRaiseY: -14,
 			smallScale: 0.55,
 			autoplayScale: 0.8,
+			turboGap: 16,
 			turboScale: 0.48,
 		},
 	},
@@ -381,23 +494,27 @@ export const PORTRAIT_UI_LAYOUT = {
 	/** WIN text under board (ref px). */
 	winBelowBoardGap: 76,
 	/** Buy/boost row top offset from board bottom (ref px, independent of WIN). */
-	buyPanelBelowBoard: 148,
+	buyPanelBelowBoard: 112,
 	/** Spin stack anchor below board when buy/boost hidden (free spins). */
 	freeSpinsSpinBelowBoard: 48,
 	/** Min gap between buy/boost row bottom and spin cluster top (ref px). */
 	spinAboveBuyGap: 42,
-	spinFromBottom: 282,
-	spinNudgeDown: 20,
+	spinFromBottom: 252,
+	spinNudgeDown: 28,
 	utilBelowSpinGap: 14,
 	utilFromBottom: 52,
 	utilNudgeDown: 0,
-	utilX: { info: 100, menu: 186, autoplay: 588, turbo: 662 },
+	utilX: { info: 72, menu: 158, autoplay: 620, turbo: 698 },
+	/** Сдвиг − | Spin | + вправо (ref px). */
+	spinClusterShiftX: 0,
 	/** Ref px (800×1422 mockup) — scaled in UiCashStacksPortraitLayout. */
 	buttons: {
-		spinDiam: 152,
+		spinDiam: 172,
 		spinBetDiam: 66,
 		spinBetGap: 12,
-		utilIconDiam: 62,
+		/** Только Spin выше −/+ (ref px, отрицательный Y). */
+		spinRaiseY: -16,
+		utilIconDiam: 76,
 		autoplayW: 285,
 		autoplayH: 70,
 		buyRowMinH: 50,

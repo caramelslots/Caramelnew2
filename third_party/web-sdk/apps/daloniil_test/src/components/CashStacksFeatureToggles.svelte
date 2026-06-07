@@ -27,6 +27,9 @@
 		panelDesc?: boolean;
 		/** Фон designer_assets/bonus_switch.png (панель под Buy Bonus). */
 		usePanelBg?: boolean;
+		/** Inline font-size для portrait buy panel (перебивает scoped CSS). */
+		panelNameFontSize?: string;
+		panelCostFontSize?: string;
 	};
 
 	const {
@@ -35,6 +38,8 @@
 		compact = false,
 		panelDesc = false,
 		usePanelBg = false,
+		panelNameFontSize,
+		panelCostFontSize,
 	}: Props = $props();
 
 	const bonusSwitchBgUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/bonus_switch/bonus_switch.png`;
@@ -70,13 +75,19 @@
 		style:background-image={usePanelBg ? `url("${bonusSwitchBgUrl}")` : undefined}
 	>
 		<div class="feature-info">
-			<div class="feature-name">
+			<div
+				class="feature-name"
+				style:font-size={panelNameFontSize}
+			>
 				{panelDesc
 					? context.i18nDerived.bonusBoostPanelDesc()
 					: context.i18nDerived.bonusBoost()}
 			</div>
 			{#if !compact}
-				<div class="feature-cost">
+				<div
+					class="feature-cost"
+					style:font-size={panelCostFontSize}
+				>
 					{context.i18nDerived.featurePerSpinCost(bonusBoostCost)}
 				</div>
 			{/if}
@@ -134,9 +145,14 @@
 		text-align: left;
 		color: inherit;
 		font-family: inherit;
-		transition: background 0.15s, border-color 0.15s;
+		transition: background 0.15s, border-color 0.15s, transform 0.1s, filter 0.1s;
 
 		&:hover { background: rgba(0, 0, 0, 0.36); }
+
+		&:active {
+			transform: scale(0.98);
+			filter: brightness(0.9);
+		}
 
 		&.active {
 			border-color: rgba(76, 200, 120, 0.45);
@@ -162,11 +178,16 @@
 		background-size: 100% 100%;
 		border: 0;
 		border-radius: 0;
-		transition: filter 0.15s, opacity 0.15s;
+		transition: filter 0.15s, opacity 0.15s, transform 0.1s;
 
 		&:hover {
 			background-color: transparent;
 			filter: brightness(1.08);
+		}
+
+		&:active {
+			transform: scale(0.97);
+			filter: brightness(0.9);
 		}
 
 		&.active {
@@ -206,15 +227,26 @@
 		min-width: 0;
 	}
 
-	.feature-name {
+	.feature-row:not(.panel-bg) .feature-name {
 		font-size: 0.9rem;
 		font-weight: 700;
 		color: #fff;
 	}
 
-	.feature-cost {
+	.feature-row:not(.panel-bg) .feature-cost {
 		font-size: 0.72rem;
 		font-weight: 700;
+		color: #4cd964;
+		letter-spacing: 0.03em;
+	}
+
+	.feature-row.panel-bg .feature-name,
+	.feature-row.panel-bg .feature-cost {
+		font-weight: 700;
+		color: #fff;
+	}
+
+	.feature-row.panel-bg .feature-cost {
 		color: #4cd964;
 		letter-spacing: 0.03em;
 	}
