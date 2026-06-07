@@ -108,8 +108,8 @@ $PY run_storybook.py && $PY sync_to_web_sdk.py
 Что делает:
 
 - `run_storybook.py` — генерит ~30-100 books на режим в `library/books/*.json`
-  (использует текущий `game_config.py` / `game_override.py`).
-  ⚠️ **Защищён**: не трогает `publish_files/` (snapshot+restore внутри).
+(использует текущий `game_config.py` / `game_override.py`).
+⚠️ **Защищён**: не трогает `publish_files/` (snapshot+restore внутри).
 - `sync_to_web_sdk.py` — копирует `.json` → `apps/daloniil_test/src/stories/data/*.ts`.
 
 После — Vite HMR подхватит. Если демка открыта, обнови вкладку (Cmd-Shift-R).
@@ -175,3 +175,4 @@ rm -rf library/books library/configs library/forces library/lookup_tables \
 - `third_party/math-sdk/games/0_0_daloniil_test/DEMO_ISSUES.md` — лог багов и фиксов в демке
 - `third_party/math-sdk/games/0_0_daloniil_test/run.py` — main M5/M6 entrypoint (поменяй `num_sim_args` для M6)
 - `third_party/math-sdk/games/0_0_daloniil_test/tools/resample_books.py` — resample logic + docstring
+
