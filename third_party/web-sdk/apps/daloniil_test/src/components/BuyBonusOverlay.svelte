@@ -19,13 +19,20 @@
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
 	import { clearActiveFeature } from '../game/activeFeature';
+	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
 	import { getContext } from '../game/context';
+	import { getContextLayout } from 'utils-layout';
 	import AssetPlaceholder from './AssetPlaceholder.svelte';
 	import CashStacksFeatureToggles from './CashStacksFeatureToggles.svelte';
 
 	const context = getContext();
+	const { stateLayoutDerived } = getContextLayout();
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonus');
+	const canvasSizes = $derived(stateLayoutDerived.canvasSizes());
+	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
+	const isPopout = $derived(isPopoutViewport(canvasSizes) && !isPopoutSmall);
+	const iconSize = $derived(isPopoutSmall ? 42 : isPopout ? 58 : 110);
 
 	type BonusVariant = 'normal' | 'super';
 
@@ -90,7 +97,12 @@
 		через нашу красную X кнопку.
 	-->
 	<Popup zIndex={60} persistent onclose={close}>
-		<div class="buy-bonus-wrap" data-test="buy-bonus-overlay">
+		<div
+			class="buy-bonus-wrap"
+			class:popout-l={isPopout}
+			class:popout-s={isPopoutSmall}
+			data-test="buy-bonus-overlay"
+		>
 			<header class="header">
 				<h2 class="title">{context.i18nDerived.buyBonusTitle()}</h2>
 				<button
@@ -109,7 +121,7 @@
 				<div class="card" data-test="bonus-card-normal">
 					<div class="card-title">{context.i18nDerived.normalBonus()}</div>
 					<div class="icon-wrap">
-						<AssetPlaceholder label="BONUS" variant="bonus" width={110} height={110} />
+						<AssetPlaceholder label="BONUS" variant="bonus" width={iconSize} height={iconSize} />
 					</div>
 					<div class="card-desc">{context.i18nDerived.buyNormalDesc()}</div>
 					<div class="card-price" data-test="bonus-price-normal">{normalPrice}</div>
@@ -122,7 +134,7 @@
 				<div class="card" data-test="bonus-card-super">
 					<div class="card-title">{context.i18nDerived.superBonus()}</div>
 					<div class="icon-wrap">
-						<AssetPlaceholder label="SUPER" variant="super" width={110} height={110} />
+						<AssetPlaceholder label="SUPER" variant="super" width={iconSize} height={iconSize} />
 					</div>
 					<div class="card-desc">{context.i18nDerived.buySuperDesc()}</div>
 					<div class="card-price" data-test="bonus-price-super">{superPrice}</div>
@@ -233,16 +245,13 @@
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 1rem;
+		align-items: stretch;
 	}
 
 	.feature-toggles {
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
-	}
-
-	@media (max-width: 600px) {
-		.cards { grid-template-columns: 1fr; }
 	}
 
 	/*
@@ -254,6 +263,7 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 0.55rem;
+		min-width: 0;
 		padding: 1rem 0.9rem 1.1rem;
 		background: linear-gradient(180deg, #4a8bbb 0%, #3a6f95 100%);
 		border-radius: 12px;
@@ -279,6 +289,11 @@
 		min-height: 110px;
 	}
 
+	.icon-wrap :global(.asset-placeholder) {
+		width: 110px !important;
+		height: 110px !important;
+	}
+
 	.card-desc {
 		font-size: 0.78rem;
 		color: rgba(255, 255, 255, 0.95);
@@ -298,7 +313,7 @@
 	}
 
 	.buy-button {
-		margin-top: 0.4rem;
+		margin-top: auto;
 		padding: 0.55rem 2rem;
 		font-size: 0.95rem;
 		font-weight: 800;
@@ -373,5 +388,333 @@
 		font-size: 1.1rem;
 		font-weight: 800;
 		color: #fff;
+	}
+
+	/* Узкие экраны (не popout): карточки в ряд, уменьшаем размеры. */
+	@media (max-width: 600px) {
+		.buy-bonus-wrap:not(.popout-l):not(.popout-s) {
+			padding: 0.85rem 0.75rem;
+			gap: 0.75rem;
+		}
+
+		.title { font-size: 1.15rem; }
+
+		.cards { gap: 0.55rem; }
+
+		.card {
+			padding: 0.65rem 0.45rem 0.75rem;
+			gap: 0.35rem;
+			border-radius: 10px;
+		}
+
+		.card-title {
+			font-size: 0.72rem;
+			min-height: 2.4em;
+		}
+
+		.icon-wrap {
+			min-height: 64px;
+		}
+
+		.icon-wrap :global(.asset-placeholder) {
+			width: 64px !important;
+			height: 64px !important;
+		}
+
+		.card-desc {
+			font-size: 0.52rem;
+			min-height: 2.5em;
+			letter-spacing: 0.02em;
+		}
+
+		.card-price { font-size: 0.95rem; }
+
+		.buy-button {
+			min-width: 0;
+			width: 100%;
+			padding: 0.4rem 0.5rem;
+			font-size: 0.72rem;
+			border-radius: 7px;
+		}
+
+		.bet-adjuster {
+			gap: 0.6rem;
+			padding: 0.55rem 0.65rem;
+		}
+
+		.bet-btn {
+			width: 40px;
+			height: 32px;
+			font-size: 1.1rem;
+		}
+
+		.bet-display { min-width: 120px; }
+		.bet-label { font-size: 0.72rem; }
+		.bet-value { font-size: 0.9rem; }
+	}
+
+	/* Stake popout L — embed 800×450 */
+	.buy-bonus-wrap.popout-l {
+		width: min(620px, 86vw);
+		max-height: 94vh;
+		overflow-y: auto;
+		padding: 0.8rem 0.65rem 0.85rem;
+		gap: 0.62rem;
+		border-radius: 14px;
+
+		.header { min-height: 2rem; }
+		.title { font-size: 1rem; }
+
+		.close-btn {
+			width: 28px;
+			height: 28px;
+			font-size: 1.1rem;
+			border-radius: 7px;
+		}
+
+		.cards { gap: 0.5rem; }
+
+		.card {
+			padding: 0.7rem 0.38rem 0.75rem;
+			gap: 0.38rem;
+			border-radius: 10px;
+		}
+
+		.card-title {
+			font-size: 0.78rem;
+			min-height: 2.2em;
+		}
+
+		.icon-wrap { min-height: 58px; }
+
+		.icon-wrap :global(.asset-placeholder) {
+			width: 58px !important;
+			height: 58px !important;
+		}
+
+		.icon-wrap :global(.label) {
+			font-size: 0.42rem;
+			padding: 0.1em;
+			word-break: keep-all;
+		}
+
+		.card-desc {
+			font-size: 0.58rem;
+			min-height: 2.5em;
+			letter-spacing: 0.02em;
+		}
+
+		.card-price { font-size: 0.95rem; }
+
+		.buy-button {
+			min-width: 0;
+			width: 100%;
+			padding: 0.45rem 0.4rem;
+			font-size: 0.72rem;
+			border-radius: 7px;
+		}
+
+		.feature-toggles :global(.feature-row) {
+			padding: 0.5rem 0.45rem;
+			border-radius: 8px;
+		}
+
+		.feature-toggles :global(.feature-name) { font-size: 0.72rem; }
+		.feature-toggles :global(.feature-cost) { font-size: 0.58rem; }
+
+		.feature-toggles :global(.feature-toggle) {
+			width: 32px;
+			height: 18px;
+		}
+
+		.feature-toggles :global(.knob) {
+			width: 14px;
+			height: 14px;
+		}
+
+		.feature-toggles :global(.feature-toggle.on .knob) {
+			left: 15px;
+		}
+
+		.bet-adjuster {
+			gap: 0.55rem;
+			padding: 0.52rem 0.5rem;
+			border-radius: 9px;
+		}
+
+		.bet-btn {
+			width: 38px;
+			height: 30px;
+			font-size: 1rem;
+		}
+
+		.bet-display { min-width: 110px; }
+		.bet-label { font-size: 0.68rem; }
+		.bet-value { font-size: 0.82rem; }
+	}
+
+	/* Stake popout S — embed 400×225 */
+	.buy-bonus-wrap.popout-s {
+		width: min(330px, 92vw);
+		max-height: 96vh;
+		overflow-y: auto;
+		padding: 0.38rem 0.32rem 0.42rem;
+		gap: 0.3rem;
+		border-radius: 10px;
+
+		.header { min-height: 1.25rem; }
+
+		.title {
+			font-size: 0.58rem;
+			padding: 0 1.1rem;
+		}
+
+		.close-btn {
+			width: 18px;
+			height: 18px;
+			font-size: 0.72rem;
+			border-radius: 4px;
+		}
+
+		.cards { gap: 0.2rem; }
+
+		.card {
+			padding: 0.3rem 0.14rem 0.34rem;
+			gap: 0.16rem;
+			border-radius: 7px;
+			box-shadow: 0 3px 8px rgba(0, 0, 0, 0.28);
+		}
+
+		.card-title {
+			font-size: 0.4rem;
+			min-height: 1.85em;
+			letter-spacing: 0.03em;
+		}
+
+		.icon-wrap { min-height: 42px; }
+
+		.icon-wrap :global(.asset-placeholder) {
+			width: 42px !important;
+			height: 42px !important;
+			border-width: 1px;
+		}
+
+		.icon-wrap :global(.label) {
+			font-size: 0.3rem;
+			padding: 0.05em;
+			letter-spacing: 0;
+			word-break: keep-all;
+			line-height: 1;
+		}
+
+		.card-desc {
+			font-size: 0.3rem;
+			min-height: 2.25em;
+			line-height: 1.2;
+			letter-spacing: 0.01em;
+		}
+
+		.card-price { font-size: 0.58rem; }
+
+		.buy-button {
+			min-width: 0;
+			width: 100%;
+			padding: 0.26rem 0.16rem;
+			font-size: 0.38rem;
+			border-radius: 5px;
+			box-shadow: 0 2px 0 rgba(0, 0, 0, 0.22);
+		}
+
+		.feature-toggles { gap: 0.22rem; }
+
+		.feature-toggles :global(.feature-row) {
+			padding: 0.28rem 0.22rem;
+			border-radius: 6px;
+			gap: 0.35rem;
+		}
+
+		.feature-toggles :global(.feature-name) { font-size: 0.4rem; }
+		.feature-toggles :global(.feature-cost) { font-size: 0.34rem; }
+
+		.feature-toggles :global(.feature-toggle) {
+			width: 22px;
+			height: 12px;
+		}
+
+		.feature-toggles :global(.knob) {
+			top: 1px;
+			left: 1px;
+			width: 8px;
+			height: 8px;
+		}
+
+		.feature-toggles :global(.feature-toggle.on .knob) {
+			left: 11px;
+		}
+
+		.bet-adjuster {
+			gap: 0.28rem;
+			padding: 0.28rem 0.26rem;
+			border-radius: 6px;
+		}
+
+		.bet-btn {
+			width: 24px;
+			height: 18px;
+			font-size: 0.68rem;
+			border-radius: 5px;
+		}
+
+		.bet-display {
+			min-width: 72px;
+			gap: 0.18rem;
+		}
+
+		.bet-label { font-size: 0.36rem; }
+		.bet-value { font-size: 0.46rem; }
+	}
+
+	@media (max-height: 500px) {
+		.buy-bonus-wrap:not(.popout-l):not(.popout-s) {
+			padding: 0.6rem 0.75rem;
+			gap: 0.55rem;
+			max-height: 96vh;
+			overflow-y: auto;
+		}
+
+		.header { min-height: 1.8rem; }
+		.title { font-size: 1rem; }
+
+		.close-btn {
+			width: 28px;
+			height: 28px;
+			font-size: 1.1rem;
+		}
+
+		.cards { gap: 0.5rem; }
+
+		.card {
+			padding: 0.5rem 0.4rem 0.6rem;
+			gap: 0.3rem;
+		}
+
+		.card-title { font-size: 0.68rem; min-height: 2em; }
+
+		.icon-wrap { min-height: 52px; }
+
+		.icon-wrap :global(.asset-placeholder) {
+			width: 52px !important;
+			height: 52px !important;
+		}
+
+		.card-desc { font-size: 0.48rem; min-height: 2.2em; }
+		.card-price { font-size: 0.85rem; }
+
+		.buy-button {
+			min-width: 0;
+			width: 100%;
+			padding: 0.35rem 0.4rem;
+			font-size: 0.65rem;
+		}
 	}
 </style>
