@@ -687,6 +687,9 @@ export const MYSTERY_REVEAL_POST_DELAY_MS = 1000;
 /** Pause after reels finish landing, before paylines/win animation start. */
 export const WIN_INFO_PRE_DELAY_MS = 100;
 
+/** Pause after win amount count-up finishes, before the celebration screen auto-dismisses. */
+export const WIN_SCREEN_POST_COUNT_UP_DELAY_MS = 1500;
+
 /**
  * Pause after reels finish landing, before bonus cats play the paw-wave
  * win animation (freeSpinTrigger / bonusCollect). Lets the BONUS-letter

@@ -11,12 +11,13 @@
 	import { Sprite, SpineProvider, SpineTrack, SpineSlot } from 'pixi-svelte';
 	import { FadeContainer, WinCountUpProvider, ResponsiveBitmapText } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
-	import { waitForResolve } from 'utils-shared/wait';
+	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 	import { CanvasSizeRectangle } from 'components-layout';
 	import { OnMount } from 'components-shared';
 	import { stateUrlDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
+	import { WIN_SCREEN_POST_COUNT_UP_DELAY_MS } from '../game/constants';
 	import FreeSpinAnimation from './FreeSpinAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 	import WinCoins from './WinCoins.svelte';
@@ -49,7 +50,13 @@
 		{@const isBigWin = winLevelData.type === 'big'}
 		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
-				<OnMount onmount={() => startCountUp()} />
+				<OnMount
+					onmount={async () => {
+						await startCountUp();
+						await waitForTimeout(WIN_SCREEN_POST_COUNT_UP_DELAY_MS);
+						oncomplete();
+					}}
+				/>
 
 				<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.5} />
 

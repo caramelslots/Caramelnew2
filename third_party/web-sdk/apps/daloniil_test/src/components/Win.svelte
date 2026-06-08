@@ -18,7 +18,7 @@
 	import WinCoins from './WinCoins.svelte';
 	import WinAnimation from './WinAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { SYMBOL_SIZE, WIN_SCREEN_POST_COUNT_UP_DELAY_MS } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { winLevelMap, type WinLevel } from '../game/winLevelMap';
 
@@ -155,7 +155,7 @@
 				<OnMount
 					onmount={async () => {
 						await startCountUp();
-						await waitForTimeout(300);
+						await waitForTimeout(WIN_SCREEN_POST_COUNT_UP_DELAY_MS);
 						oncomplete();
 					}}
 				/>
