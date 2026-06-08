@@ -282,10 +282,11 @@ export const PORTRAIT_BONUS_BAR_WIDTH_PX = 340;
 export const PORTRAIT_BONUS_BAR_HEIGHT_PX = 112.3;
 
 /**
- * iPhone SE / Mobile S (canvasSizeType `smallMobile`, width ≤375px): scale board +
- * bonus bar together so HUD fits vertically.
+ * Portrait phone board scale (uniform — board + bonus bar scale together).
+ * `smallMobile` ≤375px (iPhone SE), `mobile` ≤480px (iPhone 12/13/14, etc.).
  */
 export const PORTRAIT_SMALL_MOBILE_SCALE = 0.72;
+export const PORTRAIT_MOBILE_SCALE = 0.85;
 
 export type PortraitCanvasSizeType =
 	| 'smallMobile'
@@ -294,8 +295,11 @@ export type PortraitCanvasSizeType =
 	| 'largeTablet'
 	| 'desktop';
 
-export const getPortraitSmallMobileScaleFactor = (canvasSizeType: PortraitCanvasSizeType) =>
-	canvasSizeType === 'smallMobile' ? PORTRAIT_SMALL_MOBILE_SCALE : 1;
+export const getPortraitSmallMobileScaleFactor = (canvasSizeType: PortraitCanvasSizeType) => {
+	if (canvasSizeType === 'smallMobile') return PORTRAIT_SMALL_MOBILE_SCALE;
+	if (canvasSizeType === 'mobile') return PORTRAIT_MOBILE_SCALE;
+	return 1;
+};
 
 /** Portrait width tiers (px) for buy panel text. */
 export const PORTRAIT_MOBILE_BREAKPOINT_M = 375;

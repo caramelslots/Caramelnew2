@@ -23,11 +23,7 @@
 	import CashStacksMenuButton from './CashStacksMenuButton.svelte';
 	import CashStacksAutoSpinButton from './CashStacksAutoSpinButton.svelte';
 	import CashStacksTurboButton from './CashStacksTurboButton.svelte';
-	import {
-		BOARD_FRAME_OFFSET,
-		PORTRAIT_UI_LAYOUT,
-		PORTRAIT_UTIL_ICON_BASE,
-	} from '../game/constants';
+	import { PORTRAIT_UI_LAYOUT, PORTRAIT_UTIL_ICON_BASE } from '../game/constants';
 	import { computePortraitHudY, portraitScaleY } from '../game/portraitHudLayout';
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
@@ -50,7 +46,7 @@
 
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
 	const winHudPos = $derived({
-		x: boardLayout.x + BOARD_FRAME_OFFSET.x,
+		x: W * 0.5,
 		y:
 			boardLayout.y +
 			boardLayout.visualHeight * 0.5 +
@@ -92,7 +88,6 @@
 	const xTurbo = $derived(scalePortraitX(PORTRAIT_UI_LAYOUT.utilX.turbo));
 	const xBalanceBet = $derived(W * 0.5);
 
-	const WIN_WORD_GAP = 10;
 	const WIN_TEXT_STYLE = {
 		fontFamily: 'proxima-nova',
 		fontSize: 28,
@@ -121,17 +116,9 @@
 		<MainContainer>
 			<Container x={winHudPos.x} y={winHudPos.y} zIndex={20}>
 				<Text
-					anchor={{ x: 1, y: 0.5 }}
-					x={-WIN_WORD_GAP}
+					anchor={0.5}
 					eventMode="none"
-					text={context.i18nDerived.win().toUpperCase()}
-					style={WIN_TEXT_STYLE}
-				/>
-				<Text
-					anchor={{ x: 0, y: 0.5 }}
-					x={WIN_WORD_GAP}
-					eventMode="none"
-					text={formatWinAmount(stateBet.winBookEventAmount)}
+					text={`${context.i18nDerived.win().toUpperCase()} ${formatWinAmount(stateBet.winBookEventAmount)}`}
 					style={WIN_TEXT_STYLE}
 				/>
 			</Container>
