@@ -21,6 +21,7 @@
 	import { SYMBOL_SIZE, WIN_SCREEN_POST_COUNT_UP_DELAY_MS } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { winLevelMap, type WinLevel } from '../game/winLevelMap';
+	import { sound } from '../game/sound';
 
 	const context = getContext();
 
@@ -68,75 +69,72 @@
 	const winLadder = $derived(winLevelData ? computeWinLadder(winLevelData) : []);
 	const currentTierData = $derived(winLadder[currentTierIndex] ?? winLevelData);
 
-	/**
-	 * Advances through ladder tiers while the count-up is running.
-	 * Each intermediate tier shows for its incremental presentDuration
-	 * (i.e. the time added to reach that tier vs the previous one).
-	 * The final tier stays until the count-up completes or the user skips.
-	 *
-	 * The wait on each tier is skippable: when the user clicks, `skipCurrentTier`
-	 * is called which resolves the promise early and advances to the next tier.
-	 * On the final tier `skipCurrentTier` is null, so clicking falls through to
-	 * `finishCountUp()` (existing fast-forward behaviour).
-	 *
-	 * Also advances the BGM to match each new tier.
-	 */
-	$effect(() => {
-		winUpdateCount; // re-run on every new win event
-		const ladder = winLadder;
-		if (ladder.length <= 1) return;
+	let tierTimers: ReturnType<typeof setTimeout>[] = [];
 
-		let aborted = false;
+	const clearTierTimers = () => {
+		tierTimers.forEach(clearTimeout);
+		tierTimers = [];
+	};
 
-		void (async () => {
-			for (let i = 0; i < ladder.length - 1; i++) {
-				if (aborted) return;
-
-				const tierDuration =
-					i === 0
-						? ladder[i].presentDuration
-						: ladder[i].presentDuration - ladder[i - 1].presentDuration;
-
-				// Skippable wait: resolves after tierDuration OR immediately when the
-				// user clicks (via skipCurrentTier). Using raw setTimeout so we can
-				// clearTimeout on skip without leaving a dangling timer.
-				await new Promise<void>((resolve) => {
-					const timer = setTimeout(resolve, tierDuration);
-					skipCurrentTier = () => {
-						clearTimeout(timer);
-						resolve();
-					};
-				});
-
-				if (aborted) return;
-				skipCurrentTier = null;
-				currentTierIndex = i + 1;
-
-				const nextBgm = ladder[i + 1]?.sound?.bgm;
-				if (nextBgm) {
-					context.eventEmitter.broadcast({ type: 'soundMusic', name: nextBgm });
-				}
-			}
+	/** Schedule one tier wait, then advance currentTierIndex and chain the next step. */
+	const scheduleTierStep = (ladder: WinLevelData[], stepIndex: number) => {
+		if (stepIndex >= ladder.length - 1) {
 			skipCurrentTier = null;
-		})();
+			return;
+		}
 
-		return () => {
-			aborted = true;
-			// Unblock any pending wait so the async can reach `if (aborted) return`.
-			const skip = skipCurrentTier;
-			skipCurrentTier = null;
-			skip?.();
+		const tier = ladder[stepIndex];
+		const tierDuration =
+			'bgmDuration' in tier && tier.bgmDuration != null
+				? tier.bgmDuration
+				: stepIndex === 0
+					? tier.presentDuration
+					: tier.presentDuration - ladder[stepIndex - 1].presentDuration;
+
+		skipCurrentTier = () => {
+			clearTierTimers();
+			currentTierIndex = stepIndex + 1;
+			scheduleTierStep(ladder, stepIndex + 1);
 		};
+
+		tierTimers.push(
+			setTimeout(() => {
+				currentTierIndex = stepIndex + 1;
+				scheduleTierStep(ladder, stepIndex + 1);
+			}, tierDuration),
+		);
+	};
+
+	const startTierAdvancement = (ladder: WinLevelData[]) => {
+		clearTierTimers();
+		if (ladder.length <= 1) {
+			skipCurrentTier = null;
+			return;
+		}
+		scheduleTierStep(ladder, 0);
+	};
+
+	/** Keep win BGM in sync with the visible ladder tier (Big → Super → Epic → Sensational). */
+	$effect(() => {
+		winUpdateCount;
+		const bgm = winLadder[currentTierIndex]?.sound?.bgm;
+		if (bgm) {
+			sound.players.music.play({ name: bgm });
+		}
 	});
 
 	context.eventEmitter.subscribeOnMount({
 		winShow: () => (show = true),
-		winHide: () => (show = false),
+		winHide: () => {
+			show = false;
+			clearTierTimers();
+		},
 		winUpdate: async (emitterEvent) => {
 			amount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
 			currentTierIndex = 0;
 			winUpdateCount++;
+			startTierAdvancement(computeWinLadder(emitterEvent.winLevelData));
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},
 	});

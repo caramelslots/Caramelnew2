@@ -79,6 +79,7 @@ class GameStateOverride(GameExecutables):
 
         if self.gametype == self.config.freegame_type:
             super().draw_board(emit_event=False, trigger_symbol=trigger_symbol)
+            self.enforce_bonus_symbol_rules()
             win_data = Lines.get_lines(
                 self.board,
                 self.config,
@@ -93,7 +94,10 @@ class GameStateOverride(GameExecutables):
                 reveal_event(self)
             return
 
-        super().draw_board(emit_event=emit_event, trigger_symbol=trigger_symbol)
+        super().draw_board(emit_event=False, trigger_symbol=trigger_symbol)
+        self.enforce_bonus_symbol_rules()
+        if emit_event:
+            reveal_event(self)
 
     def draw_cluster_board(self, emit_event: bool = True) -> bool:
         """Build a validated zero-win visual cluster board."""
@@ -117,6 +121,7 @@ class GameStateOverride(GameExecutables):
             board.append(col)
         self.board = board
         self.get_special_symbols_on_board()
+        self.enforce_bonus_symbol_rules()
         self.anticipation = [0] * self.config.num_reels
         self.reel_positions = [0] * self.config.num_reels
         self.padding_position = [0] * self.config.num_reels

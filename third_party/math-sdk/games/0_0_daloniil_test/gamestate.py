@@ -17,8 +17,6 @@ class GameState(GameStateOverride):
         while self.repeat:
             self.reset_book()
             self.draw_board()
-            # Cash Stacks spec: max 1 B per reel, max 4 B on board.
-            self.enforce_bonus_symbol_rules()
 
             # Base game line evaluation.
             self.evaluate_lines_board()
@@ -50,14 +48,10 @@ class GameState(GameStateOverride):
             # клиент сразу увидел маскированную доску.
             if self.mystery_reels:
                 self.draw_board(emit_event=False)
-                # Mystery reels замаскируют целиком — но B вне mystery reels
-                # всё ещё нужно дедупить (1 per reel spec).
-                self.enforce_bonus_symbol_rules()
                 self.apply_mystery_reels()
                 reveal_event(self)
             else:
                 self.draw_board()
-                self.enforce_bonus_symbol_rules()
 
             # 1. Раскрытие Sticky Mystery Reels: M → revealed symbol (real substitution).
             #    Клиент анимирует reveal, math продолжает счёт по раскрытой доске.

@@ -10,18 +10,16 @@ export function createPlayMusic<TSoundName extends string>(options: {
 }) {
 	type Sound = GetSound<TSoundName>;
 
-	const pauseAllMusic = () => {
+	/** Stop every tracked music instance so the next sprite starts cleanly. */
+	const stopAllMusic = () => {
 		(Object.values(options.getSoundMap()) as Sound[]).forEach((existingSound) => {
-			options.howl.pause(existingSound.soundId);
-			options.getSoundMap()[existingSound.soundName] = {
-				...existingSound,
-				soundState: 'paused',
-			};
+			options.howl.stop(existingSound.soundId);
+			delete options.getSoundMap()[existingSound.soundName];
 		});
 	};
 
-	const newMusic = (sound: Sound) => {
-		pauseAllMusic();
+	const startMusic = (sound: Sound) => {
+		stopAllMusic();
 		const soundId = options.howl.play(sound.soundName);
 		options.getSoundMap()[sound.soundName] = {
 			...sound,
@@ -31,21 +29,12 @@ export function createPlayMusic<TSoundName extends string>(options: {
 		options.initSoundVolume(sound.soundName);
 	};
 
-	const resumeMusic = (sound: Sound) => {
-		pauseAllMusic();
-		options.howl.play(sound.soundId);
-		options.getSoundMap()[sound.soundName] = {
-			...sound,
-			soundState: 'playing',
-		};
-	};
-
 	const soundPlayMap = {
-		new: (sound: Sound) => newMusic(sound),
-		paused: (sound: Sound) => resumeMusic(sound),
-		playing: (_: Sound) => {
-			// Do nothing
-		},
+		new: (sound: Sound) => startMusic(sound),
+		// Always restart from the sprite offset — resuming by soundId breaks after
+		// ladder tier switches (Big → Super → Epic) leave stale paused instances.
+		paused: (sound: Sound) => startMusic(sound),
+		playing: (sound: Sound) => startMusic(sound),
 	};
 
 	const play = (playOptions: PlayOptions<TSoundName>) => {

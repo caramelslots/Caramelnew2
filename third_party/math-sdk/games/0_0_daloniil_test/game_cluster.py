@@ -71,6 +71,14 @@ def _scatter_count(board_names: list[list[str]]) -> int:
     return len(reels_with_b)
 
 
+def _bonus_per_reel_ok(board_names: list[list[str]], max_per_reel: int = 1) -> bool:
+    """True when no column shows more than max_per_reel Bonus symbols."""
+    for col in board_names:
+        if sum(1 for name in col if name == "B") > max_per_reel:
+            return False
+    return True
+
+
 def _pick_cluster_positions(
     num_reels: int,
     num_rows: list[int],
@@ -140,6 +148,8 @@ def generate_cluster_board_names(
             board_names.append(col)
 
         if _scatter_count(board_names) > max_scatters:
+            continue
+        if not _bonus_per_reel_ok(board_names):
             continue
 
         board = [

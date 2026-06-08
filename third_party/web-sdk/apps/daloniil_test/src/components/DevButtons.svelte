@@ -116,6 +116,7 @@
 		{ level: 7, amount: 75 * x, label: 'SUPER WIN (75x)' },
 		{ level: 8, amount: 175 * x, label: 'EPIC WIN (175x)' },
 		{ level: 9, amount: 1000 * x, label: 'SENSATIONAL (1000x)' },
+		{ level: 9, amount: 3000 * x, label: 'SENSATIONAL (3000x)' },
 	];
 
 	const playSetWin = (level: WinLevel, amount: number) =>
@@ -454,7 +455,7 @@
 			<section>
 				<h4>Win Levels (setWin)</h4>
 				<div class="grid">
-					{#each WIN_LEVEL_PRESETS as preset (preset.level)}
+					{#each WIN_LEVEL_PRESETS as preset (preset.label)}
 						{@const meta = winLevelMap[preset.level]}
 						<button
 							type="button"

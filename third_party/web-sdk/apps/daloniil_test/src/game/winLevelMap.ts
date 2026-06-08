@@ -1,6 +1,25 @@
 import { SECOND } from 'constants-shared/time';
 
 /**
+ * BGM segment lengths in `static/assets/audio/sounds.json` (ms).
+ * Source timestamps (mm:ss.mmm):
+ *   Big          03:25.130 → 03:31.492
+ *   Super        03:31.970 → 03:38.377  (audible ~6407 ms; file span includes pre-Epic gap)
+ *   Epic         03:39.034 → 03:45.359
+ *   Sensational  03:45.893 → 03:55.287  (loops during count-up)
+ */
+export const WIN_BGM_MS = {
+	big: 6362,
+	superwin: 6407,
+	epic: 6325,
+	sensational: 9394,
+} as const;
+
+/** Cumulative ladder time through Epic (Big + Super + Epic). */
+const WIN_LADDER_THROUGH_EPIC_MS =
+	WIN_BGM_MS.big + WIN_BGM_MS.superwin + WIN_BGM_MS.epic;
+
+/**
  * Cash Stacks 4-tier win-level visual map.
  *
  * MUST stay in sync with math-sdk override in
@@ -77,7 +96,8 @@ export const winLevelMap = {
 		alias: 'big',
 		type: 'big',
 		text: 'BIG WIN',
-		presentDuration: 7 * SECOND,
+		presentDuration: WIN_BGM_MS.big,
+		bgmDuration: WIN_BGM_MS.big,
 		sound: { sfx: undefined, bgm: 'bgm_winlevel_big' },
 		animation: { intro: 'big_win_intro', idle: 'big_win_idle', outro: 'big_win_exit' },
 	},
@@ -86,7 +106,8 @@ export const winLevelMap = {
 		alias: 'superwin',
 		type: 'big',
 		text: 'SUPER WIN',
-		presentDuration: 16 * SECOND,
+		presentDuration: WIN_BGM_MS.big + WIN_BGM_MS.superwin,
+		bgmDuration: WIN_BGM_MS.superwin,
 		sound: { sfx: undefined, bgm: 'bgm_winlevel_superwin' },
 		animation: { intro: 'super_win_intro', idle: 'super_win_idle', outro: 'super_win_exit' },
 	},
@@ -95,7 +116,8 @@ export const winLevelMap = {
 		alias: 'epic',
 		type: 'big',
 		text: 'EPIC WIN',
-		presentDuration: 22 * SECOND,
+		presentDuration: WIN_LADDER_THROUGH_EPIC_MS,
+		bgmDuration: WIN_BGM_MS.epic,
 		sound: { sfx: undefined, bgm: 'bgm_winlevel_epic' },
 		animation: { intro: 'epic_win_intro', idle: 'epic_win_idle', outro: 'epic_win_exit' },
 	},
@@ -104,7 +126,9 @@ export const winLevelMap = {
 		alias: 'sensational',
 		type: 'big',
 		text: 'SENSATIONAL WIN',
-		presentDuration: 30 * SECOND,
+		// Total count-up; sensational BGM loops for the remainder after the ladder.
+		presentDuration: WIN_LADDER_THROUGH_EPIC_MS + 12 * SECOND,
+		bgmDuration: WIN_BGM_MS.sensational,
 		sound: { sfx: undefined, bgm: 'bgm_winlevel_max' },
 		animation: { intro: 'max_win_intro', idle: 'max_win_idle', outro: 'max_win_exit' },
 	},
@@ -113,7 +137,8 @@ export const winLevelMap = {
 		alias: 'sensational',
 		type: 'big',
 		text: 'SENSATIONAL WIN',
-		presentDuration: 32 * SECOND,
+		presentDuration: WIN_LADDER_THROUGH_EPIC_MS + 14 * SECOND,
+		bgmDuration: WIN_BGM_MS.sensational,
 		sound: { sfx: undefined, bgm: 'bgm_winlevel_max' },
 		animation: { intro: 'max_win_intro', idle: 'max_win_idle', outro: 'max_win_exit' },
 	},
