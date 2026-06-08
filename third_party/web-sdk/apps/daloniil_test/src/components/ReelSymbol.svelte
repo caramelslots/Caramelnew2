@@ -3,10 +3,12 @@
 	import { sineOut, sineIn, sineInOut } from 'svelte/easing';
 	import { untrack } from 'svelte';
 
+	import { stateBetDerived } from 'state-shared';
+
 	import Symbol from './Symbol.svelte';
 	import SymbolWrap from './SymbolWrap.svelte';
 	import { getSymbolInfo, getSymbolX, toRevealedRawSymbol } from '../game/utils';
-	import { WIN_BOUNCE, DIM_NON_WINNING } from '../game/constants';
+	import { WIN_BOUNCE, DIM_NON_WINNING, MYSTERY_BG_UNCOVER_MS } from '../game/constants';
 	import { stateGame } from '../game/stateGame.svelte';
 	import type { ReelSymbol } from '../game/stateGame.svelte';
 
@@ -75,17 +77,38 @@
 		});
 	});
 
-	// Background revealed symbol shown under mystery explosion.
-	// Plays the `land` bounce as soon as the reveal starts, then
-	// settles to `static` so it stays visible through the explosion.
+	// Background revealed symbol rendered under the mystery explosion spine.
+	// Mounts at reveal start (so land → static can run invisibly) but stays
+	// alpha=0 until Mystery_bg lifts in the spine — otherwise turbo's 2×
+	// timeScale lets the pay symbol peek through before the cover animates off.
 	let bgSymbolState = $state<'land' | 'static'>('land');
+	const bgAlphaTween = new Tween(0);
 
 	$effect(() => {
-		if (props.reelSymbol.symbolState === 'mysteryReveal') {
+		const state = props.reelSymbol.symbolState;
+
+		if (state !== 'mysteryReveal') {
 			untrack(() => {
-				bgSymbolState = 'land';
+				void bgAlphaTween.set(0, { duration: 0 });
 			});
+			return;
 		}
+
+		untrack(() => {
+			bgSymbolState = 'land';
+			void bgAlphaTween.set(0, { duration: 0 });
+		});
+
+		const uncoverMs = MYSTERY_BG_UNCOVER_MS / stateBetDerived.timeScale();
+		const timer = setTimeout(() => {
+			if (props.reelSymbol.symbolState === 'mysteryReveal') {
+				untrack(() => {
+					void bgAlphaTween.set(1, { duration: 0 });
+				});
+			}
+		}, uncoverMs);
+
+		return () => clearTimeout(timer);
 	});
 
 	const revealedRawSymbol = $derived(
@@ -99,7 +122,11 @@
 </script>
 
 {#if showBgSymbol && revealedRawSymbol}
-	<SymbolWrap x={getSymbolX(props.reelIndex)} y={props.reelSymbol.symbolY()}>
+	<SymbolWrap
+		x={getSymbolX(props.reelIndex)}
+		y={props.reelSymbol.symbolY()}
+		alpha={bgAlphaTween.current}
+	>
 		<Symbol
 			state={bgSymbolState}
 			rawSymbol={revealedRawSymbol}

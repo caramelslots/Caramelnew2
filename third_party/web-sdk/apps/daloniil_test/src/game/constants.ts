@@ -740,6 +740,14 @@ export const MYSTERY_REVEAL_PRE_DELAY_MS = 400;
 /** Pause after mystery cells finish reveal, before winInfo / next reveal spin. */
 export const MYSTERY_REVEAL_POST_DELAY_MS = 1000;
 
+/**
+ * Wall-clock offset (ms) into `Mystery/explosion` when the spine drops
+ * the `Mystery_bg` attachment and the revealed pay symbol should appear.
+ * Matches the 1.5333s keyframe in Mystery.json — divide by timeScale in
+ * turbo so the bg layer stays hidden until the cover actually lifts.
+ */
+export const MYSTERY_BG_UNCOVER_MS = 1533;
+
 /** Pause after reels finish landing, before paylines/win animation start. */
 export const WIN_INFO_PRE_DELAY_MS = 100;
 
