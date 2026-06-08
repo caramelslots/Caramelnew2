@@ -14,6 +14,10 @@
 		BOARD_SIZES,
 		isPopoutViewport,
 		isPopoutSmallViewport,
+		POPOUT_BOOST_TOGGLE,
+		POPOUT_L_PANEL_WIDTH,
+		POPOUT_S_PANEL_WIDTH,
+		POPOUT_S_SCALE,
 		resolveBuyPanelText,
 	} from '../game/constants';
 	import { portraitBuyPanelCanvasTop } from '../game/portraitHudLayout';
@@ -47,13 +51,15 @@
 
 	const panelLayout = $derived.by(() => {
 		if (isPopoutSmall) {
-			return { width: 70, gap: 2, shiftLeft: 12, shiftUp: 28 };
+			return { width: POPOUT_S_PANEL_WIDTH, gap: 2, shiftLeft: 12, shiftUp: 28 };
 		}
 		if (isPopout) {
-			return { width: 124, gap: 4, shiftLeft: 22, shiftUp: 34 };
+			return { width: POPOUT_L_PANEL_WIDTH, gap: 4, shiftLeft: 22, shiftUp: 34 };
 		}
 		return { width: 178, gap: 8, shiftLeft: 50, shiftUp: 40 };
 	});
+
+	const popoutSToggle = POPOUT_BOOST_TOGGLE.s;
 	const desktopPanelPos = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
 		const off = BOARD_LAYOUT_OFFSETS.desktop;
@@ -96,6 +102,12 @@
 		class:desktop={isDesktop}
 		class:popout-l={isPopout && !isPopoutSmall}
 		class:popout-s={isPopoutSmall}
+		style:--popout-s-scale={isPopoutSmall ? POPOUT_S_SCALE : undefined}
+		style:--popout-s-toggle-w={isPopoutSmall ? `${popoutSToggle.width}px` : undefined}
+		style:--popout-s-toggle-h={isPopoutSmall ? `${popoutSToggle.height}px` : undefined}
+		style:--popout-s-knob={isPopoutSmall ? `${popoutSToggle.knob}px` : undefined}
+		style:--popout-s-knob-inset={isPopoutSmall ? `${popoutSToggle.inset}px` : undefined}
+		style:--popout-s-knob-on={isPopoutSmall ? `${popoutSToggle.onLeft}px` : undefined}
 		data-test="buy-bonus-panel"
 		data-panel-text-key={panelText.key}
 		aria-label="buy bonus"
@@ -157,10 +169,11 @@
 	}
 
 	.buy-bonus-panel.desktop.popout-s {
+		--s: var(--popout-s-scale, 0.5645);
 		width: min(70px, 17vw);
-		gap: 0.12rem;
-		padding: 0.14rem 0.1rem;
-		border-radius: 5px;
+		gap: calc(0.3rem * var(--s));
+		padding: calc(0.34rem * var(--s)) calc(0.28rem * var(--s));
+		border-radius: calc(9px * var(--s));
 	}
 
 	.popout-l .buy-bonus-label {
@@ -201,56 +214,54 @@
 	}
 
 	.popout-s .buy-bonus-btn {
-		padding: 12% 10%;
+		padding: 14% 12%;
 	}
 
 	.popout-s .buy-bonus-label {
-		letter-spacing: 0.01em;
-		line-height: 1.05;
-	}
-
-	.popout-s .boost-section {
-		padding-top: 0;
+		letter-spacing: 0.04em;
+		line-height: 1.1;
 	}
 
 	.popout-s .boost-section :global(.feature-row.panel-bg) {
-		padding: 0 8%;
-		gap: 0.12rem;
+		padding: 0 10%;
+		gap: calc(0.35rem * var(--popout-s-scale, 0.5645));
 		align-items: center;
 	}
 
 	.popout-s .boost-section :global(.feature-info) {
-		gap: 0.5px;
+		gap: calc(0.2rem * var(--popout-s-scale, 0.5645));
 		min-width: 0;
+		flex: 1;
 	}
 
 	.popout-s .boost-section :global(.feature-row.panel-bg .feature-name) {
-		line-height: 1.05;
-		letter-spacing: 0;
-	}
-
-	.buy-bonus-panel.popout-s .boost-section :global(.feature-row.panel-bg .feature-cost) {
-		line-height: 1.1;
+		line-height: 1;
 		letter-spacing: 0;
 		white-space: nowrap;
 	}
 
+	.buy-bonus-panel.popout-s .boost-section :global(.feature-row.panel-bg .feature-cost) {
+		line-height: 1.1;
+		letter-spacing: 0.03em;
+		white-space: nowrap;
+	}
+
 	.buy-bonus-panel.popout-s .boost-section :global(.feature-toggle) {
-		width: 14px;
-		height: 8px;
+		width: var(--popout-s-toggle-w, 17px);
+		height: var(--popout-s-toggle-h, 10px);
 		flex-shrink: 0;
 		align-self: center;
 	}
 
 	.buy-bonus-panel.popout-s .boost-section :global(.feature-toggle .knob) {
-		width: 5px;
-		height: 5px;
-		top: 1.5px;
-		left: 1.5px;
+		width: var(--popout-s-knob, 7px);
+		height: var(--popout-s-knob, 7px);
+		top: var(--popout-s-knob-inset, 1px);
+		left: var(--popout-s-knob-inset, 1px);
 	}
 
 	.buy-bonus-panel.popout-s .boost-section :global(.feature-toggle.on .knob) {
-		left: 7.5px;
+		left: var(--popout-s-knob-on, 8px);
 	}
 
 	.buy-bonus-panel.portrait {

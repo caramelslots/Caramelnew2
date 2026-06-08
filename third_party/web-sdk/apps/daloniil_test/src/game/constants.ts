@@ -327,6 +327,16 @@ const buyPanelText = (buyBonus: number): BuyPanelTextPx => ({
 	boostCost: Math.max(7, Math.round(buyBonus * BUY_PANEL_BOOST_TEXT_RATIO.cost)),
 });
 
+/** Popout L (800×450) / Popout S (400×225) — единый масштаб панели Buy Bonus. */
+export const POPOUT_L_PANEL_WIDTH = 124;
+export const POPOUT_S_PANEL_WIDTH = 70;
+export const POPOUT_S_SCALE = POPOUT_S_PANEL_WIDTH / POPOUT_L_PANEL_WIDTH;
+
+export const scalePopoutPx = (px: number, min = 1) =>
+	Math.max(min, Math.round(px * POPOUT_S_SCALE));
+
+const popoutLText = buyPanelText(13);
+
 /**
  * Размеры текста Buy Bonus / Bonus Boost (px).
  * Меняй buyBonus — boostName/boostCost пересчитаются автоматически.
@@ -338,9 +348,26 @@ export const BUY_PANEL_TEXT_PX = {
 		large: buyPanelText(18),
 	},
 	desktop: buyPanelText(17),
-	popoutL: buyPanelText(13),
-	popoutS: buyPanelText(6),
+	popoutL: popoutLText,
+	/** Popout S — те же пропорции, что popout L, × POPOUT_S_SCALE. boostName чуть меньше, чтобы «BONUS BOOST» влезал в одну строку. */
+	popoutS: {
+		buyBonus: scalePopoutPx(popoutLText.buyBonus),
+		boostName: Math.max(3, scalePopoutPx(popoutLText.boostName) - 1),
+		boostCost: scalePopoutPx(popoutLText.boostCost, 4),
+	},
 } as const satisfies Record<string, BuyPanelTextPx | Record<PortraitMobileTier, BuyPanelTextPx>>;
+
+/** Bonus Boost toggle — popout L эталон, popout S пропорционально уменьшен. */
+export const POPOUT_BOOST_TOGGLE = {
+	l: { width: 30, height: 17, knob: 13, inset: 2, onLeft: 15 },
+	s: {
+		width: scalePopoutPx(30),
+		height: scalePopoutPx(17),
+		knob: scalePopoutPx(13),
+		inset: scalePopoutPx(2, 1),
+		onLeft: scalePopoutPx(15),
+	},
+} as const;
 
 export const getPortraitMobileTier = (
 	_canvasSizeType: PortraitCanvasSizeType,
