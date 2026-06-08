@@ -1,7 +1,8 @@
 <!--
 	BuyBonusOverlay.svelte — кастомное меню «Купить функцию» для Cash Stacks.
-	Содержит 2 карточки бонусов в ряд (всегда 2 колонки) + адаптив
-	portrait / popout S-L / desktop.
+	Содержит 2 карточки бонусов которые можно купить:
+	  - NORMAL BONUS (×100): 10 FS, гарантированный триггер бонуса
+	  - SUPER BONUS (×200): 10 FS, старт с ×3 Sticky Mystery Reels
 
 	Пользователь видит цену в РЕАЛЬНЫХ деньгах = bet × множитель. Внизу
 	панели — компактный контрол изменения ставки (- ставка $X +) который
@@ -18,26 +19,13 @@
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
 	import { clearActiveFeature } from '../game/activeFeature';
-	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
 	import { getContext } from '../game/context';
-	import { getContextLayout } from 'utils-layout';
 	import AssetPlaceholder from './AssetPlaceholder.svelte';
 	import CashStacksFeatureToggles from './CashStacksFeatureToggles.svelte';
 
 	const context = getContext();
-	const { stateLayoutDerived } = getContextLayout();
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonus');
-	const featureTogglesDisabled = $derived(!context.stateXstateDerived.isIdle());
-	const layoutType = $derived(stateLayoutDerived.layoutType());
-	const canvasSizes = $derived(stateLayoutDerived.canvasSizes());
-	const isPortrait = $derived(layoutType === 'portrait');
-	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
-	const isPopout = $derived(isPopoutViewport(canvasSizes) && !isPopoutSmall);
-
-	const iconSize = $derived(
-		isPopoutSmall ? 44 : isPortrait ? 58 : isPopout ? 52 : 64,
-	);
 
 	type BonusVariant = 'normal' | 'super';
 
@@ -102,13 +90,7 @@
 		через нашу красную X кнопку.
 	-->
 	<Popup zIndex={60} persistent onclose={close}>
-		<div
-			class="buy-bonus-wrap"
-			class:portrait={isPortrait}
-			class:popout-l={isPopout}
-			class:popout-s={isPopoutSmall}
-			data-test="buy-bonus-overlay"
-		>
+		<div class="buy-bonus-wrap" data-test="buy-bonus-overlay">
 			<header class="header">
 				<h2 class="title">{context.i18nDerived.buyBonusTitle()}</h2>
 				<button
@@ -124,38 +106,34 @@
 
 			<div class="cards">
 				<!-- NORMAL BONUS -->
-				<article class="bonus-card" data-test="bonus-card-normal">
-					<h3 class="bonus-card-title">{context.i18nDerived.normalBonus()}</h3>
-					<div class="bonus-card-icon">
-						<AssetPlaceholder label="BONUS" variant="bonus" width={iconSize} height={iconSize} />
+				<div class="card" data-test="bonus-card-normal">
+					<div class="card-title">{context.i18nDerived.normalBonus()}</div>
+					<div class="icon-wrap">
+						<AssetPlaceholder label="BONUS" variant="bonus" width={110} height={110} />
 					</div>
-					<p class="bonus-card-desc">{context.i18nDerived.buyNormalDesc()}</p>
-					<div class="bonus-card-price" data-test="bonus-price-normal">{normalPrice}</div>
-					<button type="button" class="bonus-card-btn buy" onclick={() => onBuy('normal')}>
+					<div class="card-desc">{context.i18nDerived.buyNormalDesc()}</div>
+					<div class="card-price" data-test="bonus-price-normal">{normalPrice}</div>
+					<button class="buy-button" onclick={() => onBuy('normal')}>
 						{context.i18nDerived.buyConfirm()}
 					</button>
-				</article>
+				</div>
 
 				<!-- SUPER BONUS -->
-				<article class="bonus-card bonus-card-super" data-test="bonus-card-super">
-					<h3 class="bonus-card-title">{context.i18nDerived.superBonus()}</h3>
-					<div class="bonus-card-icon">
-						<AssetPlaceholder label="SUPER" variant="super" width={iconSize} height={iconSize} />
+				<div class="card" data-test="bonus-card-super">
+					<div class="card-title">{context.i18nDerived.superBonus()}</div>
+					<div class="icon-wrap">
+						<AssetPlaceholder label="SUPER" variant="super" width={110} height={110} />
 					</div>
-					<p class="bonus-card-desc">{context.i18nDerived.buySuperDesc()}</p>
-					<div class="bonus-card-price" data-test="bonus-price-super">{superPrice}</div>
-					<button type="button" class="bonus-card-btn buy" onclick={() => onBuy('super')}>
+					<div class="card-desc">{context.i18nDerived.buySuperDesc()}</div>
+					<div class="card-price" data-test="bonus-price-super">{superPrice}</div>
+					<button class="buy-button" onclick={() => onBuy('super')}>
 						{context.i18nDerived.buyConfirm()}
 					</button>
-				</article>
+				</div>
 			</div>
 
 			<section class="feature-toggles" aria-label="features">
-				<CashStacksFeatureToggles
-					features={['bonus_boost']}
-					disabled={featureTogglesDisabled}
-					noHoverBg
-				/>
+				<CashStacksFeatureToggles />
 			</section>
 
 			<!-- BET ADJUSTER — фиксированная нижняя строка с минусом/плюсом и текущим бетом. -->
@@ -190,33 +168,26 @@
 {/if}
 
 <style lang="scss">
-	$modal-bg: #0a1524;
-	$card-bg: #58a9cc;
-	$card-bg-super: #5f9fd4;
-	$card-border: #101010;
-	$title-gold: #ffe566;
-	$title-cyan: #9ef0ff;
-
+	/*
+		Главный контейнер — голубой темный фон, скруглённые углы, заголовок
+		сверху + красный X справа, ниже сетка карточек, внизу bet-adjuster.
+		z-index: 10 поднимает контент НАД click-to-close-layer внутри Popup
+		(там z-index: 2), иначе клики на кнопки уходят в click-to-close и
+		модалка просто закрывается.
+	*/
 	.buy-bonus-wrap {
 		position: relative;
 		z-index: 10;
-		width: min(520px, 96vw);
-		max-height: min(92vh, 820px);
-		overflow-y: auto;
-		padding: 0.85rem 0.9rem 0.8rem;
-		background: linear-gradient(180deg, #12243c 0%, $modal-bg 100%);
-		border-radius: 16px;
-		border: 2px solid rgba(0, 0, 0, 0.65);
+		width: min(820px, 92vw);
+		padding: 1.2rem 1.4rem 1.2rem;
+		background: linear-gradient(180deg, #14233a 0%, #0a1628 100%);
+		border-radius: 18px;
+		border: 1px solid rgba(255, 255, 255, 0.06);
 		color: #fff;
 		display: flex;
 		flex-direction: column;
-		gap: 0.65rem;
+		gap: 1.1rem;
 		font-family: 'proxima-nova', sans-serif;
-		box-shadow:
-			0 14px 36px rgba(0, 0, 0, 0.55),
-			inset 0 1px 0 rgba(255, 255, 255, 0.06);
-		scrollbar-width: thin;
-		scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
 	}
 
 	.header {
@@ -224,39 +195,34 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		min-height: 2rem;
-		flex-shrink: 0;
-		padding-bottom: 0.15rem;
+		min-height: 2.4rem;
 	}
 
 	.title {
 		margin: 0;
-		font-size: 1.15rem;
+		font-size: 1.5rem;
 		font-weight: 800;
-		letter-spacing: 0.04em;
-		text-align: center;
-		padding: 0 2rem;
-		text-transform: uppercase;
+		letter-spacing: 0.03em;
 	}
 
 	.close-btn {
 		position: absolute;
 		right: 0;
 		top: 0;
-		width: 30px;
-		height: 30px;
-		border-radius: 7px;
-		border: 2px solid #101010;
+		width: 36px;
+		height: 36px;
+		border-radius: 9px;
+		border: 0;
 		background: #d32f2f;
 		color: #fff;
-		font-size: 1.25rem;
+		font-size: 1.5rem;
 		font-weight: 800;
 		line-height: 1;
 		cursor: pointer;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+		box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
 		transition: filter 0.1s, transform 0.05s;
 
 		&:hover { filter: brightness(1.1); }
@@ -266,93 +232,88 @@
 	.cards {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: 0.55rem;
+		gap: 1rem;
 	}
 
-	.bonus-card {
+	.feature-toggles {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	@media (max-width: 600px) {
+		.cards { grid-template-columns: 1fr; }
+	}
+
+	/*
+		Карточка бонуса — голубой плоский тон с скруглёнными углами.
+		Внутри: тайтл, иконка, описание, цена, BUY-кнопка.
+	*/
+	.card {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.28rem;
-		min-width: 0;
-		min-height: 0;
-		padding: 0.45rem 0.4rem 0.5rem;
-		background: $card-bg;
-		border: 2px solid $card-border;
+		gap: 0.55rem;
+		padding: 1rem 0.9rem 1.1rem;
+		background: linear-gradient(180deg, #4a8bbb 0%, #3a6f95 100%);
 		border-radius: 12px;
 		text-align: center;
-		box-shadow:
-			inset 0 1px 0 rgba(255, 255, 255, 0.22),
-			0 4px 0 rgba(0, 0, 0, 0.28);
+		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
 	}
 
-	.bonus-card-super {
-		background: $card-bg-super;
-	}
-
-	.bonus-card-title {
-		margin: 0;
-		width: 100%;
-		font-size: 0.62rem;
+	.card-title {
+		font-size: 1.05rem;
 		font-weight: 800;
-		letter-spacing: 0.03em;
-		color: $title-gold;
+		letter-spacing: 0.06em;
+		color: #ffd96b;
 		text-transform: uppercase;
-		line-height: 1.1;
-		text-shadow:
-			1px 1px 0 rgba(0, 0, 0, 0.85),
-			-1px -1px 0 rgba(0, 0, 0, 0.55);
-	}
-
-	.bonus-card-icon {
+		min-height: 2.6em;
 		display: flex;
 		align-items: center;
+	}
+
+	.icon-wrap {
+		display: flex;
 		justify-content: center;
-		flex-shrink: 0;
-		margin: 0.05rem 0;
+		align-items: center;
+		min-height: 110px;
 	}
 
-	.bonus-card-desc {
-		margin: 0;
-		width: 100%;
-		font-size: 0.46rem;
-		color: rgba(255, 255, 255, 0.96);
-		line-height: 1.25;
-		font-weight: 700;
+	.card-desc {
+		font-size: 0.78rem;
+		color: rgba(255, 255, 255, 0.95);
+		line-height: 1.35;
+		min-height: 2.7em;
+		font-weight: 600;
 		text-transform: uppercase;
-		letter-spacing: 0.02em;
+		letter-spacing: 0.04em;
 	}
 
-	.bonus-card-price {
-		margin-top: 0.05rem;
-		font-size: 0.95rem;
+	/* Цена — крупная, белая, акцент на сумме. */
+	.card-price {
+		font-size: 1.45rem;
 		font-weight: 900;
 		color: #ffffff;
 		letter-spacing: 0.01em;
-		line-height: 1;
-		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 	}
 
-	.bonus-card-btn {
-		margin-top: 0.2rem;
-		width: 100%;
-		padding: 0.34rem 0.35rem;
-		font-size: 0.58rem;
+	.buy-button {
+		margin-top: 0.4rem;
+		padding: 0.55rem 2rem;
+		font-size: 0.95rem;
 		font-weight: 800;
-		letter-spacing: 0.05em;
-		border: 2px solid $card-border;
-		border-radius: 8px;
+		letter-spacing: 0.08em;
+		border: 0;
+		border-radius: 9px;
 		cursor: pointer;
 		text-transform: uppercase;
 		transition: transform 0.1s, filter 0.15s;
-		box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+		color: #2b1f08;
+		background: linear-gradient(180deg, #ffd96b 0%, #d6a233 100%);
+		box-shadow: 0 3px 0 rgba(0, 0, 0, 0.22);
+		min-width: 140px;
 
-		&.buy {
-			color: #2b1f08;
-			background: linear-gradient(180deg, #ffe14d 0%, #e5a820 100%);
-		}
-
-		&:hover:not(:disabled) { filter: brightness(1.06); }
+		&:hover:not(:disabled) { filter: brightness(1.08); }
 		&:active:not(:disabled) { transform: translateY(1px); }
 
 		&:disabled {
@@ -362,231 +323,55 @@
 		}
 	}
 
-	.feature-toggles {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.55rem;
-		flex-shrink: 0;
-	}
-
-	.feature-toggles :global(.feature-row) {
-		flex-direction: column;
-		align-items: center;
-		justify-content: flex-start;
-		gap: 0.25rem;
-		padding: 0.45rem 0.4rem 0.5rem;
-		background: $card-bg;
-		border: 2px solid $card-border;
-		border-radius: 12px;
-		box-shadow:
-			inset 0 1px 0 rgba(255, 255, 255, 0.22),
-			0 4px 0 rgba(0, 0, 0, 0.28);
-		text-align: center;
-		transition: transform 0.05s, filter 0.1s;
-
-		&:active:not(:disabled) {
-			transform: translateY(1px);
-			filter: brightness(0.98);
-		}
-
-		&:disabled {
-			opacity: 0.45;
-		}
-	}
-
-	.feature-toggles :global(.feature-row.compact .feature-name),
-	.feature-toggles :global(.feature-row:not(.panel-bg) .feature-name) {
-		width: 100%;
-		font-size: 0.58rem;
-		font-weight: 800;
-		line-height: 1.1;
-		text-transform: uppercase;
-		color: $title-cyan;
-		text-shadow:
-			1px 1px 0 rgba(0, 0, 0, 0.85),
-			-1px -1px 0 rgba(0, 0, 0, 0.55);
-	}
-
-	.feature-toggles :global(.feature-row:not(.panel-bg) .feature-cost) {
-		font-size: 0.72rem;
-		font-weight: 800;
-		color: #fff;
-		line-height: 1;
-		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
-	}
-
-	.feature-toggles :global(.feature-info) {
-		align-items: center;
-		width: 100%;
-		gap: 0.12rem;
-	}
-
-	.feature-toggles :global(.feature-toggle) {
-		margin-top: 0.15rem;
-		width: 34px;
-		height: 18px;
-		border: 2px solid $card-border;
-		box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
-	}
-
-	.feature-toggles :global(.feature-toggle .knob) {
-		width: 12px;
-		height: 12px;
-		top: 1px;
-		left: 1px;
-		border: 1px solid rgba(0, 0, 0, 0.35);
-	}
-
-	.feature-toggles :global(.feature-toggle.on .knob) {
-		left: 17px;
-	}
-
+	/*
+		Нижняя строка с +/- и текущей ставкой. Тёмная полоса как на референсе.
+	*/
 	.bet-adjuster {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.65rem;
-		padding: 0.5rem 0.65rem;
-		background: rgba(0, 0, 0, 0.55);
-		border: 2px solid rgba(0, 0, 0, 0.45);
-		border-radius: 10px;
-		flex-shrink: 0;
+		gap: 1rem;
+		padding: 0.7rem 1rem;
+		background: rgba(0, 0, 0, 0.45);
+		border-radius: 12px;
 	}
 
 	.bet-btn {
-		width: 40px;
-		height: 32px;
-		border-radius: 8px;
-		border: 2px solid $card-border;
-		background: linear-gradient(180deg, #58a9cc 0%, #3f86a8 100%);
+		width: 50px;
+		height: 38px;
+		border-radius: 9px;
+		border: 0;
+		background: linear-gradient(180deg, #4a8bbb 0%, #3a6f95 100%);
 		color: #fff;
-		font-size: 1.15rem;
+		font-size: 1.4rem;
 		font-weight: 800;
 		line-height: 1;
 		cursor: pointer;
 		transition: filter 0.1s, transform 0.05s;
-		box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
 
 		&:disabled { opacity: 0.45; cursor: not-allowed; }
-		&:not(:disabled):hover { filter: brightness(1.08); }
+		&:not(:disabled):hover { filter: brightness(1.1); }
 		&:not(:disabled):active { transform: translateY(1px); }
 	}
 
 	.bet-display {
 		display: flex;
 		align-items: baseline;
-		gap: 0.35rem;
-		min-width: 0;
+		gap: 0.45rem;
+		min-width: 160px;
 		justify-content: center;
 	}
 
 	.bet-label {
-		font-size: 0.68rem;
+		font-size: 0.85rem;
 		font-weight: 700;
-		color: rgba(255, 255, 255, 0.72);
-		letter-spacing: 0.05em;
+		color: rgba(255, 255, 255, 0.75);
+		letter-spacing: 0.06em;
 	}
 
 	.bet-value {
-		font-size: 0.88rem;
+		font-size: 1.1rem;
 		font-weight: 800;
 		color: #fff;
-	}
-
-	.buy-bonus-wrap.popout-l {
-		width: min(460px, 96vw);
-		padding: 0.65rem 0.7rem 0.6rem;
-		gap: 0.5rem;
-
-		.title { font-size: 0.95rem; }
-		.cards,
-		.feature-toggles { gap: 0.45rem; }
-	}
-
-	.buy-bonus-wrap.popout-s {
-		width: min(340px, 98vw);
-		padding: 0.45rem 0.5rem 0.4rem;
-		gap: 0.35rem;
-		border-radius: 12px;
-
-		.title {
-			font-size: 0.72rem;
-			padding: 0 1.4rem;
-		}
-
-		.close-btn {
-			width: 22px;
-			height: 22px;
-			font-size: 0.95rem;
-			border-radius: 5px;
-		}
-
-		.cards,
-		.feature-toggles { gap: 0.3rem; }
-
-		.bonus-card {
-			padding: 0.32rem 0.28rem 0.36rem;
-			gap: 0.16rem;
-			border-radius: 9px;
-		}
-
-		.bonus-card-title { font-size: 0.48rem; }
-		.bonus-card-desc { font-size: 0.38rem; }
-		.bonus-card-price { font-size: 0.72rem; }
-
-		.bonus-card-btn {
-			padding: 0.24rem 0.2rem;
-			font-size: 0.46rem;
-			border-radius: 6px;
-		}
-
-		.feature-toggles :global(.feature-row) {
-			padding: 0.32rem 0.28rem 0.36rem;
-			border-radius: 9px;
-		}
-
-		.feature-toggles :global(.feature-row:not(.panel-bg) .feature-name) {
-			font-size: 0.46rem;
-		}
-
-		.feature-toggles :global(.feature-row:not(.panel-bg) .feature-cost) {
-			font-size: 0.58rem;
-		}
-
-		.feature-toggles :global(.feature-toggle) {
-			width: 26px;
-			height: 14px;
-		}
-
-		.feature-toggles :global(.feature-toggle .knob) {
-			width: 8px;
-			height: 8px;
-		}
-
-		.feature-toggles :global(.feature-toggle.on .knob) {
-			left: 12px;
-		}
-
-		.bet-adjuster {
-			gap: 0.3rem;
-			padding: 0.32rem 0.38rem;
-		}
-
-		.bet-btn {
-			width: 28px;
-			height: 22px;
-			font-size: 0.85rem;
-		}
-
-		.bet-label { font-size: 0.5rem; }
-		.bet-value { font-size: 0.62rem; }
-	}
-
-	.buy-bonus-wrap.portrait {
-		width: min(480px, 96vw);
-		padding: 0.75rem 0.8rem 0.7rem;
-		gap: 0.55rem;
-
-		.title { font-size: 1rem; }
 	}
 </style>
