@@ -548,14 +548,20 @@ export const PORTRAIT_UI_LAYOUT = {
 	buyPanelBelowBoard: 112,
 	/** Spin stack anchor below board when buy/boost hidden (free spins). */
 	freeSpinsSpinBelowBoard: 48,
-	/** Min gap between buy/boost row bottom and spin cluster top (ref px). */
-	spinAboveBuyGap: 42,
-	spinFromBottom: 252,
-	spinNudgeDown: 28,
-	utilBelowSpinGap: 14,
-	utilFromBottom: 52,
+	/** Util-row center offset from screen bottom (ref px; ≈ iconRadius + 12px margin). */
+	utilFromBottom: 50,
+	/** Portrait buy panel CSS: width min(76vw, 360px), aspect 1233×613. */
+	buyPanelWidthVw: 0.76,
+	buyPanelMaxWidth: 360,
+	buyPanelAspect: 613 / 1233,
 	utilNudgeDown: 0,
-	utilX: { info: 72, menu: 158, autoplay: 620, turbo: 698 },
+	/** Min gap between menu/autoplay icons and balance/bet text (ref px, each side). */
+	utilBalanceTextGap: 12,
+	/** Min gap between util icon edges (ref px). */
+	utilIconGap: 16,
+	/** Balance/bet footer font (ref px). */
+	utilBalanceFontSize: 26,
+	utilX: { info: 68, menu: 172, autoplay: 608, turbo: 712 },
 	/** Сдвиг − | Spin | + вправо (ref px). */
 	spinClusterShiftX: 0,
 	/** Ref px (800×1422 mockup) — scaled in UiCashStacksPortraitLayout. */
@@ -568,7 +574,6 @@ export const PORTRAIT_UI_LAYOUT = {
 		utilIconDiam: 76,
 		autoplayW: 285,
 		autoplayH: 70,
-		buyRowMinH: 50,
 	},
 } as const;
 

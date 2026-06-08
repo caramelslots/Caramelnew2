@@ -1,21 +1,22 @@
 <!--
-	CashStacksPortraitHudOverlay.svelte — нижний util-ряд portrait HUD в HTML/CSS
-	(i | ☰ | balance/bet | autoplay | turbo). Чёткий рендер как у Buy Bonus panel.
+	CashStacksPortraitHudOverlay.svelte — portrait HUD в HTML/CSS:
+	− | Spin | + под buy/boost; i | ☰ | balance/bet | autoplay | turbo у низа экрана.
 -->
 <script lang="ts">
-	import { stateBet, stateBetDerived, stateModal, stateUi } from 'state-shared';
+	import {
+		stateBet,
+		stateBetDerived,
+		stateConfig,
+		stateModal,
+		stateUi,
+		AUTO_SPINS_LOSS_LIMIT_MULTIPLIER_MAP,
+		AUTO_SPINS_SINGLE_WIN_LIMIT_MULTIPLIER_MAP,
+	} from 'state-shared';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
-	import { PORTRAIT_UI_LAYOUT } from '../game/constants';
-	import {
-		computePortraitHudY,
-		portraitLayoutSizeToCanvas,
-		portraitLocalToCanvasX,
-		portraitLocalToCanvasY,
-		portraitRefXToLocal,
-		portraitScaleY,
-	} from '../game/portraitHudLayout';
-	import { UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
+	import { computePortraitHudCanvas } from '../game/portraitHudLayout';
+	import { portraitHudAnchors } from '../game/portraitHudAnchors.svelte';
+	import { getRoundsCounter } from '../game/autoplay';
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { getContextLayout } from 'utils-layout';
@@ -26,14 +27,19 @@
 	const assetBase = `${import.meta.env.BASE_URL}assets/sprites/ui`;
 	const infoUrl = `${assetBase}/info/info.png`;
 	const menuUrl = `${assetBase}/menu/menu.png`;
+	const minusUrl = `${assetBase}/bet/minus.png`;
+	const plusUrl = `${assetBase}/bet/plus.png`;
+	const spin1Url = `${assetBase}/spin/spin_1.png`;
+	const spin2Url = `${assetBase}/spin/spin_2.png`;
 	const autoplayUrl = `${assetBase}/autoplay/autoplay_mobile.png`;
 	const turboUrls = {
 		1: `${assetBase}/turbo/turbo_1.png`,
-		2: `${assetBase}/turbo/turbo_3.png`,
-		3: `${assetBase}/turbo/turbo_2.png`,
+		2: `${assetBase}/turbo/turbo_2.png`,
+		3: `${assetBase}/turbo/turbo_3.png`,
 	} as const;
 
 	let uiVisible = $state(true);
+	let stopDisabled = $state(false);
 
 	context.eventEmitter.subscribeOnMount({
 		uiShow: () => {
@@ -41,6 +47,12 @@
 		},
 		uiHide: () => {
 			uiVisible = false;
+		},
+		stopButtonClick: () => {
+			stopDisabled = true;
+		},
+		stopButtonEnable: () => {
+			stopDisabled = false;
 		},
 	});
 
@@ -53,56 +65,96 @@
 		isPortrait && !context.stateLayout.showLoadingScreen && uiVisible,
 	);
 
-	const ml = $derived(stateLayoutDerived.mainLayout());
-	const btn = PORTRAIT_UI_LAYOUT.buttons;
-	const spinScale = $derived(btn.spinDiam / UI_BASE_SIZE);
-	const spinHalf = $derived((UI_BASE_SIZE * spinScale) / 2);
-	const utilRowHalf = $derived(
-		Math.max(portraitScaleY(btn.utilIconDiam, ml.height), portraitScaleY(26, ml.height)) / 2,
-	);
-
-	const hudY = $derived.by(() => {
+	const hud = $derived.by(() => {
 		void stateGame.gameType;
 		void stateUi.freeSpinCounterShow;
-		return computePortraitHudY(stateLayoutDerived, spinHalf, utilRowHalf);
+		void portraitHudAnchors.buyPanelBottom;
+		const buyPanelBottomCanvas =
+			portraitHudAnchors.buyPanelBottom > 0 ? portraitHudAnchors.buyPanelBottom : undefined;
+		return computePortraitHudCanvas(stateLayoutDerived, {
+			buyPanelBottomCanvas,
+			hideAutoplay: isFreeSpins,
+		});
 	});
 
-	const iconLayoutSize = $derived(portraitRefXToLocal(btn.utilIconDiam, stateLayoutDerived));
-	const iconCanvasSize = $derived(portraitLayoutSizeToCanvas(iconLayoutSize, stateLayoutDerived));
-	const footerFontSize = $derived(portraitLayoutSizeToCanvas(20, stateLayoutDerived));
-
-	const positions = $derived({
-		info: {
-			left: portraitLocalToCanvasX(portraitRefXToLocal(PORTRAIT_UI_LAYOUT.utilX.info, stateLayoutDerived), stateLayoutDerived),
-			top: portraitLocalToCanvasY(hudY.utilCenterY, stateLayoutDerived),
-		},
-		menu: {
-			left: portraitLocalToCanvasX(portraitRefXToLocal(PORTRAIT_UI_LAYOUT.utilX.menu, stateLayoutDerived), stateLayoutDerived),
-			top: portraitLocalToCanvasY(hudY.utilCenterY, stateLayoutDerived),
-		},
-		balance: {
-			left: portraitLocalToCanvasX(ml.width * 0.5, stateLayoutDerived),
-			top: portraitLocalToCanvasY(hudY.utilCenterY, stateLayoutDerived),
-		},
-		autoplay: {
-			left: portraitLocalToCanvasX(portraitRefXToLocal(PORTRAIT_UI_LAYOUT.utilX.autoplay, stateLayoutDerived), stateLayoutDerived),
-			top: portraitLocalToCanvasY(hudY.utilCenterY, stateLayoutDerived),
-		},
-		turbo: {
-			left: portraitLocalToCanvasX(portraitRefXToLocal(PORTRAIT_UI_LAYOUT.utilX.turbo, stateLayoutDerived), stateLayoutDerived),
-			top: portraitLocalToCanvasY(hudY.utilCenterY, stateLayoutDerived),
-		},
-	});
-
-	const balanceBetText = $derived(
-		`${context.i18nDerived.balance()} ${numberToCurrencyString(stateBet.balanceAmount)}  ${context.i18nDerived.bet()} ${numberToCurrencyString(stateBet.betAmount)}`,
+	const balanceLine = $derived(
+		`${context.i18nDerived.balance()} ${numberToCurrencyString(stateBet.balanceAmount)}`,
 	);
+	const betLine = $derived(
+		`${context.i18nDerived.bet()} ${numberToCurrencyString(stateBet.betAmount)}`,
+	);
+
+	let balanceWrapEl = $state<HTMLDivElement | null>(null);
+	let balanceFontSize = $state(16);
+
+	$effect(() => {
+		const el = balanceWrapEl;
+		if (!el) return;
+
+		const maxWidth = hud.util.balance.maxWidth;
+		let size = hud.util.fontSize;
+		void balanceLine;
+		void betLine;
+		void maxWidth;
+
+		const measure = (fontSize: number) => {
+			el.style.fontSize = `${fontSize}px`;
+			return el.scrollWidth;
+		};
+
+		while (size > 9 && measure(size) > maxWidth) {
+			size -= 0.5;
+		}
+
+		balanceFontSize = size;
+	});
 
 	const turboUrl = $derived(turboUrls[stateGame.gameSpeed]);
 	const turboDisabled = $derived(stateBet.isSpaceHold);
 
 	const isAutoSpinModalOpen = $derived(stateModal.modal?.name === 'autoSpin');
 	const hasAutoBetCounter = $derived(stateBetDerived.hasAutoBetCounter());
+	const hasCounter = $derived(stateBetDerived.hasAutoBetCounter());
+	const spinSpriteUrl = $derived(hasCounter ? spin2Url : spin1Url);
+
+	const spinCounterText = $derived(
+		stateBet.autoSpinsCounter === Infinity ? '∞' : String(stateBet.autoSpinsCounter),
+	);
+	const spinCounterFontSize = $derived.by(() => {
+		if (stateBet.autoSpinsCounter === Infinity) return hud.spin.size * 0.32;
+		if (stateBet.autoSpinsCounter > 99) return hud.spin.size * 0.16;
+		if (stateBet.autoSpinsCounter > 9) return hud.spin.size * 0.22;
+		return hud.spin.size * 0.28;
+	});
+
+	const betKey = $derived.by(() => {
+		if (context.stateXstateDerived.isIdle()) {
+			if (!stateBetDerived.isBetCostAvailable()) return 'spin_disabled';
+			return 'spin_default';
+		}
+		if (stopDisabled) return 'stop_disabled';
+		if (stateBetDerived.hasAutoBetCounter()) return 'stop_default';
+		if (stateBet.isTurbo) return 'stop_disabled';
+		return 'stop_default';
+	});
+
+	const spinDisabled = $derived(
+		isAutoSpinModalOpen
+			? !stateBetDerived.isBetCostAvailable()
+			: betKey === 'spin_disabled' || betKey === 'stop_disabled',
+	);
+
+	const smallestBet = $derived(stateConfig.betAmountOptions[0]);
+	const biggestBet = $derived(
+		stateConfig.betAmountOptions[stateConfig.betAmountOptions.length - 1],
+	);
+	const decreaseDisabled = $derived(
+		!context.stateXstateDerived.isIdle() || stateBet.betAmount === smallestBet,
+	);
+	const increaseDisabled = $derived(
+		!context.stateXstateDerived.isIdle() || stateBet.betAmount === biggestBet,
+	);
+
 	const autoplayDisabled = $derived.by(() => {
 		if (stateBet.isSpaceHold) return true;
 		if (isAutoSpinModalOpen) return false;
@@ -119,6 +171,50 @@
 	const onMenuPress = () => {
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		stateUi.menuOpen = true;
+	};
+
+	const onDecreasePress = () => {
+		if (decreaseDisabled) return;
+		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+		const nextSmaller = [...stateConfig.betAmountOptions]
+			.sort((a, b) => b - a)
+			.find((option) => option < stateBet.betAmount);
+		stateBetDerived.setBetAmount(nextSmaller || smallestBet);
+	};
+
+	const onIncreasePress = () => {
+		if (increaseDisabled) return;
+		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+		const nextBigger = [...stateConfig.betAmountOptions]
+			.sort((a, b) => a - b)
+			.find((option) => option > stateBet.betAmount);
+		stateBetDerived.setBetAmount(nextBigger || biggestBet);
+	};
+
+	const onSpinPress = () => {
+		if (spinDisabled) return;
+		if (isAutoSpinModalOpen) {
+			stateBet.autoSpinsCounter = getRoundsCounter(stateUi.autoSpinsText);
+			stateBet.autoSpinsLossLimitAmount =
+				stateBet.betAmount * AUTO_SPINS_LOSS_LIMIT_MULTIPLIER_MAP[stateUi.autoSpinsLossLimitText];
+			stateBet.autoSpinsSingleWinLimitAmount =
+				stateBet.betAmount *
+				AUTO_SPINS_SINGLE_WIN_LIMIT_MULTIPLIER_MAP[stateUi.autoSpinsSingleWinLimitText];
+			if (stateBetDerived.activeBetMode().type === 'buy') stateBet.activeBetModeKey = 'BASE';
+			context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+			context.eventEmitter.broadcast({ type: 'autoBet' });
+			stateModal.modal = null;
+			return;
+		}
+
+		context.eventEmitter.broadcast({ type: 'soundPressBet' });
+		if (context.stateXstateDerived.isIdle()) {
+			if (stateBetDerived.activeBetMode()?.type === 'buy') stateBet.activeBetModeKey = 'BASE';
+			context.eventEmitter.broadcast({ type: 'bet' });
+		} else if (!stopDisabled) {
+			if (stateBetDerived.hasAutoBetCounter()) stateBet.autoSpinsCounter = 0;
+			context.eventEmitter.broadcast({ type: 'stopButtonClick' });
+		}
 	};
 
 	const onAutoplayPress = () => {
@@ -143,13 +239,61 @@
 
 {#if show}
 	<div class="portrait-hud-overlay" aria-label="game controls">
+		{#if !isFreeSpins}
+			<button
+				type="button"
+				class="hud-icon-btn"
+				class:dimmed={decreaseDisabled}
+				style:left="{hud.spin.centerX - hud.spin.betControlOffsetX}px"
+				style:top="{hud.spin.centerY}px"
+				style:width="{hud.spin.smallSize}px"
+				style:height="{hud.spin.smallSize}px"
+				style:background-image="url('{minusUrl}')"
+				disabled={decreaseDisabled}
+				aria-label="decrease bet"
+				onclick={onDecreasePress}
+			></button>
+
+			<button
+				type="button"
+				class="hud-icon-btn spin-btn"
+				class:dimmed={spinDisabled}
+				style:left="{hud.spin.centerX}px"
+				style:top="{hud.spin.centerY + hud.spin.raiseY}px"
+				style:width="{hud.spin.size}px"
+				style:height="{hud.spin.size}px"
+				style:background-image="url('{spinSpriteUrl}')"
+				disabled={spinDisabled}
+				aria-label="spin"
+				onclick={onSpinPress}
+			>
+				{#if hasCounter}
+					<span class="spin-counter" style:font-size="{spinCounterFontSize}px">{spinCounterText}</span>
+				{/if}
+			</button>
+
+			<button
+				type="button"
+				class="hud-icon-btn"
+				class:dimmed={increaseDisabled}
+				style:left="{hud.spin.centerX + hud.spin.betControlOffsetX}px"
+				style:top="{hud.spin.centerY}px"
+				style:width="{hud.spin.smallSize}px"
+				style:height="{hud.spin.smallSize}px"
+				style:background-image="url('{plusUrl}')"
+				disabled={increaseDisabled}
+				aria-label="increase bet"
+				onclick={onIncreasePress}
+			></button>
+		{/if}
+
 		<button
 			type="button"
 			class="hud-icon-btn"
-			style:left="{positions.info.left}px"
-			style:top="{positions.info.top}px"
-			style:width="{iconCanvasSize}px"
-			style:height="{iconCanvasSize}px"
+			style:left="{hud.util.x.info}px"
+			style:top="{hud.util.centerY}px"
+			style:width="{hud.util.iconSize}px"
+			style:height="{hud.util.iconSize}px"
 			style:background-image="url('{infoUrl}')"
 			aria-label="info"
 			onclick={onInfoPress}
@@ -158,33 +302,36 @@
 		<button
 			type="button"
 			class="hud-icon-btn"
-			style:left="{positions.menu.left}px"
-			style:top="{positions.menu.top}px"
-			style:width="{iconCanvasSize}px"
-			style:height="{iconCanvasSize}px"
+			style:left="{hud.util.x.menu}px"
+			style:top="{hud.util.centerY}px"
+			style:width="{hud.util.iconSize}px"
+			style:height="{hud.util.iconSize}px"
 			style:background-image="url('{menuUrl}')"
 			aria-label="menu"
 			onclick={onMenuPress}
 		></button>
 
-		<p
+		<div
+			bind:this={balanceWrapEl}
 			class="hud-balance-bet"
-			style:left="{positions.balance.left}px"
-			style:top="{positions.balance.top}px"
-			style:font-size="{footerFontSize}px"
+			style:left="{hud.util.balance.centerX}px"
+			style:top="{hud.util.centerY}px"
+			style:font-size="{balanceFontSize}px"
+			style:max-width="{hud.util.balance.maxWidth}px"
 		>
-			{balanceBetText}
-		</p>
+			<span class="hud-balance-bet-line">{balanceLine}</span>
+			<span class="hud-balance-bet-line">{betLine}</span>
+		</div>
 
 		{#if !isFreeSpins}
 			<button
 				type="button"
 				class="hud-icon-btn"
 				class:dimmed={autoplayDisabled && !isAutoSpinModalOpen}
-				style:left="{positions.autoplay.left}px"
-				style:top="{positions.autoplay.top}px"
-				style:width="{iconCanvasSize}px"
-				style:height="{iconCanvasSize}px"
+				style:left="{hud.util.x.autoplay}px"
+				style:top="{hud.util.centerY}px"
+				style:width="{hud.util.iconSize}px"
+				style:height="{hud.util.iconSize}px"
 				style:background-image="url('{autoplayUrl}')"
 				disabled={autoplayDisabled}
 				aria-label={context.i18nDerived.autoplayTitle()}
@@ -196,10 +343,10 @@
 			type="button"
 			class="hud-icon-btn"
 			class:dimmed={turboDisabled}
-			style:left="{positions.turbo.left}px"
-			style:top="{positions.turbo.top}px"
-			style:width="{iconCanvasSize}px"
-			style:height="{iconCanvasSize}px"
+			style:left="{hud.util.x.turbo}px"
+			style:top="{hud.util.centerY}px"
+			style:width="{hud.util.iconSize}px"
+			style:height="{hud.util.iconSize}px"
 			style:background-image="url('{turboUrl}')"
 			disabled={turboDisabled}
 			aria-label="turbo"
@@ -247,18 +394,42 @@
 		}
 	}
 
+	.spin-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.spin-counter {
+		color: #fff;
+		font-weight: 800;
+		line-height: 1;
+		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+		pointer-events: none;
+		user-select: none;
+	}
+
 	.hud-balance-bet {
 		position: absolute;
 		transform: translate(-50%, -50%);
+		box-sizing: border-box;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.1em;
 		margin: 0;
+		padding: 0;
 		color: #fff;
 		font-weight: 400;
 		letter-spacing: 0.02em;
-		line-height: 1.2;
 		text-align: center;
-		white-space: nowrap;
 		pointer-events: none;
 		user-select: none;
 		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+	}
+
+	.hud-balance-bet-line {
+		white-space: nowrap;
+		line-height: 1.1;
 	}
 </style>

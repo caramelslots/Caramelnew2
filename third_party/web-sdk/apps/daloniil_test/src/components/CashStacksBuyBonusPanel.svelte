@@ -21,6 +21,7 @@
 		resolveBuyPanelText,
 	} from '../game/constants';
 	import { portraitBuyPanelCanvasTop } from '../game/portraitHudLayout';
+	import { portraitHudAnchors } from '../game/portraitHudAnchors.svelte';
 	import { getContext } from '../game/context';
 	import { getContextLayout } from 'utils-layout';
 
@@ -93,10 +94,40 @@
 
 	const buyBonusBgUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/buy_bonus/buy_bonus.png`;
 	const buyBonusLabel = $derived(context.i18nDerived.buyBonusPanelButton());
+
+	let panelEl = $state<HTMLElement | null>(null);
+
+	$effect(() => {
+		void stateLayoutDerived.canvasSizes();
+		void stateLayoutDerived.mainLayout();
+
+		if (!panelEl || !isPortrait || !show) {
+			if (!show || !isPortrait) portraitHudAnchors.buyPanelBottom = 0;
+			return;
+		}
+
+		const syncBottom = () => {
+			if (!panelEl) return;
+			portraitHudAnchors.buyPanelBottom = panelEl.getBoundingClientRect().bottom;
+		};
+
+		syncBottom();
+		const observer = new ResizeObserver(syncBottom);
+		observer.observe(panelEl);
+		window.addEventListener('resize', syncBottom);
+		window.addEventListener('scroll', syncBottom, true);
+
+		return () => {
+			observer.disconnect();
+			window.removeEventListener('resize', syncBottom);
+			window.removeEventListener('scroll', syncBottom, true);
+		};
+	});
 </script>
 
 {#if show}
 	<aside
+		bind:this={panelEl}
 		class="buy-bonus-panel"
 		class:portrait={isPortrait}
 		class:desktop={isDesktop}

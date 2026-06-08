@@ -17,6 +17,26 @@ export const portraitScaleY = (px: number, layoutHeight: number) =>
 export const portraitYFromBottom = (px: number, layoutHeight: number) =>
 	layoutHeight - portraitScaleY(px, layoutHeight);
 
+/** Ref px → canvas CSS px (length). */
+export const portraitRefToCanvasLength = (refPx: number, layoutDerived: LayoutDerived) => {
+	const canvasH = layoutDerived.canvasSizes().height;
+	return (refPx / PORTRAIT_UI_LAYOUT.refHeight) * canvasH;
+};
+
+/** Canvas Y of a point `refPx` above the viewport bottom. */
+export const portraitCanvasYFromBottom = (refPx: number, layoutDerived: LayoutDerived) =>
+	layoutDerived.canvasSizes().height - portraitRefToCanvasLength(refPx, layoutDerived);
+
+/** Portrait buy panel height in canvas CSS px (matches CashStacksBuyBonusPanel CSS). */
+export const portraitBuyPanelHeightCanvas = (layoutDerived: LayoutDerived) => {
+	const { width: canvasW } = layoutDerived.canvasSizes();
+	const panelWCanvas = Math.min(
+		canvasW * PORTRAIT_UI_LAYOUT.buyPanelWidthVw,
+		PORTRAIT_UI_LAYOUT.buyPanelMaxWidth,
+	);
+	return panelWCanvas * PORTRAIT_UI_LAYOUT.buyPanelAspect;
+};
+
 /** Board bottom in game-layout local Y (same space as UiCashStacksPortraitLayout). */
 export const portraitBoardBottomLocal = (layoutDerived: LayoutDerived) => {
 	const layoutType = layoutDerived.layoutType();
@@ -30,76 +50,132 @@ export const portraitBoardBottomLocal = (layoutDerived: LayoutDerived) => {
 	return ml.height * 0.5 + off.y + halfH;
 };
 
-export type PortraitHudY = {
-	boardBottomLocal: number;
-	buyPanelTopLocal: number;
-	buyPanelBottomLocal: number;
-	spinCenterY: number;
-	utilCenterY: number;
-};
-
-/** Stacked portrait HUD Y positions in game mainLayout space (no overlap). */
-export const computePortraitHudY = (
-	layoutDerived: LayoutDerived,
-	spinHalf: number,
-	utilRowHalf: number,
-): PortraitHudY => {
-	const H = layoutDerived.mainLayout().height;
-	const btn = PORTRAIT_UI_LAYOUT.buttons;
-	const boardBottomLocal = portraitBoardBottomLocal(layoutDerived);
-
-	const buyPanelTopLocal =
-		boardBottomLocal + portraitScaleY(PORTRAIT_UI_LAYOUT.buyPanelBelowBoard, H);
-	const buyPanelBottomLocal = buyPanelTopLocal + portraitScaleY(btn.buyRowMinH, H);
-	// Позиции не меняем при FS — turbo/util-ряд остаётся на месте, скрывается только spin-кластер.
-	const spinStackAnchor = buyPanelBottomLocal;
-	const spinFromStack =
-		spinStackAnchor +
-		portraitScaleY(PORTRAIT_UI_LAYOUT.spinAboveBuyGap, H) +
-		spinHalf;
-	let spinCenterY = Math.max(
-		portraitYFromBottom(PORTRAIT_UI_LAYOUT.spinFromBottom, H),
-		spinFromStack,
-	);
-	spinCenterY += portraitScaleY(PORTRAIT_UI_LAYOUT.spinNudgeDown, H);
-
-	const utilFromStack =
-		spinCenterY + spinHalf + portraitScaleY(PORTRAIT_UI_LAYOUT.utilBelowSpinGap, H) + utilRowHalf;
-	let utilCenterY = Math.max(
-		portraitYFromBottom(PORTRAIT_UI_LAYOUT.utilFromBottom, H),
-		utilFromStack,
-	);
-
-	const utilMargin = portraitScaleY(28, H);
-	const maxUtilY = H - utilMargin;
-	if (utilCenterY > maxUtilY) {
-		utilCenterY = maxUtilY;
-		spinCenterY = Math.min(
-			spinCenterY,
-			utilCenterY -
-				portraitScaleY(PORTRAIT_UI_LAYOUT.utilBelowSpinGap, H) -
-				spinHalf,
-		);
-	}
-
-	utilCenterY += portraitScaleY(PORTRAIT_UI_LAYOUT.utilNudgeDown, H);
-
-	return {
-		boardBottomLocal,
-		buyPanelTopLocal,
-		buyPanelBottomLocal,
-		spinCenterY,
-		utilCenterY,
+export type PortraitHudCanvas = {
+	buyPanelBottomCanvas: number;
+	spin: {
+		centerX: number;
+		centerY: number;
+		raiseY: number;
+		size: number;
+		smallSize: number;
+		betControlOffsetX: number;
+	};
+	util: {
+		centerY: number;
+		iconSize: number;
+		fontSize: number;
+		x: {
+			info: number;
+			menu: number;
+			autoplay: number;
+			turbo: number;
+		};
+		balance: {
+			centerX: number;
+			maxWidth: number;
+		};
 	};
 };
 
-/** Game-layout local X (ref 800) → canvas CSS px (matches MainContainer bottom layout). */
+/**
+ * Portrait HUD positions in canvas CSS px.
+ * Spin-кластер — по центру между buy/boost и util-рядом. Util — у низа экрана.
+ */
+export const computePortraitHudCanvas = (
+	layoutDerived: LayoutDerived,
+	opts?: { buyPanelBottomCanvas?: number; hideAutoplay?: boolean },
+): PortraitHudCanvas => {
+	const btn = PORTRAIT_UI_LAYOUT.buttons;
+	const canvas = layoutDerived.canvasSizes();
+	const refLen = (px: number) => portraitRefToCanvasLength(px, layoutDerived);
+
+	const spinSize = refLen(btn.spinDiam);
+	const spinHalf = spinSize / 2;
+	const smallSize = refLen(btn.spinBetDiam);
+	const smallHalf = smallSize / 2;
+	const iconSize = refLen(btn.utilIconDiam);
+	const betControlOffsetX = spinHalf + refLen(btn.spinBetGap) + smallHalf;
+	const spinClusterCenterX =
+		canvas.width * 0.5 +
+		(PORTRAIT_UI_LAYOUT.spinClusterShiftX / PORTRAIT_UI_LAYOUT.refWidth) * canvas.width;
+
+	const buyPanelTopCanvas = portraitBuyPanelCanvasTop(layoutDerived);
+	const buyPanelBottomCanvas =
+		opts?.buyPanelBottomCanvas ??
+		buyPanelTopCanvas + portraitBuyPanelHeightCanvas(layoutDerived);
+
+	const utilCenterY = portraitCanvasYFromBottom(PORTRAIT_UI_LAYOUT.utilFromBottom, layoutDerived);
+	const utilTopCanvas = utilCenterY - iconSize / 2;
+	// Центр spin-кластера (−/+ якорь) — ровно между низом buy/boost и верхом util-ряда.
+	const spinCenterY = (buyPanelBottomCanvas + utilTopCanvas) / 2;
+
+	const localX = (refX: number) =>
+		portraitLocalToCanvasX(
+			(refX / PORTRAIT_UI_LAYOUT.refWidth) * layoutDerived.mainLayout().width,
+			layoutDerived,
+		);
+
+	const spreadIconPair = (leftX: number, rightX: number) => {
+		const minStep = iconSize + refLen(PORTRAIT_UI_LAYOUT.utilIconGap);
+		if (rightX - leftX >= minStep) return [leftX, rightX] as const;
+		const mid = (leftX + rightX) / 2;
+		return [mid - minStep / 2, mid + minStep / 2] as const;
+	};
+
+	const [infoX, menuX] = spreadIconPair(
+		localX(PORTRAIT_UI_LAYOUT.utilX.info),
+		localX(PORTRAIT_UI_LAYOUT.utilX.menu),
+	);
+	const [autoplayX, turboX] = spreadIconPair(
+		localX(PORTRAIT_UI_LAYOUT.utilX.autoplay),
+		localX(PORTRAIT_UI_LAYOUT.utilX.turbo),
+	);
+
+	const balanceTextGap = refLen(PORTRAIT_UI_LAYOUT.utilBalanceTextGap);
+	const menuRight = menuX + iconSize / 2;
+	const rightIconLeft = opts?.hideAutoplay
+		? turboX - iconSize / 2
+		: autoplayX - iconSize / 2;
+	const balanceLeft = menuRight + balanceTextGap;
+	const balanceRight = rightIconLeft - balanceTextGap;
+	const balanceMaxWidth = Math.max(0, balanceRight - balanceLeft);
+	const balanceCenterX = canvas.width * 0.5;
+
+	return {
+		buyPanelBottomCanvas,
+		spin: {
+			centerX: spinClusterCenterX,
+			centerY: spinCenterY,
+			raiseY: refLen(btn.spinRaiseY),
+			size: spinSize,
+			smallSize,
+			betControlOffsetX,
+		},
+		util: {
+			centerY: utilCenterY,
+			iconSize,
+			fontSize: refLen(PORTRAIT_UI_LAYOUT.utilBalanceFontSize),
+			x: {
+				info: infoX,
+				menu: menuX,
+				autoplay: autoplayX,
+				turbo: turboX,
+			},
+			balance: {
+				centerX: balanceCenterX,
+				maxWidth: balanceMaxWidth,
+			},
+		},
+	};
+};
+
+/** Game-layout local X (ref 800) → canvas CSS px. */
 export const portraitLocalToCanvasX = (localX: number, layoutDerived: LayoutDerived) => {
 	const ml = layoutDerived.mainLayout();
 	return ml.x + (localX - ml.width / 2) * ml.scale;
 };
 
-/** Game-layout local Y (ref 1422) → canvas CSS px (matches MainContainer bottom layout). */
+/** Game-layout local Y (ref 1422) → canvas CSS px (center-aligned MainContainer). */
 export const portraitLocalToCanvasY = (localY: number, layoutDerived: LayoutDerived) => {
 	const ml = layoutDerived.mainLayout();
 	return ml.y + (localY - ml.height / 2) * ml.scale;

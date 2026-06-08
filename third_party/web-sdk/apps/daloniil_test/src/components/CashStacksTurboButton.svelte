@@ -23,8 +23,8 @@
 
 	const TURBO_KEYS = {
 		1: 'turbo1',
-		2: 'turbo3',
-		3: 'turbo2',
+		2: 'turbo2',
+		3: 'turbo3',
 	} as const;
 
 	const { anchor, portraitCompact = false, sizeScale = 1 }: Props = $props();

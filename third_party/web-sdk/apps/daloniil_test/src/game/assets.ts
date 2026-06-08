@@ -410,10 +410,10 @@ export default {
 	},
 	turbo2: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/ui/turbo/turbo_3.png', import.meta.url).href,
+		src: new URL('../../assets/sprites/ui/turbo/turbo_2.png', import.meta.url).href,
 	},
 	turbo3: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/ui/turbo/turbo_2.png', import.meta.url).href,
+		src: new URL('../../assets/sprites/ui/turbo/turbo_3.png', import.meta.url).href,
 	},
 } as const;

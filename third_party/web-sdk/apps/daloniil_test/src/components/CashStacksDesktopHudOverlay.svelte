@@ -37,8 +37,8 @@
 	const autoplayUrl = `${assetBase}/autoplay/autoplay.png`;
 	const turboUrls = {
 		1: `${assetBase}/turbo/turbo_1.png`,
-		2: `${assetBase}/turbo/turbo_3.png`,
-		3: `${assetBase}/turbo/turbo_2.png`,
+		2: `${assetBase}/turbo/turbo_2.png`,
+		3: `${assetBase}/turbo/turbo_3.png`,
 	} as const;
 
 	let uiVisible = $state(true);
