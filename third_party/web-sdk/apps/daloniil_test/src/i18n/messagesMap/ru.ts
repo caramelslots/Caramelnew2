@@ -1,6 +1,6 @@
 export default {
 	HOME: 'ГЛАВНАЯ',
-	GAME_TITLE: 'CASH STACKS',
+	GAME_TITLE: 'Wok fury',
 	BUY_BONUS_TITLE: 'КУПИТЬ ФУНКЦИЮ',
 	NORMAL_BONUS: 'ОБЫЧНЫЙ БОНУС',
 	SUPER_BONUS: 'СУПЕР БОНУС',

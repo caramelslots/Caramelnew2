@@ -35,7 +35,7 @@
 	import ButtonMenuClose from 'components-ui-pixi/src/components/ButtonMenuClose.svelte';
 	import ButtonSoundSwitch from 'components-ui-pixi/src/components/ButtonSoundSwitch.svelte';
 
-	import { isPopoutViewport } from '../game/constants';
+	import { isPopoutSmallViewport, isPopoutViewport, POPOUT_S_SCALE } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { getContextLayout } from 'utils-layout';
@@ -50,6 +50,8 @@
 	const { stateLayoutDerived } = getContextLayout();
 	const layoutType = $derived(stateLayoutDerived.layoutType());
 	const isPopout = $derived(isPopoutViewport(stateLayoutDerived.canvasSizes()));
+	const isPopoutSmall = $derived(isPopoutSmallViewport(stateLayoutDerived.canvasSizes()));
+	const gameNameScale = $derived(isPopoutSmall ? POPOUT_S_SCALE : 1);
 	const useDesktopHud = $derived(layoutType === 'desktop' || isPopout);
 	const isFreeSpins = $derived(
 		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
@@ -76,7 +78,7 @@
 
 {#if useDesktopHud}
 	<UiFadeContainer>
-		<Container x={20}>
+		<Container x={20} scale={gameNameScale}>
 			{#if props.gameName}
 				{@render props.gameName()}
 			{/if}

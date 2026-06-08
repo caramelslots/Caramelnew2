@@ -4,7 +4,7 @@
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
-	import { App, Text, REM } from 'pixi-svelte';
+	import { App } from 'pixi-svelte';
 	import { stateModal } from 'state-shared';
 
 	import { UiGameName } from 'components-ui-pixi';
@@ -53,62 +53,48 @@
 </script>
 
 <div class="pixi-stage" class:above-html-ui={context.stateGame.transitionActive}>
-<App maxResolution={2}>
-	<EnableSound />
-	<EnableUiTextureOptimization />
-	<EnableHotkey />
-	<EnableGameActor />
-	<EnablePixiExtension />
+	<App maxResolution={2}>
+		<EnableSound />
+		<EnableUiTextureOptimization />
+		<EnableHotkey />
+		<EnableGameActor />
+		<EnablePixiExtension />
 
-	<Background />
+		<Background />
 
-	{#if context.stateLayout.showLoadingScreen}
-		<LoadingScreen onloaded={() => (context.stateLayout.showLoadingScreen = false)} />
-	{:else}
-		<ResumeBet />
-		<!--
+		{#if context.stateLayout.showLoadingScreen}
+			<LoadingScreen onloaded={() => (context.stateLayout.showLoadingScreen = false)} />
+		{:else}
+			<ResumeBet />
+			<!--
 			The reason why <Sound /> is rendered after clicking the loading screen:
 			"Autoplay with sound is allowed if: The user has interacted with the domain (click, tap, etc.)."
 			Ref: https://developer.chrome.com/blog/autoplay
 		-->
-		<Sound />
+			<Sound />
 
-		<MainContainer>
-			<BoardFrame />
-		</MainContainer>
+			<MainContainer>
+				<BoardFrame />
+			</MainContainer>
 
-		<MainContainer>
-			<Board />
-		</MainContainer>
+			<MainContainer>
+				<Board />
+			</MainContainer>
 
-		<UiCashStacksLayout>
-			{#snippet gameName()}
-				<UiGameName name="CASH STACKS" />
-			{/snippet}
-			{#snippet logo()}
-				<Text
-					anchor={{ x: 0, y: 0 }}
-					text="CA$H STACKS"
-					style={{
-						fontFamily: 'proxima-nova',
-						fontSize: REM * 2.2,
-						fontWeight: '900',
-						lineHeight: REM * 2.4,
-						fill: 0xffd000,
-						stroke: { color: 0x1a1a1a, width: 4 },
-					}}
-				/>
-			{/snippet}
-		</UiCashStacksLayout>
-		<Win />
-		<FreeSpinIntro />
-		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
-			<FreeSpinCounter />
+			<UiCashStacksLayout>
+				{#snippet gameName()}
+					<UiGameName name="Wok Fury" />
+				{/snippet}
+			</UiCashStacksLayout>
+			<Win />
+			<FreeSpinIntro />
+			{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
+				<FreeSpinCounter />
+			{/if}
+			<FreeSpinOutro />
+			<Transition />
 		{/if}
-		<FreeSpinOutro />
-		<Transition />
-	{/if}
-</App>
+	</App>
 </div>
 
 <CashStacksModals>

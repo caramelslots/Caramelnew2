@@ -1,7 +1,7 @@
 export default {
 	HOME: 'HOME',
 	// Cash Stacks
-	GAME_TITLE: 'CASH STACKS',
+	GAME_TITLE: 'Wok Fury',
 	// Buy Bonus menu
 	BUY_BONUS_TITLE: 'BUY FEATURE',
 	NORMAL_BONUS: 'NORMAL BONUS',
