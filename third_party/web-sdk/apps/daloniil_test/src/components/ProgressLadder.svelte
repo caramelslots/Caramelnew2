@@ -71,12 +71,14 @@
 	import { stateGame } from '../game/stateGame.svelte';
 	import {
 		BONUS_BAR_H_SHIFT_SCREEN_X,
+		BONUS_BAR_H_SHIFT_SCREEN_Y,
 		BOARD_LAYOUT_OFFSETS,
 		getDesktopBonusBarVDims,
 		getPortraitBonusBarHeightPx,
 		getPortraitBonusBarWidthPx,
 		getPopoutBonusBarVScale,
 		getPortraitSmallMobileScaleFactor,
+		isPopoutViewport,
 	} from '../game/constants';
 	import assets from '../game/assets';
 
@@ -138,15 +140,17 @@
 
 	const canvasSizeType = $derived(context.stateLayoutDerived.canvasSizeType());
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
+	const isPopout = $derived(isPopoutViewport(canvasSizes));
 	const portraitCompactScale = $derived(getPortraitSmallMobileScaleFactor(canvasSizeType));
 	const popoutBarScale = $derived(getPopoutBonusBarVScale(canvasSizes));
 
 	// devPreview.ladder toggled from the DEV panel (DevButtons.svelte).
 	const isVisible = $derived(devPreview.ladder || stateGame.ladderVisible);
+	// Desktop + popout L/S → vertical bar (bar_v) to the right of the board.
 	const isDesktop = $derived(
 		devPreview.ladder
 			? !devPreview.ladderHorizontal
-			: context.stateLayoutDerived.layoutType() === 'desktop',
+			: context.stateLayoutDerived.layoutType() === 'desktop' || isPopout,
 	);
 
 	// Rendered pixel sizes of the bar PNGs (inline style; .bar-v CSS is fallback only).
@@ -158,6 +162,12 @@
 		},
 	});
 	const barCompactScale = $derived(isDesktop ? popoutBarScale : portraitCompactScale);
+	const bonusBarMobileYShift = $derived(
+		!isDesktop &&
+		(canvasSizeType === 'smallMobile' || canvasSizeType === 'mobile')
+			? BONUS_BAR_H_SHIFT_SCREEN_Y * portraitCompactScale
+			: 0,
+	);
 	// Gap (px) between the board edge and the bar.
 	const GAP = $derived(16 * barCompactScale);
 	const bonusInCurrentTier = $derived(
@@ -209,7 +219,7 @@
 		const d = BAR_DIMS.h;
 		return {
 			left: ml.x - d.w / 2 + BONUS_BAR_H_SHIFT_SCREEN_X * portraitCompactScale,
-			top: boardCenterY + halfH + GAP,
+			top: boardCenterY + halfH + GAP + bonusBarMobileYShift,
 			width: d.w,
 			height: d.h,
 		};

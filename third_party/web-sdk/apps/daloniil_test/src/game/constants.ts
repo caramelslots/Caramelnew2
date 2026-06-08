@@ -447,6 +447,8 @@ export const getPortraitBonusBarHeightPx = (canvasSizeType: PortraitCanvasSizeTy
 
 /** ProgressLadder horizontal bar nudge from screen center (screen px, + = right). */
 export const BONUS_BAR_H_SHIFT_SCREEN_X = 6;
+/** ProgressLadder horizontal bar nudge downward on portrait phones (screen px, + = down). */
+export const BONUS_BAR_H_SHIFT_SCREEN_Y = 24;
 
 /** Portrait board parchment trim vs bonus bar (screen px) — neon frame reads slightly wider. */
 export const PORTRAIT_BOARD_WIDTH_TRIM_PX = 14;
