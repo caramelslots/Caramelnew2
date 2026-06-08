@@ -93,6 +93,26 @@ export const computePortraitHudY = (
 	};
 };
 
+/** Game-layout local X (ref 800) → canvas CSS px (matches MainContainer bottom layout). */
+export const portraitLocalToCanvasX = (localX: number, layoutDerived: LayoutDerived) => {
+	const ml = layoutDerived.mainLayout();
+	return ml.x + (localX - ml.width / 2) * ml.scale;
+};
+
+/** Game-layout local Y (ref 1422) → canvas CSS px (matches MainContainer bottom layout). */
+export const portraitLocalToCanvasY = (localY: number, layoutDerived: LayoutDerived) => {
+	const ml = layoutDerived.mainLayout();
+	return ml.y + (localY - ml.height / 2) * ml.scale;
+};
+
+/** Layout-space length → canvas CSS px. */
+export const portraitLayoutSizeToCanvas = (layoutPx: number, layoutDerived: LayoutDerived) =>
+	layoutPx * layoutDerived.mainLayout().scale;
+
+/** Ref X (800×1422 mockup) → game-layout local X. */
+export const portraitRefXToLocal = (refPx: number, layoutDerived: LayoutDerived) =>
+	(refPx / PORTRAIT_UI_LAYOUT.refWidth) * layoutDerived.mainLayout().width;
+
 /** Buy-bonus HTML panel top in canvas px. */
 export const portraitBuyPanelCanvasTop = (layoutDerived: LayoutDerived) => {
 	const ml = layoutDerived.mainLayout();
@@ -100,6 +120,5 @@ export const portraitBuyPanelCanvasTop = (layoutDerived: LayoutDerived) => {
 	const boardBottomLocal = portraitBoardBottomLocal(layoutDerived);
 	const buyPanelTopLocal =
 		boardBottomLocal + portraitScaleY(PORTRAIT_UI_LAYOUT.buyPanelBelowBoard, H);
-	// Game layout is center-anchored on canvas.
-	return ml.y + (buyPanelTopLocal - H / 2) * ml.scale;
+	return portraitLocalToCanvasY(buyPanelTopLocal, layoutDerived);
 };

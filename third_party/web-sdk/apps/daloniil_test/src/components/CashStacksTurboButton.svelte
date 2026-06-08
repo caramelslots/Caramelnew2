@@ -14,11 +14,12 @@
 	import { PORTRAIT_UTIL_ICON_BASE } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { UI_SPRITE_RENDER, uiScaledSize, type UiSizeScaleProps } from '../game/uiButtonSize';
 
 	type Props = {
 		anchor?: number;
 		portraitCompact?: boolean;
-	};
+	} & UiSizeScaleProps;
 
 	const TURBO_KEYS = {
 		1: 'turbo1',
@@ -26,11 +27,12 @@
 		3: 'turbo2',
 	} as const;
 
-	const { anchor, portraitCompact = false }: Props = $props();
+	const { anchor, portraitCompact = false, sizeScale = 1 }: Props = $props();
 	const context = getContext();
 
-	const size = $derived(portraitCompact ? PORTRAIT_UTIL_ICON_BASE : UI_BASE_SIZE);
-	const sizes = $derived({ width: size, height: size });
+	const baseSize = $derived(portraitCompact ? PORTRAIT_UTIL_ICON_BASE : UI_BASE_SIZE);
+	const { width, height, size } = $derived(uiScaledSize(baseSize, sizeScale));
+	const sizes = $derived({ width, height });
 	const disabled = $derived(stateBet.isSpaceHold);
 	const turboKey = $derived(TURBO_KEYS[stateGame.gameSpeed]);
 
@@ -45,7 +47,14 @@
 <Button {anchor} {sizes} {onpress} {disabled}>
 	{#snippet children({ center })}
 		<Container {...center}>
-			<Sprite key={turboKey} width={size} height={size} anchor={0.5} alpha={disabled ? 0.45 : 1} />
+			<Sprite
+				key={turboKey}
+				width={size}
+				height={size}
+				anchor={0.5}
+				alpha={disabled ? 0.45 : 1}
+				{...UI_SPRITE_RENDER}
+			/>
 		</Container>
 	{/snippet}
 </Button>

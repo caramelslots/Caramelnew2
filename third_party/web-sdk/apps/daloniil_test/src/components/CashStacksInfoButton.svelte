@@ -10,11 +10,12 @@
 	import { UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
 
 	import { getContext } from '../game/context';
+	import { UI_SPRITE_RENDER, uiScaledSize, type UiSizeScaleProps } from '../game/uiButtonSize';
 
-	const props: { anchor?: number } = $props();
+	const props: { anchor?: number } & UiSizeScaleProps = $props();
 	const context = getContext();
-	const size = UI_BASE_SIZE * 0.72;
-	const sizes = { width: size, height: size };
+	const { width, height, size } = $derived(uiScaledSize(UI_BASE_SIZE * 0.72, props.sizeScale));
+	const sizes = $derived({ width, height });
 
 	const onpress = () => {
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
@@ -25,7 +26,7 @@
 <Button {...props} {sizes} {onpress}>
 	{#snippet children({ center })}
 		<Container {...center}>
-			<Sprite key="infoButton" width={size} height={size} anchor={0.5} />
+			<Sprite key="infoButton" width={size} height={size} anchor={0.5} {...UI_SPRITE_RENDER} />
 		</Container>
 	{/snippet}
 </Button>

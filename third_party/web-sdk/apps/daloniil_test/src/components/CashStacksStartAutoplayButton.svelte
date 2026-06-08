@@ -22,10 +22,12 @@
 
 	import { getContext } from '../game/context';
 	import { getRoundsCounter } from '../game/autoplay';
+	import { UI_SPRITE_RENDER, uiScaledSize, type UiSizeScaleProps } from '../game/uiButtonSize';
 
-	const props: { anchor?: number } = $props();
+	const props: { anchor?: number } & UiSizeScaleProps = $props();
 	const context = getContext();
-	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
+	const { width, height } = $derived(uiScaledSize(UI_BASE_SIZE, props.sizeScale));
+	const sizes = $derived({ width, height });
 	const disabled = $derived(!stateBetDerived.isBetCostAvailable());
 
 	const startAutoplay = () => {
@@ -52,6 +54,7 @@
 				height={sizes.height}
 				anchor={0.5}
 				alpha={disabled ? 0.45 : 1}
+				{...UI_SPRITE_RENDER}
 			/>
 		</Container>
 	{/snippet}

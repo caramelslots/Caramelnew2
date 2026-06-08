@@ -10,10 +10,12 @@
 	import { UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
 
 	import { getContext } from '../game/context';
+	import { UI_SPRITE_RENDER, uiScaledSize, type UiSizeScaleProps } from '../game/uiButtonSize';
 
-	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
+	const props: Partial<Omit<ButtonProps, 'children'>> & UiSizeScaleProps = $props();
 	const context = getContext();
-	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
+	const { width, height } = $derived(uiScaledSize(UI_BASE_SIZE, props.sizeScale));
+	const sizes = $derived({ width, height });
 	const biggest = $derived(stateConfig.betAmountOptions[stateConfig.betAmountOptions.length - 1]);
 	const disabled = $derived(!context.stateXstateDerived.isIdle() || stateBet.betAmount === biggest);
 
@@ -37,6 +39,7 @@
 				height={sizes.height}
 				anchor={0.5}
 				alpha={disabled ? 0.45 : 1}
+				{...UI_SPRITE_RENDER}
 			/>
 		</Container>
 	{/snippet}

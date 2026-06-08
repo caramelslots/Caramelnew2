@@ -15,8 +15,9 @@
 	import { UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { UI_SPRITE_RENDER, uiScaledSize, type UiSizeScaleProps } from '../game/uiButtonSize';
 
-	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
+	const props: Partial<Omit<ButtonProps, 'children'>> & UiSizeScaleProps = $props();
 	const context = getContext();
 	const isFreeSpins = $derived(
 		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
@@ -54,18 +55,19 @@
 			manualSpinHeld = false;
 		}
 	});
-	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
+	const { width, height } = $derived(uiScaledSize(UI_BASE_SIZE, props.sizeScale));
+	const sizes = $derived({ width, height });
 	const spriteKey = $derived(hasCounter ? 'spin2' : 'spin1');
 
 	const counterFontSize = $derived.by(() => {
-		if (stateBet.autoSpinsCounter === Infinity) return UI_BASE_SIZE * 0.32;
-		if (stateBet.autoSpinsCounter > 99) return UI_BASE_SIZE * 0.16;
-		if (stateBet.autoSpinsCounter > 9) return UI_BASE_SIZE * 0.22;
-		return UI_BASE_SIZE * 0.28;
+		if (stateBet.autoSpinsCounter === Infinity) return sizes.width * 0.32;
+		if (stateBet.autoSpinsCounter > 99) return sizes.width * 0.16;
+		if (stateBet.autoSpinsCounter > 9) return sizes.width * 0.22;
+		return sizes.width * 0.28;
 	});
 
 	/** Optical center inside spin_2 inner ring. */
-	const counterOffsetY = UI_BASE_SIZE * 0.012;
+	const counterOffsetY = $derived(sizes.height * 0.012);
 </script>
 
 {#if !isFreeSpins}
@@ -89,6 +91,7 @@
 							height={sizes.height}
 							anchor={0.5}
 							alpha={isDimmed ? 0.45 : 1}
+							{...UI_SPRITE_RENDER}
 						/>
 						{#if hasCounter}
 							<Text

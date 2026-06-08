@@ -14,6 +14,7 @@
 
 	import { getContext } from '../game/context';
 	import EnableSound from './EnableSound.svelte';
+	import EnableUiTextureOptimization from './EnableUiTextureOptimization.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
 	import ResumeBet from './ResumeBet.svelte';
 	import Sound from './Sound.svelte';
@@ -34,6 +35,8 @@
 	import CashStacksMenuOverlay from './CashStacksMenuOverlay.svelte';
 	import BuyBonusOverlay from './BuyBonusOverlay.svelte';
 	import CashStacksBuyBonusPanel from './CashStacksBuyBonusPanel.svelte';
+	import CashStacksDesktopHudOverlay from './CashStacksDesktopHudOverlay.svelte';
+	import CashStacksPortraitHudOverlay from './CashStacksPortraitHudOverlay.svelte';
 	import BuyBonusConfirmOverlay from './BuyBonusConfirmOverlay.svelte';
 	import DevCheats from './DevCheats.svelte';
 	import DevButtons from './DevButtons.svelte';
@@ -52,6 +55,7 @@
 <div class="pixi-stage" class:above-html-ui={context.stateGame.transitionActive}>
 <App maxResolution={2}>
 	<EnableSound />
+	<EnableUiTextureOptimization />
 	<EnableHotkey />
 	<EnableGameActor />
 	<EnablePixiExtension />
@@ -115,6 +119,8 @@
 
 <FeaturesAutoSpinOverlay />
 <CashStacksBuyBonusPanel />
+<CashStacksDesktopHudOverlay />
+<CashStacksPortraitHudOverlay />
 <CashStacksMenuOverlay />
 <BuyBonusOverlay />
 <BuyBonusConfirmOverlay />

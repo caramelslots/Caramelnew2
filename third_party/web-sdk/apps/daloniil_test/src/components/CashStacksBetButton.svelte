@@ -8,10 +8,11 @@
 	import { stateModal, stateUi } from 'state-shared';
 
 	import { stateGame } from '../game/stateGame.svelte';
+	import type { UiSizeScaleProps } from '../game/uiButtonSize';
 	import CashStacksSpinButton from './CashStacksSpinButton.svelte';
 	import CashStacksStartAutoplayButton from './CashStacksStartAutoplayButton.svelte';
 
-	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
+	const props: Partial<Omit<ButtonProps, 'children'>> & UiSizeScaleProps = $props();
 	const isFreeSpins = $derived(
 		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
 	);
