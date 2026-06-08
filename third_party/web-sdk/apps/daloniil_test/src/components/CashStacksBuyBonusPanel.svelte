@@ -106,21 +106,24 @@
 			return;
 		}
 
+		let syncRaf = 0;
 		const syncBottom = () => {
-			if (!panelEl) return;
-			portraitHudAnchors.buyPanelBottom = panelEl.getBoundingClientRect().bottom;
+			cancelAnimationFrame(syncRaf);
+			syncRaf = requestAnimationFrame(() => {
+				if (!panelEl) return;
+				portraitHudAnchors.buyPanelBottom = panelEl.getBoundingClientRect().bottom;
+			});
 		};
 
 		syncBottom();
 		const observer = new ResizeObserver(syncBottom);
 		observer.observe(panelEl);
 		window.addEventListener('resize', syncBottom);
-		window.addEventListener('scroll', syncBottom, true);
 
 		return () => {
+			cancelAnimationFrame(syncRaf);
 			observer.disconnect();
 			window.removeEventListener('resize', syncBottom);
-			window.removeEventListener('scroll', syncBottom, true);
 		};
 	});
 </script>

@@ -99,11 +99,7 @@
 </script>
 
 {#if showBgSymbol && revealedRawSymbol}
-	<SymbolWrap
-		x={getSymbolX(props.reelIndex)}
-		y={props.reelSymbol.symbolY()}
-		animating={true}
-	>
+	<SymbolWrap x={getSymbolX(props.reelIndex)} y={props.reelSymbol.symbolY()}>
 		<Symbol
 			state={bgSymbolState}
 			rawSymbol={revealedRawSymbol}
@@ -120,23 +116,21 @@
 	scaleX={props.reelSymbol.landScaleX() * winScale.current}
 	scaleY={props.reelSymbol.landScaleY() * winScale.current}
 	alpha={dimAlphaTween.current}
-	animating={symbolInfo.type === 'spine' &&
-		(props.reelSymbol.symbolState === 'land' ||
-			props.reelSymbol.symbolState === 'win' ||
-			props.reelSymbol.symbolState === 'mysteryReveal')}
 >
-	<Symbol
-		state={props.reelSymbol.symbolState}
-		rawSymbol={props.reelSymbol.rawSymbol}
-		oncomplete={() => {
-			const state = props.reelSymbol.symbolState;
-			// Sprite-driven wins are completed by `runWinBounce` after its
-			// Tween settles — don't fire from the sprite mount oncomplete.
-			if (state === 'win' && symbolInfo.type === 'sprite') return;
-			if (state === 'win' || state === 'mysteryReveal' || state === 'land') {
-				props.reelSymbol.oncomplete();
-			}
-			if (state === 'land') props.reelSymbol.symbolState = 'static';
-		}}
-	/>
+	{#key `${props.reelSymbol.symbolState}-${symbolInfo.type}-${symbolInfo.animationName ?? ''}`}
+		<Symbol
+			state={props.reelSymbol.symbolState}
+			rawSymbol={props.reelSymbol.rawSymbol}
+			oncomplete={() => {
+				const state = props.reelSymbol.symbolState;
+				// Sprite-driven wins are completed by `runWinBounce` after its
+				// Tween settles — don't fire from the sprite mount oncomplete.
+				if (state === 'win' && symbolInfo.type === 'sprite') return;
+				if (state === 'win' || state === 'mysteryReveal' || state === 'land') {
+					props.reelSymbol.oncomplete();
+				}
+				if (state === 'land') props.reelSymbol.symbolState = 'static';
+			}}
+		/>
+	{/key}
 </SymbolWrap>

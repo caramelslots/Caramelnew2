@@ -1,6 +1,24 @@
-import * as PIXI from 'pixi.js';
+import type { LoadedAssets, LoadedSprite } from 'pixi-svelte';
 
-import type { LoadedAssets } from 'pixi-svelte';
+type TextureFromCanvas = (source: HTMLCanvasElement) => LoadedSprite;
+
+type UiTexture = LoadedSprite & {
+	source?: { resource?: unknown; autoGenerateMipmaps?: boolean };
+	destroy: (destroyBase?: boolean) => void;
+};
+
+const isUiTexture = (asset: unknown): asset is UiTexture =>
+	typeof asset === 'object' &&
+	asset !== null &&
+	'width' in asset &&
+	'height' in asset &&
+	'destroy' in asset &&
+	typeof (asset as UiTexture).destroy === 'function';
+
+const getTextureFrom = (texture: UiTexture): TextureFromCanvas => {
+	const ctor = texture.constructor as { from: TextureFromCanvas };
+	return ctor.from.bind(ctor);
+};
 
 /** HUD button textures that ship at 1000×1000 and render at ~60–160 design px. */
 export const UI_BUTTON_TEXTURE_KEYS = [
@@ -68,7 +86,7 @@ const downscaleInSteps = (
 	return target;
 };
 
-const optimizeTexture = (texture: PIXI.Texture): PIXI.Texture => {
+const optimizeTexture = (texture: UiTexture, textureFrom: TextureFromCanvas): UiTexture => {
 	const width = texture.width;
 	const height = texture.height;
 	if (Math.max(width, height) <= MAX_UI_TEXTURE_EDGE) return texture;
@@ -77,9 +95,9 @@ const optimizeTexture = (texture: PIXI.Texture): PIXI.Texture => {
 	if (!isCanvasImageSource(source)) return texture;
 
 	const canvas = downscaleInSteps(source, width, height, MAX_UI_TEXTURE_EDGE);
-	const optimized = PIXI.Texture.from(canvas);
-	const optimizedSource = optimized.source as { autoGenerateMipmaps?: boolean };
-	if ('autoGenerateMipmaps' in optimizedSource) {
+	const optimized = textureFrom(canvas);
+	const optimizedSource = optimized.source;
+	if (optimizedSource && 'autoGenerateMipmaps' in optimizedSource) {
 		optimizedSource.autoGenerateMipmaps = true;
 	}
 	texture.destroy(false);
@@ -87,10 +105,13 @@ const optimizeTexture = (texture: PIXI.Texture): PIXI.Texture => {
 };
 
 export const optimizeUiButtonTextures = (loadedAssets: LoadedAssets) => {
+	let textureFrom: TextureFromCanvas | undefined;
+
 	for (const key of UI_BUTTON_TEXTURE_KEYS) {
 		const asset = loadedAssets[key];
-		if (asset instanceof PIXI.Texture) {
-			loadedAssets[key] = optimizeTexture(asset);
-		}
+		if (!isUiTexture(asset)) continue;
+
+		if (!textureFrom) textureFrom = getTextureFrom(asset);
+		loadedAssets[key] = optimizeTexture(asset, textureFrom);
 	}
 };

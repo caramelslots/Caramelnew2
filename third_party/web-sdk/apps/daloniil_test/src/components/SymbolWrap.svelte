@@ -2,7 +2,6 @@
 	import type { Snippet } from 'svelte';
 
 	import { Container } from 'pixi-svelte';
-	import { getContextBoard } from 'components-shared';
 
 	import { SYMBOL_SIZE, BOARD_DIMENSIONS } from '../game/constants';
 
@@ -10,7 +9,6 @@
 		debug?: boolean;
 		x: number;
 		y: number;
-		animating: boolean;
 		/**
 		 * Per-axis scale on the wrapping Container. Defaults to 1.
 		 * The inner sprite/spine is centred at the container origin (anchor
@@ -20,44 +18,40 @@
 		 * Used together by the reel-level landing squash (`landScaleY`) and
 		 * the derived jelly stretch (`landScaleX`) — see createReelForSpinning.
 		 */
-	scaleX?: number;
-	scaleY?: number;
-	/**
-	 * Прозрачность всей символьной обёртки. Используется для затемнения
-	 * невыигрышных символов во время win-анимации — см. DIM_NON_WINNING и
-	 * stateGame.winSpotlightActive. Применяется на уровне родительского
-	 * Container'а, поэтому автоматически касается sprite/spine/multiplier-
-	 * текста — отдельно править вложенные компоненты не нужно.
-	 */
-	alpha?: number;
-	children: Snippet;
-};
+		scaleX?: number;
+		scaleY?: number;
+		/**
+		 * Прозрачность всей символьной обёртки. Используется для затемнения
+		 * невыигрышных символов во время win-анимации — см. DIM_NON_WINNING и
+		 * stateGame.winSpotlightActive. Применяется на уровне родительского
+		 * Container'а, поэтому автоматически касается sprite/spine/multiplier-
+		 * текста — отдельно править вложенные компоненты не нужно.
+		 */
+		alpha?: number;
+		children: Snippet;
+	};
 
-const props: Props = $props();
-const boardContext = getContextBoard();
-const show = $derived(
-	(boardContext.animate && props.animating) || (!boardContext.animate && !props.animating),
-);
-// Culling window: keep a symbol rendered while any part of it may be
-// visible through the BoardMask (y=0 … boardHeight).
-// TOP  — one full symbol above the mask so the Pixi mask smoothly clips
-//         symbols entering from above the board edge.
-// BOTTOM — one full symbol BELOW the mask bottom so symbols exiting at the
-//         bottom are smoothly clipped by the mask instead of abruptly
-//         disappearing (the inFrame check used to fire at y=boardHeight+1
-//         while 49 px were still inside the mask).
-const top = -SYMBOL_SIZE;
-const bottom = SYMBOL_SIZE * (BOARD_DIMENSIONS.y + 1);
-const inFrame = $derived(props.y >= top && props.y <= bottom);
+	const props: Props = $props();
+
+	// Culling window: keep a symbol rendered while any part of it may be
+	// visible through the BoardMask (y=0 … boardHeight).
+	// TOP  — one full symbol above the mask so the Pixi mask smoothly clips
+	//         symbols entering from above the board edge.
+	// BOTTOM — one full symbol BELOW the mask bottom so symbols exiting at the
+	//         bottom are smoothly clipped by the mask instead of abruptly
+	//         disappearing (the inFrame check used to fire at y=boardHeight+1
+	//         while 49 px were still inside the mask).
+	const top = -SYMBOL_SIZE;
+	const bottom = SYMBOL_SIZE * (BOARD_DIMENSIONS.y + 1);
+	const inFrame = $derived(props.y >= top && props.y <= bottom);
 </script>
 
-{#if props.debug || show}
+{#if props.debug || inFrame}
 	<Container
 		x={props.x}
 		y={props.y}
 		scale={{ x: props.scaleX ?? 1, y: props.scaleY ?? 1 }}
 		alpha={props.alpha ?? 1}
-		visible={props.debug || inFrame}
 	>
 		{@render props.children()}
 	</Container>

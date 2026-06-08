@@ -32,7 +32,6 @@
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 
 	import { MYSTERY_REVEAL_POST_DELAY_MS } from '../game/constants';
-	import { BoardContext } from 'components-shared';
 
 	import { getContext } from '../game/context';
 	import BoardContainer from './BoardContainer.svelte';
@@ -121,18 +120,9 @@
 </script>
 
 {#if show}
-	<BoardContext animate={false}>
-		<BoardContainer>
-			<BoardMask />
-			<BoardBase />
-		</BoardContainer>
-	</BoardContext>
-
-	<BoardContext animate={true}>
-		<BoardContainer>
-			<BoardMask />
-			<BoardBase />
-			<PaylineOverlay />
-		</BoardContainer>
-	</BoardContext>
+	<BoardContainer>
+		<BoardMask />
+		<BoardBase />
+		<PaylineOverlay />
+	</BoardContainer>
 {/if}

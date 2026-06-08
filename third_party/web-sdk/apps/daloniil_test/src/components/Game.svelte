@@ -53,7 +53,7 @@
 </script>
 
 <div class="pixi-stage" class:above-html-ui={context.stateGame.transitionActive}>
-	<App maxResolution={2}>
+	<App maxResolution={2} tuneForMobilePortrait>
 		<EnableSound />
 		<EnableUiTextureOptimization />
 		<EnableHotkey />
