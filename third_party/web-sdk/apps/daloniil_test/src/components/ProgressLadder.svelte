@@ -72,8 +72,10 @@
 	import {
 		BONUS_BAR_H_SHIFT_SCREEN_X,
 		BOARD_LAYOUT_OFFSETS,
+		getDesktopBonusBarVDims,
 		getPortraitBonusBarHeightPx,
 		getPortraitBonusBarWidthPx,
+		getPopoutBonusBarVScale,
 		getPortraitSmallMobileScaleFactor,
 	} from '../game/constants';
 	import assets from '../game/assets';
@@ -88,13 +90,15 @@
 	const BAR_ENTER_MS = 550;
 	const BAR_LEAVE_MS = 400;
 
-	const barOffsets = (node: Element) => {
+	const barOffsets = (node: Element, compactScale: number) => {
 		const vertical = node.classList.contains('bar-v');
-		return vertical ? { x: 72, y: 0 } : { x: 0, y: 48 };
+		return vertical
+			? { x: 72 * compactScale, y: 0 }
+			: { x: 0, y: 48 * compactScale };
 	};
 
-	const barEnter = (node: Element): TransitionConfig => {
-		const { x, y } = barOffsets(node);
+	const barEnter = (node: Element, compactScale: number): TransitionConfig => {
+		const { x, y } = barOffsets(node, compactScale);
 		return {
 			duration: BAR_ENTER_MS,
 			easing: cubicOut,
@@ -105,8 +109,8 @@
 		};
 	};
 
-	const barLeave = (node: Element): TransitionConfig => {
-		const { x, y } = barOffsets(node);
+	const barLeave = (node: Element, compactScale: number): TransitionConfig => {
+		const { x, y } = barOffsets(node, compactScale);
 		return {
 			duration: BAR_LEAVE_MS,
 			easing: cubicOut,
@@ -133,18 +137,9 @@
 	});
 
 	const canvasSizeType = $derived(context.stateLayoutDerived.canvasSizeType());
+	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 	const portraitCompactScale = $derived(getPortraitSmallMobileScaleFactor(canvasSizeType));
-
-	// Rendered pixel sizes of the bar PNGs (must match inline / .bar-v / .bar-h CSS).
-	const BAR_DIMS = $derived({
-		v: { w: 130, h: 311.6 },
-		h: {
-			w: getPortraitBonusBarWidthPx(canvasSizeType),
-			h: getPortraitBonusBarHeightPx(canvasSizeType),
-		},
-	});
-	// Gap (px) between the board edge and the bar.
-	const GAP = $derived(16 * portraitCompactScale);
+	const popoutBarScale = $derived(getPopoutBonusBarVScale(canvasSizes));
 
 	// devPreview.ladder toggled from the DEV panel (DevButtons.svelte).
 	const isVisible = $derived(devPreview.ladder || stateGame.ladderVisible);
@@ -153,6 +148,18 @@
 			? !devPreview.ladderHorizontal
 			: context.stateLayoutDerived.layoutType() === 'desktop',
 	);
+
+	// Rendered pixel sizes of the bar PNGs (inline style; .bar-v CSS is fallback only).
+	const BAR_DIMS = $derived({
+		v: getDesktopBonusBarVDims(canvasSizes),
+		h: {
+			w: getPortraitBonusBarWidthPx(canvasSizeType),
+			h: getPortraitBonusBarHeightPx(canvasSizeType),
+		},
+	});
+	const barCompactScale = $derived(isDesktop ? popoutBarScale : portraitCompactScale);
+	// Gap (px) between the board edge and the bar.
+	const GAP = $derived(16 * barCompactScale);
 	const bonusInCurrentTier = $derived(
 		devPreview.ladder
 			? devPreview.ladderFilled
@@ -214,7 +221,7 @@
 		return `left:${p.left}px;top:${p.top}px;width:${p.width}px;height:${p.height}px;background-image:url(${bg});`;
 	});
 
-	const counterRadiusPx = $derived(layout.counterRadius * portraitCompactScale);
+	const counterRadiusPx = $derived(layout.counterRadius * barCompactScale);
 </script>
 
 {#if isVisible}
@@ -225,8 +232,8 @@
 		class:pulse
 		class:under-smoke={stateGame.transitionActive}
 		data-test="progress-ladder"
-		in:barEnter
-		out:barLeave
+		in:barEnter={barCompactScale}
+		out:barLeave={barCompactScale}
 		style={barBoxStyle}
 	>
 		{#each placements as p, i (i)}

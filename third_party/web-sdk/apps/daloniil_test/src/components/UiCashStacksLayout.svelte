@@ -52,7 +52,6 @@
 	import ButtonSoundSwitch from 'components-ui-pixi/src/components/ButtonSoundSwitch.svelte';
 
 	import {
-		BOARD_FRAME_OFFSET,
 		AUTOPLAY_PILL_BASE,
 		DESKTOP_UI_LAYOUT,
 		isPopoutViewport,
@@ -109,7 +108,7 @@
 
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
 	const winHudPos = $derived({
-		x: boardLayout.x + BOARD_FRAME_OFFSET.x,
+		x: boardLayout.x,
 		y: boardLayout.y + boardLayout.height * 0.5 + WIN_BELOW_BOARD_GAP,
 	});
 
@@ -160,8 +159,6 @@
 		letterSpacing: 0.5,
 	};
 
-	const WIN_WORD_GAP = 10;
-
 	const WIN_TEXT_STYLE = {
 		fontFamily: 'proxima-nova',
 		fontSize: 28,
@@ -192,17 +189,9 @@
 			<MainContainer>
 				<Container x={winHudPos.x} y={winHudPos.y} zIndex={20}>
 					<Text
-						anchor={{ x: 1, y: 0.5 }}
-						x={-WIN_WORD_GAP}
+						anchor={0.5}
 						eventMode="none"
-						text={context.i18nDerived.win().toUpperCase()}
-						style={WIN_TEXT_STYLE}
-					/>
-					<Text
-						anchor={{ x: 0, y: 0.5 }}
-						x={WIN_WORD_GAP}
-						eventMode="none"
-						text={formatWinAmount(stateBet.winBookEventAmount)}
+						text={`${context.i18nDerived.win().toUpperCase()} ${formatWinAmount(stateBet.winBookEventAmount)}`}
 						style={WIN_TEXT_STYLE}
 					/>
 				</Container>

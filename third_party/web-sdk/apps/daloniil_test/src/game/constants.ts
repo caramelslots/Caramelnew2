@@ -336,6 +336,12 @@ export const POPOUT_L_PANEL_WIDTH = 124;
 export const POPOUT_S_PANEL_WIDTH = 70;
 export const POPOUT_S_SCALE = POPOUT_S_PANEL_WIDTH / POPOUT_L_PANEL_WIDTH;
 
+/** Desktop vertical FS bonus bar (bar_v.png 247×592). Popout scales down with the embed. */
+export const DESKTOP_BONUS_BAR_V_WIDTH_PX = 130;
+export const DESKTOP_BONUS_BAR_V_HEIGHT_PX = 311.6;
+export const POPOUT_L_BONUS_BAR_V_SCALE = 0.72;
+export const POPOUT_S_BONUS_BAR_V_SCALE = 0.4;
+
 export const scalePopoutPx = (px: number, min = 1) =>
 	Math.max(min, Math.round(px * POPOUT_S_SCALE));
 
@@ -475,6 +481,20 @@ export const isPopoutViewport = (sizes: { width: number; height: number }, toler
 export const isPopoutSmallViewport = (sizes: { width: number; height: number }, tolerance = 12) => {
 	const { width, height } = sizes;
 	return Math.abs(width - 400) <= tolerance && Math.abs(height - 225) <= tolerance;
+};
+
+export const getPopoutBonusBarVScale = (sizes: { width: number; height: number }) => {
+	if (isPopoutSmallViewport(sizes)) return POPOUT_S_BONUS_BAR_V_SCALE;
+	if (isPopoutViewport(sizes)) return POPOUT_L_BONUS_BAR_V_SCALE;
+	return 1;
+};
+
+export const getDesktopBonusBarVDims = (sizes: { width: number; height: number }) => {
+	const scale = getPopoutBonusBarVScale(sizes);
+	return {
+		w: DESKTOP_BONUS_BAR_V_WIDTH_PX * scale,
+		h: DESKTOP_BONUS_BAR_V_HEIGHT_PX * scale,
+	};
 };
 
 /**
