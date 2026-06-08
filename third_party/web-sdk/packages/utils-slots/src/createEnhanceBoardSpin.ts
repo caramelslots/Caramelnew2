@@ -79,24 +79,16 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 			return paddingSize;
 		}, 0);
 
-		// Turbo: kick off each reel on its own frame so updateSymbolsPool +
-		// symbolState flips don't hit one 200ms Svelte+GC frame (see mobile traces).
-		if (stateBet.isTurbo) {
-			const spinPromises: Promise<void>[] = [];
-			for (let reelIndex = 0; reelIndex < board.length; reelIndex++) {
-				spinPromises.push(board[reelIndex].spin());
-				if (reelIndex < board.length - 1) {
-					await waitForAnimationFrame();
-				}
+		// Kick off each reel on its own frame so updateSymbolsPool + symbolState
+		// flips don't land in one Svelte+GC frame (mobile traces: 80–200ms hitches).
+		const spinPromises: Promise<void>[] = [];
+		for (let reelIndex = 0; reelIndex < board.length; reelIndex++) {
+			spinPromises.push(board[reelIndex].spin());
+			if (reelIndex < board.length - 1) {
+				await waitForAnimationFrame();
 			}
-			await Promise.all(spinPromises);
-		} else {
-			await Promise.all(
-				board.map(async (reel) => {
-					await reel.spin();
-				}),
-			);
 		}
+		await Promise.all(spinPromises);
 	}
 
 	return { spin };

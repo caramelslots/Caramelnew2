@@ -3,7 +3,7 @@ import { Tween } from 'svelte/motion';
 import { sineOut, backIn, linear } from 'svelte/easing';
 
 import { stateBet } from 'state-shared';
-import { waitForTimeout } from 'utils-shared/wait';
+import { waitForAnimationFrame, waitForTimeout } from 'utils-shared/wait';
 import { createInterruptible } from 'utils-shared/interruptible';
 
 import type { SpinningReelCreateOptions, SpinningReelSpinOptions, SpinType } from './types';
@@ -67,16 +67,29 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		return reelSymbols;
 	};
 
-	const updateAllReelSymbolState = (value: SpinningReelSymbolState) => {
+	// Batched only for `spin` — spreads Svelte flushes when a reel has a large pool.
+	const SPIN_STATE_BATCH_SIZE = 10;
+
+	const updateAllReelSymbolState = async (value: SpinningReelSymbolState) => {
+		const count = reelState.activeSymbolCount;
+		const batchSize =
+			value === 'spin' && count > SPIN_STATE_BATCH_SIZE ? SPIN_STATE_BATCH_SIZE : count;
+
 		// Iterate only the active portion of the pool (first activeSymbolCount items).
 		// Off-screen pool items beyond activeSymbolCount are excluded to avoid
 		// triggering their $effects unnecessarily.
 		// onSymbolLand fires only for the final settled symbols (first reelLength items).
-		for (let i = 0; i < reelState.activeSymbolCount; i++) {
-			const reelSymbol = reelState.symbols[i];
-			reelSymbol.symbolState = value as TSymbolState;
-			if (value === 'land' && i < reelLength) {
-				reelOptions.onSymbolLand({ rawSymbol: reelSymbol.rawSymbol });
+		for (let start = 0; start < count; start += batchSize) {
+			const end = Math.min(start + batchSize, count);
+			for (let i = start; i < end; i++) {
+				const reelSymbol = reelState.symbols[i];
+				reelSymbol.symbolState = value as TSymbolState;
+				if (value === 'land' && i < reelLength) {
+					reelOptions.onSymbolLand({ rawSymbol: reelSymbol.rawSymbol });
+				}
+			}
+			if (end < count) {
+				await waitForAnimationFrame();
 			}
 		}
 	};
@@ -382,7 +395,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			await preSpinPadding({ preSpinPaddingRawReel });
 			if (!started) {
 				reelState.motion = 'spinning';
-				updateAllReelSymbolState('spin');
+				await updateAllReelSymbolState('spin');
 				started = true;
 			}
 		}
@@ -506,7 +519,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 
 		if (!isSpinning) {
 			reelState.motion = 'spinning';
-			updateAllReelSymbolState('spin');
+			await updateAllReelSymbolState('spin');
 		}
 
 		// Q: When to skip the slideDown?
@@ -523,7 +536,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		onSpinFinishing();
 		await removePaddingAndBounceBack();
 		reelState.motion = 'stopped';
-		updateAllReelSymbolState('land');
+		await updateAllReelSymbolState('land');
 	};
 
 	const fastSpin = () =>
