@@ -81,14 +81,23 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 
 		// Kick off each reel on its own frame so updateSymbolsPool + symbolState
 		// flips don't land in one Svelte+GC frame (mobile traces: 80–200ms hitches).
-		const spinPromises: Promise<void>[] = [];
-		for (let reelIndex = 0; reelIndex < board.length; reelIndex++) {
-			spinPromises.push(board[reelIndex].spin());
-			if (reelIndex < board.length - 1) {
-				await waitForAnimationFrame();
+		// Hold-scroll games use parallel handoff — rAF stagger made each column
+		// freeze for a couple of frames in a left-to-right wave at RGS response.
+		const useParallelHandoff = board.some(
+			(reel) => reel.reelState.spinOptions().reelPreSpinHoldRotations !== undefined,
+		);
+		if (useParallelHandoff) {
+			await Promise.all(board.map((reel) => reel.spin()));
+		} else {
+			const spinPromises: Promise<void>[] = [];
+			for (let reelIndex = 0; reelIndex < board.length; reelIndex++) {
+				spinPromises.push(board[reelIndex].spin());
+				if (reelIndex < board.length - 1) {
+					await waitForAnimationFrame();
+				}
 			}
+			await Promise.all(spinPromises);
 		}
-		await Promise.all(spinPromises);
 	}
 
 	return { spin };

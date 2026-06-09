@@ -36,6 +36,7 @@
 	const isWinningState = $derived(
 		props.reelSymbol.symbolState === 'win' || props.reelSymbol.symbolState === 'postWinStatic',
 	);
+	const isSpinningSymbol = $derived(props.reelSymbol.symbolState === 'spin');
 	const dimAlphaTween = new Tween(1);
 
 	$effect(() => {
@@ -125,6 +126,7 @@
 	<SymbolWrap
 		x={getSymbolX(props.reelIndex)}
 		y={props.reelSymbol.symbolY()}
+		spinActive={isSpinningSymbol}
 		alpha={bgAlphaTween.current}
 	>
 		<Symbol
@@ -140,6 +142,7 @@
 <SymbolWrap
 	x={getSymbolX(props.reelIndex)}
 	y={props.reelSymbol.symbolY() + winYOffset.current}
+	spinActive={isSpinningSymbol}
 	scaleX={props.reelSymbol.landScaleX() * winScale.current}
 	scaleY={props.reelSymbol.landScaleY() * winScale.current}
 	alpha={dimAlphaTween.current}

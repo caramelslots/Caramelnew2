@@ -370,6 +370,52 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		placeY(topY);
 	};
 
+	// Match SymbolWrap culling: top = -h, bottom = (visibleRows + 1) * h.
+	// SDK boards store reelLength symbols with ~2 off-screen rows above/below.
+	const getSymbolCullingWindow = () => {
+		const h = reelOptions.symbolHeight;
+		const visibleRows = Math.max(1, reelLength - 2);
+		return { top: -h, bottom: h * (visibleRows + 1) };
+	};
+
+	// Hold-scroll drifts reelY without preSpinPadding's placeY(topY) reset.
+	// Once reelY leaves the culling window every pool index is off-screen and
+	// SymbolWrap hides all symbols. Prepend one padding row + placeY(-h) keeps
+	// on-screen symbols fixed (same math as legacy seamless prepend).
+	const recycleOneHoldScrollRow = ({
+		preSpinPaddingRawReel,
+	}: {
+		preSpinPaddingRawReel: TRawSymbol[];
+	}) => {
+		const h = reelOptions.symbolHeight;
+		const count = reelState.activeSymbolCount;
+		if (count === 0) return;
+
+		const randomIndex = Math.floor(Math.random() * preSpinPaddingRawReel.length);
+		const newRow = getPaddingRawSymbol({
+			paddingRawReel: preSpinPaddingRawReel,
+			index: randomIndex,
+		});
+		const currentContent = reelState.symbols.slice(0, count).map((reelSymbol) => reelSymbol.rawSymbol);
+		const layout: TRawSymbol[] = [newRow, ...currentContent.slice(0, -1)];
+		updateSymbolsPool(layout);
+		placeY(reelY.current - h);
+	};
+
+	const recycleHoldScrollToWindow = ({
+		preSpinPaddingRawReel,
+	}: {
+		preSpinPaddingRawReel: TRawSymbol[];
+	}) => {
+		const h = reelOptions.symbolHeight;
+		const { bottom } = getSymbolCullingWindow();
+		const maxReelY = bottom - 0.5 * h;
+		const rowsToRecycle = Math.max(0, Math.ceil((reelY.current - maxReelY) / h));
+		for (let i = 0; i < rowsToRecycle && isPreSpinning; i++) {
+			recycleOneHoldScrollRow({ preSpinPaddingRawReel });
+		}
+	};
+
 	const preSpinSlideDownLoop = async ({
 		isTurboBeforeAll,
 		preSpinPaddingRawReel,
@@ -411,7 +457,11 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 				break;
 			}
 
-			if (inHoldPhase) continue;
+			if (inHoldPhase) {
+				// Keep reelY inside SymbolWrap's culling window so symbols stay visible.
+				recycleHoldScrollToWindow({ preSpinPaddingRawReel });
+				continue;
+			}
 
 			// Standard SDK loop (lines/price/ways): slide → padding swap → repeat.
 			await preSpinPadding({ preSpinPaddingRawReel });
@@ -554,17 +604,23 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 
 		if (!isSpinning) {
 			reelState.motion = 'spinning';
-			await updateAllReelSymbolState('spin');
+			void updateAllReelSymbolState('spin');
 		}
+
+		// Start slideDown in this sync turn (before interruptible's async executor
+		// yields) so main-spin motion begins in the same frame as prepend placeY.
+		const slideDownTask = slideDown();
 
 		// Q: When to skip the slideDown?
 		// A: When it's preSpinning(isSpinning) and stop button is clicked(isTurbo) and is noStop is false
 		if (noStop) {
-			await slideDown();
+			await slideDownTask;
 		} else if (stateBet.isTurbo && isSpinning) {
 			// skip
 		} else {
-			await interruptible.add(slideDown);
+			await interruptible.add(async () => {
+				await slideDownTask;
+			});
 		}
 
 		reelState.motion = 'bouncing';

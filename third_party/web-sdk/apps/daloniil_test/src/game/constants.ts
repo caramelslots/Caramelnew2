@@ -181,10 +181,6 @@ const SPIN_OPTIONS_SHARED = {
 	// Start at a constant speed (no `backIn` wind-up burst) so the slot doesn't
 	// visibly "surge" to swap symbols at the start of the spin.
 	reelPreSpinWindup: false,
-	// Continuous scroll while RGS responds (see utils-slots hold-phase). Lines/price
-	// use the default preSpinPadding loop instead; we skip padding after readyToSpin
-	// and scroll in fixed row chunks to avoid the upward placeY(topY) snap.
-	reelPreSpinHoldRotations: 5,
 	reelBounceSizeMulti: 0,
 	reelSettleSecondaryMulti: 0,
 	reelSettleSecondarySpeedMulti: 0,

@@ -28,6 +28,13 @@
 		 * текста — отдельно править вложенные компоненты не нужно.
 		 */
 		alpha?: number;
+		/**
+		 * Keep rendering while the reel is scrolling — SymbolWrap culling is
+		 * based on the visible board window only; fast spins can temporarily
+		 * move pool symbols outside that window even though they are on-screen
+		 * through the BoardMask.
+		 */
+		spinActive?: boolean;
 		children: Snippet;
 	};
 
@@ -43,7 +50,9 @@
 	//         while 49 px were still inside the mask).
 	const top = -SYMBOL_SIZE;
 	const bottom = SYMBOL_SIZE * (BOARD_DIMENSIONS.y + 1);
-	const inFrame = $derived(props.y >= top && props.y <= bottom);
+	const inFrame = $derived(
+		props.spinActive || (props.y >= top && props.y <= bottom),
+	);
 </script>
 
 {#if props.debug || inFrame}

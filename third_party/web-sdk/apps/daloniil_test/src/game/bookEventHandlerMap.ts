@@ -11,7 +11,6 @@ import { stateGame, stateGameDerived } from './stateGame.svelte';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
 import config from './config';
-import { runPreSpin } from './spinPadding';
 import {
 	WIN_INFO_PRE_DELAY_MS,
 	BONUS_WIN_PRE_DELAY_MS,
@@ -103,13 +102,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// сделано в actor.onNewGameStart, поэтому здесь — идемпотентный no-op.
 		clearWinSpotlight();
 
-		// FS reveals share one bet — only the first spin got preSpin in
-		// onNewGameStart. Run the same pre-spin before each freegame reveal.
-		if (bookEvent.gameType === 'freegame') {
-			await runPreSpin('freegame');
-		}
-
 		stateGame.gameType = bookEvent.gameType;
+		// Full reel scroll starts here once RGS has returned the result board.
 		await stateGameDerived.enhancedBoard.spin({
 			revealEvent: bookEvent,
 			paddingBoard: config.paddingReels[bookEvent.gameType],
