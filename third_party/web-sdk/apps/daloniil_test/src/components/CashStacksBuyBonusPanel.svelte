@@ -23,6 +23,7 @@
 	import { portraitBuyPanelCanvasTop } from '../game/portraitHudLayout';
 	import { portraitHudAnchors } from '../game/portraitHudAnchors.svelte';
 	import { getContext } from '../game/context';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { getContextLayout } from 'utils-layout';
 
 	const context = getContext();
@@ -43,9 +44,7 @@
 		});
 	});
 	const show = $derived(
-		(isDesktop || isPortrait) &&
-			!context.stateLayout.showLoadingScreen &&
-			!isFreeSpinsActive(),
+		(isDesktop || isPortrait) && gameEntrance.showContent && !isFreeSpinsActive(),
 	);
 
 	const buyDisabled = $derived(!context.stateXstateDerived.isIdle());
@@ -131,7 +130,7 @@
 {#if show}
 	<aside
 		bind:this={panelEl}
-		class="buy-bonus-panel"
+		class="buy-bonus-panel daloniil-ui-enter"
 		class:portrait={isPortrait}
 		class:desktop={isDesktop}
 		class:popout-l={isPopout && !isPopoutSmall}

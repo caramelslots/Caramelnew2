@@ -21,6 +21,7 @@
 	} from '../game/desktopHudLayout';
 	import { getRoundsCounter } from '../game/autoplay';
 	import { getContext } from '../game/context';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { getContextLayout } from 'utils-layout';
 
@@ -67,7 +68,7 @@
 		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
 	);
 	const show = $derived(
-		useDesktopHud && !context.stateLayout.showLoadingScreen && uiVisible,
+		useDesktopHud && gameEntrance.showContent && uiVisible,
 	);
 
 	const hudConfig = $derived(resolveDesktopHudConfig(isPopoutSmall));
@@ -202,7 +203,7 @@
 </script>
 
 {#if show}
-	<div class="desktop-hud-overlay" aria-label="game controls">
+	<div class="desktop-hud-overlay daloniil-ui-enter" aria-label="game controls">
 		<button
 			type="button"
 			class="hud-icon-btn"

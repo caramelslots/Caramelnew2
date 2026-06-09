@@ -759,6 +759,9 @@ export const BONUS_WIN_POST_DELAY_MS = 400;
 /** Full cloud transition spine duration. */
 export const TRANSITION_DURATION_MS = 1800;
 
+/** Fade-in for board + UI after the loading-screen cloud transition. */
+export const GAME_ENTRANCE_MS = 400;
+
 /** When the cloud transition starts becoming opaque (~0.3s in the 1.5s spine). */
 export const TRANSITION_THEME_SWITCH_DELAY_MS = 193;
 

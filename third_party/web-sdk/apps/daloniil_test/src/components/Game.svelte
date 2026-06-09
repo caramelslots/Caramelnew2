@@ -13,6 +13,8 @@
 	import CashStacksModals from './CashStacksModals.svelte';
 
 	import { getContext } from '../game/context';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { GAME_ENTRANCE_MS } from '../game/constants';
 	import EnableSound from './EnableSound.svelte';
 	import EnableUiTextureOptimization from './EnableUiTextureOptimization.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
@@ -40,10 +42,19 @@
 	import BuyBonusConfirmOverlay from './BuyBonusConfirmOverlay.svelte';
 	import DevCheats from './DevCheats.svelte';
 	import DevButtons from './DevButtons.svelte';
+	import { FadeContainer } from 'components-pixi';
 
 	const context = getContext();
 
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
+
+	// Storybook / skipLoadingScreen: reveal game without the loading flow.
+	$effect(() => {
+		if (!context.stateLayout.showLoadingScreen) {
+			gameEntrance.preloadContent = true;
+			gameEntrance.showContent = true;
+		}
+	});
 
 	context.eventEmitter.subscribeOnMount({
 		buyBonusConfirm: () => {
@@ -64,35 +75,44 @@
 
 		{#if context.stateLayout.showLoadingScreen}
 			<LoadingScreen onloaded={() => (context.stateLayout.showLoadingScreen = false)} />
-		{:else}
+		{/if}
+
+		{#if gameEntrance.preloadContent}
 			<ResumeBet />
-			<!--
-			The reason why <Sound /> is rendered after clicking the loading screen:
-			"Autoplay with sound is allowed if: The user has interacted with the domain (click, tap, etc.)."
-			Ref: https://developer.chrome.com/blog/autoplay
-		-->
-			<Sound />
-
-			<MainContainer>
-				<BoardFrame />
-			</MainContainer>
-
-			<MainContainer>
-				<Board />
-			</MainContainer>
-
-			<UiCashStacksLayout>
-				{#snippet gameName()}
-					<UiGameName name="Wok Fury" />
-				{/snippet}
-			</UiCashStacksLayout>
-			<Win />
-			<FreeSpinIntro />
-			{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
-				<FreeSpinCounter />
+			{#if gameEntrance.showContent}
+				<!--
+				Autoplay with sound is allowed after user interaction on the loading screen.
+				Ref: https://developer.chrome.com/blog/autoplay
+			-->
+				<Sound />
 			{/if}
-			<FreeSpinOutro />
-			<Transition />
+
+			<FadeContainer
+				show={gameEntrance.showContent}
+				duration={GAME_ENTRANCE_MS}
+				persistent
+			>
+				<MainContainer>
+					<BoardFrame />
+				</MainContainer>
+
+				<MainContainer>
+					<Board />
+				</MainContainer>
+
+				<UiCashStacksLayout>
+					{#snippet gameName()}
+						<UiGameName name="Wok Fury" />
+					{/snippet}
+				</UiCashStacksLayout>
+				<Win />
+				<FreeSpinIntro />
+				{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
+					<FreeSpinCounter />
+				{/if}
+				<FreeSpinOutro />
+				<Transition />
+			</FadeContainer>
 		{/if}
 	</App>
 </div>
@@ -130,5 +150,19 @@
 
 	.pixi-stage.above-html-ui {
 		z-index: 50;
+	}
+
+	:global(.daloniil-ui-enter) {
+		animation: daloniil-ui-enter 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+
+	@keyframes daloniil-ui-enter {
+		from {
+			opacity: 0;
+		}
+
+		to {
+			opacity: 1;
+		}
 	}
 </style>

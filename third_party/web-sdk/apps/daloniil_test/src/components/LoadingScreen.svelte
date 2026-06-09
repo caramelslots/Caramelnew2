@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { SpineProvider, SpineTrack, Container, Sprite } from 'pixi-svelte';
 	import { FadeContainer, LoadingProgress } from 'components-pixi';
 	import { MainContainer } from 'components-layout';
 
 	import { getContext } from '../game/context';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import TransitionAnimation from './TransitionAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 
@@ -15,6 +17,18 @@
 	const context = getContext();
 
 	let loadingType = $state<'start' | 'transition'>('start');
+
+	// Warm up board symbols / frame textures while the player reads "press to continue".
+	$effect(() => {
+		if (context.stateApp.loaded) {
+			gameEntrance.preloadContent = true;
+		}
+	});
+
+	const onTransitionComplete = () => {
+		gameEntrance.showContent = true;
+		props.onloaded();
+	};
 </script>
 
 <!-- logo and loading progress -->
@@ -51,5 +65,5 @@
 
 <!-- transition between the loading screen and the game -->
 <FadeContainer show={loadingType === 'transition'}>
-	<TransitionAnimation oncomplete={props.onloaded} />
+	<TransitionAnimation oncomplete={onTransitionComplete} />
 </FadeContainer>

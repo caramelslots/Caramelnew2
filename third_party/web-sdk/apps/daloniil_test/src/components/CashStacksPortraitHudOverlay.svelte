@@ -18,6 +18,7 @@
 	import { portraitHudAnchors } from '../game/portraitHudAnchors.svelte';
 	import { getRoundsCounter } from '../game/autoplay';
 	import { getContext } from '../game/context';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { getContextLayout } from 'utils-layout';
 
@@ -61,9 +62,7 @@
 	const isFreeSpins = $derived(
 		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
 	);
-	const show = $derived(
-		isPortrait && !context.stateLayout.showLoadingScreen && uiVisible,
-	);
+	const show = $derived(isPortrait && gameEntrance.showContent && uiVisible);
 
 	const hud = $derived.by(() => {
 		void stateGame.gameType;
@@ -238,7 +237,7 @@
 </script>
 
 {#if show}
-	<div class="portrait-hud-overlay" aria-label="game controls">
+	<div class="portrait-hud-overlay daloniil-ui-enter" aria-label="game controls">
 		{#if !isFreeSpins}
 			<button
 				type="button"
