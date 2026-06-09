@@ -208,11 +208,14 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		}
 
 		// Update active items in-place: rawSymbol + position.
-		// Write rawSymbol unconditionally (content changes every spin).
+		// Skip rawSymbol writes when content is unchanged — Mystery columns
+		// (all `M`) otherwise re-trigger spine remounts on landing pool trim.
 		// Write symbolIndex only when it actually changes to avoid triggering
 		// symbolY() re-evaluation on items that are staying in the same slot.
 		for (let i = 0; i < newLen; i++) {
-			reelState.symbols[i].rawSymbol = layout[i];
+			if (!_.isEqual(reelState.symbols[i].rawSymbol, layout[i])) {
+				reelState.symbols[i].rawSymbol = layout[i];
+			}
 			if (reelState.symbols[i].symbolIndex !== i) {
 				reelState.symbols[i].symbolIndex = i;
 			}

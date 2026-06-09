@@ -707,6 +707,8 @@ export const DIM_NON_WINNING = {
  * what we want — they should occupy the same visual footprint as the
  * resting symbol. */
 export const M_SIZE = 1.3;
+/** Sprite spin size — matches spine idle footprint (196² bg in 256 skeleton). */
+export const M_SPIN_SIZE_RATIO = (196 / 256) * M_SIZE;
 
 export const MYSTERY_REVEAL_TIER: Record<string, 'high' | 'mid' | 'low'> = {
 	H1: 'high',
@@ -803,6 +805,15 @@ const bStatic = {
 // hexagonal background was missing in static state. Using the spine
 // guarantees both bg + glyph are rendered at the right relative offset
 // and lines up perfectly with the explosion sequence on reveal.
+// Mystery scroll uses a lightweight sprite (like H/L pay symbols) so the
+// column doesn't hitch when the pool trims before landing. Rest/land keeps
+// the full Mystery/idle spine (bg + `?` glyph aligned with reveal).
+const mSpin = {
+	type: 'mysterySprite' as const,
+	bgAssetKey: 'MBgImg' as const,
+	assetKey: 'MImg' as const,
+	sizeRatios: { width: M_SPIN_SIZE_RATIO, height: M_SPIN_SIZE_RATIO },
+};
 const mStatic = {
 	type: 'spine' as const,
 	assetKey: 'M' as const,
@@ -945,7 +956,7 @@ export const SYMBOL_INFO_MAP = {
 		explosion,
 		postWinStatic: mStatic,
 		static: mStatic,
-		spin: mStatic,
+		spin: mSpin,
 		win: mStatic,
 		land: mStatic,
 	},
