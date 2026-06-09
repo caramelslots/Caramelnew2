@@ -103,6 +103,19 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		clearWinSpotlight();
 
 		stateGame.gameType = bookEvent.gameType;
+
+		// FS spins chain back-to-back inside one bet — sync the reel engine with
+		// the visible board (same as post-mystery settle) so handoff starts from
+		// defaultY with no stale pool / win-presentation drift.
+		if (bookEvent.gameType === 'freegame') {
+			const settledBoard = stateGame.board.map((reel) =>
+				reel.reelState.symbols
+					.slice(0, reel.reelLength)
+					.map(({ rawSymbol }) => ({ ...rawSymbol })),
+			);
+			stateGameDerived.enhancedBoard.settle(settledBoard);
+		}
+
 		// Full reel scroll starts here once RGS has returned the result board.
 		await stateGameDerived.enhancedBoard.spin({
 			revealEvent: bookEvent,

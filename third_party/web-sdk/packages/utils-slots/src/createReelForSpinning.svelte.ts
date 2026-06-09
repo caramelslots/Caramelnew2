@@ -493,6 +493,13 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		const isSpinning = reelState.motion === 'spinning';
 		const symbolHeight = reelOptions.symbolHeight;
 
+		// Enter spin state BEFORE pool swap / placeY so per-symbol win offsets
+		// (bounce Y / scale / dim) are not baked into handoff reposition math.
+		if (!isSpinning) {
+			reelState.motion = 'spinning';
+			void updateAllReelSymbolState('spin');
+		}
+
 		const applyLegacySeamlessPrepend = () => {
 			const currentContent = reelState.symbols
 				.slice(0, reelState.activeSymbolCount)
@@ -600,11 +607,6 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 				const topY = addPadding(paddingSize);
 				placeY(topY + phaseOffset);
 			}
-		}
-
-		if (!isSpinning) {
-			reelState.motion = 'spinning';
-			void updateAllReelSymbolState('spin');
 		}
 
 		// Start slideDown in this sync turn (before interruptible's async executor

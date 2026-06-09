@@ -37,7 +37,21 @@
 		props.reelSymbol.symbolState === 'win' || props.reelSymbol.symbolState === 'postWinStatic',
 	);
 	const isSpinningSymbol = $derived(props.reelSymbol.symbolState === 'spin');
+	const applyWinPresentation = $derived(isWinningState && !isSpinningSymbol);
 	const dimAlphaTween = new Tween(1);
+
+	$effect(() => {
+		const state = props.reelSymbol.symbolState;
+		if (state === 'spin' || state === 'static' || state === 'land') {
+			untrack(() => {
+				winScale.set(1, { duration: 0 });
+				winYOffset.set(0, { duration: 0 });
+				if (state === 'spin') {
+					dimAlphaTween.set(1, { duration: 0 });
+				}
+			});
+		}
+	});
 
 	$effect(() => {
 		const target = stateGame.winSpotlightActive && !isWinningState ? DIM_NON_WINNING.alpha : 1;
@@ -141,11 +155,11 @@
 
 <SymbolWrap
 	x={getSymbolX(props.reelIndex)}
-	y={props.reelSymbol.symbolY() + winYOffset.current}
+	y={props.reelSymbol.symbolY() + (applyWinPresentation ? winYOffset.current : 0)}
 	spinActive={isSpinningSymbol}
-	scaleX={props.reelSymbol.landScaleX() * winScale.current}
-	scaleY={props.reelSymbol.landScaleY() * winScale.current}
-	alpha={dimAlphaTween.current}
+	scaleX={props.reelSymbol.landScaleX() * (applyWinPresentation ? winScale.current : 1)}
+	scaleY={props.reelSymbol.landScaleY() * (applyWinPresentation ? winScale.current : 1)}
+	alpha={isSpinningSymbol ? 1 : dimAlphaTween.current}
 >
 	{#key `${props.reelSymbol.symbolState}-${symbolInfo.type}-${symbolInfo.animationName ?? ''}`}
 		<Symbol
