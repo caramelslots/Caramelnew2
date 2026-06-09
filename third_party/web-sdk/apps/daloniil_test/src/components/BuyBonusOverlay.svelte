@@ -393,67 +393,67 @@
 		color: #fff;
 	}
 
-	/* Узкие экраны (не popout): карточки в ряд, уменьшаем размеры. */
+	/* Узкие экраны (не popout, не portrait): карточки в ряд, уменьшаем размеры. */
 	@media (max-width: 600px) {
-		.buy-bonus-wrap:not(.popout-l):not(.popout-s) {
+		.buy-bonus-wrap:not(.popout-l):not(.popout-s):not(.portrait) {
 			padding: 0.85rem 0.75rem;
 			gap: 0.75rem;
+
+			.title { font-size: 1.15rem; }
+
+			.cards { gap: 0.55rem; }
+
+			.card {
+				padding: 0.65rem 0.45rem 0.75rem;
+				gap: 0.35rem;
+				border-radius: 10px;
+			}
+
+			.card-title {
+				font-size: 0.72rem;
+				min-height: 2.4em;
+			}
+
+			.icon-wrap {
+				min-height: 64px;
+			}
+
+			.icon-wrap :global(.asset-placeholder) {
+				width: 64px !important;
+				height: 64px !important;
+			}
+
+			.card-desc {
+				font-size: 0.52rem;
+				min-height: 2.5em;
+				letter-spacing: 0.02em;
+			}
+
+			.card-price { font-size: 0.95rem; }
+
+			.buy-button {
+				min-width: 0;
+				width: 100%;
+				padding: 0.4rem 0.5rem;
+				font-size: 0.72rem;
+				border-radius: 7px;
+			}
+
+			.bet-adjuster {
+				gap: 0.6rem;
+				padding: 0.55rem 0.65rem;
+			}
+
+			.bet-btn {
+				width: 40px;
+				height: 32px;
+				font-size: 1.1rem;
+			}
+
+			.bet-display { min-width: 120px; }
+			.bet-label { font-size: 0.72rem; }
+			.bet-value { font-size: 0.9rem; }
 		}
-
-		.title { font-size: 1.15rem; }
-
-		.cards { gap: 0.55rem; }
-
-		.card {
-			padding: 0.65rem 0.45rem 0.75rem;
-			gap: 0.35rem;
-			border-radius: 10px;
-		}
-
-		.card-title {
-			font-size: 0.72rem;
-			min-height: 2.4em;
-		}
-
-		.icon-wrap {
-			min-height: 64px;
-		}
-
-		.icon-wrap :global(.asset-placeholder) {
-			width: 64px !important;
-			height: 64px !important;
-		}
-
-		.card-desc {
-			font-size: 0.52rem;
-			min-height: 2.5em;
-			letter-spacing: 0.02em;
-		}
-
-		.card-price { font-size: 0.95rem; }
-
-		.buy-button {
-			min-width: 0;
-			width: 100%;
-			padding: 0.4rem 0.5rem;
-			font-size: 0.72rem;
-			border-radius: 7px;
-		}
-
-		.bet-adjuster {
-			gap: 0.6rem;
-			padding: 0.55rem 0.65rem;
-		}
-
-		.bet-btn {
-			width: 40px;
-			height: 32px;
-			font-size: 1.1rem;
-		}
-
-		.bet-display { min-width: 120px; }
-		.bet-label { font-size: 0.72rem; }
-		.bet-value { font-size: 0.9rem; }
 	}
 
 	/*
@@ -461,16 +461,16 @@
 		X в потоке header (не в углу блока), чтобы не вылезал за скругление.
 	*/
 	.buy-bonus-wrap.portrait:not(.popout-l):not(.popout-s) {
-		width: min(360px, 86vw);
-		padding: 1rem 0.85rem 1.05rem;
-		gap: 0.9rem;
+		width: min(420px, 94vw);
+		padding: 1.1rem 0.95rem 1.15rem;
+		gap: 1rem;
 
 		.header {
 			display: grid;
-			grid-template-columns: 20px 1fr 20px;
+			grid-template-columns: 26px 1fr 26px;
 			align-items: center;
-			column-gap: 0.3rem;
-			min-height: 1.25rem;
+			column-gap: 0.35rem;
+			min-height: 1.6rem;
 		}
 
 		.title {
@@ -478,6 +478,7 @@
 			grid-row: 1;
 			padding: 0;
 			text-align: center;
+			font-size: 1.25rem;
 		}
 
 		.close-btn {
@@ -487,77 +488,105 @@
 			grid-row: 1;
 			justify-self: end;
 			align-self: center;
-			width: 20px;
-			height: 20px;
-			font-size: 0.78rem;
-			border-radius: 5px;
+			width: 26px;
+			height: 26px;
+			font-size: 1rem;
+			border-radius: 6px;
 			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
 		}
 
 		.cards {
 			grid-template-columns: 1fr 1fr;
-			gap: 0.5rem;
+			gap: 0.65rem;
 		}
 
 		.card {
-			padding: 0.8rem 0.4rem 0.9rem;
-			gap: 0.5rem;
+			padding: 0.95rem 0.5rem 1rem;
+			gap: 0.55rem;
 		}
 
 		.card-title {
-			font-size: 0.72rem;
+			font-size: 0.88rem;
 			min-height: 2.4em;
 		}
 
 		.icon-wrap {
-			min-height: 76px;
+			min-height: 88px;
 		}
 
 		.icon-wrap :global(.asset-placeholder) {
-			width: 68px !important;
-			height: 68px !important;
+			width: 84px !important;
+			height: 84px !important;
 		}
 
 		.card-desc {
-			font-size: 0.58rem;
+			font-size: 0.68rem;
 			line-height: 1.35;
 			min-height: 2.6em;
 		}
 
 		.card-price {
-			font-size: 1rem;
+			font-size: 1.15rem;
 		}
 
 		.buy-button {
-			padding: 0.5rem 0.35rem;
-			font-size: 0.74rem;
+			padding: 0.58rem 0.4rem;
+			font-size: 0.85rem;
 		}
 
 		.feature-toggles :global(.feature-row) {
-			padding: 0.6rem 0.45rem;
+			padding: 0.7rem 0.55rem;
+		}
+
+		.feature-toggles :global(.feature-name) {
+			font-size: 0.88rem;
+		}
+
+		.feature-toggles :global(.feature-cost) {
+			font-size: 0.72rem;
+		}
+
+		.feature-toggles :global(.feature-toggle) {
+			width: 36px;
+			height: 20px;
+		}
+
+		.feature-toggles :global(.knob) {
+			width: 16px;
+			height: 16px;
+		}
+
+		.feature-toggles :global(.feature-toggle.on .knob) {
+			left: 17px;
 		}
 
 		.bet-adjuster {
-			gap: 0.8rem;
-			padding: 0.6rem 0.7rem;
+			gap: 0.85rem;
+			padding: 0.7rem 0.8rem;
+		}
+
+		.bet-btn {
+			width: 46px;
+			height: 36px;
+			font-size: 1.25rem;
 		}
 
 		.bet-display {
 			flex-direction: column;
 			align-items: center;
 			gap: 0.05rem;
-			min-width: 88px;
+			min-width: 96px;
 		}
 
 		.bet-label {
-			font-size: 0.88rem;
+			font-size: 0.92rem;
 			font-weight: 800;
 			color: rgba(255, 255, 255, 0.88);
 			letter-spacing: 0.08em;
 		}
 
 		.bet-value {
-			font-size: 1.25rem;
+			font-size: 1.35rem;
 			font-weight: 900;
 		}
 	}
@@ -829,26 +858,26 @@
 			overflow-y: auto;
 		}
 
-		.cards { gap: 0.5rem; }
+		.buy-bonus-wrap:not(.portrait) .cards { gap: 0.5rem; }
 
-		.card {
+		.buy-bonus-wrap:not(.portrait) .card {
 			padding: 0.5rem 0.4rem 0.6rem;
 			gap: 0.3rem;
 		}
 
-		.card-title { font-size: 0.68rem; min-height: 2em; }
+		.buy-bonus-wrap:not(.portrait) .card-title { font-size: 0.68rem; min-height: 2em; }
 
-		.icon-wrap { min-height: 52px; }
+		.buy-bonus-wrap:not(.portrait) .icon-wrap { min-height: 52px; }
 
-		.icon-wrap :global(.asset-placeholder) {
+		.buy-bonus-wrap:not(.portrait) .icon-wrap :global(.asset-placeholder) {
 			width: 52px !important;
 			height: 52px !important;
 		}
 
-		.card-desc { font-size: 0.48rem; min-height: 2.2em; }
-		.card-price { font-size: 0.85rem; }
+		.buy-bonus-wrap:not(.portrait) .card-desc { font-size: 0.48rem; min-height: 2.2em; }
+		.buy-bonus-wrap:not(.portrait) .card-price { font-size: 0.85rem; }
 
-		.buy-button {
+		.buy-bonus-wrap:not(.portrait) .buy-button {
 			min-width: 0;
 			width: 100%;
 			padding: 0.35rem 0.4rem;
