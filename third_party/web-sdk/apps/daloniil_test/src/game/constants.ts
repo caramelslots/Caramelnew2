@@ -181,16 +181,10 @@ const SPIN_OPTIONS_SHARED = {
 	// Start at a constant speed (no `backIn` wind-up burst) so the slot doesn't
 	// visibly "surge" to swap symbols at the start of the spin.
 	reelPreSpinWindup: false,
-	// Inject the result above the on-screen symbols and scroll it in, instead of
-	// teleporting to a fresh stack — avoids symbols visibly swapping in place on
-	// the board at the pre-spin → result handoff.
-	reelSeamlessSpinStart: true,
-	// EXACT number of rows the FIRST column scrolls on the main spin (later
-	// columns add the padding cascade). This is the real "how many rotations"
-	// knob — it does NOT change speed (REEL_SPEED) and is independent of
-	// reelPaddingMultiplierNormal. ~5 rows ≈ one board height ≈ "1 оборот", so
-	// 15 ≈ 3 оборота. Lower = fewer rotations for every column, no symbol swap.
-	reelMainSpinRows: 10,
+	// Continuous scroll while RGS responds (see utils-slots hold-phase). Lines/price
+	// use the default preSpinPadding loop instead; we skip padding after readyToSpin
+	// and scroll in fixed row chunks to avoid the upward placeY(topY) snap.
+	reelPreSpinHoldRotations: 5,
 	reelBounceSizeMulti: 0,
 	reelSettleSecondaryMulti: 0,
 	reelSettleSecondarySpeedMulti: 0,

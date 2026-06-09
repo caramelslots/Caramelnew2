@@ -78,6 +78,23 @@ import {
 	INITIAL_SYMBOL_STATE,
 	SCATTER_LAND_SOUND_MAP,
 } from './constants';
+import { devPreview } from './devPreview.svelte';
+
+const REEL_SCROLL_SPEED_MULT_SLOW = 0.5;
+
+const withReelScrollSpeedMult = <T extends typeof SPIN_OPTIONS_DEFAULT>(
+	options: T,
+	mult: number,
+): T => {
+	if (mult === 1) return options;
+	return {
+		...options,
+		reelBounceBackSpeed: options.reelBounceBackSpeed * mult,
+		reelSpinSpeedBeforeBounce: options.reelSpinSpeedBeforeBounce * mult,
+		reelPreSpinSpeed: options.reelPreSpinSpeed * mult,
+		reelSpinSpeed: options.reelSpinSpeed * mult,
+	};
+};
 
 const onSymbolLand = ({ rawSymbol }: { rawSymbol: RawSymbol }) => {
 	if (rawSymbol.name === 'B') {
@@ -112,8 +129,12 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 		onSymbolLand,
 	});
 
-	reel.reelState.spinOptions = () =>
-		reel.reelState.spinType === 'fast' ? SPIN_OPTIONS_FAST : SPIN_OPTIONS_DEFAULT;
+	reel.reelState.spinOptions = () => {
+		const base =
+			reel.reelState.spinType === 'fast' ? SPIN_OPTIONS_FAST : SPIN_OPTIONS_DEFAULT;
+		const mult = devPreview.slowReelScroll ? REEL_SCROLL_SPEED_MULT_SLOW : 1;
+		return withReelScrollSpeedMult(base, mult);
+	};
 
 	return reel;
 });

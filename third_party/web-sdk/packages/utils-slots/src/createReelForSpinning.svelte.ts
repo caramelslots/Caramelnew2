@@ -149,6 +149,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 
 	// internal states
 	let isPreSpinning = false;
+	let hasSignaledReady = false;
 	let targetPaddingPosition = reelLength - 1;
 	// Keep prev/target as plain raw-symbol arrays (no $state objects) to avoid
 	// creating and immediately discarding $state proxies every pre-spin loop tick.
@@ -342,11 +343,19 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		setSymbolsWithReelSymbols(targetRawSymbols);
 	};
 
+	const stopPreSpin = () => {
+		isPreSpinning = false;
+		// Cut an in-flight hold-chunk tween so main-spin handoff does not wait
+		// for the slide to finish (~100ms hitch when RGS lands mid-chunk).
+		reelY.set(reelY.current, { duration: 0 });
+	};
+
 	const preSpinPadding = async ({
 		preSpinPaddingRawReel,
 	}: {
 		preSpinPaddingRawReel: TRawSymbol[];
 	}) => {
+		if (!isPreSpinning) return;
 		const randomStart = Math.floor(Math.random() * preSpinPaddingRawReel.length);
 		prevRawSymbols = targetRawSymbols;
 		targetRawSymbols = getPaddingRawSymbols({
@@ -370,34 +379,42 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	}) => {
 		let started = false;
 		while (isPreSpinning) {
-			const speed = started
-				? reelState.spinOptions().reelSpinSpeed
-				: reelState.spinOptions().reelPreSpinSpeed;
-			// First slide normally winds up with `backIn` (a dip-back then a
-			// burst past the steady speed). Opt out via `reelPreSpinWindup: false`
-			// to start at a constant speed — avoids the "whole slot surges to
-			// swap symbols" look. Subsequent loops / turbo are always linear.
-			const useWindup = reelState.spinOptions().reelPreSpinWindup ?? true;
-			const easing = started || isTurboBeforeAll || !useWindup ? linear : backIn;
-			const preSpinRotations = reelState.spinOptions().reelPreSpinRotations;
+			const opts = reelState.spinOptions();
+			const holdRotations = opts.reelPreSpinHoldRotations;
+			const inHoldPhase = hasSignaledReady && holdRotations !== undefined;
+			const rotationRows = inHoldPhase ? holdRotations : opts.reelPreSpinRotations;
+			const speed = started ? opts.reelSpinSpeed : opts.reelPreSpinSpeed;
+			const useWindup = opts.reelPreSpinWindup ?? true;
+			const easing =
+				started || isTurboBeforeAll || !useWindup || inHoldPhase ? linear : backIn;
 			const preSpinTargetY =
-				preSpinRotations === undefined
+				rotationRows === undefined
 					? defaultY
-					: reelY.current + preSpinRotations * reelOptions.symbolHeight;
+					: reelY.current + rotationRows * reelOptions.symbolHeight;
+
 			await slideY({ reelY: preSpinTargetY, speed, easing });
-			// Signal readiness directly instead of polling via $effect.
-			// waitForResolve in createEnhanceBoardSpin sets readyToSpin = resolve;
-			// calling it here (instead of from the polling effect) is safe because:
-			//   - when readyToSpin = () => {} (default): no-op
-			//   - when readyToSpin = resolve (set by waitForResolve): resolves the promise
-			//   - after the promise resolves the second call is harmless
-			reelState.readyToSpin();
-			await preSpinPadding({ preSpinPaddingRawReel });
-			if (!started) {
-				reelState.motion = 'spinning';
-				await updateAllReelSymbolState('spin');
-				started = true;
+			if (!isPreSpinning) break;
+
+			if (!hasSignaledReady) {
+				reelState.readyToSpin();
+				hasSignaledReady = true;
+				if (!started) {
+					reelState.motion = 'spinning';
+					// Don't block the next hold chunk on batched symbolState flips.
+					void updateAllReelSymbolState('spin');
+					started = true;
+				}
+				// Hold-phase: keep scrolling in fixed row chunks while RGS responds.
+				// Each chunk has real distance/duration (never a zero-length slideY loop).
+				if (holdRotations !== undefined) continue;
+				// Apps without hold config park here until spin().
+				break;
 			}
+
+			if (inHoldPhase) continue;
+
+			// Standard SDK loop (lines/price/ways): slide → padding swap → repeat.
+			await preSpinPadding({ preSpinPaddingRawReel });
 		}
 	};
 
@@ -415,6 +432,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		const preSpinPaddingRawReel = preSpinPaddingReel;
 
 		isPreSpinning = true;
+		hasSignaledReady = false;
 		reelState.spinType = isTurboBeforeAll ? 'fast' : 'normal';
 		await preSpinPadding({ preSpinPaddingRawReel });
 		if (!isTurboBeforeAll) await delaySpinByReelIndex();
@@ -425,13 +443,37 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		const isSpinning = reelState.motion === 'spinning';
 		const symbolHeight = reelOptions.symbolHeight;
 
+		const applyLegacySeamlessPrepend = () => {
+			const currentContent = reelState.symbols
+				.slice(0, reelState.activeSymbolCount)
+				.map((reelSymbol) => reelSymbol.rawSymbol);
+			const paddingRawSymbols = getPaddingRawSymbols({
+				paddingRawReel,
+				start: targetPaddingPosition,
+				length: paddingSize,
+			});
+			const prependCount = targetRawSymbols.length + paddingRawSymbols.length;
+			const layout: TRawSymbol[] = [
+				...targetRawSymbols,
+				...paddingRawSymbols,
+				...currentContent,
+			];
+			updateSymbolsPool(layout);
+			placeY(reelY.current - prependCount * symbolHeight);
+		};
+
 		// IMPORTANT: the pool swap and the reel reposition must stay in ONE
 		// synchronous batch — no `await` between them — otherwise Svelte can render
 		// a frame with the new symbols at the old position (an in-place swap).
 		if (reelState.spinOptions().reelSeamlessSpinStart) {
 			const opts = reelState.spinOptions();
 			const mainSpinRows = opts.reelMainSpinRows;
-			if (mainSpinRows !== undefined) {
+			const parkDriftRows = Math.abs(reelY.current - defaultY) / symbolHeight;
+			const useControlledMainSpinStart =
+				mainSpinRows !== undefined &&
+				parkDriftRows <= (opts.reelMainSpinParkSlackRows ?? 1);
+
+			if (useControlledMainSpinStart) {
 				// Controlled seamless start: scroll an EXACT number of symbol rows.
 				// reel 0 scrolls `reelMainSpinRows`; each later reel adds the padding
 				// accumulated from previous reels (the left-to-right stop cascade).
@@ -442,8 +484,13 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 				// `scrollRows` whole rows. The anchor is derived from reelY.current,
 				// so the scroll is also robust to whatever sub-position the pre-spin
 				// happened to hand off at.
+				//
+				// Only valid while reelY is still parked near defaultY. After
+				// `reelPreSpinHoldRotations` drift the filler math diverges and
+				// placeY(startY) reads as an up/down alignment snap — fall back to
+				// legacy seamless prepend instead.
 				const cascadeRows = paddingSize - basePaddingSize();
-				const scrollRows = mainSpinRows + cascadeRows;
+				const scrollRows = mainSpinRows + Math.round(cascadeRows);
 				const landingY = defaultY + symbolHeight * opts.reelBounceSizeMulti;
 
 				// Symbols already scrolled above the top of the board won't be seen
@@ -487,34 +534,22 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			} else {
 				// Legacy seamless start: inject [result, padding] ABOVE the symbols
 				// currently on screen and keep those on-screen symbols exactly where
-				// they are, shifting the reel up by the prepended count. The normal
-				// slideDown then scrolls the result in from off-screen.
-				const currentContent = reelState.symbols
-					.slice(0, reelState.activeSymbolCount)
-					.map((reelSymbol) => reelSymbol.rawSymbol);
-				const paddingRawSymbols = getPaddingRawSymbols({
-					paddingRawReel,
-					start: targetPaddingPosition,
-					length: paddingSize,
-				});
-				const prependCount = targetRawSymbols.length + paddingRawSymbols.length;
-				const layout: TRawSymbol[] = [
-					...targetRawSymbols,
-					...paddingRawSymbols,
-					...currentContent,
-				];
-				updateSymbolsPool(layout);
-				placeY(reelY.current - prependCount * symbolHeight);
+				// they are, shifting the reel up by the prepended count. Safe at any
+				// reelY (including post-hold-scroll drift).
+				applyLegacySeamlessPrepend();
 			}
 		} else {
-			// Legacy: teleport to a freshly padded stack. `topY` is a whole
-			// multiple of symbolHeight while the pre-spin position is mid-slide
-			// (fractional), so carry the fractional phase over to keep the jump a
-			// whole number of symbol heights (no sub-symbol hitch).
-			const phaseOffset =
-				reelY.current - Math.round(reelY.current / symbolHeight) * symbolHeight;
-			const topY = addPadding(paddingSize);
-			placeY(topY + phaseOffset);
+			const opts = reelState.spinOptions();
+			// Hold-scroll drifts reelY; prepend handoff keeps on-screen symbols fixed.
+			// Standard apps (lines/price) use phaseOffset + topY teleport near defaultY.
+			if (opts.reelPreSpinHoldRotations !== undefined) {
+				applyLegacySeamlessPrepend();
+			} else {
+				const phaseOffset =
+					reelY.current - Math.round(reelY.current / symbolHeight) * symbolHeight;
+				const topY = addPadding(paddingSize);
+				placeY(topY + phaseOffset);
+			}
 		}
 
 		if (!isSpinning) {
@@ -633,7 +668,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	};
 
 	const spin = async () => {
-		isPreSpinning = false;
+		stopPreSpin();
 
 		await SPIN_MAP[reelState.spinType]();
 
@@ -679,6 +714,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		prepareToSpin,
 		spin,
 		stop,
+		stopPreSpin,
 		setSymbolsWithRawSymbols,
 		readyToSpinEffect,
 	};

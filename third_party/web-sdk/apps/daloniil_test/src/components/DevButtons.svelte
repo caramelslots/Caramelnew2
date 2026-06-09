@@ -453,6 +453,20 @@
 	{#if open}
 		<div class="dev-body">
 			<section>
+				<h4>Reel Speed</h4>
+				<div class="grid">
+					<button
+						type="button"
+						class:active={devPreview.slowReelScroll}
+						title="Замедлить прокрутку барабанов до 0.5× (spin / pre-spin / bounce-back)"
+						onclick={() => (devPreview.slowReelScroll = !devPreview.slowReelScroll)}
+					>
+						{devPreview.slowReelScroll ? 'Scroll: 0.5×' : 'Scroll: 1×'}
+					</button>
+				</div>
+			</section>
+
+			<section>
 				<h4>Win Levels (setWin)</h4>
 				<div class="grid">
 					{#each WIN_LEVEL_PRESETS as preset (preset.label)}

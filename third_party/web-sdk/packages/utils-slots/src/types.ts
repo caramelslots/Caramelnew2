@@ -22,6 +22,13 @@ export type SpinningReelSpinOptions = {
 	/** Symbol heights per pre-spin loop (default: full slide to defaultY). */
 	reelPreSpinRotations?: number;
 	/**
+	 * After `readyToSpin` fires, keep scrolling this many symbol rows per loop
+	 * WITHOUT `preSpinPadding` (no placeY snap upward). Opt-in for games that
+	 * need continuous motion during the RGS round-trip. Standard SDK apps
+	 * (lines/price/ways) omit this and use the padding loop instead.
+	 */
+	reelPreSpinHoldRotations?: number;
+	/**
 	 * Whether the first pre-spin slide winds up with `backIn` easing (a slight
 	 * dip-back then a burst past the steady speed). Defaults to `true` (legacy
 	 * behavior). Set `false` to start the spin at a constant speed — useful
@@ -50,6 +57,13 @@ export type SpinningReelSpinOptions = {
 	 * result block + padding).
 	 */
 	reelMainSpinRows?: number;
+	/**
+	 * Max |reelY − defaultY| (in symbol rows) for the controlled `reelMainSpinRows`
+	 * handoff. Beyond this (e.g. after `reelPreSpinHoldRotations` drift) the legacy
+	 * seamless prepend is used so visible symbols are not re-aligned with a snap.
+	 * Defaults to 1 row.
+	 */
+	reelMainSpinParkSlackRows?: number;
 	/**
 	 * Optional damped-oscillation settle.
 	 *
