@@ -1,8 +1,8 @@
 <script lang="ts" module>
-	import { sound, type MusicName, type SoundEffectName, type SoundName } from '../game/sound';
+	import { sound, playBgm, type MusicName, type SoundEffectName, type SoundName, type BgmLoopName } from '../game/sound';
 
 	export type EmitterEventSound =
-		| { type: 'soundMusic'; name: MusicName }
+		| { type: 'soundMusic'; name: MusicName; withIntro?: boolean }
 		| { type: 'soundOnce'; name: SoundEffectName; forcePlay?: boolean }
 		| { type: 'soundLoop'; name: SoundEffectName }
 		| { type: 'soundStop'; name: SoundName }
@@ -22,6 +22,8 @@
 
 	const context = getContext();
 
+	const playLoopBgm = (name: BgmLoopName, withIntro?: boolean) => playBgm(name, { withIntro });
+
 	context.eventEmitter.subscribeOnMount({
 		// ui
 		soundBetMode: async ({ betModeKey }) => {
@@ -29,9 +31,9 @@
 				// check if SUPERSPIN, when changing the bet mode.
 				sound.players.once.play({ name: 'sfx_winlevel_end' });
 				await waitForTimeout(SECOND);
-				sound.players.music.play({ name: 'bgm_freespin' });
+				playLoopBgm('bgm_freespin');
 			} else {
-				sound.players.music.play({ name: 'bgm_main' });
+				playLoopBgm('bgm_main');
 			}
 		},
 		soundPressGeneral: () => sound.players.once.play({ name: 'sfx_btn_general' }),
@@ -40,7 +42,13 @@
 		soundScatterCounterIncrease: () => (context.stateGame.scatterCounter = context.stateGame.scatterCounter + 1), // prettier-ignore
 		soundScatterCounterClear: () => (context.stateGame.scatterCounter = 0),
 		// game
-		soundMusic: ({ name }) => sound.players.music.play({ name }),
+		soundMusic: ({ name, withIntro }) => {
+			if (name === 'bgm_main' || name === 'bgm_freespin') {
+				playLoopBgm(name, withIntro);
+				return;
+			}
+			sound.players.music.play({ name });
+		},
 		soundLoop: ({ name }) => sound.players.loop.play({ name }),
 		soundOnce: ({ name, forcePlay }) => sound.players.once.play({ name, forcePlay }),
 		soundStop: ({ name }) => sound.stop({ name }),
@@ -50,9 +58,9 @@
 	onMount(() => {
 		if (stateBet.activeBetModeKey === 'SUPERSPIN') {
 			// check if SUPERSPIN, when resume bet and the bet is a super spin.
-			sound.players.music.play({ name: 'bgm_freespin' });
+			playLoopBgm('bgm_freespin');
 		} else {
-			sound.players.music.play({ name: 'bgm_main' });
+			playLoopBgm('bgm_main', true);
 
 			//How to control volume per soundfile(use fade)
 			// sound.players.music.fade({ name: 'bgm_main', from: 0, to: 1, duration: 2000 });

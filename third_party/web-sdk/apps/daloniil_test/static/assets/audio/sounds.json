@@ -1,7 +1,9 @@
 {
 	"sprite": {
-		"bgm_freespin": [0, 65653, true],
-		"bgm_main": [69544, 126318, true],
+		"bgm_freespin_intro": [0, 7007],
+		"bgm_freespin": [7007, 58646, true],
+		"bgm_main_intro": [69544, 16476],
+		"bgm_main": [86020, 109842, true],
 		"bgm_winlevel_big": [205130, 6362],
 		"bgm_winlevel_epic": [219034, 6325],
 		"bgm_winlevel_max": [225893, 9394, true],
@@ -60,7 +62,9 @@
 		"./assets/audio/sounds.ac3"
 	],
 	"config": {
+		"bgm_freespin_intro": { "volume": 1 },
 		"bgm_freespin": { "volume": 1 },
+		"bgm_main_intro": { "volume": 1 },
 		"bgm_main": { "volume": 1 },
 		"bgm_winlevel_big": { "volume": 1 },
 		"bgm_winlevel_epic": { "volume": 1 },

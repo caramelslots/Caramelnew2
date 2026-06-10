@@ -43,7 +43,36 @@ export function createPlayMusic<TSoundName extends string>(options: {
 		soundPlayMap[sound.soundState](sound);
 	};
 
+	let introEndListener: ((soundId: number) => void) | null = null;
+
+	const playWithIntro = (playOptions: { intro: TSoundName; loop: TSoundName }) => {
+		if (introEndListener) {
+			options.howl.off('end', introEndListener);
+			introEndListener = null;
+		}
+
+		stopAllMusic();
+		const soundId = options.howl.play(playOptions.intro);
+		options.getSoundMap()[playOptions.intro] = {
+			...options.newSound(playOptions.intro),
+			soundId,
+			soundState: 'playing',
+		};
+		options.initSoundVolume(playOptions.intro);
+
+		introEndListener = (endedId: number) => {
+			if (endedId !== soundId) return;
+			options.howl.off('end', introEndListener!);
+			introEndListener = null;
+			delete options.getSoundMap()[playOptions.intro];
+			options.howl.stop(soundId);
+			startMusic(options.newSound(playOptions.loop));
+		};
+		options.howl.on('end', introEndListener);
+	};
+
 	return {
 		play,
+		playWithIntro,
 	};
 }

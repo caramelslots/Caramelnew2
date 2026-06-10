@@ -42,12 +42,20 @@ function createPlayer<TSoundName extends string, TPlay extends Function>(playerO
 		}
 	};
 
-	const { play } = playerOptions.createPlay({
+	const playFactory = playerOptions.createPlay({
 		howl: playerOptions.howl,
 		newSound,
 		getSoundMap: () => soundMap,
 		initSoundVolume: (soundName: TSoundName) => initSoundVolume(soundName),
 	});
+	const { play } = playFactory;
+	const playWithIntro =
+		'playWithIntro' in playFactory
+			? (playFactory.playWithIntro as (options: {
+					intro: TSoundName;
+					loop: TSoundName;
+				}) => void)
+			: undefined;
 
 	const stop = (stopOptions: StopOptions<TSoundName>) => {
 		const existingSound = soundMap[stopOptions.name];
@@ -100,6 +108,7 @@ function createPlayer<TSoundName extends string, TPlay extends Function>(playerO
 
 	return {
 		play,
+		playWithIntro,
 		stop,
 		fade,
 		volume,

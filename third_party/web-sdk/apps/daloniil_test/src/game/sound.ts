@@ -1,7 +1,9 @@
 import { createSound } from 'utils-sound';
 
 export type MusicName =
+	| 'bgm_main_intro'
 	| 'bgm_main'
+	| 'bgm_freespin_intro'
 	| 'bgm_freespin'
 	| 'bgm_winlevel_big'
 	| 'bgm_winlevel_epic'
@@ -57,6 +59,21 @@ export type SoundEffectName =
 
 export type SoundName = MusicName | SoundEffectName;
 
+export type BgmLoopName = 'bgm_main' | 'bgm_freespin';
+
+const BGM_INTRO: Record<BgmLoopName, MusicName> = {
+	bgm_main: 'bgm_main_intro',
+	bgm_freespin: 'bgm_freespin_intro',
+};
+
 const sound = createSound<SoundName>();
+
+export function playBgm(name: BgmLoopName, options?: { withIntro?: boolean }) {
+	if (options?.withIntro) {
+		sound.players.music.playWithIntro?.({ intro: BGM_INTRO[name], loop: name });
+		return;
+	}
+	sound.players.music.play({ name });
+}
 
 export { sound };

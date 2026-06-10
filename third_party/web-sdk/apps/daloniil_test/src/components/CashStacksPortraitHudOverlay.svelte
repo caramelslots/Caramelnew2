@@ -137,11 +137,12 @@
 		return 'stop_default';
 	});
 
-	const spinDisabled = $derived(
-		isAutoSpinModalOpen
-			? !stateBetDerived.isBetCostAvailable()
-			: betKey === 'spin_disabled' || betKey === 'stop_disabled',
-	);
+	const spinDisabled = $derived.by(() => {
+		if (isAutoSpinModalOpen) return !stateBetDerived.isBetCostAvailable();
+		if (context.stateXstateDerived.isIdle()) return betKey === 'spin_disabled';
+		if (hasAutoBetCounter) return betKey === 'stop_disabled';
+		return true;
+	});
 
 	const smallestBet = $derived(stateConfig.betAmountOptions[0]);
 	const biggestBet = $derived(
