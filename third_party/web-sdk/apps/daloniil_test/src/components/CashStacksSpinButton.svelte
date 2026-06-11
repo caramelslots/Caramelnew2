@@ -11,7 +11,8 @@
 	import { stateBet, stateBetDerived, stateUi } from 'state-shared';
 	import { stateSlots } from 'utils-slots';
 
-	import ButtonBetProvider from 'components-ui-pixi/src/components/ButtonBetProvider.svelte';
+	import { canAffordSpin } from '../game/buyBonusBalance';
+	import CashStacksButtonBetProvider from './CashStacksButtonBetProvider.svelte';
 	import { UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
@@ -22,7 +23,7 @@
 	const isFreeSpins = $derived(
 		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
 	);
-	const disabled = $derived(!stateBetDerived.isBetCostAvailable());
+	const disabled = $derived(!canAffordSpin());
 	const hasCounter = $derived(stateBetDerived.hasAutoBetCounter());
 	let manualSpinHeld = $state(false);
 	let reelsWereSpinning = $state(false);
@@ -71,7 +72,7 @@
 </script>
 
 {#if !isFreeSpins}
-	<ButtonBetProvider>
+	<CashStacksButtonBetProvider>
 		{#snippet children({ key, onpress })}
 			{@const handlePress = () => {
 				if (key === 'spin_default' && !hasCounter) manualSpinHeld = true;
@@ -113,5 +114,5 @@
 				{/snippet}
 			</Button>
 		{/snippet}
-	</ButtonBetProvider>
+	</CashStacksButtonBetProvider>
 {/if}

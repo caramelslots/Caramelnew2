@@ -9,6 +9,7 @@
 
 	import { UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
 
+	import { canIncreaseBet } from '../game/buyBonusBalance';
 	import { getContext } from '../game/context';
 	import { UI_SPRITE_RENDER, uiScaledSize, type UiSizeScaleProps } from '../game/uiButtonSize';
 
@@ -16,8 +17,7 @@
 	const context = getContext();
 	const { width, height } = $derived(uiScaledSize(UI_BASE_SIZE, props.sizeScale));
 	const sizes = $derived({ width, height });
-	const biggest = $derived(stateConfig.betAmountOptions[stateConfig.betAmountOptions.length - 1]);
-	const disabled = $derived(!context.stateXstateDerived.isIdle() || stateBet.betAmount === biggest);
+	const disabled = $derived(!context.stateXstateDerived.isIdle() || !canIncreaseBet());
 
 	const onpress = () => {
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });

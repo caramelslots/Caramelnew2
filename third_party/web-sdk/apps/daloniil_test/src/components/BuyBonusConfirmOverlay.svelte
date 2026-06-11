@@ -18,6 +18,11 @@
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
 	import { clearActiveFeature } from '../game/activeFeature';
+	import {
+		BUY_NORMAL_COST_MULT,
+		BUY_SUPER_COST_MULT,
+		canAffordBuyBonus,
+	} from '../game/buyBonusBalance';
 	import { getContext } from '../game/context';
 	import AssetPlaceholder from './AssetPlaceholder.svelte';
 
@@ -30,10 +35,9 @@
 	   stateBet.activeBetModeKey, чтобы HUD не пересчитывал bet под цену
 	   бонуса до подтверждения). */
 	const isSuper = $derived(stateBonus.selectedBetModeKey === 'bonus_super');
-	const NORMAL_MULT = 100;
-	const SUPER_MULT = 200;
-	const multiplier = $derived(isSuper ? SUPER_MULT : NORMAL_MULT);
+	const multiplier = $derived(isSuper ? BUY_SUPER_COST_MULT : BUY_NORMAL_COST_MULT);
 	const price = $derived(numberToCurrencyString(stateBet.betAmount * multiplier));
+	const canConfirm = $derived(canAffordBuyBonus(multiplier));
 
 	const title = $derived(context.i18nDerived.buyBonusTitle());
 	const description = $derived(
@@ -54,6 +58,7 @@
 	};
 
 	const confirm = () => {
+		if (!canAffordBuyBonus(multiplier)) return;
 		clearActiveFeature();
 		/*
 			Финальный set activeBetModeKey происходит ТОЛЬКО здесь, после
@@ -140,6 +145,7 @@
 					<button
 						type="button"
 						class="confirm-btn"
+						disabled={!canConfirm}
 						onclick={confirm}
 						data-test="confirm-button"
 					>
@@ -335,7 +341,13 @@
 		box-shadow: 0 3px 0 rgba(0, 0, 0, 0.22);
 		min-width: 140px;
 
-		&:hover { filter: brightness(1.08); }
-		&:active { transform: translateY(1px); }
+		&:hover:not(:disabled) { filter: brightness(1.08); }
+		&:active:not(:disabled) { transform: translateY(1px); }
+
+		&:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+			pointer-events: none;
+		}
 	}
 </style>

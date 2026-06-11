@@ -17,6 +17,7 @@
 	import { computePortraitHudCanvas } from '../game/portraitHudLayout';
 	import { portraitHudAnchors } from '../game/portraitHudAnchors.svelte';
 	import { getRoundsCounter } from '../game/autoplay';
+	import { canAffordSpin, canIncreaseBet } from '../game/buyBonusBalance';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
@@ -128,7 +129,7 @@
 
 	const betKey = $derived.by(() => {
 		if (context.stateXstateDerived.isIdle()) {
-			if (!stateBetDerived.isBetCostAvailable()) return 'spin_disabled';
+			if (!canAffordSpin()) return 'spin_disabled';
 			return 'spin_default';
 		}
 		if (stopDisabled) return 'stop_disabled';
@@ -138,8 +139,8 @@
 	});
 
 	const spinDisabled = $derived.by(() => {
-		if (isAutoSpinModalOpen) return !stateBetDerived.isBetCostAvailable();
-		if (context.stateXstateDerived.isIdle()) return betKey === 'spin_disabled';
+		if (isAutoSpinModalOpen) return !canAffordSpin();
+		if (context.stateXstateDerived.isIdle()) return !canAffordSpin();
 		if (hasAutoBetCounter) return betKey === 'stop_disabled';
 		return true;
 	});
@@ -152,14 +153,13 @@
 		!context.stateXstateDerived.isIdle() || stateBet.betAmount === smallestBet,
 	);
 	const increaseDisabled = $derived(
-		!context.stateXstateDerived.isIdle() || stateBet.betAmount === biggestBet,
+		!context.stateXstateDerived.isIdle() || !canIncreaseBet(),
 	);
 
 	const autoplayDisabled = $derived.by(() => {
 		if (stateBet.isSpaceHold) return true;
 		if (isAutoSpinModalOpen) return false;
 		if (!context.stateXstateDerived.isIdle() && !hasAutoBetCounter) return true;
-		if (!stateBetDerived.isBetCostAvailable()) return true;
 		return false;
 	});
 

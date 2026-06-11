@@ -3,6 +3,8 @@
 
 	import { Text } from 'pixi-svelte';
 
+	import { canAffordBuyBonusForModeKey, canAffordSpin } from '../game/buyBonusBalance';
+	import { stateBet, stateBetDerived } from 'state-shared';
 	import { gameActor } from '../game/actor';
 	import { getContext } from '../game/context';
 
@@ -31,8 +33,19 @@
 
 	context.eventEmitter.subscribeOnMount({
 		// Connect every actor with app.eventEmitter to avoid call actor directly
-		bet: () => gameActor.send({ type: 'BET' }),
-		autoBet: () => gameActor.send({ type: 'AUTO_BET' }),
+		bet: () => {
+			const mode = stateBetDerived.activeBetMode();
+			if (mode?.type === 'buy') {
+				if (!canAffordBuyBonusForModeKey(stateBet.activeBetModeKey)) return;
+			} else if (!canAffordSpin()) {
+				return;
+			}
+			gameActor.send({ type: 'BET' });
+		},
+		autoBet: () => {
+			if (!canAffordSpin()) return;
+			gameActor.send({ type: 'AUTO_BET' });
+		},
 		resumeBet: () => gameActor.send({ type: 'RESUME_BET' }),
 	});
 </script>

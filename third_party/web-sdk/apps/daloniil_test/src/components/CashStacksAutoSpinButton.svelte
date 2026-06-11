@@ -44,7 +44,6 @@
 		if (stateBet.isSpaceHold) return true;
 		if (isModalOpen) return false;
 		if (!context.stateXstateDerived.isIdle() && !hasCounter) return true;
-		if (!stateBetDerived.isBetCostAvailable()) return true;
 		return false;
 	});
 

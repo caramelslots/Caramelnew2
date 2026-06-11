@@ -7,6 +7,7 @@
 	import { stateBet } from 'state-shared';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
+	import { canAffordBonusBoost } from '../game/buyBonusBalance';
 	import { getContext } from '../game/context';
 	import {
 		BONUS_BOOST_COST_MULT,
@@ -52,6 +53,11 @@
 
 	const context = getContext();
 
+	const bonusBoostActive = $derived(stateGame.activeFeature === 'bonus_boost');
+	const bonusBoostDisabled = $derived(
+		disabled || (!bonusBoostActive && !canAffordBonusBoost()),
+	);
+
 	const bonusBoostCost = $derived(
 		numberToCurrencyString(stateBet.betAmount * BONUS_BOOST_COST_MULT),
 	);
@@ -60,6 +66,7 @@
 	);
 
 	const onToggle = (feature: ActiveFeature) => {
+		if (feature === 'bonus_boost' && bonusBoostDisabled) return;
 		if (disabled) return;
 		toggleActiveFeature(feature);
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
@@ -78,8 +85,8 @@
 		class:panel-bg={usePanelBg}
 		class:panel-sprite-btn={usePanelBg}
 		class:no-hover-bg={noHoverBg}
-		class:active={stateGame.activeFeature === 'bonus_boost'}
-		{disabled}
+		class:active={bonusBoostActive}
+		disabled={bonusBoostDisabled}
 		onclick={() => onToggle('bonus_boost')}
 		data-test="feature-bonus-boost"
 		style:background-image={usePanelBg ? `url("${bonusSwitchBgUrl}")` : undefined}
@@ -102,7 +109,7 @@
 				</div>
 			{/if}
 		</div>
-		<div class="feature-toggle" class:on={stateGame.activeFeature === 'bonus_boost'}>
+		<div class="feature-toggle" class:on={bonusBoostActive}>
 			<span class="knob"></span>
 		</div>
 	</button>

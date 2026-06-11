@@ -20,6 +20,7 @@
 		AUTO_SPINS_SINGLE_WIN_LIMIT_MULTIPLIER_MAP,
 	} from 'state-shared';
 
+	import { canAffordSpin } from '../game/buyBonusBalance';
 	import { getContext } from '../game/context';
 	import CashStacksFeatureToggles from './CashStacksFeatureToggles.svelte';
 	import {
@@ -33,7 +34,7 @@
 
 	const isOpen = $derived(stateModal.modal?.name === 'autoSpin');
 	const featureTogglesDisabled = $derived(!context.stateXstateDerived.isIdle());
-	const startDisabled = $derived(!stateBetDerived.isBetCostAvailable());
+	const startDisabled = $derived(!canAffordSpin());
 	const startLabel = $derived(
 		context.i18nDerived.autoplayStartWithRounds(String(stateUi.autoSpinsText)),
 	);
@@ -102,6 +103,7 @@
 	};
 
 	const startAutoplay = () => {
+		if (!canAffordSpin()) return;
 		// Считаем счётчик из локальной таблицы game/autoplay.ts (там есть
 		// 20/30/40/70 которых нет в SDK-шной AUTO_SPINS_TEXT_OPTION_MAP).
 		stateBet.autoSpinsCounter = getRoundsCounter(stateUi.autoSpinsText);
@@ -345,6 +347,7 @@
 		&:disabled {
 			opacity: 0.45;
 			cursor: not-allowed;
+			pointer-events: none;
 		}
 	}
 </style>

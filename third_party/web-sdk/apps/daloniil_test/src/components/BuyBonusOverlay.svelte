@@ -19,6 +19,11 @@
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
 	import { clearActiveFeature } from '../game/activeFeature';
+	import {
+		BUY_NORMAL_COST_MULT,
+		BUY_SUPER_COST_MULT,
+		canAffordBuyBonus,
+	} from '../game/buyBonusBalance';
 	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { getContextLayout } from 'utils-layout';
@@ -38,14 +43,15 @@
 
 	type BonusVariant = 'normal' | 'super';
 
-	// Множители из BUY_NORMAL_COST/BUY_SUPER_COST i18n. Держим в TS как
-	// number чтобы умножать на текущий bet и показывать живую цену.
-	const NORMAL_MULT = 100;
-	const SUPER_MULT = 200;
-
-	const normalPrice = $derived(numberToCurrencyString(stateBet.betAmount * NORMAL_MULT));
-	const superPrice = $derived(numberToCurrencyString(stateBet.betAmount * SUPER_MULT));
+	const normalPrice = $derived(
+		numberToCurrencyString(stateBet.betAmount * BUY_NORMAL_COST_MULT),
+	);
+	const superPrice = $derived(
+		numberToCurrencyString(stateBet.betAmount * BUY_SUPER_COST_MULT),
+	);
 	const currentBet = $derived(numberToCurrencyString(stateBet.betAmount));
+	const canBuyNormal = $derived(canAffordBuyBonus(BUY_NORMAL_COST_MULT));
+	const canBuySuper = $derived(canAffordBuyBonus(BUY_SUPER_COST_MULT));
 
 	// === Bet adjuster ===
 	const betOptions = $derived([...stateConfig.betAmountOptions].sort((a, b) => a - b));
@@ -71,6 +77,8 @@
 	};
 
 	const onBuy = (variant: BonusVariant) => {
+		const costMult = variant === 'normal' ? BUY_NORMAL_COST_MULT : BUY_SUPER_COST_MULT;
+		if (!canAffordBuyBonus(costMult)) return;
 		clearActiveFeature();
 		/*
 			НЕ трогаем stateBet.activeBetModeKey здесь — иначе HUD сразу же
@@ -128,7 +136,11 @@
 					</div>
 					<div class="card-desc">{context.i18nDerived.buyNormalDesc()}</div>
 					<div class="card-price" data-test="bonus-price-normal">{normalPrice}</div>
-					<button class="buy-button" onclick={() => onBuy('normal')}>
+					<button
+						class="buy-button"
+						disabled={!canBuyNormal}
+						onclick={() => onBuy('normal')}
+					>
 						{context.i18nDerived.buyConfirm()}
 					</button>
 				</div>
@@ -141,7 +153,11 @@
 					</div>
 					<div class="card-desc">{context.i18nDerived.buySuperDesc()}</div>
 					<div class="card-price" data-test="bonus-price-super">{superPrice}</div>
-					<button class="buy-button" onclick={() => onBuy('super')}>
+					<button
+						class="buy-button"
+						disabled={!canBuySuper}
+						onclick={() => onBuy('super')}
+					>
 						{context.i18nDerived.buyConfirm()}
 					</button>
 				</div>

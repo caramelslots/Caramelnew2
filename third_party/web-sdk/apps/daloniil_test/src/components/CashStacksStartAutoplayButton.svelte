@@ -20,6 +20,7 @@
 	} from 'state-shared';
 	import { UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
 
+	import { canAffordSpin } from '../game/buyBonusBalance';
 	import { getContext } from '../game/context';
 	import { getRoundsCounter } from '../game/autoplay';
 	import { UI_SPRITE_RENDER, uiScaledSize, type UiSizeScaleProps } from '../game/uiButtonSize';
@@ -28,9 +29,10 @@
 	const context = getContext();
 	const { width, height } = $derived(uiScaledSize(UI_BASE_SIZE, props.sizeScale));
 	const sizes = $derived({ width, height });
-	const disabled = $derived(!stateBetDerived.isBetCostAvailable());
+	const disabled = $derived(!canAffordSpin());
 
 	const startAutoplay = () => {
+		if (!canAffordSpin()) return;
 		stateBet.autoSpinsCounter = getRoundsCounter(stateUi.autoSpinsText);
 		stateBet.autoSpinsLossLimitAmount =
 			stateBet.betAmount * AUTO_SPINS_LOSS_LIMIT_MULTIPLIER_MAP[stateUi.autoSpinsLossLimitText];
