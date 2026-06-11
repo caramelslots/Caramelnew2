@@ -247,9 +247,13 @@ export default {
 			scale: 2,
 		},
 	},
-	goldFont: {
+	prostoiFont: {
 		type: 'font',
-		src: new URL('../../assets/fonts/goldFont/mm_gold.xml', import.meta.url).href,
+		src: new URL('../../assets/fonts/prostoiFont/prostoi.xml', import.meta.url).href,
+	},
+	krutoiFont: {
+		type: 'font',
+		src: new URL('../../assets/fonts/krutoiFont/krutoi.xml', import.meta.url).href,
 	},
 	goldBlur: {
 		type: 'font',

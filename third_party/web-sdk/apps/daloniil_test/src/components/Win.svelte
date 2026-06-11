@@ -18,8 +18,15 @@
 	import WinCoins from './WinCoins.svelte';
 	import WinAnimation from './WinAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
-	import { SYMBOL_SIZE, WIN_SCREEN_POST_COUNT_UP_DELAY_MS } from '../game/constants';
+	import {
+		BITMAP_FONT_SCALE,
+		FONT_KRUTOI,
+		FONT_PROSTOI,
+		SYMBOL_SIZE,
+		WIN_SCREEN_POST_COUNT_UP_DELAY_MS,
+	} from '../game/constants';
 	import { getContext } from '../game/context';
+	import { stateGame } from '../game/stateGame.svelte';
 	import { winLevelMap, type WinLevel } from '../game/winLevelMap';
 	import { sound } from '../game/sound';
 
@@ -124,9 +131,13 @@
 	});
 
 	context.eventEmitter.subscribeOnMount({
-		winShow: () => (show = true),
+		winShow: () => {
+			show = true;
+			stateGame.winOverlayActive = true;
+		},
 		winHide: () => {
 			show = false;
+			stateGame.winOverlayActive = false;
 			clearTierTimers();
 		},
 		winUpdate: async (emitterEvent) => {
@@ -167,17 +178,15 @@
 							{#key currentTierIndex}
 								<WinAnimation
 									animationMap={currentTierData.animation}
-									bannerOverrideText={currentTierData.alias === 'sensational'
-										? currentTierData.text
-										: undefined}
+									bannerOverrideText={currentTierData.text ?? undefined}
 								>
 									<ResponsiveBitmapText
 										anchor={0.5}
 										maxWidth={2130}
 										text={bookEventAmountToCurrencyString(countUpAmount)}
 										style={{
-											fontFamily: 'gold',
-											fontSize: SYMBOL_SIZE * 3.6,
+											fontFamily: FONT_KRUTOI,
+											fontSize: SYMBOL_SIZE * 3.6 * BITMAP_FONT_SCALE,
 											align: 'center',
 											fontWeight: 'bold',
 											letterSpacing: 0,
@@ -192,8 +201,8 @@
 									context.stateLayoutDerived.mainLayout().scale}
 								text={bookEventAmountToCurrencyString(countUpAmount)}
 								style={{
-									fontFamily: 'gold',
-									fontSize: SYMBOL_SIZE,
+									fontFamily: FONT_PROSTOI,
+									fontSize: SYMBOL_SIZE * BITMAP_FONT_SCALE,
 									align: 'center',
 									fontWeight: 'bold',
 									letterSpacing: 0,

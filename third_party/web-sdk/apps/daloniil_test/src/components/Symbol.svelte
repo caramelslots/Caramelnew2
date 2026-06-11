@@ -6,7 +6,7 @@
 	import SymbolMysterySprite from './SymbolMysterySprite.svelte';
 	import SymbolPlaceholder from './SymbolPlaceholder.svelte';
 	import { getSymbolInfo } from '../game/utils';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { BITMAP_FONT_SCALE, FONT_PROSTOI, SYMBOL_SIZE } from '../game/constants';
 	import type { SymbolState, RawSymbol } from '../game/types';
 	import { getContext } from '../game/context';
 
@@ -73,8 +73,8 @@
 		y={props.y}
 		text={`${props.rawSymbol.multiplier}X`}
 		style={{
-			fontFamily: 'gold',
-			fontSize: 50,
+			fontFamily: FONT_PROSTOI,
+			fontSize: 50 * BITMAP_FONT_SCALE,
 		}}
 	/>
 {/if}

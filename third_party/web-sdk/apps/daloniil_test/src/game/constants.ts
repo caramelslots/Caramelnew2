@@ -4,6 +4,15 @@ import type { RawSymbol, SymbolState } from './types';
 
 export const SYMBOL_SIZE = 100;
 
+/** Bitmap font families (prostoi = default gold text, krutoi = big/super/epic win). */
+export const FONT_PROSTOI = 'prostoi';
+export const FONT_KRUTOI = 'krutoi';
+/**
+ * Pixi scales bitmap glyphs as `fontSize / font.info.size`.
+ * Legacy gold used info size 105; prostoi/krutoi use 53 — same fontSize renders ~2× larger without this.
+ */
+export const BITMAP_FONT_SCALE = 65 / 105;
+
 export const REEL_PADDING = 0.53;
 
 // Cash Stacks: 5 reels × 5 rows, padded top and bottom (7 cells per column).

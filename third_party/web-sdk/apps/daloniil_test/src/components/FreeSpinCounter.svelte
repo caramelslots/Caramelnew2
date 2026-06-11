@@ -10,7 +10,7 @@
 	import { FadeContainer } from 'components-pixi';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { BITMAP_FONT_SCALE, FONT_PROSTOI, SYMBOL_SIZE } from '../game/constants';
 	import { anchorToPivot, BitmapText, Container, Sprite, type Sizes } from 'pixi-svelte';
 
 	const context = getContext();
@@ -34,7 +34,7 @@
 			context.stateGameDerived.boardLayout().height * 0.5,
 	});
 
-	const fontSize = SYMBOL_SIZE * 0.275;
+	const fontSize = SYMBOL_SIZE * 0.275 * BITMAP_FONT_SCALE;
 
 	let show = $state(false);
 	let current = $state(0);
@@ -72,7 +72,7 @@
 			<BitmapText
 				text={'FREE SPIN'}
 				style={{
-					fontFamily: 'gold',
+					fontFamily: FONT_PROSTOI,
 					fontSize,
 					wordWrap: false,
 				}}
@@ -83,7 +83,7 @@
 				{...counterPosition}
 				anchor={{ x: 0.5, y: 0 }}
 				style={{
-					fontFamily: 'gold',
+					fontFamily: FONT_PROSTOI,
 					fontSize,
 				}}
 				onresize={(sizes) => (counterSizes = sizes)}

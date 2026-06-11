@@ -63,7 +63,10 @@
 	});
 </script>
 
-<div class="pixi-stage" class:above-html-ui={context.stateGame.transitionActive}>
+<div
+	class="pixi-stage"
+	class:above-html-ui={context.stateGame.transitionActive || context.stateGame.winOverlayActive}
+>
 	<App maxResolution={2} tuneForMobilePortrait>
 		<EnableSound />
 		<EnableUiTextureOptimization />
@@ -142,7 +145,7 @@
 		position: relative;
 	}
 
-	/* ProgressLadder lives in .html-underlays (z-index 40); raise Pixi during cloud transition. */
+	/* ProgressLadder / buy-bonus HUD (z-index 40–45); raise Pixi during cloud transition or win overlay. */
 	.html-underlays {
 		position: relative;
 		z-index: 40;

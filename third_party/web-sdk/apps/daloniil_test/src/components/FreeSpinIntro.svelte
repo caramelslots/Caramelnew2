@@ -12,6 +12,7 @@
 	import { waitForResolve } from 'utils-shared/wait';
 	import { BitmapText, SpineProvider, SpineSlot, SpineTrack, Sprite } from 'pixi-svelte';
 
+	import { BITMAP_FONT_SCALE, FONT_PROSTOI } from '../game/constants';
 	import { getContext } from '../game/context';
 	import PressToContinue from './PressToContinue.svelte';
 	import FreeSpinAnimation from './FreeSpinAnimation.svelte';
@@ -65,8 +66,8 @@
 						anchor={{ x: 0.5, y: 0.5 }}
 						text={freeSpinsFromEvent}
 						style={{
-							fontFamily: 'gold',
-							fontSize: sizes.width * 0.1,
+							fontFamily: FONT_PROSTOI,
+							fontSize: sizes.width * 0.1 * BITMAP_FONT_SCALE,
 							fontWeight: 'bold',
 						}}
 					/>

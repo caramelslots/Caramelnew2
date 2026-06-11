@@ -16,8 +16,14 @@
 	import { OnMount } from 'components-shared';
 	import { stateUrlDerived } from 'state-shared';
 
+	import {
+		BITMAP_FONT_SCALE,
+		FONT_KRUTOI,
+		FONT_PROSTOI,
+		WIN_SCREEN_POST_COUNT_UP_DELAY_MS,
+	} from '../game/constants';
 	import { getContext } from '../game/context';
-	import { WIN_SCREEN_POST_COUNT_UP_DELAY_MS } from '../game/constants';
+	import { stateGame } from '../game/stateGame.svelte';
 	import FreeSpinAnimation from './FreeSpinAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 	import WinCoins from './WinCoins.svelte';
@@ -34,8 +40,14 @@
 	let onCountUpComplete = $state(() => {});
 
 	context.eventEmitter.subscribeOnMount({
-		freeSpinOutroShow: () => (show = true),
-		freeSpinOutroHide: async () => (show = false),
+		freeSpinOutroShow: () => {
+			show = true;
+			stateGame.winOverlayActive = true;
+		},
+		freeSpinOutroHide: async () => {
+			show = false;
+			stateGame.winOverlayActive = false;
+		},
 		freeSpinOutroCountUp: async (emitterEvent) => {
 			amount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
@@ -91,8 +103,8 @@
 								<ResponsiveBitmapText
 									anchor={0.5}
 									style={{
-										fontFamily: 'gold',
-										fontSize: sizes.width * 0.08,
+										fontFamily: isBigWin ? FONT_KRUTOI : FONT_PROSTOI,
+										fontSize: sizes.width * 0.08 * BITMAP_FONT_SCALE,
 									}}
 									text={bookEventAmountToCurrencyString(countUpAmount)}
 									maxWidth={sizes.width}

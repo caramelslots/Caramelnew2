@@ -5,7 +5,7 @@
 	import { ResponsiveBitmapText } from 'components-pixi';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { BITMAP_FONT_SCALE, FONT_KRUTOI, SYMBOL_SIZE } from '../game/constants';
 	import WinAnimationBannerOverride from './WinAnimationBannerOverride.svelte';
 
 	type AnimationState = 'intro' | 'idle' | 'outro';
@@ -23,12 +23,10 @@
 		};
 		/**
 		 * Optional banner-text overlay rendered at the spine's `BIG_WIN` slot.
-		 * Used by Cash Stacks 4-tier rework when the spine's baked-in banner
-		 * art doesn't match the desired label (e.g. the `max_win_*` track has
-		 * "MAX WIN" baked in, but level 9-10 want "SENSATIONAL WIN"). The
-		 * sibling `WinAnimationBannerOverride` clears the spine attachment on
-		 * each frame so only this text renders. When undefined the spine's
-		 * baked-in banner shows as-is (Big/Super/Epic).
+		 * Replaces the spine's baked-in banner art (MM_BigWin / MM_SuperWin /
+		 * MM_EpicWin / MM_MaxWin) with krutoi BitmapText. The sibling
+		 * `WinAnimationBannerOverride` clears the spine attachment on each
+		 * frame so only this text renders.
 		 */
 		bannerOverrideText?: string;
 		children: Snippet;
@@ -65,8 +63,8 @@
 				maxWidth={1400}
 				text={props.bannerOverrideText}
 				style={{
-					fontFamily: 'gold',
-					fontSize: SYMBOL_SIZE * 4.4,
+					fontFamily: FONT_KRUTOI,
+					fontSize: SYMBOL_SIZE * 4.4 * BITMAP_FONT_SCALE,
 					align: 'center',
 					fontWeight: 'bold',
 					letterSpacing: 0,

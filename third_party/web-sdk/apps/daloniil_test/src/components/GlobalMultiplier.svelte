@@ -22,7 +22,7 @@
 
 	import BoardContainer from './BoardContainer.svelte';
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { BITMAP_FONT_SCALE, FONT_PROSTOI, SYMBOL_SIZE } from '../game/constants';
 
 	type AnimationName = 'static' | 'win' | 'reset' | 'increment';
 
@@ -93,8 +93,8 @@
 							anchor={0.5}
 							text={`${Math.round(previousMultiplier.current)}×`}
 							style={{
-								fontFamily: 'gold',
-								fontSize: SYMBOL_SIZE * 5.2,
+								fontFamily: FONT_PROSTOI,
+								fontSize: SYMBOL_SIZE * 5.2 * BITMAP_FONT_SCALE,
 							}}
 						/>
 					</SpineSlot>
@@ -103,8 +103,8 @@
 							anchor={0.5}
 							text={`${multiplier}×`}
 							style={{
-								fontFamily: 'gold',
-								fontSize: SYMBOL_SIZE * 5.2,
+								fontFamily: FONT_PROSTOI,
+								fontSize: SYMBOL_SIZE * 5.2 * BITMAP_FONT_SCALE,
 							}}
 						/>
 					</SpineSlot>
