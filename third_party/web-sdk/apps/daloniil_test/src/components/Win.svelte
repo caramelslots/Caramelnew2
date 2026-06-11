@@ -134,7 +134,6 @@
 	context.eventEmitter.subscribeOnMount({
 		winShow: () => {
 			show = true;
-			stateGame.winOverlayActive = true;
 		},
 		winHide: () => {
 			show = false;
@@ -144,6 +143,7 @@
 		winUpdate: async (emitterEvent) => {
 			amount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
+			stateGame.winOverlayActive = emitterEvent.winLevelData.type === 'big';
 			currentTierIndex = 0;
 			winUpdateCount++;
 			startTierAdvancement(computeWinLadder(emitterEvent.winLevelData));

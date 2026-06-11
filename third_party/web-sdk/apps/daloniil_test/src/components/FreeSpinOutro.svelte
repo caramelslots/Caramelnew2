@@ -42,7 +42,6 @@
 	context.eventEmitter.subscribeOnMount({
 		freeSpinOutroShow: () => {
 			show = true;
-			stateGame.winOverlayActive = true;
 		},
 		freeSpinOutroHide: async () => {
 			show = false;
@@ -51,6 +50,7 @@
 		freeSpinOutroCountUp: async (emitterEvent) => {
 			amount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
+			stateGame.winOverlayActive = emitterEvent.winLevelData.type === 'big';
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},
 	});
