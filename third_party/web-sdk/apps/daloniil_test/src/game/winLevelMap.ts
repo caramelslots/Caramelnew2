@@ -20,6 +20,18 @@ const WIN_LADDER_THROUGH_EPIC_MS =
 	WIN_BGM_MS.big + WIN_BGM_MS.superwin + WIN_BGM_MS.epic;
 
 /**
+ * One spine track for every big-win tier (Big → Super → Epic → Sensational).
+ * `big_win_*` / `super_win_*` bake heavier banner glow and read darker over
+ * the HTML HUD; `max_win_*` (Sensational) keeps the UI visible under the
+ * 0.5-alpha dim. Banner label still comes from each tier's `text` field.
+ */
+export const UNIFIED_BIG_WIN_SPINE = {
+	intro: 'max_win_intro',
+	idle: 'max_win_idle',
+	outro: 'max_win_exit',
+} as const;
+
+/**
  * Cash Stacks 4-tier win-level visual map.
  *
  * MUST stay in sync with math-sdk override in

@@ -11,6 +11,12 @@
 	Replacing it requires either an art rebuild (TODO) or this runtime
 	override.
 
+	`BIG_WIN_GLOW` is always cleared: the baked glow quads for Big/Super
+	are wide and fully opaque, so they hide the HTML HUD that sits under
+	the Pixi win layer (see `winOverlayActive`). Epic/Max glows are less
+	obstructive; clearing all tiers keeps the HUD visible through the
+	0.5-alpha dim overlay.
+
 	Implementation: hook the spine's `beforeUpdateWorldTransforms`
 	callback (mirrors the pattern in SpineEventEmitterProvider) so the
 	override sticks across all keyframes — clearing the attachment in
@@ -21,14 +27,22 @@
 
 	import { getContextSpine } from 'pixi-svelte';
 
+	type Props = {
+		/** When set, also strip the baked banner art so only override text shows. */
+		clearBanner?: boolean;
+	};
+
+	const { clearBanner = false }: Props = $props();
 	const spine = getContextSpine();
 
 	onMount(() => {
 		const previous = spine.beforeUpdateWorldTransforms;
 		spine.beforeUpdateWorldTransforms = (...args) => {
 			previous?.(...args);
-			const banner = spine.skeleton.findSlot('BIG_WIN');
-			if (banner) banner.attachment = null;
+			if (clearBanner) {
+				const banner = spine.skeleton.findSlot('BIG_WIN');
+				if (banner) banner.attachment = null;
+			}
 			const glow = spine.skeleton.findSlot('BIG_WIN_GLOW');
 			if (glow) glow.attachment = null;
 		};

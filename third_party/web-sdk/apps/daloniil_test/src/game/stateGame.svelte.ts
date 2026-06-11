@@ -178,7 +178,8 @@ export const stateGame = $state({
 	winSpotlightActive: false,
 	// Cloud transition covers HTML overlays (e.g. ProgressLadder) while active.
 	transitionActive: false,
-	// Big/super/epic win overlay — raises Pixi canvas above HTML HUD (buy bonus, etc.).
+	// Big/super/epic win overlay — raises Pixi canvas above HTML HUD so celebration
+	// renders on top while the dim layer (0.5 alpha) keeps controls visible underneath.
 	winOverlayActive: false,
 	// Bonus bar during FS — decoupled from gameType so background can switch under smoke first.
 	ladderVisible: false,

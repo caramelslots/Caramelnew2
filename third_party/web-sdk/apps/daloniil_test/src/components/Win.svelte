@@ -27,7 +27,7 @@
 	} from '../game/constants';
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
-	import { winLevelMap, type WinLevel } from '../game/winLevelMap';
+	import { winLevelMap, UNIFIED_BIG_WIN_SPINE, type WinLevel } from '../game/winLevelMap';
 	import { sound } from '../game/sound';
 
 	const context = getContext();
@@ -53,21 +53,22 @@
 	 *   level 8  → [Big, Super, Epic]
 	 *   level 9+ → [Big, Super, Epic, Sensational]
 	 *
-	 * Duplicate spine intro animations (levels 9 & 10 share `max_win_intro`)
-	 * are deduplicated so the ladder never shows the same banner twice.
+	 * Duplicate banner labels are deduplicated (levels 9 & 10 both say
+	 * SENSATIONAL WIN) so the ladder never shows the same title twice.
 	 */
 	function computeWinLadder(data: WinLevelData): WinLevelData[] {
 		const BIG_WIN_LEVEL = 6;
 		if (data.type !== 'big' || data.level <= BIG_WIN_LEVEL) return [data];
 
 		const ladder: WinLevelData[] = [];
-		const seenIntros = new Set<string>();
+		const seenLabels = new Set<string>();
 
 		for (let l = BIG_WIN_LEVEL; l <= data.level; l++) {
 			const levelData = winLevelMap[l as WinLevel];
 			if (!levelData?.animation) continue;
-			if (seenIntros.has(levelData.animation.intro)) continue;
-			seenIntros.add(levelData.animation.intro);
+			const label = levelData.text ?? '';
+			if (seenLabels.has(label)) continue;
+			seenLabels.add(label);
 			ladder.push(levelData);
 		}
 		return ladder;
@@ -175,25 +176,23 @@
 						y={context.stateGameDerived.boardLayout().y}
 					>
 						{#if currentTierData?.animation}
-							{#key currentTierIndex}
-								<WinAnimation
-									animationMap={currentTierData.animation}
-									bannerOverrideText={currentTierData.text ?? undefined}
-								>
-									<ResponsiveBitmapText
-										anchor={0.5}
-										maxWidth={2130}
-										text={bookEventAmountToCurrencyString(countUpAmount)}
-										style={{
-											fontFamily: FONT_KRUTOI,
-											fontSize: SYMBOL_SIZE * 3.6 * BITMAP_FONT_SCALE,
-											align: 'center',
-											fontWeight: 'bold',
-											letterSpacing: 0,
-										}}
-									/>
-								</WinAnimation>
-							{/key}
+							<WinAnimation
+								animationMap={UNIFIED_BIG_WIN_SPINE}
+								bannerOverrideText={currentTierData.text ?? undefined}
+							>
+								<ResponsiveBitmapText
+									anchor={0.5}
+									maxWidth={2130}
+									text={bookEventAmountToCurrencyString(countUpAmount)}
+									style={{
+										fontFamily: FONT_KRUTOI,
+										fontSize: SYMBOL_SIZE * 3.6 * BITMAP_FONT_SCALE,
+										align: 'center',
+										fontWeight: 'bold',
+										letterSpacing: 0,
+									}}
+								/>
+							</WinAnimation>
 						{:else}
 							<ResponsiveBitmapText
 								anchor={0.5}

@@ -55,8 +55,9 @@
 		{@render props.children()}
 	</SpineSlot>
 
+	<!-- Always strip the opaque glow quad so HTML HUD stays visible under the win layer. -->
+	<WinAnimationBannerOverride clearBanner={!!props.bannerOverrideText} />
 	{#if props.bannerOverrideText}
-		<WinAnimationBannerOverride />
 		<SpineSlot slotName="BIG_WIN">
 			<ResponsiveBitmapText
 				anchor={0.5}
