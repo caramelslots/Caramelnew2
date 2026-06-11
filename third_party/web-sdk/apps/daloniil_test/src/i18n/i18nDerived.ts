@@ -57,4 +57,6 @@ export const i18nDerived = {
 	freeSpinsAwarded: (n: number) => `+${n} ${t('FREE_SPINS_AWARDED_SUFFIX')}`,
 	// Misc
 	maxWin: () => t('MAX_WIN'),
+	pressToContinue: () =>
+		`${t('PRESS_TO_CONTINUE_LINE1').toUpperCase()}\n${t('PRESS_TO_CONTINUE_LINE2').toUpperCase()}`,
 };

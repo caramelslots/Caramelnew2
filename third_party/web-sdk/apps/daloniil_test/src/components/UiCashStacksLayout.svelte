@@ -11,7 +11,7 @@
 
 	import { stateBet, stateUi } from 'state-shared';
 	import { MainContainer } from 'components-layout';
-	import { Container, Text } from 'pixi-svelte';
+	import { Container, BitmapText } from 'pixi-svelte';
 	import { EnableSpaceHold } from 'components-shared';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 
@@ -35,7 +35,7 @@
 	import ButtonMenuClose from 'components-ui-pixi/src/components/ButtonMenuClose.svelte';
 	import ButtonSoundSwitch from 'components-ui-pixi/src/components/ButtonSoundSwitch.svelte';
 
-	import { isPopoutSmallViewport, isPopoutViewport, POPOUT_S_SCALE } from '../game/constants';
+	import { BITMAP_FONT_SCALE, FONT_PROSTOI, isPopoutSmallViewport, isPopoutViewport, POPOUT_S_SCALE, WIN_HUD_FONT_SIZE } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { getContextLayout } from 'utils-layout';
@@ -57,7 +57,7 @@
 		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
 	);
 
-	const WIN_BELOW_BOARD_GAP = 72;
+	const WIN_BELOW_BOARD_GAP = 58;
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
 	const winHudPos = $derived({
 		x: boardLayout.x,
@@ -67,10 +67,10 @@
 	const showWin = $derived(stateBet.winBookEventAmount > 0);
 
 	const WIN_TEXT_STYLE = {
-		fontFamily: 'proxima-nova',
-		fontSize: 28,
-		fontWeight: '700' as const,
-		fill: 0xffd000,
+		fontFamily: FONT_PROSTOI,
+		fontSize: WIN_HUD_FONT_SIZE * BITMAP_FONT_SCALE,
+		fontWeight: 'bold' as const,
+		letterSpacing: 1,
 	};
 </script>
 
@@ -93,7 +93,7 @@
 		{#if showWin}
 			<MainContainer>
 				<Container x={winHudPos.x} y={winHudPos.y} zIndex={20}>
-					<Text
+					<BitmapText
 						anchor={0.5}
 						eventMode="none"
 						text={`${context.i18nDerived.win().toUpperCase()} ${formatWinAmount(stateBet.winBookEventAmount)}`}

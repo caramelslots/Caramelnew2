@@ -1,9 +1,14 @@
 <script lang="ts">
 	import { MainContainer, OnPressFullScreen } from 'components-layout';
 	import { OnHotkey } from 'components-shared';
-	import { stateUrlDerived } from 'state-shared';
-	import { Sprite } from 'pixi-svelte';
+	import { ResponsiveBitmapText } from 'components-pixi';
 
+	import {
+		BITMAP_FONT_SCALE,
+		FONT_PROSTOI,
+		PRESS_TO_CONTINUE_BOTTOM_OFFSET,
+		PRESS_TO_CONTINUE_FONT_SIZE,
+	} from '../game/constants';
 	import { getContext } from '../game/context';
 
 	type Props = {
@@ -12,16 +17,23 @@
 
 	const props: Props = $props();
 	const context = getContext();
+	const layout = $derived(context.stateLayoutDerived.mainLayout());
+	const pressText = $derived(context.i18nDerived.pressToContinue());
 </script>
 
 <MainContainer alignVertical="bottom">
-	<Sprite
-		key="pressToContinueText_{stateUrlDerived.lang()}.png"
-		width={800}
-		height={134}
+	<ResponsiveBitmapText
 		anchor={{ x: 0.5, y: 1 }}
-		x={context.stateLayoutDerived.mainLayout().width * 0.5}
-		y={context.stateLayoutDerived.mainLayout().height}
+		x={layout.width * 0.5}
+		y={layout.height - PRESS_TO_CONTINUE_BOTTOM_OFFSET}
+		maxWidth={900}
+		text={pressText}
+		style={{
+			fontFamily: FONT_PROSTOI,
+			fontSize: PRESS_TO_CONTINUE_FONT_SIZE * BITMAP_FONT_SCALE,
+			align: 'center',
+			letterSpacing: 2,
+		}}
 	/>
 </MainContainer>
 <OnHotkey hotkey="Space" onpress={() => props.onpress()} />

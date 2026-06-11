@@ -13,6 +13,14 @@ export const FONT_KRUTOI = 'krutoi';
  */
 export const BITMAP_FONT_SCALE = 65 / 105;
 
+/** Prostoi bitmap size for WIN label under the board (ref px before BITMAP_FONT_SCALE). */
+export const WIN_HUD_FONT_SIZE = 52;
+
+/** Prostoi bitmap size for "Press anywhere to continue" (ref px before BITMAP_FONT_SCALE). */
+export const PRESS_TO_CONTINUE_FONT_SIZE = 50;
+/** Distance from bottom of main layout (ref px). */
+export const PRESS_TO_CONTINUE_BOTTOM_OFFSET = 30;
+
 export const REEL_PADDING = 0.53;
 
 // Cash Stacks: 5 reels × 5 rows, padded top and bottom (7 cells per column).
@@ -544,7 +552,7 @@ export const PORTRAIT_UI_LAYOUT = {
 	refWidth: 800,
 	refHeight: 1422,
 	/** WIN text under board (ref px). */
-	winBelowBoardGap: 76,
+	winBelowBoardGap: 62,
 	/** Buy/boost row top offset from board bottom (ref px, independent of WIN). */
 	buyPanelBelowBoard: 112,
 	/** Spin stack anchor below board when buy/boost hidden (free spins). */
