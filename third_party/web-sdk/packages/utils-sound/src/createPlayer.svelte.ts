@@ -47,6 +47,7 @@ function createPlayer<TSoundName extends string, TPlay extends Function>(playerO
 		newSound,
 		getSoundMap: () => soundMap,
 		initSoundVolume: (soundName: TSoundName) => initSoundVolume(soundName),
+		loadedAudio: playerOptions.loadedAudio,
 	});
 	const { play } = playFactory;
 	const playWithIntro =
