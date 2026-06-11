@@ -16,7 +16,7 @@ function formatAttrs(attrs) {
 		.join(' ');
 }
 
-function fntToXml(fntPath, xmlPath, faceName) {
+function fntToXml(fntPath, xmlPath, faceName, pageFileName) {
 	const lines = readFileSync(fntPath, 'utf8').split('\n');
 	const parts = [];
 	let section = null;
@@ -39,6 +39,7 @@ function fntToXml(fntPath, xmlPath, faceName) {
 				section = 'pages';
 			}
 			const attrs = parseKeyValues(line.slice(5));
+			if (pageFileName) attrs.file = pageFileName;
 			parts.push(`    <page ${formatAttrs(attrs)}/>`);
 		} else if (line.startsWith('chars ')) {
 			if (section === 'pages') {
@@ -87,4 +88,10 @@ fntToXml(
 	`${root}/static/assets/fonts/prostoiFont/prostoi.xml`,
 	'prostoi',
 );
-console.log('Converted krutoi.fnt and prostoi.fnt to XML');
+fntToXml(
+	`${root}/../../../../designer_assets/prostoi white.fnt`,
+	`${root}/static/assets/fonts/prostoiWhiteFont/prostoiWhite.xml`,
+	'prostoiWhite',
+	'prostoiWhite.png',
+);
+console.log('Converted krutoi.fnt, prostoi.fnt and prostoi white.fnt to XML');

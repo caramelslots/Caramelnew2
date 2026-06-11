@@ -36,6 +36,5 @@ export default {
 	MYSTERY_REEL_UNLOCKED_SUBTITLE: 'РАЗБЛОКИРОВАН!',
 	FREE_SPINS_AWARDED_SUFFIX: 'ФРИСПИНОВ',
 	MAX_WIN: 'МАКС. ВЫИГРЫШ',
-	PRESS_TO_CONTINUE_LINE1: 'НАЖМИТЕ В ЛЮБОМ МЕСТЕ,',
-	PRESS_TO_CONTINUE_LINE2: 'ЧТОБЫ ПРОДОЛЖИТЬ',
+	PRESS_TO_CONTINUE: 'Нажмите в любом месте, чтобы продолжить',
 };

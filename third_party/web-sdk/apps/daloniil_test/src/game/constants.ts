@@ -6,6 +6,7 @@ export const SYMBOL_SIZE = 100;
 
 /** Bitmap font families (prostoi = default gold text, krutoi = big/super/epic win). */
 export const FONT_PROSTOI = 'prostoi';
+export const FONT_PROSTOI_WHITE = 'prostoiWhite';
 export const FONT_KRUTOI = 'krutoi';
 /**
  * Pixi scales bitmap glyphs as `fontSize / font.info.size`.
@@ -16,10 +17,10 @@ export const BITMAP_FONT_SCALE = 65 / 105;
 /** Prostoi bitmap size for WIN label under the board (ref px before BITMAP_FONT_SCALE). */
 export const WIN_HUD_FONT_SIZE = 52;
 
-/** Prostoi bitmap size for "Press anywhere to continue" (ref px before BITMAP_FONT_SCALE). */
-export const PRESS_TO_CONTINUE_FONT_SIZE = 50;
+/** Prostoi white bitmap size for "Press anywhere to continue" (ref px before BITMAP_FONT_SCALE). */
+export const PRESS_TO_CONTINUE_FONT_SIZE = 28;
 /** Distance from bottom of main layout (ref px). */
-export const PRESS_TO_CONTINUE_BOTTOM_OFFSET = 30;
+export const PRESS_TO_CONTINUE_BOTTOM_OFFSET = 18;
 
 export const REEL_PADDING = 0.53;
 

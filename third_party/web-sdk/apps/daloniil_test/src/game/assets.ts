@@ -251,6 +251,10 @@ export default {
 		type: 'font',
 		src: new URL('../../assets/fonts/prostoiFont/prostoi.xml', import.meta.url).href,
 	},
+	prostoiWhiteFont: {
+		type: 'font',
+		src: new URL('../../assets/fonts/prostoiWhiteFont/prostoiWhite.xml', import.meta.url).href,
+	},
 	krutoiFont: {
 		type: 'font',
 		src: new URL('../../assets/fonts/krutoiFont/krutoi.xml', import.meta.url).href,

@@ -5,7 +5,7 @@
 
 	import {
 		BITMAP_FONT_SCALE,
-		FONT_PROSTOI,
+		FONT_PROSTOI_WHITE,
 		PRESS_TO_CONTINUE_BOTTOM_OFFSET,
 		PRESS_TO_CONTINUE_FONT_SIZE,
 	} from '../game/constants';
@@ -26,10 +26,10 @@
 		anchor={{ x: 0.5, y: 1 }}
 		x={layout.width * 0.5}
 		y={layout.height - PRESS_TO_CONTINUE_BOTTOM_OFFSET}
-		maxWidth={900}
+		maxWidth={layout.width * 0.95}
 		text={pressText}
 		style={{
-			fontFamily: FONT_PROSTOI,
+			fontFamily: FONT_PROSTOI_WHITE,
 			fontSize: PRESS_TO_CONTINUE_FONT_SIZE * BITMAP_FONT_SCALE,
 			align: 'center',
 			letterSpacing: 2,
