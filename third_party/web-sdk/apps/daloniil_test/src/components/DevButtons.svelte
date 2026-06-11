@@ -377,6 +377,9 @@
 	const playLadderTierUp = () =>
 		guard(() => playBookEvent(asEvent(baseEvents.ladderTierUp), { bookEvents: [] }));
 
+	const playMysteryReelUnlockCelebration = () =>
+		guard(() => playBookEvent(asEvent(baseEvents.mysteryReelUnlock), { bookEvents: [] }));
+
 	const playMysteryReveal = () =>
 		guard(async () => {
 			await playBookEvents([
@@ -640,6 +643,14 @@
 						Bonus Collect ×4
 					</button>
 					<button type="button" disabled={busy} onclick={playLadderTierUp}>Ladder Tier Up</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="mysteryReelUnlock: поздравление +3 FS при tier-up Progress Ladder"
+						onclick={playMysteryReelUnlockCelebration}
+					>
+						+3 FS Celebration
+					</button>
 					<button
 						type="button"
 						disabled={busy}

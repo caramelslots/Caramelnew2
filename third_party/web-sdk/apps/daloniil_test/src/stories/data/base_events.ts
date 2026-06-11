@@ -183,6 +183,12 @@ export default {
 		rewardSpins: 3,
 		rewardedMysteryReels: 1,
 	},
+	mysteryReelUnlock: {
+		type: 'mysteryReelUnlock',
+		reels: [2],
+		tierAfter: 1,
+		rewardSpins: 3,
+	},
 	mysteryReelActivate: {
 		type: 'mysteryReelActivate',
 		reels: [2],
