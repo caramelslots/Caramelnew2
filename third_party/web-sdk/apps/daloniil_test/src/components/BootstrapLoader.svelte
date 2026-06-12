@@ -89,10 +89,10 @@
 	.player {
 		position: relative;
 		z-index: 1;
-		width: min(640px, 90vw);
-		height: min(640px, 60vh);
+		--player-size: min(640px, 90vw, 60vh);
+		width: var(--player-size);
+		height: var(--player-size);
 		transform: scaleY(-1);
-		overflow: hidden;
 	}
 
 	.player :global(.spine-player),
