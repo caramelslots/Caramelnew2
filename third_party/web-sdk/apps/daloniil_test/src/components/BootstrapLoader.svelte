@@ -2,7 +2,6 @@
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { SpinePlayer } from '@esotericsoftware/spine-player';
-	import '@esotericsoftware/spine-player/dist/spine-player.css';
 	import { waitForTimeout } from 'utils-shared/wait';
 
 	type Props = {
@@ -12,6 +11,18 @@
 	const props: Props = $props();
 
 	const SPLASH_DURATION_MS = 2300;
+
+	/** Frame only the logo circle; ignore off-screen title text in auto-bounds. */
+	const LOGO_VIEWPORT = {
+		x: -500,
+		y: -500,
+		width: 1000,
+		height: 1000,
+		padLeft: '18%',
+		padRight: '18%',
+		padTop: '18%',
+		padBottom: '18%',
+	};
 
 	/** static/ asset path relative to deployed index.html (Stake CDN subpath-safe). */
 	const resolveStaticUrl = (path: string) =>
@@ -37,7 +48,15 @@
 			premultipliedAlpha: true,
 			preserveDrawingBuffer: false,
 			alpha: true,
+			viewport: {
+				animations: {
+					appear: LOGO_VIEWPORT,
+					static: LOGO_VIEWPORT,
+				},
+			},
 			success: (spinePlayer) => {
+				// Flip inside WebGL so viewport math matches pixels (CSS scaleY clips the canvas).
+				spinePlayer.skeleton!.scaleY = -1;
 				spinePlayer.setAnimation('appear', false);
 				spinePlayer.addAnimation('static', true, 0);
 			},
@@ -89,15 +108,24 @@
 	.player {
 		position: relative;
 		z-index: 1;
-		--player-size: min(640px, 90vw, 60vh);
-		width: var(--player-size);
-		height: var(--player-size);
-		transform: scaleY(-1);
+		width: min(640px, 90vw);
+		height: 100vh;
+		overflow: visible;
 	}
 
-	.player :global(.spine-player),
+	.player :global(.spine-player) {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		background: none;
+	}
+
 	.player :global(.spine-player-canvas) {
+		display: block;
+		width: 100%;
+		height: 100%;
 		background: transparent !important;
+		border-radius: 0 !important;
 	}
 
 	.player :global(.spine-player-controls),

@@ -22,8 +22,8 @@
 	// so they scale with the layout instead of being absolute pixels.
 	const LANTERN_HEIGHT_RATIO = 0.42;
 	const LANTERN_TOP_RATIO = -0.04;
-	const LANTERN_LEFT_RATIO = 0.11;
-	const LANTERN_RIGHT_RATIO = 0.92;
+	const LANTERN_LEFT_RATIO = 0.17;
+	const LANTERN_RIGHT_RATIO = 0.86;
 
 	const cover = (ratio: number) => {
 		const canvas = context.stateLayoutDerived.canvasSizes();
