@@ -22,6 +22,8 @@
 
 	import { canAffordSpin } from '../game/buyBonusBalance';
 	import { getContext } from '../game/context';
+	import { computePopupHudLayout } from '../game/popupHudLayout';
+	import { getContextLayout } from 'utils-layout';
 	import CashStacksFeatureToggles from './CashStacksFeatureToggles.svelte';
 	import {
 		CASH_STACKS_ROUND_OPTIONS,
@@ -31,8 +33,14 @@
 	} from '../game/autoplay';
 
 	const context = getContext();
+	const { stateLayoutDerived } = getContextLayout();
 
+	const popup = $derived(computePopupHudLayout(stateLayoutDerived));
 	const isOpen = $derived(stateModal.modal?.name === 'autoSpin');
+
+	$effect(() => {
+		if (isOpen) stateUi.menuOpen = false;
+	});
 	const featureTogglesDisabled = $derived(!context.stateXstateDerived.isIdle());
 	const startDisabled = $derived(!canAffordSpin());
 	const startLabel = $derived(
@@ -128,10 +136,37 @@
 		затемняется. Закрытие — через крестик в углу панели.
 	-->
 	<div class="autoplay-overlay" data-test="autoplay-overlay">
-		<div class="autoplay-card" role="dialog" aria-modal="true">
-			<header class="autoplay-header">
-				<h3 class="autoplay-title">{context.i18nDerived.autoplayTitle()}</h3>
-				<button type="button" class="close-button" onclick={close} aria-label="close">×</button>
+		<div
+			class="autoplay-card"
+			role="dialog"
+			aria-modal="true"
+			style:width="{popup.autoplay.width}px"
+			style:left="{popup.autoplay.left}px"
+			style:bottom="{popup.autoplay.bottom}px"
+			style:padding="{popup.autoplay.padding}px"
+			style:gap="{popup.autoplay.gap}px"
+			style:border-radius="{popup.autoplay.borderRadius}px"
+			style:--popup-section-title="{popup.autoplay.sectionTitleSize}px"
+			style:--popup-feature-name="{popup.autoplay.featureNameSize}px"
+			style:--popup-feature-cost="{popup.autoplay.featureCostSize}px"
+			style:--popup-feature-row-py="{popup.autoplay.featureRowPadY}px"
+			style:--popup-feature-row-px="{popup.autoplay.featureRowPadX}px"
+			style:--popup-toggle-w="{popup.autoplay.toggleW}px"
+			style:--popup-toggle-h="{popup.autoplay.toggleH}px"
+			style:--popup-knob-size="{popup.autoplay.knobSize}px"
+			style:--popup-scale="{popup.scale}"
+		>
+			<header class="autoplay-header" style:min-height="{popup.autoplay.titleSize * 1.2}px">
+				<h3 class="autoplay-title" style:font-size="{popup.autoplay.titleSize}px">
+					{context.i18nDerived.autoplayTitle()}
+				</h3>
+				<button
+					type="button"
+					class="close-button"
+					style:font-size="{popup.autoplay.titleSize * 1.15}px"
+					onclick={close}
+					aria-label="close"
+				>×</button>
 			</header>
 
 			<!-- === ФУНКЦИИ === -->
@@ -145,10 +180,14 @@
 
 
 			<!-- === РАУНДЫ === -->
-			<section class="autoplay-section">
-				<div class="section-title">{context.i18nDerived.autoplayRounds()}</div>
+			<section class="autoplay-section" style:gap="{popup.autoplay.gap * 0.7}px">
+				<div class="section-title" style:font-size="{popup.autoplay.sectionTitleSize}px">
+					{context.i18nDerived.autoplayRounds()}
+				</div>
 
-				<div class="rounds-display">{stateUi.autoSpinsText}</div>
+				<div class="rounds-display" style:font-size="{popup.autoplay.roundsSize}px">
+					{stateUi.autoSpinsText}
+				</div>
 
 				<!--
 					Полоса прогресса (как в дизайне): голубой fill = текущий
@@ -160,6 +199,7 @@
 				<div
 					bind:this={sliderEl}
 					class="rounds-slider"
+					style:padding="{popup.autoplay.sliderPadY}px {popup.autoplay.sliderPadX}px"
 					role="slider"
 					aria-label="rounds"
 					aria-valuemin={0}
@@ -173,7 +213,7 @@
 					onpointercancel={onPointerUp}
 					data-test="rounds-slider"
 				>
-					<div class="slider-bar">
+					<div class="slider-bar" style:height="{popup.autoplay.sliderTrackHeight}px">
 						<div
 							class="slider-bar-fill"
 							style:width={`${sliderProgress * 100}%`}
@@ -185,6 +225,9 @@
 			<button
 				type="button"
 				class="start-button"
+				style:font-size="{popup.autoplay.startFontSize}px"
+				style:padding="{popup.autoplay.startPaddingY}px {popup.autoplay.featureRowPadX}px"
+				style:border-radius="{popup.autoplay.borderRadius * 0.7}px"
 				disabled={startDisabled}
 				onclick={startAutoplay}
 				data-test="autoplay-start-button"
@@ -196,36 +239,23 @@
 {/if}
 
 <style lang="scss">
-	/*
-		Overlay — прозрачный контейнер на весь экран без backdrop.
-		pointer-events: none пропускает клики СКВОЗЬ overlay (HUD внизу
-		остаётся интерактивным), а .autoplay-card pointer-events: auto.
-		Карточка прижата к правому-нижнему углу, сразу над HUD-баром
-		(который занимает примерно 100-130px высоты).
-	*/
 	.autoplay-overlay {
 		position: fixed;
 		inset: 0;
 		z-index: 9999;
-		display: flex;
-		align-items: flex-end;
-		justify-content: flex-end;
-		padding: 0 1.2rem 9rem 0;
 		pointer-events: none;
 	}
 
 	.autoplay-card {
-		width: min(280px, 80vw);
+		position: fixed;
 		background: linear-gradient(180deg, #1f3050 0%, #122340 100%);
-		border-radius: 14px;
-		padding: 0.9rem 1rem 0.9rem;
 		display: flex;
 		flex-direction: column;
-		gap: 0.7rem;
 		box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
 		color: #fff;
 		font-family: 'proxima-nova', sans-serif;
 		pointer-events: auto;
+		box-sizing: border-box;
 	}
 
 	.autoplay-header {
@@ -233,12 +263,10 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		min-height: 1.8rem;
 	}
 
 	.autoplay-title {
 		margin: 0;
-		font-size: 1.3rem;
 		font-weight: 800;
 		letter-spacing: 0.01em;
 		color: #fff;
@@ -247,15 +275,14 @@
 
 	.close-button {
 		position: absolute;
-		right: -0.4rem;
-		top: -0.2rem;
+		right: -0.25em;
+		top: -0.15em;
 		background: none;
 		border: 0;
 		color: rgba(255, 255, 255, 0.55);
-		font-size: 1.5rem;
 		line-height: 1;
 		cursor: pointer;
-		padding: 0.2rem 0.4rem;
+		padding: 0.15em 0.35em;
 
 		&:hover { color: #fff; }
 	}
@@ -263,12 +290,59 @@
 	.autoplay-section {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
 	}
 
-	/* Жёлто-оранжевый заголовок секций как на референсе. */
+	.autoplay-card :global(.section-title) {
+		font-size: var(--popup-section-title);
+		font-weight: 800;
+		color: #f0c674;
+		text-align: center;
+		letter-spacing: 0.01em;
+		margin-bottom: calc(2px * var(--popup-scale, 1));
+	}
+
+	.autoplay-card :global(.feature-row) {
+		padding: var(--popup-feature-row-py) var(--popup-feature-row-px);
+		border-radius: calc(8px * var(--popup-scale, 1));
+		gap: calc(6px * var(--popup-scale, 1));
+	}
+
+	.autoplay-card :global(.feature-info) {
+		gap: calc(2px * var(--popup-scale, 1));
+	}
+
+	.autoplay-card :global(.feature-name) {
+		font-size: var(--popup-feature-name);
+		font-weight: 700;
+		line-height: 1.2;
+	}
+
+	.autoplay-card :global(.feature-cost) {
+		font-size: var(--popup-feature-cost);
+		font-weight: 700;
+		line-height: 1.2;
+	}
+
+	.autoplay-card :global(.feature-toggle) {
+		width: var(--popup-toggle-w);
+		height: var(--popup-toggle-h);
+	}
+
+	.autoplay-card :global(.feature-toggle .knob) {
+		width: var(--popup-knob-size);
+		height: var(--popup-knob-size);
+		top: calc((var(--popup-toggle-h) - var(--popup-knob-size)) / 2);
+		left: calc((var(--popup-toggle-h) - var(--popup-knob-size)) / 2);
+	}
+
+	.autoplay-card :global(.feature-toggle.on .knob) {
+		left: calc(
+			var(--popup-toggle-w) - var(--popup-knob-size) -
+				(var(--popup-toggle-h) - var(--popup-knob-size)) / 2
+		);
+	}
+
 	.section-title {
-		font-size: 1.1rem;
 		font-weight: 800;
 		color: #f0c674;
 		text-align: center;
@@ -277,28 +351,18 @@
 
 	.rounds-display {
 		text-align: center;
-		font-size: 1.8rem;
 		font-weight: 800;
 		line-height: 1;
-		padding: 0.3rem 0 0.4rem;
+		padding: 0.25em 0 0.35em;
 		background: rgba(0, 0, 0, 0.28);
-		border-radius: 10px 10px 0 0;
-		margin-bottom: -0.2rem;
+		border-radius: calc(8px * var(--popup-scale, 1)) calc(8px * var(--popup-scale, 1)) 0 0;
+		margin-bottom: calc(-2px * var(--popup-scale, 1));
 	}
 
-	/*
-		Полоса прогресса (как в дизайне): голубой fill = текущий процент
-		выбранного значения относительно всего диапазона. Сам контейнер
-		.rounds-slider — это interactive surface, ловит pointer-события
-		на всю свою область и pad'у для удобного захвата пальцем.
-		touch-action: none — чтобы браузер не пытался скроллить страницу
-		при свайпе горизонтально по слайдеру.
-	*/
 	.rounds-slider {
 		position: relative;
 		background: rgba(0, 0, 0, 0.28);
-		border-radius: 0 0 10px 10px;
-		padding: 0.7rem 0.7rem 0.9rem;
+		border-radius: 0 0 calc(8px * var(--popup-scale, 1)) calc(8px * var(--popup-scale, 1));
 		cursor: pointer;
 		touch-action: none;
 		user-select: none;
@@ -309,7 +373,6 @@
 
 	.slider-bar {
 		position: relative;
-		height: 18px;
 		background: #0a1628;
 		border-radius: 5px;
 		overflow: hidden;
@@ -324,25 +387,18 @@
 
 	.start-button {
 		width: 100%;
-		margin-top: 0.15rem;
-		padding: 0.85rem 0.75rem;
+		margin-top: calc(2px * var(--popup-scale, 1));
 		border: 1px solid rgba(110, 193, 255, 0.55);
-		border-radius: 10px;
 		background: linear-gradient(180deg, #6ec1ff 0%, #3a93e0 100%);
 		color: #fff;
 		font-family: inherit;
-		font-size: 0.92rem;
 		font-weight: 800;
 		line-height: 1.2;
 		text-transform: uppercase;
 		letter-spacing: 0.03em;
 		cursor: pointer;
 		box-shadow: 0 4px 16px rgba(58, 147, 224, 0.4);
-		transition: filter 0.15s, opacity 0.15s;
-
-		&:hover:not(:disabled) {
-			filter: brightness(1.08);
-		}
+		transition: opacity 0.15s;
 
 		&:disabled {
 			opacity: 0.45;

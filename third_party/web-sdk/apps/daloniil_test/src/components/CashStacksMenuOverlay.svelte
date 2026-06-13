@@ -12,11 +12,22 @@
 	выше HUD-бара (над кнопкой меню).
 -->
 <script lang="ts">
-	import { stateUi, stateBet, stateSound } from 'state-shared';
+	import { stateUi, stateBet, stateSound, stateModal } from 'state-shared';
+	import { getContextLayout } from 'utils-layout';
 
+	import { computePopupHudLayout } from '../game/popupHudLayout';
 	import { stateGame } from '../game/stateGame.svelte';
 
+	const { stateLayoutDerived } = getContextLayout();
+	const popup = $derived(computePopupHudLayout(stateLayoutDerived));
+
 	const isOpen = $derived(stateUi.menuOpen);
+
+	$effect(() => {
+		if (isOpen && stateModal.modal?.name === 'autoSpin') {
+			stateModal.modal = null;
+		}
+	});
 
 	const close = () => {
 		stateUi.menuOpen = false;
@@ -93,25 +104,47 @@
 		role="dialog"
 		aria-modal="true"
 		tabindex="-1"
+		style:width="{popup.menu.width}px"
+		style:left="{popup.menu.left}px"
+		style:bottom="{popup.menu.bottom}px"
+		style:padding="{popup.menu.padding}px"
+		style:gap="{popup.menu.gap}px"
+		style:border-radius="{popup.menu.borderRadius}px"
 		onclick={(e) => e.stopPropagation()}
 		onkeydown={(e) => e.stopPropagation()}
 	>
 		<header class="menu-header">
-			<h3 class="menu-title">ИНФОРМАЦИЯ</h3>
+			<h3 class="menu-title" style:font-size="{popup.menu.titleSize}px">ИНФОРМАЦИЯ</h3>
 		</header>
 
 		<!-- === СКОРОСТЬ ИГРЫ (1/2/3) === -->
-		<div class="menu-row">
-			<div class="row-icon" aria-hidden="true">
-				<svg viewBox="0 0 24 24" width="16" height="16">
+		<div class="menu-row" style:gap="{popup.menu.rowGap}px">
+			<div
+				class="row-icon"
+				style:width="{popup.menu.iconSize}px"
+				style:height="{popup.menu.iconSize}px"
+				style:flex="0 0 {popup.menu.iconSize}px"
+				aria-hidden="true"
+			>
+				<svg viewBox="0 0 24 24" width="70%" height="70%">
 					<path d="M13 2L3 14h7l-1 8 11-14h-7l1-6z" fill="#fff" />
 				</svg>
 			</div>
-			<div class="seg-control" role="radiogroup" aria-label="Game speed">
+			<div
+				class="seg-control"
+				style:min-height="{popup.menu.segMinHeight}px"
+				style:padding="{popup.menu.segControlPadding}px"
+				style:border-radius="{popup.menu.borderRadius * 0.5}px"
+				role="radiogroup"
+				aria-label="Game speed"
+			>
 				{#each [1, 2, 3] as level (level)}
 					<button
 						type="button"
 						class="seg-btn"
+						style:height="{popup.menu.segBtnHeight}px"
+						style:font-size="{popup.menu.segBtnFontSize}px"
+						style:border-radius="{popup.menu.borderRadius * 0.33}px"
 						class:active={stateGame.gameSpeed === level}
 						onclick={() => setSpeed(level as 1 | 2 | 3)}
 						aria-pressed={stateGame.gameSpeed === level}
@@ -124,9 +157,15 @@
 		</div>
 
 		<!-- === MASTER VOLUME (drag-слайдер в стиле rounds из Autoplay) === -->
-		<div class="menu-row">
-			<div class="row-icon" aria-hidden="true">
-				<svg viewBox="0 0 24 24" width="18" height="18">
+		<div class="menu-row" style:gap="{popup.menu.rowGap}px">
+			<div
+				class="row-icon"
+				style:width="{popup.menu.iconSize}px"
+				style:height="{popup.menu.iconSize}px"
+				style:flex="0 0 {popup.menu.iconSize}px"
+				aria-hidden="true"
+			>
+				<svg viewBox="0 0 24 24" width="75%" height="75%">
 					<path
 						d="M3 9v6h4l5 4V5L7 9H3zm13.5 3a4.5 4.5 0 00-2.5-4v8a4.5 4.5 0 002.5-4zM14 3.23v2.06A7 7 0 0119 12a7 7 0 01-5 6.71v2.06A9 9 0 0021 12 9 9 0 0014 3.23z"
 						fill="#fff"
@@ -136,6 +175,9 @@
 			<div
 				bind:this={volumeEl}
 				class="volume-slider"
+				style:min-height="{popup.menu.segMinHeight}px"
+				style:padding="0 {popup.menu.volumePadX}px"
+				style:border-radius="{popup.menu.borderRadius * 0.5}px"
 				role="slider"
 				aria-label="Master volume"
 				aria-valuemin={0}
@@ -148,7 +190,7 @@
 				onpointercancel={onVolumePointerUp}
 				data-test="volume-slider"
 			>
-				<div class="volume-bar">
+				<div class="volume-bar" style:height="{popup.menu.volumeTrackHeight}px">
 					<div
 						class="volume-bar-fill"
 						style:width={`${stateSound.volumeValueMaster}%`}
@@ -158,16 +200,32 @@
 		</div>
 
 		<!-- === МУЗЫКА (ВКЛ/ВЫКЛ кнопки) === -->
-		<div class="menu-row">
-			<div class="row-icon" aria-hidden="true">
-				<svg viewBox="0 0 24 24" width="16" height="16">
+		<div class="menu-row" style:gap="{popup.menu.rowGap}px">
+			<div
+				class="row-icon"
+				style:width="{popup.menu.iconSize}px"
+				style:height="{popup.menu.iconSize}px"
+				style:flex="0 0 {popup.menu.iconSize}px"
+				aria-hidden="true"
+			>
+				<svg viewBox="0 0 24 24" width="70%" height="70%">
 					<path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z" fill="#fff" />
 				</svg>
 			</div>
-			<div class="seg-control" role="radiogroup" aria-label="Music">
+			<div
+				class="seg-control"
+				style:min-height="{popup.menu.segMinHeight}px"
+				style:padding="{popup.menu.segControlPadding}px"
+				style:border-radius="{popup.menu.borderRadius * 0.5}px"
+				role="radiogroup"
+				aria-label="Music"
+			>
 				<button
 					type="button"
 					class="seg-btn wide"
+					style:height="{popup.menu.segBtnHeight}px"
+					style:font-size="{popup.menu.segBtnFontSize * 0.94}px"
+					style:border-radius="{popup.menu.borderRadius * 0.33}px"
 					class:active={stateGame.musicEnabled}
 					onclick={() => toggleMusic(true)}
 					aria-pressed={stateGame.musicEnabled}
@@ -178,6 +236,9 @@
 				<button
 					type="button"
 					class="seg-btn wide"
+					style:height="{popup.menu.segBtnHeight}px"
+					style:font-size="{popup.menu.segBtnFontSize * 0.94}px"
+					style:border-radius="{popup.menu.borderRadius * 0.33}px"
 					class:active={!stateGame.musicEnabled}
 					onclick={() => toggleMusic(false)}
 					aria-pressed={!stateGame.musicEnabled}
@@ -203,26 +264,20 @@
 	}
 
 	/*
-		Card позиционирована absolute, bottom-left — над hamburger-кнопкой,
-		которая находится внутри dark bar HUD (~примерно 7rem от низа).
-		Pointer-events на карточке = auto, на backdrop = тоже auto, но
-		stopPropagation на карточке предотвращает закрытие при клике внутри.
+		Card anchored above the menu HUD button (left = button center).
+		Sizes and position come from computePopupHudLayout().
 	*/
 	.menu-card {
 		position: fixed;
-		left: 1.2rem;
-		bottom: 7.5rem;
 		z-index: 9998;
-		width: min(260px, 80vw);
+		transform: translateX(-50%);
 		background: linear-gradient(180deg, #6db9d8 0%, #4b8eb0 100%);
-		border-radius: 18px;
-		padding: 0.85rem 0.95rem 1rem;
 		display: flex;
 		flex-direction: column;
-		gap: 0.55rem;
 		box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
 		color: #fff;
 		font-family: 'proxima-nova', sans-serif;
+		box-sizing: border-box;
 
 		&:focus { outline: none; }
 	}
@@ -231,13 +286,11 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.5rem;
-		margin-bottom: 0.15rem;
+		margin-bottom: 0.15em;
 	}
 
 	.menu-title {
 		margin: 0;
-		font-size: 1.05rem;
 		font-weight: 800;
 		letter-spacing: 0.04em;
 		color: #fff;
@@ -246,13 +299,9 @@
 	.menu-row {
 		display: flex;
 		align-items: center;
-		gap: 0.45rem;
 	}
 
 	.row-icon {
-		width: 30px;
-		height: 30px;
-		flex: 0 0 30px;
 		border-radius: 50%;
 		background: rgba(255, 255, 255, 0.18);
 		display: flex;
@@ -260,33 +309,26 @@
 		justify-content: center;
 	}
 
-	/* Контейнер для группы кнопок 1/2/3. */
 	.seg-control {
 		flex: 1;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 0.2rem;
-		padding: 0.22rem;
+		gap: 0.15em;
 		background: #0c2233;
-		border-radius: 9px;
-		min-height: 34px;
 	}
 
 	.seg-btn {
 		flex: 1;
-		height: 28px;
 		border: 0;
-		border-radius: 6px;
 		background: transparent;
 		color: #fff;
-		font-size: 0.85rem;
 		font-weight: 800;
 		font-family: inherit;
 		cursor: pointer;
 		transition: background 0.15s, color 0.15s, transform 0.05s;
 
-		&.wide { font-size: 0.8rem; letter-spacing: 0.04em; }
+		&.wide { letter-spacing: 0.04em; }
 
 		&:hover:not(.active) {
 			background: rgba(255, 255, 255, 0.06);
@@ -301,21 +343,13 @@
 		&:active { transform: translateY(1px); }
 	}
 
-	/*
-		Volume slider — стиль 1-в-1 как у rounds-слайдера в Autoplay:
-		тёмная подложка #0c2233, голубой fill, drag через pointer-capture.
-		touch-action: none предотвращает скролл страницы при свайпе.
-	*/
 	.volume-slider {
 		flex: 1;
 		position: relative;
-		padding: 0.5rem 0.55rem;
 		background: #0c2233;
-		border-radius: 9px;
 		cursor: pointer;
 		touch-action: none;
 		user-select: none;
-		min-height: 34px;
 		display: flex;
 		align-items: center;
 
@@ -326,7 +360,6 @@
 	.volume-bar {
 		position: relative;
 		flex: 1;
-		height: 14px;
 		background: #0a1628;
 		border-radius: 4px;
 		overflow: hidden;

@@ -1,5 +1,7 @@
 import { createLayout } from 'utils-layout';
 
+import { MAX_LAYOUT_SCALE } from './constants';
+
 export const { stateLayout, stateLayoutDerived } = createLayout({
 	backgroundRatio: {
 		normal: 2039 / 1000,
@@ -11,4 +13,5 @@ export const { stateLayout, stateLayoutDerived } = createLayout({
 		landscape: { width: 1600, height: 900 },
 		portrait: { width: 800, height: 1422 },
 	},
+	maxScale: MAX_LAYOUT_SCALE,
 });

@@ -16,6 +16,7 @@
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { GAME_ENTRANCE_MS } from '../game/constants';
 	import EnableSound from './EnableSound.svelte';
+	import EnableSymbolTextureOptimization from './EnableSymbolTextureOptimization.svelte';
 	import EnableUiTextureOptimization from './EnableUiTextureOptimization.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
 	import ResumeBet from './ResumeBet.svelte';
@@ -69,8 +70,9 @@
 		context.stateGame.winOverlayActive ||
 		context.stateGame.freeSpinIntroActive}
 >
-	<App maxResolution={2} tuneForMobilePortrait>
+	<App maxResolution={3} tuneForMobilePortrait>
 		<EnableSound />
+		<EnableSymbolTextureOptimization />
 		<EnableUiTextureOptimization />
 		<EnableHotkey />
 		<EnableGameActor />
