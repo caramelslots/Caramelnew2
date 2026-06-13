@@ -24,6 +24,7 @@
 	import { stateBet } from 'state-shared';
 
 	import { playBet, playBookEvent, playBookEvents } from '../game/utils';
+	import { eventEmitter } from '../game/eventEmitter';
 	import { devPreview } from '../game/devPreview.svelte';
 	import baseEvents from '../stories/data/base_events';
 	import baseBooks from '../stories/data/base_books';
@@ -333,6 +334,17 @@
 			playBookEvent(asEvent({ type: 'freeSpinEnd', amount, winLevel }), { bookEvents: [] }),
 		);
 
+	/** Только доска «10 Free Spins» — без transition, звуков и смены UI. */
+	const playFsIntroPreview = () =>
+		guard(async () => {
+			eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
+			await eventEmitter.broadcastAsync({
+				type: 'freeSpinIntroUpdate',
+				totalFreeSpins: 10,
+			});
+			eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
+		});
+
 	const playSingleBonusCat = () =>
 		guard(async () => {
 			await playBookEvent(reveal(SINGLE_BONUS_CAT_BOARD), { bookEvents: [] });
@@ -533,6 +545,14 @@
 			<section>
 				<h4>Free Spins</h4>
 				<div class="grid">
+					<button
+						type="button"
+						disabled={busy}
+						title="Только доска поздравления «10 Free Spins» (без transition и звуков)"
+						onclick={playFsIntroPreview}
+					>
+						FS Intro Board
+					</button>
 					<button
 						type="button"
 						disabled={busy}

@@ -6,35 +6,51 @@
 </script>
 
 <script lang="ts">
-	import { CanvasSizeRectangle } from 'components-layout';
-	import { stateUrlDerived } from 'state-shared';
+	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
 	import { FadeContainer } from 'components-pixi';
 	import { waitForResolve } from 'utils-shared/wait';
-	import { BitmapText, SpineProvider, SpineSlot, SpineTrack, Sprite } from 'pixi-svelte';
+	import { anchorToPivot, Container, Sprite } from 'pixi-svelte';
 
-	import { BITMAP_FONT_SCALE, FONT_PROSTOI } from '../game/constants';
+	import { BOARD_DIMENSIONS, SYMBOL_SIZE } from '../game/constants';
 	import { getContext } from '../game/context';
 	import PressToContinue from './PressToContinue.svelte';
-	import FreeSpinAnimation from './FreeSpinAnimation.svelte';
-
-	type AnimationName = 'intro' | 'idle';
 
 	const context = getContext();
 
+	// fs_cong.png native aspect; scaled up for legibility on desktop/portrait layouts.
+	const BOARD_RATIO = 1536 / 1024;
+	const NUMBER_RATIO = 1276 / 595;
+	const BOARD_SCALE = 1.55;
+	const PANEL_WIDTH = SYMBOL_SIZE * BOARD_DIMENSIONS.x;
+	const boardSizes = {
+		width: PANEL_WIDTH * BOARD_SCALE,
+		height: (PANEL_WIDTH * BOARD_SCALE) / BOARD_RATIO,
+	};
+	// Inner "10" plaque — centred in the YOU WON / FREE SPINS gap on fs_cong art.
+	const NUMBER_Y_RATIO = 0.6;
+	const NUMBER_WIDTH_RATIO = 0.24;
+	const numberWidth = boardSizes.width * NUMBER_WIDTH_RATIO;
+	const numberSizes = {
+		width: numberWidth,
+		height: numberWidth / NUMBER_RATIO,
+	};
+	const numberOffsetY = boardSizes.height * (NUMBER_Y_RATIO - 0.5);
+	const boardCenter = {
+		x: boardSizes.width * 0.5,
+		y: boardSizes.height * 0.5,
+	};
+	const panelPosition = $derived({
+		x: context.stateGameDerived.boardLayout().x,
+		y: context.stateGameDerived.boardLayout().y,
+	});
+
 	let show = $state(false);
-	let animationName = $state<AnimationName>('intro');
-	let freeSpinsFromEvent = $state(0);
 	let oncomplete = $state(() => {});
 
 	context.eventEmitter.subscribeOnMount({
 		freeSpinIntroShow: () => (show = true),
 		freeSpinIntroHide: () => (show = false),
-		freeSpinIntroUpdate: async (emitterEvent) => {
-			// if (emitterEvent.extraSpins) {
-			// 	context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_fs_respins' });
-			// }
-			// freeSpinsFromEvent = emitterEvent.extraSpins ?? emitterEvent.totalFreeSpins;
-			freeSpinsFromEvent = emitterEvent.totalFreeSpins;
+		freeSpinIntroUpdate: async () => {
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},
 	});
@@ -43,40 +59,30 @@
 <FadeContainer {show}>
 	<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.5} />
 
-	<FreeSpinAnimation>
-		{#snippet children({ sizes })}
+	<MainContainer>
+		<Container
+			x={panelPosition.x}
+			y={panelPosition.y}
+			pivot={anchorToPivot({ anchor: 0.5, sizes: boardSizes })}
+		>
 			<Sprite
-				anchor={{ x: 0.5, y: 1.2 }}
-				width={500 * 2.2}
-				height={156 * 2.2}
-				key="freespins_{stateUrlDerived.lang()}.png"
+				key="fsCongBoard"
+				anchor={0.5}
+				x={boardCenter.x}
+				y={boardCenter.y}
+				width={boardSizes.width}
+				height={boardSizes.height}
 			/>
-
-			<SpineProvider key="fsIntroNumber" width={sizes.width * 0.3}>
-				<SpineTrack
-					trackIndex={0}
-					{animationName}
-					loop={animationName === 'idle'}
-					listener={{
-						complete: () => (animationName = 'idle'),
-					}}
-				/>
-				<SpineSlot slotName="slot_number">
-					<BitmapText
-						anchor={{ x: 0.5, y: 0.5 }}
-						text={freeSpinsFromEvent}
-						style={{
-							fontFamily: FONT_PROSTOI,
-							fontSize: sizes.width * 0.1 * BITMAP_FONT_SCALE,
-							fontWeight: 'bold',
-						}}
-					/>
-				</SpineSlot>
-			</SpineProvider>
-
-			<Sprite anchor={{ x: 0.5, y: -3 }} width={183 * 2.2} height={42 * 2.2} key="freespins.png" />
-		{/snippet}
-	</FreeSpinAnimation>
+			<Sprite
+				key="fsCongNumber"
+				anchor={0.5}
+				x={boardCenter.x}
+				y={boardCenter.y + numberOffsetY}
+				width={numberSizes.width}
+				height={numberSizes.height}
+			/>
+		</Container>
+	</MainContainer>
 
 	<PressToContinue onpress={() => oncomplete()} />
 </FadeContainer>
