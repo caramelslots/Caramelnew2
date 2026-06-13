@@ -354,6 +354,10 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/fsCong/10_fs_cong_table.png', import.meta.url).href,
 	},
+	fsLeftCounter: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fsLeftCounter/fs_left_counter.png', import.meta.url).href,
+	},
 	winSmall: {
 		type: 'sprites',
 		src: new URL('../../assets/sprites/winSmall/MM_Localisation_winsmall.json', import.meta.url)

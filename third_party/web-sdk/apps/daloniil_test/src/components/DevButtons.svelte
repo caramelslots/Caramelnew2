@@ -36,6 +36,7 @@
 
 	let open = $state(false);
 	let busy = $state(false);
+	let fsCounterPreview = $state(false);
 
 	/*
 		Dev-only: bookEvents требует `index: number`, но storybook fixtures
@@ -345,6 +346,23 @@
 			eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
 		});
 
+	/** Toggle FS left counter panel (3 OF 10) for layout debug. */
+	const playFsCounterPreview = () =>
+		guard(() => {
+			if (fsCounterPreview) {
+				eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
+				fsCounterPreview = false;
+				return;
+			}
+			eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
+			eventEmitter.broadcast({
+				type: 'freeSpinCounterUpdate',
+				current: 3,
+				total: 10,
+			});
+			fsCounterPreview = true;
+		});
+
 	const playSingleBonusCat = () =>
 		guard(async () => {
 			await playBookEvent(reveal(SINGLE_BONUS_CAT_BOARD), { bookEvents: [] });
@@ -545,6 +563,15 @@
 			<section>
 				<h4>Free Spins</h4>
 				<div class="grid">
+					<button
+						type="button"
+						disabled={busy}
+						class:active={fsCounterPreview}
+						title="Toggle FS left counter panel (3 OF 10)"
+						onclick={playFsCounterPreview}
+					>
+						{fsCounterPreview ? 'FS Counter: ON' : 'FS Left Counter'}
+					</button>
 					<button
 						type="button"
 						disabled={busy}
