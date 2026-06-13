@@ -13,8 +13,8 @@
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import UiFadeContainer from 'components-ui-pixi/src/components/UiFadeContainer.svelte';
 
-	import { BITMAP_FONT_SCALE, FONT_PROSTOI, PORTRAIT_UI_LAYOUT, WIN_HUD_FONT_SIZE } from '../game/constants';
-	import { portraitScaleY } from '../game/portraitHudLayout';
+	import { BITMAP_FONT_SCALE, FONT_PROSTOI, WIN_HUD_FONT_SIZE } from '../game/constants';
+	import { portraitScaleY, portraitWinHudLocalY } from '../game/portraitHudLayout';
 	import { getContext } from '../game/context';
 	import { getContextLayout } from 'utils-layout';
 
@@ -31,13 +31,9 @@
 	const W = $derived(ml.width);
 	const H = $derived(ml.height);
 
-	const boardLayout = $derived(context.stateGameDerived.boardLayout());
 	const winHudPos = $derived({
 		x: W * 0.5,
-		y:
-			boardLayout.y +
-			boardLayout.visualHeight * 0.5 +
-			portraitScaleY(PORTRAIT_UI_LAYOUT.winBelowBoardGap, H),
+		y: portraitWinHudLocalY(stateLayoutDerived),
 	});
 
 	const showWin = $derived(stateBet.winBookEventAmount > 0);

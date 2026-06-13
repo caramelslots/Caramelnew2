@@ -50,6 +50,15 @@ export const portraitBoardBottomLocal = (layoutDerived: LayoutDerived) => {
 	return ml.height * 0.5 + off.y + halfH;
 };
 
+/** WIN label Y — vertically centred between board bottom and buy/boost panel top. */
+export const portraitWinHudLocalY = (layoutDerived: LayoutDerived) => {
+	const H = layoutDerived.mainLayout().height;
+	const boardBottom = portraitBoardBottomLocal(layoutDerived);
+	const buyPanelGap = portraitScaleY(PORTRAIT_UI_LAYOUT.buyPanelBelowBoard, H);
+	const winNudge = portraitScaleY(PORTRAIT_UI_LAYOUT.winNudgeDown, H);
+	return boardBottom + buyPanelGap / 2 + winNudge;
+};
+
 export type PortraitHudCanvas = {
 	buyPanelBottomCanvas: number;
 	spin: {

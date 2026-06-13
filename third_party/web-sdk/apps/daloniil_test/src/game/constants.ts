@@ -556,6 +556,8 @@ export const PORTRAIT_UI_LAYOUT = {
 	winBelowBoardGap: 62,
 	/** Buy/boost row top offset from board bottom (ref px, independent of WIN). */
 	buyPanelBelowBoard: 112,
+	/** Extra WIN nudge down on portrait (ref px, + = down). */
+	winNudgeDown: 12.5,
 	/** Spin stack anchor below board when buy/boost hidden (free spins). */
 	freeSpinsSpinBelowBoard: 48,
 	/** Util-row center offset from screen bottom (ref px; ≈ iconRadius + 12px margin). */
