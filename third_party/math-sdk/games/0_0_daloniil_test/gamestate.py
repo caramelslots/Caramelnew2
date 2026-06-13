@@ -22,7 +22,7 @@ class GameState(GameStateOverride):
             self.evaluate_lines_board()
 
             self.win_manager.update_gametype_wins(self.gametype)
-            if self.check_fs_condition():
+            if self.check_fs_condition() and not self.wincap_triggered:
                 # 3× B → Normal Bonus FS profile; 4× B → Super Bonus FS profile.
                 self.apply_fs_profile_from_trigger()
                 self.emit_fs_trigger_bonus_collect()
@@ -40,7 +40,7 @@ class GameState(GameStateOverride):
         if self.is_super_bonus():
             self.init_super_bonus_mystery_reels()
 
-        while self.fs < self.tot_fs:
+        while self.fs < self.tot_fs and not self.wincap_triggered:
             self.update_freespin()
             # draw_board сам эмитит reveal_event с reelstrip-доской. Если на этом
             # спине есть активные Mystery Reels — суппрессим первый reveal,
