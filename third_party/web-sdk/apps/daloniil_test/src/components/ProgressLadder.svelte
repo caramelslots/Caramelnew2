@@ -64,7 +64,7 @@
 </script>
 
 <script lang="ts">
-	import { cubicOut } from 'svelte/easing';
+	import { backOut, cubicOut } from 'svelte/easing';
 	import type { TransitionConfig } from 'svelte/transition';
 	import { getContext } from '../game/context';
 	import { devPreview } from '../game/devPreview.svelte';
@@ -89,7 +89,7 @@
 	const catStaticUrl = assets.bonusBarCat.src;
 
 	const BONUSES_PER_TIER = 4;
-	const BAR_ENTER_MS = 550;
+	const BAR_ENTER_MS = 650;
 	const BAR_LEAVE_MS = 400;
 
 	const barOffsets = (node: Element, compactScale: number) => {
@@ -103,9 +103,9 @@
 		const { x, y } = barOffsets(node, compactScale);
 		return {
 			duration: BAR_ENTER_MS,
-			easing: cubicOut,
+			easing: backOut,
 			css: (t) => {
-				const scale = 0.82 + 0.18 * t;
+				const scale = 0.72 + 0.28 * t;
 				return `opacity:${t};transform:translate(${(1 - t) * x}px,${(1 - t) * y}px) scale(${scale});`;
 			},
 		};
@@ -145,7 +145,9 @@
 	const popoutBarScale = $derived(getPopoutBonusBarVScale(canvasSizes));
 
 	// devPreview.ladder toggled from the DEV panel (DevButtons.svelte).
-	const isVisible = $derived(devPreview.ladder || stateGame.ladderVisible);
+	const isVisible = $derived(
+		(devPreview.ladder || stateGame.ladderVisible) && !stateGame.freeSpinIntroActive,
+	);
 	// Desktop + popout L/S → vertical bar (bar_v) to the right of the board.
 	const isDesktop = $derived(
 		devPreview.ladder
@@ -271,6 +273,7 @@
 		z-index: 40;
 		background-repeat: no-repeat;
 		background-size: 100% 100%;
+		transform-origin: center center;
 		transition: filter 0.15s ease;
 	}
 

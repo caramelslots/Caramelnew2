@@ -65,7 +65,9 @@
 
 <div
 	class="pixi-stage"
-	class:above-html-ui={context.stateGame.transitionActive || context.stateGame.winOverlayActive}
+	class:above-html-ui={context.stateGame.transitionActive ||
+		context.stateGame.winOverlayActive ||
+		context.stateGame.freeSpinIntroActive}
 >
 	<App maxResolution={2} tuneForMobilePortrait>
 		<EnableSound />

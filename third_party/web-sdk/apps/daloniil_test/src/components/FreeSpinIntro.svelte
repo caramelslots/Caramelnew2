@@ -13,6 +13,7 @@
 
 	import { BOARD_DIMENSIONS, SYMBOL_SIZE } from '../game/constants';
 	import { getContext } from '../game/context';
+	import { stateGame } from '../game/stateGame.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 
 	const context = getContext();
@@ -48,8 +49,14 @@
 	let oncomplete = $state(() => {});
 
 	context.eventEmitter.subscribeOnMount({
-		freeSpinIntroShow: () => (show = true),
-		freeSpinIntroHide: () => (show = false),
+		freeSpinIntroShow: () => {
+			show = true;
+			stateGame.freeSpinIntroActive = true;
+		},
+		freeSpinIntroHide: () => {
+			show = false;
+			stateGame.freeSpinIntroActive = false;
+		},
 		freeSpinIntroUpdate: async () => {
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},
