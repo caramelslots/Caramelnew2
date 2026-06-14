@@ -182,7 +182,7 @@ export const stateGame = $state({
 	// renders on top while the dim layer keeps controls visible underneath.
 	// Small/medium wins leave this false so the HUD stays at normal stacking.
 	winOverlayActive: false,
-	// FS intro board sits in Pixi — raise canvas above HTML ProgressLadder while visible.
+	// FS intro board is an HTML overlay — hide ProgressLadder while visible.
 	freeSpinIntroActive: false,
 	// Bonus bar during FS — decoupled from gameType so background can switch under smoke first.
 	ladderVisible: false,

@@ -66,9 +66,7 @@
 
 <div
 	class="pixi-stage"
-	class:above-html-ui={context.stateGame.transitionActive ||
-		context.stateGame.winOverlayActive ||
-		context.stateGame.freeSpinIntroActive}
+	class:above-html-ui={context.stateGame.transitionActive || context.stateGame.winOverlayActive}
 >
 	<App maxResolution={3} tuneForMobilePortrait>
 		<EnableSound />
@@ -113,7 +111,6 @@
 					{/snippet}
 				</UiCashStacksLayout>
 				<Win />
-				<FreeSpinIntro />
 				{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
 					<FreeSpinCounter />
 				{/if}
@@ -141,6 +138,7 @@
 	<ProgressLadder />
 </div>
 <MysteryReelUnlockOverlay />
+<FreeSpinIntro />
 <DevCheats />
 <DevButtons />
 

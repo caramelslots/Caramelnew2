@@ -12,10 +12,13 @@
 	import { getContext } from '../game/context';
 
 	type Props = {
-		onpress: () => void;
+		onpress?: () => void;
+		/** When false, only renders the label (no fullscreen / hotkey handlers). */
+		interactive?: boolean;
 	};
 
 	const props: Props = $props();
+	const interactive = $derived(props.interactive !== false);
 	const context = getContext();
 	const layout = $derived(context.stateLayoutDerived.mainLayout());
 	const pressText = $derived(context.i18nDerived.pressToContinue());
@@ -36,5 +39,7 @@
 		}}
 	/>
 </MainContainer>
-<OnHotkey hotkey="Space" onpress={() => props.onpress()} />
-<OnPressFullScreen onpress={() => props.onpress()} />
+{#if interactive}
+	<OnHotkey hotkey="Space" onpress={() => props.onpress?.()} />
+	<OnPressFullScreen onpress={() => props.onpress?.()} />
+{/if}
