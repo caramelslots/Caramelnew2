@@ -615,25 +615,30 @@ const explosion = {
 
 // New designer artwork comes from `designer_assets/Symbols/export/` — a
 // single combined spine with bounce/win/explosion animations + per-symbol
-// images. Static frames render as plain sprites (`*Img` assets in
-// `assets.ts`) so spin → land → static stays cheap; only `land`/`win`/
-// `mysteryReveal` instantiate the spine. The reel-level inertial squash
-// (`removePaddingAndBounceBack` in createReelForSpinning) is preserved on
-// top of the per-symbol bounce — they stack visually on landing.
-
-const h1Static = { type: 'sprite', assetKey: 'H1Img', sizeRatios: { width: 1, height: 1 } };
-const h2Static = { type: 'sprite', assetKey: 'H2Img', sizeRatios: { width: 1, height: 1 } };
-const h3Static = { type: 'sprite', assetKey: 'H3Img', sizeRatios: { width: 1, height: 1 } };
-const h4Static = { type: 'sprite', assetKey: 'H4Img', sizeRatios: { width: 1, height: 1 } };
-
-const l1Static = { type: 'sprite', assetKey: 'L1Img', sizeRatios: { width: 1, height: 1 } };
-const l2Static = { type: 'sprite', assetKey: 'L2Img', sizeRatios: { width: 1, height: 1 } };
-const l3Static = { type: 'sprite', assetKey: 'L3Img', sizeRatios: { width: 1, height: 1 } };
-const l4Static = { type: 'sprite', assetKey: 'L4Img', sizeRatios: { width: 1, height: 1 } };
+// images. Rest/spin/static frames render via zero-movement `*/idle` spine
+// clips (frozen with autoUpdate=false) so they match bounce/win quality from
+// the same atlas textures. `land` plays the per-symbol bounce spine; dedicated
+// `*/win` / `wave` clips drive W/B celebration.
 
 // Per-symbol bounce on landing — slot-driven attachment matches the
 // asset key, so each spine animates only the H_/L_ image we want.
 const bounceSizeRatios = { width: 1, height: 1 };
+
+const makePaySymbolIdle = (assetKey: string, clipPrefix: string) => ({
+	type: 'spine' as const,
+	assetKey,
+	animationName: `${clipPrefix}/idle`,
+	sizeRatios: bounceSizeRatios,
+});
+
+const h1Static = makePaySymbolIdle('H1', 'High_1');
+const h2Static = makePaySymbolIdle('H2', 'High_2');
+const h3Static = makePaySymbolIdle('H3', 'High_3');
+const h4Static = makePaySymbolIdle('H4', 'High_4');
+const l1Static = makePaySymbolIdle('L1', 'Low_1');
+const l2Static = makePaySymbolIdle('L2', 'Low_2');
+const l3Static = makePaySymbolIdle('L3', 'Low_3');
+const l4Static = makePaySymbolIdle('L4', 'Low_4');
 const h1Bounce = {
 	type: 'spine',
 	assetKey: 'H1',
@@ -684,9 +689,9 @@ const l4Bounce = {
 };
 
 /**
- * Per-symbol win animation — used for any symbol whose `win` entry is
- * a sprite (H1..H4, L1..L4, B, M). The spine-based `W` win plays its
- * own `wild_dynamite` animation and skips this bounce.
+ * Per-symbol win animation — used when `win` shows a frozen idle spine
+ * (H1..H4, L1..L4, M) with a container scale tween. W and B play dedicated
+ * spine win clips (`Special_2/win`, `Special_1/wave`) and skip this bounce.
  *
  * Flow (ReelSymbol.svelte): on `state === 'win'`
  *   1. UP: scale 1 → `scalePeak`, y-offset 0 → `−yOffsetPeakPx` over `upMs` (sineOut)
@@ -733,8 +738,6 @@ export const DIM_NON_WINNING = {
  * what we want — they should occupy the same visual footprint as the
  * resting symbol. */
 export const M_SIZE = 1.3;
-/** Sprite spin size — matches spine idle footprint (196² bg in 256 skeleton). */
-export const M_SPIN_SIZE_RATIO = (196 / 256) * M_SIZE;
 
 export const MYSTERY_REVEAL_TIER: Record<string, 'high' | 'mid' | 'low'> = {
 	H1: 'high',
@@ -831,15 +834,6 @@ const bStatic = {
 // hexagonal background was missing in static state. Using the spine
 // guarantees both bg + glyph are rendered at the right relative offset
 // and lines up perfectly with the explosion sequence on reveal.
-// Mystery scroll uses a lightweight sprite (like H/L pay symbols) so the
-// column doesn't hitch when the pool trims before landing. Rest/land keeps
-// the full Mystery/idle spine (bg + `?` glyph aligned with reveal).
-const mSpin = {
-	type: 'mysterySprite' as const,
-	bgAssetKey: 'MBgImg' as const,
-	assetKey: 'MImg' as const,
-	sizeRatios: { width: M_SPIN_SIZE_RATIO, height: M_SPIN_SIZE_RATIO },
-};
 const mStatic = {
 	type: 'spine' as const,
 	assetKey: 'M' as const,
@@ -847,7 +841,12 @@ const mStatic = {
 	sizeRatios: { width: M_SIZE, height: M_SIZE },
 };
 
-const wStatic = { type: 'sprite', assetKey: 'WImg', sizeRatios: { width: 1, height: 1 } };
+const wStatic = {
+	type: 'spine' as const,
+	assetKey: 'W' as const,
+	animationName: 'Special_2/idle',
+	sizeRatios: bounceSizeRatios,
+};
 const wWinSizeRatios = { width: SPECIAL_SYMBOL_SIZE, height: SPECIAL_SYMBOL_SIZE };
 const bWinSizeRatios = { width: SPECIAL_SYMBOL_SIZE, height: SPECIAL_SYMBOL_SIZE };
 const mRevealSizeRatios = { width: M_SIZE, height: M_SIZE };
@@ -955,9 +954,8 @@ export const SYMBOL_INFO_MAP = {
 		spin: l4Static,
 		land: l4Bounce,
 	},
-	// Wild — bounce spine on land, dedicated `Special_2/win` celebration
-	// spine on win (lights up the W/I/L/D letters). Static frames keep the
-	// new `WImg` PNG so spinning is cheap.
+	// Wild — `Special_2/idle` rest pose, bounce spine on land, dedicated
+	// `Special_2/win` celebration spine on win (lights up the W/I/L/D letters).
 	W: {
 		explosion,
 		postWinStatic: wStatic,
@@ -982,7 +980,7 @@ export const SYMBOL_INFO_MAP = {
 		explosion,
 		postWinStatic: mStatic,
 		static: mStatic,
-		spin: mSpin,
+		spin: mStatic,
 		win: mStatic,
 		land: mStatic,
 	},

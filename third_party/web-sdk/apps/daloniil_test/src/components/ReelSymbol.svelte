@@ -22,10 +22,14 @@
 		getSymbolInfo({ rawSymbol: props.reelSymbol.rawSymbol, state: props.reelSymbol.symbolState }),
 	);
 
-	// Per-symbol win bounce. Only runs for sprite-based win renders
-	// (H/L pay symbols, B, M). For W (spine win), the spine drives its
-	// own oncomplete via SymbolSpine's listener — we skip the bounce so
-	// scale doesn't fight the wild_dynamite animation.
+	// Per-symbol win bounce. Runs for symbols whose win state shows a frozen
+	// idle spine + container scale tween (H/L pay, M). W (`Special_2/win`) and
+	// B (`Special_1/wave`) drive their own spine celebration — skip the bounce
+	// so scale doesn't fight the designer animation.
+	const usesDedicatedSpineWin = $derived(
+		symbolInfo.animationName === 'Special_2/win' ||
+			symbolInfo.animationName === 'Special_1/wave',
+	);
 	const winScale = new Tween(1);
 	const winYOffset = new Tween(0);
 
@@ -84,9 +88,8 @@
 
 	$effect(() => {
 		const state = props.reelSymbol.symbolState;
-		const type = symbolInfo.type;
 		untrack(() => {
-			if (state === 'win' && type === 'sprite') {
+			if (state === 'win' && !usesDedicatedSpineWin) {
 				runWinBounce();
 			}
 		});
@@ -167,9 +170,9 @@
 			rawSymbol={props.reelSymbol.rawSymbol}
 			oncomplete={() => {
 				const state = props.reelSymbol.symbolState;
-				// Sprite-driven wins are completed by `runWinBounce` after its
-				// Tween settles — don't fire from the sprite mount oncomplete.
-				if (state === 'win' && symbolInfo.type === 'sprite') return;
+				// Container win bounce completes via `runWinBounce` — don't fire
+				// from the spine idle mount oncomplete.
+				if (state === 'win' && !usesDedicatedSpineWin) return;
 				if (state === 'win' || state === 'mysteryReveal' || state === 'land') {
 					props.reelSymbol.oncomplete();
 				}
