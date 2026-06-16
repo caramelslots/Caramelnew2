@@ -4,6 +4,8 @@
 	START AUTOPLAY внутри панели. HUD остаётся интерактивным (без backdrop).
 -->
 <script lang="ts">
+	import { scale } from 'svelte/transition';
+	import { backOut, cubicOut } from 'svelte/easing';
 	import { stateModal, stateUi } from 'state-shared';
 	import { OnHotkey } from 'components-shared';
 
@@ -35,6 +37,9 @@
 	const minusUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/bet/minus.png`;
 	const plusUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/bet/plus.png`;
 	const startButtonUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay/main_button.png`;
+
+	const PANEL_IN_MS = 400;
+	const PANEL_OUT_MS = 240;
 
 	const isOpen = $derived(stateModal.modal?.name === 'autoSpin');
 	const layoutType = $derived(stateLayoutDerived.layoutType());
@@ -146,6 +151,8 @@
 			style:left={useAnchoredLayout ? `${panelAnchor!.left}px` : undefined}
 			style:bottom={useAnchoredLayout ? `${panelAnchor!.bottom}px` : undefined}
 			style:--panel-width={useAnchoredLayout ? `${panelAnchor!.width}px` : undefined}
+			in:scale={{ duration: PANEL_IN_MS, easing: backOut, start: 0.86, opacity: 0 }}
+			out:scale={{ duration: PANEL_OUT_MS, easing: cubicOut, start: 0.95, opacity: 0 }}
 			role="dialog"
 			aria-modal="true"
 			aria-label={context.i18nDerived.autoplayTitle()}
@@ -299,11 +306,13 @@
 		aspect-ratio: 1329 / 1444;
 		pointer-events: auto;
 		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
+		transform-origin: center center;
 	}
 
 	.autoplay-overlay.anchored .autoplay-panel {
 		position: fixed;
 		aspect-ratio: 1329 / 1380;
+		transform-origin: 55% 100%;
 	}
 
 	.panel-bg {
