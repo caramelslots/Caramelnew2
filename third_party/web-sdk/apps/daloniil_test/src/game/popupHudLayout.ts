@@ -1,6 +1,6 @@
 import type { createLayout } from 'utils-layout';
 
-import { isPopoutSmallViewport } from './constants';
+import { isPopoutSmallViewport, isPopoutViewport } from './constants';
 import {
 	computeDesktopHudLayout,
 	resolveDesktopHudConfig,
@@ -14,6 +14,8 @@ const DESIGN_CANVAS_WIDTH = 1280;
 const AUTOPLAY_REF_WIDTH = 132;
 const MENU_REF_WIDTH = 126;
 const GAP_ABOVE_BUTTON = 5;
+const AUTOPLAY_PANEL_SHIFT_LEFT = 0.08;
+const AUTOPLAY_PANEL_LIFT = 0.045;
 const SCREEN_MARGIN = 12;
 const MIN_POPUP_WIDTH = 108;
 
@@ -147,6 +149,49 @@ const buildMenuMetrics = (width: number) => {
 		volumeTrackHeight: 7 * s,
 		volumePadX: 5 * s,
 		borderRadius: 8 * s,
+	};
+};
+
+export type AutoplayPanelAnchor = {
+	left: number;
+	bottom: number;
+	width: number;
+};
+
+const resolveAutoplayPanelWidth = (
+	canvasWidth: number,
+	isPopoutSmall: boolean,
+	isPopout: boolean,
+) => {
+	if (isPopoutSmall) return Math.min(155, canvasWidth * 0.68);
+	if (isPopout) return Math.min(240, canvasWidth * 0.58);
+	return Math.min(315, canvasWidth * 0.245);
+};
+
+/** Anchor for the full bg_auto panel — null on portrait phone (centered modal). */
+export const computeAutoplayPanelAnchor = (
+	layoutDerived: LayoutDerived,
+): AutoplayPanelAnchor | null => {
+	const canvas = layoutDerived.canvasSizes();
+	const layoutType = layoutDerived.layoutType();
+
+	if (layoutType === 'portrait') return null;
+
+	const isPopoutSmall = isPopoutSmallViewport(canvas);
+	const isPopout = isPopoutViewport(canvas) && !isPopoutSmall;
+	const panelWidth = resolveAutoplayPanelWidth(canvas.width, isPopoutSmall, isPopout);
+	const hud = computeDesktopHudLayout(layoutDerived, resolveDesktopHudConfig(isPopoutSmall));
+	const autoplayFit = fitPopupLeft(hud.autoplay.x, panelWidth, canvas.width, 'prefer-right');
+
+	return {
+		left: autoplayFit.left + autoplayFit.width * AUTOPLAY_PANEL_SHIFT_LEFT,
+		bottom:
+			canvas.height -
+			hud.autoplay.y +
+			hud.autoplay.height / 2 +
+			GAP_ABOVE_BUTTON +
+			autoplayFit.width * AUTOPLAY_PANEL_LIFT,
+		width: autoplayFit.width,
 	};
 };
 

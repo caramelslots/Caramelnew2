@@ -1,109 +1,129 @@
 <!--
-	FeaturesAutoSpinOverlay.svelte — кастомная панель автоигры для Cash Stacks.
-	Открывается при stateModal.modal?.name === 'autoSpin' (после клика по
-	ButtonAutoSpin). Заменяет SDK-овский full-screen ModalAutoSpin (см.
-	CashStacksModals.svelte — мы исключили стандартный ModalAutoSpin).
-
-	Состоит из трёх секций согласно дизайн-референсу:
-	  1. Header «Автоигра»
-	  2. «Функции» — Bonus Boost toggle
-	  3. «Раунды» — выбор количества (10, 25, 50, 75, 100, 250, 500, 1000, ∞)
-	  4. «Начать автоигру (N)» — запуск с выбранными параметрами.
+	FeaturesAutoSpinOverlay.svelte — меню автоигры по designer_assets/bg_auto.png.
+	Открывается при stateModal.modal?.name === 'autoSpin'. Запуск — кнопкой
+	START AUTOPLAY внутри панели. HUD остаётся интерактивным (без backdrop).
 -->
 <script lang="ts">
-	import {
-		stateModal,
-		stateUi,
-		stateBet,
-		stateBetDerived,
-		AUTO_SPINS_LOSS_LIMIT_MULTIPLIER_MAP,
-		AUTO_SPINS_SINGLE_WIN_LIMIT_MULTIPLIER_MAP,
-	} from 'state-shared';
+	import { stateModal, stateUi } from 'state-shared';
+	import { OnHotkey } from 'components-shared';
 
 	import { canAffordSpin } from '../game/buyBonusBalance';
 	import { getContext } from '../game/context';
-	import { computePopupHudLayout } from '../game/popupHudLayout';
+	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
 	import { getContextLayout } from 'utils-layout';
 	import CashStacksFeatureToggles from './CashStacksFeatureToggles.svelte';
 	import {
-		CASH_STACKS_ROUND_OPTIONS,
-		CASH_STACKS_DEFAULT_ROUND,
+		CASH_STACKS_MIN_ROUNDS,
+		CASH_STACKS_MAX_ROUNDS,
+		CASH_STACKS_ROUND_LABELS,
 		getRoundsCounter,
-		type CashStacksRoundOption,
+		roundsToProgress,
+		progressToRounds,
+		launchCashStacksAutoplay,
 	} from '../game/autoplay';
+	import { computeAutoplayPanelAnchor } from '../game/popupHudLayout';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 
-	const popup = $derived(computePopupHudLayout(stateLayoutDerived));
+	const bgUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay/bg_auto_panel.png`;
+	const closeIconUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay/cross.png`;
+	const sliderHeadUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay/slider/head.png`;
+	const sliderFullUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay/slider/full.png`;
+	const sliderButtonUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay/slider/button.png`;
+	const sliderEmptyUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay/slider/empty.png`;
+	const minusUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/bet/minus.png`;
+	const plusUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/bet/plus.png`;
+	const startButtonUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay/main_button.png`;
+
 	const isOpen = $derived(stateModal.modal?.name === 'autoSpin');
+	const layoutType = $derived(stateLayoutDerived.layoutType());
+	const canvasSizes = $derived(stateLayoutDerived.canvasSizes());
+	const isPortrait = $derived(layoutType === 'portrait');
+	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
+	const isPopout = $derived(isPopoutViewport(canvasSizes) && !isPopoutSmall);
+	const panelAnchor = $derived(computeAutoplayPanelAnchor(stateLayoutDerived));
+	const useAnchoredLayout = $derived(panelAnchor !== null);
 
 	$effect(() => {
 		if (isOpen) stateUi.menuOpen = false;
 	});
+
 	const featureTogglesDisabled = $derived(!context.stateXstateDerived.isIdle());
-	const startDisabled = $derived(!canAffordSpin());
-	const startLabel = $derived(
-		context.i18nDerived.autoplayStartWithRounds(String(stateUi.autoSpinsText)),
-	);
+	const startDisabled = $derived(featureTogglesDisabled || !canAffordSpin());
 
-	/* Источник правды для значений раундов — apps/.../game/autoplay.ts.
-	   Если в state хранится значение вне списка (например, '25' из SDK
-	   defaults или ∞), сбрасываем к дефолту по дизайну. */
-	const ROUND_OPTIONS = CASH_STACKS_ROUND_OPTIONS;
-	type RoundOption = CashStacksRoundOption;
+	const roundsCount = $derived(getRoundsCounter(stateUi.autoSpinsText));
 
-	if (!ROUND_OPTIONS.includes(stateUi.autoSpinsText as RoundOption)) {
-		stateUi.autoSpinsText = CASH_STACKS_DEFAULT_ROUND as typeof stateUi.autoSpinsText;
-	}
-
-	// Position сегмента на slider'е (0..1) для текущего значения раундов.
-	const sliderProgress = $derived.by(() => {
-		const idx = ROUND_OPTIONS.indexOf(stateUi.autoSpinsText as RoundOption);
-		return idx < 0 ? 0 : idx / (ROUND_OPTIONS.length - 1);
+	$effect(() => {
+		const normalized = String(roundsCount);
+		if (stateUi.autoSpinsText !== normalized) {
+			stateUi.autoSpinsText = normalized as typeof stateUi.autoSpinsText;
+		}
 	});
 
-	/* === Drag/swipe слайдера раундов ===
-	   Раньше работали только тапы по фиксированным сегментам. По UX требованию
-	   нужен полноценный drag — пользователь зажимает полосу и тянет, значение
-	   меняется на лету, выбирая ближайшее из ROUND_OPTIONS. */
-	let sliderEl: HTMLDivElement | undefined = $state(undefined);
+	let trackEl: HTMLDivElement | undefined = $state(undefined);
 	let isDragging = $state(false);
+	let dragProgress = $state<number | null>(null);
 
-	const setProgressByClientX = (clientX: number) => {
-		if (!sliderEl) return;
-		const rect = sliderEl.getBoundingClientRect();
-		const ratio = (clientX - rect.left) / rect.width;
-		const clamped = Math.max(0, Math.min(1, ratio));
-		const idx = Math.round(clamped * (ROUND_OPTIONS.length - 1));
-		const next = ROUND_OPTIONS[idx];
-		if (next !== stateUi.autoSpinsText) {
-			// Cast: SDK типизирует autoSpinsText union'ом, мы пишем кастомные
-			// значения (20/30/40/70) — рантайм безопасен, в startAutoplay мы
-			// читаем счётчик через свой ROUND_VALUE_MAP, а не SDK-шный.
-			stateUi.autoSpinsText = next as typeof stateUi.autoSpinsText;
-		}
+	const displayProgress = $derived(dragProgress ?? roundsToProgress(roundsCount));
+
+	const applyRounds = (value: number, playSound = true) => {
+		const next = String(value);
+		if (next === stateUi.autoSpinsText) return;
+		stateUi.autoSpinsText = next as typeof stateUi.autoSpinsText;
+		if (playSound) context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 	};
 
-	const onPointerDown = (e: PointerEvent) => {
+	const setRoundByClientX = (clientX: number) => {
+		if (!trackEl || featureTogglesDisabled) return;
+		const rect = trackEl.getBoundingClientRect();
+		const thumbPx = rect.height * (48 / 95);
+		const usable = Math.max(1, rect.width - thumbPx);
+		const ratio = (clientX - rect.left - thumbPx * 0.5) / usable;
+		const clamped = Math.max(0, Math.min(1, ratio));
+		dragProgress = clamped;
+		applyRounds(progressToRounds(clamped), false);
+	};
+
+	const onTrackPointerDown = (e: PointerEvent) => {
+		if (featureTogglesDisabled) return;
 		isDragging = true;
 		(e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
-		setProgressByClientX(e.clientX);
+		setRoundByClientX(e.clientX);
+		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 	};
 
-	const onPointerMove = (e: PointerEvent) => {
+	const onTrackPointerMove = (e: PointerEvent) => {
 		if (!isDragging) return;
-		setProgressByClientX(e.clientX);
+		setRoundByClientX(e.clientX);
 	};
 
-	const onPointerUp = (e: PointerEvent) => {
+	const onTrackPointerUp = (e: PointerEvent) => {
 		if (!isDragging) return;
 		isDragging = false;
+		dragProgress = null;
 		try {
 			(e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId);
 		} catch {
-			/* ignore — pointer might already be released */
+			/* pointer might already be released */
 		}
+	};
+
+	const decreaseDisabled = $derived(
+		featureTogglesDisabled || roundsCount <= CASH_STACKS_MIN_ROUNDS,
+	);
+	const increaseDisabled = $derived(
+		featureTogglesDisabled || roundsCount >= CASH_STACKS_MAX_ROUNDS,
+	);
+
+	const onDecreasePress = () => {
+		if (decreaseDisabled) return;
+		applyRounds(roundsCount - 1);
+	};
+
+	const onIncreasePress = () => {
+		if (increaseDisabled) return;
+		applyRounds(roundsCount + 1);
 	};
 
 	const close = () => {
@@ -111,129 +131,145 @@
 	};
 
 	const startAutoplay = () => {
-		if (!canAffordSpin()) return;
-		// Считаем счётчик из локальной таблицы game/autoplay.ts (там есть
-		// 20/30/40/70 которых нет в SDK-шной AUTO_SPINS_TEXT_OPTION_MAP).
-		stateBet.autoSpinsCounter = getRoundsCounter(stateUi.autoSpinsText);
-		stateBet.autoSpinsLossLimitAmount =
-			stateBet.betAmount * AUTO_SPINS_LOSS_LIMIT_MULTIPLIER_MAP[stateUi.autoSpinsLossLimitText];
-		stateBet.autoSpinsSingleWinLimitAmount =
-			stateBet.betAmount *
-			AUTO_SPINS_SINGLE_WIN_LIMIT_MULTIPLIER_MAP[stateUi.autoSpinsSingleWinLimitText];
-		if (stateBetDerived.activeBetMode().type === 'buy') stateBet.activeBetModeKey = 'BASE';
-		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
-		context.eventEmitter.broadcast({ type: 'autoBet' });
-		stateModal.modal = null;
+		launchCashStacksAutoplay((event) => context.eventEmitter.broadcast(event));
 	};
 </script>
 
 {#if isOpen}
-	<!--
-		Контейнер позиционирует панель по центру экрана.
-		pointer-events: none на overlay + auto на card → клики проходят сквозь
-		пустое пространство (HUD под панелью остаётся интерактивным),
-		а сама панель ловит свои клики. Backdrop отсутствует — экран НЕ
-		затемняется. Закрытие — через крестик в углу панели.
-	-->
-	<div class="autoplay-overlay" data-test="autoplay-overlay">
+	<OnHotkey hotkey="Space" disabled={startDisabled} onpress={startAutoplay} />
+	<div class="autoplay-overlay" class:anchored={useAnchoredLayout} data-test="autoplay-overlay">
 		<div
-			class="autoplay-card"
+			class="autoplay-panel"
+			class:portrait={isPortrait}
+			class:popout-l={isPopout}
+			class:popout-s={isPopoutSmall}
+			style:left={useAnchoredLayout ? `${panelAnchor!.left}px` : undefined}
+			style:bottom={useAnchoredLayout ? `${panelAnchor!.bottom}px` : undefined}
+			style:--panel-width={useAnchoredLayout ? `${panelAnchor!.width}px` : undefined}
 			role="dialog"
 			aria-modal="true"
-			style:width="{popup.autoplay.width}px"
-			style:left="{popup.autoplay.left}px"
-			style:bottom="{popup.autoplay.bottom}px"
-			style:padding="{popup.autoplay.padding}px"
-			style:gap="{popup.autoplay.gap}px"
-			style:border-radius="{popup.autoplay.borderRadius}px"
-			style:--popup-section-title="{popup.autoplay.sectionTitleSize}px"
-			style:--popup-feature-name="{popup.autoplay.featureNameSize}px"
-			style:--popup-feature-cost="{popup.autoplay.featureCostSize}px"
-			style:--popup-feature-row-py="{popup.autoplay.featureRowPadY}px"
-			style:--popup-feature-row-px="{popup.autoplay.featureRowPadX}px"
-			style:--popup-toggle-w="{popup.autoplay.toggleW}px"
-			style:--popup-toggle-h="{popup.autoplay.toggleH}px"
-			style:--popup-knob-size="{popup.autoplay.knobSize}px"
-			style:--popup-scale="{popup.scale}"
+			aria-label={context.i18nDerived.autoplayTitle()}
 		>
-			<header class="autoplay-header" style:min-height="{popup.autoplay.titleSize * 1.2}px">
-				<h3 class="autoplay-title" style:font-size="{popup.autoplay.titleSize}px">
-					{context.i18nDerived.autoplayTitle()}
-				</h3>
-				<button
-					type="button"
-					class="close-button"
-					style:font-size="{popup.autoplay.titleSize * 1.15}px"
-					onclick={close}
-					aria-label="close"
-				>×</button>
-			</header>
+			<img class="panel-bg" src={bgUrl} alt="" draggable="false" />
 
-			<!-- === ФУНКЦИИ === -->
-			<section class="autoplay-section">
-				<CashStacksFeatureToggles
-					showSectionTitle
-					features={['bonus_boost']}
-					disabled={featureTogglesDisabled}
-				/>
-			</section>
+			<div class="panel-content">
+				<header class="panel-header">
+					<h3 class="panel-title">{context.i18nDerived.autoplayTitle()}</h3>
+					<button
+						type="button"
+						class="close-button"
+						onclick={close}
+						aria-label="close"
+						data-test="autoplay-close"
+					>
+						<img class="close-icon" src={closeIconUrl} alt="" draggable="false" />
+					</button>
+				</header>
 
+				<section class="features-section" aria-label={context.i18nDerived.autoplayFeatures()}>
+					<CashStacksFeatureToggles
+						features={['bonus_boost']}
+						disabled={featureTogglesDisabled}
+						noHoverBg
+					/>
+				</section>
 
-			<!-- === РАУНДЫ === -->
-			<section class="autoplay-section" style:gap="{popup.autoplay.gap * 0.7}px">
-				<div class="section-title" style:font-size="{popup.autoplay.sectionTitleSize}px">
-					{context.i18nDerived.autoplayRounds()}
-				</div>
+				<p class="rounds-title" aria-hidden="true">{context.i18nDerived.autoplayRounds()}</p>
 
-				<div class="rounds-display" style:font-size="{popup.autoplay.roundsSize}px">
-					{stateUi.autoSpinsText}
-				</div>
+				<section class="rounds-stepper" aria-label={context.i18nDerived.autoplayRounds()}>
+					<button
+						type="button"
+						class="rounds-stepper-btn"
+						class:dimmed={decreaseDisabled}
+						style:background-image="url('{minusUrl}')"
+						disabled={decreaseDisabled}
+						aria-label="decrease rounds"
+						data-test="autoplay-rounds-decrease"
+						onclick={onDecreasePress}
+					></button>
 
-				<!--
-					Полоса прогресса (как в дизайне): голубой fill = текущий
-					процент выбранного значения относительно всего диапазона.
-					Поддерживает И тап (моментально перемещает к точке клика),
-					И drag (тянуть пальцем/мышкой меняя значение на лету).
-					Реализовано через pointer-events с pointerCapture.
-				-->
-				<div
-					bind:this={sliderEl}
-					class="rounds-slider"
-					style:padding="{popup.autoplay.sliderPadY}px {popup.autoplay.sliderPadX}px"
-					role="slider"
-					aria-label="rounds"
-					aria-valuemin={0}
-					aria-valuemax={ROUND_OPTIONS.length - 1}
-					aria-valuenow={ROUND_OPTIONS.indexOf(stateUi.autoSpinsText)}
-					aria-valuetext={stateUi.autoSpinsText}
-					tabindex="0"
-					onpointerdown={onPointerDown}
-					onpointermove={onPointerMove}
-					onpointerup={onPointerUp}
-					onpointercancel={onPointerUp}
-					data-test="rounds-slider"
-				>
-					<div class="slider-bar" style:height="{popup.autoplay.sliderTrackHeight}px">
-						<div
-							class="slider-bar-fill"
-							style:width={`${sliderProgress * 100}%`}
-						></div>
+					<p class="rounds-stepper-value" data-test="autoplay-rounds-value">
+						{roundsCount}
+					</p>
+
+					<button
+						type="button"
+						class="rounds-stepper-btn"
+						class:dimmed={increaseDisabled}
+						style:background-image="url('{plusUrl}')"
+						disabled={increaseDisabled}
+						aria-label="increase rounds"
+						data-test="autoplay-rounds-increase"
+						onclick={onIncreasePress}
+					></button>
+				</section>
+
+				<section class="rounds-section" aria-label={context.i18nDerived.autoplayRounds()}>
+					<div class="rounds-slider" class:disabled={featureTogglesDisabled}>
+						<div class="slider-rail">
+							<img class="slider-head" src={sliderHeadUrl} alt="" draggable="false" />
+
+							<div
+								bind:this={trackEl}
+								class="slider-track-wrap"
+								class:dragging={isDragging}
+								style:--progress={displayProgress}
+								role="slider"
+								aria-label={context.i18nDerived.autoplayRounds()}
+								aria-valuemin={CASH_STACKS_MIN_ROUNDS}
+								aria-valuemax={CASH_STACKS_MAX_ROUNDS}
+								aria-valuenow={roundsCount}
+								aria-valuetext={String(roundsCount)}
+								tabindex={featureTogglesDisabled ? -1 : 0}
+								onpointerdown={onTrackPointerDown}
+								onpointermove={onTrackPointerMove}
+								onpointerup={onTrackPointerUp}
+								onpointercancel={onTrackPointerUp}
+								data-test="autoplay-rounds-slider"
+							>
+								<div class="slider-track">
+									<img class="slider-empty" src={sliderEmptyUrl} alt="" draggable="false" />
+									<div class="slider-fill">
+										<img class="slider-full" src={sliderFullUrl} alt="" draggable="false" />
+									</div>
+								</div>
+								<img class="slider-thumb" src={sliderButtonUrl} alt="" draggable="false" />
+							</div>
+						</div>
 					</div>
-				</div>
-			</section>
 
-			<button
-				type="button"
-				class="start-button"
-				style:font-size="{popup.autoplay.startFontSize}px"
-				style:padding="{popup.autoplay.startPaddingY}px {popup.autoplay.featureRowPadX}px"
-				style:border-radius="{popup.autoplay.borderRadius * 0.7}px"
-				disabled={startDisabled}
-				onclick={startAutoplay}
-				data-test="autoplay-start-button"
-			>
-				{startLabel}
-			</button>
+					<div class="rounds-labels" aria-hidden="true">
+						<div class="rounds-labels-rail">
+							<span class="rounds-labels-head-spacer"></span>
+							<div class="rounds-labels-track">
+								{#each CASH_STACKS_ROUND_LABELS as label (label)}
+									<span
+										class="rounds-label"
+										style:left="calc(var(--thumb-width) * 0.5 + {roundsToProgress(label)} * (100% - var(--thumb-width)))"
+									>
+										{label}
+									</span>
+								{/each}
+							</div>
+						</div>
+					</div>
+				</section>
+
+				<section class="start-section">
+					<button
+						type="button"
+						class="start-button"
+						class:dimmed={startDisabled}
+						disabled={startDisabled}
+						aria-label="START AUTOPLAY"
+						data-test="autoplay-start"
+						onclick={startAutoplay}
+					>
+						<img class="start-button-bg" src={startButtonUrl} alt="" draggable="false" />
+						<span class="start-button-label">START AUTOPLAY</span>
+					</button>
+				</section>
+			</div>
 		</div>
 	</div>
 {/if}
@@ -244,166 +280,734 @@
 		inset: 0;
 		z-index: 9999;
 		pointer-events: none;
-	}
-
-	.autoplay-card {
-		position: fixed;
-		background: linear-gradient(180deg, #1f3050 0%, #122340 100%);
-		display: flex;
-		flex-direction: column;
-		box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
-		color: #fff;
-		font-family: 'proxima-nova', sans-serif;
-		pointer-events: auto;
-		box-sizing: border-box;
-	}
-
-	.autoplay-header {
-		position: relative;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		padding: 12px;
+		box-sizing: border-box;
 	}
 
-	.autoplay-title {
-		margin: 0;
-		font-weight: 800;
-		letter-spacing: 0.01em;
-		color: #fff;
-		text-align: center;
+	.autoplay-overlay.anchored {
+		display: block;
+		padding: 0;
 	}
 
-	.close-button {
+	.autoplay-panel {
+		--panel-width: min(400px, 92vw);
+		position: relative;
+		width: var(--panel-width);
+		aspect-ratio: 1329 / 1444;
+		pointer-events: auto;
+		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
+	}
+
+	.autoplay-overlay.anchored .autoplay-panel {
+		position: fixed;
+		aspect-ratio: 1329 / 1380;
+	}
+
+	.panel-bg {
 		position: absolute;
-		right: -0.25em;
-		top: -0.15em;
-		background: none;
-		border: 0;
-		color: rgba(255, 255, 255, 0.55);
-		line-height: 1;
-		cursor: pointer;
-		padding: 0.15em 0.35em;
-
-		&:hover { color: #fff; }
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: fill;
+		pointer-events: none;
+		user-select: none;
 	}
 
-	.autoplay-section {
+	.panel-content {
+		position: absolute;
+		inset: 0;
 		display: flex;
 		flex-direction: column;
 	}
 
-	.autoplay-card :global(.section-title) {
-		font-size: var(--popup-section-title);
-		font-weight: 800;
-		color: #f0c674;
-		text-align: center;
-		letter-spacing: 0.01em;
-		margin-bottom: calc(2px * var(--popup-scale, 1));
-	}
-
-	.autoplay-card :global(.feature-row) {
-		padding: var(--popup-feature-row-py) var(--popup-feature-row-px);
-		border-radius: calc(8px * var(--popup-scale, 1));
-		gap: calc(6px * var(--popup-scale, 1));
-	}
-
-	.autoplay-card :global(.feature-info) {
-		gap: calc(2px * var(--popup-scale, 1));
-	}
-
-	.autoplay-card :global(.feature-name) {
-		font-size: var(--popup-feature-name);
-		font-weight: 700;
-		line-height: 1.2;
-	}
-
-	.autoplay-card :global(.feature-cost) {
-		font-size: var(--popup-feature-cost);
-		font-weight: 700;
-		line-height: 1.2;
-	}
-
-	.autoplay-card :global(.feature-toggle) {
-		width: var(--popup-toggle-w);
-		height: var(--popup-toggle-h);
-	}
-
-	.autoplay-card :global(.feature-toggle .knob) {
-		width: var(--popup-knob-size);
-		height: var(--popup-knob-size);
-		top: calc((var(--popup-toggle-h) - var(--popup-knob-size)) / 2);
-		left: calc((var(--popup-toggle-h) - var(--popup-knob-size)) / 2);
-	}
-
-	.autoplay-card :global(.feature-toggle.on .knob) {
-		left: calc(
-			var(--popup-toggle-w) - var(--popup-knob-size) -
-				(var(--popup-toggle-h) - var(--popup-knob-size)) / 2
-		);
-	}
-
-	.section-title {
-		font-weight: 800;
-		color: #f0c674;
-		text-align: center;
-		letter-spacing: 0.01em;
-	}
-
-	.rounds-display {
-		text-align: center;
-		font-weight: 800;
-		line-height: 1;
-		padding: 0.25em 0 0.35em;
-		background: rgba(0, 0, 0, 0.28);
-		border-radius: calc(8px * var(--popup-scale, 1)) calc(8px * var(--popup-scale, 1)) 0 0;
-		margin-bottom: calc(-2px * var(--popup-scale, 1));
-	}
-
-	.rounds-slider {
-		position: relative;
-		background: rgba(0, 0, 0, 0.28);
-		border-radius: 0 0 calc(8px * var(--popup-scale, 1)) calc(8px * var(--popup-scale, 1));
-		cursor: pointer;
-		touch-action: none;
-		user-select: none;
-
-		&:focus { outline: none; }
-		&:focus-visible { outline: 2px solid rgba(110, 193, 255, 0.6); }
-	}
-
-	.slider-bar {
-		position: relative;
-		background: #0a1628;
-		border-radius: 5px;
-		overflow: hidden;
+	.panel-header {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 20.5%;
+		display: grid;
+		grid-template-columns: 1fr auto;
+		align-items: center;
+		padding: 0 7.5% 0 24%;
+		box-sizing: border-box;
 		pointer-events: none;
 	}
 
-	.slider-bar-fill {
+	.panel-title {
+		margin: 0;
+		grid-column: 1;
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.085);
+		font-style: italic;
+		font-weight: 900;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: #d4b44a;
+		text-shadow:
+			0 1px 0 rgba(0, 0, 0, 0.85),
+			0 2px 6px rgba(0, 0, 0, 0.65);
+		text-align: center;
+		line-height: 1.1;
+		pointer-events: none;
+	}
+
+	.close-button {
+		position: relative;
+		grid-column: 2;
+		width: calc(var(--panel-width) * 0.125);
+		height: calc(var(--panel-width) * 0.125);
+		padding: 0;
+		border: 0;
+		background: transparent;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: auto;
+		transition:
+			transform 0.12s,
+			filter 0.12s;
+
+		&:hover {
+			filter: brightness(1.12);
+			transform: scale(1.06);
+		}
+
+		&:active {
+			transform: scale(0.96);
+		}
+	}
+
+	.close-icon {
+		width: 100%;
 		height: 100%;
-		background: linear-gradient(180deg, #6ec1ff 0%, #3a93e0 100%);
-		transition: width 0.12s ease-out;
+		object-fit: contain;
+		transform: rotate(45deg);
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.features-section {
+		position: absolute;
+		top: 32.5%;
+		left: 10.5%;
+		right: 9%;
+		height: 13%;
+		display: flex;
+		align-items: center;
+		box-sizing: border-box;
+	}
+
+	.features-section :global(.feature-row) {
+		width: 100%;
+		height: 100%;
+		display: grid;
+		grid-template-columns: 28% minmax(0, 1fr) auto;
+		align-items: center;
+		padding: 0 3.5% 0 0;
+		background: transparent;
+		border: 0;
+		border-radius: 0;
+		gap: 0;
+		box-sizing: border-box;
+
+		&:hover:not(:disabled),
+		&:active:not(:disabled) {
+			background: transparent;
+			filter: none;
+			transform: none;
+		}
+	}
+
+	.features-section :global(.feature-info) {
+		grid-column: 2;
+		justify-self: start;
+		align-self: center;
+		min-width: 0;
+		max-width: 100%;
+		margin-left: calc(var(--panel-width) * -0.015);
+		gap: calc(var(--panel-width) * 0.014);
+		overflow: hidden;
+	}
+
+	.features-section :global(.feature-row.compact .feature-name),
+	.features-section :global(.feature-row .feature-name) {
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.046);
+		font-style: italic;
+		font-weight: 900;
+		text-transform: uppercase;
+		color: #d4b44a;
+		text-shadow:
+			0 1px 0 rgba(0, 0, 0, 0.85),
+			0 2px 6px rgba(0, 0, 0, 0.65);
+		line-height: 1.1;
+		letter-spacing: 0.05em;
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.features-section :global(.feature-cost) {
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.036);
+		font-weight: 700;
+		color: #4cd964;
+		letter-spacing: 0.03em;
+		line-height: 1.15;
+		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.75);
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.features-section :global(.feature-toggle) {
+		grid-column: 3;
+		width: calc(var(--panel-width) * 0.1);
+		height: calc(var(--panel-width) * 0.055);
+		flex-shrink: 0;
+		background: rgba(0, 0, 0, 0.55);
+	}
+
+	.features-section :global(.feature-toggle.on) {
+		background: #4cd964;
+	}
+
+	.features-section :global(.feature-toggle .knob) {
+		width: calc(var(--panel-width) * 0.046);
+		height: calc(var(--panel-width) * 0.046);
+		top: calc((var(--panel-width) * 0.055 - var(--panel-width) * 0.046) / 2);
+		left: calc((var(--panel-width) * 0.055 - var(--panel-width) * 0.046) / 2);
+		background: #8a8a8a;
+	}
+
+	.features-section :global(.feature-toggle.on .knob) {
+		left: calc(
+			var(--panel-width) * 0.1 - var(--panel-width) * 0.046 -
+				(var(--panel-width) * 0.055 - var(--panel-width) * 0.046) / 2
+		);
+		background: #fff;
+	}
+
+	.rounds-section {
+		position: absolute;
+		top: 66%;
+		left: 8%;
+		right: 8%;
+		height: 14%;
+		box-sizing: border-box;
+		--head-width: calc(var(--panel-width) * 0.11);
+		/* Трек заходит под правый край головы — без зазора до линии. */
+		--track-start: calc(var(--head-width) * 0.84);
+		--thumb-width: calc(var(--panel-width) * 0.048);
+	}
+
+	.rounds-slider {
+		width: 100%;
+		min-height: calc(var(--panel-width) * 0.1);
+
+		&.disabled {
+			opacity: 0.5;
+			pointer-events: none;
+		}
+	}
+
+	.slider-rail {
+		position: relative;
+		width: 100%;
+		height: calc(var(--panel-width) * 0.105);
+		--slider-line-height: calc(var(--panel-width) * 0.04);
+		--slider-fill-height: calc(var(--panel-width) * 0.2);
+		/* Компенсация прозрачных полей в PNG (empty: 114/1019, full: 144/1090). */
+		--empty-img-scale: calc(1019 / 886);
+		--empty-img-offset: calc(-100% * 114 / 886);
+		--full-img-scale: calc(1090 / 850);
+		--full-img-offset: calc(-100cqw * 144 / 850);
+	}
+
+	.slider-head {
+		position: absolute;
+		left: 0;
+		top: 50%;
+		transform: translateY(-50%);
+		width: var(--head-width);
+		height: auto;
+		object-fit: contain;
+		pointer-events: none;
+		user-select: none;
+		z-index: 3;
+	}
+
+	.slider-track-wrap {
+		position: absolute;
+		left: var(--track-start);
+		right: 0;
+		top: 50%;
+		transform: translateY(-50%);
+		height: calc(var(--panel-width) * 0.095);
+		cursor: pointer;
+		touch-action: none;
+		user-select: none;
+		z-index: 1;
+
+		&:focus {
+			outline: none;
+		}
+
+		&:focus-visible {
+			outline: 2px solid rgba(212, 180, 74, 0.55);
+			outline-offset: 2px;
+			border-radius: 999px;
+		}
+	}
+
+	.slider-track {
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 50%;
+		height: calc(var(--panel-width) * 0.078);
+		transform: translateY(-50%);
+		overflow: visible;
+		container-type: inline-size;
+	}
+
+	.slider-empty {
+		position: absolute;
+		top: 50%;
+		width: calc(100% * var(--empty-img-scale));
+		height: var(--slider-line-height);
+		left: var(--empty-img-offset);
+		transform: translateY(-50%);
+		object-fit: fill;
+		pointer-events: none;
+		user-select: none;
+		z-index: 0;
+	}
+
+	.slider-fill {
+		position: absolute;
+		left: 0;
+		top: 50%;
+		height: var(--slider-fill-height);
+		transform: translateY(-50%);
+		overflow: hidden;
+		min-width: 0;
+		pointer-events: none;
+		z-index: 1;
+		width: calc(
+			var(--thumb-width) * 0.5 * clamp(0, var(--progress) * 9999, 1) + var(--progress) *
+				(100% - var(--thumb-width))
+		);
+		transition: width 0.32s ease-in-out;
+	}
+
+	.slider-track-wrap.dragging .slider-fill,
+	.slider-track-wrap.dragging .slider-thumb {
+		transition: none;
+	}
+
+	.slider-full {
+		position: absolute;
+		top: 0;
+		left: var(--full-img-offset);
+		width: calc(100cqw * var(--full-img-scale));
+		height: 100%;
+		object-fit: fill;
+		object-position: left center;
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.slider-thumb {
+		position: absolute;
+		top: 50%;
+		width: var(--thumb-width);
+		height: auto;
+		left: calc(var(--thumb-width) * 0.5 + var(--progress) * (100% - var(--thumb-width)));
+		transform: translate(-50%, -50%);
+		pointer-events: none;
+		user-select: none;
+		transition: left 0.32s ease-in-out;
+		z-index: 2;
+	}
+
+	.rounds-labels {
+		margin-top: calc(var(--panel-width) * 0.012);
+		width: 100%;
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.rounds-labels-rail {
+		position: relative;
+		width: 100%;
+		height: calc(var(--panel-width) * 0.04);
+	}
+
+	.rounds-labels-head-spacer {
+		display: block;
+		width: var(--track-start);
+		height: 0;
+	}
+
+	.rounds-labels-track {
+		position: absolute;
+		left: var(--track-start);
+		right: 0;
+		top: 0;
+		height: 100%;
+	}
+
+	.rounds-label {
+		position: absolute;
+		top: 0;
+		transform: translateX(-50%);
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.032);
+		font-style: italic;
+		font-weight: 700;
+		color: #d4b44a;
+		line-height: 1;
+		text-shadow:
+			0 1px 0 rgba(0, 0, 0, 0.85),
+			0 2px 4px rgba(0, 0, 0, 0.65);
+	}
+
+	.start-section {
+		position: absolute;
+		top: 79%;
+		left: 7%;
+		right: 7%;
+		height: 14%;
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+		box-sizing: border-box;
 	}
 
 	.start-button {
-		width: 100%;
-		margin-top: calc(2px * var(--popup-scale, 1));
-		border: 1px solid rgba(110, 193, 255, 0.55);
-		background: linear-gradient(180deg, #6ec1ff 0%, #3a93e0 100%);
-		color: #fff;
-		font-family: inherit;
-		font-weight: 800;
-		line-height: 1.2;
-		text-transform: uppercase;
-		letter-spacing: 0.03em;
+		position: relative;
+		display: block;
+		width: 62%;
+		max-width: 100%;
+		margin: 0 auto;
+		aspect-ratio: 772 / 342;
+		padding: 0;
+		border: 0;
+		background: transparent;
 		cursor: pointer;
-		box-shadow: 0 4px 16px rgba(58, 147, 224, 0.4);
-		transition: opacity 0.15s;
+		transition:
+			transform 0.12s,
+			filter 0.12s,
+			opacity 0.12s;
+		/* Визуальный центр тёмной области main_button.png: (46+258)/2 / 342 */
+		--start-button-text-y: 44.44%;
+
+		&:hover:not(:disabled) {
+			filter: brightness(1.08);
+			transform: scale(1.02);
+		}
+
+		&:active:not(:disabled) {
+			transform: scale(0.98);
+		}
 
 		&:disabled {
-			opacity: 0.45;
 			cursor: not-allowed;
 			pointer-events: none;
+		}
+
+		&.dimmed {
+			opacity: 0.5;
+		}
+	}
+
+	.start-button-bg {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.start-button-label {
+		position: absolute;
+		top: var(--start-button-text-y);
+		left: 50%;
+		transform: translate(-50%, -50%);
+		margin: 0;
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.038);
+		font-style: italic;
+		font-weight: 900;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: #d4b44a;
+		line-height: 1;
+		white-space: nowrap;
+		text-shadow:
+			0 1px 0 rgba(0, 0, 0, 0.85),
+			0 2px 6px rgba(0, 0, 0, 0.65);
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.rounds-title {
+		position: absolute;
+		top: 48%;
+		left: 11%;
+		right: 11%;
+		margin: 0;
+		text-align: center;
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.044);
+		font-style: italic;
+		font-weight: 900;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: #d4b44a;
+		line-height: 1;
+		text-shadow:
+			0 1px 0 rgba(0, 0, 0, 0.85),
+			0 2px 6px rgba(0, 0, 0, 0.65);
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.rounds-stepper {
+		position: absolute;
+		top: 54%;
+		left: 11%;
+		right: 11%;
+		height: 13%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		column-gap: calc(var(--panel-width) * 0.038);
+		box-sizing: border-box;
+	}
+
+	.rounds-stepper-btn {
+		width: calc(var(--panel-width) * 0.115);
+		height: calc(var(--panel-width) * 0.115);
+		padding: 0;
+		border: 0;
+		background-color: transparent;
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: contain;
+		cursor: pointer;
+		transition:
+			transform 0.1s,
+			filter 0.12s,
+			opacity 0.12s;
+
+		&:hover:not(:disabled) {
+			filter: brightness(1.1);
+			transform: scale(1.04);
+		}
+
+		&:active:not(:disabled) {
+			transform: scale(0.96);
+			filter: brightness(0.92);
+		}
+
+		&:disabled {
+			cursor: not-allowed;
+			pointer-events: none;
+		}
+
+		&.dimmed {
+			opacity: 0.45;
+		}
+	}
+
+	.rounds-stepper-value {
+		margin: 0;
+		min-width: calc(var(--panel-width) * 0.3);
+		text-align: center;
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.084);
+		font-style: italic;
+		font-weight: 900;
+		letter-spacing: 0.05em;
+		color: #d4b44a;
+		line-height: 1.15;
+		text-shadow:
+			0 1px 0 rgba(0, 0, 0, 0.85),
+			0 2px 6px rgba(0, 0, 0, 0.65);
+		pointer-events: none;
+		user-select: none;
+	}
+
+	/* Portrait mobile */
+	.autoplay-panel.portrait:not(.popout-l):not(.popout-s) {
+		--panel-width: min(360px, 94vw);
+
+		.features-section {
+			top: 31.5%;
+			left: 11%;
+			right: 10%;
+			height: 13.5%;
+			overflow: hidden;
+		}
+
+		.features-section :global(.feature-row) {
+			grid-template-columns: 22% minmax(0, 1fr) auto;
+			padding: 0 1.5% 0 0;
+		}
+
+		.features-section :global(.feature-row .feature-info) {
+			margin-left: 0;
+			gap: calc(var(--panel-width) * 0.014);
+		}
+
+		.features-section :global(.feature-row .feature-name) {
+			font-size: clamp(13px, calc(var(--panel-width) * 0.048), 17px);
+			letter-spacing: 0.03em;
+			line-height: 1.05;
+		}
+
+		.features-section :global(.feature-row .feature-cost) {
+			font-size: clamp(10px, calc(var(--panel-width) * 0.035), 13px);
+			letter-spacing: 0.02em;
+			line-height: 1.05;
+		}
+
+		.features-section :global(.feature-toggle) {
+			width: calc(var(--panel-width) * 0.088);
+			height: calc(var(--panel-width) * 0.05);
+		}
+	}
+
+	/* Stake popout L — 800×450 */
+	.autoplay-panel.popout-l {
+		--panel-width: min(240px, 58vw);
+		filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.6));
+	}
+
+	/* Stake popout S — 400×225 */
+	.autoplay-panel.popout-s {
+		--panel-width: min(155px, 68vw);
+		filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55));
+
+		.panel-title {
+			font-size: calc(var(--panel-width) * 0.08);
+			letter-spacing: 0.05em;
+		}
+
+		.close-button {
+			width: calc(var(--panel-width) * 0.135);
+			height: calc(var(--panel-width) * 0.135);
+		}
+
+		.features-section :global(.feature-row .feature-name) {
+			font-size: calc(var(--panel-width) * 0.052);
+		}
+
+		.features-section :global(.feature-row .feature-info) {
+			gap: calc(var(--panel-width) * 0.018);
+		}
+
+		.features-section :global(.feature-cost) {
+			font-size: calc(var(--panel-width) * 0.04);
+		}
+
+		.features-section :global(.feature-toggle) {
+			width: calc(var(--panel-width) * 0.11);
+			height: calc(var(--panel-width) * 0.06);
+		}
+
+		.slider-head {
+			width: var(--head-width);
+		}
+
+		.slider-rail {
+			--thumb-width: calc(var(--panel-width) * 0.052);
+		}
+
+		.rounds-section {
+			--thumb-width: calc(var(--panel-width) * 0.052);
+		}
+
+		.rounds-label {
+			font-size: calc(var(--panel-width) * 0.036);
+		}
+
+		.start-button {
+			width: 68%;
+		}
+
+		.start-button-label {
+			font-size: calc(var(--panel-width) * 0.042);
+		}
+
+		.rounds-stepper-btn {
+			width: calc(var(--panel-width) * 0.125);
+			height: calc(var(--panel-width) * 0.125);
+		}
+
+		.rounds-title {
+			font-size: calc(var(--panel-width) * 0.048);
+		}
+
+		.rounds-stepper-value {
+			font-size: calc(var(--panel-width) * 0.09);
+		}
+	}
+
+	@media (max-width: 600px) {
+		.autoplay-panel:not(.popout-l):not(.popout-s) {
+			--panel-width: min(340px, 94vw);
+
+			.features-section {
+				top: 31.5%;
+				left: 11%;
+				right: 10%;
+				height: 13.5%;
+				overflow: hidden;
+			}
+
+			.features-section :global(.feature-row) {
+				grid-template-columns: 22% minmax(0, 1fr) auto;
+				padding: 0 1.5% 0 0;
+			}
+
+			.features-section :global(.feature-row .feature-info) {
+				margin-left: 0;
+				gap: calc(var(--panel-width) * 0.014);
+			}
+
+			.features-section :global(.feature-row .feature-name) {
+				font-size: clamp(13px, calc(var(--panel-width) * 0.048), 17px);
+				letter-spacing: 0.03em;
+				line-height: 1.05;
+			}
+
+			.features-section :global(.feature-row .feature-cost) {
+				font-size: clamp(10px, calc(var(--panel-width) * 0.035), 13px);
+				letter-spacing: 0.02em;
+				line-height: 1.05;
+			}
+
+			.features-section :global(.feature-toggle) {
+				width: calc(var(--panel-width) * 0.088);
+				height: calc(var(--panel-width) * 0.05);
+			}
+		}
+	}
+
+	@media (max-height: 500px) {
+		.autoplay-panel:not(.popout-l):not(.popout-s):not(.portrait) {
+			--panel-width: min(245px, 48vw);
 		}
 	}
 </style>

@@ -10,19 +10,12 @@
 	import { Container, Sprite } from 'pixi-svelte';
 	import { Button } from 'components-pixi';
 	import { OnHotkey } from 'components-shared';
-	import {
-		stateUi,
-		stateBet,
-		stateBetDerived,
-		stateModal,
-		AUTO_SPINS_LOSS_LIMIT_MULTIPLIER_MAP,
-		AUTO_SPINS_SINGLE_WIN_LIMIT_MULTIPLIER_MAP,
-	} from 'state-shared';
+	import { stateModal } from 'state-shared';
 	import { UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
 
 	import { canAffordSpin } from '../game/buyBonusBalance';
 	import { getContext } from '../game/context';
-	import { getRoundsCounter } from '../game/autoplay';
+	import { launchCashStacksAutoplay } from '../game/autoplay';
 	import { UI_SPRITE_RENDER, uiScaledSize, type UiSizeScaleProps } from '../game/uiButtonSize';
 
 	const props: { anchor?: number } & UiSizeScaleProps = $props();
@@ -32,17 +25,7 @@
 	const disabled = $derived(!canAffordSpin());
 
 	const startAutoplay = () => {
-		if (!canAffordSpin()) return;
-		stateBet.autoSpinsCounter = getRoundsCounter(stateUi.autoSpinsText);
-		stateBet.autoSpinsLossLimitAmount =
-			stateBet.betAmount * AUTO_SPINS_LOSS_LIMIT_MULTIPLIER_MAP[stateUi.autoSpinsLossLimitText];
-		stateBet.autoSpinsSingleWinLimitAmount =
-			stateBet.betAmount *
-			AUTO_SPINS_SINGLE_WIN_LIMIT_MULTIPLIER_MAP[stateUi.autoSpinsSingleWinLimitText];
-		if (stateBetDerived.activeBetMode().type === 'buy') stateBet.activeBetModeKey = 'BASE';
-		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
-		context.eventEmitter.broadcast({ type: 'autoBet' });
-		stateModal.modal = null;
+		launchCashStacksAutoplay((event) => context.eventEmitter.broadcast(event));
 	};
 </script>
 

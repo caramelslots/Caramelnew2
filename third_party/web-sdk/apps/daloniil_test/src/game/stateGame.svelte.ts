@@ -9,7 +9,7 @@ import { CASH_STACKS_DEFAULT_ROUND } from './autoplay';
 
 // Cash Stacks default: предвыбранные 50 раундов автоигры (SDK по дефолту
 // ставит '10'). Делается при импорте модуля, до первого открытия модалки.
-stateUi.autoSpinsText = CASH_STACKS_DEFAULT_ROUND as typeof stateUi.autoSpinsText;
+stateUi.autoSpinsText = String(CASH_STACKS_DEFAULT_ROUND) as typeof stateUi.autoSpinsText;
 
 /*
 	Cash Stacks использует кастомные bet-mode keys (`bonus_normal`,
