@@ -312,6 +312,14 @@ export default {
 			scale: 2,
 		},
 	},
+	fsPopup: {
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/fsPopup/fs_popup.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/fsPopup/fs_popup.json', import.meta.url).href,
+			scale: 2,
+		},
+	},
 	tumble_multiplier: {
 		type: 'spine',
 		src: {

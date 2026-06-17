@@ -1,54 +1,37 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	import {
-		anchorToPivot,
-		Container,
-		SpineProvider,
-		SpineSlot,
-		SpineTrack,
-		type Sizes,
-	} from 'pixi-svelte';
+	import { Container, SpineProvider, SpineSlot, SpineTrack } from 'pixi-svelte';
 	import { MainContainer } from 'components-layout';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE, BOARD_DIMENSIONS } from '../game/constants';
+	import { BOARD_SIZES } from '../game/constants';
 
 	type Props = {
-		children: Snippet<[{ sizes: Sizes }]>;
+		title: Snippet<[{ width: number; height: number }]>;
+		winAmount: Snippet<[{ width: number; height: number }]>;
 	};
 
 	const props: Props = $props();
 
-	type AnimationName = 'intro' | 'idle';
+	type AnimationName = 'appear' | 'idle';
 
 	const context = getContext();
-	const BACKGROUND_RATIO = 920 / 720;
-	const BACKGROUND_WIDTH = SYMBOL_SIZE * BOARD_DIMENSIONS.x;
-	const BACKGROUND_SIZES = {
-		width: BACKGROUND_WIDTH,
-		height: BACKGROUND_WIDTH / BACKGROUND_RATIO,
-	};
-	const PANEL_SIZES = {
-		width: SYMBOL_SIZE * BOARD_DIMENSIONS.x,
-		height: SYMBOL_SIZE * BOARD_DIMENSIONS.x,
-	};
 
-	let animationName = $state<AnimationName>('intro');
+	// SPINE_WIDTH drives the uniform scale applied by SpineProvider.
+	// All content inside SpineSlots scales proportionally with this value.
+	const SPINE_WIDTH = BOARD_SIZES.width * 0.6;
+
+	let animationName = $state<AnimationName>('appear');
 </script>
 
 <MainContainer>
+	<!-- Container sits at board centre; spine root is at the same point. -->
 	<Container
 		x={context.stateGameDerived.boardLayout().x}
 		y={context.stateGameDerived.boardLayout().y}
-		pivot={anchorToPivot({ anchor: 0.5, sizes: BACKGROUND_SIZES })}
 	>
-		<SpineProvider
-			key="fsIntro"
-			width={PANEL_SIZES.width}
-			x={PANEL_SIZES.width * 0.5}
-			y={PANEL_SIZES.height * 0.4}
-		>
+		<SpineProvider key="fsPopup" width={SPINE_WIDTH}>
 			<SpineTrack
 				trackIndex={0}
 				{animationName}
@@ -57,8 +40,11 @@
 					complete: () => (animationName = 'idle'),
 				}}
 			/>
-			<SpineSlot slotName="slot_text_placeholder">
-				{@render props.children({ sizes: BACKGROUND_SIZES })}
+			<SpineSlot slotName="text_placeholder_1">
+				{@render props.title({ width: BOARD_SIZES.width, height: BOARD_SIZES.height })}
+			</SpineSlot>
+			<SpineSlot slotName="text_placeholder_2">
+				{@render props.winAmount({ width: BOARD_SIZES.width, height: BOARD_SIZES.height })}
 			</SpineSlot>
 		</SpineProvider>
 	</Container>

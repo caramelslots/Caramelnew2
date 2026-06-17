@@ -35,6 +35,8 @@
 		disabled?: boolean;
 		/** Не менять фон при hover (карточки в BuyBonusOverlay). */
 		noHoverBg?: boolean;
+		/** Иконка кота слева (меню buy bonus / wok frame). */
+		showMenuCatIcon?: boolean;
 	};
 
 	const {
@@ -47,9 +49,11 @@
 		panelCostFontSize,
 		disabled = false,
 		noHoverBg = false,
+		showMenuCatIcon = false,
 	}: Props = $props();
 
 	const bonusSwitchBgUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/bonus_switch/bonus_switch.png`;
+	const menuCatIconUrl = `${import.meta.env.BASE_URL}assets/sprites/bonusBar/cat_static.png`;
 
 	const context = getContext();
 
@@ -85,12 +89,16 @@
 		class:panel-bg={usePanelBg}
 		class:panel-sprite-btn={usePanelBg}
 		class:no-hover-bg={noHoverBg}
+		class:menu-cat={showMenuCatIcon}
 		class:active={bonusBoostActive}
 		disabled={bonusBoostDisabled}
 		onclick={() => onToggle('bonus_boost')}
 		data-test="feature-bonus-boost"
 		style:background-image={usePanelBg ? `url("${bonusSwitchBgUrl}")` : undefined}
 	>
+		{#if showMenuCatIcon}
+			<img class="feature-cat-icon" src={menuCatIconUrl} alt="" draggable="false" />
+		{/if}
 		<div class="feature-info">
 			<div
 				class="feature-name"
@@ -265,6 +273,19 @@
 
 	.feature-row.panel-bg .feature-cost {
 		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+	}
+
+	.feature-row.menu-cat {
+		padding: 0;
+		gap: 0;
+	}
+
+	.feature-cat-icon {
+		display: block;
+		flex: 0 0 auto;
+		object-fit: contain;
+		pointer-events: none;
+		user-select: none;
 	}
 
 	.feature-info {

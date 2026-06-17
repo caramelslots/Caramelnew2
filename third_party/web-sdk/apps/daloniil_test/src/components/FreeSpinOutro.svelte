@@ -8,7 +8,7 @@
 </script>
 
 <script lang="ts">
-	import { Sprite, SpineProvider, SpineTrack, SpineSlot } from 'pixi-svelte';
+	import { Sprite } from 'pixi-svelte';
 	import { FadeContainer, WinCountUpProvider, ResponsiveBitmapText } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
@@ -28,16 +28,14 @@
 	import PressToContinue from './PressToContinue.svelte';
 	import WinCoins from './WinCoins.svelte';
 
-	type AnimationName = 'intro' | 'idle';
-
 	const context = getContext();
 
 	let show = $state(true);
-	let animationName = $state<AnimationName>('intro');
-	let amount = $state(0);
+	let winAmount = $state(0);
 	let winLevelData = $state<WinLevelData>();
 	let oncomplete = $state(() => {});
 	let onCountUpComplete = $state(() => {});
+	let cookieOpened = $state(false);
 
 	context.eventEmitter.subscribeOnMount({
 		freeSpinOutroShow: () => {
@@ -48,7 +46,9 @@
 			stateGame.winOverlayActive = false;
 		},
 		freeSpinOutroCountUp: async (emitterEvent) => {
-			amount = emitterEvent.amount;
+			cookieOpened = false;
+			waitForTimeout(1000).then(() => (cookieOpened = true));
+			winAmount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
 			stateGame.winOverlayActive = emitterEvent.winLevelData.type === 'big';
 			await waitForResolve((resolve) => (oncomplete = resolve));
@@ -60,7 +60,7 @@
 	{#if winLevelData}
 		{@const duration = winLevelData.presentDuration}
 		{@const isBigWin = winLevelData.type === 'big'}
-		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
+		<WinCountUpProvider amount={winAmount} {duration} oncomplete={() => onCountUpComplete()}>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
 				<OnMount
 					onmount={async () => {
@@ -72,56 +72,35 @@
 
 				<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.5} />
 
-				<FreeSpinAnimation>
-					{#snippet children({ sizes })}
-						{#if isBigWin}
+				{#key winAmount}
+					<FreeSpinAnimation>
+						{#snippet title({ width })}
 							<Sprite
-								anchor={{ x: 0.5, y: 1.2 }}
-								width={500 * 2.2}
-								height={156 * 2.2}
-								key="freespins_{stateUrlDerived.lang()}.png"
+								anchor={0.5}
+								width={isBigWin ? width * 3.2 : width * 4.0}
+								height={isBigWin ? width * 1.0 : width * 0.65}
+								key={isBigWin
+									? `freespins_${stateUrlDerived.lang()}.png`
+									: `winsmall_${stateUrlDerived.lang()}.png`}
 							/>
-						{:else}
-							<Sprite
-								anchor={{ x: 0.5, y: 1.2 }}
-								width={500 * 4.5}
-								height={80 * 4.5}
-								key="winsmall_{stateUrlDerived.lang()}.png"
-							/>
-						{/if}
-
-						<SpineProvider key="fsOutroNumber" width={sizes.width * 0.4}>
-							<SpineTrack
-								trackIndex={0}
-								{animationName}
-								loop={animationName === 'idle'}
-								listener={{
-									complete: () => (animationName = 'idle'),
+						{/snippet}
+						{#snippet winAmount({ width })}
+							<ResponsiveBitmapText
+								anchor={0.5}
+								style={{
+									fontFamily: isBigWin ? FONT_KRUTOI : FONT_PROSTOI,
+									fontSize: width * 0.4 * BITMAP_FONT_SCALE,
 								}}
+								text={bookEventAmountToCurrencyString(countUpAmount)}
+								maxWidth={width * 3.0}
 							/>
-							<SpineSlot slotName="slot_number">
-								<ResponsiveBitmapText
-									anchor={0.5}
-									style={{
-										fontFamily: isBigWin ? FONT_KRUTOI : FONT_PROSTOI,
-										fontSize: sizes.width * 0.08 * BITMAP_FONT_SCALE,
-									}}
-									text={bookEventAmountToCurrencyString(countUpAmount)}
-									maxWidth={sizes.width}
-								/>
-							</SpineSlot>
-						</SpineProvider>
+						{/snippet}
+					</FreeSpinAnimation>
+				{/key}
 
-						<Sprite
-							anchor={{ x: 0.5, y: isBigWin ? -3.2 : -2 }}
-							width={177 * (isBigWin ? 2.2 : 3)}
-							height={42 * (isBigWin ? 2.2 : 3)}
-							key="totalwin.png"
-						/>
-					{/snippet}
-				</FreeSpinAnimation>
-
-				<WinCoins emit={!countUpCompleted} levelAlias={winLevelData?.alias} />
+				{#if cookieOpened}
+					<WinCoins emit={!countUpCompleted} levelAlias={winLevelData?.alias} />
+				{/if}
 
 				<PressToContinue onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())} />
 			{/snippet}

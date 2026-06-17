@@ -1,16 +1,7 @@
 <!--
-	BuyBonusOverlay.svelte — кастомное меню «Купить функцию» для Cash Stacks.
-	Содержит 2 карточки бонусов которые можно купить:
-	  - NORMAL BONUS (×100): 10 FS, гарантированный триггер бонуса
-	  - SUPER BONUS (×200): 10 FS, старт с ×3 Sticky Mystery Reels
-
-	Пользователь видит цену в РЕАЛЬНЫХ деньгах = bet × множитель. Внизу
-	панели — компактный контрол изменения ставки (- ставка $X +) который
-	работает поверх stateConfig.betAmountOptions (тот же набор что у
-	главного +/- в HUD).
-
-	Рендерится поверх стандартного ModalBuyBonus (zIndex 60 > zIndex.modal=50).
-	На BUY → emit buyBonusConfirm → стандартный ModalBuyBonusConfirm подхватывает.
+	BuyBonusOverlay.svelte — меню «Купить функцию» по designer_assets/bg wok menu.png.
+	Открывается при stateModal.modal?.name === 'buyBonus'. Масштабируется через
+	--panel-width для desktop, portrait, popout L (800×450) и popout S (400×225).
 -->
 <script lang="ts">
 	import { Popup } from 'components-shared';
@@ -27,11 +18,20 @@
 	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { getContextLayout } from 'utils-layout';
-	import AssetPlaceholder from './AssetPlaceholder.svelte';
 	import CashStacksFeatureToggles from './CashStacksFeatureToggles.svelte';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
+
+	const bgUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/buy_bonus/bg_buy_bonus_panel.png`;
+	const normalCardUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/buy_bonus/normal_bonus_card.png`;
+	const superCardUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/buy_bonus/super_bonus_card.png`;
+	const closeIconUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay/cross.png`;
+	const deskLUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/buy_bonus/desk_l.png`;
+	const deskRUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/buy_bonus/desk_r.png`;
+	const buyButtonBgUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/buy_bonus/buy_button_bg.png`;
+	const minusUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/bet/minus.png`;
+	const plusUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/bet/plus.png`;
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonus');
 	const layoutType = $derived(stateLayoutDerived.layoutType());
@@ -39,21 +39,16 @@
 	const canvasSizes = $derived(stateLayoutDerived.canvasSizes());
 	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
 	const isPopout = $derived(isPopoutViewport(canvasSizes) && !isPopoutSmall);
-	const iconSize = $derived(isPopoutSmall ? 42 : isPopout ? 58 : 110);
 
 	type BonusVariant = 'normal' | 'super';
 
-	const normalPrice = $derived(
-		numberToCurrencyString(stateBet.betAmount * BUY_NORMAL_COST_MULT),
-	);
-	const superPrice = $derived(
-		numberToCurrencyString(stateBet.betAmount * BUY_SUPER_COST_MULT),
-	);
+	const normalPrice = $derived(numberToCurrencyString(stateBet.betAmount * BUY_NORMAL_COST_MULT));
+	const superPrice = $derived(numberToCurrencyString(stateBet.betAmount * BUY_SUPER_COST_MULT));
 	const currentBet = $derived(numberToCurrencyString(stateBet.betAmount));
 	const canBuyNormal = $derived(canAffordBuyBonus(BUY_NORMAL_COST_MULT));
 	const canBuySuper = $derived(canAffordBuyBonus(BUY_SUPER_COST_MULT));
+	const featureTogglesDisabled = $derived(!context.stateXstateDerived.isIdle());
 
-	// === Bet adjuster ===
 	const betOptions = $derived([...stateConfig.betAmountOptions].sort((a, b) => a - b));
 	const minBet = $derived(betOptions[0]);
 	const maxBet = $derived(betOptions[betOptions.length - 1]);
@@ -80,14 +75,6 @@
 		const costMult = variant === 'normal' ? BUY_NORMAL_COST_MULT : BUY_SUPER_COST_MULT;
 		if (!canAffordBuyBonus(costMult)) return;
 		clearActiveFeature();
-		/*
-			НЕ трогаем stateBet.activeBetModeKey здесь — иначе HUD сразу же
-			пересчитает betCost под bonus-цены, а до подтверждения это
-			преждевременно. Запоминаем выбор в stateBonus.selectedBetModeKey
-			(тот же канал, который читает SDK ModalBuyBonusConfirm) и
-			финальный set activeBetModeKey делает BuyBonusConfirmOverlay при
-			нажатии КУПИТЬ.
-		*/
 		stateBonus.selectedBetModeKey = variant === 'normal' ? 'bonus_normal' : 'bonus_super';
 		stateModal.modal = null;
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
@@ -100,255 +87,398 @@
 </script>
 
 {#if isOpen}
-	<!--
-		persistent: дефолтный click-to-close слой Popup'а перекрывает контент
-		через z-index: 2 и съедает клики по +/- и КУПИТЬ. Также скрывает
-		SDK-шный крестик X (у нас собственный в header). Закрытие — только
-		через нашу красную X кнопку.
-	-->
 	<Popup zIndex={60} persistent onclose={close}>
 		<div
-			class="buy-bonus-wrap"
+			class="buy-bonus-panel"
 			class:portrait={isPortrait}
 			class:popout-l={isPopout}
 			class:popout-s={isPopoutSmall}
 			data-test="buy-bonus-overlay"
 		>
-			<header class="header">
-				<h2 class="title">{context.i18nDerived.buyBonusTitle()}</h2>
-				<button
-					type="button"
-					class="close-btn"
-					onclick={close}
-					aria-label="close"
-					data-test="buy-bonus-close"
-				>
-					×
-				</button>
-			</header>
+			<img class="panel-bg" src={bgUrl} alt="" draggable="false" />
 
-			<div class="cards">
-				<!-- NORMAL BONUS -->
-				<div class="card" data-test="bonus-card-normal">
-					<div class="card-title">{context.i18nDerived.normalBonus()}</div>
-					<div class="icon-wrap">
-						<AssetPlaceholder label="BONUS" variant="bonus" width={iconSize} height={iconSize} />
-					</div>
-					<div class="card-desc">{context.i18nDerived.buyNormalDesc()}</div>
-					<div class="card-price" data-test="bonus-price-normal">{normalPrice}</div>
+			<div class="panel-content">
+				<header class="panel-header">
+					<!-- panel-title hidden by design -->
 					<button
-						class="buy-button"
+						type="button"
+						class="close-button"
+						onclick={close}
+						aria-label="close"
+						data-test="buy-bonus-close"
+					>
+						<img class="close-icon" src={closeIconUrl} alt="" draggable="false" />
+					</button>
+				</header>
+
+				<section class="cards-section" aria-label="bonus options">
+					<button
+						type="button"
+						class="card card-normal"
+						data-test="bonus-card-normal"
 						disabled={!canBuyNormal}
 						onclick={() => onBuy('normal')}
 					>
-						{context.i18nDerived.buyConfirm()}
+						<img class="card-bg" src={normalCardUrl} alt="" draggable="false" />
+						<div class="card-content">
+							<div class="card-title">{context.i18nDerived.normalBonus()}</div>
+							<div class="card-desc">{context.i18nDerived.buyNormalDesc()}</div>
+							<div class="card-price-wrap" style:background-image="url('{deskLUrl}')">
+								<span class="card-price" data-test="bonus-price-normal">{normalPrice}</span>
+							</div>
+							<div class="buy-button" style:background-image="url('{buyButtonBgUrl}')">
+								{context.i18nDerived.buyConfirm()}
+							</div>
+						</div>
 					</button>
-				</div>
 
-				<!-- SUPER BONUS -->
-				<div class="card" data-test="bonus-card-super">
-					<div class="card-title">{context.i18nDerived.superBonus()}</div>
-					<div class="icon-wrap">
-						<AssetPlaceholder label="SUPER" variant="super" width={iconSize} height={iconSize} />
-					</div>
-					<div class="card-desc">{context.i18nDerived.buySuperDesc()}</div>
-					<div class="card-price" data-test="bonus-price-super">{superPrice}</div>
 					<button
-						class="buy-button"
+						type="button"
+						class="card card-super"
+						data-test="bonus-card-super"
 						disabled={!canBuySuper}
 						onclick={() => onBuy('super')}
 					>
-						{context.i18nDerived.buyConfirm()}
+						<img class="card-bg" src={superCardUrl} alt="" draggable="false" />
+						<div class="card-content">
+							<div class="card-title">{context.i18nDerived.superBonus()}</div>
+							<div class="card-desc">{context.i18nDerived.buySuperDesc()}</div>
+							<div class="card-price-wrap" style:background-image="url('{deskRUrl}')">
+								<span class="card-price" data-test="bonus-price-super">{superPrice}</span>
+							</div>
+							<div class="buy-button" style:background-image="url('{buyButtonBgUrl}')">
+								{context.i18nDerived.buyConfirm()}
+							</div>
+						</div>
 					</button>
-				</div>
+				</section>
+
+				<section class="features-section" aria-label={context.i18nDerived.autoplayFeatures()}>
+					<CashStacksFeatureToggles
+						features={['bonus_boost']}
+						disabled={featureTogglesDisabled}
+						showMenuCatIcon
+						noHoverBg
+					/>
+				</section>
+
+				<footer class="bet-adjuster">
+					<button
+						type="button"
+						class="bet-btn"
+						style:background-image="url('{minusUrl}')"
+						onclick={decreaseBet}
+						disabled={!canDecrease}
+						aria-label="decrease bet"
+						data-test="bet-decrease"
+					></button>
+					<div class="bet-display">
+						<span class="bet-label">{context.i18nDerived.bet().toUpperCase()}</span>
+						<span class="bet-value" data-test="bet-value">{currentBet}</span>
+					</div>
+					<button
+						type="button"
+						class="bet-btn"
+						style:background-image="url('{plusUrl}')"
+						onclick={increaseBet}
+						disabled={!canIncrease}
+						aria-label="increase bet"
+						data-test="bet-increase"
+					></button>
+				</footer>
 			</div>
-
-			<section class="feature-toggles" aria-label="features">
-				<CashStacksFeatureToggles />
-			</section>
-
-			<!-- BET ADJUSTER — фиксированная нижняя строка с минусом/плюсом и текущим бетом. -->
-			<footer class="bet-adjuster">
-				<button
-					type="button"
-					class="bet-btn"
-					onclick={decreaseBet}
-					disabled={!canDecrease}
-					aria-label="decrease bet"
-					data-test="bet-decrease"
-				>
-					−
-				</button>
-				<div class="bet-display">
-					<span class="bet-label">{context.i18nDerived.bet().toUpperCase()}</span>
-					<span class="bet-value" data-test="bet-value">{currentBet}</span>
-				</div>
-				<button
-					type="button"
-					class="bet-btn"
-					onclick={increaseBet}
-					disabled={!canIncrease}
-					aria-label="increase bet"
-					data-test="bet-increase"
-				>
-					+
-				</button>
-			</footer>
 		</div>
 	</Popup>
 {/if}
 
 <style lang="scss">
-	/*
-		Главный контейнер — голубой темный фон, скруглённые углы, заголовок
-		сверху + красный X справа, ниже сетка карточек, внизу bet-adjuster.
-		z-index: 10 поднимает контент НАД click-to-close-layer внутри Popup
-		(там z-index: 2), иначе клики на кнопки уходят в click-to-close и
-		модалка просто закрывается.
-	*/
-	.buy-bonus-wrap {
+	.buy-bonus-panel {
+		--panel-width: min(780px, 96vw);
+		--panel-height-scale: 1.24;
 		position: relative;
 		z-index: 10;
-		width: min(820px, 92vw);
-		padding: 1.2rem 1.4rem 1.2rem;
-		background: linear-gradient(180deg, #14233a 0%, #0a1628 100%);
-		border-radius: 18px;
-		border: 1px solid rgba(255, 255, 255, 0.06);
-		color: #fff;
-		display: flex;
-		flex-direction: column;
-		gap: 1.1rem;
-		font-family: 'proxima-nova', sans-serif;
+		width: var(--panel-width);
+		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 98vh);
+		pointer-events: auto;
+		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
 	}
 
-	.header {
-		position: relative;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		min-height: 2.4rem;
-	}
-
-	.title {
-		margin: 0;
-		font-size: 1.5rem;
-		font-weight: 800;
-		letter-spacing: 0.03em;
-	}
-
-	.close-btn {
+	.panel-bg {
 		position: absolute;
-		right: 0;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: fill;
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.panel-content {
+		position: absolute;
+		inset: 0;
+	}
+
+	.panel-header {
+		position: absolute;
 		top: 0;
-		width: 36px;
-		height: 36px;
-		border-radius: 9px;
+		left: 0;
+		right: 0;
+		height: 18%;
+		display: grid;
+		grid-template-columns: 1fr auto;
+		align-items: start;
+		padding: 0 8% 0 10%;
+		box-sizing: border-box;
+		pointer-events: none;
+	}
+
+	.panel-title {
+		margin: calc(var(--panel-width) * 0.072) 0 0;
+		grid-column: 1;
+		width: 100%;
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.062);
+		font-style: italic;
+		font-weight: 900;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: #e8b4ff;
+		text-shadow:
+			0 0 8px rgba(255, 80, 220, 0.85),
+			0 0 16px rgba(180, 60, 255, 0.55),
+			0 2px 6px rgba(0, 0, 0, 0.85);
+		text-align: center;
+		line-height: 1.05;
+		pointer-events: none;
+	}
+
+	.close-button {
+		position: relative;
+		grid-column: 2;
+		width: calc(var(--panel-width) * 0.1);
+		height: calc(var(--panel-width) * 0.1);
+		padding: 0;
 		border: 0;
-		background: #d32f2f;
-		color: #fff;
-		font-size: 1.5rem;
-		font-weight: 800;
-		line-height: 1;
+		background: transparent;
 		cursor: pointer;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
-		transition: filter 0.1s, transform 0.05s;
+		pointer-events: auto;
+		transition:
+			transform 0.12s,
+			filter 0.12s;
 
-		&:hover { filter: brightness(1.1); }
-		&:active { transform: translateY(1px); }
+		&:hover {
+			filter: brightness(1.12);
+			transform: scale(1.06);
+		}
+
+		&:active {
+			transform: scale(0.96);
+		}
 	}
 
-	.cards {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 1rem;
-		align-items: stretch;
+	.close-icon {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		transform: rotate(45deg);
+		pointer-events: none;
+		user-select: none;
 	}
 
-	.feature-toggles {
+	.cards-section {
+		position: absolute;
+		top: 24.2%;
+		left: 49%;
+		width: 80%;
+		height: 49%;
+		transform: translateX(-50%);
 		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-	}
-
-	/*
-		Карточка бонуса — голубой плоский тон с скруглёнными углами.
-		Внутри: тайтл, иконка, описание, цена, BUY-кнопка.
-	*/
-	.card {
-		display: flex;
-		flex-direction: column;
+		justify-content: center;
 		align-items: center;
-		gap: 0.55rem;
+		gap: calc(var(--panel-width) * 0.014);
+		box-sizing: border-box;
+	}
+
+	.card {
+		position: relative;
+		height: 94%;
+		width: auto;
+		flex: 0 1 auto;
 		min-width: 0;
-		padding: 1rem 0.9rem 1.1rem;
-		background: linear-gradient(180deg, #4a8bbb 0%, #3a6f95 100%);
-		border-radius: 12px;
-		text-align: center;
-		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+		filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		font-family: inherit;
+		text-align: left;
+		transition:
+			filter 0.15s,
+			transform 0.1s;
+
+		&:hover:not(:disabled) {
+			filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45)) brightness(1.08);
+		}
+
+		&:active:not(:disabled) {
+			transform: scale(0.97);
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+			pointer-events: none;
+		}
+	}
+
+	.card-normal {
+		aspect-ratio: 541 / 799;
+	}
+
+	.card-super {
+		aspect-ratio: 552 / 803;
+	}
+
+	.card-bg {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: fill;
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.card-content {
+		position: absolute;
+		inset: 0;
+		transform: scale(0.83);
+		transform-origin: 50% 60%;
 	}
 
 	.card-title {
-		font-size: 1.05rem;
-		font-weight: 800;
-		letter-spacing: 0.06em;
-		color: #ffd96b;
-		text-transform: uppercase;
-		min-height: 2.6em;
+		position: absolute;
+		top: -5%;
+		left: 10%;
+		right: 10%;
+		height: 8%;
+		margin: 0;
 		display: flex;
 		align-items: center;
-	}
-
-	.icon-wrap {
-		display: flex;
 		justify-content: center;
-		align-items: center;
-		min-height: 110px;
-	}
-
-	.icon-wrap :global(.asset-placeholder) {
-		width: 110px !important;
-		height: 110px !important;
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.021);
+		font-weight: 900;
+		font-style: italic;
+		letter-spacing: 0.03em;
+		text-transform: uppercase;
+		line-height: 1;
+		text-align: center;
+		color: #f5e6c8;
+		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 	}
 
 	.card-desc {
-		font-size: 0.78rem;
-		color: rgba(255, 255, 255, 0.95);
-		line-height: 1.35;
-		min-height: 2.7em;
-		font-weight: 600;
+		position: absolute;
+		top: 57%;
+		left: 12%;
+		right: 12%;
+		height: 11%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.0135);
+		line-height: 1.15;
+		font-weight: 700;
 		text-transform: uppercase;
-		letter-spacing: 0.04em;
+		letter-spacing: 0.015em;
+		text-align: center;
 	}
 
-	/* Цена — крупная, белая, акцент на сумме. */
+	.card-normal .card-desc {
+		color: #4a3020;
+		text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+	}
+
+	.card-super .card-desc {
+		color: #f5e0c0;
+		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.75);
+	}
+
+	.card-price-wrap {
+		position: absolute;
+		top: 68%;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 72%;
+		height: 9%;
+		background-size: 100% 100%;
+		background-repeat: no-repeat;
+		background-position: center;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
 	.card-price {
-		font-size: 1.45rem;
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.024);
 		font-weight: 900;
-		color: #ffffff;
 		letter-spacing: 0.01em;
+		text-align: center;
+		line-height: 1;
+	}
+
+	.card-normal .card-price {
+		color: #f5e6c8;
+		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+	}
+
+	.card-super .card-price {
+		color: #f5e6c8;
+		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 	}
 
 	.buy-button {
-		margin-top: auto;
-		padding: 0.55rem 2rem;
-		font-size: 0.95rem;
-		font-weight: 800;
-		letter-spacing: 0.08em;
+		position: absolute;
+		top: 79%;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 62%;
+		height: 10%;
+		padding: 5% 0 0 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.022);
+		font-weight: 900;
+		letter-spacing: 0.06em;
 		border: 0;
-		border-radius: 9px;
+		border-radius: 0;
 		cursor: pointer;
 		text-transform: uppercase;
-		transition: transform 0.1s, filter 0.15s;
-		color: #2b1f08;
-		background: linear-gradient(180deg, #ffd96b 0%, #d6a233 100%);
-		box-shadow: 0 3px 0 rgba(0, 0, 0, 0.22);
-		min-width: 140px;
+		background-size: 100% 100%;
+		background-repeat: no-repeat;
+		background-color: transparent;
+		box-shadow: none;
+		transition:
+			transform 0.1s,
+			filter 0.15s;
+		color: #f5e6c8;
+		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
 
-		&:hover:not(:disabled) { filter: brightness(1.08); }
-		&:active:not(:disabled) { transform: translateY(1px); }
+		&:hover:not(:disabled) {
+			filter: brightness(1.1);
+		}
+
+		&:active:not(:disabled) {
+			transform: translateX(-50%) translateY(1px);
+		}
 
 		&:disabled {
 			opacity: 0.45;
@@ -357,547 +487,734 @@
 		}
 	}
 
-	/*
-		Нижняя строка с +/- и текущей ставкой. Тёмная полоса как на референсе.
-	*/
+	.features-section {
+		position: absolute;
+		top: 77.9%;
+		left: 19%;
+		right: 21.5%;
+		height: 5.8%;
+		display: flex;
+		align-items: center;
+		padding: 0;
+		box-sizing: border-box;
+		overflow: visible;
+	}
+
+	.features-section :global(.feature-row) {
+		width: 100%;
+		height: 100%;
+		display: grid;
+		grid-template-columns: 14% minmax(0, 1fr) auto;
+		align-items: center;
+		padding: 0 3% 0 2.5%;
+		column-gap: calc(var(--panel-width) * 0.01);
+		background: transparent;
+		border: 0;
+		border-radius: 0;
+		gap: 0;
+		box-sizing: border-box;
+
+		&:hover:not(:disabled),
+		&:active:not(:disabled) {
+			background: transparent;
+			filter: none;
+			transform: none;
+		}
+	}
+
+	.features-section :global(.feature-cat-icon) {
+		grid-column: 1;
+		justify-self: center;
+		align-self: center;
+		width: calc(var(--panel-width) * 0.044);
+		height: calc(var(--panel-width) * 0.044);
+		max-height: 95%;
+		object-fit: contain;
+		pointer-events: none;
+		user-select: none;
+		transform: none;
+	}
+
+	.features-section :global(.feature-info) {
+		grid-column: 2;
+		justify-self: start;
+		align-self: center;
+		min-width: 0;
+		max-width: 100%;
+		margin-left: calc(var(--panel-width) * 0.008);
+		padding-top: 0;
+		gap: calc(var(--panel-width) * 0.002);
+		overflow: visible;
+	}
+
+	.features-section :global(.feature-row.compact .feature-name),
+	.features-section :global(.feature-row .feature-name) {
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.024);
+		font-style: italic;
+		font-weight: 900;
+		text-transform: uppercase;
+		color: #d4b44a;
+		text-shadow:
+			0 1px 0 rgba(0, 0, 0, 0.85),
+			0 2px 6px rgba(0, 0, 0, 0.65);
+		line-height: 1.1;
+		letter-spacing: 0.03em;
+		max-width: 100%;
+		overflow: visible;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.features-section :global(.feature-cost) {
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.0185);
+		font-weight: 700;
+		color: #4cd964;
+		letter-spacing: 0.02em;
+		line-height: 1.1;
+		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.75);
+		max-width: 100%;
+		overflow: visible;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.features-section :global(.feature-toggle) {
+		grid-column: 3;
+		justify-self: end;
+		align-self: center;
+		width: calc(var(--panel-width) * 0.062);
+		height: calc(var(--panel-width) * 0.033);
+		flex-shrink: 0;
+		background: rgba(0, 0, 0, 0.55);
+		transform: none;
+		margin-right: calc(var(--panel-width) * 0.004);
+	}
+
+	.features-section :global(.feature-toggle.on) {
+		background: #4cd964;
+	}
+
+	.features-section :global(.feature-toggle .knob) {
+		width: calc(var(--panel-width) * 0.027);
+		height: calc(var(--panel-width) * 0.027);
+		top: calc((var(--panel-width) * 0.033 - var(--panel-width) * 0.027) / 2);
+		left: calc((var(--panel-width) * 0.033 - var(--panel-width) * 0.027) / 2);
+		background: #8a8a8a;
+	}
+
+	.features-section :global(.feature-toggle.on .knob) {
+		left: calc(
+			var(--panel-width) * 0.062 - var(--panel-width) * 0.027 -
+				(var(--panel-width) * 0.033 - var(--panel-width) * 0.027) / 2
+		);
+		background: #fff;
+	}
+
 	.bet-adjuster {
+		position: absolute;
+		top: 85.5%;
+		left: 14%;
+		right: 14%;
+		height: 10%;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 1rem;
-		padding: 0.7rem 1rem;
-		background: rgba(0, 0, 0, 0.45);
-		border-radius: 12px;
+		gap: calc(var(--panel-width) * 0.028);
+		box-sizing: border-box;
 	}
 
 	.bet-btn {
-		width: 50px;
-		height: 38px;
-		border-radius: 9px;
+		width: calc(var(--panel-width) * 0.082);
+		height: calc(var(--panel-width) * 0.082);
+		padding: 0;
 		border: 0;
-		background: linear-gradient(180deg, #4a8bbb 0%, #3a6f95 100%);
-		color: #fff;
-		font-size: 1.4rem;
-		font-weight: 800;
-		line-height: 1;
+		background-color: transparent;
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: contain;
 		cursor: pointer;
-		transition: filter 0.1s, transform 0.05s;
+		transition:
+			transform 0.1s,
+			filter 0.12s,
+			opacity 0.12s;
 
-		&:disabled { opacity: 0.45; cursor: not-allowed; }
-		&:not(:disabled):hover { filter: brightness(1.1); }
-		&:not(:disabled):active { transform: translateY(1px); }
+		&:hover:not(:disabled) {
+			filter: brightness(1.1);
+			transform: scale(1.04);
+		}
+
+		&:active:not(:disabled) {
+			transform: scale(0.96);
+		}
+
+		&:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+			pointer-events: none;
+		}
 	}
 
 	.bet-display {
 		display: flex;
-		align-items: baseline;
-		gap: 0.45rem;
-		min-width: 160px;
+		flex-direction: column;
+		align-items: center;
 		justify-content: center;
+		gap: calc(var(--panel-width) * 0.006);
+		min-width: calc(var(--panel-width) * 0.28);
 	}
 
 	.bet-label {
-		font-size: 0.85rem;
-		font-weight: 700;
-		color: rgba(255, 255, 255, 0.75);
-		letter-spacing: 0.06em;
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.022);
+		font-weight: 800;
+		color: #d4b44a;
+		letter-spacing: 0.08em;
+		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.75);
 	}
 
 	.bet-value {
-		font-size: 1.1rem;
-		font-weight: 800;
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.03);
+		font-weight: 900;
 		color: #fff;
+		text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
 	}
 
-	/* Узкие экраны (не popout, не portrait): карточки в ряд, уменьшаем размеры. */
-	@media (max-width: 600px) {
-		.buy-bonus-wrap:not(.popout-l):not(.popout-s):not(.portrait) {
-			padding: 0.85rem 0.75rem;
-			gap: 0.75rem;
-
-			.title { font-size: 1.15rem; }
-
-			.cards { gap: 0.55rem; }
-
-			.card {
-				padding: 0.65rem 0.45rem 0.75rem;
-				gap: 0.35rem;
-				border-radius: 10px;
-			}
-
-			.card-title {
-				font-size: 0.72rem;
-				min-height: 2.4em;
-			}
-
-			.icon-wrap {
-				min-height: 64px;
-			}
-
-			.icon-wrap :global(.asset-placeholder) {
-				width: 64px !important;
-				height: 64px !important;
-			}
-
-			.card-desc {
-				font-size: 0.52rem;
-				min-height: 2.5em;
-				letter-spacing: 0.02em;
-			}
-
-			.card-price { font-size: 0.95rem; }
-
-			.buy-button {
-				min-width: 0;
-				width: 100%;
-				padding: 0.4rem 0.5rem;
-				font-size: 0.72rem;
-				border-radius: 7px;
-			}
-
-			.bet-adjuster {
-				gap: 0.6rem;
-				padding: 0.55rem 0.65rem;
-			}
-
-			.bet-btn {
-				width: 40px;
-				height: 32px;
-				font-size: 1.1rem;
-			}
-
-			.bet-display { min-width: 120px; }
-			.bet-label { font-size: 0.72rem; }
-			.bet-value { font-size: 0.9rem; }
-		}
-	}
-
-	/*
-		Portrait mobile — только пропорции, без смены визуального стиля.
-		X в потоке header (не в углу блока), чтобы не вылезал за скругление.
-	*/
-	.buy-bonus-wrap.portrait:not(.popout-l):not(.popout-s) {
-		width: min(420px, 94vw);
-		padding: 1.1rem 0.95rem 1.15rem;
-		gap: 1rem;
-
-		.header {
-			display: grid;
-			grid-template-columns: 26px 1fr 26px;
-			align-items: center;
-			column-gap: 0.35rem;
-			min-height: 1.6rem;
+	/* Desktop — компактные карточки, Bonus Boost в золотой рамке */
+	.buy-bonus-panel:not(.portrait):not(.popout-l):not(.popout-s) {
+		.panel-title {
+			display: none;
 		}
 
-		.title {
-			grid-column: 1 / -1;
-			grid-row: 1;
-			padding: 0;
-			text-align: center;
-			font-size: 1.25rem;
+		.close-button {
+			width: calc(var(--panel-width) * 0.085);
+			height: calc(var(--panel-width) * 0.085);
+			margin-top: calc(var(--panel-width) * 0.06);
+			margin-right: calc(var(--panel-width) * 0.03);
 		}
 
-		.close-btn {
-			position: relative;
-			z-index: 1;
-			grid-column: 3;
-			grid-row: 1;
-			justify-self: end;
-			align-self: center;
-			width: 26px;
-			height: 26px;
-			font-size: 1rem;
-			border-radius: 6px;
-			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
-		}
-
-		.cards {
-			grid-template-columns: 1fr 1fr;
-			gap: 0.65rem;
+		.cards-section {
+			top: 24.5%;
+			left: 49%;
+			width: 79%;
+			height: 50%;
+			gap: calc(var(--panel-width) * 0.012);
 		}
 
 		.card {
-			padding: 0.95rem 0.5rem 1rem;
-			gap: 0.55rem;
+			height: 94%;
 		}
 
-		.card-title {
-			font-size: 0.88rem;
-			min-height: 2.4em;
-		}
-
-		.icon-wrap {
-			min-height: 88px;
-		}
-
-		.icon-wrap :global(.asset-placeholder) {
-			width: 84px !important;
-			height: 84px !important;
+		.card-content {
+			transform: scale(0.8);
+			transform-origin: 50% 61%;
 		}
 
 		.card-desc {
-			font-size: 0.68rem;
-			line-height: 1.35;
-			min-height: 2.6em;
+			top: 71%;
+			font-size: calc(var(--panel-width) * 0.018);
+		}
+
+		.card-price-wrap {
+			top: 87%;
+			height: 13%;
+			width: 90%;
 		}
 
 		.card-price {
-			font-size: 1.15rem;
+			font-size: calc(var(--panel-width) * 0.028);
 		}
 
 		.buy-button {
-			padding: 0.58rem 0.4rem;
-			font-size: 0.85rem;
-		}
-
-		.feature-toggles :global(.feature-row) {
-			padding: 0.7rem 0.55rem;
-		}
-
-		.feature-toggles :global(.feature-name) {
-			font-size: 0.88rem;
-		}
-
-		.feature-toggles :global(.feature-cost) {
-			font-size: 0.72rem;
-		}
-
-		.feature-toggles :global(.feature-toggle) {
-			width: 36px;
-			height: 20px;
-		}
-
-		.feature-toggles :global(.knob) {
-			width: 16px;
-			height: 16px;
-		}
-
-		.feature-toggles :global(.feature-toggle.on .knob) {
-			left: 17px;
+			top: 98%;
+			width: 90%;
+			height: 17%;
+			font-size: calc(var(--panel-width) * 0.024);
 		}
 
 		.bet-adjuster {
-			gap: 0.85rem;
-			padding: 0.7rem 0.8rem;
+			top: 87%;
+			left: 49%;
+			right: auto;
+			width: 72%;
+			transform: translateX(-50%);
+			height: 6%;
+			gap: calc(var(--panel-width) * 0.014);
 		}
 
 		.bet-btn {
-			width: 46px;
-			height: 36px;
-			font-size: 1.25rem;
+			width: calc(var(--panel-width) * 0.044);
+			height: calc(var(--panel-width) * 0.044);
 		}
 
 		.bet-display {
-			flex-direction: column;
-			align-items: center;
-			gap: 0.05rem;
-			min-width: 96px;
+			min-width: calc(var(--panel-width) * 0.18);
+			gap: calc(var(--panel-width) * 0.002);
 		}
 
 		.bet-label {
-			font-size: 0.92rem;
-			font-weight: 800;
-			color: rgba(255, 255, 255, 0.88);
-			letter-spacing: 0.08em;
+			font-size: calc(var(--panel-width) * 0.015);
 		}
 
 		.bet-value {
-			font-size: 1.35rem;
-			font-weight: 900;
-		}
-	}
-
-	/* Stake popout L — embed 800×450 */
-	.buy-bonus-wrap.popout-l {
-		width: min(620px, 86vw);
-		max-height: 94vh;
-		overflow-y: auto;
-		padding: 0.8rem 0.65rem 0.85rem;
-		gap: 0.62rem;
-		border-radius: 14px;
-
-		.header { min-height: 2rem; }
-		.title { font-size: 1rem; }
-
-		.close-btn {
-			width: 28px;
-			height: 28px;
-			font-size: 1.1rem;
-			border-radius: 7px;
+			font-size: calc(var(--panel-width) * 0.019);
 		}
 
-		.cards { gap: 0.5rem; }
-
-		.card {
-			padding: 0.7rem 0.38rem 0.75rem;
-			gap: 0.38rem;
-			border-radius: 10px;
-		}
-
-		.card-title {
-			font-size: 0.78rem;
-			min-height: 2.2em;
-		}
-
-		.icon-wrap { min-height: 58px; }
-
-		.icon-wrap :global(.asset-placeholder) {
-			width: 58px !important;
-			height: 58px !important;
-		}
-
-		.icon-wrap :global(.label) {
-			font-size: 0.42rem;
-			padding: 0.1em;
-			word-break: keep-all;
-		}
-
-		.card-desc {
-			font-size: 0.58rem;
-			min-height: 2.5em;
-			letter-spacing: 0.02em;
-		}
-
-		.card-price { font-size: 0.95rem; }
-
-		.buy-button {
-			min-width: 0;
-			width: 100%;
-			padding: 0.45rem 0.4rem;
-			font-size: 0.72rem;
-			border-radius: 7px;
-		}
-
-		.feature-toggles :global(.feature-row) {
-			padding: 0.5rem 0.45rem;
-			border-radius: 8px;
-		}
-
-		.feature-toggles :global(.feature-name) { font-size: 0.72rem; }
-		.feature-toggles :global(.feature-cost) { font-size: 0.58rem; }
-
-		.feature-toggles :global(.feature-toggle) {
-			width: 32px;
-			height: 18px;
-		}
-
-		.feature-toggles :global(.knob) {
-			width: 14px;
-			height: 14px;
-		}
-
-		.feature-toggles :global(.feature-toggle.on .knob) {
-			left: 15px;
-		}
-
-		.bet-adjuster {
-			gap: 0.55rem;
-			padding: 0.52rem 0.5rem;
-			border-radius: 9px;
-		}
-
-		.bet-btn {
-			width: 38px;
-			height: 30px;
-			font-size: 1rem;
-		}
-
-		.bet-display { min-width: 110px; }
-		.bet-label { font-size: 0.68rem; }
-		.bet-value { font-size: 0.82rem; }
-	}
-
-	/* Stake popout S — embed 400×225 */
-	.buy-bonus-wrap.popout-s {
-		width: min(360px, 90vw);
-		max-height: 96vh;
-		overflow-y: auto;
-		padding: 0.48rem 0.38rem 0.52rem;
-		gap: 0.38rem;
-		border-radius: 10px;
-
-		.header {
-			display: grid;
-			grid-template-columns: 16px 1fr 16px;
-			align-items: center;
-			column-gap: 0.2rem;
-			min-height: 1rem;
-		}
-
-		.title {
-			grid-column: 1 / -1;
-			grid-row: 1;
-			font-size: 0.62rem;
+		.features-section {
+			top: 79.2%;
+			left: 22%;
+			right: 24.5%;
+			height: 5.4%;
 			padding: 0;
-			text-align: center;
 		}
 
-		.close-btn {
-			position: relative;
-			z-index: 1;
-			grid-column: 3;
-			grid-row: 1;
-			justify-self: end;
-			align-self: center;
-			width: 16px;
-			height: 16px;
-			font-size: 0.65rem;
-			border-radius: 4px;
-			box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+		.features-section :global(.feature-row) {
+			height: 100%;
+			padding: 0 2.5% 0 2%;
+			grid-template-columns: 13% minmax(0, 1fr) auto;
 		}
 
-		.cards { gap: 0.22rem; }
+		.features-section :global(.feature-cat-icon) {
+			width: calc(var(--panel-width) * 0.04);
+			height: calc(var(--panel-width) * 0.04);
+		}
+
+		.features-section :global(.feature-info) {
+			margin-left: calc(var(--panel-width) * 0.006);
+			gap: calc(var(--panel-width) * 0.001);
+		}
+
+		.features-section :global(.feature-row .feature-name) {
+			font-size: calc(var(--panel-width) * 0.021);
+			line-height: 1.08;
+		}
+
+		.features-section :global(.feature-cost) {
+			font-size: calc(var(--panel-width) * 0.0165);
+			line-height: 1.08;
+		}
+
+		.features-section :global(.feature-toggle) {
+			width: calc(var(--panel-width) * 0.054);
+			height: calc(var(--panel-width) * 0.029);
+			margin-right: 0;
+		}
+
+		.features-section :global(.feature-toggle .knob) {
+			width: calc(var(--panel-width) * 0.023);
+			height: calc(var(--panel-width) * 0.023);
+			top: calc((var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2);
+			left: calc((var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2);
+		}
+
+		.features-section :global(.feature-toggle.on .knob) {
+			left: calc(
+				var(--panel-width) * 0.054 - var(--panel-width) * 0.023 -
+					(var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2
+			);
+		}
+	}
+
+	/* Portrait mobile */
+	.buy-bonus-panel.portrait:not(.popout-l):not(.popout-s) {
+		--panel-height-scale: 1.24;
+		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
+
+		.panel-bg {
+			width: 130%;
+			top: 0;
+			bottom: 0;
+			left: 50%;
+			right: auto;
+			transform: translateX(-50%);
+		}
+
+		.panel-title {
+			display: none;
+		}
+
+		.panel-header {
+			height: 22%;
+		}
+
+		.close-button {
+			position: absolute;
+			top: 82%;
+			right: 7%;
+			width: calc(var(--panel-width) * 0.075);
+			height: calc(var(--panel-width) * 0.075);
+			margin: 0;
+		}
+
+		.cards-section {
+			top: 24.5%;
+			left: 49%;
+			width: 79%;
+			height: 50%;
+			gap: calc(var(--panel-width) * 0.012);
+		}
 
 		.card {
-			padding: 0.4rem 0.16rem 0.44rem;
-			gap: 0.22rem;
-			border-radius: 7px;
-			box-shadow: 0 3px 8px rgba(0, 0, 0, 0.28);
+			height: 96%;
+		}
+
+		.card-content {
+			transform: scale(0.72);
+			transform-origin: 50% 61%;
 		}
 
 		.card-title {
-			font-size: 0.42rem;
-			min-height: 1.9em;
-			letter-spacing: 0.03em;
-		}
-
-		.icon-wrap { min-height: 48px; }
-
-		.icon-wrap :global(.asset-placeholder) {
-			width: 46px !important;
-			height: 46px !important;
-			border-width: 1px;
-		}
-
-		.icon-wrap :global(.label) {
-			font-size: 0.32rem;
-			padding: 0.05em;
-			letter-spacing: 0;
-			word-break: keep-all;
-			line-height: 1;
+			top: -11%;
+			font-size: calc(var(--panel-width) * 0.032);
 		}
 
 		.card-desc {
-			font-size: 0.32rem;
-			min-height: 2.5em;
-			line-height: 1.25;
-			letter-spacing: 0.01em;
+			top: 71%;
+			font-size: calc(var(--panel-width) * 0.022);
 		}
 
-		.card-price { font-size: 0.62rem; }
+		.card-price-wrap {
+			top: 87%;
+			height: 13%;
+			width: 90%;
+		}
+
+		.card-price {
+			font-size: calc(var(--panel-width) * 0.03);
+		}
 
 		.buy-button {
-			min-width: 0;
-			width: 100%;
-			padding: 0.32rem 0.18rem;
-			font-size: 0.4rem;
-			border-radius: 5px;
-			box-shadow: 0 2px 0 rgba(0, 0, 0, 0.22);
-		}
-
-		.feature-toggles { gap: 0.24rem; }
-
-		.feature-toggles :global(.feature-row) {
-			padding: 0.36rem 0.24rem;
-			border-radius: 6px;
-			gap: 0.35rem;
-		}
-
-		.feature-toggles :global(.feature-name) { font-size: 0.42rem; }
-		.feature-toggles :global(.feature-cost) { font-size: 0.36rem; }
-
-		.feature-toggles :global(.feature-toggle) {
-			width: 22px;
-			height: 12px;
-		}
-
-		.feature-toggles :global(.knob) {
-			top: 1px;
-			left: 1px;
-			width: 8px;
-			height: 8px;
-		}
-
-		.feature-toggles :global(.feature-toggle.on .knob) {
-			left: 11px;
+			top: 98%;
+			width: 90%;
+			height: 17%;
+			font-size: calc(var(--panel-width) * 0.026);
 		}
 
 		.bet-adjuster {
-			gap: 0.32rem;
-			padding: 0.38rem 0.28rem;
-			border-radius: 6px;
+			top: 87%;
+			left: 49%;
+			right: auto;
+			width: 76%;
+			transform: translateX(-50%);
+			height: 7%;
+			gap: calc(var(--panel-width) * 0.02);
 		}
 
 		.bet-btn {
-			width: 26px;
-			height: 20px;
-			font-size: 0.72rem;
-			border-radius: 5px;
+			width: calc(var(--panel-width) * 0.062);
+			height: calc(var(--panel-width) * 0.062);
 		}
 
 		.bet-display {
-			min-width: 68px;
-			gap: 0.14rem;
-			align-items: baseline;
+			min-width: calc(var(--panel-width) * 0.22);
+			gap: calc(var(--panel-width) * 0.003);
 		}
 
 		.bet-label {
-			font-size: 0.44rem;
-			font-weight: 800;
+			font-size: calc(var(--panel-width) * 0.022);
 		}
 
 		.bet-value {
-			font-size: 0.54rem;
-			font-weight: 900;
+			font-size: calc(var(--panel-width) * 0.028);
+		}
+
+		.features-section {
+			top: 78.6%;
+			left: 14%;
+			right: 18%;
+			height: 6.5%;
+			padding: 0;
+			overflow: visible;
+		}
+
+		.features-section :global(.feature-cat-icon) {
+			width: calc(var(--panel-width) * 0.07) !important;
+			height: calc(var(--panel-width) * 0.07) !important;
+			min-width: calc(var(--panel-width) * 0.07) !important;
+			min-height: calc(var(--panel-width) * 0.07) !important;
+			transform: translateY(5%);
+			flex-shrink: 0 !important;
+		}
+
+		.features-section :global(.feature-row) {
+			height: 100%;
+			padding: 0 2.5% 0 2%;
+			grid-template-columns: 22% minmax(0, 1fr) auto;
+			overflow: visible;
+		}
+
+		.features-section :global(.feature-info) {
+			margin-left: calc(var(--panel-width) * 0.006);
+			gap: calc(var(--panel-width) * 0.001);
+		}
+
+		.features-section :global(.feature-row .feature-name) {
+			font-size: calc(var(--panel-width) * 0.03);
+			line-height: 1.08;
+		}
+
+		.features-section :global(.feature-cost) {
+			font-size: calc(var(--panel-width) * 0.024);
+			line-height: 1.08;
+		}
+
+		.features-section :global(.feature-toggle) {
+			width: calc(var(--panel-width) * 0.072);
+			height: calc(var(--panel-width) * 0.038);
+			margin-right: 0;
+		}
+
+		.features-section :global(.feature-toggle .knob) {
+			width: calc(var(--panel-width) * 0.03);
+			height: calc(var(--panel-width) * 0.03);
+			top: calc((var(--panel-width) * 0.038 - var(--panel-width) * 0.03) / 2);
+			left: calc((var(--panel-width) * 0.038 - var(--panel-width) * 0.03) / 2);
+		}
+
+		.features-section :global(.feature-toggle.on .knob) {
+			left: calc(
+				var(--panel-width) * 0.072 - var(--panel-width) * 0.03 -
+					(var(--panel-width) * 0.038 - var(--panel-width) * 0.03) / 2
+			);
+		}
+	}
+
+	/* Stake popout L — 800×450 */
+	.buy-bonus-panel.popout-l {
+		--panel-width: min(520px, 90vw);
+		--panel-height-scale: 1.2;
+		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
+		filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.6));
+
+		.panel-title {
+			display: none;
+		}
+
+		.close-button {
+			width: calc(var(--panel-width) * 0.085);
+			height: calc(var(--panel-width) * 0.085);
+			margin-top: calc(var(--panel-width) * 0.06);
+			margin-right: calc(var(--panel-width) * 0.03);
+		}
+
+		.cards-section {
+			top: 24.5%;
+			left: 49%;
+			width: 79%;
+			height: 50%;
+			gap: calc(var(--panel-width) * 0.012);
+		}
+
+		.card {
+			height: 94%;
+		}
+
+		.card-content {
+			transform: scale(0.8);
+			transform-origin: 50% 61%;
+		}
+
+		.card-desc {
+			top: 71%;
+			font-size: calc(var(--panel-width) * 0.018);
+		}
+
+		.card-price-wrap {
+			top: 87%;
+			height: 13%;
+			width: 90%;
+		}
+
+		.card-price {
+			font-size: calc(var(--panel-width) * 0.028);
+		}
+
+		.buy-button {
+			top: 98%;
+			width: 90%;
+			height: 17%;
+			font-size: calc(var(--panel-width) * 0.024);
+		}
+
+		.bet-adjuster {
+			top: 87%;
+			left: 49%;
+			right: auto;
+			width: 72%;
+			transform: translateX(-50%);
+			height: 6%;
+			gap: calc(var(--panel-width) * 0.014);
+		}
+
+		.bet-btn {
+			width: calc(var(--panel-width) * 0.044);
+			height: calc(var(--panel-width) * 0.044);
+		}
+
+		.bet-display {
+			min-width: calc(var(--panel-width) * 0.18);
+			gap: calc(var(--panel-width) * 0.002);
+		}
+
+		.bet-label {
+			font-size: calc(var(--panel-width) * 0.015);
+		}
+
+		.bet-value {
+			font-size: calc(var(--panel-width) * 0.019);
+		}
+
+		.features-section {
+			top: 79.2%;
+			left: 22%;
+			right: 24.5%;
+			height: 5.4%;
+			padding: 0;
+		}
+
+		.features-section :global(.feature-row) {
+			height: 100%;
+			padding: 0 2.5% 0 2%;
+			grid-template-columns: 13% minmax(0, 1fr) auto;
+		}
+
+		.features-section :global(.feature-cat-icon) {
+			width: calc(var(--panel-width) * 0.04);
+			height: calc(var(--panel-width) * 0.04);
+		}
+
+		.features-section :global(.feature-info) {
+			margin-left: calc(var(--panel-width) * 0.006);
+			gap: calc(var(--panel-width) * 0.001);
+		}
+
+		.features-section :global(.feature-row .feature-name) {
+			font-size: calc(var(--panel-width) * 0.021);
+			line-height: 1.08;
+		}
+
+		.features-section :global(.feature-cost) {
+			font-size: calc(var(--panel-width) * 0.0165);
+			line-height: 1.08;
+		}
+
+		.features-section :global(.feature-toggle) {
+			width: calc(var(--panel-width) * 0.054);
+			height: calc(var(--panel-width) * 0.029);
+			margin-right: 0;
+		}
+
+		.features-section :global(.feature-toggle .knob) {
+			width: calc(var(--panel-width) * 0.023);
+			height: calc(var(--panel-width) * 0.023);
+			top: calc((var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2);
+			left: calc((var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2);
+		}
+
+		.features-section :global(.feature-toggle.on .knob) {
+			left: calc(
+				var(--panel-width) * 0.054 - var(--panel-width) * 0.023 -
+					(var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2
+			);
+		}
+	}
+
+	/* Stake popout S — 400×225 */
+	.buy-bonus-panel.popout-s {
+		--panel-width: min(265px, 92vw);
+		--panel-height-scale: 1.14;
+		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
+		filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55));
+
+		.panel-title {
+			font-size: calc(var(--panel-width) * 0.058);
+		}
+
+		.close-button {
+			width: calc(var(--panel-width) * 0.11);
+			height: calc(var(--panel-width) * 0.11);
+		}
+
+		.cards-section {
+			top: 24.1%;
+			left: 49.5%;
+			width: 82%;
+			height: 46%;
+			gap: calc(var(--panel-width) * 0.01);
+		}
+
+		.card {
+			height: 92%;
+		}
+
+		.card-content {
+			transform: scale(0.76);
+		}
+
+		.card-title {
+			font-size: calc(var(--panel-width) * 0.024);
+		}
+
+		.card-desc {
+			font-size: calc(var(--panel-width) * 0.016);
+		}
+
+		.card-price {
+			font-size: calc(var(--panel-width) * 0.028);
+		}
+
+		.buy-button {
+			font-size: calc(var(--panel-width) * 0.018);
+		}
+
+		.features-section {
+			top: 77.1%;
+			left: 17%;
+			right: 19.5%;
+			height: 5.2%;
+		}
+
+		.features-section :global(.feature-cat-icon) {
+			width: calc(var(--panel-width) * 0.058);
+			height: calc(var(--panel-width) * 0.058);
+			transform: translateY(4%);
+		}
+
+		.features-section :global(.feature-row .feature-name) {
+			font-size: calc(var(--panel-width) * 0.03);
+		}
+
+		.features-section :global(.feature-row .feature-info) {
+			margin-left: calc(var(--panel-width) * 0.006);
+			gap: calc(var(--panel-width) * 0.003);
+		}
+
+		.features-section :global(.feature-cost) {
+			font-size: calc(var(--panel-width) * 0.024);
+		}
+
+		.features-section :global(.feature-toggle) {
+			width: calc(var(--panel-width) * 0.072);
+			height: calc(var(--panel-width) * 0.038);
+			transform: translateY(3%);
+		}
+	}
+
+	@media (max-width: 600px) {
+		.buy-bonus-panel:not(.popout-l):not(.popout-s) {
+			--panel-width: min(540px, 98vw);
+			--panel-height-scale: 1.28;
+			height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
 		}
 	}
 
 	@media (max-height: 500px) {
-		.buy-bonus-wrap:not(.popout-l):not(.popout-s):not(.portrait) {
-			padding: 0.6rem 0.75rem;
-			gap: 0.55rem;
-			max-height: 96vh;
-			overflow-y: auto;
-		}
-
-		.buy-bonus-wrap:not(.popout-l):not(.popout-s):not(.portrait) .header { min-height: 1.8rem; }
-		.buy-bonus-wrap:not(.popout-l):not(.popout-s):not(.portrait) .title { font-size: 1rem; }
-
-		.buy-bonus-wrap:not(.popout-l):not(.popout-s):not(.portrait) .close-btn {
-			width: 28px;
-			height: 28px;
-			font-size: 1.1rem;
-		}
-
-		.buy-bonus-wrap.portrait:not(.popout-l):not(.popout-s) {
-			max-height: 96vh;
-			overflow-y: auto;
-		}
-
-		.buy-bonus-wrap:not(.portrait) .cards { gap: 0.5rem; }
-
-		.buy-bonus-wrap:not(.portrait) .card {
-			padding: 0.5rem 0.4rem 0.6rem;
-			gap: 0.3rem;
-		}
-
-		.buy-bonus-wrap:not(.portrait) .card-title { font-size: 0.68rem; min-height: 2em; }
-
-		.buy-bonus-wrap:not(.portrait) .icon-wrap { min-height: 52px; }
-
-		.buy-bonus-wrap:not(.portrait) .icon-wrap :global(.asset-placeholder) {
-			width: 52px !important;
-			height: 52px !important;
-		}
-
-		.buy-bonus-wrap:not(.portrait) .card-desc { font-size: 0.48rem; min-height: 2.2em; }
-		.buy-bonus-wrap:not(.portrait) .card-price { font-size: 0.85rem; }
-
-		.buy-bonus-wrap:not(.portrait) .buy-button {
-			min-width: 0;
-			width: 100%;
-			padding: 0.35rem 0.4rem;
-			font-size: 0.65rem;
+		.buy-bonus-panel:not(.popout-l):not(.popout-s):not(.portrait) {
+			--panel-width: min(390px, 62vw);
+			--panel-height-scale: 1.16;
+			height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
 		}
 	}
 </style>
