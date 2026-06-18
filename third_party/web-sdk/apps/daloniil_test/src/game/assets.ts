@@ -1,54 +1,58 @@
+/** Resolve static/ asset URL relative to the deployed page (Stake Engine v### subpath-safe). */
+const assetUrl = (path: string) =>
+	new URL(path.replace(/^\//, ''), typeof window !== 'undefined' ? window.location.href : import.meta.url).href;
+
 export default {
 	loader: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/loader/loader.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/loader/loader.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/loader/loader.atlas'),
+			skeleton: assetUrl('assets/spines/loader/loader.json'),
 			scale: 2,
 		},
 		preload: true,
 	},
 	mainBackground: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/background/day.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/background/day.png'),
 		preload: true,
 	},
 	featureBackground: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/background/night.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/background/night.png'),
 		preload: true,
 	},
 	lanternDay: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/background/lantern_day.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/background/lantern_day.png'),
 		preload: true,
 	},
 	lanternNight: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/background/lantern_night.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/background/lantern_night.png'),
 		preload: true,
 	},
 	boardDay: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/boardFrame/desk_day.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/boardFrame/desk_day.png'),
 		preload: true,
 	},
 	boardNight: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/boardFrame/desk_night.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/boardFrame/desk_night.png'),
 		preload: true,
 	},
 	bonusBarV: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/bonusBar/bar_v.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/bonusBar/bar_v.png'),
 	},
 	bonusBarH: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/bonusBar/bar_h.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/bonusBar/bar_h.png'),
 	},
 	bonusBarCat: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/bonusBar/cat_static.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/bonusBar/cat_static.png'),
 	},
 	pressToContinueText: {
 		type: 'sprites',
@@ -64,72 +68,72 @@ export default {
 	H1: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/symbolsNew/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbolsNew/High_1.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
+			skeleton: assetUrl('assets/spines/symbolsNew/High_1.json'),
 			scale: 1,
 		},
 	},
 	H2: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/symbolsNew/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbolsNew/High_2.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
+			skeleton: assetUrl('assets/spines/symbolsNew/High_2.json'),
 			scale: 1,
 		},
 	},
 	H3: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/symbolsNew/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbolsNew/High_3.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
+			skeleton: assetUrl('assets/spines/symbolsNew/High_3.json'),
 			scale: 1,
 		},
 	},
 	H4: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/symbolsNew/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbolsNew/High_4.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
+			skeleton: assetUrl('assets/spines/symbolsNew/High_4.json'),
 			scale: 1,
 		},
 	},
 	L1: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/symbolsNew/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbolsNew/Low_1.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
+			skeleton: assetUrl('assets/spines/symbolsNew/Low_1.json'),
 			scale: 1,
 		},
 	},
 	L2: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/symbolsNew/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbolsNew/Low_2.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
+			skeleton: assetUrl('assets/spines/symbolsNew/Low_2.json'),
 			scale: 1,
 		},
 	},
 	L3: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/symbolsNew/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbolsNew/Low_3.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
+			skeleton: assetUrl('assets/spines/symbolsNew/Low_3.json'),
 			scale: 1,
 		},
 	},
 	L4: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/symbolsNew/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbolsNew/Low_4.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
+			skeleton: assetUrl('assets/spines/symbolsNew/Low_4.json'),
 			scale: 1,
 		},
 	},
 	explosion: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/symbols3/symbols3.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbols3/explosion.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/symbols3/symbols3.atlas'),
+			skeleton: assetUrl('assets/spines/symbols3/explosion.json'),
 			scale: 2,
 		},
 	},
@@ -139,8 +143,8 @@ export default {
 	W: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/symbolsNew/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbolsNew/Special_2.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
+			skeleton: assetUrl('assets/spines/symbolsNew/Special_2.json'),
 			scale: 1,
 		},
 	},
@@ -149,8 +153,8 @@ export default {
 	WWin: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/symbolsNew/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbolsNew/Special_2_win.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
+			skeleton: assetUrl('assets/spines/symbolsNew/Special_2_win.json'),
 			scale: 1,
 		},
 	},
@@ -158,8 +162,8 @@ export default {
 	B: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/symbolsNew/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbolsNew/Special_1.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
+			skeleton: assetUrl('assets/spines/symbolsNew/Special_1.json'),
 			scale: 1,
 		},
 	},
@@ -167,16 +171,16 @@ export default {
 	BWin: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/symbolsNew/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbolsNew/Special_1_win.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
+			skeleton: assetUrl('assets/spines/symbolsNew/Special_1_win.json'),
 			scale: 1,
 		},
 	},
 	M: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/symbolsNew/symbols.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/symbolsNew/Mystery.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
+			skeleton: assetUrl('assets/spines/symbolsNew/Mystery.json'),
 			scale: 1,
 		},
 	},
@@ -185,104 +189,104 @@ export default {
 	// because the per-symbol sizes differ (H/L 196², Mystery 256², W/B masked).
 	H1Img: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/symbolsNew/High_1.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/symbolsNew/High_1.png'),
 	},
 	H2Img: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/symbolsNew/High_2.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/symbolsNew/High_2.png'),
 	},
 	H3Img: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/symbolsNew/High_3.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/symbolsNew/High_3.png'),
 	},
 	H4Img: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/symbolsNew/High_4.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/symbolsNew/High_4.png'),
 	},
 	L1Img: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/symbolsNew/Low_1.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/symbolsNew/Low_1.png'),
 	},
 	L2Img: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/symbolsNew/Low_2.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/symbolsNew/Low_2.png'),
 	},
 	L3Img: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/symbolsNew/Low_3.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/symbolsNew/Low_3.png'),
 	},
 	L4Img: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/symbolsNew/Low_4.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/symbolsNew/Low_4.png'),
 	},
 	BImg: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/symbolsNew/Special_1.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/symbolsNew/Special_1.png'),
 	},
 	WImg: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/symbolsNew/Special_2.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/symbolsNew/Special_2.png'),
 	},
 	MImg: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/symbolsNew/Mystery_sign.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/symbolsNew/Mystery_sign.png'),
 	},
 	MBgImg: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/symbolsNew/Mystery_bg.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/symbolsNew/Mystery_bg.png'),
 	},
 	reelsFrame: {
 		type: 'sprites',
-		src: new URL('../../assets/sprites/reelsFrame/reels_frame.json', import.meta.url).href,
+		src: assetUrl('assets/sprites/reelsFrame/reels_frame.json'),
 	},
 	payFrame: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/payFrame/payFrame.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/payFrame/payFrame.png'),
 	},
 	anticipation: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/anticipation/anticipation.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/anticipation/anticipation.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/anticipation/anticipation.atlas'),
+			skeleton: assetUrl('assets/spines/anticipation/anticipation.json'),
 			scale: 2,
 		},
 	},
 	prostoiFont: {
 		type: 'font',
-		src: new URL('../../assets/fonts/prostoiFont/prostoi.xml', import.meta.url).href,
+		src: assetUrl('assets/fonts/prostoiFont/prostoi.xml'),
 	},
 	prostoiWhiteFont: {
 		type: 'font',
-		src: new URL('../../assets/fonts/prostoiWhiteFont/prostoiWhite.xml', import.meta.url).href,
+		src: assetUrl('assets/fonts/prostoiWhiteFont/prostoiWhite.xml'),
 	},
 	krutoiFont: {
 		type: 'font',
-		src: new URL('../../assets/fonts/krutoiFont/krutoi.xml', import.meta.url).href,
+		src: assetUrl('assets/fonts/krutoiFont/krutoi.xml'),
 	},
 	goldBlur: {
 		type: 'font',
-		src: new URL('../../assets/fonts/goldBlur/miningfont_gold_blur.xml', import.meta.url).href,
+		src: assetUrl('assets/fonts/goldBlur/miningfont_gold_blur.xml'),
 	},
 	silverFont: {
 		type: 'font',
-		src: new URL('../../assets/fonts/silverFont/mm_silver.xml', import.meta.url).href,
+		src: assetUrl('assets/fonts/silverFont/mm_silver.xml'),
 	},
 	purpleFont: {
 		type: 'font',
-		src: new URL('../../assets/fonts/purpleFont/mm_purple.xml', import.meta.url).href,
+		src: assetUrl('assets/fonts/purpleFont/mm_purple.xml'),
 	},
 	bigwin: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/bigwin/big_wins.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/bigwin/mm_bigwin.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/bigwin/big_wins.atlas'),
+			skeleton: assetUrl('assets/spines/bigwin/mm_bigwin.json'),
 			scale: 2,
 		},
 	},
 	globalMultiplier: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/globalMultiplier/multiframe.atlas', import.meta.url).href,
+			atlas: assetUrl('assets/spines/globalMultiplier/multiframe.atlas'),
 			skeleton: new URL('../../assets/spines/globalMultiplier/multiframe.json', import.meta.url)
 				.href,
 			scale: 2,
@@ -291,39 +295,39 @@ export default {
 	fsIntro: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/fsIntro/fs_screen.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/fsIntro/fs_screen.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/fsIntro/fs_screen.atlas'),
+			skeleton: assetUrl('assets/spines/fsIntro/fs_screen.json'),
 			scale: 2,
 		},
 	},
 	fsIntroNumber: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/fsIntro/fs_screen.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/fsIntro/fs_screen_number.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/fsIntro/fs_screen.atlas'),
+			skeleton: assetUrl('assets/spines/fsIntro/fs_screen_number.json'),
 			scale: 2,
 		},
 	},
 	fsOutroNumber: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/fsIntro/fs_screen.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/fsIntro/fs_total_number.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/fsIntro/fs_screen.atlas'),
+			skeleton: assetUrl('assets/spines/fsIntro/fs_total_number.json'),
 			scale: 2,
 		},
 	},
 	fsPopup: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/fsPopup/fs_popup.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/fsPopup/fs_popup.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/fsPopup/fs_popup.atlas'),
+			skeleton: assetUrl('assets/spines/fsPopup/fs_popup.json'),
 			scale: 2,
 		},
 	},
 	tumble_multiplier: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/tumbleWin/tumble_win.atlas', import.meta.url).href,
+			atlas: assetUrl('assets/spines/tumbleWin/tumble_win.atlas'),
 			skeleton: new URL('../../assets/spines/tumbleWin/tumble_multiplier.json', import.meta.url)
 				.href,
 			scale: 2,
@@ -332,39 +336,39 @@ export default {
 	tumble_win: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/tumbleWin/tumble_win.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/tumbleWin/tumble_win.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/tumbleWin/tumble_win.atlas'),
+			skeleton: assetUrl('assets/spines/tumbleWin/tumble_win.json'),
 			scale: 2,
 		},
 	},
 	reelhouse: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/reelhouse/reelhouse_glow.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/reelhouse/reelhouse_glow.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/reelhouse/reelhouse_glow.atlas'),
+			skeleton: assetUrl('assets/spines/reelhouse/reelhouse_glow.json'),
 			scale: 2,
 		},
 	},
 	progressBar: {
 		type: 'sprites',
-		src: new URL('../../assets/sprites/progressBar/progressBar.json', import.meta.url).href,
+		src: assetUrl('assets/sprites/progressBar/progressBar.json'),
 		preload: true,
 	},
 	freeSpins: {
 		type: 'sprites',
-		src: new URL('../../assets/sprites/freeSpins/freeSpins.json', import.meta.url).href,
+		src: assetUrl('assets/sprites/freeSpins/freeSpins.json'),
 	},
 	fsCongBoard: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/fsCong/fs_cong.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/fsCong/fs_cong.png'),
 	},
 	fsCongNumber: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/fsCong/10_fs_cong_table.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/fsCong/10_fs_cong_table.png'),
 	},
 	fsLeftCounter: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/fsLeftCounter/fs_left_counter.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/fsLeftCounter/fs_left_counter.png'),
 	},
 	winSmall: {
 		type: 'sprites',
@@ -374,74 +378,74 @@ export default {
 	clusterWin: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/clusterWin/clusterpay.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/clusterWin/clusterpay.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/clusterWin/clusterpay.atlas'),
+			skeleton: assetUrl('assets/spines/clusterWin/clusterpay.json'),
 			scale: 2,
 		},
 	},
 	transition: {
 		type: 'spine',
 		src: {
-			atlas: new URL('../../assets/spines/transition/transition.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/transition/transition.json', import.meta.url).href,
+			atlas: assetUrl('assets/spines/transition/transition.atlas'),
+			skeleton: assetUrl('assets/spines/transition/transition.json'),
 			scale: 2,
 		},
 	},
 	symbolsStatic: {
 		type: 'sprites',
-		src: new URL('../../assets/sprites/symbolsStatic/symbolsStatic.json', import.meta.url).href,
+		src: assetUrl('assets/sprites/symbolsStatic/symbolsStatic.json'),
 	},
 	coins: {
 		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/coin/SD2_Coin.json', import.meta.url).href,
+		src: assetUrl('assets/sprites/coin/SD2_Coin.json'),
 	},
 	sound: {
 		type: 'audio',
-		src: new URL('../../assets/audio/sounds.json', import.meta.url).href,
+		src: assetUrl('assets/audio/sounds.json'),
 		preload: true,
 	},
 	betPlus: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/ui/bet/plus.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/ui/bet/plus.png'),
 	},
 	betMinus: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/ui/bet/minus.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/ui/bet/minus.png'),
 	},
 	autoplayButton: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/ui/autoplay/autoplay.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/ui/autoplay/autoplay.png'),
 	},
 	autoplayMobileButton: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/ui/autoplay/autoplay_mobile.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/ui/autoplay/autoplay_mobile.png'),
 	},
 	spin1: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/ui/spin/spin_1.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/ui/spin/spin_1.png'),
 	},
 	spin2: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/ui/spin/spin_2.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/ui/spin/spin_2.png'),
 	},
 	menuButton: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/ui/menu/menu.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/ui/menu/menu.png'),
 	},
 	infoButton: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/ui/info/info.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/ui/info/info.png'),
 	},
 	turbo1: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/ui/turbo/turbo_1.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/ui/turbo/turbo_1.png'),
 	},
 	turbo2: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/ui/turbo/turbo_2.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/ui/turbo/turbo_2.png'),
 	},
 	turbo3: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/ui/turbo/turbo_3.png', import.meta.url).href,
+		src: assetUrl('assets/sprites/ui/turbo/turbo_3.png'),
 	},
 } as const;
