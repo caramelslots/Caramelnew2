@@ -22,9 +22,12 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 	async function spin<RevealEvent extends BaseRevealEvent>({
 		revealEvent,
 		paddingBoard,
+		frozenReelIndices = [],
 	}: {
 		revealEvent: RevealEvent;
 		paddingBoard?: TRawSymbol[][];
+		/** Reel indices that must not spin this round (e.g. frozen Mystery reels). */
+		frozenReelIndices?: number[];
 	}) {
 		if (stateSlots.isPreSpinning) {
 			await Promise.all(
@@ -52,6 +55,9 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 		};
 
 		board.reduce((previousPaddingSize, reel, reelIndex) => {
+			// Frozen reels (e.g. Mystery reels after first reveal) stay in place.
+			if (frozenReelIndices.includes(reelIndex)) return previousPaddingSize;
+
 			const noStop = globalHasAnticipation && reelIndex >= firstAnticipatedReelIndex;
 			const isAnticipated = (revealEvent.anticipation?.[reelIndex] || 0) > 0;
 			const spinType = getSpinType({ noStop, isAnticipated });
@@ -87,10 +93,16 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 			(reel) => reel.reelState.spinOptions().reelPreSpinHoldRotations !== undefined,
 		);
 		if (useParallelHandoff) {
-			await Promise.all(board.map((reel) => reel.spin()));
+			await Promise.all(
+				board.map((reel, reelIndex) => {
+					if (frozenReelIndices.includes(reelIndex)) return Promise.resolve();
+					return reel.spin();
+				}),
+			);
 		} else {
 			const spinPromises: Promise<void>[] = [];
 			for (let reelIndex = 0; reelIndex < board.length; reelIndex++) {
+				if (frozenReelIndices.includes(reelIndex)) continue;
 				spinPromises.push(board[reelIndex].spin());
 				if (reelIndex < board.length - 1) {
 					await waitForAnimationFrame();

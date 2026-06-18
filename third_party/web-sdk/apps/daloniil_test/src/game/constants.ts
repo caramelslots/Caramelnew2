@@ -997,6 +997,23 @@ export const MYSTERY_REVEAL_SPINE = {
 	sizeRatios: mRevealSizeRatios,
 };
 
+/** Full duration of `Mystery/explosion` in seconds — used for reverse (collapse) timing. */
+export const MYSTERY_EXPLOSION_DURATION_S = 2.0;
+
+/**
+ * Spine descriptor for the collapse-back-to-? animation.
+ * Same skeleton and clip as the reveal, but `reverseAnimation: true` signals
+ * SymbolSpineMain to pass `reverse={true}` to SpineTrack so Spine plays the
+ * explosion backward (from opened state back to the `?` box).
+ */
+export const MYSTERY_COLLAPSE_SPINE = {
+	type: 'spine' as const,
+	assetKey: 'M' as const,
+	animationName: MYSTERY_REVEAL_ANIMATION,
+	sizeRatios: mRevealSizeRatios,
+	reverseAnimation: true as const,
+};
+
 export const SCATTER_LAND_SOUND_MAP = {
 	1: 'sfx_scatter_stop_1',
 	2: 'sfx_scatter_stop_2',

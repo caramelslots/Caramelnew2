@@ -26,6 +26,12 @@
 			if (track) spine.state.setEmptyAnimation(track.trackIndex, 0);
 			try {
 				track = spine.state.setAnimation(props.trackIndex, props.animationName, props.loop);
+				// Set `reverse` synchronously — propsSyncEffect runs after this effect,
+				// but Pixi's ticker may fire between microtask batches. Applying it here
+				// guarantees the very first rendered frame already plays backward.
+				if (props.reverse && track) {
+					track.reverse = true;
+				}
 				// When the parent Spine is frozen (autoUpdate === false, e.g. a
 				// zero-movement idle pose), the Pixi ticker will not advance the
 				// skeleton, so the newly-set animation would never be applied.

@@ -173,7 +173,12 @@
 				// Container win bounce completes via `runWinBounce` — don't fire
 				// from the spine idle mount oncomplete.
 				if (state === 'win' && !usesDedicatedSpineWin) return;
-				if (state === 'win' || state === 'mysteryReveal' || state === 'land') {
+				if (
+					state === 'win' ||
+					state === 'mysteryReveal' ||
+					state === 'mysteryCollapse' ||
+					state === 'land'
+				) {
 					props.reelSymbol.oncomplete();
 				}
 				if (state === 'land') props.reelSymbol.symbolState = 'static';

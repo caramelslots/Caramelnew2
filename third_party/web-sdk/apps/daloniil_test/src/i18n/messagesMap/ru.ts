@@ -26,6 +26,7 @@ export default {
 	SPECIAL_SPINS_DESC: 'Игроки могут активировать Special Spins за ×30.',
 	SPECIAL_SPINS_COST: '{cost} за вращение',
 	RTP_LABEL: 'RTP',
+	FS_COUNTER_LABEL: 'ФРИСПИН',
 	FS_REMAINING: 'ФРИСПИНЫ',
 	PROGRESS_LADDER: 'ПРОГРЕСС',
 	BONUS_COLLECTED: 'СОБРАНО БОНУСОВ',

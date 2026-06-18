@@ -10,6 +10,7 @@ import {
 	BOARD_DIMENSIONS,
 	MYSTERY_REVEAL_ANIMATION,
 	MYSTERY_REVEAL_SYNC_ANIMATION,
+	MYSTERY_COLLAPSE_SPINE,
 	M_SIZE,
 } from './constants';
 import { eventEmitter } from './eventEmitter';
@@ -127,6 +128,9 @@ export const getSymbolInfo = ({
 		return getMysteryRevealSymbolInfo(rawSymbol.mysteryRevealTo, {
 			syncAnimation: rawSymbol.mysteryRevealSync,
 		});
+	}
+	if (rawSymbol.name === 'M' && state === 'mysteryCollapse') {
+		return MYSTERY_COLLAPSE_SPINE;
 	}
 	return SYMBOL_INFO_MAP[rawSymbol.name][state];
 };

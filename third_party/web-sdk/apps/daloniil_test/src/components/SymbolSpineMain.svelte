@@ -21,6 +21,12 @@
 	// resting/scrolling B/M cell, which is pure waste. Animated clips
 	// (bounce/wave/win/explosion) keep autoUpdate=true.
 	const autoUpdate = $derived(!props.symbolInfo.animationName?.endsWith('/idle'));
+
+	// `reverseAnimation` on the descriptor signals that this clip should play
+	// backward (e.g. Mystery collapse: explosion in reverse → back to ? box).
+	const reverseAnimation = $derived(
+		'reverseAnimation' in props.symbolInfo && props.symbolInfo.reverseAnimation === true,
+	);
 </script>
 
 <SpineProvider
@@ -35,6 +41,7 @@
 		trackIndex={0}
 		animationName={props.symbolInfo.animationName}
 		timeScale={stateBetDerived.timeScale()}
+		reverse={reverseAnimation}
 		listener={props.listener}
 	/>
 </SpineProvider>

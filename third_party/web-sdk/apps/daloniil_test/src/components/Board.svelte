@@ -21,19 +21,25 @@
 				symbolPositions: Position[];
 				revealedSymbol: SymbolName;
 		  }
-		| {
-				type: 'boardMysteryRevealBatch';
-				reveals: MysteryRevealItem[];
-				syncAnimation: boolean;
-		  };
+	| {
+			type: 'boardMysteryRevealBatch';
+			reveals: MysteryRevealItem[];
+			syncAnimation: boolean;
+	  }
+	| {
+			/** Collapse (reverse explosion) for mystery reels that revealed on the
+			 *  previous spin. Fired fire-and-forget at the start of the next spin. */
+			type: 'boardMysteryCollapseReels';
+			reelIndices: number[];
+	  };
 </script>
 
 <script lang="ts">
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 
-	import { MYSTERY_REVEAL_POST_DELAY_MS } from '../game/constants';
-
+	import { MYSTERY_EXPLOSION_DURATION_S } from '../game/constants';
 	import { getContext } from '../game/context';
+	import { freezeMysteryReel } from '../game/mysteryReel';
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardMask from './BoardMask.svelte';
 	import BoardBase from './BoardBase.svelte';
@@ -43,7 +49,7 @@
 
 	let show = $state(true);
 
-	type MysteryCell = { reelSymbol: ReelSymbol; revealedSymbol: SymbolName };
+	type MysteryCell = { reelSymbol: ReelSymbol; revealedSymbol: SymbolName; reelIndex: number };
 
 	const runMysteryRevealBatch = async ({
 		reveals,
@@ -64,10 +70,11 @@
 					mysteryRevealSync: syncAnimation,
 				};
 				reelSymbol.symbolState = 'mysteryReveal';
-				cells.push({ reelSymbol, revealedSymbol });
+				cells.push({ reelSymbol, revealedSymbol, reelIndex: position.reel });
 			}
 		}
 
+		// Phase 1: wait for the explosion animation to complete on all cells.
 		await Promise.all(
 			cells.map(
 				({ reelSymbol }) =>
@@ -77,6 +84,7 @@
 			),
 		);
 
+		// Phase 2: show the revealed symbol (land → static).
 		await Promise.all(
 			cells.map(async ({ reelSymbol, revealedSymbol }) => {
 				reelSymbol.rawSymbol = toRevealedRawSymbol(revealedSymbol);
@@ -86,7 +94,9 @@
 			}),
 		);
 
-		await waitForTimeout(MYSTERY_REVEAL_POST_DELAY_MS);
+		// Mystery symbol stays open (showing the revealed value) until the next
+		// spin starts. The collapse back to ? is triggered concurrently with the
+		// next reel scroll via the boardMysteryCollapseReels event.
 	};
 
 	context.eventEmitter.subscribeOnMount({
@@ -113,6 +123,35 @@
 		},
 		boardMysteryRevealBatch: async ({ reveals, syncAnimation }) => {
 			await runMysteryRevealBatch({ reveals, syncAnimation });
+		},
+		boardMysteryCollapseReels: async ({ reelIndices }) => {
+			// Collect all visible cells for each pending-collapse reel.
+			const cells: { reelSymbol: ReelSymbol; reelIndex: number }[] = [];
+			for (const reelIndex of reelIndices) {
+				const reel = context.stateGame.board[reelIndex];
+				for (let row = 0; row < reel.reelLength; row++) {
+					cells.push({ reelSymbol: reel.reelState.symbols[row], reelIndex });
+				}
+			}
+
+			// Transition cells to the reverse-explosion (collapse) animation.
+			for (const { reelSymbol } of cells) {
+				reelSymbol.rawSymbol = { name: 'M' };
+				reelSymbol.symbolState = 'mysteryCollapse';
+			}
+
+			// Play only the first half of the reverse animation, then snap to static.
+			await waitForTimeout(Math.round(MYSTERY_EXPLOSION_DURATION_S * 500));
+
+			// Snap to static Mystery/? and permanently freeze the reel.
+			const frozenSet = new Set<number>();
+			for (const { reelSymbol, reelIndex } of cells) {
+				reelSymbol.symbolState = 'static';
+				frozenSet.add(reelIndex);
+			}
+			for (const reelIndex of frozenSet) {
+				freezeMysteryReel(reelIndex);
+			}
 		},
 	});
 

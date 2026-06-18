@@ -164,6 +164,11 @@ export const stateGame = $state({
 	ladderTier: 0,
 	// Индексы барабанов с активным Sticky Mystery (для FS).
 	mysteryReels: [] as number[],
+	// Барабаны, которые уже прошли первый reveal и заморожены (показывают ?).
+	mysteryReelsFrozen: [] as number[],
+	// Барабаны, у которых reveal сыграл и ждёт схлопывания обратно к ?.
+	// Record<reelIndex, revealedSymbol>
+	mysteryReelsPendingCollapse: {} as Record<number, string>,
 	// Bonus Boost / Special Spins state (для autoplay).
 	activeFeature: null as 'bonus_boost' | 'special_spins' | null,
 	// Скорость игры (1 = normal, 2 = fast, 3 = ultra-fast) для меню Информация.

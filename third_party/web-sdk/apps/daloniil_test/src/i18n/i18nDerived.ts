@@ -44,6 +44,7 @@ export const i18nDerived = {
 	featurePerSpinCost: (cost: string) => `${cost} ${t('PER_SPIN_SUFFIX')}`,
 	rtpLabel: () => t('RTP_LABEL'),
 	// Free Spins
+	fsCounterLabel: () => t('FS_COUNTER_LABEL'),
 	fsRemaining: () => t('FS_REMAINING'),
 	progressLadder: () => t('PROGRESS_LADDER'),
 	bonusCollected: () => t('BONUS_COLLECTED'),

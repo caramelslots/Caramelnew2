@@ -12,6 +12,11 @@ import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEv
 import type { Position } from './types';
 import config from './config';
 import {
+	resetMysteryReelSession,
+	markMysteryReelPendingCollapse,
+	getMysteryReelsPendingCollapseIndices,
+} from './mysteryReel';
+import {
 	WIN_INFO_PRE_DELAY_MS,
 	BONUS_WIN_PRE_DELAY_MS,
 	BONUS_WIN_POST_DELAY_MS,
@@ -116,10 +121,24 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			stateGameDerived.enhancedBoard.settle(settledBoard);
 		}
 
+		// Reels that revealed on the previous spin are still showing the revealed
+		// symbol. Kick off their collapse animation fire-and-forget so it plays
+		// concurrently with the new spin, then skip them from the spin itself.
+		const pendingCollapseReels = getMysteryReelsPendingCollapseIndices();
+		if (pendingCollapseReels.length > 0) {
+			eventEmitter.broadcast({
+				type: 'boardMysteryCollapseReels',
+				reelIndices: pendingCollapseReels,
+			});
+		}
+
 		// Full reel scroll starts here once RGS has returned the result board.
+		// Frozen Mystery reels don't spin — they stay showing ? until FS ends.
+		// Pending-collapse reels are also skipped: the collapse handles their display.
 		await stateGameDerived.enhancedBoard.spin({
 			revealEvent: bookEvent,
 			paddingBoard: config.paddingReels[bookEvent.gameType],
+			frozenReelIndices: [...stateGame.mysteryReelsFrozen, ...pendingCollapseReels],
 		});
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
 	},
@@ -174,6 +193,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.ladderTier = 0;
 		stateGame.mysteryReels = [];
 		stateGame.ladderVisible = false;
+		resetMysteryReelSession();
 		// Math emits `bonusCollect` immediately before `freeSpinTrigger` when
 		// 3+ B land on the trigger board. Skip the duplicate paw-wave on old
 		// books that only carry positions on this event.
@@ -227,6 +247,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.ladderTier = 0;
 		stateGame.mysteryReels = [];
 		stateGame.ladderVisible = false;
+		resetMysteryReelSession();
 
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		eventEmitter.broadcast({ type: 'boardFrameGlowHide' });
@@ -363,19 +384,26 @@ export const playMysteryRevealBatch = async (bookEvents: BookEventOfType<'myster
 		syncAnimation,
 	});
 
+	// Board.svelte's runMysteryRevealBatch has finished: cells are now showing
+	// the revealed symbol (static). Mark each reel as pending-collapse so the
+	// next reveal handler fires the reverse-explosion concurrently with the spin.
 	for (const bookEvent of bookEvents) {
-		const revealedRaw = toRevealedRawSymbol(bookEvent.revealedSymbol);
+		const reelIndex = bookEvent.positions[0]?.reel;
+		if (reelIndex !== undefined) {
+			markMysteryReelPendingCollapse(reelIndex, bookEvent.revealedSymbol);
+		}
+
 		for (const pos of bookEvent.positions) {
 			const reelSymbol = stateGame.board[pos.reel]?.reelState.symbols[pos.row];
 			if (!reelSymbol) continue;
-			reelSymbol.rawSymbol = revealedRaw;
+			// Keep showing the revealed symbol until the collapse fires.
+			reelSymbol.rawSymbol = toRevealedRawSymbol(bookEvent.revealedSymbol);
 			reelSymbol.symbolState = 'static';
 		}
 	}
 
-	// Mystery reveal updates reelSymbol.rawSymbol in place, but the reel
-	// engine's prev/target arrays still hold the pre-reveal M stack. The
-	// next preSpin scrolls those stale symbols back through the column.
+	// Sync the reel engine's prev/target arrays with the current board so the
+	// next spin's padding pool starts from the correct symbols.
 	const settledBoard = stateGame.board.map((reel) =>
 		reel.reelState.symbols.slice(0, reel.reelLength).map(({ rawSymbol }) => ({ ...rawSymbol })),
 	);

@@ -11,7 +11,7 @@
 
 	import { getContext } from '../game/context';
 	import { BITMAP_FONT_SCALE, FONT_PROSTOI, SYMBOL_SIZE } from '../game/constants';
-	import { BitmapText, Sprite } from 'pixi-svelte';
+	import { anchorToPivot, BitmapText, Container, Sprite, type Sizes } from 'pixi-svelte';
 
 	const context = getContext();
 	const PANEL_RATIO = 1233 / 613;
@@ -34,10 +34,19 @@
 
 	const fontSize = SYMBOL_SIZE * 0.28 * BITMAP_FONT_SCALE;
 	const counterText = $derived(`${current} OF ${total}`);
+	const titleText = $derived(context.i18nDerived.fsCounterLabel());
 
 	let show = $state(false);
 	let current = $state(0);
 	let total = $state(0);
+	let titleSizes: Sizes = $state({ width: 0, height: 0 });
+	let counterSizes: Sizes = $state({ width: 0, height: 0 });
+
+	const textContainerSizes = $derived({
+		width: titleSizes.width,
+		height: titleSizes.height + counterSizes.height,
+	});
+	const counterPosition = $derived({ x: titleSizes.width / 2, y: titleSizes.height });
 
 	context.eventEmitter.subscribeOnMount({
 		freeSpinCounterShow: () => (show = true),
@@ -52,15 +61,33 @@
 <MainContainer>
 	<FadeContainer {show} {...position} {scale}>
 		<Sprite key="fsLeftCounter" {...panelSizes} />
-		<BitmapText
+		<Container
 			x={panelSizes.width * 0.5}
-			y={panelSizes.height * 0.52}
-			anchor={0.5}
-			text={counterText}
-			style={{
-				fontFamily: FONT_PROSTOI,
-				fontSize,
-			}}
-		/>
+			y={panelSizes.height * 0.45}
+			pivot={anchorToPivot({
+				sizes: textContainerSizes,
+				anchor: { x: 0.5, y: 0.5 },
+			})}
+		>
+			<BitmapText
+				text={titleText}
+				style={{
+					fontFamily: FONT_PROSTOI,
+					fontSize,
+					wordWrap: false,
+				}}
+				onresize={(sizes) => (titleSizes = sizes)}
+			/>
+			<BitmapText
+				text={counterText}
+				{...counterPosition}
+				anchor={{ x: 0.5, y: 0 }}
+				style={{
+					fontFamily: FONT_PROSTOI,
+					fontSize,
+				}}
+				onresize={(sizes) => (counterSizes = sizes)}
+			/>
+		</Container>
 	</FadeContainer>
 </MainContainer>
