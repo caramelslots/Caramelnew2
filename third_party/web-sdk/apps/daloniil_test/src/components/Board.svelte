@@ -35,9 +35,8 @@
 </script>
 
 <script lang="ts">
-	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
+	import { waitForResolve } from 'utils-shared/wait';
 
-	import { MYSTERY_EXPLOSION_DURATION_S } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { freezeMysteryReel } from '../game/mysteryReel';
 	import BoardContainer from './BoardContainer.svelte';
@@ -135,13 +134,21 @@
 			}
 
 			// Transition cells to the reverse-explosion (collapse) animation.
+			// animationEnd on the descriptor limits playback to the closing half only.
 			for (const { reelSymbol } of cells) {
 				reelSymbol.rawSymbol = { name: 'M' };
 				reelSymbol.symbolState = 'mysteryCollapse';
 			}
 
-			// Play only the first half of the reverse animation, then snap to static.
-			await waitForTimeout(Math.round(MYSTERY_EXPLOSION_DURATION_S * 500));
+			// Wait for the half-duration reverse animation to complete on every cell.
+			await Promise.all(
+				cells.map(
+					({ reelSymbol }) =>
+						new Promise<void>((resolve) => {
+							reelSymbol.oncomplete = resolve;
+						}),
+				),
+			);
 
 			// Snap to static Mystery/? and permanently freeze the reel.
 			const frozenSet = new Set<number>();

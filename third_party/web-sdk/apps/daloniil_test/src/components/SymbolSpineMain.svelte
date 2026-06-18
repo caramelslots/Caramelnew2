@@ -27,6 +27,12 @@
 	const reverseAnimation = $derived(
 		'reverseAnimation' in props.symbolInfo && props.symbolInfo.reverseAnimation === true,
 	);
+
+	// `animationEnd` on the descriptor limits the playback range (TrackEntry.animationEnd).
+	// For the reverse collapse we set it to duration/2 so only the closing half plays.
+	const animationEnd = $derived(
+		'animationEnd' in props.symbolInfo ? (props.symbolInfo.animationEnd as number) : undefined,
+	);
 </script>
 
 <SpineProvider
@@ -42,6 +48,7 @@
 		animationName={props.symbolInfo.animationName}
 		timeScale={stateBetDerived.timeScale()}
 		reverse={reverseAnimation}
+		animationEnd={animationEnd}
 		listener={props.listener}
 	/>
 </SpineProvider>

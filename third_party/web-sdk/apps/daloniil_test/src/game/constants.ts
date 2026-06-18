@@ -1002,9 +1002,9 @@ export const MYSTERY_EXPLOSION_DURATION_S = 2.0;
 
 /**
  * Spine descriptor for the collapse-back-to-? animation.
- * Same skeleton and clip as the reveal, but `reverseAnimation: true` signals
- * SymbolSpineMain to pass `reverse={true}` to SpineTrack so Spine plays the
- * explosion backward (from opened state back to the `?` box).
+ * `reverseAnimation: true` makes SpineTrack play the explosion backward.
+ * `animationEnd` limits the playback range to the second half of the clip
+ * (midpoint → 0), so only the "closing" phase is shown (~1 s instead of 2 s).
  */
 export const MYSTERY_COLLAPSE_SPINE = {
 	type: 'spine' as const,
@@ -1012,6 +1012,8 @@ export const MYSTERY_COLLAPSE_SPINE = {
 	animationName: MYSTERY_REVEAL_ANIMATION,
 	sizeRatios: mRevealSizeRatios,
 	reverseAnimation: true as const,
+	/** TrackEntry.animationEnd: reverse plays from this point back to 0. */
+	animationEnd: MYSTERY_EXPLOSION_DURATION_S / 2,
 };
 
 export const SCATTER_LAND_SOUND_MAP = {
