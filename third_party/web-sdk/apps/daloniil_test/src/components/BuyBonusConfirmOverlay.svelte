@@ -48,9 +48,6 @@
 	const cardTitle = $derived(
 		isSuper ? context.i18nDerived.superBonus() : context.i18nDerived.normalBonus(),
 	);
-	const description = $derived(
-		isSuper ? context.i18nDerived.buySuperDesc() : context.i18nDerived.buyNormalDesc(),
-	);
 
 	const goBack = () => {
 		stateModal.modal = { name: 'buyBonus' };
@@ -113,7 +110,21 @@
 						<img class="card-bg" src={cardUrl} alt="" draggable="false" />
 						<div class="card-content">
 							<h3 class="card-title">{cardTitle}</h3>
-							<p class="card-desc">{description}</p>
+							{#if isSuper}
+								<div class="card-desc card-desc-stacked">
+									<span class="desc-spin-count">{context.i18nDerived.buySuperDescCount()}</span>
+									<span class="desc-spin-label">{context.i18nDerived.buySuperDescSpins()}</span>
+									<span class="desc-divider" aria-hidden="true"></span>
+									<span class="desc-trigger">{context.i18nDerived.buySuperDescFeature()}</span>
+								</div>
+							{:else}
+								<div class="card-desc card-desc-stacked">
+									<span class="desc-spin-count">{context.i18nDerived.buyNormalDescCount()}</span>
+									<span class="desc-spin-label">{context.i18nDerived.buyNormalDescSpins()}</span>
+									<span class="desc-divider" aria-hidden="true"></span>
+									<span class="desc-trigger">{context.i18nDerived.buyNormalDescTrigger()}</span>
+								</div>
+							{/if}
 							<div class="card-price-wrap" style:background-image="url('{deskUrl}')">
 								<span class="card-price" data-test="buy-bonus-confirm-price">{price}</span>
 							</div>
@@ -166,8 +177,8 @@
 	}
 
 	.confirm-panel {
-		--panel-width: min(780px, 96vw);
-		--panel-height-scale: 1.24;
+		--panel-width: min(700px, 90vw);
+		--panel-height-scale: 1.32;
 		position: relative;
 		width: var(--panel-width);
 		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 98vh);
@@ -258,12 +269,9 @@
 		filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
 	}
 
-	.confirm-card.card-normal {
-		aspect-ratio: 541 / 799;
-	}
-
+	.confirm-card.card-normal,
 	.confirm-card.card-super {
-		aspect-ratio: 552 / 803;
+		aspect-ratio: 541 / 799;
 	}
 
 	.card-bg {
@@ -321,6 +329,54 @@
 		font-weight: 700;
 		text-transform: uppercase;
 		letter-spacing: 0.015em;
+		text-align: center;
+	}
+
+	.card .card-desc.card-desc-stacked {
+		top: 61%;
+		height: 18%;
+		flex-direction: column;
+		justify-content: flex-start;
+		align-items: center;
+		gap: calc(var(--panel-width) * 0.0015);
+		text-transform: uppercase;
+		font-size: inherit;
+	}
+
+	.card .card-desc.card-desc-stacked .desc-spin-count {
+		font-size: calc(var(--panel-width) * 0.086);
+		font-weight: 900;
+		line-height: 0.85;
+		letter-spacing: -0.02em;
+	}
+
+	.card .card-desc.card-desc-stacked .desc-spin-label {
+		font-size: calc(var(--panel-width) * 0.034);
+		font-weight: 800;
+		line-height: 1;
+		letter-spacing: 0.05em;
+	}
+
+	.card .card-desc.card-desc-stacked .desc-divider {
+		width: 76%;
+		height: max(1px, calc(var(--panel-width) * 0.0028));
+		margin: calc(var(--panel-width) * 0.002) 0 calc(var(--panel-width) * 0.001);
+		background: currentColor;
+		opacity: 0.9;
+	}
+
+	.card .card-desc.card-desc-stacked .desc-trigger {
+		width: 100%;
+		max-width: 100%;
+		font-size: calc(var(--panel-width) * 0.019);
+		font-weight: 700;
+		line-height: 1.1;
+		letter-spacing: 0.02em;
+		white-space: nowrap;
+		min-height: calc(var(--panel-width) * 0.024);
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		text-align: center;
 	}
 
@@ -466,11 +522,6 @@
 			font-size: calc(var(--panel-width) * 0.022);
 		}
 
-		.card-desc {
-			top: 58%;
-			font-size: calc(var(--panel-width) * 0.016);
-		}
-
 		.card-price-wrap {
 			top: 74%;
 			height: 11%;
@@ -495,7 +546,7 @@
 
 	/* Portrait */
 	.confirm-panel.portrait:not(.popout-l):not(.popout-s) {
-		--panel-height-scale: 1.24;
+		--panel-height-scale: 1.32;
 		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
 
 		.panel-bg {
@@ -535,10 +586,6 @@
 			font-size: calc(var(--panel-width) * 0.028);
 		}
 
-		.card-desc {
-			font-size: calc(var(--panel-width) * 0.02);
-		}
-
 		.card-price {
 			font-size: calc(var(--panel-width) * 0.032);
 		}
@@ -557,8 +604,8 @@
 
 	/* Popout L */
 	.confirm-panel.popout-l {
-		--panel-width: min(520px, 90vw);
-		--panel-height-scale: 1.2;
+		--panel-width: min(470px, 86vw);
+		--panel-height-scale: 1.28;
 		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
 		filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.6));
 
@@ -586,8 +633,8 @@
 
 	/* Popout S */
 	.confirm-panel.popout-s {
-		--panel-width: min(360px, 94vw);
-		--panel-height-scale: 1.18;
+		--panel-width: min(240px, 86vw);
+		--panel-height-scale: 1.22;
 		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
 		filter: drop-shadow(0 8px 22px rgba(0, 0, 0, 0.55));
 
@@ -611,10 +658,6 @@
 
 		.card-title {
 			font-size: calc(var(--panel-width) * 0.026);
-		}
-
-		.card-desc {
-			font-size: calc(var(--panel-width) * 0.017);
 		}
 
 		.card-price {

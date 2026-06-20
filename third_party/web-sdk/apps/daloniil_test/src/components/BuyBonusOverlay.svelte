@@ -122,7 +122,12 @@
 						<img class="card-bg" src={normalCardUrl} alt="" draggable="false" />
 						<div class="card-content">
 							<div class="card-title">{context.i18nDerived.normalBonus()}</div>
-							<div class="card-desc">{context.i18nDerived.buyNormalDesc()}</div>
+							<div class="card-desc card-desc-stacked">
+								<span class="desc-spin-count">{context.i18nDerived.buyNormalDescCount()}</span>
+								<span class="desc-spin-label">{context.i18nDerived.buyNormalDescSpins()}</span>
+								<span class="desc-divider" aria-hidden="true"></span>
+								<span class="desc-trigger">{context.i18nDerived.buyNormalDescTrigger()}</span>
+							</div>
 							<div class="card-price-wrap" style:background-image="url('{deskLUrl}')">
 								<span class="card-price" data-test="bonus-price-normal">{normalPrice}</span>
 							</div>
@@ -142,7 +147,12 @@
 						<img class="card-bg" src={superCardUrl} alt="" draggable="false" />
 						<div class="card-content">
 							<div class="card-title">{context.i18nDerived.superBonus()}</div>
-							<div class="card-desc">{context.i18nDerived.buySuperDesc()}</div>
+							<div class="card-desc card-desc-stacked">
+								<span class="desc-spin-count">{context.i18nDerived.buySuperDescCount()}</span>
+								<span class="desc-spin-label">{context.i18nDerived.buySuperDescSpins()}</span>
+								<span class="desc-divider" aria-hidden="true"></span>
+								<span class="desc-trigger">{context.i18nDerived.buySuperDescFeature()}</span>
+							</div>
 							<div class="card-price-wrap" style:background-image="url('{deskRUrl}')">
 								<span class="card-price" data-test="bonus-price-super">{superPrice}</span>
 							</div>
@@ -193,8 +203,8 @@
 
 <style lang="scss">
 	.buy-bonus-panel {
-		--panel-width: min(780px, 96vw);
-		--panel-height-scale: 1.24;
+		--panel-width: min(700px, 90vw);
+		--panel-height-scale: 1.32;
 		position: relative;
 		z-index: 10;
 		width: var(--panel-width);
@@ -293,7 +303,7 @@
 		top: 24.2%;
 		left: 49%;
 		width: 80%;
-		height: 49%;
+		height: 46%;
 		transform: translateX(-50%);
 		display: flex;
 		justify-content: center;
@@ -304,7 +314,7 @@
 
 	.card {
 		position: relative;
-		height: 94%;
+		height: 91%;
 		width: auto;
 		flex: 0 1 auto;
 		min-width: 0;
@@ -334,12 +344,9 @@
 		}
 	}
 
-	.card-normal {
-		aspect-ratio: 541 / 799;
-	}
-
+	.card-normal,
 	.card-super {
-		aspect-ratio: 552 / 803;
+		aspect-ratio: 541 / 799;
 	}
 
 	.card-bg {
@@ -399,6 +406,54 @@
 		text-align: center;
 	}
 
+	.card .card-desc.card-desc-stacked {
+		top: 61%;
+		height: 18%;
+		flex-direction: column;
+		justify-content: flex-start;
+		align-items: center;
+		gap: calc(var(--panel-width) * 0.0015);
+		text-transform: uppercase;
+		font-size: inherit;
+	}
+
+	.card .card-desc.card-desc-stacked .desc-spin-count {
+		font-size: calc(var(--panel-width) * 0.086);
+		font-weight: 900;
+		line-height: 0.85;
+		letter-spacing: -0.02em;
+	}
+
+	.card .card-desc.card-desc-stacked .desc-spin-label {
+		font-size: calc(var(--panel-width) * 0.034);
+		font-weight: 800;
+		line-height: 1;
+		letter-spacing: 0.05em;
+	}
+
+	.card .card-desc.card-desc-stacked .desc-divider {
+		width: 76%;
+		height: max(1px, calc(var(--panel-width) * 0.0028));
+		margin: calc(var(--panel-width) * 0.002) 0 calc(var(--panel-width) * 0.001);
+		background: currentColor;
+		opacity: 0.9;
+	}
+
+	.card .card-desc.card-desc-stacked .desc-trigger {
+		width: 100%;
+		max-width: 100%;
+		font-size: calc(var(--panel-width) * 0.019);
+		font-weight: 700;
+		line-height: 1.1;
+		letter-spacing: 0.02em;
+		white-space: nowrap;
+		min-height: calc(var(--panel-width) * 0.024);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+	}
+
 	.card-normal .card-desc {
 		color: #4a3020;
 		text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
@@ -411,11 +466,11 @@
 
 	.card-price-wrap {
 		position: absolute;
-		top: 68%;
+		top: 80%;
 		left: 50%;
 		transform: translateX(-50%);
-		width: 72%;
-		height: 9%;
+		width: 108%;
+		height: 14%;
 		background-size: 100% 100%;
 		background-repeat: no-repeat;
 		background-position: center;
@@ -426,7 +481,7 @@
 
 	.card-price {
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.024);
+		font-size: calc(var(--panel-width) * 0.028);
 		font-weight: 900;
 		letter-spacing: 0.01em;
 		text-align: center;
@@ -445,17 +500,17 @@
 
 	.buy-button {
 		position: absolute;
-		top: 79%;
+		top: 94%;
 		left: 50%;
 		transform: translateX(-50%);
-		width: 62%;
+		width: 50%;
 		height: 10%;
-		padding: 5% 0 0 0;
+		padding: 4.5% 0 0 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.022);
+		font-size: calc(var(--panel-width) * 0.024);
 		font-weight: 900;
 		letter-spacing: 0.06em;
 		border: 0;
@@ -550,7 +605,7 @@
 	.features-section :global(.feature-row.compact .feature-name),
 	.features-section :global(.feature-row .feature-name) {
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.024);
+		font-size: calc(var(--panel-width) * 0.026);
 		font-style: italic;
 		font-weight: 900;
 		text-transform: uppercase;
@@ -614,7 +669,7 @@
 
 	.bet-adjuster {
 		position: absolute;
-		top: 85.5%;
+		top: calc(85.5% - 2px);
 		left: 14%;
 		right: 14%;
 		height: 10%;
@@ -626,8 +681,8 @@
 	}
 
 	.bet-btn {
-		width: calc(var(--panel-width) * 0.082);
-		height: calc(var(--panel-width) * 0.082);
+		width: calc(var(--panel-width) * 0.118);
+		height: calc(var(--panel-width) * 0.118);
 		padding: 0;
 		border: 0;
 		background-color: transparent;
@@ -661,14 +716,15 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: calc(var(--panel-width) * 0.006);
+		gap: calc(var(--panel-width) * 0.004);
 		min-width: calc(var(--panel-width) * 0.28);
 	}
 
 	.bet-label {
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.022);
+		font-size: calc(var(--panel-width) * 0.026);
 		font-weight: 800;
+		line-height: 1;
 		color: #d4b44a;
 		letter-spacing: 0.08em;
 		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.75);
@@ -676,8 +732,10 @@
 
 	.bet-value {
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.03);
+		font-size: calc(var(--panel-width) * 0.036);
 		font-weight: 900;
+		line-height: 1;
+		margin-top: 0;
 		color: #fff;
 		text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
 	}
@@ -699,12 +757,12 @@
 			top: 24.5%;
 			left: 49%;
 			width: 79%;
-			height: 50%;
+			height: 46%;
 			gap: calc(var(--panel-width) * 0.012);
 		}
 
 		.card {
-			height: 94%;
+			height: 91%;
 		}
 
 		.card-content {
@@ -712,30 +770,25 @@
 			transform-origin: 50% 61%;
 		}
 
-		.card-desc {
-			top: 71%;
-			font-size: calc(var(--panel-width) * 0.018);
-		}
-
 		.card-price-wrap {
-			top: 87%;
-			height: 13%;
-			width: 90%;
+			top: 99%;
+			height: 18%;
+			width: 110%;
 		}
 
 		.card-price {
-			font-size: calc(var(--panel-width) * 0.028);
+			font-size: calc(var(--panel-width) * 0.033);
 		}
 
 		.buy-button {
-			top: 98%;
-			width: 90%;
-			height: 17%;
-			font-size: calc(var(--panel-width) * 0.024);
+			top: 112%;
+			width: 68%;
+			height: 18%;
+			font-size: calc(var(--panel-width) * 0.025);
 		}
 
 		.bet-adjuster {
-			top: 87%;
+			top: calc(87% - 2px);
 			left: 49%;
 			right: auto;
 			width: 72%;
@@ -745,21 +798,20 @@
 		}
 
 		.bet-btn {
-			width: calc(var(--panel-width) * 0.044);
-			height: calc(var(--panel-width) * 0.044);
+			width: calc(var(--panel-width) * 0.064);
+			height: calc(var(--panel-width) * 0.064);
 		}
 
 		.bet-display {
 			min-width: calc(var(--panel-width) * 0.18);
-			gap: calc(var(--panel-width) * 0.002);
 		}
 
 		.bet-label {
-			font-size: calc(var(--panel-width) * 0.015);
+			font-size: calc(var(--panel-width) * 0.019);
 		}
 
 		.bet-value {
-			font-size: calc(var(--panel-width) * 0.019);
+			font-size: calc(var(--panel-width) * 0.023);
 		}
 
 		.features-section {
@@ -819,7 +871,7 @@
 
 	/* Portrait mobile */
 	.buy-bonus-panel.portrait:not(.popout-l):not(.popout-s) {
-		--panel-height-scale: 1.24;
+		--panel-height-scale: 1.32;
 		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
 
 		.panel-bg {
@@ -852,12 +904,12 @@
 			top: 24.5%;
 			left: 49%;
 			width: 79%;
-			height: 50%;
+			height: 46%;
 			gap: calc(var(--panel-width) * 0.012);
 		}
 
 		.card {
-			height: 96%;
+			height: 91%;
 		}
 
 		.card-content {
@@ -870,30 +922,25 @@
 			font-size: calc(var(--panel-width) * 0.032);
 		}
 
-		.card-desc {
-			top: 71%;
-			font-size: calc(var(--panel-width) * 0.022);
-		}
-
 		.card-price-wrap {
-			top: 87%;
-			height: 13%;
-			width: 90%;
+			top: 99%;
+			height: 18%;
+			width: 110%;
 		}
 
 		.card-price {
-			font-size: calc(var(--panel-width) * 0.03);
+			font-size: calc(var(--panel-width) * 0.035);
 		}
 
 		.buy-button {
-			top: 98%;
-			width: 90%;
-			height: 17%;
-			font-size: calc(var(--panel-width) * 0.026);
+			top: 113%;
+			width: 68%;
+			height: 15%;
+			font-size: calc(var(--panel-width) * 0.028);
 		}
 
 		.bet-adjuster {
-			top: 87%;
+			top: calc(87% - 2px);
 			left: 49%;
 			right: auto;
 			width: 76%;
@@ -903,21 +950,20 @@
 		}
 
 		.bet-btn {
-			width: calc(var(--panel-width) * 0.062);
-			height: calc(var(--panel-width) * 0.062);
+			width: calc(var(--panel-width) * 0.09);
+			height: calc(var(--panel-width) * 0.09);
 		}
 
 		.bet-display {
 			min-width: calc(var(--panel-width) * 0.22);
-			gap: calc(var(--panel-width) * 0.003);
 		}
 
 		.bet-label {
-			font-size: calc(var(--panel-width) * 0.022);
+			font-size: calc(var(--panel-width) * 0.026);
 		}
 
 		.bet-value {
-			font-size: calc(var(--panel-width) * 0.028);
+			font-size: calc(var(--panel-width) * 0.033);
 		}
 
 		.features-section {
@@ -956,7 +1002,7 @@
 		}
 
 		.features-section :global(.feature-cost) {
-			font-size: calc(var(--panel-width) * 0.024);
+			font-size: calc(var(--panel-width) * 0.026);
 			line-height: 1.08;
 		}
 
@@ -983,8 +1029,8 @@
 
 	/* Stake popout L — 800×450 */
 	.buy-bonus-panel.popout-l {
-		--panel-width: min(520px, 90vw);
-		--panel-height-scale: 1.2;
+		--panel-width: min(470px, 86vw);
+		--panel-height-scale: 1.28;
 		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
 		filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.6));
 
@@ -1003,12 +1049,12 @@
 			top: 24.5%;
 			left: 49%;
 			width: 79%;
-			height: 50%;
+			height: 46%;
 			gap: calc(var(--panel-width) * 0.012);
 		}
 
 		.card {
-			height: 94%;
+			height: 91%;
 		}
 
 		.card-content {
@@ -1016,30 +1062,25 @@
 			transform-origin: 50% 61%;
 		}
 
-		.card-desc {
-			top: 71%;
-			font-size: calc(var(--panel-width) * 0.018);
-		}
-
 		.card-price-wrap {
-			top: 87%;
-			height: 13%;
-			width: 90%;
+			top: 99%;
+			height: 18%;
+			width: 110%;
 		}
 
 		.card-price {
-			font-size: calc(var(--panel-width) * 0.028);
+			font-size: calc(var(--panel-width) * 0.033);
 		}
 
 		.buy-button {
-			top: 98%;
-			width: 90%;
-			height: 17%;
-			font-size: calc(var(--panel-width) * 0.024);
+			top: 113%;
+			width: 68%;
+			height: 15%;
+			font-size: calc(var(--panel-width) * 0.025);
 		}
 
 		.bet-adjuster {
-			top: 87%;
+			top: calc(87% - 2px);
 			left: 49%;
 			right: auto;
 			width: 72%;
@@ -1049,21 +1090,20 @@
 		}
 
 		.bet-btn {
-			width: calc(var(--panel-width) * 0.044);
-			height: calc(var(--panel-width) * 0.044);
+			width: calc(var(--panel-width) * 0.064);
+			height: calc(var(--panel-width) * 0.064);
 		}
 
 		.bet-display {
 			min-width: calc(var(--panel-width) * 0.18);
-			gap: calc(var(--panel-width) * 0.002);
 		}
 
 		.bet-label {
-			font-size: calc(var(--panel-width) * 0.015);
+			font-size: calc(var(--panel-width) * 0.019);
 		}
 
 		.bet-value {
-			font-size: calc(var(--panel-width) * 0.019);
+			font-size: calc(var(--panel-width) * 0.023);
 		}
 
 		.features-section {
@@ -1123,8 +1163,8 @@
 
 	/* Stake popout S — 400×225 */
 	.buy-bonus-panel.popout-s {
-		--panel-width: min(265px, 92vw);
-		--panel-height-scale: 1.14;
+		--panel-width: min(240px, 86vw);
+		--panel-height-scale: 1.22;
 		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
 		filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55));
 
@@ -1141,12 +1181,12 @@
 			top: 24.1%;
 			left: 49.5%;
 			width: 82%;
-			height: 46%;
+			height: 43%;
 			gap: calc(var(--panel-width) * 0.01);
 		}
 
 		.card {
-			height: 92%;
+			height: 89%;
 		}
 
 		.card-content {
@@ -1154,19 +1194,15 @@
 		}
 
 		.card-title {
-			font-size: calc(var(--panel-width) * 0.024);
-		}
-
-		.card-desc {
-			font-size: calc(var(--panel-width) * 0.016);
+			font-size: calc(var(--panel-width) * 0.026);
 		}
 
 		.card-price {
-			font-size: calc(var(--panel-width) * 0.028);
+			font-size: calc(var(--panel-width) * 0.031);
 		}
 
 		.buy-button {
-			font-size: calc(var(--panel-width) * 0.018);
+			font-size: calc(var(--panel-width) * 0.021);
 		}
 
 		.features-section {
@@ -1177,8 +1213,8 @@
 		}
 
 		.features-section :global(.feature-cat-icon) {
-			width: calc(var(--panel-width) * 0.058);
-			height: calc(var(--panel-width) * 0.058);
+			width: calc(var(--panel-width) * 0.064);
+			height: calc(var(--panel-width) * 0.064);
 			transform: translateY(4%);
 		}
 
@@ -1192,7 +1228,7 @@
 		}
 
 		.features-section :global(.feature-cost) {
-			font-size: calc(var(--panel-width) * 0.024);
+			font-size: calc(var(--panel-width) * 0.026);
 		}
 
 		.features-section :global(.feature-toggle) {
@@ -1204,16 +1240,16 @@
 
 	@media (max-width: 600px) {
 		.buy-bonus-panel:not(.popout-l):not(.popout-s) {
-			--panel-width: min(540px, 98vw);
-			--panel-height-scale: 1.28;
+			--panel-width: min(480px, 94vw);
+			--panel-height-scale: 1.36;
 			height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
 		}
 	}
 
 	@media (max-height: 500px) {
 		.buy-bonus-panel:not(.popout-l):not(.popout-s):not(.portrait) {
-			--panel-width: min(390px, 62vw);
-			--panel-height-scale: 1.16;
+			--panel-width: min(360px, 58vw);
+			--panel-height-scale: 1.22;
 			height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
 		}
 	}
