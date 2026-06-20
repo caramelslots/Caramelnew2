@@ -564,10 +564,10 @@
 
 		.close-button {
 			position: absolute;
-			top: 82%;
+			top: 65%;
 			right: 7%;
-			width: calc(var(--panel-width) * 0.075);
-			height: calc(var(--panel-width) * 0.075);
+			width: calc(var(--panel-width) * 0.095);
+			height: calc(var(--panel-width) * 0.095);
 			margin: 0;
 		}
 
@@ -625,6 +625,23 @@
 			transform: scale(0.88);
 		}
 
+		.card .card-desc.card-desc-stacked {
+			height: 16%;
+		}
+
+		.card .card-desc.card-desc-stacked .desc-spin-count {
+			font-size: calc(var(--panel-width) * 0.074);
+		}
+
+		.card .card-desc.card-desc-stacked .desc-spin-label {
+			font-size: calc(var(--panel-width) * 0.028);
+		}
+
+		.card .card-desc.card-desc-stacked .desc-trigger {
+			font-size: calc(var(--panel-width) * 0.016);
+			min-height: calc(var(--panel-width) * 0.020);
+		}
+
 		.confirm-actions {
 			top: 82%;
 			height: 10%;
@@ -633,48 +650,65 @@
 
 	/* Popout S */
 	.confirm-panel.popout-s {
-		--panel-width: min(240px, 86vw);
-		--panel-height-scale: 1.22;
-		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
-		filter: drop-shadow(0 8px 22px rgba(0, 0, 0, 0.55));
+		--panel-width: min(240px, 60vw);
+		--panel-height-scale: 1.28;
+		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
+		filter: drop-shadow(0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.075) rgba(0, 0, 0, 0.55));
 
 		.close-button {
-			width: calc(var(--panel-width) * 0.09);
-			height: calc(var(--panel-width) * 0.09);
-			margin-top: calc(var(--panel-width) * 0.055);
-			margin-right: calc(var(--panel-width) * 0.025);
+			width: calc(var(--panel-width) * 0.085);
+			height: calc(var(--panel-width) * 0.085);
+			margin-top: calc(var(--panel-width) * 0.06);
+			margin-right: calc(var(--panel-width) * 0.03);
 		}
 
 		.confirm-card-section {
-			top: 23%;
-			width: 38%;
-			height: 42%;
+			top: 24%;
+			width: 32%;
+			height: 45%;
 		}
 
 		.card-content {
-			transform: scale(0.78);
-			transform-origin: 50% 58%;
+			transform: scale(0.88);
+			transform-origin: 50% 59%;
 		}
 
-		.card-title {
-			font-size: calc(var(--panel-width) * 0.026);
+		.card .card-desc.card-desc-stacked {
+			height: 16%;
 		}
 
-		.card-price {
+		.card .card-desc.card-desc-stacked .desc-spin-count {
+			font-size: calc(var(--panel-width) * 0.074);
+		}
+
+		.card .card-desc.card-desc-stacked .desc-spin-label {
 			font-size: calc(var(--panel-width) * 0.028);
 		}
 
-		.confirm-actions {
-			top: 80%;
-			left: 12%;
-			right: 12%;
+		.card .card-desc.card-desc-stacked .desc-trigger {
+			font-size: calc(var(--panel-width) * 0.016);
+			min-height: calc(var(--panel-width) * 0.020);
+		}
+
+		.card-price-wrap {
+			top: 74%;
 			height: 11%;
-			gap: calc(var(--panel-width) * 0.015);
+			width: 82%;
+		}
+
+		.card-price {
+			font-size: calc(var(--panel-width) * 0.03);
+		}
+
+		.confirm-actions {
+			top: 83%;
+			left: 18%;
+			right: 18%;
+			height: 9%;
 		}
 
 		.action-btn {
-			font-size: calc(var(--panel-width) * 0.022);
-			padding-top: 10%;
+			font-size: calc(var(--panel-width) * 0.02);
 		}
 	}
 </style>

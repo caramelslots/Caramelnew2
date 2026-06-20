@@ -893,10 +893,10 @@
 
 		.close-button {
 			position: absolute;
-			top: 82%;
+			top: 35%;
 			right: 7%;
-			width: calc(var(--panel-width) * 0.075);
-			height: calc(var(--panel-width) * 0.075);
+			width: calc(var(--panel-width) * 0.095);
+			height: calc(var(--panel-width) * 0.095);
 			margin: 0;
 		}
 
@@ -922,21 +922,39 @@
 			font-size: calc(var(--panel-width) * 0.032);
 		}
 
+		.card .card-desc.card-desc-stacked {
+			top: 66%;
+			height: 22%;
+		}
+
+		.card .card-desc.card-desc-stacked .desc-spin-count {
+			font-size: calc(var(--panel-width) * 0.112);
+		}
+
+		.card .card-desc.card-desc-stacked .desc-spin-label {
+			font-size: calc(var(--panel-width) * 0.045);
+		}
+
+		.card .card-desc.card-desc-stacked .desc-trigger {
+			font-size: calc(var(--panel-width) * 0.026);
+			min-height: calc(var(--panel-width) * 0.032);
+		}
+
 		.card-price-wrap {
-			top: 99%;
+			top: 105%;
 			height: 18%;
-			width: 110%;
+			width: 118%;
 		}
 
 		.card-price {
-			font-size: calc(var(--panel-width) * 0.035);
+			font-size: calc(var(--panel-width) * 0.042);
 		}
 
 		.buy-button {
-			top: 113%;
-			width: 68%;
-			height: 15%;
-			font-size: calc(var(--panel-width) * 0.028);
+			top: 120%;
+			width: 76%;
+			height: 19%;
+			font-size: calc(var(--panel-width) * 0.038);
 		}
 
 		.bet-adjuster {
@@ -1062,6 +1080,23 @@
 			transform-origin: 50% 61%;
 		}
 
+		.card .card-desc.card-desc-stacked {
+			height: 16%;
+		}
+
+		.card .card-desc.card-desc-stacked .desc-spin-count {
+			font-size: calc(var(--panel-width) * 0.074);
+		}
+
+		.card .card-desc.card-desc-stacked .desc-spin-label {
+			font-size: calc(var(--panel-width) * 0.028);
+		}
+
+		.card .card-desc.card-desc-stacked .desc-trigger {
+			font-size: calc(var(--panel-width) * 0.016);
+			min-height: calc(var(--panel-width) * 0.020);
+		}
+
 		.card-price-wrap {
 			top: 99%;
 			height: 18%;
@@ -1074,9 +1109,9 @@
 
 		.buy-button {
 			top: 113%;
-			width: 68%;
-			height: 15%;
-			font-size: calc(var(--panel-width) * 0.025);
+			width: 75%;
+			height: 18%;
+			font-size: calc(var(--panel-width) * 0.028);
 		}
 
 		.bet-adjuster {
@@ -1161,80 +1196,154 @@
 		}
 	}
 
-	/* Stake popout S — 400×225 */
+	/* Stake popout S — 400×225 (те же пропорции что popout L, меньший --panel-width) */
 	.buy-bonus-panel.popout-s {
-		--panel-width: min(240px, 86vw);
-		--panel-height-scale: 1.22;
-		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
-		filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55));
+		--panel-width: min(240px, 60vw);
+		--panel-height-scale: 1.28;
+		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
+		filter: drop-shadow(0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.075) rgba(0, 0, 0, 0.55));
 
 		.panel-title {
-			font-size: calc(var(--panel-width) * 0.058);
+			display: none;
 		}
 
 		.close-button {
-			width: calc(var(--panel-width) * 0.11);
-			height: calc(var(--panel-width) * 0.11);
+			width: calc(var(--panel-width) * 0.085);
+			height: calc(var(--panel-width) * 0.085);
+			margin-top: calc(var(--panel-width) * 0.06);
+			margin-right: calc(var(--panel-width) * 0.03);
 		}
 
 		.cards-section {
-			top: 24.1%;
-			left: 49.5%;
-			width: 82%;
-			height: 43%;
-			gap: calc(var(--panel-width) * 0.01);
+			top: 24.5%;
+			left: 49%;
+			width: 79%;
+			height: 46%;
+			gap: calc(var(--panel-width) * 0.012);
 		}
 
 		.card {
-			height: 89%;
+			height: 91%;
 		}
 
 		.card-content {
-			transform: scale(0.76);
+			transform: scale(0.8);
+			transform-origin: 50% 61%;
 		}
 
-		.card-title {
-			font-size: calc(var(--panel-width) * 0.026);
+		.card .card-desc.card-desc-stacked {
+			height: 16%;
+		}
+
+		.card .card-desc.card-desc-stacked .desc-spin-count {
+			font-size: calc(var(--panel-width) * 0.074);
+		}
+
+		.card .card-desc.card-desc-stacked .desc-spin-label {
+			font-size: calc(var(--panel-width) * 0.028);
+		}
+
+		.card .card-desc.card-desc-stacked .desc-trigger {
+			font-size: calc(var(--panel-width) * 0.016);
+			min-height: calc(var(--panel-width) * 0.020);
+		}
+
+		.card-price-wrap {
+			top: 99%;
+			height: 18%;
+			width: 110%;
 		}
 
 		.card-price {
-			font-size: calc(var(--panel-width) * 0.031);
+			font-size: calc(var(--panel-width) * 0.033);
 		}
 
 		.buy-button {
-			font-size: calc(var(--panel-width) * 0.021);
+			top: 113%;
+			width: 75%;
+			height: 18%;
+			font-size: calc(var(--panel-width) * 0.028);
+		}
+
+		.bet-adjuster {
+			top: 87%;
+			left: 49%;
+			right: auto;
+			width: 72%;
+			transform: translateX(-50%);
+			height: 6%;
+			gap: calc(var(--panel-width) * 0.014);
+		}
+
+		.bet-btn {
+			width: calc(var(--panel-width) * 0.064);
+			height: calc(var(--panel-width) * 0.064);
+		}
+
+		.bet-display {
+			min-width: calc(var(--panel-width) * 0.18);
+		}
+
+		.bet-label {
+			font-size: calc(var(--panel-width) * 0.019);
+		}
+
+		.bet-value {
+			font-size: calc(var(--panel-width) * 0.023);
 		}
 
 		.features-section {
-			top: 77.1%;
-			left: 17%;
-			right: 19.5%;
-			height: 5.2%;
+			top: 79.2%;
+			left: 22%;
+			right: 24.5%;
+			height: 5.4%;
+			padding: 0;
+		}
+
+		.features-section :global(.feature-row) {
+			height: 100%;
+			padding: 0 2.5% 0 2%;
+			grid-template-columns: 13% minmax(0, 1fr) auto;
 		}
 
 		.features-section :global(.feature-cat-icon) {
-			width: calc(var(--panel-width) * 0.064);
-			height: calc(var(--panel-width) * 0.064);
-			transform: translateY(4%);
+			width: calc(var(--panel-width) * 0.04);
+			height: calc(var(--panel-width) * 0.04);
+		}
+
+		.features-section :global(.feature-info) {
+			margin-left: calc(var(--panel-width) * 0.006);
+			gap: calc(var(--panel-width) * 0.001);
 		}
 
 		.features-section :global(.feature-row .feature-name) {
-			font-size: calc(var(--panel-width) * 0.03);
-		}
-
-		.features-section :global(.feature-row .feature-info) {
-			margin-left: calc(var(--panel-width) * 0.006);
-			gap: calc(var(--panel-width) * 0.003);
+			font-size: calc(var(--panel-width) * 0.021);
+			line-height: 1.08;
 		}
 
 		.features-section :global(.feature-cost) {
-			font-size: calc(var(--panel-width) * 0.026);
+			font-size: calc(var(--panel-width) * 0.0165);
+			line-height: 1.08;
 		}
 
 		.features-section :global(.feature-toggle) {
-			width: calc(var(--panel-width) * 0.072);
-			height: calc(var(--panel-width) * 0.038);
-			transform: translateY(3%);
+			width: calc(var(--panel-width) * 0.054);
+			height: calc(var(--panel-width) * 0.029);
+			margin-right: 0;
+		}
+
+		.features-section :global(.feature-toggle .knob) {
+			width: calc(var(--panel-width) * 0.023);
+			height: calc(var(--panel-width) * 0.023);
+			top: calc((var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2);
+			left: calc((var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2);
+		}
+
+		.features-section :global(.feature-toggle.on .knob) {
+			left: calc(
+				var(--panel-width) * 0.054 - var(--panel-width) * 0.023 -
+					(var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2
+			);
 		}
 	}
 
