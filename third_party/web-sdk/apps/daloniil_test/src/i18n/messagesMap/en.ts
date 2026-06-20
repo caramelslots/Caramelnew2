@@ -14,6 +14,8 @@ export default {
 	BUY_CANCEL: 'CANCEL',
 	BUY_BONUS_PANEL_BUTTON: 'Buy bonus',
 	BONUS_BOOST_PANEL_DESC: 'Increased bonus chance ×2',
+	// Settings menu
+	SETTINGS_MENU_TITLE: 'SETTINGS',
 	// Autoplay menu
 	AUTOPLAY_TITLE: 'Autoplay',
 	AUTOPLAY_FEATURES: 'Features',

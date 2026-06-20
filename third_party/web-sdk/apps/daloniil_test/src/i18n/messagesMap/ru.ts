@@ -12,6 +12,7 @@ export default {
 	BUY_CANCEL: 'ОТМЕНА',
 	BUY_BONUS_PANEL_BUTTON: 'КУПИТЬ БОНУС',
 	BONUS_BOOST_PANEL_DESC: 'шанс на бонус ×2 (свитч)',
+	SETTINGS_MENU_TITLE: 'НАСТРОЙКИ',
 	AUTOPLAY_TITLE: 'Автоигра',
 	AUTOPLAY_FEATURES: 'Функции',
 	AUTOPLAY_ROUNDS: 'Раунды',

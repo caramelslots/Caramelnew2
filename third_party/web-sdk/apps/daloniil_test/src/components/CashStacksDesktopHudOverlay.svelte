@@ -64,7 +64,7 @@
 	const layoutType = $derived(stateLayoutDerived.layoutType());
 	const isPopout = $derived(isPopoutViewport(stateLayoutDerived.canvasSizes()));
 	const isPopoutSmall = $derived(isPopoutSmallViewport(stateLayoutDerived.canvasSizes()));
-	const useDesktopHud = $derived(layoutType === 'desktop' || isPopout);
+	const useDesktopHud = $derived(layoutType !== 'portrait');
 	const isFreeSpins = $derived(
 		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
 	);
@@ -136,7 +136,7 @@
 
 	const onMenuPress = () => {
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
-		stateUi.menuOpen = true;
+		stateUi.menuOpen = !stateUi.menuOpen;
 	};
 
 	const onDecreasePress = () => {

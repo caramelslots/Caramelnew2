@@ -24,6 +24,8 @@ export const i18nDerived = {
 	buyCancel: () => t('BUY_CANCEL'),
 	buyBonusPanelButton: () => t('BUY_BONUS_PANEL_BUTTON'),
 	bonusBoostPanelDesc: () => t('BONUS_BOOST_PANEL_DESC'),
+	// Settings menu
+	settingsMenuTitle: () => t('SETTINGS_MENU_TITLE'),
 	// Autoplay
 	autoplayTitle: () => t('AUTOPLAY_TITLE'),
 	autoplayFeatures: () => t('AUTOPLAY_FEATURES'),

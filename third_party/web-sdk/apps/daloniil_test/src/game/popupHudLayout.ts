@@ -1,10 +1,7 @@
 import type { createLayout } from 'utils-layout';
 
 import { isPopoutSmallViewport, isPopoutViewport } from './constants';
-import {
-	computeDesktopHudLayout,
-	resolveDesktopHudConfig,
-} from './desktopHudLayout';
+import { computeDesktopHudLayout, resolveDesktopHudConfig } from './desktopHudLayout';
 import { computePortraitHudCanvas } from './portraitHudLayout';
 
 type LayoutDerived = ReturnType<typeof createLayout>['stateLayoutDerived'];
@@ -12,8 +9,17 @@ type LayoutDerived = ReturnType<typeof createLayout>['stateLayoutDerived'];
 /** Design reference at 1280×720 — popups stay compact, only shrink on narrow viewports. */
 const DESIGN_CANVAS_WIDTH = 1280;
 const AUTOPLAY_REF_WIDTH = 132;
-const MENU_REF_WIDTH = 126;
+const MENU_REF_WIDTH = 400;
 const GAP_ABOVE_BUTTON = 5;
+const MENU_PANEL_DROP = 98;
+const MENU_PANEL_DROP_POPOUT_S_FACTOR = 1.1;
+const MENU_PANEL_SHIFT_LEFT = 0;
+/** Extra left offset on portrait — fraction of panel width, applied after anchor alignment. */
+const MENU_PANEL_SHIFT_LEFT_PORTRAIT = 0.2;
+/** Matches `.menu-panel` transform-origin X (12%) — hinge above menu button. */
+const MENU_PANEL_ANCHOR_X_FRACTION = 0.12;
+const MENU_PANEL_LIFT = 0.045;
+const MENU_PANEL_POPOUT_S_EXTRA_LIFT = 0;
 const AUTOPLAY_PANEL_SHIFT_LEFT = 0.08;
 const AUTOPLAY_PANEL_LIFT = 0.045;
 const SCREEN_MARGIN = 12;
@@ -76,14 +82,43 @@ const resolveAutoplayWidth = (canvasWidth: number, layoutType: string) => {
 	);
 };
 
-const resolveMenuWidth = (canvasWidth: number, layoutType: string) => {
-	const maxFraction = layoutType === 'portrait' ? 0.6 : 0.16;
-	return clamp(
-		MENU_REF_WIDTH * viewportFactor(canvasWidth),
-		MIN_POPUP_WIDTH,
-		Math.min(MENU_REF_WIDTH, canvasWidth * maxFraction),
-	);
+const resolveMenuPanelWidth = (
+	canvasWidth: number,
+	layoutType: string,
+	isPopoutSmall: boolean,
+	isPopout: boolean,
+) => {
+	if (layoutType === 'portrait') {
+		return Math.min(MENU_REF_WIDTH, canvasWidth * 0.94);
+	}
+	if (isPopoutSmall) return Math.min(197, canvasWidth * 0.68);
+	if (isPopout) return Math.min(305, canvasWidth * 0.58);
+	return Math.min(MENU_REF_WIDTH, canvasWidth * 0.311);
 };
+
+export const resolveMenuPanelWidthForLayout = (layoutDerived: LayoutDerived) => {
+	const canvas = layoutDerived.canvasSizes();
+	const layoutType = layoutDerived.layoutType();
+	const isPopoutSmall = isPopoutSmallViewport(canvas);
+	const isPopout = isPopoutViewport(canvas) && !isPopoutSmall;
+	return resolveMenuPanelWidth(canvas.width, layoutType, isPopoutSmall, isPopout);
+};
+
+const resolveMenuWidth = (
+	canvasWidth: number,
+	layoutType: string,
+	isPopoutSmall: boolean,
+	isPopout: boolean,
+) => resolveMenuPanelWidth(canvasWidth, layoutType, isPopoutSmall, isPopout);
+
+const resolveMenuPanelDrop = (panelWidth: number, isPopoutSmall: boolean) => {
+	const scaledDrop = MENU_PANEL_DROP * (panelWidth / MENU_REF_WIDTH);
+	if (isPopoutSmall) return scaledDrop * MENU_PANEL_DROP_POPOUT_S_FACTOR;
+	return scaledDrop;
+};
+
+const resolveMenuPanelExtraLift = (panelWidth: number, isPopoutSmall: boolean) =>
+	isPopoutSmall ? panelWidth * MENU_PANEL_POPOUT_S_EXTRA_LIFT : 0;
 
 const fitPopupLeft = (
 	anchorCenterX: number,
@@ -195,6 +230,66 @@ export const computeAutoplayPanelAnchor = (
 	};
 };
 
+export type MenuPanelAnchor = {
+	left: number;
+	bottom: number;
+	width: number;
+	/** Portrait-only horizontal compensation when panel width fills the viewport. */
+	translateX: number;
+};
+
+/** Anchor for the settings panel above the menu HUD button. */
+export const computeMenuPanelAnchor = (layoutDerived: LayoutDerived): MenuPanelAnchor => {
+	const canvas = layoutDerived.canvasSizes();
+	const layoutType = layoutDerived.layoutType();
+	const isPopoutSmall = isPopoutSmallViewport(canvas);
+	const isPopout = isPopoutViewport(canvas) && !isPopoutSmall;
+	const panelWidth = resolveMenuPanelWidth(canvas.width, layoutType, isPopoutSmall, isPopout);
+	const drop = resolveMenuPanelDrop(panelWidth, isPopoutSmall);
+	const extraLift = resolveMenuPanelExtraLift(panelWidth, isPopoutSmall);
+
+	if (layoutType === 'portrait') {
+		const hud = computePortraitHudCanvas(layoutDerived);
+		const menuFit = fitPopupLeft(hud.util.x.menu, panelWidth, canvas.width, 'prefer-left');
+		const minLeft = SCREEN_MARGIN;
+		const maxLeft = Math.max(minLeft, canvas.width - SCREEN_MARGIN - menuFit.width);
+		const idealLeft =
+			hud.util.x.menu -
+			menuFit.width * (MENU_PANEL_ANCHOR_X_FRACTION + MENU_PANEL_SHIFT_LEFT_PORTRAIT);
+		const clampedLeft = clamp(idealLeft, minLeft, maxLeft);
+
+		return {
+			left: clampedLeft,
+			translateX: idealLeft - clampedLeft,
+			bottom:
+				canvas.height -
+				hud.util.centerY +
+				hud.util.iconSize / 2 +
+				GAP_ABOVE_BUTTON -
+				drop +
+				menuFit.width * MENU_PANEL_LIFT,
+			width: menuFit.width,
+		};
+	}
+
+	const hud = computeDesktopHudLayout(layoutDerived, resolveDesktopHudConfig(isPopoutSmall));
+	const menuFit = fitPopupLeft(hud.menu.x, panelWidth, canvas.width, 'prefer-left');
+
+	return {
+		left: menuFit.left + menuFit.width * MENU_PANEL_SHIFT_LEFT,
+		translateX: 0,
+		bottom:
+			canvas.height -
+			hud.menu.y +
+			hud.menu.size / 2 +
+			GAP_ABOVE_BUTTON -
+			drop +
+			menuFit.width * MENU_PANEL_LIFT +
+			extraLift,
+		width: menuFit.width,
+	};
+};
+
 export const computePopupHudLayout = (layoutDerived: LayoutDerived): PopupHudLayout => {
 	const canvas = layoutDerived.canvasSizes();
 	const layoutType = layoutDerived.layoutType();
@@ -204,8 +299,14 @@ export const computePopupHudLayout = (layoutDerived: LayoutDerived): PopupHudLay
 		const hud = computePortraitHudCanvas(layoutDerived);
 		const iconSize = hud.util.iconSize;
 		const autoplayWidth = resolveAutoplayWidth(canvas.width, layoutType);
-		const menuWidth = resolveMenuWidth(canvas.width, layoutType);
-		const autoplayFit = fitPopupLeft(hud.util.x.autoplay, autoplayWidth, canvas.width, 'prefer-right');
+		const menuWidth = resolveMenuWidth(canvas.width, layoutType, false, false);
+		const menuDrop = resolveMenuPanelDrop(menuWidth, false);
+		const autoplayFit = fitPopupLeft(
+			hud.util.x.autoplay,
+			autoplayWidth,
+			canvas.width,
+			'prefer-right',
+		);
 		const menuFit = fitPopupLeft(hud.util.x.menu, menuWidth, canvas.width, 'prefer-left');
 
 		return {
@@ -218,15 +319,24 @@ export const computePopupHudLayout = (layoutDerived: LayoutDerived): PopupHudLay
 			menu: {
 				...buildMenuMetrics(menuFit.width),
 				left: menuFit.left + menuFit.width / 2,
-				bottom: canvas.height - hud.util.centerY + iconSize / 2 + gap,
+				bottom:
+					canvas.height -
+					hud.util.centerY +
+					iconSize / 2 +
+					gap -
+					menuDrop +
+					menuFit.width * MENU_PANEL_LIFT,
 			},
 		};
 	}
 
 	const isPopoutSmall = isPopoutSmallViewport(canvas);
+	const isPopout = isPopoutViewport(canvas) && !isPopoutSmall;
 	const hud = computeDesktopHudLayout(layoutDerived, resolveDesktopHudConfig(isPopoutSmall));
 	const autoplayWidth = resolveAutoplayWidth(canvas.width, layoutType);
-	const menuWidth = resolveMenuWidth(canvas.width, layoutType);
+	const menuWidth = resolveMenuWidth(canvas.width, layoutType, isPopoutSmall, isPopout);
+	const menuDrop = resolveMenuPanelDrop(menuWidth, isPopoutSmall);
+	const menuExtraLift = resolveMenuPanelExtraLift(menuWidth, isPopoutSmall);
 	const autoplayFit = fitPopupLeft(hud.autoplay.x, autoplayWidth, canvas.width, 'prefer-right');
 	const menuFit = fitPopupLeft(hud.menu.x, menuWidth, canvas.width, 'prefer-left');
 
@@ -240,7 +350,14 @@ export const computePopupHudLayout = (layoutDerived: LayoutDerived): PopupHudLay
 		menu: {
 			...buildMenuMetrics(menuFit.width),
 			left: menuFit.left + menuFit.width / 2,
-			bottom: canvas.height - hud.menu.y + hud.menu.size / 2 + gap,
+			bottom:
+				canvas.height -
+				hud.menu.y +
+				hud.menu.size / 2 +
+				gap -
+				menuDrop +
+				menuFit.width * MENU_PANEL_LIFT +
+				menuExtraLift,
 		},
 	};
 };

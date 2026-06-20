@@ -1,15 +1,14 @@
 <!--
-	UiCashStacksLayout.svelte — кастомный desktop-layout для Cash Stacks.
+	UiCashStacksLayout.svelte — кастомный layout для Cash Stacks.
 	  - BuyBonus  : CashStacksBuyBonusPanel (HTML)
-	  - HUD bar + spin cluster : CashStacksDesktopHudOverlay (HTML)
+	  - HUD bar + spin cluster : CashStacksDesktopHudOverlay (HTML), кроме portrait
 	  - WIN — Pixi под доской
 	Portrait — UiCashStacksPortraitLayout (+ CashStacksPortraitHudOverlay).
-	Popout S/L + desktop — desktop HUD overlay.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	import { stateBet, stateUi } from 'state-shared';
+	import { stateBet } from 'state-shared';
 	import { MainContainer } from 'components-layout';
 	import { Container, BitmapText } from 'pixi-svelte';
 	import { EnableSpaceHold } from 'components-shared';
@@ -17,27 +16,9 @@
 
 	import UiFadeContainer from 'components-ui-pixi/src/components/UiFadeContainer.svelte';
 	import UiCashStacksPortraitLayout from './UiCashStacksPortraitLayout.svelte';
-	import LayoutLandscape from 'components-ui-pixi/src/components/LayoutLandscape.svelte';
-	import LayoutTablet from 'components-ui-pixi/src/components/LayoutTablet.svelte';
-	import LabelBalance from 'components-ui-pixi/src/components/LabelBalance.svelte';
-	import LabelWin from 'components-ui-pixi/src/components/LabelWin.svelte';
-	import LabelBet from 'components-ui-pixi/src/components/LabelBet.svelte';
-	import ButtonPayTable from 'components-ui-pixi/src/components/ButtonPayTable.svelte';
-	import ButtonGameRules from 'components-ui-pixi/src/components/ButtonGameRules.svelte';
-	import ButtonSettings from 'components-ui-pixi/src/components/ButtonSettings.svelte';
-	import ButtonBuyBonus from 'components-ui-pixi/src/components/ButtonBuyBonus.svelte';
-	import CashStacksBetButton from './CashStacksBetButton.svelte';
-	import ButtonTurbo from 'components-ui-pixi/src/components/ButtonTurbo.svelte';
-	import CashStacksIncreaseButton from './CashStacksIncreaseButton.svelte';
-	import CashStacksDecreaseButton from './CashStacksDecreaseButton.svelte';
-	import ButtonAutoSpin from 'components-ui-pixi/src/components/ButtonAutoSpin.svelte';
-	import ButtonMenu from 'components-ui-pixi/src/components/ButtonMenu.svelte';
-	import ButtonMenuClose from 'components-ui-pixi/src/components/ButtonMenuClose.svelte';
-	import ButtonSoundSwitch from 'components-ui-pixi/src/components/ButtonSoundSwitch.svelte';
 
-	import { BITMAP_FONT_SCALE, FONT_PROSTOI, isPopoutSmallViewport, isPopoutViewport, POPOUT_S_SCALE, WIN_HUD_FONT_SIZE } from '../game/constants';
+	import { BITMAP_FONT_SCALE, FONT_PROSTOI, isPopoutSmallViewport, POPOUT_S_SCALE, WIN_HUD_FONT_SIZE } from '../game/constants';
 	import { getContext } from '../game/context';
-	import { stateGame } from '../game/stateGame.svelte';
 	import { getContextLayout } from 'utils-layout';
 
 	type Props = {
@@ -49,13 +30,9 @@
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 	const layoutType = $derived(stateLayoutDerived.layoutType());
-	const isPopout = $derived(isPopoutViewport(stateLayoutDerived.canvasSizes()));
 	const isPopoutSmall = $derived(isPopoutSmallViewport(stateLayoutDerived.canvasSizes()));
+	const useDesktopHud = $derived(layoutType !== 'portrait');
 	const gameNameScale = $derived(isPopoutSmall ? POPOUT_S_SCALE : 1);
-	const useDesktopHud = $derived(layoutType === 'desktop' || isPopout);
-	const isFreeSpins = $derived(
-		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
-	);
 
 	const WIN_BELOW_BOARD_GAP = 58;
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
@@ -112,56 +89,4 @@
 			{#if props.logo}{@render props.logo()}{/if}
 		{/snippet}
 	</UiCashStacksPortraitLayout>
-{:else if layoutType === 'landscape' && !isPopout}
-	<UiFadeContainer>
-		<LayoutLandscape>
-			{#snippet gameName()}
-				{#if props.gameName}{@render props.gameName()}{/if}
-			{/snippet}
-			{#snippet logo()}
-				{#if props.logo}{@render props.logo()}{/if}
-			{/snippet}
-			{#snippet amountBalance(labelProps)}<LabelBalance {...labelProps} />{/snippet}
-			{#snippet amountWin(labelProps)}<LabelWin {...labelProps} />{/snippet}
-			{#snippet amountBet(labelProps)}<LabelBet {...labelProps} />{/snippet}
-			{#snippet buttonBuyBonus(buttonProps)}<ButtonBuyBonus {...buttonProps} />{/snippet}
-			{#snippet buttonBet(buttonProps)}{#if !isFreeSpins}<CashStacksBetButton {...buttonProps} />{/if}{/snippet}
-			{#snippet buttonTurbo(buttonProps)}<ButtonTurbo {...buttonProps} />{/snippet}
-			{#snippet buttonAutoSpin(buttonProps)}<ButtonAutoSpin {...buttonProps} />{/snippet}
-			{#snippet buttonIncrease(buttonProps)}<CashStacksIncreaseButton {...buttonProps} />{/snippet}
-			{#snippet buttonDecrease(buttonProps)}<CashStacksDecreaseButton {...buttonProps} />{/snippet}
-			{#snippet buttonMenu(buttonProps)}<ButtonMenu {...buttonProps} />{/snippet}
-			{#snippet buttonMenuClose(buttonProps)}<ButtonMenuClose {...buttonProps} />{/snippet}
-			{#snippet buttonPayTable(buttonProps)}<ButtonPayTable {...buttonProps} />{/snippet}
-			{#snippet buttonGameRules(buttonProps)}<ButtonGameRules {...buttonProps} />{/snippet}
-			{#snippet buttonSettings(buttonProps)}<ButtonSettings {...buttonProps} />{/snippet}
-			{#snippet buttonSoundSwitch(buttonProps)}<ButtonSoundSwitch {...buttonProps} />{/snippet}
-		</LayoutLandscape>
-	</UiFadeContainer>
-{:else}
-	<UiFadeContainer>
-		<LayoutTablet>
-			{#snippet gameName()}
-				{#if props.gameName}{@render props.gameName()}{/if}
-			{/snippet}
-			{#snippet logo()}
-				{#if props.logo}{@render props.logo()}{/if}
-			{/snippet}
-			{#snippet amountBalance(labelProps)}<LabelBalance {...labelProps} />{/snippet}
-			{#snippet amountWin(labelProps)}<LabelWin {...labelProps} />{/snippet}
-			{#snippet amountBet(labelProps)}<LabelBet {...labelProps} />{/snippet}
-			{#snippet buttonBuyBonus(buttonProps)}<ButtonBuyBonus {...buttonProps} />{/snippet}
-			{#snippet buttonBet(buttonProps)}{#if !isFreeSpins}<CashStacksBetButton {...buttonProps} />{/if}{/snippet}
-			{#snippet buttonTurbo(buttonProps)}<ButtonTurbo {...buttonProps} />{/snippet}
-			{#snippet buttonAutoSpin(buttonProps)}<ButtonAutoSpin {...buttonProps} />{/snippet}
-			{#snippet buttonIncrease(buttonProps)}<CashStacksIncreaseButton {...buttonProps} />{/snippet}
-			{#snippet buttonDecrease(buttonProps)}<CashStacksDecreaseButton {...buttonProps} />{/snippet}
-			{#snippet buttonMenu(buttonProps)}<ButtonMenu {...buttonProps} />{/snippet}
-			{#snippet buttonMenuClose(buttonProps)}<ButtonMenuClose {...buttonProps} />{/snippet}
-			{#snippet buttonPayTable(buttonProps)}<ButtonPayTable {...buttonProps} />{/snippet}
-			{#snippet buttonGameRules(buttonProps)}<ButtonGameRules {...buttonProps} />{/snippet}
-			{#snippet buttonSettings(buttonProps)}<ButtonSettings {...buttonProps} />{/snippet}
-			{#snippet buttonSoundSwitch(buttonProps)}<ButtonSoundSwitch {...buttonProps} />{/snippet}
-		</LayoutTablet>
-	</UiFadeContainer>
 {/if}
