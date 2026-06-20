@@ -89,35 +89,33 @@
 		stateSound.volumeValueMusic === 0 ? musicOffUrl : musicOnUrl,
 	);
 
-	/** Row icon slots from bg PNG — fixed canvas px like HUD icons (outside scaled panel). */
+	/** Row icons — panel-local px (scale with panel, crisp at rest on resize). */
 	const MENU_ROW_ICON_CENTER_X = 0.285;
 	const MENU_ROW_ICON_SIZE = 0.12;
 	const MENU_ROW_HEIGHT = 0.085;
 
 	const rowIcons = $derived.by(() => {
-		const w = panelAnchor.width;
-		const panelLeft = panelAnchor.left + panelAnchor.translateX;
-		const panelTop = canvasSizes.height - panelAnchor.bottom - w;
-		const size = w * MENU_ROW_ICON_SIZE;
-		const rowCenter = (top: number) => panelTop + w * (top + MENU_ROW_HEIGHT / 2);
+		const w = panelWidth;
+		const size = Math.round(w * MENU_ROW_ICON_SIZE);
+		const rowCenter = (top: number) => Math.round(w * (top + MENU_ROW_HEIGHT / 2));
 
 		return {
 			turbo: {
-				x: panelLeft + w * MENU_ROW_ICON_CENTER_X,
+				x: Math.round(w * MENU_ROW_ICON_CENTER_X),
 				y: rowCenter(0.355),
 				size,
 				url: turboUrls[stateGame.gameSpeed - 1],
 				label: 'Game speed',
 			},
 			volume: {
-				x: panelLeft + w * MENU_ROW_ICON_CENTER_X,
+				x: Math.round(w * MENU_ROW_ICON_CENTER_X),
 				y: rowCenter(0.48),
 				size,
 				url: soundIconUrl,
 				label: 'Master volume',
 			},
 			music: {
-				x: panelLeft + w * MENU_ROW_ICON_CENTER_X,
+				x: Math.round(w * MENU_ROW_ICON_CENTER_X),
 				y: rowCenter(0.605),
 				size,
 				url: musicIconUrl,
@@ -241,19 +239,6 @@
 		data-test="menu-toggle-hit"
 	></button>
 
-	{#each Object.values(rowIcons) as icon (icon.label)}
-		<div
-			class="menu-row-hud-icon"
-			style:left="{icon.x}px"
-			style:top="{icon.y}px"
-			style:width="{icon.size}px"
-			style:height="{icon.size}px"
-			style:background-image="url('{icon.url}')"
-			role="img"
-			aria-label={icon.label}
-		></div>
-	{/each}
-
 	<div class="menu-overlay anchored" data-test="menu-overlay" style:--panel-width="{panelWidth}px">
 		<div
 			class="menu-panel-anchor"
@@ -277,6 +262,19 @@
 				out:scale={{ duration: PANEL_OUT_MS, easing: cubicOut, start: 0.95, opacity: 0 }}
 			>
 		<img class="panel-bg" src={bgUrl} alt="" draggable="false" />
+
+		{#each Object.values(rowIcons) as icon (icon.label)}
+			<div
+				class="menu-row-icon"
+				style:left="{icon.x}px"
+				style:top="{icon.y}px"
+				style:width="{icon.size}px"
+				style:height="{icon.size}px"
+				style:background-image="url('{icon.url}')"
+				role="img"
+				aria-label={icon.label}
+			></div>
+		{/each}
 
 		<div class="panel-content">
 			<header class="panel-header">
@@ -370,31 +368,17 @@
 {/if}
 
 <style lang="scss">
-	.menu-toggle-hit,
-	.menu-row-hud-icon {
+	.menu-toggle-hit {
 		position: fixed;
+		z-index: 10001;
 		transform: translate(-50%, -50%);
 		border: 0;
 		padding: 0;
-		background-color: transparent;
-		background-repeat: no-repeat;
-		background-position: center;
-		background-size: contain;
-		pointer-events: none;
-		user-select: none;
-		-webkit-tap-highlight-color: transparent;
-	}
-
-	.menu-toggle-hit {
-		z-index: 10001;
 		background: transparent;
 		cursor: pointer;
 		pointer-events: auto;
+		-webkit-tap-highlight-color: transparent;
 		touch-action: manipulation;
-	}
-
-	.menu-row-hud-icon {
-		z-index: 10000;
 	}
 
 	.menu-overlay {
@@ -454,6 +438,20 @@
 	.panel-content {
 		position: absolute;
 		inset: 0;
+	}
+
+	.menu-row-icon {
+		position: absolute;
+		z-index: 2;
+		transform: translate(-50%, -50%);
+		border: 0;
+		padding: 0;
+		background-color: transparent;
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: contain;
+		pointer-events: none;
+		user-select: none;
 	}
 
 	/* Header frame: y 13.2–27.7% on source PNG */
