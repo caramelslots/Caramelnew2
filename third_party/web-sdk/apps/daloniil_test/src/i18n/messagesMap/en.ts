@@ -15,7 +15,7 @@ export default {
 	BUY_SUPER_DESC_SPINS: 'FREE SPINS',
 	BUY_SUPER_DESC_FEATURE: '+ Sticky Mystery Reel',
 	BUY_CONFIRM: 'BUY',
-	BUY_CANCEL: 'CANCEL',
+	BUY_CANCEL: 'BACK',
 	BUY_BONUS_PANEL_BUTTON: 'Buy bonus',
 	BONUS_BOOST_PANEL_DESC: 'Increased bonus chance ×2',
 	// Settings menu

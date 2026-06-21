@@ -618,7 +618,7 @@
 
 	/* Popout L */
 	.confirm-panel.popout-l {
-		--panel-width: min(470px, 86vw);
+		--panel-width: min(425px, 86vw);
 		--panel-height-scale: 1.28;
 		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
 		filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.6));
@@ -752,6 +752,12 @@
 		.cancel-btn,
 		.confirm-btn {
 			font-size: calc(var(--panel-width) * 0.028);
+		}
+	}
+
+	@media (max-width: 1024px) and (min-width: 601px) {
+		.confirm-panel:not(.portrait):not(.popout-l):not(.popout-s) {
+			--panel-width: min(630px, 90vw);
 		}
 	}
 

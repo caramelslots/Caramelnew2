@@ -13,7 +13,7 @@ export default {
 	BUY_SUPER_DESC_SPINS: 'ФРИСПИНОВ',
 	BUY_SUPER_DESC_FEATURE: '+ Sticky Mystery Reel.',
 	BUY_CONFIRM: 'КУПИТЬ',
-	BUY_CANCEL: 'ОТМЕНА',
+	BUY_CANCEL: 'НАЗАД',
 	BUY_BONUS_PANEL_BUTTON: 'КУПИТЬ БОНУС',
 	BONUS_BOOST_PANEL_DESC: 'шанс на бонус ×2 (свитч)',
 	SETTINGS_MENU_TITLE: 'НАСТРОЙКИ',

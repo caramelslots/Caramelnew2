@@ -414,14 +414,14 @@
 	}
 
 	.card .card-desc.card-desc-stacked .desc-spin-count {
-		font-size: calc(var(--panel-width) * 0.072);
+		font-size: calc(var(--panel-width) * 0.060);
 		font-weight: 900;
 		line-height: 0.85;
 		letter-spacing: -0.02em;
 	}
 
 	.card .card-desc.card-desc-stacked .desc-spin-label {
-		font-size: calc(var(--panel-width) * 0.028);
+		font-size: calc(var(--panel-width) * 0.022);
 		font-weight: 800;
 		line-height: 1;
 		letter-spacing: 0.05em;
@@ -438,12 +438,12 @@
 	.card .card-desc.card-desc-stacked .desc-trigger {
 		width: 100%;
 		max-width: 100%;
-		font-size: calc(var(--panel-width) * 0.016);
+		font-size: calc(var(--panel-width) * 0.013);
 		font-weight: 700;
 		line-height: 1.1;
 		letter-spacing: 0.02em;
 		white-space: nowrap;
-		min-height: calc(var(--panel-width) * 0.02);
+		min-height: calc(var(--panel-width) * 0.016);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1041,9 +1041,9 @@
 		}
 	}
 
-	/* Stake popout L — 800×450 */
+	/* Stake popout L — 800×450 (laptop embed) */
 	.buy-bonus-panel.popout-l {
-		--panel-width: min(470px, 86vw);
+		--panel-width: min(425px, 86vw);
 		--panel-height-scale: 1.28;
 		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
 		filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.6));
@@ -1081,15 +1081,15 @@
 		}
 
 		.card .card-desc.card-desc-stacked .desc-spin-count {
-			font-size: calc(var(--panel-width) * 0.062);
+			font-size: calc(var(--panel-width) * 0.072);
 		}
 
 		.card .card-desc.card-desc-stacked .desc-spin-label {
-			font-size: calc(var(--panel-width) * 0.023);
+			font-size: calc(var(--panel-width) * 0.027);
 		}
 
 		.card .card-desc.card-desc-stacked .desc-trigger {
-			font-size: calc(var(--panel-width) * 0.013);
+			font-size: calc(var(--panel-width) * 0.016);
 			min-height: calc(var(--panel-width) * 0.017);
 		}
 
@@ -1342,6 +1342,25 @@
 				var(--panel-width) * 0.054 - var(--panel-width) * 0.023 -
 					(var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2
 			);
+		}
+	}
+
+	/* Laptop 1024×576 */
+	@media (max-width: 1024px) and (min-width: 601px) {
+		.buy-bonus-panel:not(.popout-l):not(.popout-s):not(.portrait) {
+			--panel-width: min(630px, 90vw);
+
+			.card .card-desc.card-desc-stacked .desc-spin-count {
+				font-size: calc(var(--panel-width) * 0.068);
+			}
+
+			.card .card-desc.card-desc-stacked .desc-spin-label {
+				font-size: calc(var(--panel-width) * 0.026);
+			}
+
+			.card .card-desc.card-desc-stacked .desc-trigger {
+				font-size: calc(var(--panel-width) * 0.015);
+			}
 		}
 	}
 
