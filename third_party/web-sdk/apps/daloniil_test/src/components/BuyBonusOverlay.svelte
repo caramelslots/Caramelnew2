@@ -4,7 +4,6 @@
 	--panel-width для desktop, portrait, popout L (800×450) и popout S (400×225).
 -->
 <script lang="ts">
-	import { Popup } from 'components-shared';
 	import { stateModal, stateBet, stateBetDerived, stateConfig } from 'state-shared';
 	import { stateBonus } from 'components-ui-html/src/stateBonus.svelte';
 	import { numberToCurrencyString } from 'utils-shared/amount';
@@ -77,9 +76,8 @@
 		if (!canAffordBuyBonus(costMult)) return;
 		clearActiveFeature();
 		stateBonus.selectedBetModeKey = variant === 'normal' ? 'bonus_normal' : 'bonus_super';
-		stateModal.modal = null;
+		stateModal.modal = { name: 'buyBonusConfirm' };
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
-		context.eventEmitter.broadcast({ type: 'buyBonusConfirm' });
 	};
 
 	const close = () => {
@@ -87,15 +85,14 @@
 	};
 </script>
 
-{#if isOpen}
-	<Popup zIndex={60} persistent onclose={close}>
-		<div
-			class="buy-bonus-panel"
-			class:portrait={isPortrait}
-			class:popout-l={isPopout}
-			class:popout-s={isPopoutSmall}
-			data-test="buy-bonus-overlay"
-		>
+<div
+	class="buy-bonus-panel"
+	class:portrait={isPortrait}
+	class:popout-l={isPopout}
+	class:popout-s={isPopoutSmall}
+	data-test="buy-bonus-overlay"
+	aria-hidden={!isOpen}
+>
 			<img class="panel-bg" src={bgUrl} alt="" draggable="false" />
 
 			<div class="panel-content">
@@ -198,9 +195,7 @@
 					></button>
 				</footer>
 			</div>
-		</div>
-	</Popup>
-{/if}
+</div>
 
 <style lang="scss">
 	.buy-bonus-panel {
@@ -448,7 +443,7 @@
 		line-height: 1.1;
 		letter-spacing: 0.02em;
 		white-space: nowrap;
-		min-height: calc(var(--panel-width) * 0.020);
+		min-height: calc(var(--panel-width) * 0.02);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1202,7 +1197,9 @@
 		--panel-width: min(240px, 60vw);
 		--panel-height-scale: 1.28;
 		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
-		filter: drop-shadow(0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.075) rgba(0, 0, 0, 0.55));
+		filter: drop-shadow(
+			0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.075) rgba(0, 0, 0, 0.55)
+		);
 
 		.panel-title {
 			display: none;

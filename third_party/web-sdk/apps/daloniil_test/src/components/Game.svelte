@@ -38,11 +38,10 @@
 	import Transition from './Transition.svelte';
 	import FeaturesAutoSpinOverlay from './FeaturesAutoSpinOverlay.svelte';
 	import CashStacksMenuOverlay from './CashStacksMenuOverlay.svelte';
-	import BuyBonusOverlay from './BuyBonusOverlay.svelte';
+	import BuyBonusModalShell from './BuyBonusModalShell.svelte';
 	import CashStacksBuyBonusPanel from './CashStacksBuyBonusPanel.svelte';
 	import CashStacksDesktopHudOverlay from './CashStacksDesktopHudOverlay.svelte';
 	import CashStacksPortraitHudOverlay from './CashStacksPortraitHudOverlay.svelte';
-	import BuyBonusConfirmOverlay from './BuyBonusConfirmOverlay.svelte';
 	import DevCheats from './DevCheats.svelte';
 	import DevButtons from './DevButtons.svelte';
 	import { FadeContainer } from 'components-pixi';
@@ -95,11 +94,7 @@
 				<Sound />
 			{/if}
 
-			<FadeContainer
-				show={gameEntrance.showContent}
-				duration={GAME_ENTRANCE_MS}
-				persistent
-			>
+			<FadeContainer show={gameEntrance.showContent} duration={GAME_ENTRANCE_MS} persistent>
 				<MainContainer>
 					<BoardFrame />
 				</MainContainer>
@@ -137,8 +132,7 @@
 <CashStacksDesktopHudOverlay />
 <CashStacksPortraitHudOverlay />
 <CashStacksMenuOverlay />
-<BuyBonusOverlay />
-<BuyBonusConfirmOverlay />
+<BuyBonusModalShell />
 <div class="html-underlays">
 	<ProgressLadder />
 </div>

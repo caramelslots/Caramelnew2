@@ -74,104 +74,83 @@
 	}}
 />
 
-{#if isOpen}
-	<div class="backdrop">
-		<div
-			class="confirm-panel"
-			class:portrait={isPortrait}
-			class:popout-l={isPopout}
-			class:popout-s={isPopoutSmall}
-			role="dialog"
-			aria-modal="true"
-			data-test="buy-bonus-confirm-overlay"
-		>
-			<img class="panel-bg" src={bgUrl} alt="" draggable="false" />
+<div
+	class="confirm-panel"
+	class:portrait={isPortrait}
+	class:popout-l={isPopout}
+	class:popout-s={isPopoutSmall}
+	role="dialog"
+	aria-modal="true"
+	aria-hidden={!isOpen}
+	data-test="buy-bonus-confirm-overlay"
+>
+	<img class="panel-bg" src={bgUrl} alt="" draggable="false" />
 
-			<div class="panel-content">
-				<header class="panel-header">
-					<button
-						type="button"
-						class="close-button"
-						onclick={closeAll}
-						aria-label="close"
-						data-test="buy-bonus-confirm-close"
-					>
-						<img class="close-icon" src={closeIconUrl} alt="" draggable="false" />
-					</button>
-				</header>
+	<div class="panel-content">
+		<header class="panel-header">
+			<button
+				type="button"
+				class="close-button"
+				onclick={closeAll}
+				aria-label="close"
+				data-test="buy-bonus-confirm-close"
+			>
+				<img class="close-icon" src={closeIconUrl} alt="" draggable="false" />
+			</button>
+		</header>
 
-				<section class="confirm-card-section" aria-label="selected bonus">
-					<article
-						class="card confirm-card"
-						class:card-normal={!isSuper}
-						class:card-super={isSuper}
-					>
-						<img class="card-bg" src={cardUrl} alt="" draggable="false" />
-						<div class="card-content">
-							<div class="card-title">{cardTitle}</div>
-							{#if isSuper}
-								<div class="card-desc card-desc-stacked">
-									<span class="desc-spin-count">{context.i18nDerived.buySuperDescCount()}</span>
-									<span class="desc-spin-label">{context.i18nDerived.buySuperDescSpins()}</span>
-									<span class="desc-divider" aria-hidden="true"></span>
-									<span class="desc-trigger">{context.i18nDerived.buySuperDescFeature()}</span>
-								</div>
-							{:else}
-								<div class="card-desc card-desc-stacked">
-									<span class="desc-spin-count">{context.i18nDerived.buyNormalDescCount()}</span>
-									<span class="desc-spin-label">{context.i18nDerived.buyNormalDescSpins()}</span>
-									<span class="desc-divider" aria-hidden="true"></span>
-									<span class="desc-trigger">{context.i18nDerived.buyNormalDescTrigger()}</span>
-								</div>
-							{/if}
-							<div class="card-price-wrap" style:background-image="url('{deskUrl}')">
-								<span class="card-price" data-test="buy-bonus-confirm-price">{price}</span>
-							</div>
+		<section class="confirm-card-section" aria-label="selected bonus">
+			<article class="card confirm-card" class:card-normal={!isSuper} class:card-super={isSuper}>
+				<img class="card-bg" src={cardUrl} alt="" draggable="false" />
+				<div class="card-content">
+					<div class="card-title">{cardTitle}</div>
+					{#if isSuper}
+						<div class="card-desc card-desc-stacked">
+							<span class="desc-spin-count">{context.i18nDerived.buySuperDescCount()}</span>
+							<span class="desc-spin-label">{context.i18nDerived.buySuperDescSpins()}</span>
+							<span class="desc-divider" aria-hidden="true"></span>
+							<span class="desc-trigger">{context.i18nDerived.buySuperDescFeature()}</span>
 						</div>
-					</article>
-				</section>
+					{:else}
+						<div class="card-desc card-desc-stacked">
+							<span class="desc-spin-count">{context.i18nDerived.buyNormalDescCount()}</span>
+							<span class="desc-spin-label">{context.i18nDerived.buyNormalDescSpins()}</span>
+							<span class="desc-divider" aria-hidden="true"></span>
+							<span class="desc-trigger">{context.i18nDerived.buyNormalDescTrigger()}</span>
+						</div>
+					{/if}
+					<div class="card-price-wrap" style:background-image="url('{deskUrl}')">
+						<span class="card-price" data-test="buy-bonus-confirm-price">{price}</span>
+					</div>
+				</div>
+			</article>
+		</section>
 
-				<footer class="confirm-actions">
-					<button
-						type="button"
-						class="action-btn cancel-btn"
-						style:background-image="url('{cancelButtonBgUrl}')"
-						onclick={goBack}
-						data-test="buy-bonus-confirm-back"
-					>
-						{context.i18nDerived.buyCancel()}
-					</button>
-					<button
-						type="button"
-						class="action-btn confirm-btn"
-						style:background-image="url('{confirmButtonBgUrl}')"
-						disabled={!canConfirm}
-						onclick={confirm}
-						data-test="confirm-button"
-					>
-						{context.i18nDerived.buyConfirm()}
-					</button>
-				</footer>
-			</div>
-		</div>
+		<footer class="confirm-actions">
+			<button
+				type="button"
+				class="action-btn cancel-btn"
+				style:background-image="url('{cancelButtonBgUrl}')"
+				onclick={goBack}
+				data-test="buy-bonus-confirm-back"
+			>
+				{context.i18nDerived.buyCancel()}
+			</button>
+			<button
+				type="button"
+				class="action-btn confirm-btn"
+				style:background-image="url('{confirmButtonBgUrl}')"
+				disabled={!canConfirm}
+				onclick={confirm}
+				data-test="confirm-button"
+			>
+				{context.i18nDerived.buyConfirm()}
+			</button>
+		</footer>
 	</div>
-{/if}
+</div>
 
 <style lang="scss">
-	.backdrop {
-		position: fixed;
-		inset: 0;
-		z-index: 70;
-		background: rgba(0, 0, 0, 0.5);
-		backdrop-filter: blur(30px);
-		-webkit-backdrop-filter: blur(30px);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 1rem;
-		box-sizing: border-box;
-	}
-
 	.confirm-panel {
 		--panel-width: min(700px, 90vw);
 		--panel-height-scale: 1.32;
@@ -203,17 +182,19 @@
 		left: 0;
 		right: 0;
 		height: 18%;
-		display: flex;
-		justify-content: flex-end;
-		align-items: flex-start;
+		display: grid;
+		grid-template-columns: 1fr auto;
+		align-items: start;
 		padding: 0 8% 0 10%;
 		box-sizing: border-box;
 		pointer-events: none;
 	}
 
 	.close-button {
-		width: calc(var(--panel-width) * 0.11);
-		height: calc(var(--panel-width) * 0.11);
+		position: relative;
+		grid-column: 2;
+		width: calc(var(--panel-width) * 0.1);
+		height: calc(var(--panel-width) * 0.1);
 		padding: 0;
 		border: 0;
 		background: transparent;
@@ -250,7 +231,7 @@
 		top: 25%;
 		left: 49%;
 		width: 79%;
-		height: 55%;
+		height: 52%;
 		transform: translateX(-50%);
 		display: flex;
 		align-items: center;
@@ -492,17 +473,17 @@
 	/* Desktop */
 	.confirm-panel:not(.portrait):not(.popout-l):not(.popout-s) {
 		.close-button {
-			width: calc(var(--panel-width) * 0.095);
-			height: calc(var(--panel-width) * 0.095);
-			margin-top: calc(var(--panel-width) * 0.025);
-			margin-right: 0;
+			width: calc(var(--panel-width) * 0.085);
+			height: calc(var(--panel-width) * 0.085);
+			margin-top: calc(var(--panel-width) * 0.06);
+			margin-right: calc(var(--panel-width) * 0.03);
 		}
 
 		.confirm-card-section {
 			top: 25%;
 			left: 49%;
 			width: 79%;
-			height: 55%;
+			height: 52%;
 		}
 
 		.card {
@@ -543,8 +524,8 @@
 
 	/* Portrait */
 	.confirm-panel.portrait:not(.popout-l):not(.popout-s) {
-		--panel-height-scale: 1.42;
-		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 98vh);
+		--panel-height-scale: 1.32;
+		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
 
 		.panel-bg {
 			width: 130%;
@@ -561,10 +542,10 @@
 
 		.close-button {
 			position: absolute;
-			top: 40%;
-			right: 1.5%;
-			width: calc(var(--panel-width) * 0.11);
-			height: calc(var(--panel-width) * 0.11);
+			top: 35%;
+			right: 7%;
+			width: calc(var(--panel-width) * 0.095);
+			height: calc(var(--panel-width) * 0.095);
 			margin: 0;
 		}
 
@@ -572,7 +553,7 @@
 			top: 25%;
 			left: 49%;
 			width: 79%;
-			height: 51%;
+			height: 46%;
 		}
 
 		.card {
@@ -643,17 +624,17 @@
 		filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.6));
 
 		.close-button {
-			width: calc(var(--panel-width) * 0.095);
-			height: calc(var(--panel-width) * 0.095);
-			margin-top: calc(var(--panel-width) * 0.025);
-			margin-right: 0;
+			width: calc(var(--panel-width) * 0.085);
+			height: calc(var(--panel-width) * 0.085);
+			margin-top: calc(var(--panel-width) * 0.06);
+			margin-right: calc(var(--panel-width) * 0.03);
 		}
 
 		.confirm-card-section {
 			top: 25%;
 			left: 49%;
 			width: 79%;
-			height: 55%;
+			height: 52%;
 		}
 
 		.card {
@@ -679,7 +660,7 @@
 
 		.card .card-desc.card-desc-stacked .desc-trigger {
 			font-size: calc(var(--panel-width) * 0.016);
-			min-height: calc(var(--panel-width) * 0.020);
+			min-height: calc(var(--panel-width) * 0.02);
 		}
 
 		.card-price-wrap {
@@ -703,20 +684,22 @@
 		--panel-width: min(240px, 60vw);
 		--panel-height-scale: 1.28;
 		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
-		filter: drop-shadow(0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.075) rgba(0, 0, 0, 0.55));
+		filter: drop-shadow(
+			0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.075) rgba(0, 0, 0, 0.55)
+		);
 
 		.close-button {
-			width: calc(var(--panel-width) * 0.095);
-			height: calc(var(--panel-width) * 0.095);
-			margin-top: calc(var(--panel-width) * 0.025);
-			margin-right: 0;
+			width: calc(var(--panel-width) * 0.085);
+			height: calc(var(--panel-width) * 0.085);
+			margin-top: calc(var(--panel-width) * 0.06);
+			margin-right: calc(var(--panel-width) * 0.03);
 		}
 
 		.confirm-card-section {
 			top: 25%;
 			left: 49%;
 			width: 79%;
-			height: 55%;
+			height: 52%;
 		}
 
 		.card {
@@ -742,7 +725,7 @@
 
 		.card .card-desc.card-desc-stacked .desc-trigger {
 			font-size: calc(var(--panel-width) * 0.016);
-			min-height: calc(var(--panel-width) * 0.020);
+			min-height: calc(var(--panel-width) * 0.02);
 		}
 
 		.card-price-wrap {
