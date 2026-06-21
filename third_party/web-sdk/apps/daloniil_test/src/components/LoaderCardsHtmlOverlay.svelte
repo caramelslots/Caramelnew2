@@ -7,11 +7,12 @@
 	import LoaderCardHtml from './LoaderCardHtml.svelte';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
-	import { LOADER_CARD_IMAGE_URLS } from '../game/loaderCardAssets';
+	import { LOADER_NEON_LOGO_URL, LOADER_SCREEN_IMAGE_URLS } from '../game/loaderCardAssets';
 	import {
 		LOADER_CARD_COUNT,
 		computeLoaderCardsAnchor,
 		computeLoaderCarouselMetrics,
+		computeLoaderLogoMetrics,
 		computeLoaderRowMetrics,
 		shouldUseLoaderCarousel,
 	} from '../game/loaderCardsHtmlLayout';
@@ -41,8 +42,13 @@
 		),
 	);
 
+	const logoMetrics = $derived(computeLoaderLogoMetrics(context.stateLayoutDerived));
+
 	const overlayStyle = $derived(
-		`left:${canvasSizes.width * 0.5}px;top:${anchor.y}px;transform:translate(-50%,-50%);`,
+		`left:${canvasSizes.width * 0.5}px;top:${anchor.y + (logoMetrics.height + logoMetrics.gap) / 2}px;transform:translate(-50%,-50%);`,
+	);
+	const logoStyle = $derived(
+		`width:${logoMetrics.width}px;height:${logoMetrics.height}px;margin-bottom:${logoMetrics.gap}px;transform:translateX(-50%) translateY(${logoMetrics.dropOffset}px);`,
 	);
 
 	let activeIndex = $state(0);
@@ -145,8 +151,8 @@
 
 	onMount(() => {
 		clearAutoAdvance();
-		void preloadHtmlImages(LOADER_CARD_IMAGE_URLS, {
-			priority: [LOADER_CARD_IMAGE_URLS[0]!],
+		void preloadHtmlImages(LOADER_SCREEN_IMAGE_URLS, {
+			priority: [LOADER_NEON_LOGO_URL, LOADER_SCREEN_IMAGE_URLS[1]!],
 			concurrency: 2,
 		});
 	});
@@ -177,7 +183,15 @@
 
 {#if show}
 	<div class="loader-cards-overlay" style={overlayStyle} aria-hidden={!show}>
-		{#if useCarousel}
+		<div class="loader-cards-stack">
+			<img
+				class="loader-neon-logo"
+				src={LOADER_NEON_LOGO_URL}
+				alt="Wok Fury"
+				style={logoStyle}
+				draggable="false"
+			/>
+			{#if useCarousel}
 			<div
 				class="carousel-viewport"
 				style:width="{carouselMetrics.viewportWidth}px"
@@ -211,13 +225,32 @@
 				{/each}
 			</div>
 		{/if}
+		</div>
 	</div>
 {/if}
 
 <style lang="scss">
+	.loader-neon-logo {
+		position: absolute;
+		left: 50%;
+		bottom: 100%;
+		display: block;
+		object-fit: contain;
+		pointer-events: none;
+		user-select: none;
+		mix-blend-mode: screen;
+	}
+
+	.loader-cards-stack {
+		position: relative;
+	}
+
 	.loader-cards-overlay {
 		position: fixed;
-		z-index: 43;
+		z-index: 44;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		pointer-events: none;
 		user-select: none;
 		overflow: visible;

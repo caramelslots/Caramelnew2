@@ -1,6 +1,7 @@
 import type { createLayout } from 'utils-layout';
 
-import { isPopoutViewport } from './constants';
+import { isPopoutSmallViewport, isPopoutViewport } from './constants';
+import { LOADER_NEON_LOGO_ASPECT } from './loaderCardAssets';
 
 export const LOADER_CARD_ASPECT = 862 / 1484;
 export const LOADER_CARD_COUNT = 3;
@@ -18,7 +19,7 @@ export const shouldUseLoaderCarousel = (layoutDerived: LayoutDerived) => {
 /** Canvas px anchor for the loader cards row (matches LoadingScreen MainContainer center + Y offset). */
 export const computeLoaderCardsAnchor = (layoutDerived: LayoutDerived) => {
 	const ml = layoutDerived.mainLayout();
-	const cardYOffset = -ml.height * 0.04;
+	const cardYOffset = -ml.height * 0.1;
 	const localX = ml.width * 0.5;
 	const localY = ml.height * 0.5 + cardYOffset;
 
@@ -56,7 +57,10 @@ export const computeLoaderCarouselMetrics = (
 	const maxCardWidthPx = canvasWidth * 0.94;
 	const maxCardHeightPx = canvasHeight * 0.62;
 
-	let cardWidthPx = Math.min(layoutWidth * (isPortraitCanvas ? 0.72 : 0.58) * scale, maxCardWidthPx);
+	let cardWidthPx = Math.min(
+		layoutWidth * (isPortraitCanvas ? 0.72 : 0.58) * scale,
+		maxCardWidthPx,
+	);
 	let cardHeightPx = cardWidthPx / LOADER_CARD_ASPECT;
 
 	if (cardHeightPx > maxCardHeightPx) {
@@ -71,5 +75,36 @@ export const computeLoaderCarouselMetrics = (
 		slideStep: canvasWidth,
 		slideWidth: canvasWidth,
 		viewportWidth: canvasWidth,
+	};
+};
+
+/** Neon WOK FURY title — centered above the loader cards (ref. CASH STACKS on info screen). */
+export const computeLoaderLogoMetrics = (layoutDerived: LayoutDerived) => {
+	const canvasSizes = layoutDerived.canvasSizes();
+	const canvasWidth = canvasSizes.width;
+	const canvasHeight = canvasSizes.height;
+	const useCarousel = shouldUseLoaderCarousel(layoutDerived);
+	const isPopout = isPopoutViewport(canvasSizes);
+	const isPopoutL = isPopout && !isPopoutSmallViewport(canvasSizes);
+	const maxWidthFraction = useCarousel ? 1 : isPopout ? 0.78 : 0.85;
+	let width = Math.min(canvasWidth * maxWidthFraction, canvasWidth - 16);
+	let height = width / LOADER_NEON_LOGO_ASPECT;
+
+	// Keep the title in the upper band above cards (never clip off the top of the canvas).
+	const maxHeight = canvasHeight * (useCarousel ? 0.26 : 0.24);
+	if (height > maxHeight) {
+		height = maxHeight;
+		width = height * LOADER_NEON_LOGO_ASPECT;
+	}
+
+	const dropOffset = useCarousel ? 8 : isPopoutL ? 30 : isPopout ? 18 : 44;
+
+	return {
+		width,
+		height,
+		/** Space between logo bottom edge and card top edge. */
+		gap: useCarousel ? 8 : 12,
+		/** Extra downward shift for the logo (cards stay fixed). */
+		dropOffset,
 	};
 };
