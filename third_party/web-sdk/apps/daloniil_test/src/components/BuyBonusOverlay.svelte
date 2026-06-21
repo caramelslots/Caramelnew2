@@ -93,7 +93,7 @@
 	data-test="buy-bonus-overlay"
 	aria-hidden={!isOpen}
 >
-	<img class="panel-bg" src={bgUrl} alt="" draggable="false" />
+			<img class="panel-bg" src={bgUrl} alt="" draggable="false" loading="eager" />
 
 	<div class="panel-content">
 		<header class="panel-header">

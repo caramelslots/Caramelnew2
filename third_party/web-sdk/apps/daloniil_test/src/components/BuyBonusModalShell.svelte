@@ -1,39 +1,35 @@
 <!--
 	Shared blur backdrop for buy-bonus menu + confirm.
-	Both panels stay mounted while open; only visibility toggles to avoid blink.
+	Shell stays mounted after game enter (hidden) so backdrop + PNGs are warm
+	before the first open; only visibility toggles on show/hide and panel swap.
 -->
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { stateModal } from 'state-shared';
 
 	import BuyBonusOverlay from './BuyBonusOverlay.svelte';
 	import BuyBonusConfirmOverlay from './BuyBonusConfirmOverlay.svelte';
-	import { BUY_BONUS_ASSETS } from '../game/uiHtmlAssetManifest';
-	import { preloadHtmlImages } from '../game/preloadHtmlImages';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
 
-	const isOpen = $derived(
+	const shellMounted = $derived(gameEntrance.showContent);
+	const isVisible = $derived(
 		stateModal.modal?.name === 'buyBonus' || stateModal.modal?.name === 'buyBonusConfirm',
 	);
 	const showBuyPanel = $derived(stateModal.modal?.name === 'buyBonus');
 	const showConfirmPanel = $derived(stateModal.modal?.name === 'buyBonusConfirm');
 
-	onMount(() => {
-		void preloadHtmlImages(
-			[
-				BUY_BONUS_ASSETS.menuBg,
-				BUY_BONUS_ASSETS.confirmBg,
-				BUY_BONUS_ASSETS.normalCard,
-				BUY_BONUS_ASSETS.superCard,
-				BUY_BONUS_ASSETS.cancelButtonBg,
-				BUY_BONUS_ASSETS.confirmButtonBg,
-			],
-			{ priority: [BUY_BONUS_ASSETS.confirmBg], concurrency: 3 },
-		);
+	$effect(() => {
+		if (shellMounted) startBuyBonusFlowPreload();
 	});
 </script>
 
-{#if isOpen}
-	<div class="buy-bonus-modal-shell" data-test="buy-bonus-modal-shell">
+{#if shellMounted}
+	<div
+		class="buy-bonus-modal-shell"
+		class:active={isVisible}
+		aria-hidden={!isVisible}
+		data-test="buy-bonus-modal-shell"
+	>
 		<div class="panel-slot" class:active={showBuyPanel} aria-hidden={!showBuyPanel}>
 			<BuyBonusOverlay />
 		</div>
@@ -51,7 +47,14 @@
 		background: rgba(0, 0, 0, 0.5);
 		backdrop-filter: blur(30px);
 		-webkit-backdrop-filter: blur(30px);
-		pointer-events: auto;
+		visibility: hidden;
+		pointer-events: none;
+		will-change: backdrop-filter;
+
+		&.active {
+			visibility: visible;
+			pointer-events: auto;
+		}
 	}
 
 	.panel-slot {

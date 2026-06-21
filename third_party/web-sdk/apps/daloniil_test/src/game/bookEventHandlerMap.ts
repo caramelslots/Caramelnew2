@@ -109,14 +109,24 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		stateGame.gameType = bookEvent.gameType;
 
-		// FS spins chain back-to-back inside one bet — sync the reel engine with
-		// the visible board (same as post-mystery settle) so handoff starts from
-		// defaultY with no stale pool / win-presentation drift.
-		if (bookEvent.gameType === 'freegame') {
+		// Sync the reel engine with the visible board before every spin so that:
+		// – FS back-to-back reveals chain from the correct position (no stale pool
+		//   or win-presentation drift between consecutive freegame reveals).
+		// – After FS ends, M-symbols left on frozen mystery-reel columns by
+		//   `mysteryReveal`/`mysteryCollapse` are replaced with a neutral symbol
+		//   before the first basegame spin builds its scroll strip. Without this
+		//   the engine's internal pool still contains M, and one of those cells
+		//   briefly flashes during the new basegame reel scroll.
+		//   Frozen reels never participate in `enhancedBoard.spin()` (they are
+		//   always excluded via `frozenReelIndices`), so replacing M → L1 in the
+		//   settle target is safe: the pool value is never read for those reels.
+		{
 			const settledBoard = stateGame.board.map((reel) =>
 				reel.reelState.symbols
 					.slice(0, reel.reelLength)
-					.map(({ rawSymbol }) => ({ ...rawSymbol })),
+					.map(({ rawSymbol }) =>
+						rawSymbol.name === 'M' ? { name: 'L1' as const } : { ...rawSymbol },
+					),
 			);
 			stateGameDerived.enhancedBoard.settle(settledBoard);
 		}

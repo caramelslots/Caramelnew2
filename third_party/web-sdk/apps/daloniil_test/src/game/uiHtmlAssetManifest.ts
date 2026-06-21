@@ -116,6 +116,38 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	BUY_BONUS_ASSETS.confirmButtonBg,
 ]);
 
+export const BUY_BONUS_FLOW_IMAGE_URLS = dedupeUrls([
+	BUY_BONUS_ASSETS.menuBg,
+	BUY_BONUS_ASSETS.confirmBg,
+	BUY_BONUS_ASSETS.normalCard,
+	BUY_BONUS_ASSETS.superCard,
+	BUY_BONUS_ASSETS.deskL,
+	BUY_BONUS_ASSETS.deskR,
+	BUY_BONUS_ASSETS.buyButtonBg,
+	BUY_BONUS_ASSETS.cancelButtonBg,
+	BUY_BONUS_ASSETS.confirmButtonBg,
+]);
+
+const BUY_BONUS_FLOW_PRELOAD_PRIORITY = [
+	BUY_BONUS_ASSETS.menuBg,
+	BUY_BONUS_ASSETS.confirmBg,
+	BUY_BONUS_ASSETS.normalCard,
+	BUY_BONUS_ASSETS.superCard,
+] as const;
+
+let buyBonusFlowPreloadStarted = false;
+
+/** Decode buy-bonus modal sprites before the first open. */
+export const startBuyBonusFlowPreload = () => {
+	if (buyBonusFlowPreloadStarted) return;
+	buyBonusFlowPreloadStarted = true;
+
+	void preloadHtmlImages(BUY_BONUS_FLOW_IMAGE_URLS, {
+		priority: BUY_BONUS_FLOW_PRELOAD_PRIORITY,
+		concurrency: 3,
+	});
+};
+
 const LOADING_IDLE_UI_PRIORITY = [
 	HUD_ASSETS.spin1,
 	HUD_ASSETS.spin2,
