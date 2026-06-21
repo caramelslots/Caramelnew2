@@ -18,8 +18,8 @@
 
 	import {
 		BITMAP_FONT_SCALE,
+		FONT_BABLO,
 		FONT_KRUTOI,
-		FONT_PROSTOI,
 		WIN_SCREEN_POST_COUNT_UP_DELAY_MS,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
@@ -91,7 +91,7 @@
 							<ResponsiveBitmapText
 								anchor={0.5}
 								style={{
-									fontFamily: isBigWin ? FONT_KRUTOI : FONT_PROSTOI,
+									fontFamily: FONT_BABLO,
 									fontSize: width * 0.4 * BITMAP_FONT_SCALE,
 								}}
 								text={bookEventAmountToCurrencyString(countUpAmount)}

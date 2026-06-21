@@ -13,7 +13,7 @@
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import UiFadeContainer from 'components-ui-pixi/src/components/UiFadeContainer.svelte';
 
-	import { BITMAP_FONT_SCALE, FONT_PROSTOI, WIN_HUD_FONT_SIZE } from '../game/constants';
+	import { BITMAP_FONT_SCALE, FONT_BABLO, WIN_HUD_FONT_SIZE } from '../game/constants';
 	import { portraitScaleY, portraitWinHudLocalY } from '../game/portraitHudLayout';
 	import { getContext } from '../game/context';
 	import { getContextLayout } from 'utils-layout';
@@ -44,7 +44,7 @@
 	);
 
 	const WIN_TEXT_STYLE = $derived({
-		fontFamily: FONT_PROSTOI,
+		fontFamily: FONT_BABLO,
 		fontSize: winHudFontSize,
 		fontWeight: 'bold' as const,
 		letterSpacing: 1,

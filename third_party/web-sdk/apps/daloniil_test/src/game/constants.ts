@@ -11,9 +11,11 @@ export const SYMBOL_TEXTURE_NATIVE_PX = 196;
 export const MAX_LAYOUT_SCALE = SYMBOL_TEXTURE_NATIVE_PX / SYMBOL_SIZE;
 
 /** Bitmap font families (prostoi = default gold text, krutoi = big/super/epic win). */
-export const FONT_PROSTOI = 'prostoi';
-export const FONT_PROSTOI_WHITE = 'prostoiWhite';
-export const FONT_KRUTOI = 'krutoi';
+export const FONT_PROSTOI = 'Reggae One Regular';
+export const FONT_PROSTOI_WHITE = 'Reggae One White';
+export const FONT_KRUTOI = 'Shojumaru';
+/** Bablo — full currency-glyph font (₽ € ₩ ₴ ₫ ₱ ₹ ₦ ₪ ₡ ¥ zł…). Used for all monetary amounts. */
+export const FONT_BABLO = 'Noto Sans SemiCondensed SemiBold';
 /**
  * Pixi scales bitmap glyphs as `fontSize / font.info.size`.
  * Legacy gold used info size 105; prostoi/krutoi use 53 — same fontSize renders ~2× larger without this.

@@ -20,8 +20,8 @@
 	import PressToContinue from './PressToContinue.svelte';
 	import {
 		BITMAP_FONT_SCALE,
+		FONT_BABLO,
 		FONT_KRUTOI,
-		FONT_PROSTOI,
 		SYMBOL_SIZE,
 		WIN_SCREEN_POST_COUNT_UP_DELAY_MS,
 	} from '../game/constants';
@@ -188,7 +188,7 @@
 									maxWidth={2130}
 									text={bookEventAmountToCurrencyString(countUpAmount)}
 									style={{
-										fontFamily: FONT_KRUTOI,
+										fontFamily: FONT_BABLO,
 										fontSize: SYMBOL_SIZE * 3.6 * BITMAP_FONT_SCALE,
 										align: 'center',
 										fontWeight: 'bold',
@@ -203,7 +203,7 @@
 									context.stateLayoutDerived.mainLayout().scale}
 								text={bookEventAmountToCurrencyString(countUpAmount)}
 								style={{
-									fontFamily: FONT_PROSTOI,
+									fontFamily: FONT_BABLO,
 									fontSize: SYMBOL_SIZE * BITMAP_FONT_SCALE,
 									align: 'center',
 									fontWeight: 'bold',

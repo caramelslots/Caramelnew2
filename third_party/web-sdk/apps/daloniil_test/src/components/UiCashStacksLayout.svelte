@@ -17,7 +17,7 @@
 	import UiFadeContainer from 'components-ui-pixi/src/components/UiFadeContainer.svelte';
 	import UiCashStacksPortraitLayout from './UiCashStacksPortraitLayout.svelte';
 
-	import { BITMAP_FONT_SCALE, FONT_PROSTOI, isPopoutSmallViewport, POPOUT_S_SCALE, WIN_HUD_FONT_SIZE } from '../game/constants';
+	import { BITMAP_FONT_SCALE, FONT_BABLO, isPopoutSmallViewport, POPOUT_S_SCALE, WIN_HUD_FONT_SIZE } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { getContextLayout } from 'utils-layout';
 
@@ -44,7 +44,7 @@
 	const showWin = $derived(stateBet.winBookEventAmount > 0);
 
 	const WIN_TEXT_STYLE = {
-		fontFamily: FONT_PROSTOI,
+		fontFamily: FONT_BABLO,
 		fontSize: WIN_HUD_FONT_SIZE * BITMAP_FONT_SCALE,
 		fontWeight: 'bold' as const,
 		letterSpacing: 1,

@@ -242,17 +242,21 @@ export default {
 			scale: 2,
 		},
 	},
+	babloFont: {
+		type: 'font',
+		src: assetUrl('assets/fonts/babloFont/bablo.fnt'),
+	},
 	prostoiFont: {
 		type: 'font',
-		src: assetUrl('assets/fonts/prostoiFont/prostoi.xml'),
+		src: assetUrl('assets/fonts/prostoiFont/prostoi_langs.fnt'),
 	},
 	prostoiWhiteFont: {
 		type: 'font',
-		src: assetUrl('assets/fonts/prostoiWhiteFont/prostoiWhite.xml'),
+		src: assetUrl('assets/fonts/prostoiWhiteFont/prostoiWhite_langs.fnt'),
 	},
 	krutoiFont: {
 		type: 'font',
-		src: assetUrl('assets/fonts/krutoiFont/krutoi.xml'),
+		src: assetUrl('assets/fonts/krutoiFont/krutoi_langs.fnt'),
 	},
 	goldBlur: {
 		type: 'font',
