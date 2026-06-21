@@ -65,4 +65,15 @@ export const i18nDerived = {
 	// Misc
 	maxWin: () => t('MAX_WIN'),
 	pressToContinue: () => t('PRESS_TO_CONTINUE').toUpperCase(),
+	// Loader cards
+	loaderCard1Title: () => t('LOADER_CARD_1_TITLE'),
+	loaderCard1Line1: () => t('LOADER_CARD_1_LINE_1'),
+	loaderCard1Line2: () => t('LOADER_CARD_1_LINE_2'),
+	loaderCard1Line3: () => t('LOADER_CARD_1_LINE_3'),
+	loaderCard1Line4: () => t('LOADER_CARD_1_LINE_4'),
+	loaderCard2Title: () => t('LOADER_CARD_2_TITLE'),
+	loaderCard2Body: () => t('LOADER_CARD_2_BODY'),
+	loaderCard3Title: () => t('LOADER_CARD_3_TITLE'),
+	loaderCard3Line1: () => t('LOADER_CARD_3_LINE_1'),
+	loaderCard3Line2: () => t('LOADER_CARD_3_LINE_2'),
 };

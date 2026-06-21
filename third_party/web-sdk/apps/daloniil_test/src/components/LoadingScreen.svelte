@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { SpineProvider, SpineTrack, Container, Sprite } from 'pixi-svelte';
+	import { Container, Sprite } from 'pixi-svelte';
 	import { FadeContainer, LoadingProgress } from 'components-pixi';
 	import { MainContainer } from 'components-layout';
 
@@ -18,6 +17,10 @@
 
 	let loadingType = $state<'start' | 'transition'>('start');
 
+	$effect(() => {
+		gameEntrance.loadingCardsVisible = loadingType === 'start';
+	});
+
 	// Warm up board symbols / frame textures while the player reads "press to continue".
 	$effect(() => {
 		if (context.stateApp.loaded) {
@@ -31,16 +34,13 @@
 	};
 </script>
 
-<!-- logo and loading progress -->
+<!-- loader cards and loading progress -->
 <FadeContainer show={loadingType === 'start'}>
 	<MainContainer>
 		<Container
 			x={context.stateLayoutDerived.mainLayout().width * 0.5}
 			y={context.stateLayoutDerived.mainLayout().height * 0.5}
 		>
-			<SpineProvider key="loader" width={300}>
-				<SpineTrack trackIndex={0} animationName={'title_screen'} loop timeScale={3} />
-			</SpineProvider>
 			{#if !context.stateApp.loaded}
 				<LoadingProgress y={250} width={1967 * 0.2} height={346 * 0.2}>
 					{#snippet background(sizes)}

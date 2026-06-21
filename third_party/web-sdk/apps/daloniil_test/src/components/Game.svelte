@@ -22,6 +22,7 @@
 	import ResumeBet from './ResumeBet.svelte';
 	import Sound from './Sound.svelte';
 	import Background from './Background.svelte';
+	import LoaderCardsHtmlOverlay from './LoaderCardsHtmlOverlay.svelte';
 	import LoadingScreen from './LoadingScreen.svelte';
 	import BoardFrame from './BoardFrame.svelte';
 	import Board from './Board.svelte';
@@ -120,6 +121,8 @@
 		{/if}
 	</App>
 </div>
+
+<LoaderCardsHtmlOverlay />
 
 <CashStacksModals>
 	{#snippet version()}

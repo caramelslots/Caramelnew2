@@ -3,15 +3,6 @@ const assetUrl = (path: string) =>
 	new URL(path.replace(/^\//, ''), typeof window !== 'undefined' ? window.location.href : import.meta.url).href;
 
 export default {
-	loader: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('assets/spines/loader/loader.atlas'),
-			skeleton: assetUrl('assets/spines/loader/loader.json'),
-			scale: 2,
-		},
-		preload: true,
-	},
 	mainBackground: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/background/day.png'),
