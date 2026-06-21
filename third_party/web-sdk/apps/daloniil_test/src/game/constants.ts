@@ -608,13 +608,6 @@ export const PORTRAIT_UTIL_ICON_BASE = 108;
 export const PORTRAIT_AUTOPLAY_PILL_BASE = AUTOPLAY_PILL_BASE;
 export const PORTRAIT_TURBO_ICON_BASE = 108;
 
-const explosion = {
-	type: 'spine',
-	assetKey: 'explosion',
-	animationName: 'explosion',
-	sizeRatios: { width: 1, height: 1 },
-};
-
 // New designer artwork comes from `designer_assets/Symbols/export/` — a
 // single combined spine with bounce/win/explosion animations + per-symbol
 // images. Rest/spin/static frames render via zero-movement `*/idle` spine
@@ -893,7 +886,6 @@ export const SYMBOL_INFO_MAP = {
 	// the visual consistent with WIN_BOUNCE's translate Tween that
 	// ReelSymbol still applies on top.
 	H1: {
-		explosion,
 		win: h1Static,
 		postWinStatic: h1Static,
 		static: h1Static,
@@ -901,7 +893,6 @@ export const SYMBOL_INFO_MAP = {
 		land: h1Bounce,
 	},
 	H2: {
-		explosion,
 		win: h2Static,
 		postWinStatic: h2Static,
 		static: h2Static,
@@ -909,7 +900,6 @@ export const SYMBOL_INFO_MAP = {
 		land: h2Bounce,
 	},
 	H3: {
-		explosion,
 		win: h3Static,
 		postWinStatic: h3Static,
 		static: h3Static,
@@ -917,7 +907,6 @@ export const SYMBOL_INFO_MAP = {
 		land: h3Bounce,
 	},
 	H4: {
-		explosion,
 		win: h4Static,
 		postWinStatic: h4Static,
 		static: h4Static,
@@ -925,7 +914,6 @@ export const SYMBOL_INFO_MAP = {
 		land: h4Bounce,
 	},
 	L1: {
-		explosion,
 		win: l1Static,
 		postWinStatic: l1Static,
 		static: l1Static,
@@ -933,7 +921,6 @@ export const SYMBOL_INFO_MAP = {
 		land: l1Bounce,
 	},
 	L2: {
-		explosion,
 		win: l2Static,
 		postWinStatic: l2Static,
 		static: l2Static,
@@ -941,7 +928,6 @@ export const SYMBOL_INFO_MAP = {
 		land: l2Bounce,
 	},
 	L3: {
-		explosion,
 		win: l3Static,
 		postWinStatic: l3Static,
 		static: l3Static,
@@ -949,7 +935,6 @@ export const SYMBOL_INFO_MAP = {
 		land: l3Bounce,
 	},
 	L4: {
-		explosion,
 		win: l4Static,
 		postWinStatic: l4Static,
 		static: l4Static,
@@ -959,7 +944,6 @@ export const SYMBOL_INFO_MAP = {
 	// Wild — `Special_2/idle` rest pose, bounce spine on land, dedicated
 	// `Special_2/win` celebration spine on win (lights up the W/I/L/D letters).
 	W: {
-		explosion,
 		postWinStatic: wStatic,
 		static: wStatic,
 		spin: wStatic,
@@ -968,7 +952,6 @@ export const SYMBOL_INFO_MAP = {
 	},
 	// Bonus — landing shows BONUS letters; scatter/collect win plays paw wave.
 	B: {
-		explosion,
 		postWinStatic: bStatic,
 		static: bStatic,
 		spin: bStatic,
@@ -979,7 +962,6 @@ export const SYMBOL_INFO_MAP = {
 	// `Mystery/explosion` spine plays during `mysteryReveal` (handled
 	// dynamically in `getMysteryRevealSymbolInfo`).
 	M: {
-		explosion,
 		postWinStatic: mStatic,
 		static: mStatic,
 		spin: mStatic,

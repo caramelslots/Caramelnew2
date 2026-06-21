@@ -7,7 +7,7 @@
 	    эффекты). Достаётся через pixi-svelte context, без прямого импорта
 	    'pixi.js' (apps/daloniil_test не имеет его в deps).
 	  - stateBetDerived.timeScale() — Spine-анимации символов, Anticipation,
-	    GlobalMultiplier, SymbolSpine.
+	    SymbolSpine.
 	  - window.setTimeout / setInterval — waitForTimeout, паузы между
 	    book-events, FS-intro/outro, blink/glow таймеры.
 

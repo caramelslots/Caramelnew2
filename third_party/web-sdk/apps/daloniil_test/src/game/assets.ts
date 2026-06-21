@@ -114,14 +114,6 @@ export default {
 			scale: 1,
 		},
 	},
-	explosion: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('assets/spines/symbols3/symbols3.atlas'),
-			skeleton: assetUrl('assets/spines/symbols3/explosion.json'),
-			scale: 2,
-		},
-	},
 	// Wild — `Special_2` skeleton holds the bounce/idle clip (no text), so
 	// the spinning/landing reels never accidentally render the W/I/L/D
 	// letters from default-skin attachments.
@@ -249,15 +241,6 @@ export default {
 		src: {
 			atlas: assetUrl('assets/spines/bigwin/big_wins.atlas'),
 			skeleton: assetUrl('assets/spines/bigwin/mm_bigwin.json'),
-			scale: 2,
-		},
-	},
-	globalMultiplier: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('assets/spines/globalMultiplier/multiframe.atlas'),
-			skeleton: new URL('../../assets/spines/globalMultiplier/multiframe.json', import.meta.url)
-				.href,
 			scale: 2,
 		},
 	},
