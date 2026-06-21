@@ -1,7 +1,6 @@
 <!--
 	BuyBonusConfirmOverlay.svelte — подтверждение покупки бонуса (WOK MENU).
-	Собрано из тех же ассетов что BuyBonusOverlay: bg_buy_bonus_panel,
-	normal/super_bonus_card, desk_l/desk_r, buy_button_bg, cross.
+	bg_buy_bonus_confirm_panel + cancel/confirm button bg; карточка, cross — как в BuyBonusOverlay.
 -->
 <script lang="ts">
 	import { stateModal, stateBet } from 'state-shared';
@@ -22,13 +21,14 @@
 	const { stateLayoutDerived } = getContextLayout();
 
 	const assetBase = `${import.meta.env.BASE_URL}assets/sprites/ui`;
-	const bgUrl = `${assetBase}/buy_bonus/bg_buy_bonus_panel.png`;
+	const bgUrl = `${assetBase}/buy_bonus/bg_buy_bonus_confirm_panel.png`;
 	const normalCardUrl = `${assetBase}/buy_bonus/normal_bonus_card.png`;
 	const superCardUrl = `${assetBase}/buy_bonus/super_bonus_card.png`;
 	const closeIconUrl = `${assetBase}/autoplay/cross.png`;
+	const cancelButtonBgUrl = `${assetBase}/buy_bonus/cancel_button_bg.png`;
+	const confirmButtonBgUrl = `${assetBase}/buy_bonus/confirm_button_bg.png`;
 	const deskLUrl = `${assetBase}/buy_bonus/desk_l.png`;
 	const deskRUrl = `${assetBase}/buy_bonus/desk_r.png`;
-	const buyButtonBgUrl = `${assetBase}/buy_bonus/buy_button_bg.png`;
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonusConfirm');
 	const layoutType = $derived(stateLayoutDerived.layoutType());
@@ -43,7 +43,6 @@
 	const deskUrl = $derived(isSuper ? deskRUrl : deskLUrl);
 	const price = $derived(numberToCurrencyString(stateBet.betAmount * multiplier));
 	const canConfirm = $derived(canAffordBuyBonus(multiplier));
-	const showMultiplierBadge = $derived(isSuper);
 
 	const cardTitle = $derived(
 		isSuper ? context.i18nDerived.superBonus() : context.i18nDerived.normalBonus(),
@@ -103,13 +102,13 @@
 
 				<section class="confirm-card-section" aria-label="selected bonus">
 					<article
-						class="confirm-card"
+						class="card confirm-card"
 						class:card-normal={!isSuper}
 						class:card-super={isSuper}
 					>
 						<img class="card-bg" src={cardUrl} alt="" draggable="false" />
 						<div class="card-content">
-							<h3 class="card-title">{cardTitle}</h3>
+							<div class="card-title">{cardTitle}</div>
 							{#if isSuper}
 								<div class="card-desc card-desc-stacked">
 									<span class="desc-spin-count">{context.i18nDerived.buySuperDescCount()}</span>
@@ -128,9 +127,6 @@
 							<div class="card-price-wrap" style:background-image="url('{deskUrl}')">
 								<span class="card-price" data-test="buy-bonus-confirm-price">{price}</span>
 							</div>
-							{#if showMultiplierBadge}
-								<span class="multiplier-badge">×3</span>
-							{/if}
 						</div>
 					</article>
 				</section>
@@ -139,7 +135,7 @@
 					<button
 						type="button"
 						class="action-btn cancel-btn"
-						style:background-image="url('{deskLUrl}')"
+						style:background-image="url('{cancelButtonBgUrl}')"
 						onclick={goBack}
 						data-test="buy-bonus-confirm-back"
 					>
@@ -148,7 +144,7 @@
 					<button
 						type="button"
 						class="action-btn confirm-btn"
-						style:background-image="url('{buyButtonBgUrl}')"
+						style:background-image="url('{confirmButtonBgUrl}')"
 						disabled={!canConfirm}
 						onclick={confirm}
 						data-test="confirm-button"
@@ -216,8 +212,8 @@
 	}
 
 	.close-button {
-		width: calc(var(--panel-width) * 0.1);
-		height: calc(var(--panel-width) * 0.1);
+		width: calc(var(--panel-width) * 0.11);
+		height: calc(var(--panel-width) * 0.11);
 		padding: 0;
 		border: 0;
 		background: transparent;
@@ -251,10 +247,10 @@
 
 	.confirm-card-section {
 		position: absolute;
-		top: 24%;
-		left: 50%;
-		width: 34%;
-		height: 44%;
+		top: 25%;
+		left: 49%;
+		width: 79%;
+		height: 55%;
 		transform: translateX(-50%);
 		display: flex;
 		align-items: center;
@@ -262,15 +258,16 @@
 		box-sizing: border-box;
 	}
 
-	.confirm-card {
+	.confirm-card-section .card {
 		position: relative;
 		height: 100%;
 		width: auto;
+		flex: 0 0 auto;
 		filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
 	}
 
-	.confirm-card.card-normal,
-	.confirm-card.card-super {
+	.card-normal,
+	.card-super {
 		aspect-ratio: 541 / 799;
 	}
 
@@ -287,13 +284,13 @@
 	.card-content {
 		position: absolute;
 		inset: 0;
-		transform: scale(0.92);
-		transform-origin: 50% 58%;
+		transform: scale(0.8);
+		transform-origin: 50% 61%;
 	}
 
 	.card-title {
 		position: absolute;
-		top: -2%;
+		top: -5%;
 		left: 10%;
 		right: 10%;
 		height: 8%;
@@ -302,7 +299,7 @@
 		align-items: center;
 		justify-content: center;
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.024);
+		font-size: calc(var(--panel-width) * 0.021);
 		font-weight: 900;
 		font-style: italic;
 		letter-spacing: 0.03em;
@@ -318,13 +315,13 @@
 		top: 57%;
 		left: 12%;
 		right: 12%;
-		height: 14%;
+		height: 11%;
 		margin: 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.014);
+		font-size: calc(var(--panel-width) * 0.0135);
 		line-height: 1.15;
 		font-weight: 700;
 		text-transform: uppercase;
@@ -392,11 +389,11 @@
 
 	.card-price-wrap {
 		position: absolute;
-		top: 72%;
+		top: 99%;
 		left: 50%;
 		transform: translateX(-50%);
-		width: 78%;
-		height: 10%;
+		width: 110%;
+		height: 18%;
 		background-size: 100% 100%;
 		background-repeat: no-repeat;
 		background-position: center;
@@ -407,35 +404,21 @@
 
 	.card-price {
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.028);
+		font-size: calc(var(--panel-width) * 0.033);
 		font-weight: 900;
 		letter-spacing: 0.01em;
 		text-align: center;
 		line-height: 1;
+	}
+
+	.card-normal .card-price {
 		color: #f5e6c8;
 		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 	}
 
-	.multiplier-badge {
-		position: absolute;
-		top: 38%;
-		right: 6%;
-		min-width: calc(var(--panel-width) * 0.05);
-		height: calc(var(--panel-width) * 0.044);
-		padding: 0 calc(var(--panel-width) * 0.012);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: linear-gradient(180deg, #ffd96b 0%, #d6a233 100%);
-		color: #2b1f08;
-		font-family: 'proxima-nova', sans-serif;
-		font-weight: 900;
-		font-size: calc(var(--panel-width) * 0.018);
-		letter-spacing: 0.02em;
-		border-radius: calc(var(--panel-width) * 0.008);
-		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-		border: calc(var(--panel-width) * 0.003) solid #2b1f08;
-		pointer-events: none;
+	.card-super .card-price {
+		color: #f5e6c8;
+		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 	}
 
 	.confirm-actions {
@@ -447,7 +430,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: calc(var(--panel-width) * 0.02);
+		gap: calc(var(--panel-width) * 0.07);
 		box-sizing: border-box;
 	}
 
@@ -490,46 +473,55 @@
 		}
 	}
 
-	.cancel-btn {
-		color: #f5e6c8;
-	}
-
+	.cancel-btn,
 	.confirm-btn {
+		flex: 0 1 auto;
+		width: auto;
+		max-width: 48%;
+		aspect-ratio: 343 / 165;
+		padding: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: calc(var(--panel-width) * 0.032);
+		line-height: 1;
 		color: #f5e6c8;
+		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
 	}
 
 	/* Desktop */
 	.confirm-panel:not(.portrait):not(.popout-l):not(.popout-s) {
 		.close-button {
-			width: calc(var(--panel-width) * 0.085);
-			height: calc(var(--panel-width) * 0.085);
-			margin-top: calc(var(--panel-width) * 0.06);
-			margin-right: calc(var(--panel-width) * 0.03);
+			width: calc(var(--panel-width) * 0.095);
+			height: calc(var(--panel-width) * 0.095);
+			margin-top: calc(var(--panel-width) * 0.025);
+			margin-right: 0;
 		}
 
 		.confirm-card-section {
-			top: 24%;
-			width: 32%;
-			height: 45%;
+			top: 25%;
+			left: 49%;
+			width: 79%;
+			height: 55%;
+		}
+
+		.card {
+			height: 100%;
 		}
 
 		.card-content {
-			transform: scale(0.88);
-			transform-origin: 50% 59%;
-		}
-
-		.card-title {
-			font-size: calc(var(--panel-width) * 0.022);
+			transform: scale(0.8);
+			transform-origin: 50% 61%;
 		}
 
 		.card-price-wrap {
-			top: 74%;
-			height: 11%;
-			width: 82%;
+			top: 99%;
+			height: 18%;
+			width: 110%;
 		}
 
 		.card-price {
-			font-size: calc(var(--panel-width) * 0.03);
+			font-size: calc(var(--panel-width) * 0.033);
 		}
 
 		.confirm-actions {
@@ -540,14 +532,19 @@
 		}
 
 		.action-btn {
-			font-size: calc(var(--panel-width) * 0.02);
+			font-size: calc(var(--panel-width) * 0.028);
+		}
+
+		.cancel-btn,
+		.confirm-btn {
+			font-size: calc(var(--panel-width) * 0.028);
 		}
 	}
 
 	/* Portrait */
 	.confirm-panel.portrait:not(.popout-l):not(.popout-s) {
-		--panel-height-scale: 1.32;
-		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
+		--panel-height-scale: 1.42;
+		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 98vh);
 
 		.panel-bg {
 			width: 130%;
@@ -564,41 +561,77 @@
 
 		.close-button {
 			position: absolute;
-			top: 65%;
-			right: 7%;
-			width: calc(var(--panel-width) * 0.095);
-			height: calc(var(--panel-width) * 0.095);
+			top: 40%;
+			right: 1.5%;
+			width: calc(var(--panel-width) * 0.11);
+			height: calc(var(--panel-width) * 0.11);
 			margin: 0;
 		}
 
 		.confirm-card-section {
-			top: 24%;
-			width: 40%;
-			height: 42%;
+			top: 25%;
+			left: 49%;
+			width: 79%;
+			height: 51%;
+		}
+
+		.card {
+			height: 100%;
 		}
 
 		.card-content {
-			transform: scale(0.82);
-			transform-origin: 50% 59%;
+			transform: scale(0.72);
+			transform-origin: 50% 61%;
 		}
 
 		.card-title {
-			font-size: calc(var(--panel-width) * 0.028);
+			top: -11%;
+			font-size: calc(var(--panel-width) * 0.032);
+		}
+
+		.card .card-desc.card-desc-stacked {
+			top: 66%;
+			height: 22%;
+		}
+
+		.card .card-desc.card-desc-stacked .desc-spin-count {
+			font-size: calc(var(--panel-width) * 0.112);
+		}
+
+		.card .card-desc.card-desc-stacked .desc-spin-label {
+			font-size: calc(var(--panel-width) * 0.045);
+		}
+
+		.card .card-desc.card-desc-stacked .desc-trigger {
+			font-size: calc(var(--panel-width) * 0.026);
+			min-height: calc(var(--panel-width) * 0.032);
+		}
+
+		.card-price-wrap {
+			top: 105%;
+			height: 18%;
+			width: 118%;
 		}
 
 		.card-price {
-			font-size: calc(var(--panel-width) * 0.032);
+			font-size: calc(var(--panel-width) * 0.042);
 		}
 
 		.confirm-actions {
 			top: 81%;
 			left: 14%;
 			right: 14%;
-			height: 11%;
+			height: 10%;
+			gap: calc(var(--panel-width) * 0.08);
 		}
 
 		.action-btn {
-			font-size: calc(var(--panel-width) * 0.024);
+			font-size: calc(var(--panel-width) * 0.034);
+		}
+
+		.cancel-btn,
+		.confirm-btn {
+			font-size: calc(var(--panel-width) * 0.034);
 		}
 	}
 
@@ -610,67 +643,26 @@
 		filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.6));
 
 		.close-button {
-			width: calc(var(--panel-width) * 0.085);
-			height: calc(var(--panel-width) * 0.085);
-			margin-top: calc(var(--panel-width) * 0.06);
-			margin-right: calc(var(--panel-width) * 0.03);
+			width: calc(var(--panel-width) * 0.095);
+			height: calc(var(--panel-width) * 0.095);
+			margin-top: calc(var(--panel-width) * 0.025);
+			margin-right: 0;
 		}
 
 		.confirm-card-section {
-			width: 34%;
-			height: 44%;
+			top: 25%;
+			left: 49%;
+			width: 79%;
+			height: 55%;
+		}
+
+		.card {
+			height: 100%;
 		}
 
 		.card-content {
-			transform: scale(0.88);
-		}
-
-		.card .card-desc.card-desc-stacked {
-			height: 16%;
-		}
-
-		.card .card-desc.card-desc-stacked .desc-spin-count {
-			font-size: calc(var(--panel-width) * 0.074);
-		}
-
-		.card .card-desc.card-desc-stacked .desc-spin-label {
-			font-size: calc(var(--panel-width) * 0.028);
-		}
-
-		.card .card-desc.card-desc-stacked .desc-trigger {
-			font-size: calc(var(--panel-width) * 0.016);
-			min-height: calc(var(--panel-width) * 0.020);
-		}
-
-		.confirm-actions {
-			top: 82%;
-			height: 10%;
-		}
-	}
-
-	/* Popout S */
-	.confirm-panel.popout-s {
-		--panel-width: min(240px, 60vw);
-		--panel-height-scale: 1.28;
-		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
-		filter: drop-shadow(0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.075) rgba(0, 0, 0, 0.55));
-
-		.close-button {
-			width: calc(var(--panel-width) * 0.085);
-			height: calc(var(--panel-width) * 0.085);
-			margin-top: calc(var(--panel-width) * 0.06);
-			margin-right: calc(var(--panel-width) * 0.03);
-		}
-
-		.confirm-card-section {
-			top: 24%;
-			width: 32%;
-			height: 45%;
-		}
-
-		.card-content {
-			transform: scale(0.88);
-			transform-origin: 50% 59%;
+			transform: scale(0.8);
+			transform-origin: 50% 61%;
 		}
 
 		.card .card-desc.card-desc-stacked {
@@ -691,13 +683,76 @@
 		}
 
 		.card-price-wrap {
-			top: 74%;
-			height: 11%;
-			width: 82%;
+			top: 99%;
+			height: 18%;
+			width: 110%;
 		}
 
 		.card-price {
-			font-size: calc(var(--panel-width) * 0.03);
+			font-size: calc(var(--panel-width) * 0.033);
+		}
+
+		.confirm-actions {
+			top: 82%;
+			height: 10%;
+		}
+	}
+
+	/* Popout S */
+	.confirm-panel.popout-s {
+		--panel-width: min(240px, 60vw);
+		--panel-height-scale: 1.28;
+		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
+		filter: drop-shadow(0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.075) rgba(0, 0, 0, 0.55));
+
+		.close-button {
+			width: calc(var(--panel-width) * 0.095);
+			height: calc(var(--panel-width) * 0.095);
+			margin-top: calc(var(--panel-width) * 0.025);
+			margin-right: 0;
+		}
+
+		.confirm-card-section {
+			top: 25%;
+			left: 49%;
+			width: 79%;
+			height: 55%;
+		}
+
+		.card {
+			height: 100%;
+		}
+
+		.card-content {
+			transform: scale(0.8);
+			transform-origin: 50% 61%;
+		}
+
+		.card .card-desc.card-desc-stacked {
+			height: 16%;
+		}
+
+		.card .card-desc.card-desc-stacked .desc-spin-count {
+			font-size: calc(var(--panel-width) * 0.074);
+		}
+
+		.card .card-desc.card-desc-stacked .desc-spin-label {
+			font-size: calc(var(--panel-width) * 0.028);
+		}
+
+		.card .card-desc.card-desc-stacked .desc-trigger {
+			font-size: calc(var(--panel-width) * 0.016);
+			min-height: calc(var(--panel-width) * 0.020);
+		}
+
+		.card-price-wrap {
+			top: 99%;
+			height: 18%;
+			width: 110%;
+		}
+
+		.card-price {
+			font-size: calc(var(--panel-width) * 0.033);
 		}
 
 		.confirm-actions {
@@ -708,7 +763,27 @@
 		}
 
 		.action-btn {
-			font-size: calc(var(--panel-width) * 0.02);
+			font-size: calc(var(--panel-width) * 0.028);
+		}
+
+		.cancel-btn,
+		.confirm-btn {
+			font-size: calc(var(--panel-width) * 0.028);
+		}
+	}
+
+	@media (max-width: 600px) {
+		.confirm-panel.portrait:not(.popout-l):not(.popout-s) {
+			--panel-height-scale: 1.5;
+			height: min(calc(var(--panel-width) * var(--panel-height-scale)), 98vh);
+
+			.confirm-card-section {
+				height: 49%;
+			}
+
+			.confirm-actions {
+				height: 9.7%;
+			}
 		}
 	}
 </style>
