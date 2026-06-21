@@ -45,12 +45,6 @@ export default {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/bonusBar/cat_static.png'),
 	},
-	pressToContinueText: {
-		type: 'sprites',
-		src: new URL('../../assets/sprites/pressToContinueText/MM_pressanywhere.json', import.meta.url)
-			.href,
-		preload: true,
-	},
 	// Designer-handoff `designer_assets/Symbols/export` — combined skeleton
 	// with all symbol slots + bounce/win/explosion animations. Split into
 	// per-symbol skeletons by `scripts/splitSymbolsSpine.py` so each ReelSymbol
@@ -226,14 +220,6 @@ export default {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/symbolsNew/Mystery_bg.png'),
 	},
-	reelsFrame: {
-		type: 'sprites',
-		src: assetUrl('assets/sprites/reelsFrame/reels_frame.json'),
-	},
-	payFrame: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/payFrame/payFrame.png'),
-	},
 	anticipation: {
 		type: 'spine',
 		src: {
@@ -258,18 +244,6 @@ export default {
 		type: 'font',
 		src: assetUrl('assets/fonts/krutoiFont/krutoi_langs.fnt'),
 	},
-	goldBlur: {
-		type: 'font',
-		src: assetUrl('assets/fonts/goldBlur/miningfont_gold_blur.xml'),
-	},
-	silverFont: {
-		type: 'font',
-		src: assetUrl('assets/fonts/silverFont/mm_silver.xml'),
-	},
-	purpleFont: {
-		type: 'font',
-		src: assetUrl('assets/fonts/purpleFont/mm_purple.xml'),
-	},
 	bigwin: {
 		type: 'spine',
 		src: {
@@ -287,52 +261,11 @@ export default {
 			scale: 2,
 		},
 	},
-	fsIntro: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('assets/spines/fsIntro/fs_screen.atlas'),
-			skeleton: assetUrl('assets/spines/fsIntro/fs_screen.json'),
-			scale: 2,
-		},
-	},
-	fsIntroNumber: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('assets/spines/fsIntro/fs_screen.atlas'),
-			skeleton: assetUrl('assets/spines/fsIntro/fs_screen_number.json'),
-			scale: 2,
-		},
-	},
-	fsOutroNumber: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('assets/spines/fsIntro/fs_screen.atlas'),
-			skeleton: assetUrl('assets/spines/fsIntro/fs_total_number.json'),
-			scale: 2,
-		},
-	},
 	fsPopup: {
 		type: 'spine',
 		src: {
 			atlas: assetUrl('assets/spines/fsPopup/fs_popup.atlas'),
 			skeleton: assetUrl('assets/spines/fsPopup/fs_popup.json'),
-			scale: 2,
-		},
-	},
-	tumble_multiplier: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('assets/spines/tumbleWin/tumble_win.atlas'),
-			skeleton: new URL('../../assets/spines/tumbleWin/tumble_multiplier.json', import.meta.url)
-				.href,
-			scale: 2,
-		},
-	},
-	tumble_win: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('assets/spines/tumbleWin/tumble_win.atlas'),
-			skeleton: assetUrl('assets/spines/tumbleWin/tumble_win.json'),
 			scale: 2,
 		},
 	},
@@ -370,14 +303,6 @@ export default {
 		src: new URL('../../assets/sprites/winSmall/MM_Localisation_winsmall.json', import.meta.url)
 			.href,
 	},
-	clusterWin: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('assets/spines/clusterWin/clusterpay.atlas'),
-			skeleton: assetUrl('assets/spines/clusterWin/clusterpay.json'),
-			scale: 2,
-		},
-	},
 	transition: {
 		type: 'spine',
 		src: {
@@ -385,10 +310,6 @@ export default {
 			skeleton: assetUrl('assets/spines/transition/transition.json'),
 			scale: 2,
 		},
-	},
-	symbolsStatic: {
-		type: 'sprites',
-		src: assetUrl('assets/sprites/symbolsStatic/symbolsStatic.json'),
 	},
 	coins: {
 		type: 'spriteSheet',

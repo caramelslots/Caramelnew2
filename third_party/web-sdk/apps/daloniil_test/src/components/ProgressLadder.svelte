@@ -5,9 +5,9 @@
 	Other layouts → bar_h.png  (horizontal, bottom of screen)
 
 	As the player collects Bonus (kitty) symbols, slots fill top→bottom / left→right
-	with the colored Bonus cat (cat_static.png — extracted from the symbolsStatic
-	atlas, already includes the raised paw + BONUS medallion), placed to sit exactly
-	on top of the grey cat silhouettes baked into the bar texture.
+	with the colored Bonus cat (cat_static.png, already includes the raised paw +
+	BONUS medallion), placed to sit exactly on top of the grey cat silhouettes baked
+	into the bar texture.
 	Every BONUSES_PER_TIER collected = tier-up.
 
 	All geometry below is expressed as a percentage of the FULL bar PNG (the element
@@ -252,7 +252,7 @@
 			{@const filled = i < bonusInCurrentTier}
 			<!--
 				Vertical bar fills top→bottom, horizontal fills left→right.
-				cat_static (extracted from the symbolsStatic atlas) already includes the
+				cat_static already includes the
 				raised paw + BONUS medallion, so it sits on the whole grey silhouette.
 			-->
 			<div class="cat-wrap" class:filled style={boxStyle(p.cat)}>
