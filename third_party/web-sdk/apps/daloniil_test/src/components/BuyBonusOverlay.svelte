@@ -93,108 +93,108 @@
 	data-test="buy-bonus-overlay"
 	aria-hidden={!isOpen}
 >
-			<img class="panel-bg" src={bgUrl} alt="" draggable="false" />
+	<img class="panel-bg" src={bgUrl} alt="" draggable="false" />
 
-			<div class="panel-content">
-				<header class="panel-header">
-					<!-- panel-title hidden by design -->
-					<button
-						type="button"
-						class="close-button"
-						onclick={close}
-						aria-label="close"
-						data-test="buy-bonus-close"
-					>
-						<img class="close-icon" src={closeIconUrl} alt="" draggable="false" />
-					</button>
-				</header>
+	<div class="panel-content">
+		<header class="panel-header">
+			<!-- panel-title hidden by design -->
+			<button
+				type="button"
+				class="close-button"
+				onclick={close}
+				aria-label="close"
+				data-test="buy-bonus-close"
+			>
+				<img class="close-icon" src={closeIconUrl} alt="" draggable="false" />
+			</button>
+		</header>
 
-				<section class="cards-section" aria-label="bonus options">
-					<button
-						type="button"
-						class="card card-normal"
-						data-test="bonus-card-normal"
-						disabled={!canBuyNormal}
-						onclick={() => onBuy('normal')}
-					>
-						<img class="card-bg" src={normalCardUrl} alt="" draggable="false" />
-						<div class="card-content">
-							<div class="card-title">{context.i18nDerived.normalBonus()}</div>
-							<div class="card-desc card-desc-stacked">
-								<span class="desc-spin-count">{context.i18nDerived.buyNormalDescCount()}</span>
-								<span class="desc-spin-label">{context.i18nDerived.buyNormalDescSpins()}</span>
-								<span class="desc-divider" aria-hidden="true"></span>
-								<span class="desc-trigger">{context.i18nDerived.buyNormalDescTrigger()}</span>
-							</div>
-							<div class="card-price-wrap" style:background-image="url('{deskLUrl}')">
-								<span class="card-price" data-test="bonus-price-normal">{normalPrice}</span>
-							</div>
-							<div class="buy-button" style:background-image="url('{buyButtonBgUrl}')">
-								{context.i18nDerived.buyConfirm()}
-							</div>
-						</div>
-					</button>
-
-					<button
-						type="button"
-						class="card card-super"
-						data-test="bonus-card-super"
-						disabled={!canBuySuper}
-						onclick={() => onBuy('super')}
-					>
-						<img class="card-bg" src={superCardUrl} alt="" draggable="false" />
-						<div class="card-content">
-							<div class="card-title">{context.i18nDerived.superBonus()}</div>
-							<div class="card-desc card-desc-stacked">
-								<span class="desc-spin-count">{context.i18nDerived.buySuperDescCount()}</span>
-								<span class="desc-spin-label">{context.i18nDerived.buySuperDescSpins()}</span>
-								<span class="desc-divider" aria-hidden="true"></span>
-								<span class="desc-trigger">{context.i18nDerived.buySuperDescFeature()}</span>
-							</div>
-							<div class="card-price-wrap" style:background-image="url('{deskRUrl}')">
-								<span class="card-price" data-test="bonus-price-super">{superPrice}</span>
-							</div>
-							<div class="buy-button" style:background-image="url('{buyButtonBgUrl}')">
-								{context.i18nDerived.buyConfirm()}
-							</div>
-						</div>
-					</button>
-				</section>
-
-				<section class="features-section" aria-label={context.i18nDerived.autoplayFeatures()}>
-					<CashStacksFeatureToggles
-						features={['bonus_boost']}
-						disabled={featureTogglesDisabled}
-						showMenuCatIcon
-						noHoverBg
-					/>
-				</section>
-
-				<footer class="bet-adjuster">
-					<button
-						type="button"
-						class="bet-btn"
-						style:background-image="url('{minusUrl}')"
-						onclick={decreaseBet}
-						disabled={!canDecrease}
-						aria-label="decrease bet"
-						data-test="bet-decrease"
-					></button>
-					<div class="bet-display">
-						<span class="bet-label">{context.i18nDerived.bet().toUpperCase()}</span>
-						<span class="bet-value" data-test="bet-value">{currentBet}</span>
+		<section class="cards-section" aria-label="bonus options">
+			<button
+				type="button"
+				class="card card-normal"
+				data-test="bonus-card-normal"
+				disabled={!canBuyNormal}
+				onclick={() => onBuy('normal')}
+			>
+				<img class="card-bg" src={normalCardUrl} alt="" draggable="false" />
+				<div class="card-content">
+					<div class="card-title">{context.i18nDerived.normalBonus()}</div>
+					<div class="card-desc card-desc-stacked">
+						<span class="desc-spin-count">{context.i18nDerived.buyNormalDescCount()}</span>
+						<span class="desc-spin-label">{context.i18nDerived.buyNormalDescSpins()}</span>
+						<span class="desc-divider" aria-hidden="true"></span>
+						<span class="desc-trigger">{context.i18nDerived.buyNormalDescTrigger()}</span>
 					</div>
-					<button
-						type="button"
-						class="bet-btn"
-						style:background-image="url('{plusUrl}')"
-						onclick={increaseBet}
-						disabled={!canIncrease}
-						aria-label="increase bet"
-						data-test="bet-increase"
-					></button>
-				</footer>
+					<div class="card-price-wrap" style:background-image="url('{deskLUrl}')">
+						<span class="card-price" data-test="bonus-price-normal">{normalPrice}</span>
+					</div>
+					<div class="buy-button" style:background-image="url('{buyButtonBgUrl}')">
+						{context.i18nDerived.buyConfirm()}
+					</div>
+				</div>
+			</button>
+
+			<button
+				type="button"
+				class="card card-super"
+				data-test="bonus-card-super"
+				disabled={!canBuySuper}
+				onclick={() => onBuy('super')}
+			>
+				<img class="card-bg" src={superCardUrl} alt="" draggable="false" />
+				<div class="card-content">
+					<div class="card-title">{context.i18nDerived.superBonus()}</div>
+					<div class="card-desc card-desc-stacked">
+						<span class="desc-spin-count">{context.i18nDerived.buySuperDescCount()}</span>
+						<span class="desc-spin-label">{context.i18nDerived.buySuperDescSpins()}</span>
+						<span class="desc-divider" aria-hidden="true"></span>
+						<span class="desc-trigger">{context.i18nDerived.buySuperDescFeature()}</span>
+					</div>
+					<div class="card-price-wrap" style:background-image="url('{deskRUrl}')">
+						<span class="card-price" data-test="bonus-price-super">{superPrice}</span>
+					</div>
+					<div class="buy-button" style:background-image="url('{buyButtonBgUrl}')">
+						{context.i18nDerived.buyConfirm()}
+					</div>
+				</div>
+			</button>
+		</section>
+
+		<section class="features-section" aria-label={context.i18nDerived.autoplayFeatures()}>
+			<CashStacksFeatureToggles
+				features={['bonus_boost']}
+				disabled={featureTogglesDisabled}
+				showMenuCatIcon
+				noHoverBg
+			/>
+		</section>
+
+		<footer class="bet-adjuster">
+			<button
+				type="button"
+				class="bet-btn"
+				style:background-image="url('{minusUrl}')"
+				onclick={decreaseBet}
+				disabled={!canDecrease}
+				aria-label="decrease bet"
+				data-test="bet-decrease"
+			></button>
+			<div class="bet-display">
+				<span class="bet-label">{context.i18nDerived.bet().toUpperCase()}</span>
+				<span class="bet-value" data-test="bet-value">{currentBet}</span>
 			</div>
+			<button
+				type="button"
+				class="bet-btn"
+				style:background-image="url('{plusUrl}')"
+				onclick={increaseBet}
+				disabled={!canIncrease}
+				aria-label="increase bet"
+				data-test="bet-increase"
+			></button>
+		</footer>
+	</div>
 </div>
 
 <style lang="scss">
