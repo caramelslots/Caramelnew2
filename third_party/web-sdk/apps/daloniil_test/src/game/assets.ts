@@ -265,10 +265,6 @@ export default {
 		src: assetUrl('assets/sprites/progressBar/progressBar.json'),
 		preload: true,
 	},
-	freeSpins: {
-		type: 'sprites',
-		src: assetUrl('assets/sprites/freeSpins/freeSpins.json'),
-	},
 	fsCongBoard: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/fsCong/fs_cong.png'),
@@ -280,11 +276,6 @@ export default {
 	fsLeftCounter: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/fsLeftCounter/fs_left_counter.png'),
-	},
-	winSmall: {
-		type: 'sprites',
-		src: new URL('../../assets/sprites/winSmall/MM_Localisation_winsmall.json', import.meta.url)
-			.href,
 	},
 	transition: {
 		type: 'spine',
