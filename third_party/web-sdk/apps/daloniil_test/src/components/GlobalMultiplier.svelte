@@ -22,6 +22,8 @@
 
 	import BoardContainer from './BoardContainer.svelte';
 	import { getContext } from '../game/context';
+	import { scaleMsByGameSpeed } from '../game/gameSpeed';
+	import { stateGame } from '../game/stateGame.svelte';
 	import { BITMAP_FONT_SCALE, FONT_PROSTOI, SYMBOL_SIZE } from '../game/constants';
 
 	type AnimationName = 'static' | 'win' | 'reset' | 'increment';
@@ -53,7 +55,7 @@
 		globalMultiplierUpdate: async (emitterEvent) => {
 			if (emitterEvent.multiplier === 1 && multiplier !== 1) {
 				animationName = 'reset';
-				await waitForTimeout(300);
+				await waitForTimeout(scaleMsByGameSpeed(300, stateGame.gameSpeed));
 				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_reset' });
 				previousMultiplier.set(emitterEvent.multiplier);
 			}

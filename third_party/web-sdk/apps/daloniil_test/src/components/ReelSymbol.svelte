@@ -68,16 +68,20 @@
 	const runWinBounce = async () => {
 		const peak = WIN_BOUNCE.scalePeak;
 		const lift = WIN_BOUNCE.yOffsetPeakPx;
+		const speed = stateBetDerived.timeScale();
+		const upMs = WIN_BOUNCE.upMs / speed;
+		const holdMs = WIN_BOUNCE.holdMs / speed;
+		const downMs = WIN_BOUNCE.downMs / speed;
 
-		void winScale.set(peak, { duration: WIN_BOUNCE.upMs, easing: sineOut });
-		await winYOffset.set(-lift, { duration: WIN_BOUNCE.upMs, easing: sineOut });
+		void winScale.set(peak, { duration: upMs, easing: sineOut });
+		await winYOffset.set(-lift, { duration: upMs, easing: sineOut });
 
-		if (WIN_BOUNCE.holdMs > 0) {
-			await new Promise((resolve) => setTimeout(resolve, WIN_BOUNCE.holdMs));
+		if (holdMs > 0) {
+			await new Promise((resolve) => setTimeout(resolve, holdMs));
 		}
 
-		void winScale.set(1, { duration: WIN_BOUNCE.downMs, easing: sineIn });
-		await winYOffset.set(0, { duration: WIN_BOUNCE.downMs, easing: sineIn });
+		void winScale.set(1, { duration: downMs, easing: sineIn });
+		await winYOffset.set(0, { duration: downMs, easing: sineIn });
 
 		// Fire only if we're still in win state — defensively skips the call
 		// if the state was reset externally (e.g. spin restarted mid-bounce).

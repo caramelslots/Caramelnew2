@@ -25,6 +25,7 @@
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { isSdkTurboSpin } from '../game/gameSpeed';
 	import { getContextLayout } from 'utils-layout';
 
 	const context = getContext();
@@ -199,7 +200,7 @@
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		const next = (stateGame.gameSpeed === 3 ? 1 : stateGame.gameSpeed + 1) as 1 | 2 | 3;
 		stateGame.gameSpeed = next;
-		stateBet.isTurbo = next > 1;
+		stateBet.isTurbo = isSdkTurboSpin(next);
 	};
 </script>
 

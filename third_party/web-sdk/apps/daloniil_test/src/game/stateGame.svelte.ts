@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import type { Tween } from 'svelte/motion';
 
-import { stateBet, stateUi, stateMeta } from 'state-shared';
+import { stateBet, stateBetDerived, stateUi, stateMeta } from 'state-shared';
 import { createEnhanceBoard, createReelForSpinning } from 'utils-slots';
 import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 
@@ -79,6 +79,7 @@ import {
 	SCATTER_LAND_SOUND_MAP,
 } from './constants';
 import { devPreview } from './devPreview.svelte';
+import { gameSpeedMultFor } from './gameSpeed';
 
 const REEL_SCROLL_SPEED_MULT_SLOW = 0.5;
 
@@ -93,6 +94,8 @@ const withReelScrollSpeedMult = <T extends typeof SPIN_OPTIONS_DEFAULT>(
 		reelSpinSpeedBeforeBounce: options.reelSpinSpeedBeforeBounce * mult,
 		reelPreSpinSpeed: options.reelPreSpinSpeed * mult,
 		reelSpinSpeed: options.reelSpinSpeed * mult,
+		reelSpinDelay: Math.max(0, Math.round(options.reelSpinDelay / mult)),
+		reelLandSquashRecoveryMs: Math.max(0, Math.round(options.reelLandSquashRecoveryMs / mult)),
 	};
 };
 
@@ -132,8 +135,8 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 	reel.reelState.spinOptions = () => {
 		const base =
 			reel.reelState.spinType === 'fast' ? SPIN_OPTIONS_FAST : SPIN_OPTIONS_DEFAULT;
-		const mult = devPreview.slowReelScroll ? REEL_SCROLL_SPEED_MULT_SLOW : 1;
-		return withReelScrollSpeedMult(base, mult);
+		const devMult = devPreview.slowReelScroll ? REEL_SCROLL_SPEED_MULT_SLOW : 1;
+		return withReelScrollSpeedMult(base, devMult * gameSpeedMultFor(stateGame.gameSpeed));
 	};
 
 	return reel;
@@ -171,9 +174,8 @@ export const stateGame = $state({
 	mysteryReelsPendingCollapse: {} as Record<number, string>,
 	// Bonus Boost / Special Spins state (для autoplay).
 	activeFeature: null as 'bonus_boost' | 'special_spins' | null,
-	// Скорость игры (1 = normal, 2 = fast, 3 = ultra-fast) для меню Информация.
-	// 1 → isTurbo=false; 2-3 → isTurbo=true. Полный gradient можно навесить
-	// позже через timeScale-логику если нужно три уровня скорости.
+	// Скорость игры: 1 = normal, 2 = 1.5× normal scroll, 3 = 2× fast scroll (см. gameSpeed.ts).
+	// isTurbo (SDK fast spin) только для уровня 3.
 	gameSpeed: 1 as 1 | 2 | 3,
 	// Музыка вкл/выкл для меню Информация. Связана со stateSound.volumeValueMusic.
 	musicEnabled: true,
@@ -192,6 +194,8 @@ export const stateGame = $state({
 	// Bonus bar during FS — decoupled from gameType so background can switch under smoke first.
 	ladderVisible: false,
 });
+
+stateBetDerived.timeScale = () => gameSpeedMultFor(stateGame.gameSpeed);
 
 const boardLayout = () => {
 	const layoutType = stateLayoutDerived.layoutType();

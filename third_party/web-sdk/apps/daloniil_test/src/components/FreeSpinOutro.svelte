@@ -23,6 +23,7 @@
 		WIN_SCREEN_POST_COUNT_UP_DELAY_MS,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
+	import { scaleMsByGameSpeed } from '../game/gameSpeed';
 	import { stateGame } from '../game/stateGame.svelte';
 	import FreeSpinAnimation from './FreeSpinAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
@@ -47,7 +48,7 @@
 		},
 		freeSpinOutroCountUp: async (emitterEvent) => {
 			cookieOpened = false;
-			waitForTimeout(1000).then(() => (cookieOpened = true));
+			waitForTimeout(scaleMsByGameSpeed(1000, stateGame.gameSpeed)).then(() => (cookieOpened = true));
 			winAmount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
 			stateGame.winOverlayActive = emitterEvent.winLevelData.type === 'big';
@@ -65,7 +66,9 @@
 				<OnMount
 					onmount={async () => {
 						await startCountUp();
-						await waitForTimeout(WIN_SCREEN_POST_COUNT_UP_DELAY_MS);
+						await waitForTimeout(
+							scaleMsByGameSpeed(WIN_SCREEN_POST_COUNT_UP_DELAY_MS, stateGame.gameSpeed),
+						);
 						oncomplete();
 					}}
 				/>

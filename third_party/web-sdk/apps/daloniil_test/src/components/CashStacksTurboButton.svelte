@@ -14,6 +14,7 @@
 	import { PORTRAIT_UTIL_ICON_BASE } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { isSdkTurboSpin } from '../game/gameSpeed';
 	import { UI_SPRITE_RENDER, uiScaledSize, type UiSizeScaleProps } from '../game/uiButtonSize';
 
 	type Props = {
@@ -40,7 +41,7 @@
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		const next = (stateGame.gameSpeed === 3 ? 1 : stateGame.gameSpeed + 1) as 1 | 2 | 3;
 		stateGame.gameSpeed = next;
-		stateBet.isTurbo = next > 1;
+		stateBet.isTurbo = isSdkTurboSpin(next);
 	};
 </script>
 

@@ -2,7 +2,6 @@ import _ from 'lodash';
 
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
 import { stateBet, stateUi } from 'state-shared';
-import { waitForTimeout } from 'utils-shared/wait';
 
 import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
@@ -23,6 +22,7 @@ import {
 	MYSTERY_REVEAL_PRE_DELAY_MS,
 	WIN_SPOTLIGHT_CLEAR_DELAY_MS,
 } from './constants';
+import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
 
 // Таймер фонового снятия затемнения/paylines. Хранится здесь, чтобы
 // `reveal` мог отменить его при старте нового спина раньше истечения задержки.
@@ -88,10 +88,10 @@ const animateSymbols = async ({ positions }: { positions: Position[] }) => {
 
 /** Bonus scatter/collect paw-wave — delayed after reel landing. */
 const animateBonusSymbols = async ({ positions }: { positions: Position[] }) => {
-	await waitForTimeout(BONUS_WIN_PRE_DELAY_MS);
+	await waitForGameSpeed(BONUS_WIN_PRE_DELAY_MS, stateGame.gameSpeed);
 	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
 	await animateSymbols({ positions });
-	await waitForTimeout(BONUS_WIN_POST_DELAY_MS);
+	await waitForGameSpeed(BONUS_WIN_POST_DELAY_MS, stateGame.gameSpeed);
 };
 
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
@@ -155,7 +155,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
 		// Breathing room after the reels land before the win celebration kicks
 		// in (also lets the symbol bounce animation finish landing).
-		await waitForTimeout(WIN_INFO_PRE_DELAY_MS);
+		await waitForGameSpeed(WIN_INFO_PRE_DELAY_MS, stateGame.gameSpeed);
 
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 
@@ -192,7 +192,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			spotlightClearTimer = null;
 			stateGame.winSpotlightActive = false;
 			eventEmitter.broadcast({ type: 'paylineClearAll' });
-		}, WIN_SPOTLIGHT_CLEAR_DELAY_MS);
+		}, scaleMsByGameSpeed(WIN_SPOTLIGHT_CLEAR_DELAY_MS, stateGame.gameSpeed));
 	},
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
 		stateBet.winBookEventAmount = bookEvent.amount;
@@ -382,7 +382,7 @@ export const playMysteryRevealBatch = async (bookEvents: BookEventOfType<'myster
 	// reel skip the `?` static frame entirely and snap straight into the
 	// reveal spine. Pause once for the whole batch so all reels show the
 	// question mark for a guaranteed window before the reveal.
-	await waitForTimeout(MYSTERY_REVEAL_PRE_DELAY_MS);
+	await waitForGameSpeed(MYSTERY_REVEAL_PRE_DELAY_MS, stateGame.gameSpeed);
 
 	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_win' });
 	await eventEmitter.broadcastAsync({

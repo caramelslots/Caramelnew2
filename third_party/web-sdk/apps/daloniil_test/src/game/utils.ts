@@ -16,6 +16,7 @@ import {
 import { eventEmitter } from './eventEmitter';
 import type { Bet, BookEventOfType } from './typesBookEvent';
 import { bookEventHandlerMap, playMysteryRevealBatch } from './bookEventHandlerMap';
+import { stateGame } from './stateGame.svelte';
 import type { RawSymbol, SymbolName, SymbolState } from './types';
 
 // general utils
@@ -131,6 +132,11 @@ export const getSymbolInfo = ({
 	}
 	if (rawSymbol.name === 'M' && state === 'mysteryCollapse') {
 		return MYSTERY_COLLAPSE_SPINE;
+	}
+	// Turbo 3: skip land bounce — fast spin is already near-instant; bounce at 2×
+	// is still hard to tell apart from Turbo 2, so land goes straight to static.
+	if (state === 'land' && stateGame.gameSpeed === 3) {
+		return SYMBOL_INFO_MAP[rawSymbol.name].static;
 	}
 	return SYMBOL_INFO_MAP[rawSymbol.name][state];
 };

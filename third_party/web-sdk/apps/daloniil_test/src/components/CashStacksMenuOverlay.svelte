@@ -16,6 +16,7 @@
 	import { computeDesktopHudLayout, resolveDesktopHudConfig } from '../game/desktopHudLayout';
 	import { computePortraitHudCanvas } from '../game/portraitHudLayout';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { isSdkTurboSpin } from '../game/gameSpeed';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
@@ -132,7 +133,7 @@
 	const setSpeed = (level: 1 | 2 | 3) => {
 		if (stateGame.gameSpeed === level) return;
 		stateGame.gameSpeed = level;
-		stateBet.isTurbo = level > 1;
+		stateBet.isTurbo = isSdkTurboSpin(level);
 		playClick();
 	};
 

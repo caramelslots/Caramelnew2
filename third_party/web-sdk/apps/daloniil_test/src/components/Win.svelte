@@ -26,6 +26,7 @@
 		WIN_SCREEN_POST_COUNT_UP_DELAY_MS,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
+	import { scaleMsByGameSpeed } from '../game/gameSpeed';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { winLevelMap, UNIFIED_BIG_WIN_SPINE, type WinLevel } from '../game/winLevelMap';
 	import { sound } from '../game/sound';
@@ -165,7 +166,9 @@
 				<OnMount
 					onmount={async () => {
 						await startCountUp();
-						await waitForTimeout(WIN_SCREEN_POST_COUNT_UP_DELAY_MS);
+						await waitForTimeout(
+							scaleMsByGameSpeed(WIN_SCREEN_POST_COUNT_UP_DELAY_MS, stateGame.gameSpeed),
+						);
 						oncomplete();
 					}}
 				/>
