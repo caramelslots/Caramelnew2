@@ -12,6 +12,7 @@
 	import { getContext } from '../game/context';
 	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
 	import { computeMenuPanelAnchor } from '../game/popupHudLayout';
+	import { SETTINGS_ASSETS, SETTINGS_TURBO_URLS } from '../game/uiHtmlAssetManifest';
 	import { computeDesktopHudLayout, resolveDesktopHudConfig } from '../game/desktopHudLayout';
 	import { computePortraitHudCanvas } from '../game/portraitHudLayout';
 	import { stateGame } from '../game/stateGame.svelte';
@@ -52,25 +53,19 @@
 		stateUi.menuOpen = false;
 	};
 
-	const assetBase = `${import.meta.env.BASE_URL}assets/sprites/ui`;
-	const settingsAssetBase = `${assetBase}/settings`;
-	const bgUrl = `${settingsAssetBase}/bg_settings_panel.png`;
+	const bgUrl = SETTINGS_ASSETS.bg;
 	const soundIconUrls = {
-		off: `${settingsAssetBase}/sound_off.png`,
-		low: `${settingsAssetBase}/sound_low.png`,
-		mid: `${settingsAssetBase}/sound_mid.png`,
-		high: `${settingsAssetBase}/sound_high.png`,
+		off: SETTINGS_ASSETS.soundOff,
+		low: SETTINGS_ASSETS.soundLow,
+		mid: SETTINGS_ASSETS.soundMid,
+		high: SETTINGS_ASSETS.soundHigh,
 	} as const;
-	const sliderEmptyUrl = `${settingsAssetBase}/slider_empty.png`;
-	const sliderFullUrl = `${settingsAssetBase}/slider_full.png`;
-	const sliderKnobUrl = `${settingsAssetBase}/slider_knob.png`;
-	const musicOnUrl = `${settingsAssetBase}/music_on.png`;
-	const musicOffUrl = `${settingsAssetBase}/music_off.png`;
-	const turboUrls = [
-		`${settingsAssetBase}/turbo_1.png`,
-		`${settingsAssetBase}/turbo_2.png`,
-		`${settingsAssetBase}/turbo_3.png`,
-	] as const;
+	const sliderEmptyUrl = SETTINGS_ASSETS.sliderEmpty;
+	const sliderFullUrl = SETTINGS_ASSETS.sliderFull;
+	const sliderKnobUrl = SETTINGS_ASSETS.sliderKnob;
+	const musicOnUrl = SETTINGS_ASSETS.musicOn;
+	const musicOffUrl = SETTINGS_ASSETS.musicOff;
+	const turboUrls = SETTINGS_TURBO_URLS;
 
 	const PANEL_IN_MS = 400;
 	const PANEL_OUT_MS = 240;

@@ -7,6 +7,7 @@
 	import LoaderCardHtml from './LoaderCardHtml.svelte';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { LOADER_CARD_IMAGE_URLS } from '../game/loaderCardAssets';
 	import {
 		LOADER_CARD_COUNT,
 		computeLoaderCardsAnchor,
@@ -14,6 +15,7 @@
 		computeLoaderRowMetrics,
 		shouldUseLoaderCarousel,
 	} from '../game/loaderCardsHtmlLayout';
+	import { preloadHtmlImages } from '../game/preloadHtmlImages';
 
 	const SWIPE_THRESHOLD = 0.18;
 	const SNAP_MS = 520;
@@ -141,7 +143,13 @@
 		scheduleAutoAdvance();
 	};
 
-	onMount(() => clearAutoAdvance);
+	onMount(() => {
+		clearAutoAdvance();
+		void preloadHtmlImages(LOADER_CARD_IMAGE_URLS, {
+			priority: [LOADER_CARD_IMAGE_URLS[0]!],
+			concurrency: 2,
+		});
+	});
 
 	$effect(() => {
 		if (!useCarousel) return;

@@ -5,6 +5,7 @@
 
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { startLoadingIdleUiPreload } from '../game/uiHtmlAssetManifest';
 	import TransitionAnimation from './TransitionAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 
@@ -25,6 +26,7 @@
 	$effect(() => {
 		if (context.stateApp.loaded) {
 			gameEntrance.preloadContent = true;
+			startLoadingIdleUiPreload();
 		}
 	});
 

@@ -20,24 +20,24 @@
 	import { canAffordSpin, canIncreaseBet } from '../game/buyBonusBalance';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { getContextLayout } from 'utils-layout';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 
-	const assetBase = `${import.meta.env.BASE_URL}assets/sprites/ui`;
-	const infoUrl = `${assetBase}/info/info.png`;
-	const menuUrl = `${assetBase}/menu/menu.png`;
-	const minusUrl = `${assetBase}/bet/minus.png`;
-	const plusUrl = `${assetBase}/bet/plus.png`;
-	const spin1Url = `${assetBase}/spin/spin_1.png`;
-	const spin2Url = `${assetBase}/spin/spin_2.png`;
-	const autoplayUrl = `${assetBase}/autoplay/autoplay_mobile.png`;
+	const infoUrl = HUD_ASSETS.info;
+	const menuUrl = HUD_ASSETS.menu;
+	const minusUrl = HUD_ASSETS.betMinus;
+	const plusUrl = HUD_ASSETS.betPlus;
+	const spin1Url = HUD_ASSETS.spin1;
+	const spin2Url = HUD_ASSETS.spin2;
+	const autoplayUrl = HUD_ASSETS.autoplayMobile;
 	const turboUrls = {
-		1: `${assetBase}/turbo/turbo_1.png`,
-		2: `${assetBase}/turbo/turbo_2.png`,
-		3: `${assetBase}/turbo/turbo_3.png`,
+		1: HUD_ASSETS.turbo1,
+		2: HUD_ASSETS.turbo2,
+		3: HUD_ASSETS.turbo3,
 	} as const;
 
 	let uiVisible = $state(true);

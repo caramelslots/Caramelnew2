@@ -4,6 +4,7 @@
 	import { Tween } from 'svelte/motion';
 
 	import { getContext } from '../game/context';
+	import { loaderCardImageUrl } from '../game/loaderCardAssets';
 
 	const BOUNCE_MS = 520;
 
@@ -22,14 +23,7 @@
 
 	const scale = new Tween(1);
 
-	const assetBase = `${import.meta.env.BASE_URL}assets/sprites/ui/loader`;
-	const cardUrls = [
-		`${assetBase}/loader_card_1.png`,
-		`${assetBase}/loader_card_2.png`,
-		`${assetBase}/loader_card_3.png`,
-	] as const;
-
-	const cardUrl = $derived(cardUrls[props.cardIndex] ?? cardUrls[0]);
+	const cardUrl = $derived(loaderCardImageUrl(props.cardIndex));
 	const animationIndex = $derived(props.animationIndex ?? props.cardIndex);
 	const cardStyle = $derived(
 		`--card-width:${props.cardWidth}px;transform:scale(${scale.current});`,

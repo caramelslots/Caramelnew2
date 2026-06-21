@@ -16,6 +16,7 @@
 		type ActiveFeature,
 	} from '../game/activeFeature';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { FEATURE_TOGGLE_ASSETS } from '../game/uiHtmlAssetManifest';
 
 	type Props = {
 		/** Заголовок секции «Функции» (только в меню автоигры). */
@@ -52,8 +53,8 @@
 		showMenuCatIcon = false,
 	}: Props = $props();
 
-	const bonusSwitchBgUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/bonus_switch/bonus_switch.png`;
-	const menuCatIconUrl = `${import.meta.env.BASE_URL}assets/sprites/bonusBar/cat_static.png`;
+	const bonusSwitchBgUrl = FEATURE_TOGGLE_ASSETS.bonusSwitchBg;
+	const menuCatIconUrl = FEATURE_TOGGLE_ASSETS.menuCatIcon;
 
 	const context = getContext();
 

@@ -24,19 +24,20 @@
 		launchCashStacksAutoplay,
 	} from '../game/autoplay';
 	import { computeAutoplayPanelAnchor } from '../game/popupHudLayout';
+	import { AUTOSPIN_ASSETS, HUD_ASSETS } from '../game/uiHtmlAssetManifest';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 
-	const bgUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay/bg_auto_panel.png`;
-	const closeIconUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay/cross.png`;
-	const sliderHeadUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay/slider/head.png`;
-	const sliderFullUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay/slider/full.png`;
-	const sliderButtonUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay/slider/button.png`;
-	const sliderEmptyUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay/slider/empty.png`;
-	const minusUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/bet/minus.png`;
-	const plusUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/bet/plus.png`;
-	const startButtonUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay/main_button.png`;
+	const bgUrl = AUTOSPIN_ASSETS.bg;
+	const closeIconUrl = AUTOSPIN_ASSETS.close;
+	const sliderHeadUrl = AUTOSPIN_ASSETS.sliderHead;
+	const sliderFullUrl = AUTOSPIN_ASSETS.sliderFull;
+	const sliderButtonUrl = AUTOSPIN_ASSETS.sliderButton;
+	const sliderEmptyUrl = AUTOSPIN_ASSETS.sliderEmpty;
+	const minusUrl = HUD_ASSETS.betMinus;
+	const plusUrl = HUD_ASSETS.betPlus;
+	const startButtonUrl = AUTOSPIN_ASSETS.startButton;
 
 	const PANEL_IN_MS = 400;
 	const PANEL_OUT_MS = 240;

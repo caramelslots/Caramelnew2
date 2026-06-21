@@ -418,14 +418,14 @@
 	}
 
 	.card .card-desc.card-desc-stacked .desc-spin-count {
-		font-size: calc(var(--panel-width) * 0.086);
+		font-size: calc(var(--panel-width) * 0.072);
 		font-weight: 900;
 		line-height: 0.85;
 		letter-spacing: -0.02em;
 	}
 
 	.card .card-desc.card-desc-stacked .desc-spin-label {
-		font-size: calc(var(--panel-width) * 0.034);
+		font-size: calc(var(--panel-width) * 0.028);
 		font-weight: 800;
 		line-height: 1;
 		letter-spacing: 0.05em;
@@ -442,12 +442,12 @@
 	.card .card-desc.card-desc-stacked .desc-trigger {
 		width: 100%;
 		max-width: 100%;
-		font-size: calc(var(--panel-width) * 0.019);
+		font-size: calc(var(--panel-width) * 0.016);
 		font-weight: 700;
 		line-height: 1.1;
 		letter-spacing: 0.02em;
 		white-space: nowrap;
-		min-height: calc(var(--panel-width) * 0.024);
+		min-height: calc(var(--panel-width) * 0.020);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -928,16 +928,16 @@
 		}
 
 		.card .card-desc.card-desc-stacked .desc-spin-count {
-			font-size: calc(var(--panel-width) * 0.112);
+			font-size: calc(var(--panel-width) * 0.094);
 		}
 
 		.card .card-desc.card-desc-stacked .desc-spin-label {
-			font-size: calc(var(--panel-width) * 0.045);
+			font-size: calc(var(--panel-width) * 0.037);
 		}
 
 		.card .card-desc.card-desc-stacked .desc-trigger {
-			font-size: calc(var(--panel-width) * 0.026);
-			min-height: calc(var(--panel-width) * 0.032);
+			font-size: calc(var(--panel-width) * 0.021);
+			min-height: calc(var(--panel-width) * 0.026);
 		}
 
 		.card-price-wrap {
@@ -1085,16 +1085,16 @@
 		}
 
 		.card .card-desc.card-desc-stacked .desc-spin-count {
-			font-size: calc(var(--panel-width) * 0.074);
+			font-size: calc(var(--panel-width) * 0.062);
 		}
 
 		.card .card-desc.card-desc-stacked .desc-spin-label {
-			font-size: calc(var(--panel-width) * 0.028);
+			font-size: calc(var(--panel-width) * 0.023);
 		}
 
 		.card .card-desc.card-desc-stacked .desc-trigger {
-			font-size: calc(var(--panel-width) * 0.016);
-			min-height: calc(var(--panel-width) * 0.020);
+			font-size: calc(var(--panel-width) * 0.013);
+			min-height: calc(var(--panel-width) * 0.017);
 		}
 
 		.card-price-wrap {
@@ -1236,16 +1236,16 @@
 		}
 
 		.card .card-desc.card-desc-stacked .desc-spin-count {
-			font-size: calc(var(--panel-width) * 0.074);
+			font-size: calc(var(--panel-width) * 0.062);
 		}
 
 		.card .card-desc.card-desc-stacked .desc-spin-label {
-			font-size: calc(var(--panel-width) * 0.028);
+			font-size: calc(var(--panel-width) * 0.023);
 		}
 
 		.card .card-desc.card-desc-stacked .desc-trigger {
-			font-size: calc(var(--panel-width) * 0.016);
-			min-height: calc(var(--panel-width) * 0.020);
+			font-size: calc(var(--panel-width) * 0.013);
+			min-height: calc(var(--panel-width) * 0.017);
 		}
 
 		.card-price-wrap {

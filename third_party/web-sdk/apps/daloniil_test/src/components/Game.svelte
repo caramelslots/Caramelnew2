@@ -14,6 +14,7 @@
 
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { startLoadingIdleUiPreload } from '../game/uiHtmlAssetManifest';
 	import { GAME_ENTRANCE_MS } from '../game/constants';
 	import EnableSound from './EnableSound.svelte';
 	import EnableSymbolTextureOptimization from './EnableSymbolTextureOptimization.svelte';
@@ -55,6 +56,7 @@
 		if (!context.stateLayout.showLoadingScreen) {
 			gameEntrance.preloadContent = true;
 			gameEntrance.showContent = true;
+			startLoadingIdleUiPreload();
 		}
 	});
 
