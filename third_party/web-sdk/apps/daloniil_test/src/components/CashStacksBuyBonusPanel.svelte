@@ -24,6 +24,7 @@
 	import { portraitHudAnchors } from '../game/portraitHudAnchors.svelte';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
 	import { getContextLayout } from 'utils-layout';
 
 	const context = getContext();
@@ -91,7 +92,7 @@
 		stateModal.modal = { name: 'buyBonus' };
 	};
 
-	const buyBonusBgUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/buy_bonus/buy_bonus.png`;
+	const buyBonusBgUrl = HUD_ASSETS.buyBonusPanel;
 	const buyBonusLabel = $derived(context.i18nDerived.buyBonusPanelButton());
 
 	let panelEl = $state<HTMLElement | null>(null);

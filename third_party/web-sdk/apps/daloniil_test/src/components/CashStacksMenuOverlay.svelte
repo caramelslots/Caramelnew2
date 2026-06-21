@@ -235,6 +235,14 @@
 	></button>
 
 	<div class="menu-overlay anchored" data-test="menu-overlay" style:--panel-width="{panelWidth}px">
+		<button
+			type="button"
+			class="menu-backdrop"
+			aria-label="close menu"
+			onclick={closeFromMenuButton}
+			data-test="menu-backdrop"
+		></button>
+
 		<div
 			class="menu-panel-anchor"
 			style:left="{panelAnchor.left}px"
@@ -363,6 +371,19 @@
 {/if}
 
 <style lang="scss">
+	.menu-backdrop {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+		border: 0;
+		padding: 0;
+		margin: 0;
+		background: transparent;
+		pointer-events: auto;
+		cursor: default;
+		-webkit-tap-highlight-color: transparent;
+	}
+
 	.menu-toggle-hit {
 		position: fixed;
 		z-index: 10001;
@@ -396,6 +417,7 @@
 	.menu-panel-anchor {
 		position: fixed;
 		pointer-events: none;
+		z-index: 1;
 	}
 
 	.menu-panel {

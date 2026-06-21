@@ -16,19 +16,19 @@
 	} from '../game/buyBonusBalance';
 	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
 	import { getContext } from '../game/context';
+	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS } from '../game/uiHtmlAssetManifest';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 
-	const assetBase = `${import.meta.env.BASE_URL}assets/sprites/ui`;
-	const bgUrl = `${assetBase}/buy_bonus/bg_buy_bonus_confirm_panel.png`;
-	const normalCardUrl = `${assetBase}/buy_bonus/normal_bonus_card.png`;
-	const superCardUrl = `${assetBase}/buy_bonus/super_bonus_card.png`;
-	const closeIconUrl = `${assetBase}/autoplay/cross.png`;
-	const cancelButtonBgUrl = `${assetBase}/buy_bonus/cancel_button_bg.png`;
-	const confirmButtonBgUrl = `${assetBase}/buy_bonus/confirm_button_bg.png`;
-	const deskLUrl = `${assetBase}/buy_bonus/desk_l.png`;
-	const deskRUrl = `${assetBase}/buy_bonus/desk_r.png`;
+	const bgUrl = BUY_BONUS_ASSETS.confirmBg;
+	const normalCardUrl = BUY_BONUS_ASSETS.normalCard;
+	const superCardUrl = BUY_BONUS_ASSETS.superCard;
+	const closeIconUrl = AUTOSPIN_ASSETS.close;
+	const cancelButtonBgUrl = BUY_BONUS_ASSETS.cancelButtonBg;
+	const confirmButtonBgUrl = BUY_BONUS_ASSETS.confirmButtonBg;
+	const deskLUrl = BUY_BONUS_ASSETS.deskL;
+	const deskRUrl = BUY_BONUS_ASSETS.deskR;
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonusConfirm');
 	const layoutType = $derived(stateLayoutDerived.layoutType());

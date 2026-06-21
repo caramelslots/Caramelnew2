@@ -18,20 +18,21 @@
 	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { getContextLayout } from 'utils-layout';
+	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS, HUD_ASSETS } from '../game/uiHtmlAssetManifest';
 	import CashStacksFeatureToggles from './CashStacksFeatureToggles.svelte';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 
-	const bgUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/buy_bonus/bg_buy_bonus_panel.png`;
-	const normalCardUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/buy_bonus/normal_bonus_card.png`;
-	const superCardUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/buy_bonus/super_bonus_card.png`;
-	const closeIconUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay/cross.png`;
-	const deskLUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/buy_bonus/desk_l.png`;
-	const deskRUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/buy_bonus/desk_r.png`;
-	const buyButtonBgUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/buy_bonus/buy_button_bg.png`;
-	const minusUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/bet/minus.png`;
-	const plusUrl = `${import.meta.env.BASE_URL}assets/sprites/ui/bet/plus.png`;
+	const bgUrl = BUY_BONUS_ASSETS.menuBg;
+	const normalCardUrl = BUY_BONUS_ASSETS.normalCard;
+	const superCardUrl = BUY_BONUS_ASSETS.superCard;
+	const closeIconUrl = AUTOSPIN_ASSETS.close;
+	const deskLUrl = BUY_BONUS_ASSETS.deskL;
+	const deskRUrl = BUY_BONUS_ASSETS.deskR;
+	const buyButtonBgUrl = BUY_BONUS_ASSETS.buyButtonBg;
+	const minusUrl = HUD_ASSETS.betMinus;
+	const plusUrl = HUD_ASSETS.betPlus;
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonus');
 	const layoutType = $derived(stateLayoutDerived.layoutType());

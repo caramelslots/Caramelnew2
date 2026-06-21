@@ -17,6 +17,19 @@ export const HUD_ASSETS = {
 	turbo1: uiHtmlAssetUrl('turbo/turbo_1.png'),
 	turbo2: uiHtmlAssetUrl('turbo/turbo_2.png'),
 	turbo3: uiHtmlAssetUrl('turbo/turbo_3.png'),
+	buyBonusPanel: uiHtmlAssetUrl('buy_bonus/buy_bonus.png'),
+} as const;
+
+export const BUY_BONUS_ASSETS = {
+	menuBg: uiHtmlAssetUrl('buy_bonus/bg_buy_bonus_panel.png'),
+	confirmBg: uiHtmlAssetUrl('buy_bonus/bg_buy_bonus_confirm_panel.png'),
+	normalCard: uiHtmlAssetUrl('buy_bonus/normal_bonus_card.png'),
+	superCard: uiHtmlAssetUrl('buy_bonus/super_bonus_card.png'),
+	deskL: uiHtmlAssetUrl('buy_bonus/desk_l.png'),
+	deskR: uiHtmlAssetUrl('buy_bonus/desk_r.png'),
+	buyButtonBg: uiHtmlAssetUrl('buy_bonus/buy_button_bg.png'),
+	cancelButtonBg: uiHtmlAssetUrl('buy_bonus/cancel_button_bg.png'),
+	confirmButtonBg: uiHtmlAssetUrl('buy_bonus/confirm_button_bg.png'),
 } as const;
 
 export const SETTINGS_ASSETS = {
@@ -58,7 +71,7 @@ export const FEATURE_TOGGLE_ASSETS = {
 
 const dedupeUrls = (urls: readonly string[]) => [...new Set(urls)];
 
-/** HUD + settings + autoplay sprites shown soon after entering the game. */
+/** HUD + settings + autoplay + buy bonus sprites shown soon after entering the game. */
 export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	HUD_ASSETS.info,
 	HUD_ASSETS.menu,
@@ -71,6 +84,7 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	HUD_ASSETS.turbo1,
 	HUD_ASSETS.turbo2,
 	HUD_ASSETS.turbo3,
+	HUD_ASSETS.buyBonusPanel,
 	SETTINGS_ASSETS.bg,
 	SETTINGS_ASSETS.soundOff,
 	SETTINGS_ASSETS.soundLow,
@@ -91,19 +105,39 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	AUTOSPIN_ASSETS.startButton,
 	FEATURE_TOGGLE_ASSETS.bonusSwitchBg,
 	FEATURE_TOGGLE_ASSETS.menuCatIcon,
+	BUY_BONUS_ASSETS.menuBg,
+	BUY_BONUS_ASSETS.confirmBg,
+	BUY_BONUS_ASSETS.normalCard,
+	BUY_BONUS_ASSETS.superCard,
+	BUY_BONUS_ASSETS.deskL,
+	BUY_BONUS_ASSETS.deskR,
+	BUY_BONUS_ASSETS.buyButtonBg,
+	BUY_BONUS_ASSETS.cancelButtonBg,
+	BUY_BONUS_ASSETS.confirmButtonBg,
 ]);
 
 const LOADING_IDLE_UI_PRIORITY = [
-	SETTINGS_ASSETS.bg,
-	AUTOSPIN_ASSETS.bg,
+	HUD_ASSETS.spin1,
+	HUD_ASSETS.spin2,
 	HUD_ASSETS.menu,
+	HUD_ASSETS.info,
+	HUD_ASSETS.buyBonusPanel,
 	HUD_ASSETS.autoplay,
 	HUD_ASSETS.autoplayMobile,
+	HUD_ASSETS.betMinus,
+	HUD_ASSETS.betPlus,
+	HUD_ASSETS.turbo1,
+	HUD_ASSETS.turbo2,
+	HUD_ASSETS.turbo3,
+	SETTINGS_ASSETS.bg,
+	AUTOSPIN_ASSETS.bg,
+	BUY_BONUS_ASSETS.menuBg,
+	BUY_BONUS_ASSETS.confirmBg,
 ] as const;
 
 let loadingIdleUiPreloadStarted = false;
 
-/** Warm settings/autoplay/HUD HTML sprites during the loading-screen idle window. */
+/** Warm HUD/settings/autoplay/buy-bonus HTML sprites during the loading-screen idle window. */
 export const startLoadingIdleUiPreload = () => {
 	if (loadingIdleUiPreloadStarted) return;
 	loadingIdleUiPreloadStarted = true;

@@ -1,7 +1,7 @@
 <!--
 	FeaturesAutoSpinOverlay.svelte — меню автоигры по designer_assets/bg_auto.png.
-	Открывается при stateModal.modal?.name === 'autoSpin'. Запуск — кнопкой
-	START AUTOPLAY внутри панели. HUD остаётся интерактивным (без backdrop).
+	Открывается при stateModal.modal?.name === 'autoSpin'. Закрытие — cross,
+	клик по пустому месту или повторный клик по autoplay в HUD.
 -->
 <script lang="ts">
 	import { scale } from 'svelte/transition';
@@ -144,6 +144,14 @@
 {#if isOpen}
 	<OnHotkey hotkey="Space" disabled={startDisabled} onpress={startAutoplay} />
 	<div class="autoplay-overlay" class:anchored={useAnchoredLayout} data-test="autoplay-overlay">
+		<button
+			type="button"
+			class="autoplay-backdrop"
+			aria-label="close"
+			onclick={close}
+			data-test="autoplay-backdrop"
+		></button>
+
 		<div
 			class="autoplay-panel"
 			class:portrait={isPortrait}
@@ -283,6 +291,19 @@
 {/if}
 
 <style lang="scss">
+	.autoplay-backdrop {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+		border: 0;
+		padding: 0;
+		margin: 0;
+		background: transparent;
+		pointer-events: auto;
+		cursor: default;
+		-webkit-tap-highlight-color: transparent;
+	}
+
 	.autoplay-overlay {
 		position: fixed;
 		inset: 0;
@@ -306,6 +327,7 @@
 		width: var(--panel-width);
 		aspect-ratio: 1329 / 1444;
 		pointer-events: auto;
+		z-index: 1;
 		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
 		transform-origin: center center;
 	}
@@ -314,6 +336,7 @@
 		position: fixed;
 		aspect-ratio: 1329 / 1380;
 		transform-origin: 55% 100%;
+		z-index: 1;
 	}
 
 	.panel-bg {
