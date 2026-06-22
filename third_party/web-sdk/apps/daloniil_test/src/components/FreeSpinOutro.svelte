@@ -28,7 +28,6 @@
 		fontForLocale,
 		LOCALE_TEXT_FILL_GOLD,
 		LOCALE_TEXT_FILL_WHITE,
-		WIN_SCREEN_POST_COUNT_UP_DELAY_MS,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
 	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
@@ -52,16 +51,33 @@
 	let oncomplete = $state(() => {});
 	let onCountUpComplete = $state(() => {});
 	let cookieOpened = $state(false);
+	let fsAnimation = $state<FreeSpinAnimation | undefined>();
+	let finishingOutro = $state(false);
+	let closing = $state(false);
+
+	const finishOutro = async () => {
+		if (finishingOutro) return;
+		finishingOutro = true;
+		closing = true;
+		await fsAnimation?.playDisappear();
+		show = false;
+		stateGame.winOverlayActive = false;
+		oncomplete();
+	};
 
 	context.eventEmitter.subscribeOnMount({
 		freeSpinOutroShow: () => {
 			show = true;
+			closing = false;
 		},
 		freeSpinOutroHide: async () => {
 			show = false;
+			closing = false;
 			stateGame.winOverlayActive = false;
 		},
 		freeSpinOutroCountUp: async (emitterEvent) => {
+			finishingOutro = false;
+			closing = false;
 			cookieOpened = false;
 			waitForTimeout(scaleMsByGameSpeed(1000, stateGame.gameSpeed)).then(() => (cookieOpened = true));
 			winAmount = emitterEvent.amount;
@@ -81,17 +97,16 @@
 				<OnMount
 					onmount={async () => {
 						await startCountUp();
-						await waitForTimeout(
-							scaleMsByGameSpeed(WIN_SCREEN_POST_COUNT_UP_DELAY_MS, stateGame.gameSpeed),
-						);
-						oncomplete();
+						await finishOutro();
 					}}
 				/>
 
-				<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.5} />
+				{#if !closing}
+					<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.5} />
+				{/if}
 
 				{#key winAmount}
-					<FreeSpinAnimation>
+					<FreeSpinAnimation bind:this={fsAnimation}>
 						{#snippet title({ width })}
 							{@const lang = stateUrlDerived.lang()}
 							{@const youWon = getFsOutroYouWonText(lang)}
@@ -175,11 +190,13 @@
 					</FreeSpinAnimation>
 				{/key}
 
-				{#if cookieOpened}
+				{#if cookieOpened && !closing}
 					<WinCoins emit={!countUpCompleted} levelAlias={winLevelData?.alias} />
 				{/if}
 
-				<PressToContinue onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())} />
+				{#if !closing}
+					<PressToContinue onpress={() => (countUpCompleted ? finishOutro() : finishCountUp())} />
+				{/if}
 			{/snippet}
 		</WinCountUpProvider>
 	{/if}
