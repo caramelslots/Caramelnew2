@@ -10,14 +10,14 @@
 
 	import { stateBet } from 'state-shared';
 	import { MainContainer } from 'components-layout';
-	import { Container, BitmapText } from 'pixi-svelte';
+	import { Container } from 'pixi-svelte';
 	import { EnableSpaceHold } from 'components-shared';
-	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 
 	import UiFadeContainer from 'components-ui-pixi/src/components/UiFadeContainer.svelte';
 	import UiCashStacksPortraitLayout from './UiCashStacksPortraitLayout.svelte';
+	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
 
-	import { BITMAP_FONT_SCALE, FONT_BABLO, isPopoutSmallViewport, POPOUT_S_SCALE, WIN_HUD_FONT_SIZE } from '../game/constants';
+	import { BITMAP_FONT_SCALE, isPopoutSmallViewport, POPOUT_S_SCALE, WIN_HUD_FONT_SIZE } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { getContextLayout } from 'utils-layout';
 
@@ -40,11 +40,9 @@
 		x: boardLayout.x,
 		y: boardLayout.y + boardLayout.height * 0.5 + WIN_BELOW_BOARD_GAP,
 	});
-	const formatWinAmount = (v: number) => bookEventAmountToCurrencyString(v);
 	const showWin = $derived(stateBet.winBookEventAmount > 0);
 
 	const WIN_TEXT_STYLE = {
-		fontFamily: FONT_BABLO,
 		fontSize: WIN_HUD_FONT_SIZE * BITMAP_FONT_SCALE,
 		fontWeight: 'bold' as const,
 		letterSpacing: 1,
@@ -70,10 +68,13 @@
 		{#if showWin}
 			<MainContainer>
 				<Container x={winHudPos.x} y={winHudPos.y} zIndex={20}>
-					<BitmapText
+					<ResponsiveCurrencyBitmapText
 						anchor={0.5}
 						eventMode="none"
-						text={`${context.i18nDerived.win().toUpperCase()} ${formatWinAmount(stateBet.winBookEventAmount)}`}
+						prefix={`${context.i18nDerived.win().toUpperCase()} `}
+						amount={stateBet.winBookEventAmount}
+						bookEvent
+						maxWidth={boardLayout.width}
 						style={WIN_TEXT_STYLE}
 					/>
 				</Container>

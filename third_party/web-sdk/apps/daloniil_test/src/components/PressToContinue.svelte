@@ -3,9 +3,13 @@
 	import { OnHotkey } from 'components-shared';
 	import { ResponsiveBitmapText } from 'components-pixi';
 
+	import { stateI18n } from 'state-shared';
+
 	import {
 		BITMAP_FONT_SCALE,
 		FONT_PROSTOI_WHITE,
+		FONT_PROSTOI_WHITE_RU,
+		fontForLocale,
 		PRESS_TO_CONTINUE_BOTTOM_OFFSET,
 		PRESS_TO_CONTINUE_FONT_SIZE,
 	} from '../game/constants';
@@ -32,7 +36,7 @@
 		maxWidth={layout.width * 0.95}
 		text={pressText}
 		style={{
-			fontFamily: FONT_PROSTOI_WHITE,
+			fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale),
 			fontSize: PRESS_TO_CONTINUE_FONT_SIZE * BITMAP_FONT_SCALE,
 			align: 'center',
 			letterSpacing: 2,

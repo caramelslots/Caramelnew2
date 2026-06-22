@@ -228,13 +228,25 @@ export default {
 		type: 'font',
 		src: assetUrl('assets/fonts/prostoiFont/prostoi_langs.fnt'),
 	},
+	prostoiFontRu: {
+		type: 'font',
+		src: assetUrl('assets/fonts/prostoiFont/prostoi_ru.fnt'),
+	},
 	prostoiWhiteFont: {
 		type: 'font',
 		src: assetUrl('assets/fonts/prostoiWhiteFont/prostoiWhite_langs.fnt'),
 	},
+	prostoiWhiteFontRu: {
+		type: 'font',
+		src: assetUrl('assets/fonts/prostoiWhiteFont/prostoiWhite_ru.fnt'),
+	},
 	krutoiFont: {
 		type: 'font',
 		src: assetUrl('assets/fonts/krutoiFont/krutoi_langs.fnt'),
+	},
+	krutoiFontRu: {
+		type: 'font',
+		src: assetUrl('assets/fonts/krutoiFont/krutoi_ru.fnt'),
 	},
 	bigwin: {
 		type: 'spine',

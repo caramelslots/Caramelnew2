@@ -1,9 +1,13 @@
 <script lang="ts">
 	import * as PIXI from 'pixi.js';
 
+	import { stateI18n } from 'state-shared';
+
 	import {
 		BITMAP_FONT_SCALE,
 		FONT_PROSTOI_WHITE,
+		FONT_PROSTOI_WHITE_RU,
+		fontForLocale,
 		PRESS_TO_CONTINUE_BOTTOM_OFFSET,
 		PRESS_TO_CONTINUE_FONT_SIZE,
 	} from '../game/constants';
@@ -32,7 +36,7 @@
 		const bitmapText = new PIXI.BitmapText({
 			text,
 			style: {
-				fontFamily: FONT_PROSTOI_WHITE,
+				fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale),
 				fontSize,
 				align: 'center',
 				letterSpacing: 2,

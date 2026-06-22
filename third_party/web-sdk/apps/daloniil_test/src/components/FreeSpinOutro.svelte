@@ -10,20 +10,24 @@
 <script lang="ts">
 	import { FadeContainer, WinCountUpProvider, ResponsiveBitmapText } from 'components-pixi';
 	import { Container } from 'pixi-svelte';
-	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 	import { CanvasSizeRectangle } from 'components-layout';
 	import { OnMount } from 'components-shared';
 	import { stateUrlDerived } from 'state-shared';
 
+	import { stateI18n } from 'state-shared';
+
 	import {
 		BITMAP_FONT_SCALE,
-		FONT_BABLO,
 		FONT_KRUTOI,
+		FONT_KRUTOI_RU,
 		FONT_PROSTOI_WHITE,
+		FONT_PROSTOI_WHITE_RU,
+		fontForLocale,
 		WIN_SCREEN_POST_COUNT_UP_DELAY_MS,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
+	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
 	import { scaleMsByGameSpeed } from '../game/gameSpeed';
 	import { stateGame } from '../game/stateGame.svelte';
 	import {
@@ -95,7 +99,7 @@
 										text={getFsOutroCongratulationsText(lang)}
 										maxWidth={width * 3.4}
 										style={{
-											fontFamily: FONT_KRUTOI,
+											fontFamily: fontForLocale(FONT_KRUTOI, FONT_KRUTOI_RU, stateI18n.i18n.locale),
 											fontSize: width * 0.56 * BITMAP_FONT_SCALE,
 											align: 'center',
 											fontWeight: 'bold',
@@ -108,7 +112,7 @@
 										text={youWon}
 										maxWidth={width * 3.0}
 										style={{
-											fontFamily: FONT_PROSTOI_WHITE,
+											fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale),
 											fontSize: width * 0.42 * BITMAP_FONT_SCALE,
 											align: 'center',
 											fontWeight: 'bold',
@@ -122,7 +126,7 @@
 									text={youWon}
 									maxWidth={width * 3.0}
 									style={{
-										fontFamily: FONT_PROSTOI_WHITE,
+										fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale),
 										fontSize: width * 0.5 * BITMAP_FONT_SCALE,
 										align: 'center',
 										fontWeight: 'bold',
@@ -134,14 +138,14 @@
 						{#snippet winAmount({ width })}
 							{@const amountLineGap = width * 0.25}
 							<Container>
-								<ResponsiveBitmapText
+								<ResponsiveCurrencyBitmapText
 									anchor={0.5}
 									y={-amountLineGap}
 									style={{
-										fontFamily: FONT_BABLO,
 										fontSize: width * 0.45 * BITMAP_FONT_SCALE,
 									}}
-									text={bookEventAmountToCurrencyString(countUpAmount)}
+									amount={countUpAmount}
+									bookEvent
 									maxWidth={width * 3.2}
 								/>
 								<ResponsiveBitmapText
@@ -150,7 +154,7 @@
 									text={FS_OUTRO_TOTAL_WIN_LABEL}
 									maxWidth={width * 2.6}
 									style={{
-										fontFamily: FONT_PROSTOI_WHITE,
+										fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale),
 										fontSize: width * 0.26 * BITMAP_FONT_SCALE,
 										align: 'center',
 										fontWeight: 'bold',

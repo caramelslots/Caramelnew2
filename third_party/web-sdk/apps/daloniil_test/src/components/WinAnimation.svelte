@@ -4,8 +4,10 @@
 	import { SpineProvider, SpineTrack, SpineSlot } from 'pixi-svelte';
 	import { ResponsiveBitmapText } from 'components-pixi';
 
+	import { stateI18n } from 'state-shared';
+
 	import { getContext } from '../game/context';
-	import { BITMAP_FONT_SCALE, FONT_KRUTOI, SYMBOL_SIZE } from '../game/constants';
+	import { BITMAP_FONT_SCALE, FONT_KRUTOI, FONT_KRUTOI_RU, SYMBOL_SIZE, fontForLocale } from '../game/constants';
 	import WinAnimationBannerOverride from './WinAnimationBannerOverride.svelte';
 
 	type AnimationState = 'intro' | 'idle' | 'outro';
@@ -64,7 +66,7 @@
 				maxWidth={1400}
 				text={props.bannerOverrideText}
 				style={{
-					fontFamily: FONT_KRUTOI,
+					fontFamily: fontForLocale(FONT_KRUTOI, FONT_KRUTOI_RU, stateI18n.i18n.locale),
 					fontSize: SYMBOL_SIZE * 4.4 * BITMAP_FONT_SCALE,
 					align: 'center',
 					fontWeight: 'bold',

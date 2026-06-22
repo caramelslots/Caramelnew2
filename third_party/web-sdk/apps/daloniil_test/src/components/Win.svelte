@@ -9,19 +9,17 @@
 
 <script lang="ts">
 	import { Container } from 'pixi-svelte';
-	import { FadeContainer, WinCountUpProvider, ResponsiveBitmapText } from 'components-pixi';
+	import { FadeContainer, WinCountUpProvider } from 'components-pixi';
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
-	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
 	import { OnMount } from 'components-shared';
 
 	import WinCoins from './WinCoins.svelte';
 	import WinAnimation from './WinAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
+	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
 	import {
 		BITMAP_FONT_SCALE,
-		FONT_BABLO,
-		FONT_KRUTOI,
 		SYMBOL_SIZE,
 		WIN_SCREEN_POST_COUNT_UP_DELAY_MS,
 	} from '../game/constants';
@@ -183,12 +181,12 @@
 								animationMap={UNIFIED_BIG_WIN_SPINE}
 								bannerOverrideText={currentTierData.text ?? undefined}
 							>
-								<ResponsiveBitmapText
+								<ResponsiveCurrencyBitmapText
 									anchor={0.5}
 									maxWidth={2130}
-									text={bookEventAmountToCurrencyString(countUpAmount)}
+									amount={countUpAmount}
+									bookEvent
 									style={{
-										fontFamily: FONT_BABLO,
 										fontSize: SYMBOL_SIZE * 3.6 * BITMAP_FONT_SCALE,
 										align: 'center',
 										fontWeight: 'bold',
@@ -197,13 +195,13 @@
 								/>
 							</WinAnimation>
 						{:else}
-							<ResponsiveBitmapText
+							<ResponsiveCurrencyBitmapText
 								anchor={0.5}
 								maxWidth={context.stateLayoutDerived.canvasSizes().width /
 									context.stateLayoutDerived.mainLayout().scale}
-								text={bookEventAmountToCurrencyString(countUpAmount)}
+								amount={countUpAmount}
+								bookEvent
 								style={{
-									fontFamily: FONT_BABLO,
 									fontSize: SYMBOL_SIZE * BITMAP_FONT_SCALE,
 									align: 'center',
 									fontWeight: 'bold',

@@ -14,8 +14,22 @@ export const MAX_LAYOUT_SCALE = SYMBOL_TEXTURE_NATIVE_PX / SYMBOL_SIZE;
 export const FONT_PROSTOI = 'Reggae One Regular';
 export const FONT_PROSTOI_WHITE = 'Reggae One White';
 export const FONT_KRUTOI = 'Shojumaru';
+/** Russian (Cyrillic) bitmap font variants. */
+export const FONT_PROSTOI_RU = 'Philosopher Bold';
+export const FONT_PROSTOI_WHITE_RU = 'Philosopher Bold White';
+export const FONT_KRUTOI_RU = 'Russo One';
 /** Bablo — full currency-glyph font (₽ € ₩ ₴ ₫ ₱ ₹ ₦ ₪ ₡ ¥ zł…). Used for all monetary amounts. */
 export const FONT_BABLO = 'Noto Sans SemiCondensed SemiBold';
+
+/**
+ * Pick the correct bitmap font for the current locale.
+ * Russian uses dedicated Cyrillic typefaces; all other locales use the Latin variants.
+ */
+export const fontForLocale = (
+	latin: string,
+	ru: string,
+	locale: string,
+): string => (locale === 'ru' ? ru : latin);
 /**
  * Pixi scales bitmap glyphs as `fontSize / font.info.size`.
  * Legacy gold used info size 105; prostoi/krutoi use 53 — same fontSize renders ~2× larger without this.
