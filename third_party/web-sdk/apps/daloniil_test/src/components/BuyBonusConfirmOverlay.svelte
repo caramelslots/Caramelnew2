@@ -495,6 +495,32 @@
 			transform-origin: 50% 61%;
 		}
 
+		.card-super .card-desc.card-desc-stacked .desc-spin-count {
+			font-size: calc(var(--panel-width) * 0.099);
+		}
+
+		.card-super .card-desc.card-desc-stacked .desc-spin-label {
+			font-size: calc(var(--panel-width) * 0.04);
+		}
+
+		.card-super .card-desc.card-desc-stacked .desc-trigger {
+			font-size: calc(var(--panel-width) * 0.023);
+			min-height: calc(var(--panel-width) * 0.028);
+		}
+
+		.card-normal .card-desc.card-desc-stacked .desc-spin-count {
+			font-size: calc(var(--panel-width) * 0.099);
+		}
+
+		.card-normal .card-desc.card-desc-stacked .desc-spin-label {
+			font-size: calc(var(--panel-width) * 0.04);
+		}
+
+		.card-normal .card-desc.card-desc-stacked .desc-trigger {
+			font-size: calc(var(--panel-width) * 0.023);
+			min-height: calc(var(--panel-width) * 0.028);
+		}
+
 		.card-price-wrap {
 			top: 99%;
 			height: 18%;

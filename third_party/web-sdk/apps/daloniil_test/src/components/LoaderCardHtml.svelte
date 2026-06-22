@@ -60,10 +60,14 @@
 		{#if props.cardIndex === 0}
 			<h3 class="card-title">{context.i18nDerived.loaderCard1Title()}</h3>
 			<div class="card-body card-body--1">
-				<p class="line">{context.i18nDerived.loaderCard1Line1()}</p>
-				<p class="line highlight">{context.i18nDerived.loaderCard1Line2()}</p>
-				<p class="line">{context.i18nDerived.loaderCard1Line3()}</p>
-				<p class="line highlight">{context.i18nDerived.loaderCard1Line4()}</p>
+				<div class="line-block line-block--1">
+					<p class="line">{context.i18nDerived.loaderCard1Line1()}</p>
+					<p class="line highlight">{context.i18nDerived.loaderCard1Line2()}</p>
+				</div>
+				<div class="line-block line-block--2">
+					<p class="line">{context.i18nDerived.loaderCard1Line3()}</p>
+					<p class="line highlight">{context.i18nDerived.loaderCard1Line4()}</p>
+				</div>
 			</div>
 		{:else if props.cardIndex === 1}
 			<h3 class="card-title">{context.i18nDerived.loaderCard2Title()}</h3>
@@ -73,8 +77,10 @@
 		{:else}
 			<h3 class="card-title">{context.i18nDerived.loaderCard3Title()}</h3>
 			<div class="card-body card-body--3">
-				<p class="line">{context.i18nDerived.loaderCard3Line1()}</p>
-				<p class="line highlight">{context.i18nDerived.loaderCard3Line2()}</p>
+				<div class="line-block line-block--3">
+					<p class="line">{context.i18nDerived.loaderCard3Line1()}</p>
+					<p class="line highlight">{context.i18nDerived.loaderCard3Line2()}</p>
+				</div>
 			</div>
 		{/if}
 	</div>
@@ -172,32 +178,38 @@
 		font-weight: 800;
 	}
 
+	.line-block {
+		position: absolute;
+		left: 12%;
+		right: 12%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--line-block-gap);
+	}
+
+	.line-block .line {
+		position: static;
+		width: 100%;
+	}
+
 	/* Offsets mirror former Pixi LoaderCardContent layout math. */
-	.card-body--1 .line:nth-child(1) {
+	.line-block--1 {
 		top: calc(var(--card-height) * 0.582);
+		--line-block-gap: calc(var(--line-height) * 0.25);
 	}
 
-	.card-body--1 .line:nth-child(2) {
-		top: calc(var(--card-height) * 0.6 + var(--line-height) * 1.8);
-	}
-
-	.card-body--1 .line:nth-child(3) {
+	.line-block--2 {
 		top: calc(var(--card-height) * 0.6 + var(--line-height) * 5.3);
-	}
-
-	.card-body--1 .line:nth-child(4) {
-		top: calc(var(--card-height) * 0.6 + var(--line-height) * 6.3);
+		--line-block-gap: calc(var(--line-height) * 0.25);
 	}
 
 	.card-body--2 .line:nth-child(1) {
 		top: calc(var(--card-height) * 0.645);
 	}
 
-	.card-body--3 .line:nth-child(1) {
+	.line-block--3 {
 		top: calc(var(--card-height) * 0.7);
-	}
-
-	.card-body--3 .line:nth-child(2) {
-		top: calc(var(--card-height) * 0.73 + var(--line-height) * 2.15);
+		--line-block-gap: calc(var(--line-height) * 0.25);
 	}
 </style>

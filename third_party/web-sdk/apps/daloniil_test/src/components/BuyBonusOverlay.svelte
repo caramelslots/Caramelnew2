@@ -766,6 +766,32 @@
 			transform-origin: 50% 61%;
 		}
 
+		.card-super .card-desc.card-desc-stacked .desc-spin-count {
+			font-size: calc(var(--panel-width) * 0.072);
+		}
+
+		.card-super .card-desc.card-desc-stacked .desc-spin-label {
+			font-size: calc(var(--panel-width) * 0.028);
+		}
+
+		.card-super .card-desc.card-desc-stacked .desc-trigger {
+			font-size: calc(var(--panel-width) * 0.018);
+			min-height: calc(var(--panel-width) * 0.021);
+		}
+
+		.card-normal .card-desc.card-desc-stacked .desc-spin-count {
+			font-size: calc(var(--panel-width) * 0.072);
+		}
+
+		.card-normal .card-desc.card-desc-stacked .desc-spin-label {
+			font-size: calc(var(--panel-width) * 0.028);
+		}
+
+		.card-normal .card-desc.card-desc-stacked .desc-trigger {
+			font-size: calc(var(--panel-width) * 0.018);
+			min-height: calc(var(--panel-width) * 0.021);
+		}
+
 		.card-price-wrap {
 			top: 99%;
 			height: 18%;
@@ -1350,16 +1376,28 @@
 		.buy-bonus-panel:not(.popout-l):not(.popout-s):not(.portrait) {
 			--panel-width: min(630px, 90vw);
 
-			.card .card-desc.card-desc-stacked .desc-spin-count {
-				font-size: calc(var(--panel-width) * 0.068);
+			.card-super .card-desc.card-desc-stacked .desc-spin-count {
+				font-size: calc(var(--panel-width) * 0.07);
 			}
 
-			.card .card-desc.card-desc-stacked .desc-spin-label {
-				font-size: calc(var(--panel-width) * 0.026);
+			.card-super .card-desc.card-desc-stacked .desc-spin-label {
+				font-size: calc(var(--panel-width) * 0.027);
 			}
 
-			.card .card-desc.card-desc-stacked .desc-trigger {
-				font-size: calc(var(--panel-width) * 0.015);
+			.card-super .card-desc.card-desc-stacked .desc-trigger {
+				font-size: calc(var(--panel-width) * 0.017);
+			}
+
+			.card-normal .card-desc.card-desc-stacked .desc-spin-count {
+				font-size: calc(var(--panel-width) * 0.07);
+			}
+
+			.card-normal .card-desc.card-desc-stacked .desc-spin-label {
+				font-size: calc(var(--panel-width) * 0.027);
+			}
+
+			.card-normal .card-desc.card-desc-stacked .desc-trigger {
+				font-size: calc(var(--panel-width) * 0.017);
 			}
 		}
 	}
