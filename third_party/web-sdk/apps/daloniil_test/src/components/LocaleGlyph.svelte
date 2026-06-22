@@ -2,10 +2,12 @@
 	import { BitmapText, Text, type BitmapTextProps } from 'pixi-svelte';
 	import { stateI18n } from 'state-shared';
 
+	import { ensureCjkFontLoaded } from '../game/cjkFont';
 	import {
+		isCjkLocale,
 		LOCALE_TEXT_FILL_WHITE,
-		SYSTEM_TEXT_FONT_FAMILY,
 		supportsBitmapFont,
+		systemTextFontFamily,
 	} from '../game/constants';
 
 	type Style = NonNullable<BitmapTextProps['style']>;
@@ -20,13 +22,31 @@
 
 	const locale = $derived(stateI18n.i18n.locale);
 	const useBitmap = $derived(supportsBitmapFont(locale));
+	const needsCjkFont = $derived(!useBitmap && isCjkLocale(locale));
+
+	let cjkFontReady = $state(!needsCjkFont);
+
+	$effect(() => {
+		if (!needsCjkFont) {
+			cjkFontReady = true;
+			return;
+		}
+		cjkFontReady = false;
+		let cancelled = false;
+		ensureCjkFontLoaded().then(() => {
+			if (!cancelled) cjkFontReady = true;
+		});
+		return () => {
+			cancelled = true;
+		};
+	});
 
 	const resolvedStyle = $derived(
 		useBitmap
 			? props.style
 			: {
 					...props.style,
-					fontFamily: SYSTEM_TEXT_FONT_FAMILY,
+					fontFamily: systemTextFontFamily(locale),
 					fill: props.fallbackFill ?? props.style.fill ?? LOCALE_TEXT_FILL_WHITE,
 				},
 	);
@@ -34,6 +54,6 @@
 
 {#if useBitmap}
 	<BitmapText {...props} style={resolvedStyle} />
-{:else}
+{:else if cjkFontReady}
 	<Text {...props} style={resolvedStyle} />
 {/if}

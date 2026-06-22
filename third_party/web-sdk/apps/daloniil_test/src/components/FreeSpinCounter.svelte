@@ -14,6 +14,7 @@
 		BITMAP_FONT_SCALE,
 		FONT_PROSTOI,
 		FONT_PROSTOI_RU,
+		FONT_PROSTOI_HI,
 		fontForLocale,
 		LOCALE_TEXT_FILL_WHITE,
 		SYMBOL_SIZE,
@@ -82,7 +83,7 @@
 				text={titleText}
 				fallbackFill={LOCALE_TEXT_FILL_WHITE}
 				style={{
-					fontFamily: fontForLocale(FONT_PROSTOI, FONT_PROSTOI_RU, stateI18n.i18n.locale),
+					fontFamily: fontForLocale(FONT_PROSTOI, FONT_PROSTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI),
 					fontSize,
 					wordWrap: false,
 				}}
@@ -93,7 +94,7 @@
 				{...counterPosition}
 				anchor={{ x: 0.5, y: 0 }}
 				style={{
-					fontFamily: fontForLocale(FONT_PROSTOI, FONT_PROSTOI_RU, stateI18n.i18n.locale),
+					fontFamily: fontForLocale(FONT_PROSTOI, FONT_PROSTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI),
 					fontSize,
 				}}
 				onresize={(sizes) => (counterSizes = sizes)}

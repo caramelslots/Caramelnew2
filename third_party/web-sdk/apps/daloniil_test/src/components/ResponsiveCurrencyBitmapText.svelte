@@ -7,6 +7,7 @@
 		FONT_BABLO,
 		FONT_KRUTOI,
 		FONT_KRUTOI_RU,
+		FONT_PROSTOI_HI,
 		fontForLocale,
 		LOCALE_TEXT_FILL_GOLD,
 	} from '../game/constants';
@@ -30,7 +31,7 @@
 	);
 
 	const bodyFont = $derived(
-		fontForLocale(FONT_KRUTOI, FONT_KRUTOI_RU, stateI18n.i18n.locale),
+		fontForLocale(FONT_KRUTOI, FONT_KRUTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI),
 	);
 
 	const layoutStyle = $derived({

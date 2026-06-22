@@ -8,6 +8,7 @@
 		BITMAP_FONT_SCALE,
 		FONT_PROSTOI_WHITE,
 		FONT_PROSTOI_WHITE_RU,
+		FONT_PROSTOI_WHITE_HI,
 		fontForLocale,
 		LOCALE_TEXT_FILL_WHITE,
 		PRESS_TO_CONTINUE_BOTTOM_OFFSET,
@@ -38,7 +39,7 @@
 		text={pressText}
 		fallbackFill={LOCALE_TEXT_FILL_WHITE}
 		style={{
-			fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale),
+			fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale, FONT_PROSTOI_WHITE_HI),
 			fontSize: PRESS_TO_CONTINUE_FONT_SIZE * BITMAP_FONT_SCALE,
 			align: 'center',
 			letterSpacing: 2,

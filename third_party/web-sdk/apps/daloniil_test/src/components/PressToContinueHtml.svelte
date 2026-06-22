@@ -3,17 +3,20 @@
 
 	import { stateI18n } from 'state-shared';
 
+	import { ensureCjkFontLoaded } from '../game/cjkFont';
 	import {
 		BITMAP_FONT_SCALE,
 		FONT_PROSTOI_WHITE,
 		FONT_PROSTOI_WHITE_RU,
+		FONT_PROSTOI_WHITE_HI,
 		fontForLocale,
+		isCjkLocale,
 		localeTextDirection,
 		LOCALE_TEXT_FILL_WHITE,
 		PRESS_TO_CONTINUE_BOTTOM_OFFSET,
 		PRESS_TO_CONTINUE_FONT_SIZE,
 		supportsBitmapFont,
-		SYSTEM_TEXT_FONT_FAMILY,
+		systemTextFontFamily,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
 
@@ -24,6 +27,25 @@
 	const locale = $derived(stateI18n.i18n.locale);
 	const useBitmap = $derived(supportsBitmapFont(locale));
 	const textDirection = $derived(localeTextDirection(locale));
+	const systemFontFamily = $derived(systemTextFontFamily(locale));
+	const needsCjkFont = $derived(!useBitmap && isCjkLocale(locale));
+
+	let cjkFontReady = $state(!needsCjkFont);
+
+	$effect(() => {
+		if (!needsCjkFont) {
+			cjkFontReady = true;
+			return;
+		}
+		cjkFontReady = false;
+		let cancelled = false;
+		ensureCjkFontLoaded().then(() => {
+			if (!cancelled) cjkFontReady = true;
+		});
+		return () => {
+			cancelled = true;
+		};
+	});
 
 	const positionStyle = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
@@ -49,7 +71,7 @@
 		const bitmapText = new PIXI.BitmapText({
 			text,
 			style: {
-				fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, locale),
+				fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, locale, FONT_PROSTOI_WHITE_HI),
 				fontSize,
 				align: 'center',
 				letterSpacing: 2,
@@ -82,9 +104,10 @@
 
 {#if useBitmap}
 	<img bind:this={imgEl} class="press-label" style={positionStyle} alt="" />
-{:else}
+{:else if cjkFontReady}
 	<p
 		class="press-label press-label--system"
+		class:press-label--cjk={isCjkLocale(locale)}
 		style={positionStyle}
 		dir={textDirection}
 		lang={locale}
@@ -105,12 +128,18 @@
 		margin: 0;
 		padding: 0;
 		text-align: center;
-		font-family: v-bind(SYSTEM_TEXT_FONT_FAMILY);
+		font-family: v-bind(systemFontFamily);
 		font-size: v-bind('`${systemFontSize}px`');
 		font-weight: 700;
 		letter-spacing: 0.08em;
 		color: v-bind(LOCALE_TEXT_FILL_WHITE);
 		text-transform: uppercase;
 		line-height: 1.2;
+	}
+
+	.press-label--cjk {
+		text-transform: none;
+		letter-spacing: 0;
+		font-weight: 700;
 	}
 </style>

@@ -18,6 +18,10 @@ export const FONT_KRUTOI = 'Shojumaru';
 export const FONT_PROSTOI_RU = 'Philosopher Bold';
 export const FONT_PROSTOI_WHITE_RU = 'Philosopher Bold White';
 export const FONT_KRUTOI_RU = 'Russo One';
+/** Hindi (Devanagari) bitmap font variants — krutoi reuses gold prostoi per art handoff. */
+export const FONT_PROSTOI_HI = 'Noto Sans Devanagari Regular';
+export const FONT_PROSTOI_WHITE_HI = 'Noto Sans Devanagari White';
+export const FONT_KRUTOI_HI = FONT_PROSTOI_HI;
 /** Bablo — full currency-glyph font (₽ € ₩ ₴ ₫ ₱ ₹ ₦ ₪ ₡ ¥ zł…). Used for all monetary amounts. */
 export const FONT_BABLO = 'Noto Sans SemiCondensed SemiBold';
 
@@ -26,6 +30,11 @@ export type LocaleScript = 'latin' | 'cyrillic' | 'cjk' | 'arabic' | 'devanagari
 const CJK_LOCALES = new Set(['ja', 'ko', 'zh']);
 const ARABIC_LOCALES = new Set(['ar']);
 const DEVANAGARI_LOCALES = new Set(['hi']);
+
+/** System (non-bitmap) font for ja / ko / zh — NotoSansMonoCJKhk-Bold.otf. */
+export const FONT_CJK = 'Noto Sans Mono CJK HK Bold';
+
+export const isCjkLocale = (locale: string): boolean => CJK_LOCALES.has(locale);
 
 /** Classify locale script for font / layout decisions. */
 export const localeScriptGroup = (locale: string): LocaleScript => {
@@ -36,34 +45,40 @@ export const localeScriptGroup = (locale: string): LocaleScript => {
 	return 'latin';
 };
 
-/** Prostoi/krutoi bitmap atlases cover Latin + Cyrillic only. */
+/** Prostoi/krutoi bitmap atlases cover Latin, Cyrillic, and Hindi (Devanagari). */
 export const supportsBitmapFont = (locale: string): boolean => {
 	const script = localeScriptGroup(locale);
-	return script === 'latin' || script === 'cyrillic';
+	return script === 'latin' || script === 'cyrillic' || script === 'devanagari';
 };
 
 export const localeTextDirection = (locale: string): 'ltr' | 'rtl' =>
 	locale === 'ar' ? 'rtl' : 'ltr';
 
-/** System font stack for locales without bitmap glyph coverage. */
+/** System font stack for ar fallback (non-bitmap locale). */
 export const SYSTEM_TEXT_FONT_FAMILY =
-	"'proxima-nova', 'Noto Sans', 'Noto Sans Arabic', 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans SC', 'Noto Sans Devanagari', system-ui, sans-serif";
+	"'proxima-nova', 'Noto Sans', 'Noto Sans Arabic', system-ui, sans-serif";
+
+/** PIXI/HTML system font for locales without bitmap glyphs. */
+export const systemTextFontFamily = (locale: string): string =>
+	isCjkLocale(locale) ? FONT_CJK : SYSTEM_TEXT_FONT_FAMILY;
 
 export const LOCALE_TEXT_FILL_GOLD = '#ffcc44';
 export const LOCALE_TEXT_FILL_WHITE = '#ffffff';
 
 /**
  * Pick the correct bitmap font for the current locale.
- * Russian uses dedicated Cyrillic typefaces; all other latin-script locales use the Latin variants.
- * Returns `latin` unchanged when bitmap fonts are not supported (caller should use system Text).
+ * `hi` — optional Hindi (Devanagari) variant; krutoi on hi reuses gold prostoi.
  */
 export const fontForLocale = (
 	latin: string,
 	ru: string,
 	locale: string,
+	hi?: string,
 ): string => {
-	if (!supportsBitmapFont(locale)) return latin;
-	return locale === 'ru' ? ru : latin;
+	if (locale === 'ru') return ru;
+	if (locale === 'hi' && hi) return hi;
+	if (supportsBitmapFont(locale)) return latin;
+	return latin;
 };
 /**
  * Pixi scales bitmap glyphs as `fontSize / font.info.size`.

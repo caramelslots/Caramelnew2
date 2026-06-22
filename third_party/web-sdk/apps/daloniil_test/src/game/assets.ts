@@ -232,6 +232,10 @@ export default {
 		type: 'font',
 		src: assetUrl('assets/fonts/prostoiFont/prostoi_ru.fnt'),
 	},
+	prostoiFontHi: {
+		type: 'font',
+		src: assetUrl('assets/fonts/prostoiFont/prostoi_hi.fnt'),
+	},
 	prostoiWhiteFont: {
 		type: 'font',
 		src: assetUrl('assets/fonts/prostoiWhiteFont/prostoiWhite_langs.fnt'),
@@ -239,6 +243,10 @@ export default {
 	prostoiWhiteFontRu: {
 		type: 'font',
 		src: assetUrl('assets/fonts/prostoiWhiteFont/prostoiWhite_ru.fnt'),
+	},
+	prostoiWhiteFontHi: {
+		type: 'font',
+		src: assetUrl('assets/fonts/prostoiWhiteFont/prostoiWhite_hi.fnt'),
 	},
 	krutoiFont: {
 		type: 'font',
