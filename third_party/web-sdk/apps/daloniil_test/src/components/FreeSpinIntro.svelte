@@ -8,12 +8,26 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 	import { OnHotkey } from 'components-shared';
+	import { stateUrlDerived } from 'state-shared';
 	import { waitForResolve } from 'utils-shared/wait';
 
-	import { BOARD_DIMENSIONS, BOARD_LAYOUT_OFFSETS, SYMBOL_SIZE } from '../game/constants';
+	import {
+		BOARD_DIMENSIONS,
+		BOARD_LAYOUT_OFFSETS,
+		FONT_KRUTOI,
+		FONT_KRUTOI_RU,
+		FONT_PROSTOI_HI,
+		FONT_PROSTOI_WHITE,
+		FONT_PROSTOI_WHITE_RU,
+		LOCALE_TEXT_FILL_GOLD,
+		LOCALE_TEXT_FILL_WHITE,
+		SYMBOL_SIZE,
+	} from '../game/constants';
 	import assets from '../game/assets';
+	import { getFsOutroCongratulationsText, getFsOutroYouWonText } from '../game/fsOutroBannerText';
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
+	import FsIntroBannerLabel from './FsIntroBannerLabel.svelte';
 	import PressToContinueHtml from './PressToContinueHtml.svelte';
 
 	const context = getContext();
@@ -21,12 +35,17 @@
 	const boardUrl = assets.fsCongBoard.src;
 	const numberUrl = assets.fsCongNumber.src;
 
-	// fs_cong.png native aspect; scaled up for legibility on desktop/portrait layouts.
+	// поздравление фриспины.png — 1536×1024, same canvas as legacy fs_cong.
 	const BOARD_RATIO = 1536 / 1024;
 	const NUMBER_RATIO = 1276 / 595;
 	const BOARD_SCALE = 1.55;
-	// Inner "10" plaque — centred in the YOU WON / FREE SPINS gap on fs_cong art.
-	const NUMBER_Y_RATIO = 0.61;
+	// Layout tuned to legacy fs_cong art: congrats on wood (below roof),
+	// YOU WON / number / FREE SPINS stacked in the wood panel centre.
+	const TEXT_BLOCK_Y_OFFSET = 0.045;
+	const CONGRATULATIONS_Y_RATIO = 0.31 + TEXT_BLOCK_Y_OFFSET;
+	const YOU_WON_Y_RATIO = 0.42 + TEXT_BLOCK_Y_OFFSET;
+	const NUMBER_Y_RATIO = 0.58 + TEXT_BLOCK_Y_OFFSET;
+	const FREE_SPINS_Y_RATIO = 0.7 + TEXT_BLOCK_Y_OFFSET;
 	const NUMBER_WIDTH_RATIO = 0.22;
 
 	const panelLayout = $derived.by(() => {
@@ -46,6 +65,7 @@
 			centerY,
 			panelWidth,
 			panelHeight,
+			layoutScale: ml.scale,
 			numberWidth,
 			numberHeight,
 			numberTop: panelHeight * NUMBER_Y_RATIO,
@@ -64,12 +84,15 @@
 
 	const numberStyle = $derived.by(() => {
 		const p = panelLayout;
-		return [
-			`width:${p.numberWidth}px`,
-			`height:${p.numberHeight}px`,
-			`top:${p.numberTop}px`,
-		].join(';');
+		return [`width:${p.numberWidth}px`, `height:${p.numberHeight}px`, `top:${p.numberTop}px`].join(
+			';',
+		);
 	});
+
+	const lang = $derived(stateUrlDerived.lang());
+	const congratulationsText = $derived(getFsOutroCongratulationsText(lang));
+	const youWonText = $derived(getFsOutroYouWonText(lang));
+	const freeSpinsText = $derived(context.i18nDerived.fsRemaining());
 
 	let show = $state(false);
 	let oncomplete = $state(() => {});
@@ -103,7 +126,54 @@
 	>
 		<div class="panel" style={panelStyle}>
 			<img class="board" src={boardUrl} alt="" draggable="false" />
+
+			<FsIntroBannerLabel
+				text={congratulationsText}
+				fontKrutoi={FONT_KRUTOI}
+				fontKrutoiRu={FONT_KRUTOI_RU}
+				fontProstoi={FONT_PROSTOI_WHITE}
+				fontProstoiRu={FONT_PROSTOI_WHITE_RU}
+				fontProstoiHi={FONT_PROSTOI_HI}
+				useKrutoi
+				sizeRatio={0.066}
+				yRatio={CONGRATULATIONS_Y_RATIO}
+				maxWidthRatio={0.78}
+				panelWidth={panelLayout.panelWidth}
+				panelHeight={panelLayout.panelHeight}
+				layoutScale={panelLayout.layoutScale}
+				fallbackFill={LOCALE_TEXT_FILL_GOLD}
+			/>
+			<FsIntroBannerLabel
+				text={youWonText}
+				fontKrutoi={FONT_KRUTOI}
+				fontKrutoiRu={FONT_KRUTOI_RU}
+				fontProstoi={FONT_PROSTOI_WHITE}
+				fontProstoiRu={FONT_PROSTOI_WHITE_RU}
+				fontProstoiHi={FONT_PROSTOI_HI}
+				sizeRatio={0.046}
+				yRatio={YOU_WON_Y_RATIO}
+				maxWidthRatio={0.68}
+				panelWidth={panelLayout.panelWidth}
+				panelHeight={panelLayout.panelHeight}
+				layoutScale={panelLayout.layoutScale}
+				fallbackFill={LOCALE_TEXT_FILL_WHITE}
+			/>
 			<img class="number" src={numberUrl} alt="" draggable="false" style={numberStyle} />
+			<FsIntroBannerLabel
+				text={freeSpinsText}
+				fontKrutoi={FONT_KRUTOI}
+				fontKrutoiRu={FONT_KRUTOI_RU}
+				fontProstoi={FONT_PROSTOI_WHITE}
+				fontProstoiRu={FONT_PROSTOI_WHITE_RU}
+				fontProstoiHi={FONT_PROSTOI_HI}
+				sizeRatio={0.044}
+				yRatio={FREE_SPINS_Y_RATIO}
+				maxWidthRatio={0.68}
+				panelWidth={panelLayout.panelWidth}
+				panelHeight={panelLayout.panelHeight}
+				layoutScale={panelLayout.layoutScale}
+				fallbackFill={LOCALE_TEXT_FILL_WHITE}
+			/>
 		</div>
 
 		<PressToContinueHtml />
