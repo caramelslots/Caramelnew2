@@ -9,7 +9,9 @@
 		"storybook": "PUBLIC_CHROMATIC=true storybook dev -p 6007 public",
 		"dev": "vite dev --host --port 3007",
 		"build": "vite build",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"i18n:generate": "node scripts/i18n/generate.mjs",
+		"i18n:validate": "node scripts/i18n/validate.mjs"
 	},
 	"type": "module",
 	"devDependencies": {

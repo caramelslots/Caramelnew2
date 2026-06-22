@@ -8,7 +8,9 @@
 		FONT_KRUTOI,
 		FONT_KRUTOI_RU,
 		fontForLocale,
+		LOCALE_TEXT_FILL_GOLD,
 	} from '../game/constants';
+	import LocaleGlyph from './LocaleGlyph.svelte';
 
 	type Props = Omit<BitmapTextProps, 'text' | 'style' | 'scale' | 'onresize'> & {
 		maxWidth: number;
@@ -66,8 +68,9 @@
 <!-- Hidden measure row -->
 <Container visible={false}>
 	{#if parts.before}
-		<BitmapText
+		<LocaleGlyph
 			text={parts.before}
+			fallbackFill={LOCALE_TEXT_FILL_GOLD}
 			style={{ ...layoutStyle, fontFamily: bodyFont }}
 			onresize={(s) => {
 				if (beforeWidth !== s.width) beforeWidth = s.width;
@@ -84,8 +87,9 @@
 		/>
 	{/if}
 	{#if parts.after}
-		<BitmapText
+		<LocaleGlyph
 			text={parts.after}
+			fallbackFill={LOCALE_TEXT_FILL_GOLD}
 			style={{ ...layoutStyle, fontFamily: bodyFont }}
 			onresize={(s) => {
 				if (afterWidth !== s.width) afterWidth = s.width;
@@ -102,11 +106,12 @@
 	zIndex={props.zIndex}
 >
 	{#if parts.before}
-		<BitmapText
+		<LocaleGlyph
 			x={-totalWidth * anchorX}
 			y={0}
 			anchor={{ x: 0, y: anchorY }}
 			text={parts.before}
+			fallbackFill={LOCALE_TEXT_FILL_GOLD}
 			style={{ ...layoutStyle, fontFamily: bodyFont }}
 		/>
 	{/if}
@@ -120,11 +125,12 @@
 		/>
 	{/if}
 	{#if parts.after}
-		<BitmapText
+		<LocaleGlyph
 			x={afterX - totalWidth * anchorX}
 			y={0}
 			anchor={{ x: 0, y: anchorY }}
 			text={parts.after}
+			fallbackFill={LOCALE_TEXT_FILL_GOLD}
 			style={{ ...layoutStyle, fontFamily: bodyFont }}
 		/>
 	{/if}

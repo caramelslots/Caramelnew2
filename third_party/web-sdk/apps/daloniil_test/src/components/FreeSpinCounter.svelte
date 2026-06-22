@@ -10,8 +10,17 @@
 	import { FadeContainer } from 'components-pixi';
 
 	import { getContext } from '../game/context';
-	import { BITMAP_FONT_SCALE, FONT_PROSTOI, SYMBOL_SIZE } from '../game/constants';
+	import {
+		BITMAP_FONT_SCALE,
+		FONT_PROSTOI,
+		FONT_PROSTOI_RU,
+		fontForLocale,
+		LOCALE_TEXT_FILL_WHITE,
+		SYMBOL_SIZE,
+	} from '../game/constants';
+	import LocaleGlyph from './LocaleGlyph.svelte';
 	import { anchorToPivot, BitmapText, Container, Sprite, type Sizes } from 'pixi-svelte';
+	import { stateI18n } from 'state-shared';
 
 	const context = getContext();
 	const PANEL_RATIO = 1233 / 613;
@@ -69,10 +78,11 @@
 				anchor: { x: 0.5, y: 0.5 },
 			})}
 		>
-			<BitmapText
+			<LocaleGlyph
 				text={titleText}
+				fallbackFill={LOCALE_TEXT_FILL_WHITE}
 				style={{
-					fontFamily: FONT_PROSTOI,
+					fontFamily: fontForLocale(FONT_PROSTOI, FONT_PROSTOI_RU, stateI18n.i18n.locale),
 					fontSize,
 					wordWrap: false,
 				}}
@@ -83,7 +93,7 @@
 				{...counterPosition}
 				anchor={{ x: 0.5, y: 0 }}
 				style={{
-					fontFamily: FONT_PROSTOI,
+					fontFamily: fontForLocale(FONT_PROSTOI, FONT_PROSTOI_RU, stateI18n.i18n.locale),
 					fontSize,
 				}}
 				onresize={(sizes) => (counterSizes = sizes)}

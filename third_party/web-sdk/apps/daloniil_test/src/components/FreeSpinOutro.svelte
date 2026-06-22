@@ -8,7 +8,7 @@
 </script>
 
 <script lang="ts">
-	import { FadeContainer, WinCountUpProvider, ResponsiveBitmapText } from 'components-pixi';
+	import { FadeContainer, WinCountUpProvider } from 'components-pixi';
 	import { Container } from 'pixi-svelte';
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 	import { CanvasSizeRectangle } from 'components-layout';
@@ -24,10 +24,13 @@
 		FONT_PROSTOI_WHITE,
 		FONT_PROSTOI_WHITE_RU,
 		fontForLocale,
+		LOCALE_TEXT_FILL_GOLD,
+		LOCALE_TEXT_FILL_WHITE,
 		WIN_SCREEN_POST_COUNT_UP_DELAY_MS,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
 	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
+	import ResponsiveLocaleText from './ResponsiveLocaleText.svelte';
 	import { scaleMsByGameSpeed } from '../game/gameSpeed';
 	import { stateGame } from '../game/stateGame.svelte';
 	import {
@@ -93,11 +96,12 @@
 							{@const titleLineGap = width * 0.2}
 							{#if isBigWin}
 								<Container>
-									<ResponsiveBitmapText
+									<ResponsiveLocaleText
 										anchor={0.5}
 										y={-titleLineGap}
 										text={getFsOutroCongratulationsText(lang)}
 										maxWidth={width * 3.4}
+										fallbackFill={LOCALE_TEXT_FILL_GOLD}
 										style={{
 											fontFamily: fontForLocale(FONT_KRUTOI, FONT_KRUTOI_RU, stateI18n.i18n.locale),
 											fontSize: width * 0.56 * BITMAP_FONT_SCALE,
@@ -106,11 +110,12 @@
 											letterSpacing: 0,
 										}}
 									/>
-									<ResponsiveBitmapText
+									<ResponsiveLocaleText
 										anchor={0.5}
 										y={titleLineGap}
 										text={youWon}
 										maxWidth={width * 3.0}
+										fallbackFill={LOCALE_TEXT_FILL_WHITE}
 										style={{
 											fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale),
 											fontSize: width * 0.42 * BITMAP_FONT_SCALE,
@@ -121,10 +126,11 @@
 									/>
 								</Container>
 							{:else}
-								<ResponsiveBitmapText
+								<ResponsiveLocaleText
 									anchor={0.5}
 									text={youWon}
 									maxWidth={width * 3.0}
+									fallbackFill={LOCALE_TEXT_FILL_WHITE}
 									style={{
 										fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale),
 										fontSize: width * 0.5 * BITMAP_FONT_SCALE,
@@ -148,11 +154,12 @@
 									bookEvent
 									maxWidth={width * 3.2}
 								/>
-								<ResponsiveBitmapText
+								<ResponsiveLocaleText
 									anchor={0.5}
 									y={amountLineGap}
 									text={FS_OUTRO_TOTAL_WIN_LABEL}
 									maxWidth={width * 2.6}
+									fallbackFill={LOCALE_TEXT_FILL_WHITE}
 									style={{
 										fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale),
 										fontSize: width * 0.26 * BITMAP_FONT_SCALE,

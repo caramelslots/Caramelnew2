@@ -21,15 +21,50 @@ export const FONT_KRUTOI_RU = 'Russo One';
 /** Bablo — full currency-glyph font (₽ € ₩ ₴ ₫ ₱ ₹ ₦ ₪ ₡ ¥ zł…). Used for all monetary amounts. */
 export const FONT_BABLO = 'Noto Sans SemiCondensed SemiBold';
 
+export type LocaleScript = 'latin' | 'cyrillic' | 'cjk' | 'arabic' | 'devanagari';
+
+const CJK_LOCALES = new Set(['ja', 'ko', 'zh']);
+const ARABIC_LOCALES = new Set(['ar']);
+const DEVANAGARI_LOCALES = new Set(['hi']);
+
+/** Classify locale script for font / layout decisions. */
+export const localeScriptGroup = (locale: string): LocaleScript => {
+	if (locale === 'ru') return 'cyrillic';
+	if (CJK_LOCALES.has(locale)) return 'cjk';
+	if (ARABIC_LOCALES.has(locale)) return 'arabic';
+	if (DEVANAGARI_LOCALES.has(locale)) return 'devanagari';
+	return 'latin';
+};
+
+/** Prostoi/krutoi bitmap atlases cover Latin + Cyrillic only. */
+export const supportsBitmapFont = (locale: string): boolean => {
+	const script = localeScriptGroup(locale);
+	return script === 'latin' || script === 'cyrillic';
+};
+
+export const localeTextDirection = (locale: string): 'ltr' | 'rtl' =>
+	locale === 'ar' ? 'rtl' : 'ltr';
+
+/** System font stack for locales without bitmap glyph coverage. */
+export const SYSTEM_TEXT_FONT_FAMILY =
+	"'proxima-nova', 'Noto Sans', 'Noto Sans Arabic', 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans SC', 'Noto Sans Devanagari', system-ui, sans-serif";
+
+export const LOCALE_TEXT_FILL_GOLD = '#ffcc44';
+export const LOCALE_TEXT_FILL_WHITE = '#ffffff';
+
 /**
  * Pick the correct bitmap font for the current locale.
- * Russian uses dedicated Cyrillic typefaces; all other locales use the Latin variants.
+ * Russian uses dedicated Cyrillic typefaces; all other latin-script locales use the Latin variants.
+ * Returns `latin` unchanged when bitmap fonts are not supported (caller should use system Text).
  */
 export const fontForLocale = (
 	latin: string,
 	ru: string,
 	locale: string,
-): string => (locale === 'ru' ? ru : latin);
+): string => {
+	if (!supportsBitmapFont(locale)) return latin;
+	return locale === 'ru' ? ru : latin;
+};
 /**
  * Pixi scales bitmap glyphs as `fontSize / font.info.size`.
  * Legacy gold used info size 105; prostoi/krutoi use 53 — same fontSize renders ~2× larger without this.

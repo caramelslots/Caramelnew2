@@ -21,11 +21,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	import { stateBet } from 'state-shared';
+	import { stateBet, stateI18n } from 'state-shared';
 
 	import { playBet, playBookEvent, playBookEvents } from '../game/utils';
 	import { eventEmitter } from '../game/eventEmitter';
 	import { devPreview } from '../game/devPreview.svelte';
+	import { LANG_LABELS, setGameLanguage, STAKE_LOCALES } from '../game/devLang';
 	import baseEvents from '../stories/data/base_events';
 	import baseBooks from '../stories/data/base_books';
 	import bonusBooks from '../stories/data/bonus_books';
@@ -35,6 +36,7 @@
 	import config from '../game/config';
 
 	let open = $state(false);
+	let langOpen = $state(false);
 	let busy = $state(false);
 	let fsCounterPreview = $state(false);
 
@@ -483,6 +485,29 @@
 		{open ? 'DEV ▴' : 'DEV ▾'}
 	</button>
 
+	<button
+		class="dev-toggle lang-toggle"
+		class:lang-toggle--open={langOpen}
+		type="button"
+		onclick={() => (langOpen = !langOpen)}
+	>
+		LANG {langOpen ? '▴' : '▾'} {stateI18n.i18n.locale.toUpperCase()}
+	</button>
+
+	{#if langOpen}
+		<div class="lang-body">
+			{#each STAKE_LOCALES as lang (lang)}
+				<button
+					type="button"
+					class:active={stateI18n.i18n.locale === lang}
+					onclick={() => setGameLanguage(lang)}
+				>
+					{LANG_LABELS[lang]}
+				</button>
+			{/each}
+		</div>
+	{/if}
+
 	{#if open}
 		<div class="dev-body">
 			<section>
@@ -788,6 +813,55 @@
 	}
 	.dev-toggle:hover {
 		background: rgba(29, 78, 216, 0.95);
+	}
+
+	.lang-toggle {
+		display: block;
+		margin-top: 4px;
+		background: rgba(124, 58, 237, 0.92);
+	}
+	.lang-toggle:hover {
+		background: rgba(109, 40, 217, 0.95);
+	}
+	.lang-toggle--open {
+		background: rgba(91, 33, 182, 0.95);
+	}
+
+	.lang-body {
+		margin-top: 4px;
+		background: rgba(15, 23, 42, 0.94);
+		border: 1px solid rgba(167, 139, 250, 0.45);
+		border-radius: 8px;
+		padding: 6px;
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 4px;
+		min-width: 240px;
+		max-width: 280px;
+		max-height: 200px;
+		overflow-y: auto;
+		box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+	}
+
+	.lang-body button {
+		background: rgba(30, 41, 59, 0.95);
+		color: #f1f5f9;
+		border: 1px solid rgba(71, 85, 105, 0.7);
+		padding: 5px 4px;
+		font-family: inherit;
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		border-radius: 4px;
+		cursor: pointer;
+	}
+	.lang-body button:hover {
+		background: rgba(124, 58, 237, 0.35);
+		border-color: rgba(167, 139, 250, 0.85);
+	}
+	.lang-body button.active {
+		background: rgba(34, 197, 94, 0.45);
+		border-color: rgba(74, 222, 128, 0.9);
 	}
 
 	.dev-body {

@@ -8,8 +8,12 @@
 		FONT_PROSTOI_WHITE,
 		FONT_PROSTOI_WHITE_RU,
 		fontForLocale,
+		localeTextDirection,
+		LOCALE_TEXT_FILL_WHITE,
 		PRESS_TO_CONTINUE_BOTTOM_OFFSET,
 		PRESS_TO_CONTINUE_FONT_SIZE,
+		supportsBitmapFont,
+		SYSTEM_TEXT_FONT_FAMILY,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
 
@@ -17,6 +21,9 @@
 
 	const context = getContext();
 	const text = $derived(context.i18nDerived.pressToContinue());
+	const locale = $derived(stateI18n.i18n.locale);
+	const useBitmap = $derived(supportsBitmapFont(locale));
+	const textDirection = $derived(localeTextDirection(locale));
 
 	const positionStyle = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
@@ -24,7 +31,13 @@
 		return `left:${ml.x}px;bottom:${bottom}px;max-width:${ml.width * ml.scale * 0.95}px;`;
 	});
 
+	const systemFontSize = $derived(
+		PRESS_TO_CONTINUE_FONT_SIZE * BITMAP_FONT_SCALE * context.stateLayoutDerived.mainLayout().scale,
+	);
+
 	$effect(() => {
+		if (!useBitmap) return;
+
 		const renderer = context.stateApp.pixiApplication?.renderer;
 		if (!renderer || !imgEl) return;
 
@@ -36,7 +49,7 @@
 		const bitmapText = new PIXI.BitmapText({
 			text,
 			style: {
-				fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale),
+				fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, locale),
 				fontSize,
 				align: 'center',
 				letterSpacing: 2,
@@ -67,7 +80,18 @@
 	});
 </script>
 
-<img bind:this={imgEl} class="press-label" style={positionStyle} alt="" />
+{#if useBitmap}
+	<img bind:this={imgEl} class="press-label" style={positionStyle} alt="" />
+{:else}
+	<p
+		class="press-label press-label--system"
+		style={positionStyle}
+		dir={textDirection}
+		lang={locale}
+	>
+		{text}
+	</p>
+{/if}
 
 <style lang="scss">
 	.press-label {
@@ -75,5 +99,18 @@
 		transform: translateX(-50%);
 		pointer-events: none;
 		user-select: none;
+	}
+
+	.press-label--system {
+		margin: 0;
+		padding: 0;
+		text-align: center;
+		font-family: v-bind(SYSTEM_TEXT_FONT_FAMILY);
+		font-size: v-bind('`${systemFontSize}px`');
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		color: v-bind(LOCALE_TEXT_FILL_WHITE);
+		text-transform: uppercase;
+		line-height: 1.2;
 	}
 </style>

@@ -2,12 +2,12 @@
 	import type { Snippet } from 'svelte';
 
 	import { SpineProvider, SpineTrack, SpineSlot } from 'pixi-svelte';
-	import { ResponsiveBitmapText } from 'components-pixi';
+	import ResponsiveLocaleText from './ResponsiveLocaleText.svelte';
 
 	import { stateI18n } from 'state-shared';
 
 	import { getContext } from '../game/context';
-	import { BITMAP_FONT_SCALE, FONT_KRUTOI, FONT_KRUTOI_RU, SYMBOL_SIZE, fontForLocale } from '../game/constants';
+	import { BITMAP_FONT_SCALE, FONT_KRUTOI, FONT_KRUTOI_RU, SYMBOL_SIZE, fontForLocale, LOCALE_TEXT_FILL_GOLD } from '../game/constants';
 	import WinAnimationBannerOverride from './WinAnimationBannerOverride.svelte';
 
 	type AnimationState = 'intro' | 'idle' | 'outro';
@@ -61,10 +61,11 @@
 	<WinAnimationBannerOverride clearBanner={!!props.bannerOverrideText} />
 	{#if props.bannerOverrideText}
 		<SpineSlot slotName="BIG_WIN">
-			<ResponsiveBitmapText
+			<ResponsiveLocaleText
 				anchor={0.5}
 				maxWidth={1400}
 				text={props.bannerOverrideText}
+				fallbackFill={LOCALE_TEXT_FILL_GOLD}
 				style={{
 					fontFamily: fontForLocale(FONT_KRUTOI, FONT_KRUTOI_RU, stateI18n.i18n.locale),
 					fontSize: SYMBOL_SIZE * 4.4 * BITMAP_FONT_SCALE,
