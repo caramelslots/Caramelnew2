@@ -139,6 +139,8 @@
 	const startAutoplay = () => {
 		launchCashStacksAutoplay((event) => context.eventEmitter.broadcast(event));
 	};
+
+	const startAutoplayLabel = $derived(context.i18nDerived.startAutoplay());
 </script>
 
 {#if isOpen}
@@ -277,12 +279,12 @@
 						class="start-button"
 						class:dimmed={startDisabled}
 						disabled={startDisabled}
-						aria-label="START AUTOPLAY"
+						aria-label={startAutoplayLabel}
 						data-test="autoplay-start"
 						onclick={startAutoplay}
 					>
 						<img class="start-button-bg" src={startButtonUrl} alt="" draggable="false" />
-						<span class="start-button-label">START AUTOPLAY</span>
+						<span class="start-button-label">{startAutoplayLabel}</span>
 					</button>
 				</section>
 			</div>
