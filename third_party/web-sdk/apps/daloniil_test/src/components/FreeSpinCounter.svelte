@@ -15,6 +15,8 @@
 		FONT_PROSTOI,
 		FONT_PROSTOI_RU,
 		FONT_PROSTOI_HI,
+		FONT_PROSTOI_VI,
+		FONT_PROSTOI_CJK,
 		fontForLocale,
 		LOCALE_TEXT_FILL_WHITE,
 		SYMBOL_SIZE,
@@ -83,7 +85,7 @@
 				text={titleText}
 				fallbackFill={LOCALE_TEXT_FILL_WHITE}
 				style={{
-					fontFamily: fontForLocale(FONT_PROSTOI, FONT_PROSTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI),
+					fontFamily: fontForLocale(FONT_PROSTOI, FONT_PROSTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI, FONT_PROSTOI_VI, FONT_PROSTOI_CJK),
 					fontSize,
 					wordWrap: false,
 				}}
@@ -94,7 +96,7 @@
 				{...counterPosition}
 				anchor={{ x: 0.5, y: 0 }}
 				style={{
-					fontFamily: fontForLocale(FONT_PROSTOI, FONT_PROSTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI),
+					fontFamily: fontForLocale(FONT_PROSTOI, FONT_PROSTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI, FONT_PROSTOI_VI, FONT_PROSTOI_CJK),
 					fontSize,
 				}}
 				onresize={(sizes) => (counterSizes = sizes)}

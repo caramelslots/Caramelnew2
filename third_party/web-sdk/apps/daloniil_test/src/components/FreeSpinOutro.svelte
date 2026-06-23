@@ -25,6 +25,10 @@
 		FONT_PROSTOI_WHITE,
 		FONT_PROSTOI_WHITE_RU,
 		FONT_PROSTOI_WHITE_HI,
+		FONT_PROSTOI_WHITE_VI,
+		FONT_PROSTOI_WHITE_CJK,
+		FONT_KRUTOI_VI,
+		FONT_KRUTOI_CJK,
 		fontForLocale,
 		LOCALE_TEXT_FILL_GOLD,
 		LOCALE_TEXT_FILL_WHITE,
@@ -120,7 +124,7 @@
 										maxWidth={width * 3.4}
 										fallbackFill={LOCALE_TEXT_FILL_GOLD}
 										style={{
-											fontFamily: fontForLocale(FONT_KRUTOI, FONT_KRUTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI),
+											fontFamily: fontForLocale(FONT_KRUTOI, FONT_KRUTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI, FONT_KRUTOI_VI, FONT_KRUTOI_CJK),
 											fontSize: width * 0.56 * BITMAP_FONT_SCALE,
 											align: 'center',
 											fontWeight: 'bold',
@@ -134,7 +138,7 @@
 										maxWidth={width * 3.0}
 										fallbackFill={LOCALE_TEXT_FILL_WHITE}
 										style={{
-											fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale, FONT_PROSTOI_WHITE_HI),
+											fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale, FONT_PROSTOI_WHITE_HI, FONT_PROSTOI_WHITE_VI, FONT_PROSTOI_WHITE_CJK),
 											fontSize: width * 0.42 * BITMAP_FONT_SCALE,
 											align: 'center',
 											fontWeight: 'bold',
@@ -149,7 +153,7 @@
 									maxWidth={width * 3.0}
 									fallbackFill={LOCALE_TEXT_FILL_WHITE}
 									style={{
-										fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale, FONT_PROSTOI_WHITE_HI),
+										fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale, FONT_PROSTOI_WHITE_HI, FONT_PROSTOI_WHITE_VI, FONT_PROSTOI_WHITE_CJK),
 										fontSize: width * 0.5 * BITMAP_FONT_SCALE,
 										align: 'center',
 										fontWeight: 'bold',
@@ -178,7 +182,7 @@
 									maxWidth={width * 2.6}
 									fallbackFill={LOCALE_TEXT_FILL_WHITE}
 									style={{
-										fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale, FONT_PROSTOI_WHITE_HI),
+										fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale, FONT_PROSTOI_WHITE_HI, FONT_PROSTOI_WHITE_VI, FONT_PROSTOI_WHITE_CJK),
 										fontSize: width * 0.26 * BITMAP_FONT_SCALE,
 										align: 'center',
 										fontWeight: 'bold',

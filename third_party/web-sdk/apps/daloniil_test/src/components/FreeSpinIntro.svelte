@@ -17,6 +17,10 @@
 		FONT_KRUTOI,
 		FONT_KRUTOI_RU,
 		FONT_PROSTOI_HI,
+		FONT_PROSTOI_VI,
+		FONT_KRUTOI_VI,
+		FONT_KRUTOI_CJK,
+		FONT_PROSTOI_WHITE_CJK,
 		FONT_PROSTOI_WHITE,
 		FONT_PROSTOI_WHITE_RU,
 		LOCALE_TEXT_FILL_GOLD,
@@ -134,6 +138,8 @@
 				fontProstoi={FONT_PROSTOI_WHITE}
 				fontProstoiRu={FONT_PROSTOI_WHITE_RU}
 				fontProstoiHi={FONT_PROSTOI_HI}
+				fontProstoiVi={FONT_KRUTOI_VI}
+				fontLocaleCjk={FONT_KRUTOI_CJK}
 				useKrutoi
 				sizeRatio={0.066}
 				yRatio={CONGRATULATIONS_Y_RATIO}
@@ -150,6 +156,8 @@
 				fontProstoi={FONT_PROSTOI_WHITE}
 				fontProstoiRu={FONT_PROSTOI_WHITE_RU}
 				fontProstoiHi={FONT_PROSTOI_HI}
+				fontProstoiVi={FONT_KRUTOI_VI}
+				fontLocaleCjk={FONT_PROSTOI_WHITE_CJK}
 				sizeRatio={0.046}
 				yRatio={YOU_WON_Y_RATIO}
 				maxWidthRatio={0.68}
@@ -166,6 +174,8 @@
 				fontProstoi={FONT_PROSTOI_WHITE}
 				fontProstoiRu={FONT_PROSTOI_WHITE_RU}
 				fontProstoiHi={FONT_PROSTOI_HI}
+				fontProstoiVi={FONT_KRUTOI_VI}
+				fontLocaleCjk={FONT_PROSTOI_WHITE_CJK}
 				sizeRatio={0.044}
 				yRatio={FREE_SPINS_Y_RATIO}
 				maxWidthRatio={0.68}

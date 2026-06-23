@@ -3,20 +3,22 @@
 
 	import { stateI18n } from 'state-shared';
 
-	import { ensureCjkFontLoaded } from '../game/cjkFont';
+	import { ensureLocaleFontsLoaded, needsLocaleFontLoad } from '../game/localeFonts';
 	import {
 		BITMAP_FONT_SCALE,
 		FONT_PROSTOI_WHITE,
 		FONT_PROSTOI_WHITE_RU,
 		FONT_PROSTOI_WHITE_HI,
+		FONT_PROSTOI_WHITE_VI,
+		FONT_PROSTOI_WHITE_CJK,
 		fontForLocale,
+		isArabicLocale,
 		isCjkLocale,
 		localeTextDirection,
 		LOCALE_TEXT_FILL_WHITE,
 		PRESS_TO_CONTINUE_BOTTOM_OFFSET,
 		PRESS_TO_CONTINUE_FONT_SIZE,
 		supportsBitmapFont,
-		systemTextFontFamily,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
 
@@ -27,20 +29,22 @@
 	const locale = $derived(stateI18n.i18n.locale);
 	const useBitmap = $derived(supportsBitmapFont(locale));
 	const textDirection = $derived(localeTextDirection(locale));
-	const systemFontFamily = $derived(systemTextFontFamily(locale));
-	const needsCjkFont = $derived(!useBitmap && isCjkLocale(locale));
+	const resolvedFontFamily = $derived(
+		fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, locale, FONT_PROSTOI_WHITE_HI, FONT_PROSTOI_WHITE_VI, FONT_PROSTOI_WHITE_CJK),
+	);
+	const needsCustomFont = $derived(needsLocaleFontLoad(locale));
 
-	let cjkFontReady = $state(!needsCjkFont);
+	let localeFontReady = $state(!needsCustomFont);
 
 	$effect(() => {
-		if (!needsCjkFont) {
-			cjkFontReady = true;
+		if (!needsCustomFont) {
+			localeFontReady = true;
 			return;
 		}
-		cjkFontReady = false;
+		localeFontReady = false;
 		let cancelled = false;
-		ensureCjkFontLoaded().then(() => {
-			if (!cancelled) cjkFontReady = true;
+		ensureLocaleFontsLoaded(locale).then(() => {
+			if (!cancelled) localeFontReady = true;
 		});
 		return () => {
 			cancelled = true;
@@ -71,7 +75,7 @@
 		const bitmapText = new PIXI.BitmapText({
 			text,
 			style: {
-				fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, locale, FONT_PROSTOI_WHITE_HI),
+				fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, locale, FONT_PROSTOI_WHITE_HI, FONT_PROSTOI_WHITE_VI, FONT_PROSTOI_WHITE_CJK),
 				fontSize,
 				align: 'center',
 				letterSpacing: 2,
@@ -104,10 +108,11 @@
 
 {#if useBitmap}
 	<img bind:this={imgEl} class="press-label" style={positionStyle} alt="" />
-{:else if cjkFontReady}
+{:else if localeFontReady}
 	<p
 		class="press-label press-label--system"
 		class:press-label--cjk={isCjkLocale(locale)}
+		class:press-label--arabic={isArabicLocale(locale)}
 		style={positionStyle}
 		dir={textDirection}
 		lang={locale}
@@ -128,7 +133,7 @@
 		margin: 0;
 		padding: 0;
 		text-align: center;
-		font-family: v-bind(systemFontFamily);
+		font-family: v-bind(resolvedFontFamily);
 		font-size: v-bind('`${systemFontSize}px`');
 		font-weight: 700;
 		letter-spacing: 0.08em;
@@ -141,5 +146,11 @@
 		text-transform: none;
 		letter-spacing: 0;
 		font-weight: 700;
+	}
+
+	.press-label--arabic {
+		text-transform: none;
+		letter-spacing: 0;
+		font-weight: 500;
 	}
 </style>

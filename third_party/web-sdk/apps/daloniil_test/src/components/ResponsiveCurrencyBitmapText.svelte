@@ -10,6 +10,10 @@
 		FONT_PROSTOI,
 		FONT_PROSTOI_HI,
 		FONT_PROSTOI_RU,
+		FONT_PROSTOI_VI,
+		FONT_PROSTOI_CJK,
+		FONT_KRUTOI_VI,
+		FONT_KRUTOI_CJK,
 		fontForLocale,
 		LOCALE_TEXT_FILL_GOLD,
 	} from '../game/constants';
@@ -38,8 +42,8 @@
 
 	const bodyFont = $derived(
 		(props.bodyFontVariant ?? 'krutoi') === 'prostoi'
-			? fontForLocale(FONT_PROSTOI, FONT_PROSTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI)
-			: fontForLocale(FONT_KRUTOI, FONT_KRUTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI),
+			? fontForLocale(FONT_PROSTOI, FONT_PROSTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI, FONT_PROSTOI_VI, FONT_PROSTOI_CJK)
+			: fontForLocale(FONT_KRUTOI, FONT_KRUTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI, FONT_KRUTOI_VI, FONT_KRUTOI_CJK),
 	);
 
 	const layoutStyle = $derived({

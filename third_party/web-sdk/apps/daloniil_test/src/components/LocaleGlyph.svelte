@@ -2,13 +2,13 @@
 	import { BitmapText, Text, type BitmapTextProps } from 'pixi-svelte';
 	import { stateI18n } from 'state-shared';
 
-	import { ensureCjkFontLoaded } from '../game/cjkFont';
 	import {
-		isCjkLocale,
+		isArabicLocale,
 		LOCALE_TEXT_FILL_WHITE,
 		supportsBitmapFont,
 		systemTextFontFamily,
 	} from '../game/constants';
+	import { ensureLocaleFontsLoaded, needsLocaleFontLoad } from '../game/localeFonts';
 
 	type Style = NonNullable<BitmapTextProps['style']>;
 
@@ -22,19 +22,19 @@
 
 	const locale = $derived(stateI18n.i18n.locale);
 	const useBitmap = $derived(supportsBitmapFont(locale));
-	const needsCjkFont = $derived(!useBitmap && isCjkLocale(locale));
+	const needsCustomFont = $derived(needsLocaleFontLoad(locale));
 
-	let cjkFontReady = $state(!needsCjkFont);
+	let localeFontReady = $state(!needsCustomFont);
 
 	$effect(() => {
-		if (!needsCjkFont) {
-			cjkFontReady = true;
+		if (!needsCustomFont) {
+			localeFontReady = true;
 			return;
 		}
-		cjkFontReady = false;
+		localeFontReady = false;
 		let cancelled = false;
-		ensureCjkFontLoaded().then(() => {
-			if (!cancelled) cjkFontReady = true;
+		ensureLocaleFontsLoaded(locale).then(() => {
+			if (!cancelled) localeFontReady = true;
 		});
 		return () => {
 			cancelled = true;
@@ -46,7 +46,9 @@
 			? props.style
 			: {
 					...props.style,
-					fontFamily: systemTextFontFamily(locale),
+					fontFamily: isArabicLocale(locale)
+						? props.style.fontFamily
+						: systemTextFontFamily(locale),
 					fill: props.fallbackFill ?? props.style.fill ?? LOCALE_TEXT_FILL_WHITE,
 				},
 	);
@@ -54,6 +56,6 @@
 
 {#if useBitmap}
 	<BitmapText {...props} style={resolvedStyle} />
-{:else if cjkFontReady}
+{:else if localeFontReady}
 	<Text {...props} style={resolvedStyle} />
 {/if}

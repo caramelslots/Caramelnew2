@@ -3,14 +3,14 @@
 
 	import { stateI18n } from 'state-shared';
 
-	import { ensureCjkFontLoaded } from '../game/cjkFont';
+	import { ensureLocaleFontsLoaded, needsLocaleFontLoad } from '../game/localeFonts';
 	import {
 		BITMAP_FONT_SCALE,
 		fontForLocale,
+		isArabicLocale,
 		isCjkLocale,
 		localeTextDirection,
 		supportsBitmapFont,
-		systemTextFontFamily,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
 
@@ -21,6 +21,8 @@
 		fontProstoi: string;
 		fontProstoiRu: string;
 		fontProstoiHi: string;
+		fontProstoiVi: string;
+		fontLocaleCjk: string;
 		useKrutoi?: boolean;
 		/** Font size as a fraction of panel width. */
 		sizeRatio: number;
@@ -42,28 +44,29 @@
 	const locale = $derived(stateI18n.i18n.locale);
 	const useBitmap = $derived(supportsBitmapFont(locale));
 	const textDirection = $derived(localeTextDirection(locale));
-	const systemFontFamily = $derived(systemTextFontFamily(locale));
-	const needsCjkFont = $derived(!useBitmap && isCjkLocale(locale));
+	const needsCustomFont = $derived(needsLocaleFontLoad(locale));
 	const fontFamily = $derived(
 		fontForLocale(
 			props.useKrutoi ? props.fontKrutoi : props.fontProstoi,
 			props.useKrutoi ? props.fontKrutoiRu : props.fontProstoiRu,
 			locale,
 			props.fontProstoiHi,
+			props.fontProstoiVi,
+			props.fontLocaleCjk,
 		),
 	);
 
-	let cjkFontReady = $state(!needsCjkFont);
+	let localeFontReady = $state(!needsCustomFont);
 
 	$effect(() => {
-		if (!needsCjkFont) {
-			cjkFontReady = true;
+		if (!needsCustomFont) {
+			localeFontReady = true;
 			return;
 		}
-		cjkFontReady = false;
+		localeFontReady = false;
 		let cancelled = false;
-		ensureCjkFontLoaded().then(() => {
-			if (!cancelled) cjkFontReady = true;
+		ensureLocaleFontsLoaded(locale).then(() => {
+			if (!cancelled) localeFontReady = true;
 		});
 		return () => {
 			cancelled = true;
@@ -131,10 +134,12 @@
 
 {#if useBitmap}
 	<img bind:this={imgEl} class="label" style={positionStyle} alt="" />
-{:else if cjkFontReady}
+{:else if localeFontReady}
 	<p
 		class="label label--system"
 		class:label--cjk={isCjkLocale(locale)}
+		class:label--arabic={isArabicLocale(locale)}
+		class:label--krutoi={isArabicLocale(locale) && props.useKrutoi}
 		style={positionStyle}
 		dir={textDirection}
 		lang={locale}
@@ -156,7 +161,7 @@
 		padding: 0;
 		width: max-content;
 		text-align: center;
-		font-family: v-bind(systemFontFamily);
+		font-family: v-bind(fontFamily);
 		font-size: v-bind('`${systemFontSize}px`');
 		font-weight: 700;
 		letter-spacing: 0.04em;
@@ -168,5 +173,15 @@
 	.label--cjk {
 		text-transform: none;
 		letter-spacing: 0;
+	}
+
+	.label--arabic {
+		text-transform: none;
+		letter-spacing: 0;
+		font-weight: 500;
+	}
+
+	.label--arabic.label--krutoi {
+		font-weight: 900;
 	}
 </style>

@@ -22,6 +22,10 @@ export const FONT_KRUTOI_RU = 'Russo One';
 export const FONT_PROSTOI_HI = 'Noto Sans Devanagari Regular';
 export const FONT_PROSTOI_WHITE_HI = 'Noto Sans Devanagari White';
 export const FONT_KRUTOI_HI = FONT_PROSTOI_HI;
+/** Vietnamese bitmap font variants — krutoi reuses gold prostoi per art handoff. */
+export const FONT_PROSTOI_VI = 'Fruktur Regular';
+export const FONT_PROSTOI_WHITE_VI = 'Fruktur Regular White';
+export const FONT_KRUTOI_VI = FONT_PROSTOI_VI;
 /** Bablo — full currency-glyph font (₽ € ₩ ₴ ₫ ₱ ₹ ₦ ₪ ₡ ¥ zł…). Used for all monetary amounts. */
 export const FONT_BABLO = 'Noto Sans SemiCondensed SemiBold';
 
@@ -31,10 +35,16 @@ const CJK_LOCALES = new Set(['ja', 'ko', 'zh']);
 const ARABIC_LOCALES = new Set(['ar']);
 const DEVANAGARI_LOCALES = new Set(['hi']);
 
-/** System (non-bitmap) font for ja / ko / zh — NotoSansMonoCJKhk-Bold.otf. */
-export const FONT_CJK = 'Noto Sans Mono CJK HK Bold';
+/** CJK (ja / ko / zh) bitmap font variants — krutoi reuses gold prostoi per art handoff. */
+export const FONT_PROSTOI_CJK = 'Asian Y Standard';
+export const FONT_PROSTOI_WHITE_CJK = 'Asian Y White';
+export const FONT_KRUTOI_CJK = FONT_PROSTOI_CJK;
+/** Arabic TTF fonts — prostoi / white share Medium; krutoi uses Black. */
+export const FONT_ARABIC_PROSTOI = 'Cairo Medium';
+export const FONT_ARABIC_KRUTOI = 'Cairo Black';
 
 export const isCjkLocale = (locale: string): boolean => CJK_LOCALES.has(locale);
+export const isArabicLocale = (locale: string): boolean => ARABIC_LOCALES.has(locale);
 
 /** Classify locale script for font / layout decisions. */
 export const localeScriptGroup = (locale: string): LocaleScript => {
@@ -45,8 +55,9 @@ export const localeScriptGroup = (locale: string): LocaleScript => {
 	return 'latin';
 };
 
-/** Prostoi/krutoi bitmap atlases cover Latin, Cyrillic, and Hindi (Devanagari). */
+/** Prostoi/krutoi bitmap atlases cover Latin, Cyrillic, Hindi, Vietnamese, and CJK. */
 export const supportsBitmapFont = (locale: string): boolean => {
+	if (locale === 'vi' || isCjkLocale(locale)) return true;
 	const script = localeScriptGroup(locale);
 	return script === 'latin' || script === 'cyrillic' || script === 'devanagari';
 };
@@ -59,24 +70,39 @@ export const SYSTEM_TEXT_FONT_FAMILY =
 	"'proxima-nova', 'Noto Sans', 'Noto Sans Arabic', system-ui, sans-serif";
 
 /** PIXI/HTML system font for locales without bitmap glyphs. */
-export const systemTextFontFamily = (locale: string): string =>
-	isCjkLocale(locale) ? FONT_CJK : SYSTEM_TEXT_FONT_FAMILY;
+export const systemTextFontFamily = (locale: string): string => {
+	if (isArabicLocale(locale)) return FONT_ARABIC_PROSTOI;
+	return SYSTEM_TEXT_FONT_FAMILY;
+};
+
+const isKrutoiBitmapFamily = (fontFamily: string): boolean =>
+	fontFamily === FONT_KRUTOI ||
+	fontFamily === FONT_KRUTOI_RU ||
+	fontFamily === FONT_KRUTOI_HI ||
+	fontFamily === FONT_KRUTOI_VI;
 
 export const LOCALE_TEXT_FILL_GOLD = '#ffcc44';
 export const LOCALE_TEXT_FILL_WHITE = '#ffffff';
 
 /**
  * Pick the correct bitmap font for the current locale.
- * `hi` — optional Hindi (Devanagari) variant; krutoi on hi reuses gold prostoi.
+ * `hi` / `vi` / `cjk` — optional locale-specific variants; krutoi on hi/vi/cjk reuses gold prostoi.
  */
 export const fontForLocale = (
 	latin: string,
 	ru: string,
 	locale: string,
 	hi?: string,
+	vi?: string,
+	cjk?: string,
 ): string => {
 	if (locale === 'ru') return ru;
 	if (locale === 'hi' && hi) return hi;
+	if (locale === 'vi' && vi) return vi;
+	if (isCjkLocale(locale) && cjk) return cjk;
+	if (locale === 'ar') {
+		return isKrutoiBitmapFamily(latin) ? FONT_ARABIC_KRUTOI : FONT_ARABIC_PROSTOI;
+	}
 	if (supportsBitmapFont(locale)) return latin;
 	return latin;
 };
