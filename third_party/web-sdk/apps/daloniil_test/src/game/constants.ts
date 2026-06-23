@@ -89,6 +89,11 @@ export const BITMAP_FONT_SCALE = 65 / 105;
 /** Prostoi bitmap size for WIN label under the board (ref px before BITMAP_FONT_SCALE). */
 export const WIN_HUD_FONT_SIZE = 52;
 
+/** Prostoi bitmap size for per-line small-win amounts (ref px before BITMAP_FONT_SCALE). */
+export const PAYLINE_WIN_AMOUNT_FONT_SIZE = 42;
+/** Vertical offset above the payline center (ref px). */
+export const PAYLINE_WIN_AMOUNT_ABOVE_LINE_OFFSET = 36;
+
 /** Prostoi white bitmap size for "Press to continue" (ref px before BITMAP_FONT_SCALE). */
 export const PRESS_TO_CONTINUE_FONT_SIZE = 38;
 /** Distance from bottom of main layout (ref px). */

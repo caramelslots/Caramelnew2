@@ -44,6 +44,18 @@ export const clearWinSpotlight = () => {
 	eventEmitter.broadcast({ type: 'paylineClearAll' });
 };
 
+/** Next `setWin` before the following `reveal`, if any. */
+const findNextSetWin = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
+	const startIdx = bookEvents.indexOf(fromEvent);
+	if (startIdx < 0) return undefined;
+	for (let i = startIdx + 1; i < bookEvents.length; i++) {
+		const event = bookEvents[i];
+		if (event.type === 'setWin') return event;
+		if (event.type === 'reveal') break;
+	}
+	return undefined;
+};
+
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
 	// Wincap (level 10) hides UI — the count-up runs ~32s and a visible HUD
 	// would otherwise stay live during the celebration. After the 4-tier
@@ -152,7 +164,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
 	},
-	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
+	winInfo: async (bookEvent: BookEventOfType<'winInfo'>, { bookEvents }: BookEventContext) => {
 		// Breathing room after the reels land before the win celebration kicks
 		// in (also lets the symbol bounce animation finish landing).
 		await waitForGameSpeed(WIN_INFO_PRE_DELAY_MS, stateGame.gameSpeed);
@@ -172,6 +184,27 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				positions: win.positions,
 				paylineRows,
 			});
+		}
+
+		const anchorWin = bookEvent.wins[0];
+		if (anchorWin) {
+			eventEmitter.broadcast({
+				type: 'paylineWinAmountShow',
+				amount: bookEvent.totalWin,
+				anchor: {
+					lineIndex: anchorWin.meta.lineIndex,
+					positions: anchorWin.positions,
+				},
+			});
+
+			const nextSetWin = findNextSetWin(bookEvents, bookEvent);
+			const nextWinLevelData =
+				nextSetWin != null ? winLevelMap[nextSetWin.winLevel as WinLevel] : undefined;
+			const isSmallWinFlow = !nextWinLevelData || nextWinLevelData.type !== 'big';
+
+			if (isSmallWinFlow) {
+				stateBet.winBookEventAmount = stateBet.winBookEventAmount + bookEvent.totalWin;
+			}
 		}
 
 		// Symbols repeating across multiple paylines must animate only once;
@@ -282,11 +315,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	setWin: async (bookEvent: BookEventOfType<'setWin'>) => {
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
 
-		// Цифра WIN в HUD должна появляться в момент старта целебрации, а не
-		// после её окончания. По умолчанию pipeline такой: setWin (await доски)
-		// → setTotalWin (обновляет бар). Поднимаем кумулятив ДО await'а:
-		// math-инвариант гарантирует, что (prev + setWin.amount) ≡ setTotalWin.amount
-		// (см. books_*.ts), поэтому последующий setTotalWin становится no-op'ом.
+		// Stake UX: small/medium wins are non-blocking — board amount + HUD WIN
+		// are raised during winInfo; skip duplicate increment here.
+		if (winLevelData.type !== 'big') {
+			return;
+		}
+
+		// Big-win HUD: поднимаем кумулятив ДО await'а celebration overlay.
+		// math-инвариант: (prev + setWin.amount) ≡ setTotalWin.amount.
 		stateBet.winBookEventAmount = stateBet.winBookEventAmount + bookEvent.amount;
 
 		// For big wins above level 6, the visual ladder starts at Big Win and

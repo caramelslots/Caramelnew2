@@ -43,6 +43,7 @@
 	import BoardMask from './BoardMask.svelte';
 	import BoardBase from './BoardBase.svelte';
 	import PaylineOverlay from './PaylineOverlay.svelte';
+	import PaylineWinAmounts from './PaylineWinAmounts.svelte';
 
 	const context = getContext();
 
@@ -170,5 +171,6 @@
 		<BoardMask />
 		<BoardBase />
 		<PaylineOverlay />
+		<PaylineWinAmounts />
 	</BoardContainer>
 {/if}

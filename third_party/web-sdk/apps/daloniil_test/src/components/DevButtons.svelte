@@ -541,7 +541,7 @@
 					<button
 						type="button"
 						disabled={busy}
-						title="setWin level=3 (small) — prostoi count-up без big-win баннера"
+						title="setWin level=3 — non-blocking; use Board + Small Win to see payline amount"
 						onclick={playSmallWin}
 					>
 						Small Win (5x)
@@ -566,7 +566,7 @@
 					<button
 						type="button"
 						disabled={busy}
-						title="reveal → winInfo line 1 → setWin level=3 (small, prostoi)"
+						title="reveal → winInfo → setWin level=3 (amount above payline, no overlay delay)"
 						onclick={playBoardSmallWin}
 					>
 						Board + Small Win

@@ -7,6 +7,7 @@ import type { EmitterEventWin } from '../components/Win.svelte';
 import type { EmitterEventSound } from '../components/Sound.svelte';
 import type { EmitterEventTransition } from '../components/Transition.svelte';
 import type { EmitterEventPaylineOverlay } from '../components/PaylineOverlay.svelte';
+import type { EmitterEventPaylineWinAmount } from '../components/PaylineWinAmounts.svelte';
 import type { EmitterEventProgressLadder } from '../components/ProgressLadder.svelte';
 import type { EmitterEventMysteryReelUnlockOverlay } from '../components/MysteryReelUnlockOverlay.svelte';
 
@@ -20,5 +21,6 @@ export type EmitterEventGame =
 	| EmitterEventSound
 	| EmitterEventTransition
 	| EmitterEventPaylineOverlay
+	| EmitterEventPaylineWinAmount
 	| EmitterEventProgressLadder
 	| EmitterEventMysteryReelUnlockOverlay;
