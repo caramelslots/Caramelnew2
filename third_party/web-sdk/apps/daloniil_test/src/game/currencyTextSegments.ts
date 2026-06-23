@@ -12,6 +12,8 @@ const NO_LOCALISATION_CURRENCY_MAP: Record<string, string> = {
 export type CurrencyTextSegment = { kind: 'symbol' | 'body'; text: string };
 
 export type CurrencyLayoutParts = {
+	/** Localised label before the amount (e.g. HUD "WIN "). */
+	label: string;
 	before: string;
 	symbol: string;
 	after: string;
@@ -60,19 +62,6 @@ export const amountToCurrencySegments = (
 	return segments;
 };
 
-export const withPrefixSegments = (
-	prefix: string,
-	amount: number,
-	bookEvent = false,
-): CurrencyTextSegment[] => {
-	const segments: CurrencyTextSegment[] = [];
-	if (prefix) pushSegment(segments, 'body', prefix);
-	for (const seg of amountToCurrencySegments(amount, bookEvent)) {
-		pushSegment(segments, seg.kind, seg.text);
-	}
-	return segments;
-};
-
 /** Flatten segments into before/symbol/after for at-most-3 BitmapText layout. */
 export const segmentsToLayoutParts = (segments: CurrencyTextSegment[]): CurrencyLayoutParts => {
 	let before = '';
@@ -91,15 +80,19 @@ export const segmentsToLayoutParts = (segments: CurrencyTextSegment[]): Currency
 		}
 	}
 
-	return { before, symbol, after };
+	return { label: '', before, symbol, after };
 };
 
 export const amountToLayoutParts = (
 	amount: number,
 	options?: { bookEvent?: boolean; prefix?: string },
 ): CurrencyLayoutParts => {
-	const segments = options?.prefix
-		? withPrefixSegments(options.prefix, amount, options.bookEvent)
-		: amountToCurrencySegments(amount, options?.bookEvent);
-	return segmentsToLayoutParts(segments);
+	const segments = amountToCurrencySegments(amount, options?.bookEvent);
+	const { before, symbol, after } = segmentsToLayoutParts(segments);
+	return {
+		label: options?.prefix ?? '',
+		before,
+		symbol,
+		after,
+	};
 };
