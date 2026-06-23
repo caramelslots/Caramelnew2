@@ -197,6 +197,7 @@
 						{:else}
 							<ResponsiveCurrencyBitmapText
 								anchor={0.5}
+								bodyFontVariant="prostoi"
 								maxWidth={context.stateLayoutDerived.canvasSizes().width /
 									context.stateLayoutDerived.mainLayout().scale}
 								amount={countUpAmount}

@@ -42,7 +42,7 @@ export default {
 	MYSTERY_REEL_UNLOCKED_SUBTITLE: '잠금 해제!',
 	FREE_SPINS_AWARDED_SUFFIX: '무료 스핀',
 	MAX_WIN: '최대 승리',
-	PRESS_TO_CONTINUE: '아무 곳이나 탭하여 계속',
+	PRESS_TO_CONTINUE: '탭하여 계속',
 	LOADER_CARD_1_TITLE: '무료 스핀',
 	LOADER_CARD_1_LINE_1: '고양이 심볼 3개를 모아 획득',
 	LOADER_CARD_1_LINE_2: '보너스 무료 스핀',

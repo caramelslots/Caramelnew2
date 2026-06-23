@@ -42,7 +42,7 @@ export default {
 	MYSTERY_REEL_UNLOCKED_SUBTITLE: 'अनलॉक!',
 	FREE_SPINS_AWARDED_SUFFIX: 'मुफ़्त स्पिन',
 	MAX_WIN: 'अधिकतम जीत',
-	PRESS_TO_CONTINUE: 'जारी रखने के लिए कहीं भी टैप करें',
+	PRESS_TO_CONTINUE: 'जारी रखने के लिए टैप करें',
 	LOADER_CARD_1_TITLE: 'मुफ़्त स्पिन',
 	LOADER_CARD_1_LINE_1: '3 बिल्ली प्रतीक इकट्ठा करें और पाएं',
 	LOADER_CARD_1_LINE_2: 'बोनस मुफ़्त स्पिन',

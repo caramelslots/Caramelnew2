@@ -42,7 +42,7 @@ export default {
 	MYSTERY_REEL_UNLOCKED_SUBTITLE: '已解锁！',
 	FREE_SPINS_AWARDED_SUFFIX: '免费旋转',
 	MAX_WIN: '最大赢奖',
-	PRESS_TO_CONTINUE: '点击任意位置继续',
+	PRESS_TO_CONTINUE: '点击继续',
 	LOADER_CARD_1_TITLE: '免费旋转',
 	LOADER_CARD_1_LINE_1: '收集 3 个猫符号可获得',
 	LOADER_CARD_1_LINE_2: '奖金免费旋转',

@@ -7,17 +7,23 @@
 		FONT_BABLO,
 		FONT_KRUTOI,
 		FONT_KRUTOI_RU,
+		FONT_PROSTOI,
 		FONT_PROSTOI_HI,
+		FONT_PROSTOI_RU,
 		fontForLocale,
 		LOCALE_TEXT_FILL_GOLD,
 	} from '../game/constants';
 	import LocaleGlyph from './LocaleGlyph.svelte';
+
+	type BodyFontVariant = 'krutoi' | 'prostoi';
 
 	type Props = Omit<BitmapTextProps, 'text' | 'style' | 'scale' | 'onresize'> & {
 		maxWidth: number;
 		amount: number;
 		bookEvent?: boolean;
 		prefix?: string;
+		/** prostoi for small wins / HUD; krutoi (default) for big-win overlays. */
+		bodyFontVariant?: BodyFontVariant;
 		style: Omit<NonNullable<BitmapTextProps['style']>, 'fontFamily'>;
 	};
 
@@ -31,7 +37,9 @@
 	);
 
 	const bodyFont = $derived(
-		fontForLocale(FONT_KRUTOI, FONT_KRUTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI),
+		(props.bodyFontVariant ?? 'krutoi') === 'prostoi'
+			? fontForLocale(FONT_PROSTOI, FONT_PROSTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI)
+			: fontForLocale(FONT_KRUTOI, FONT_KRUTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI),
 	);
 
 	const layoutStyle = $derived({

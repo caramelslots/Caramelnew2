@@ -42,7 +42,7 @@ export default {
 	MYSTERY_REEL_UNLOCKED_SUBTITLE: 'アンロック！',
 	FREE_SPINS_AWARDED_SUFFIX: 'フリースピン',
 	MAX_WIN: '最大勝利',
-	PRESS_TO_CONTINUE: 'どこでもタップして続行',
+	PRESS_TO_CONTINUE: 'タップして続行',
 	LOADER_CARD_1_TITLE: 'フリースピン',
 	LOADER_CARD_1_LINE_1: '猫シンボルを3つ集めて獲得',
 	LOADER_CARD_1_LINE_2: 'ボーナスフリースピン',

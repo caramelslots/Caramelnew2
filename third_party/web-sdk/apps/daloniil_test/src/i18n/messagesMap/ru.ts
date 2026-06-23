@@ -42,7 +42,7 @@ export default {
 	MYSTERY_REEL_UNLOCKED_SUBTITLE: 'РАЗБЛОКИРОВАН!',
 	FREE_SPINS_AWARDED_SUFFIX: 'ФРИСПИНОВ',
 	MAX_WIN: 'МАКС. ВЫИГРЫШ',
-	PRESS_TO_CONTINUE: 'Нажмите в любом месте, чтобы продолжить',
+	PRESS_TO_CONTINUE: 'Нажмите, чтобы продолжить',
 	LOADER_CARD_1_TITLE: 'ФРИСПИНЫ',
 	LOADER_CARD_1_LINE_1: 'СОБЕРИТЕ 3 СИМВОЛА КОТА, ЧТОБЫ ПОЛУЧИТЬ',
 	LOADER_CARD_1_LINE_2: 'БОНУСНЫЕ ФРИСПИНЫ',

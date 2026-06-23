@@ -89,8 +89,8 @@ export const BITMAP_FONT_SCALE = 65 / 105;
 /** Prostoi bitmap size for WIN label under the board (ref px before BITMAP_FONT_SCALE). */
 export const WIN_HUD_FONT_SIZE = 52;
 
-/** Prostoi white bitmap size for "Press anywhere to continue" (ref px before BITMAP_FONT_SCALE). */
-export const PRESS_TO_CONTINUE_FONT_SIZE = 28;
+/** Prostoi white bitmap size for "Press to continue" (ref px before BITMAP_FONT_SCALE). */
+export const PRESS_TO_CONTINUE_FONT_SIZE = 38;
 /** Distance from bottom of main layout (ref px). */
 export const PRESS_TO_CONTINUE_BOTTOM_OFFSET = 18;
 

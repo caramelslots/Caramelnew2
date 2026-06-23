@@ -63,6 +63,7 @@
 			<Container x={winHudPos.x} y={winHudPos.y} zIndex={20}>
 				<ResponsiveCurrencyBitmapText
 					anchor={0.5}
+					bodyFontVariant="prostoi"
 					eventMode="none"
 					prefix={`${context.i18nDerived.win().toUpperCase()} `}
 					amount={stateBet.winBookEventAmount}

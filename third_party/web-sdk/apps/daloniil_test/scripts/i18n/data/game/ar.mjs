@@ -42,7 +42,7 @@ export default {
 	MYSTERY_REEL_UNLOCKED_SUBTITLE: 'تم الفتح!',
 	FREE_SPINS_AWARDED_SUFFIX: 'دورات مجانية',
 	MAX_WIN: 'الحد الأقصى للفوز',
-	PRESS_TO_CONTINUE: 'اضغط في أي مكان للمتابعة',
+	PRESS_TO_CONTINUE: 'اضغط للمتابعة',
 	LOADER_CARD_1_TITLE: 'دورات مجانية',
 	LOADER_CARD_1_LINE_1: 'اجمع 3 رموز قطة للحصول على',
 	LOADER_CARD_1_LINE_2: 'دورات مجانية إضافية',

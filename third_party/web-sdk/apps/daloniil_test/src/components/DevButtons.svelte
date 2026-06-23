@@ -131,6 +131,17 @@
 			});
 		});
 
+	const playSmallWin = () => playSetWin(3, 5 * x);
+
+	const playBoardSmallWin = () =>
+		guard(async () => {
+			await playBookEvents([reveal(LINE_WIN_BOARD), asEvent(baseEvents.winInfo)]);
+			stateBet.winBookEventAmount = 5 * x;
+			await playBookEvent(asEvent({ type: 'setWin', amount: 5 * x, winLevel: 3 }), {
+				bookEvents: [],
+			});
+		});
+
 	// === Board reveal + payline win ===
 	// 5×5 boards (visible only — paddingReels добавит padding через padBoard).
 	// reveal сначала кладёт доску, потом winInfo рисует линию + анимирует
@@ -527,6 +538,14 @@
 			<section>
 				<h4>Win Levels (setWin)</h4>
 				<div class="grid">
+					<button
+						type="button"
+						disabled={busy}
+						title="setWin level=3 (small) — prostoi count-up без big-win баннера"
+						onclick={playSmallWin}
+					>
+						Small Win (5x)
+					</button>
 					{#each WIN_LEVEL_PRESETS as preset (preset.label)}
 						{@const meta = winLevelMap[preset.level]}
 						<button
@@ -544,6 +563,14 @@
 			<section>
 				<h4>Board Wins</h4>
 				<div class="grid">
+					<button
+						type="button"
+						disabled={busy}
+						title="reveal → winInfo line 1 → setWin level=3 (small, prostoi)"
+						onclick={playBoardSmallWin}
+					>
+						Board + Small Win
+					</button>
 					<button
 						type="button"
 						disabled={busy}
