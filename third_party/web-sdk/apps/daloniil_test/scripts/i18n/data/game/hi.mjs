@@ -17,7 +17,7 @@ export default {
 	BUY_BONUS_PANEL_BUTTON: 'बोनस खरीदें',
 	BONUS_BOOST_PANEL_DESC: 'बोनस की संभावना ×2 बढ़ी',
 	SETTINGS_MENU_TITLE: 'सेटिंग्स',
-	AUTOPLAY_TITLE: 'ऑटोप्ले',
+	AUTOPLAY_TITLE: 'ऑटो',
 	AUTOPLAY_FEATURES: 'फ़ीचर',
 	AUTOPLAY_ROUNDS: 'राउंड',
 	AUTOPLAY_START: 'शुरू',

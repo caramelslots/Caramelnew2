@@ -17,7 +17,7 @@ export default {
 	BUY_BONUS_PANEL_BUTTON: '보너스 구매',
 	BONUS_BOOST_PANEL_DESC: '보너스 확률 ×2 증가',
 	SETTINGS_MENU_TITLE: '설정',
-	AUTOPLAY_TITLE: '자동 플레이',
+	AUTOPLAY_TITLE: '자동',
 	AUTOPLAY_FEATURES: '기능',
 	AUTOPLAY_ROUNDS: '라운드',
 	AUTOPLAY_START: '시작',

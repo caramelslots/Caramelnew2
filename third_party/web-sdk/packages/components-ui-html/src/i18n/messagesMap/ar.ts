@@ -12,7 +12,7 @@ export default {
 	ADVANCED: 'متقدم',
 	'SINGLE WIN LIMIT': 'حد الفوز الواحد',
 	'LOSS LIMIT': 'حد الخسارة',
-	'START AUTOPLAY': 'بدء اللعب التلقائي',
+	'START AUTOPLAY': 'بدء',
 	NOTIFICATION: 'إشعار',
 	'AUTO PLAY HAS STOPPED DUE TO': 'توقف اللعب التلقائي بسبب',
 	'INSUFFICIENT FUNDS TO PLACE THIS BET. PLEASE ADD FUNDS TO YOUR ACCOUNT OR LOWER THE BET LEVEL.': 'رصيد غير كافٍ. أضف أموالاً أو خفّض مستوى الرهان.',

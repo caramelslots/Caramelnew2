@@ -17,7 +17,7 @@ export default {
 	BUY_BONUS_PANEL_BUTTON: 'Kup bonus',
 	BONUS_BOOST_PANEL_DESC: 'Zwiększona szansa na bonus ×2',
 	SETTINGS_MENU_TITLE: 'USTAWIENIA',
-	AUTOPLAY_TITLE: 'Autogra',
+	AUTOPLAY_TITLE: 'Auto',
 	AUTOPLAY_FEATURES: 'Funkcje',
 	AUTOPLAY_ROUNDS: 'Rundy',
 	AUTOPLAY_START: 'Start',

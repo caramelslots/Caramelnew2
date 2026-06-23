@@ -12,7 +12,7 @@ export default {
 	ADVANCED: '詳細',
 	'SINGLE WIN LIMIT': '単一勝利上限',
 	'LOSS LIMIT': '損失上限',
-	'START AUTOPLAY': 'オートプレイ開始',
+	'START AUTOPLAY': '開始',
 	NOTIFICATION: '通知',
 	'AUTO PLAY HAS STOPPED DUE TO': 'オートプレイ停止理由:',
 	'INSUFFICIENT FUNDS TO PLACE THIS BET. PLEASE ADD FUNDS TO YOUR ACCOUNT OR LOWER THE BET LEVEL.': '残高不足です。入金するかベットを下げてください。',

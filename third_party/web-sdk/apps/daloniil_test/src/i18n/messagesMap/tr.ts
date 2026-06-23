@@ -17,7 +17,7 @@ export default {
 	BUY_BONUS_PANEL_BUTTON: 'Bonus satın al',
 	BONUS_BOOST_PANEL_DESC: 'Artırılmış bonus şansı ×2',
 	SETTINGS_MENU_TITLE: 'AYARLAR',
-	AUTOPLAY_TITLE: 'Otomatik oyun',
+	AUTOPLAY_TITLE: 'Oto',
 	AUTOPLAY_FEATURES: 'Özellikler',
 	AUTOPLAY_ROUNDS: 'Turlar',
 	AUTOPLAY_START: 'Başlat',

@@ -17,7 +17,7 @@ export default {
 	BUY_BONUS_PANEL_BUTTON: '购买奖金',
 	BONUS_BOOST_PANEL_DESC: '奖金概率提升 ×2',
 	SETTINGS_MENU_TITLE: '设置',
-	AUTOPLAY_TITLE: '自动游戏',
+	AUTOPLAY_TITLE: '自动',
 	AUTOPLAY_FEATURES: '功能',
 	AUTOPLAY_ROUNDS: '回合',
 	AUTOPLAY_START: '开始',

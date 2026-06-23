@@ -17,7 +17,7 @@ export default {
 	BUY_BONUS_PANEL_BUTTON: 'Osta bonus',
 	BONUS_BOOST_PANEL_DESC: 'Lisääntynyt bonusmahdollisuus ×2',
 	SETTINGS_MENU_TITLE: 'ASETUKSET',
-	AUTOPLAY_TITLE: 'Automaattipeli',
+	AUTOPLAY_TITLE: 'Auto',
 	AUTOPLAY_FEATURES: 'Ominaisuudet',
 	AUTOPLAY_ROUNDS: 'Kierrokset',
 	AUTOPLAY_START: 'Aloita',

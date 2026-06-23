@@ -12,7 +12,7 @@ export default {
 	ADVANCED: '고급',
 	'SINGLE WIN LIMIT': '단일 승리 한도',
 	'LOSS LIMIT': '손실 한도',
-	'START AUTOPLAY': '자동 플레이 시작',
+	'START AUTOPLAY': '시작',
 	NOTIFICATION: '알림',
 	'AUTO PLAY HAS STOPPED DUE TO': '자동 플레이 중지 사유:',
 	'INSUFFICIENT FUNDS TO PLACE THIS BET. PLEASE ADD FUNDS TO YOUR ACCOUNT OR LOWER THE BET LEVEL.': '잔액이 부족합니다. 충전하거나 베팅을 낮추세요.',

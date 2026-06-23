@@ -12,7 +12,7 @@ export default {
 	ADVANCED: 'उन्नत',
 	'SINGLE WIN LIMIT': 'एकल जीत सीमा',
 	'LOSS LIMIT': 'हानि सीमा',
-	'START AUTOPLAY': 'ऑटोप्ले शुरू करें',
+	'START AUTOPLAY': 'शुरू',
 	NOTIFICATION: 'सूचना',
 	'AUTO PLAY HAS STOPPED DUE TO': 'ऑटोप्ले रुका क्योंकि',
 	'INSUFFICIENT FUNDS TO PLACE THIS BET. PLEASE ADD FUNDS TO YOUR ACCOUNT OR LOWER THE BET LEVEL.': 'अपर्याप्त धनराशि। धन जोड़ें या दांव कम करें।',

@@ -17,7 +17,7 @@ export default {
 	BUY_BONUS_PANEL_BUTTON: 'Mua bonus',
 	BONUS_BOOST_PANEL_DESC: 'Tăng cơ hội bonus ×2',
 	SETTINGS_MENU_TITLE: 'CÀI ĐẶT',
-	AUTOPLAY_TITLE: 'Tự động chơi',
+	AUTOPLAY_TITLE: 'Tự động',
 	AUTOPLAY_FEATURES: 'Tính năng',
 	AUTOPLAY_ROUNDS: 'Vòng',
 	AUTOPLAY_START: 'Bắt đầu',

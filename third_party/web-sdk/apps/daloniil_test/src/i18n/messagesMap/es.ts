@@ -17,7 +17,7 @@ export default {
 	BUY_BONUS_PANEL_BUTTON: 'Comprar bono',
 	BONUS_BOOST_PANEL_DESC: 'Mayor probabilidad de bono ×2',
 	SETTINGS_MENU_TITLE: 'AJUSTES',
-	AUTOPLAY_TITLE: 'Autojuego',
+	AUTOPLAY_TITLE: 'Auto',
 	AUTOPLAY_FEATURES: 'Funciones',
 	AUTOPLAY_ROUNDS: 'Rondas',
 	AUTOPLAY_START: 'Iniciar',

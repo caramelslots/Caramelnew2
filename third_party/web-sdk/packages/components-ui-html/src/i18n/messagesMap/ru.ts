@@ -12,7 +12,7 @@ export default {
 	ADVANCED: 'РАСШИРЕННЫЕ',
 	'SINGLE WIN LIMIT': 'ЛИМИТ ОДНОГО ВЫИГРЫША',
 	'LOSS LIMIT': 'ЛИМИТ ПОТЕРЬ',
-	'START AUTOPLAY': 'НАЧАТЬ АВТОИГРУ',
+	'START AUTOPLAY': 'СТАРТ',
 	NOTIFICATION: 'УВЕДОМЛЕНИЕ',
 	'AUTO PLAY HAS STOPPED DUE TO': 'АВТОИГРА ОСТАНОВЛЕНА ИЗ-ЗА',
 	'INSUFFICIENT FUNDS TO PLACE THIS BET. PLEASE ADD FUNDS TO YOUR ACCOUNT OR LOWER THE BET LEVEL.': 'НЕДОСТАТОЧНО СРЕДСТВ ДЛЯ ЭТОЙ СТАВКИ. ПОПОЛНИТЕ СЧЁТ ИЛИ УМЕНЬШИТЕ СТАВКУ.',

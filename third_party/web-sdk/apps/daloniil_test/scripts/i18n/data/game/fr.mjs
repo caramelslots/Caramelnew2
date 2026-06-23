@@ -17,7 +17,7 @@ export default {
 	BUY_BONUS_PANEL_BUTTON: 'Acheter bonus',
 	BONUS_BOOST_PANEL_DESC: 'Chance de bonus augmentée ×2',
 	SETTINGS_MENU_TITLE: 'PARAMÈTRES',
-	AUTOPLAY_TITLE: 'Jeu auto',
+	AUTOPLAY_TITLE: 'Auto',
 	AUTOPLAY_FEATURES: 'Fonctions',
 	AUTOPLAY_ROUNDS: 'Tours',
 	AUTOPLAY_START: 'Démarrer',

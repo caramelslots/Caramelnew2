@@ -17,7 +17,7 @@ export default {
 	BUY_BONUS_PANEL_BUTTON: 'شراء مكافأة',
 	BONUS_BOOST_PANEL_DESC: 'زيادة فرصة المكافأة ×2',
 	SETTINGS_MENU_TITLE: 'الإعدادات',
-	AUTOPLAY_TITLE: 'اللعب التلقائي',
+	AUTOPLAY_TITLE: 'تلقائي',
 	AUTOPLAY_FEATURES: 'الميزات',
 	AUTOPLAY_ROUNDS: 'الجولات',
 	AUTOPLAY_START: 'بدء',

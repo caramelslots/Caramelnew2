@@ -12,7 +12,7 @@ export default {
 	ADVANCED: '高级',
 	'SINGLE WIN LIMIT': '单次赢奖上限',
 	'LOSS LIMIT': '亏损上限',
-	'START AUTOPLAY': '开始自动游戏',
+	'START AUTOPLAY': '开始',
 	NOTIFICATION: '通知',
 	'AUTO PLAY HAS STOPPED DUE TO': '自动游戏已停止，原因：',
 	'INSUFFICIENT FUNDS TO PLACE THIS BET. PLEASE ADD FUNDS TO YOUR ACCOUNT OR LOWER THE BET LEVEL.': '余额不足。请充值或降低投注额。',

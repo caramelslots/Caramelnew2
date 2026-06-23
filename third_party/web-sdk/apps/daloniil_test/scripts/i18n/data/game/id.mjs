@@ -17,7 +17,7 @@ export default {
 	BUY_BONUS_PANEL_BUTTON: 'Beli bonus',
 	BONUS_BOOST_PANEL_DESC: 'Peluang bonus meningkat ×2',
 	SETTINGS_MENU_TITLE: 'PENGATURAN',
-	AUTOPLAY_TITLE: 'Main otomatis',
+	AUTOPLAY_TITLE: 'Auto',
 	AUTOPLAY_FEATURES: 'Fitur',
 	AUTOPLAY_ROUNDS: 'Ronde',
 	AUTOPLAY_START: 'Mulai',

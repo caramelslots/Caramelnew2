@@ -17,7 +17,7 @@ export default {
 	BUY_BONUS_PANEL_BUTTON: 'Buy bonus',
 	BONUS_BOOST_PANEL_DESC: 'Increased bonus chance ×2',
 	SETTINGS_MENU_TITLE: 'SETTINGS',
-	AUTOPLAY_TITLE: 'Autoplay',
+	AUTOPLAY_TITLE: 'Auto',
 	AUTOPLAY_FEATURES: 'Features',
 	AUTOPLAY_ROUNDS: 'Rounds',
 	AUTOPLAY_START: 'Start',
