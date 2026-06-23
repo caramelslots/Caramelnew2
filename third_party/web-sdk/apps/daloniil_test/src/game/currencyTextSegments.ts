@@ -50,6 +50,7 @@ export const amountToCurrencySegments = (
 		currency: stateBet.currency,
 		minimumFractionDigits: 2,
 		maximumFractionDigits: 2,
+		numberingSystem: 'latn',
 	}).formatToParts(value);
 
 	for (const part of parts) {

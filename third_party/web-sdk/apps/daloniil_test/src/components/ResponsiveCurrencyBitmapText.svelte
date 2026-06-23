@@ -3,21 +3,7 @@
 	import { stateBet, stateI18n } from 'state-shared';
 
 	import { amountToLayoutParts } from '../game/currencyTextSegments';
-	import {
-		FONT_BABLO,
-		FONT_KRUTOI,
-		FONT_KRUTOI_RU,
-		FONT_PROSTOI,
-		FONT_PROSTOI_HI,
-		FONT_PROSTOI_RU,
-		FONT_PROSTOI_VI,
-		FONT_PROSTOI_CJK,
-		FONT_KRUTOI_VI,
-		FONT_KRUTOI_CJK,
-		fontForLocale,
-		LOCALE_TEXT_FILL_GOLD,
-	} from '../game/constants';
-	import LocaleGlyph from './LocaleGlyph.svelte';
+	import { FONT_BABLO, FONT_KRUTOI, FONT_PROSTOI } from '../game/constants';
 
 	type BodyFontVariant = 'krutoi' | 'prostoi';
 
@@ -40,10 +26,9 @@
 		}),
 	);
 
+	/** Digits/separators always use the default latin bitmap (not locale variants). */
 	const bodyFont = $derived(
-		(props.bodyFontVariant ?? 'krutoi') === 'prostoi'
-			? fontForLocale(FONT_PROSTOI, FONT_PROSTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI, FONT_PROSTOI_VI, FONT_PROSTOI_CJK)
-			: fontForLocale(FONT_KRUTOI, FONT_KRUTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI, FONT_KRUTOI_VI, FONT_KRUTOI_CJK),
+		(props.bodyFontVariant ?? 'krutoi') === 'prostoi' ? FONT_PROSTOI : FONT_KRUTOI,
 	);
 
 	const layoutStyle = $derived({
@@ -81,9 +66,8 @@
 <!-- Hidden measure row -->
 <Container visible={false}>
 	{#if parts.before}
-		<LocaleGlyph
+		<BitmapText
 			text={parts.before}
-			fallbackFill={LOCALE_TEXT_FILL_GOLD}
 			style={{ ...layoutStyle, fontFamily: bodyFont }}
 			onresize={(s) => {
 				if (beforeWidth !== s.width) beforeWidth = s.width;
@@ -100,9 +84,8 @@
 		/>
 	{/if}
 	{#if parts.after}
-		<LocaleGlyph
+		<BitmapText
 			text={parts.after}
-			fallbackFill={LOCALE_TEXT_FILL_GOLD}
 			style={{ ...layoutStyle, fontFamily: bodyFont }}
 			onresize={(s) => {
 				if (afterWidth !== s.width) afterWidth = s.width;
@@ -119,12 +102,11 @@
 	zIndex={props.zIndex}
 >
 	{#if parts.before}
-		<LocaleGlyph
+		<BitmapText
 			x={-totalWidth * anchorX}
 			y={0}
 			anchor={{ x: 0, y: anchorY }}
 			text={parts.before}
-			fallbackFill={LOCALE_TEXT_FILL_GOLD}
 			style={{ ...layoutStyle, fontFamily: bodyFont }}
 		/>
 	{/if}
@@ -138,12 +120,11 @@
 		/>
 	{/if}
 	{#if parts.after}
-		<LocaleGlyph
+		<BitmapText
 			x={afterX - totalWidth * anchorX}
 			y={0}
 			anchor={{ x: 0, y: anchorY }}
 			text={parts.after}
-			fallbackFill={LOCALE_TEXT_FILL_GOLD}
 			style={{ ...layoutStyle, fontFamily: bodyFont }}
 		/>
 	{/if}
