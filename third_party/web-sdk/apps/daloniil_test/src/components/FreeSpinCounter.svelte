@@ -45,7 +45,7 @@
 	});
 
 	const fontSize = SYMBOL_SIZE * 0.28 * BITMAP_FONT_SCALE;
-	const counterText = $derived(`${current} OF ${total}`);
+	const counterText = $derived(context.i18nDerived.fsCounterText(current, total));
 	const titleText = $derived(context.i18nDerived.fsCounterLabel());
 
 	let show = $state(false);

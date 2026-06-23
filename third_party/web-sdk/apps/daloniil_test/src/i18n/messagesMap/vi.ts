@@ -32,6 +32,7 @@ export default {
 	SPECIAL_SPINS_COST: '{cost} mỗi vòng',
 	RTP_LABEL: 'RTP',
 	FS_COUNTER_LABEL: 'VÒNG MIỄN PHÍ',
+	FS_COUNTER_OF: '/',
 	FS_REMAINING: 'VÒNG QUAY MIỄN PHÍ',
 	PROGRESS_LADDER: 'TIẾN ĐỘ',
 	BONUS_COLLECTED: 'BONUS ĐÃ THU THẬP',

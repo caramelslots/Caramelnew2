@@ -32,6 +32,7 @@ export default {
 	SPECIAL_SPINS_COST: '{cost} за вращение',
 	RTP_LABEL: 'RTP',
 	FS_COUNTER_LABEL: 'ФРИСПИН',
+	FS_COUNTER_OF: 'ИЗ',
 	FS_REMAINING: 'ФРИСПИНЫ',
 	PROGRESS_LADDER: 'ПРОГРЕСС',
 	BONUS_COLLECTED: 'СОБРАНО БОНУСОВ',

@@ -32,6 +32,7 @@ export default {
 	SPECIAL_SPINS_COST: '{cost}/スピン',
 	RTP_LABEL: 'RTP',
 	FS_COUNTER_LABEL: 'フリースピン',
+	FS_COUNTER_OF: '/',
 	FS_REMAINING: 'フリースピン',
 	PROGRESS_LADDER: '進捗',
 	BONUS_COLLECTED: '収集ボーナス',

@@ -32,6 +32,7 @@ export default {
 	SPECIAL_SPINS_COST: '{cost}/스핀',
 	RTP_LABEL: 'RTP',
 	FS_COUNTER_LABEL: '무료 스핀',
+	FS_COUNTER_OF: '/',
 	FS_REMAINING: '무료 스핀',
 	PROGRESS_LADDER: '진행',
 	BONUS_COLLECTED: '수집한 보너스',

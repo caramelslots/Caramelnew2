@@ -32,6 +32,7 @@ export default {
 	SPECIAL_SPINS_COST: '{cost} لكل دورة',
 	RTP_LABEL: 'RTP',
 	FS_COUNTER_LABEL: 'دورة مجانية',
+	FS_COUNTER_OF: '/',
 	FS_REMAINING: 'دورات مجانية',
 	PROGRESS_LADDER: 'التقدم',
 	BONUS_COLLECTED: 'المكافآت المجمعة',

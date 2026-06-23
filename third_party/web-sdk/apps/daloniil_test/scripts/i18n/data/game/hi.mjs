@@ -32,6 +32,7 @@ export default {
 	SPECIAL_SPINS_COST: '{cost} प्रति स्पिन',
 	RTP_LABEL: 'RTP',
 	FS_COUNTER_LABEL: 'मुफ़्त स्पिन',
+	FS_COUNTER_OF: '/',
 	FS_REMAINING: 'मुफ़्त स्पिन',
 	PROGRESS_LADDER: 'प्रगति',
 	BONUS_COLLECTED: 'एकत्रित बोनस',

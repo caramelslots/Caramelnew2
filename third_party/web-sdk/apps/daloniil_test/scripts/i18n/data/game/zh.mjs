@@ -32,6 +32,7 @@ export default {
 	SPECIAL_SPINS_COST: '{cost}/次旋转',
 	RTP_LABEL: 'RTP',
 	FS_COUNTER_LABEL: '免费旋转',
+	FS_COUNTER_OF: '/',
 	FS_REMAINING: '免费旋转',
 	PROGRESS_LADDER: '进度',
 	BONUS_COLLECTED: '已收集奖金',
