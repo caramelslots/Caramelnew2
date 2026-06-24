@@ -17,6 +17,7 @@
 	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS } from '../game/uiHtmlAssetManifest';
+	import FitCardText from './FitCardText.svelte';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
@@ -107,16 +108,30 @@
 					{#if isSuper}
 						<div class="card-desc card-desc-stacked">
 							<span class="desc-spin-count">{context.i18nDerived.buySuperDescCount()}</span>
-							<span class="desc-spin-label">{context.i18nDerived.buySuperDescSpins()}</span>
-							<span class="desc-divider" aria-hidden="true"></span>
-							<span class="desc-trigger">{context.i18nDerived.buySuperDescFeature()}</span>
+							<FitCardText
+								variant="spin-label"
+								text={context.i18nDerived.buySuperDescSpins()}
+								maxLines={2}
+							/>
+							<FitCardText
+								variant="trigger"
+								text={context.i18nDerived.buySuperDescFeature()}
+								maxLines={2}
+							/>
 						</div>
 					{:else}
 						<div class="card-desc card-desc-stacked">
 							<span class="desc-spin-count">{context.i18nDerived.buyNormalDescCount()}</span>
-							<span class="desc-spin-label">{context.i18nDerived.buyNormalDescSpins()}</span>
-							<span class="desc-divider" aria-hidden="true"></span>
-							<span class="desc-trigger">{context.i18nDerived.buyNormalDescTrigger()}</span>
+							<FitCardText
+								variant="spin-label"
+								text={context.i18nDerived.buyNormalDescSpins()}
+								maxLines={2}
+							/>
+							<FitCardText
+								variant="trigger"
+								text={context.i18nDerived.buyNormalDescTrigger()}
+								maxLines={2}
+							/>
 						</div>
 					{/if}
 					<div class="card-price-wrap" style:background-image="url('{deskUrl}')">
@@ -154,6 +169,8 @@
 	.confirm-panel {
 		--panel-width: min(700px, 90vw);
 		--panel-height-scale: 1.32;
+		--bb-card-price-fs: calc(var(--panel-width) * 0.024);
+		--bb-confirm-action-fs: calc(var(--panel-width) * 0.020);
 		position: relative;
 		width: var(--panel-width);
 		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 98vh);
@@ -308,54 +325,37 @@
 		text-transform: uppercase;
 		letter-spacing: 0.015em;
 		text-align: center;
+		overflow: visible;
 	}
 
 	.card .card-desc.card-desc-stacked {
-		top: 61%;
-		height: 18%;
+		top: 58%;
+		height: 26%;
 		flex-direction: column;
 		justify-content: flex-start;
 		align-items: center;
-		gap: calc(var(--panel-width) * 0.0015);
+		--bb-desc-count-fs: calc(var(--panel-width) * 0.066);
+		--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.024);
+		--bb-desc-trigger-fs: calc(var(--panel-width) * 0.014);
+		--bb-desc-gap-count-label: calc(var(--bb-desc-count-fs) * 0.12);
+		--bb-desc-gap-label-trigger: calc(var(--bb-desc-spin-label-fs) * 0.28);
+		gap: 0;
 		text-transform: uppercase;
 		font-size: inherit;
+		overflow: visible;
 	}
 
 	.card .card-desc.card-desc-stacked .desc-spin-count {
-		font-size: calc(var(--panel-width) * 0.086);
+		font-size: var(--bb-desc-count-fs);
 		font-weight: 900;
 		line-height: 0.85;
 		letter-spacing: -0.02em;
+		flex-shrink: 0;
+		margin: 0 0 var(--bb-desc-gap-count-label);
 	}
 
-	.card .card-desc.card-desc-stacked .desc-spin-label {
-		font-size: calc(var(--panel-width) * 0.034);
-		font-weight: 800;
-		line-height: 1;
-		letter-spacing: 0.05em;
-	}
-
-	.card .card-desc.card-desc-stacked .desc-divider {
-		width: 76%;
-		height: max(1px, calc(var(--panel-width) * 0.0028));
-		margin: calc(var(--panel-width) * 0.002) 0 calc(var(--panel-width) * 0.001);
-		background: currentColor;
-		opacity: 0.9;
-	}
-
-	.card .card-desc.card-desc-stacked .desc-trigger {
-		width: 100%;
-		max-width: 100%;
-		font-size: calc(var(--panel-width) * 0.019);
-		font-weight: 700;
-		line-height: 1.1;
-		letter-spacing: 0.02em;
-		white-space: nowrap;
-		min-height: calc(var(--panel-width) * 0.024);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		text-align: center;
+	.card .card-desc.card-desc-stacked :global(.fit-card-text--spin-label) {
+		margin: 0 0 var(--bb-desc-gap-label-trigger);
 	}
 
 	.card-normal .card-desc {
@@ -385,7 +385,7 @@
 
 	.card-price {
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.033);
+		font-size: var(--bb-card-price-fs);
 		font-weight: 900;
 		letter-spacing: 0.01em;
 		text-align: center;
@@ -428,7 +428,7 @@
 		background-position: center;
 		background-size: 100% 100%;
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.022);
+		font-size: var(--bb-confirm-action-fs);
 		font-weight: 900;
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
@@ -464,7 +464,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: calc(var(--panel-width) * 0.032);
+		font-size: var(--bb-confirm-action-fs);
 		line-height: 1;
 		color: #f5e6c8;
 		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
@@ -472,6 +472,9 @@
 
 	/* Desktop */
 	.confirm-panel:not(.portrait):not(.popout-l):not(.popout-s) {
+		--bb-card-price-fs: calc(var(--panel-width) * 0.028);
+		--bb-confirm-action-fs: calc(var(--panel-width) * 0.021);
+
 		.close-button {
 			width: calc(var(--panel-width) * 0.085);
 			height: calc(var(--panel-width) * 0.085);
@@ -495,30 +498,16 @@
 			transform-origin: 50% 61%;
 		}
 
-		.card-super .card-desc.card-desc-stacked .desc-spin-count {
-			font-size: calc(var(--panel-width) * 0.099);
+		.card-super .card-desc.card-desc-stacked {
+			--bb-desc-count-fs: calc(var(--panel-width) * 0.079);
+			--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.031);
+			--bb-desc-trigger-fs: calc(var(--panel-width) * 0.020);
 		}
 
-		.card-super .card-desc.card-desc-stacked .desc-spin-label {
-			font-size: calc(var(--panel-width) * 0.04);
-		}
-
-		.card-super .card-desc.card-desc-stacked .desc-trigger {
-			font-size: calc(var(--panel-width) * 0.023);
-			min-height: calc(var(--panel-width) * 0.028);
-		}
-
-		.card-normal .card-desc.card-desc-stacked .desc-spin-count {
-			font-size: calc(var(--panel-width) * 0.099);
-		}
-
-		.card-normal .card-desc.card-desc-stacked .desc-spin-label {
-			font-size: calc(var(--panel-width) * 0.04);
-		}
-
-		.card-normal .card-desc.card-desc-stacked .desc-trigger {
-			font-size: calc(var(--panel-width) * 0.023);
-			min-height: calc(var(--panel-width) * 0.028);
+		.card-normal .card-desc.card-desc-stacked {
+			--bb-desc-count-fs: calc(var(--panel-width) * 0.079);
+			--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.031);
+			--bb-desc-trigger-fs: calc(var(--panel-width) * 0.020);
 		}
 
 		.card-price-wrap {
@@ -527,24 +516,11 @@
 			width: 110%;
 		}
 
-		.card-price {
-			font-size: calc(var(--panel-width) * 0.033);
-		}
-
 		.confirm-actions {
 			top: 83%;
 			left: 18%;
 			right: 18%;
 			height: 9%;
-		}
-
-		.action-btn {
-			font-size: calc(var(--panel-width) * 0.028);
-		}
-
-		.cancel-btn,
-		.confirm-btn {
-			font-size: calc(var(--panel-width) * 0.028);
 		}
 	}
 
@@ -552,6 +528,8 @@
 	.confirm-panel.portrait:not(.popout-l):not(.popout-s) {
 		--panel-height-scale: 1.32;
 		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
+		--bb-card-price-fs: calc(var(--panel-width) * 0.036);
+		--bb-confirm-action-fs: calc(var(--panel-width) * 0.028);
 
 		.panel-bg {
 			width: 130%;
@@ -598,30 +576,16 @@
 
 		.card .card-desc.card-desc-stacked {
 			top: 66%;
-			height: 22%;
-		}
-
-		.card .card-desc.card-desc-stacked .desc-spin-count {
-			font-size: calc(var(--panel-width) * 0.112);
-		}
-
-		.card .card-desc.card-desc-stacked .desc-spin-label {
-			font-size: calc(var(--panel-width) * 0.045);
-		}
-
-		.card .card-desc.card-desc-stacked .desc-trigger {
-			font-size: calc(var(--panel-width) * 0.026);
-			min-height: calc(var(--panel-width) * 0.032);
+			height: 24%;
+			--bb-desc-count-fs: calc(var(--panel-width) * 0.103);
+			--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.041);
+			--bb-desc-trigger-fs: calc(var(--panel-width) * 0.023);
 		}
 
 		.card-price-wrap {
 			top: 105%;
 			height: 18%;
 			width: 118%;
-		}
-
-		.card-price {
-			font-size: calc(var(--panel-width) * 0.042);
 		}
 
 		.confirm-actions {
@@ -631,15 +595,6 @@
 			height: 10%;
 			gap: calc(var(--panel-width) * 0.08);
 		}
-
-		.action-btn {
-			font-size: calc(var(--panel-width) * 0.034);
-		}
-
-		.cancel-btn,
-		.confirm-btn {
-			font-size: calc(var(--panel-width) * 0.034);
-		}
 	}
 
 	/* Popout L */
@@ -648,6 +603,8 @@
 		--panel-height-scale: 1.28;
 		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
 		filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.6));
+		--bb-card-price-fs: calc(var(--panel-width) * 0.028);
+		--bb-confirm-action-fs: calc(var(--panel-width) * 0.024);
 
 		.close-button {
 			width: calc(var(--panel-width) * 0.085);
@@ -673,30 +630,16 @@
 		}
 
 		.card .card-desc.card-desc-stacked {
-			height: 16%;
-		}
-
-		.card .card-desc.card-desc-stacked .desc-spin-count {
-			font-size: calc(var(--panel-width) * 0.074);
-		}
-
-		.card .card-desc.card-desc-stacked .desc-spin-label {
-			font-size: calc(var(--panel-width) * 0.028);
-		}
-
-		.card .card-desc.card-desc-stacked .desc-trigger {
-			font-size: calc(var(--panel-width) * 0.016);
-			min-height: calc(var(--panel-width) * 0.02);
+			height: 18%;
+			--bb-desc-count-fs: calc(var(--panel-width) * 0.079);
+			--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.030);
+			--bb-desc-trigger-fs: calc(var(--panel-width) * 0.018);
 		}
 
 		.card-price-wrap {
 			top: 99%;
 			height: 18%;
 			width: 110%;
-		}
-
-		.card-price {
-			font-size: calc(var(--panel-width) * 0.033);
 		}
 
 		.confirm-actions {
@@ -713,6 +656,8 @@
 		filter: drop-shadow(
 			0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.075) rgba(0, 0, 0, 0.55)
 		);
+		--bb-card-price-fs: calc(var(--panel-width) * 0.028);
+		--bb-confirm-action-fs: calc(var(--panel-width) * 0.024);
 
 		.close-button {
 			width: calc(var(--panel-width) * 0.085);
@@ -738,20 +683,10 @@
 		}
 
 		.card .card-desc.card-desc-stacked {
-			height: 16%;
-		}
-
-		.card .card-desc.card-desc-stacked .desc-spin-count {
-			font-size: calc(var(--panel-width) * 0.074);
-		}
-
-		.card .card-desc.card-desc-stacked .desc-spin-label {
-			font-size: calc(var(--panel-width) * 0.028);
-		}
-
-		.card .card-desc.card-desc-stacked .desc-trigger {
-			font-size: calc(var(--panel-width) * 0.016);
-			min-height: calc(var(--panel-width) * 0.02);
+			height: 18%;
+			--bb-desc-count-fs: calc(var(--panel-width) * 0.068);
+			--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.025);
+			--bb-desc-trigger-fs: calc(var(--panel-width) * 0.014);
 		}
 
 		.card-price-wrap {
@@ -760,24 +695,11 @@
 			width: 110%;
 		}
 
-		.card-price {
-			font-size: calc(var(--panel-width) * 0.033);
-		}
-
 		.confirm-actions {
 			top: 83%;
 			left: 18%;
 			right: 18%;
 			height: 9%;
-		}
-
-		.action-btn {
-			font-size: calc(var(--panel-width) * 0.028);
-		}
-
-		.cancel-btn,
-		.confirm-btn {
-			font-size: calc(var(--panel-width) * 0.028);
 		}
 	}
 
