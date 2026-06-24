@@ -101,7 +101,6 @@
 				<OnMount
 					onmount={async () => {
 						await startCountUp();
-						await finishOutro();
 					}}
 				/>
 
