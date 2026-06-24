@@ -33,7 +33,7 @@ export default {
 	RTP_LABEL: 'RTP',
 	FS_COUNTER_LABEL: 'ФРИСПИН',
 	FS_COUNTER_OF: 'ИЗ',
-	FS_REMAINING: 'ФРИСПИНЫ',
+	FS_REMAINING: 'ФРИСПИНОВ',
 	PROGRESS_LADDER: 'ПРОГРЕСС',
 	BONUS_COLLECTED: 'СОБРАНО БОНУСОВ',
 	MYSTERY_REEL_METER: 'MYSTERY REELS',
