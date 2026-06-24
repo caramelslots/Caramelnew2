@@ -45,14 +45,31 @@
 	});
 
 	const fontSize = SYMBOL_SIZE * 0.28 * BITMAP_FONT_SCALE;
+	const maxTextWidth = $derived(panelSizes.width * 0.88);
+	const minTextScale = 0.55;
 	const counterText = $derived(context.i18nDerived.fsCounterText(current, total));
 	const titleText = $derived(context.i18nDerived.fsCounterLabel());
+	const labelFont = $derived(
+		fontForLocale(
+			FONT_PROSTOI,
+			FONT_PROSTOI_RU,
+			stateI18n.i18n.locale,
+			FONT_PROSTOI_HI,
+			FONT_PROSTOI_VI,
+			FONT_PROSTOI_CJK,
+		),
+	);
 
 	let show = $state(false);
 	let current = $state(0);
 	let total = $state(0);
 	let titleSizes: Sizes = $state({ width: 0, height: 0 });
 	let counterSizes: Sizes = $state({ width: 0, height: 0 });
+
+	const contentWidth = $derived(Math.max(titleSizes.width, counterSizes.width, 1));
+	const textScale = $derived(
+		Math.min(Math.max(maxTextWidth / contentWidth, minTextScale), 1),
+	);
 
 	const textContainerSizes = $derived({
 		width: titleSizes.width,
@@ -76,6 +93,7 @@
 		<Container
 			x={panelSizes.width * 0.5}
 			y={panelSizes.height * 0.45}
+			scale={textScale}
 			pivot={anchorToPivot({
 				sizes: textContainerSizes,
 				anchor: { x: 0.5, y: 0.5 },
@@ -85,7 +103,7 @@
 				text={titleText}
 				fallbackFill={LOCALE_TEXT_FILL_WHITE}
 				style={{
-					fontFamily: fontForLocale(FONT_PROSTOI, FONT_PROSTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI, FONT_PROSTOI_VI, FONT_PROSTOI_CJK),
+					fontFamily: labelFont,
 					fontSize,
 					wordWrap: false,
 				}}
@@ -96,7 +114,7 @@
 				{...counterPosition}
 				anchor={{ x: 0.5, y: 0 }}
 				style={{
-					fontFamily: fontForLocale(FONT_PROSTOI, FONT_PROSTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI, FONT_PROSTOI_VI, FONT_PROSTOI_CJK),
+					fontFamily: labelFont,
 					fontSize,
 				}}
 				onresize={(sizes) => (counterSizes = sizes)}

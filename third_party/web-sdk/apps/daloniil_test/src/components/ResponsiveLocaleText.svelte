@@ -8,23 +8,26 @@
 		fallbackFill?: string | number;
 	};
 
-	const { maxWidth, fallbackFill, ...textProps }: Props = $props();
+	const { maxWidth, fallbackFill, style, ...restTextProps }: Props = $props();
 	let baseSizes = $state({ width: 0, height: 0 });
-	const responsiveScale = $derived(maxWidth / (baseSizes.width || 1));
+
+	const fitScale = $derived(Math.min(maxWidth / (baseSizes.width || 1), 1));
+	const baseFontSize = $derived(Number(style?.fontSize) || 24);
+	const displayStyle = $derived({
+		...style,
+		fontSize: baseFontSize * fitScale,
+	});
 </script>
 
 <Container visible={false}>
 	<LocaleGlyph
-		{...textProps}
+		{...restTextProps}
+		{style}
 		{fallbackFill}
 		onresize={(sizes) => (baseSizes = sizes)}
 	/>
 </Container>
 
 <Container>
-	<LocaleGlyph
-		{...textProps}
-		{fallbackFill}
-		scale={Math.min(responsiveScale, 1)}
-	/>
+	<LocaleGlyph {...restTextProps} style={displayStyle} {fallbackFill} />
 </Container>
