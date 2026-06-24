@@ -867,6 +867,9 @@ export const WIN_INFO_PRE_DELAY_MS = 100;
 /** Pause after win amount count-up finishes, before the celebration screen auto-dismisses. */
 export const WIN_SCREEN_POST_COUNT_UP_DELAY_MS = 1500;
 
+/** Full-screen dim behind FS end (FreeSpinOutro) count-up panel. */
+export const FS_OUTRO_DIM_ALPHA = 0.85;
+
 /**
  * Pause after reels finish landing, before bonus cats play the paw-wave
  * win animation (freeSpinTrigger / bonusCollect). Lets the BONUS-letter

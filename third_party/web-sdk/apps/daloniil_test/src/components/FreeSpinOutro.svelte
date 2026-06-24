@@ -30,6 +30,7 @@
 		FONT_KRUTOI_VI,
 		FONT_KRUTOI_CJK,
 		fontForLocale,
+		FS_OUTRO_DIM_ALPHA,
 		LOCALE_TEXT_FILL_GOLD,
 		LOCALE_TEXT_FILL_WHITE,
 	} from '../game/constants';
@@ -40,7 +41,6 @@
 	import { stateGame } from '../game/stateGame.svelte';
 	import {
 		getFsOutroCongratulationsText,
-		getFsOutroTotalWinText,
 		getFsOutroYouWonText,
 	} from '../game/fsOutroBannerText';
 	import { stopWinLevelCountUpSounds } from '../game/bookEventHandlerMap';
@@ -120,7 +120,7 @@
 				/>
 
 				{#if !closing}
-					<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.5} />
+					<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={FS_OUTRO_DIM_ALPHA} />
 				{/if}
 
 				{#key winAmount}
@@ -128,9 +128,10 @@
 						{#snippet title({ width })}
 							{@const lang = stateUrlDerived.lang()}
 							{@const youWon = getFsOutroYouWonText(lang)}
-							{@const titleLineGap = width * 0.21}
+							{@const titleLineGap = width * 0.22}
+							{@const titleYOffset = width * 0.06}
 							{#if isBigWin}
-								<Container>
+								<Container y={titleYOffset}>
 									<ResponsiveLocaleText
 										anchor={0.5}
 										y={-titleLineGap}
@@ -139,7 +140,7 @@
 										fallbackFill={LOCALE_TEXT_FILL_GOLD}
 										style={{
 											fontFamily: fontForLocale(FONT_KRUTOI, FONT_KRUTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI, FONT_KRUTOI_VI, FONT_KRUTOI_CJK),
-											fontSize: width * 0.62 * BITMAP_FONT_SCALE,
+											fontSize: width * 0.7 * BITMAP_FONT_SCALE,
 											align: 'center',
 											fontWeight: 'bold',
 											letterSpacing: 0,
@@ -153,7 +154,7 @@
 										fallbackFill={LOCALE_TEXT_FILL_WHITE}
 										style={{
 											fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale, FONT_PROSTOI_WHITE_HI, FONT_PROSTOI_WHITE_VI, FONT_PROSTOI_WHITE_CJK),
-											fontSize: width * 0.46 * BITMAP_FONT_SCALE,
+											fontSize: width * 0.52 * BITMAP_FONT_SCALE,
 											align: 'center',
 											fontWeight: 'bold',
 											letterSpacing: 0,
@@ -163,12 +164,13 @@
 							{:else}
 								<ResponsiveLocaleText
 									anchor={0.5}
+									y={titleYOffset}
 									text={youWon}
 									maxWidth={width * 3.2}
 									fallbackFill={LOCALE_TEXT_FILL_WHITE}
 									style={{
 										fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale, FONT_PROSTOI_WHITE_HI, FONT_PROSTOI_WHITE_VI, FONT_PROSTOI_WHITE_CJK),
-										fontSize: width * 0.55 * BITMAP_FONT_SCALE,
+										fontSize: width * 0.62 * BITMAP_FONT_SCALE,
 										align: 'center',
 										fontWeight: 'bold',
 										letterSpacing: 0,
@@ -177,32 +179,15 @@
 							{/if}
 						{/snippet}
 						{#snippet winAmount({ width })}
-							{@const lang = stateUrlDerived.lang()}
-							{@const amountLineGap = width * 0.27}
-							<Container>
+							<Container y={width * 0.14}>
 								<ResponsiveCurrencyBitmapText
 									anchor={0.5}
-									y={-amountLineGap}
 									style={{
-										fontSize: width * 0.5 * BITMAP_FONT_SCALE,
+										fontSize: width * 0.6 * BITMAP_FONT_SCALE,
 									}}
 									amount={countUpAmount}
 									bookEvent
 									maxWidth={width * 3.4}
-								/>
-								<ResponsiveLocaleText
-									anchor={0.5}
-									y={amountLineGap}
-									text={getFsOutroTotalWinText(lang)}
-									maxWidth={width * 3.0}
-									fallbackFill={LOCALE_TEXT_FILL_WHITE}
-									style={{
-										fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale, FONT_PROSTOI_WHITE_HI, FONT_PROSTOI_WHITE_VI, FONT_PROSTOI_WHITE_CJK),
-										fontSize: width * 0.34 * BITMAP_FONT_SCALE,
-										align: 'center',
-										fontWeight: 'bold',
-										letterSpacing: 0,
-									}}
 								/>
 							</Container>
 						{/snippet}
