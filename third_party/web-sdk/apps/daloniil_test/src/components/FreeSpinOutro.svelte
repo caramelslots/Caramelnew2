@@ -43,6 +43,7 @@
 		getFsOutroTotalWinText,
 		getFsOutroYouWonText,
 	} from '../game/fsOutroBannerText';
+	import { stopWinLevelCountUpSounds } from '../game/bookEventHandlerMap';
 	import FreeSpinAnimation from './FreeSpinAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 	import WinCoins from './WinCoins.svelte';
@@ -55,6 +56,7 @@
 	let oncomplete = $state(() => {});
 	let onCountUpComplete = $state(() => {});
 	let cookieOpened = $state(false);
+	let coinsEmit = $state(false);
 	let fsAnimation = $state<FreeSpinAnimation | undefined>();
 	let finishingOutro = $state(false);
 	let closing = $state(false);
@@ -83,7 +85,11 @@
 			finishingOutro = false;
 			closing = false;
 			cookieOpened = false;
-			waitForTimeout(scaleMsByGameSpeed(1000, stateGame.gameSpeed)).then(() => (cookieOpened = true));
+			coinsEmit = false;
+			waitForTimeout(scaleMsByGameSpeed(1000, stateGame.gameSpeed)).then(() => {
+				cookieOpened = true;
+				coinsEmit = true;
+			});
 			winAmount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
 			stateGame.winOverlayActive = emitterEvent.winLevelData.type === 'big';
@@ -96,7 +102,16 @@
 	{#if winLevelData}
 		{@const duration = winLevelData.presentDuration}
 		{@const isBigWin = winLevelData.type === 'big'}
-		<WinCountUpProvider amount={winAmount} {duration} oncomplete={() => onCountUpComplete()}>
+		{#key winAmount}
+		<WinCountUpProvider
+			amount={winAmount}
+			{duration}
+			oncomplete={() => {
+				coinsEmit = false;
+				stopWinLevelCountUpSounds();
+				onCountUpComplete();
+			}}
+		>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
 				<OnMount
 					onmount={async () => {
@@ -195,13 +210,24 @@
 				{/key}
 
 				{#if cookieOpened && !closing}
-					<WinCoins emit={!countUpCompleted} levelAlias={winLevelData?.alias} />
+					<WinCoins emit={coinsEmit} levelAlias={winLevelData?.alias} />
 				{/if}
 
 				{#if !closing}
-					<PressToContinue onpress={() => (countUpCompleted ? finishOutro() : finishCountUp())} />
+					<PressToContinue
+						onpress={() => {
+							if (countUpCompleted) {
+								finishOutro();
+							} else {
+								coinsEmit = false;
+								stopWinLevelCountUpSounds();
+								finishCountUp();
+							}
+						}}
+					/>
 				{/if}
 			{/snippet}
 		</WinCountUpProvider>
+		{/key}
 	{/if}
 </FadeContainer>

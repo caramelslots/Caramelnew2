@@ -86,6 +86,20 @@ const winLevelSoundsStop = (options?: { music?: 'bgm_main' | 'bgm_freespin' }) =
 	eventEmitter.broadcastAsync({ type: 'uiShow' });
 };
 
+/** Stops looping count-up audio (coin SFX + win-level BGM) without switching main music. */
+export const stopWinLevelCountUpSounds = () => {
+	eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_bigwin_coinloop' });
+	for (const name of [
+		'bgm_winlevel_big',
+		'bgm_winlevel_superwin',
+		'bgm_winlevel_epic',
+		'bgm_winlevel_max',
+		'bgm_winlevel_mega',
+	] as const) {
+		eventEmitter.broadcast({ type: 'soundStop', name });
+	}
+};
+
 const animateSymbols = async ({ positions }: { positions: Position[] }) => {
 	eventEmitter.broadcast({ type: 'boardShow' });
 	// Поднимаем флаг ДО broadcast'а — символы вне выигрыша начнут плавно

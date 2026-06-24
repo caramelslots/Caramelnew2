@@ -2,15 +2,16 @@
 	import {
 		Emitter,
 		upgradeConfig,
-		type EmitterConfigV3,
-		type EmitterConfigV2,
 		type EmitterConfigV1,
+		type EmitterConfigV2,
+		type EmitterConfigV3,
 	} from '@barvynkoa/particle-emitter';
 
-	import type { LoadedSpriteSheet } from '../types';
+	import type { LoadedSpriteSheet } from 'pixi-svelte';
 
-	export type Props = Partial<Emitter> & {
+	export type Props = {
 		key: string;
+		emit?: boolean;
 		emitSpeed?: number;
 		config: EmitterConfigV3 | EmitterConfigV2 | EmitterConfigV1;
 	};
@@ -18,8 +19,7 @@
 
 <script lang="ts">
 	import { onDestroy } from 'svelte';
-	import { getContextApp, getContextParent } from '../context.svelte';
-	import { propsSyncEffect } from '../utils.svelte';
+	import { getContextApp, getContextParent } from 'pixi-svelte';
 
 	const props: Props = $props();
 	const context = getContextApp();
@@ -29,8 +29,6 @@
 	// svelte-ignore state_referenced_locally
 	const emitter = new Emitter(parentContext.parent, updatedConfig);
 
-	propsSyncEffect({ props, target: emitter, ignore: ['emit'] });
-
 	$effect(() => {
 		if (props.emit === true) {
 			emitter.init(updatedConfig);
@@ -39,15 +37,10 @@
 		emitter.emit = false;
 	});
 
-	// Keep a reference to the ticker callback so it can be removed on destroy.
-	// Without this, every ParticleEmitter mount (e.g. each win's coin shower)
-	// permanently adds a ticker listener that keeps calling emitter.update()
-	// on a destroyed emitter for the rest of the session — a leak that
-	// accumulates per win and progressively degrades frame time.
 	const tickerUpdate = () => {
 		if (context.stateApp.pixiApplication) {
 			const deltaUpdate =
-				context.stateApp.pixiApplication.ticker.deltaMS * (props.emitSpeed || 0.00234);
+				context.stateApp.pixiApplication.ticker.deltaMS * (props.emitSpeed ?? 0.00234);
 			emitter.update(deltaUpdate);
 		}
 	};
