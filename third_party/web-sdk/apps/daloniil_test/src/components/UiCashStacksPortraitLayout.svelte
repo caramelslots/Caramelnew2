@@ -31,8 +31,10 @@
 	const W = $derived(ml.width);
 	const H = $derived(ml.height);
 
+	const WIN_HUD_X_OFFSET_RATIO = 0.012;
+
 	const winHudPos = $derived({
-		x: W * 0.5,
+		x: W * (0.5 + WIN_HUD_X_OFFSET_RATIO),
 		y: portraitWinHudLocalY(stateLayoutDerived),
 	});
 
@@ -47,6 +49,7 @@
 		fontWeight: 'bold' as const,
 		letterSpacing: 1,
 	});
+	const winLabelGap = $derived(winHudFontSize * 0.48);
 </script>
 
 <UiFadeContainer>
@@ -65,10 +68,12 @@
 					anchor={0.5}
 					bodyFontVariant="prostoi"
 					eventMode="none"
-					prefix={`${context.i18nDerived.win().toUpperCase()} `}
+					prefix={context.i18nDerived.win().toUpperCase()}
 					amount={stateBet.winBookEventAmount}
 					bookEvent
 					maxWidth={W * 0.9}
+					minScale={0.5}
+					labelGap={winLabelGap}
 					style={WIN_TEXT_STYLE}
 				/>
 			</Container>

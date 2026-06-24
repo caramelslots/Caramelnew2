@@ -25,6 +25,10 @@
 		prefix?: string;
 		/** prostoi for small wins / HUD; krutoi (default) for big-win overlays. */
 		bodyFontVariant?: BodyFontVariant;
+		/** Gap between label prefix and amount (layout px, before responsive scale). */
+		labelGap?: number;
+		/** Minimum scale when the full string exceeds maxWidth. */
+		minScale?: number;
 		style: Omit<NonNullable<BitmapTextProps['style']>, 'fontFamily'>;
 	};
 
@@ -36,6 +40,9 @@
 			prefix: props.prefix,
 		}),
 	);
+
+	const labelText = $derived(parts.label.trimEnd());
+	const hasLabel = $derived(labelText.length > 0);
 
 	const isProstoi = $derived((props.bodyFontVariant ?? 'krutoi') === 'prostoi');
 
@@ -69,21 +76,37 @@
 	let symbolWidth = $state(0);
 	let afterWidth = $state(0);
 
-	const totalWidth = $derived(labelWidth + beforeWidth + symbolWidth + afterWidth);
+	const labelGapPx = $derived(
+		props.labelGap ?? (props.style.fontSize ?? 24) * (hasLabel ? 0.38 : 0),
+	);
+	const minFitScale = $derived(props.minScale ?? 0.45);
+
+	const totalWidth = $derived(
+		labelWidth + labelGapPx + beforeWidth + symbolWidth + afterWidth,
+	);
 	const responsiveScale = $derived(
-		totalWidth > 0 ? Math.min(props.maxWidth / totalWidth, 1) : 1,
+		totalWidth > 0 ? Math.min(Math.max(props.maxWidth / totalWidth, minFitScale), 1) : 1,
 	);
 
-	const beforeX = $derived(labelWidth);
-	const symbolX = $derived(labelWidth + beforeWidth);
-	const afterX = $derived(labelWidth + beforeWidth + symbolWidth);
+	const beforeX = $derived(labelWidth + labelGapPx);
+	const symbolX = $derived(beforeX + beforeWidth);
+	const afterX = $derived(symbolX + symbolWidth);
+	const pivotX = $derived(totalWidth * anchorX);
 
-	const structureKey = $derived(
-		`${props.prefix ?? ''}|${stateBet.currency}|${stateI18n.i18n.locale}`,
+	const measureKey = $derived(
+		`${labelText}|${props.amount}|${stateBet.currency}|${stateI18n.i18n.locale}|${labelGapPx}|${minFitScale}|${props.style.fontSize}`,
+	);
+
+	const isLayoutReady = $derived(
+		totalWidth > 0 &&
+			(!hasLabel || labelWidth > 0) &&
+			(!parts.before || beforeWidth > 0) &&
+			(!parts.symbol || symbolWidth > 0) &&
+			(!parts.after || afterWidth > 0),
 	);
 
 	$effect.pre(() => {
-		structureKey;
+		measureKey;
 		labelWidth = 0;
 		beforeWidth = 0;
 		symbolWidth = 0;
@@ -91,89 +114,94 @@
 	});
 </script>
 
-<!-- Hidden measure row -->
-<Container visible={false}>
-	{#if parts.label}
-		<LocaleGlyph
-			text={parts.label}
-			fallbackFill={LOCALE_TEXT_FILL_GOLD}
-			style={{ ...layoutStyle, fontFamily: labelFont }}
-			onresize={(s) => {
-				if (labelWidth !== s.width) labelWidth = s.width;
-			}}
-		/>
-	{/if}
-	{#if parts.before}
-		<BitmapText
-			text={parts.before}
-			style={{ ...layoutStyle, fontFamily: digitFont }}
-			onresize={(s) => {
-				if (beforeWidth !== s.width) beforeWidth = s.width;
-			}}
-		/>
-	{/if}
-	{#if parts.symbol}
-		<BitmapText
-			text={parts.symbol}
-			style={{ ...layoutStyle, fontFamily: FONT_BABLO }}
-			onresize={(s) => {
-				if (symbolWidth !== s.width) symbolWidth = s.width;
-			}}
-		/>
-	{/if}
-	{#if parts.after}
-		<BitmapText
-			text={parts.after}
-			style={{ ...layoutStyle, fontFamily: digitFont }}
-			onresize={(s) => {
-				if (afterWidth !== s.width) afterWidth = s.width;
-			}}
-		/>
-	{/if}
-</Container>
+<!-- Hidden measure row — each glyph measured independently -->
+{#key measureKey}
+	<Container visible={false}>
+		{#if hasLabel}
+			<LocaleGlyph
+				text={labelText}
+				fallbackFill={LOCALE_TEXT_FILL_GOLD}
+				style={{ ...layoutStyle, fontFamily: labelFont }}
+				onresize={(s) => {
+					labelWidth = s.width;
+				}}
+			/>
+		{/if}
+		{#if parts.before}
+			<BitmapText
+				text={parts.before}
+				style={{ ...layoutStyle, fontFamily: digitFont }}
+				onresize={(s) => {
+					beforeWidth = s.width;
+				}}
+			/>
+		{/if}
+		{#if parts.symbol}
+			<BitmapText
+				text={parts.symbol}
+				style={{ ...layoutStyle, fontFamily: FONT_BABLO }}
+				onresize={(s) => {
+					symbolWidth = s.width;
+				}}
+			/>
+		{/if}
+		{#if parts.after}
+			<BitmapText
+				text={parts.after}
+				style={{ ...layoutStyle, fontFamily: digitFont }}
+				onresize={(s) => {
+					afterWidth = s.width;
+				}}
+			/>
+		{/if}
+	</Container>
+{/key}
 
-<Container
-	x={props.x}
-	y={props.y}
-	scale={responsiveScale}
-	eventMode={props.eventMode}
-	zIndex={props.zIndex}
->
-	{#if parts.label}
-		<LocaleGlyph
-			x={-totalWidth * anchorX}
-			y={0}
-			anchor={{ x: 0, y: anchorY }}
-			text={parts.label}
-			fallbackFill={LOCALE_TEXT_FILL_GOLD}
-			style={{ ...layoutStyle, fontFamily: labelFont }}
-		/>
-	{/if}
-	{#if parts.before}
-		<BitmapText
-			x={beforeX - totalWidth * anchorX}
-			y={0}
-			anchor={{ x: 0, y: anchorY }}
-			text={parts.before}
-			style={{ ...layoutStyle, fontFamily: digitFont }}
-		/>
-	{/if}
-	{#if parts.symbol}
-		<BitmapText
-			x={symbolX - totalWidth * anchorX}
-			y={0}
-			anchor={{ x: 0, y: anchorY }}
-			text={parts.symbol}
-			style={{ ...layoutStyle, fontFamily: FONT_BABLO }}
-		/>
-	{/if}
-	{#if parts.after}
-		<BitmapText
-			x={afterX - totalWidth * anchorX}
-			y={0}
-			anchor={{ x: 0, y: anchorY }}
-			text={parts.after}
-			style={{ ...layoutStyle, fontFamily: digitFont }}
-		/>
-	{/if}
-</Container>
+{#if isLayoutReady}
+	<Container
+		x={props.x}
+		y={props.y}
+		eventMode={props.eventMode}
+		zIndex={props.zIndex}
+	>
+		<Container scale={responsiveScale} pivot={{ x: pivotX, y: 0 }}>
+			{#if hasLabel}
+				<LocaleGlyph
+					x={0}
+					y={0}
+					anchor={{ x: 0, y: anchorY }}
+					text={labelText}
+					fallbackFill={LOCALE_TEXT_FILL_GOLD}
+					style={{ ...layoutStyle, fontFamily: labelFont }}
+				/>
+			{/if}
+			{#if parts.before}
+				<BitmapText
+					x={beforeX}
+					y={0}
+					anchor={{ x: 0, y: anchorY }}
+					text={parts.before}
+					style={{ ...layoutStyle, fontFamily: digitFont }}
+				/>
+			{/if}
+			{#if parts.symbol}
+				<BitmapText
+					x={symbolX}
+					y={0}
+					anchor={{ x: 0, y: anchorY }}
+					text={parts.symbol}
+					style={{ ...layoutStyle, fontFamily: FONT_BABLO }}
+				/>
+			{/if}
+			{#if parts.after}
+				<BitmapText
+					x={afterX}
+					y={0}
+					anchor={{ x: 0, y: anchorY }}
+					text={parts.after}
+					style={{ ...layoutStyle, fontFamily: digitFont }}
+				/>
+			{/if}
+		</Container>
+	</Container>
+{/if}

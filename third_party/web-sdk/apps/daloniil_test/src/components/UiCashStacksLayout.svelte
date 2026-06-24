@@ -17,7 +17,12 @@
 	import UiCashStacksPortraitLayout from './UiCashStacksPortraitLayout.svelte';
 	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
 
-	import { BITMAP_FONT_SCALE, isPopoutSmallViewport, POPOUT_S_SCALE, WIN_HUD_FONT_SIZE } from '../game/constants';
+	import {
+		BITMAP_FONT_SCALE,
+		isPopoutSmallViewport,
+		POPOUT_S_SCALE,
+		WIN_HUD_FONT_SIZE,
+	} from '../game/constants';
 	import { getContext } from '../game/context';
 	import { getContextLayout } from 'utils-layout';
 
@@ -35,9 +40,12 @@
 	const gameNameScale = $derived(isPopoutSmall ? POPOUT_S_SCALE : 1);
 
 	const WIN_BELOW_BOARD_GAP = 58;
+	/** Horizontal nudge right from screen center, as a fraction of main layout width. */
+	const WIN_HUD_X_OFFSET_RATIO = 0.012;
+	const ml = $derived(stateLayoutDerived.mainLayout());
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
 	const winHudPos = $derived({
-		x: boardLayout.x,
+		x: ml.width * (0.5 + WIN_HUD_X_OFFSET_RATIO),
 		y: boardLayout.y + boardLayout.height * 0.5 + WIN_BELOW_BOARD_GAP,
 	});
 	const showWin = $derived(stateBet.winBookEventAmount > 0);
@@ -47,6 +55,7 @@
 		fontWeight: 'bold' as const,
 		letterSpacing: 1,
 	};
+	const winLabelGap = WIN_HUD_FONT_SIZE * BITMAP_FONT_SCALE * 0.78;
 </script>
 
 <EnableSpaceHold />
@@ -72,10 +81,12 @@
 						anchor={0.5}
 						bodyFontVariant="prostoi"
 						eventMode="none"
-						prefix={`${context.i18nDerived.win().toUpperCase()} `}
+						prefix={context.i18nDerived.win().toUpperCase()}
 						amount={stateBet.winBookEventAmount}
 						bookEvent
-						maxWidth={boardLayout.width}
+						maxWidth={boardLayout.width * 0.96}
+						minScale={0.5}
+						labelGap={winLabelGap}
 						style={WIN_TEXT_STYLE}
 					/>
 				</Container>
