@@ -143,7 +143,8 @@
 				useKrutoi
 				sizeRatio={0.066}
 				yRatio={CONGRATULATIONS_Y_RATIO}
-				maxWidthRatio={0.78}
+				maxWidthRatio={0.64}
+				minScale={0.48}
 				panelWidth={panelLayout.panelWidth}
 				panelHeight={panelLayout.panelHeight}
 				layoutScale={panelLayout.layoutScale}

@@ -30,6 +30,8 @@
 		yRatio: number;
 		/** Max text width as a fraction of panel width. */
 		maxWidthRatio?: number;
+		/** Minimum horizontal scale when fitting long strings. */
+		minScale?: number;
 		panelWidth: number;
 		panelHeight: number;
 		layoutScale: number;
@@ -39,6 +41,8 @@
 	const props: Props = $props();
 
 	let imgEl = $state<HTMLImageElement | undefined>();
+	let systemEl = $state<HTMLParagraphElement | undefined>();
+	let fitScale = $state(1);
 
 	const context = getContext();
 	const locale = $derived(stateI18n.i18n.locale);
@@ -76,6 +80,7 @@
 	const basePanelWidth = $derived(props.panelWidth / props.layoutScale);
 	const fontSize = $derived(basePanelWidth * props.sizeRatio * BITMAP_FONT_SCALE);
 	const maxWidth = $derived(basePanelWidth * (props.maxWidthRatio ?? 0.88));
+	const minFitScale = $derived(props.minScale ?? 0.45);
 	const systemFontSize = $derived(fontSize * props.layoutScale);
 	const systemFill = $derived(String(props.fallbackFill ?? '#fff8e8'));
 
@@ -86,6 +91,51 @@
 			`max-width:${maxWidth * props.layoutScale}px`,
 		].join(';'),
 	);
+
+	const systemTransformStyle = $derived(
+		`transform:translate(-50%, -50%) scale(${fitScale});`,
+	);
+
+	const fitScaleToWidth = (naturalWidth: number, limitWidth: number) => {
+		if (naturalWidth <= 0 || limitWidth <= 0) return 1;
+		return Math.min(Math.max(limitWidth / naturalWidth, minFitScale), 1);
+	};
+
+	const refitSystemLabel = () => {
+		const el = systemEl;
+		if (!el) return;
+
+		fitScale = 1;
+		el.style.transform = 'translate(-50%, -50%) scale(1)';
+
+		const limitWidth = maxWidth * props.layoutScale;
+		const naturalWidth = el.scrollWidth;
+		fitScale = fitScaleToWidth(naturalWidth, limitWidth);
+	};
+
+	$effect(() => {
+		if (useBitmap) return;
+
+		props.text;
+		locale;
+		maxWidth;
+		minFitScale;
+		systemFontSize;
+		fontFamily;
+		localeFontReady;
+
+		if (!localeFontReady) return;
+
+		requestAnimationFrame(() => requestAnimationFrame(refitSystemLabel));
+	});
+
+	$effect(() => {
+		if (useBitmap || !systemEl) return;
+
+		const observer = new ResizeObserver(() => refitSystemLabel());
+		observer.observe(systemEl);
+		return () => observer.disconnect();
+	});
 
 	$effect(() => {
 		if (!useBitmap) return;
@@ -108,7 +158,8 @@
 			},
 		});
 
-		const scale = Math.min(renderMaxWidth / (bitmapText.width || 1), 1);
+		const naturalWidth = bitmapText.getLocalBounds().width;
+		const scale = fitScaleToWidth(naturalWidth, renderMaxWidth);
 		bitmapText.scale.set(scale);
 		bitmapText.anchor.set(0.5, 0.5);
 
@@ -136,11 +187,12 @@
 	<img bind:this={imgEl} class="label" style={positionStyle} alt="" />
 {:else if localeFontReady}
 	<p
+		bind:this={systemEl}
 		class="label label--system"
 		class:label--cjk={isCjkLocale(locale)}
 		class:label--arabic={isArabicLocale(locale)}
 		class:label--krutoi={isArabicLocale(locale) && props.useKrutoi}
-		style={positionStyle}
+		style="{positionStyle};{systemTransformStyle}"
 		dir={textDirection}
 		lang={locale}
 	>
@@ -154,13 +206,16 @@
 		transform: translate(-50%, -50%);
 		pointer-events: none;
 		user-select: none;
+		transform-origin: center center;
 	}
 
 	.label--system {
 		margin: 0;
 		padding: 0;
 		width: max-content;
+		max-width: 100%;
 		text-align: center;
+		white-space: nowrap;
 		font-family: v-bind(fontFamily);
 		font-size: v-bind('`${systemFontSize}px`');
 		font-weight: 700;
