@@ -334,8 +334,8 @@ export const zIndexes = {
 	},
 };
 
-/** Purple FS pulse (`reelhouse_glow` in BoardFrame) — separate from frame bezel padding. */
-export const REELHOUSE_GLOW_SCALE = { width: 0.62, height: 0.66 } as const;
+/** FS board pulse (`reelhouse_glow` in BoardFrame) — tint #db7ce0. */
+export const REELHOUSE_GLOW_SCALE = { width: 0.58, height: 0.62 } as const;
 
 /**
  * Geometry of the parchment playfield inside the desk artwork

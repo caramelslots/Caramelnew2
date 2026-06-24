@@ -1186,10 +1186,10 @@
 		"name": "default",
 		"attachments": {
 			"frame_glow": {
-				"REEL_GLOW": { "color": "ffffff84", "scaleX": 1.98, "scaleY": 1.98, "width": 1351, "height": 1175 }
+				"REEL_GLOW": { "color": "db7ce084", "scaleX": 1.98, "scaleY": 1.98, "width": 1351, "height": 1175 }
 			},
 			"frame_glow_2": {
-				"REEL_GLOW": { "color": "ffffff84", "scaleX": 1.98, "scaleY": 1.98, "width": 1351, "height": 1175 }
+				"REEL_GLOW": { "color": "db7ce084", "scaleX": 1.98, "scaleY": 1.98, "width": 1351, "height": 1175 }
 			},
 			"FULL_FRAME_NM2": {
 				"WW_Reelhouse-alpha": { "width": 1351, "height": 1175 }
@@ -1547,8 +1547,8 @@
 		"slots": {
 			"frame_glow_2": {
 				"rgba": [
-					{ "color": "c26dff80" },
-					{ "time": 0.4333, "color": "6c00ff00" }
+					{ "color": "db7ce080" },
+					{ "time": 0.4333, "color": "db7ce000" }
 				],
 				"attachment": [
 					{ "name": "REEL_GLOW" }
@@ -1556,8 +1556,8 @@
 			},
 			"FULL_FRAME_NM3": {
 				"rgba": [
-					{ "color": "c26dff80" },
-					{ "time": 0.4333, "color": "6c00ff00" }
+					{ "color": "db7ce080" },
+					{ "time": 0.4333, "color": "db7ce000" }
 				],
 				"attachment": [
 					{ "name": "WW_Reelhouse-alpha" }
@@ -3683,10 +3683,10 @@
 					},
 					{
 						"time": 0.1667,
-						"color": "c26dffff",
+						"color": "db7ce0ff",
 						"curve": [ 0.774, 0.74, 0.875, 0.42, 0.774, 0.4, 0.875, 0, 0.774, 0.97, 0.875, 1, 0.367, 1, 0.573, 0.01 ]
 					},
-					{ "time": 0.9667, "color": "6c00ff00" }
+					{ "time": 0.9667, "color": "db7ce000" }
 				],
 				"attachment": [
 					{ "name": "REEL_GLOW" }
@@ -3694,11 +3694,11 @@
 			},
 			"frame_glow_2": {
 				"rgba": [
-					{ "color": "c26dff80" },
-					{ "time": 0.4333, "color": "6c00ff00", "curve": "stepped" },
+					{ "color": "db7ce080" },
+					{ "time": 0.4333, "color": "db7ce000", "curve": "stepped" },
 					{ "time": 0.5, "color": "ffffff00" },
-					{ "time": 0.7, "color": "c26dffff" },
-					{ "time": 1, "color": "c26dff80" }
+					{ "time": 0.7, "color": "db7ce0ff" },
+					{ "time": 1, "color": "db7ce080" }
 				],
 				"attachment": [
 					{ "name": "REEL_GLOW" }
@@ -3707,8 +3707,8 @@
 			"FULL_FRAME_NM2": {
 				"rgba": [
 					{ "color": "ffffff00" },
-					{ "time": 0.1667, "color": "c26dffff" },
-					{ "time": 0.9667, "color": "6c00ff00" }
+					{ "time": 0.1667, "color": "db7ce0ff" },
+					{ "time": 0.9667, "color": "db7ce000" }
 				],
 				"attachment": [
 					{ "name": "WW_Reelhouse-alpha" }
@@ -3716,11 +3716,11 @@
 			},
 			"FULL_FRAME_NM3": {
 				"rgba": [
-					{ "color": "c26dff80" },
-					{ "time": 0.4333, "color": "6c00ff00", "curve": "stepped" },
+					{ "color": "db7ce080" },
+					{ "time": 0.4333, "color": "db7ce000", "curve": "stepped" },
 					{ "time": 0.5, "color": "ffffff00" },
-					{ "time": 0.7, "color": "c26dffff" },
-					{ "time": 1, "color": "c26dff80" }
+					{ "time": 0.7, "color": "db7ce0ff" },
+					{ "time": 1, "color": "db7ce080" }
 				],
 				"attachment": [
 					{ "name": "WW_Reelhouse-alpha" }
@@ -9847,8 +9847,8 @@
 			"frame_glow_2": {
 				"rgba": [
 					{ "color": "ffffff00" },
-					{ "time": 0.2333, "color": "c26dffff" },
-					{ "time": 0.5, "color": "c26dff80" }
+					{ "time": 0.2333, "color": "db7ce0ff" },
+					{ "time": 0.5, "color": "db7ce080" }
 				],
 				"attachment": [
 					{ "name": "REEL_GLOW" }
@@ -9857,8 +9857,8 @@
 			"FULL_FRAME_NM3": {
 				"rgba": [
 					{ "color": "ffffff00" },
-					{ "time": 0.2333, "color": "c26dffff" },
-					{ "time": 0.5, "color": "c26dff80" }
+					{ "time": 0.2333, "color": "db7ce0ff" },
+					{ "time": 0.5, "color": "db7ce080" }
 				],
 				"attachment": [
 					{ "name": "WW_Reelhouse-alpha" }
