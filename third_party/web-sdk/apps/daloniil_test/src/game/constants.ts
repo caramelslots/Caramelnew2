@@ -441,6 +441,17 @@ export const PORTRAIT_BONUS_BAR_WIDTH_PX = 340;
 /** ProgressLadder `.bar-h` height (px), aspect ratio matches bar_h.png 657×217. */
 export const PORTRAIT_BONUS_BAR_HEIGHT_PX = 112.3;
 
+/** FS left counter width as a fraction of portrait board visual width. */
+export const PORTRAIT_FS_COUNTER_WIDTH_FRAC = 0.55;
+/** Extra shrink on phone portrait — panel width and bitmap text scale together. */
+export const PORTRAIT_FS_COUNTER_PHONE_SCALE = {
+	small: 0.87,
+	medium: 0.93,
+	large: 0.96,
+} as const;
+/** Vertical gap above spin cluster (game px at phone scale 1). */
+export const PORTRAIT_FS_COUNTER_Y_GAP = 100;
+
 /**
  * Portrait phone board scale (uniform — board + bonus bar scale together).
  * `smallMobile` ≤375px (iPhone SE), `mobile` ≤480px (iPhone 12/13/14, etc.).

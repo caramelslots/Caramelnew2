@@ -22,7 +22,11 @@
 		fontForLocale,
 		isArabicLocale,
 		LOCALE_TEXT_FILL_GOLD,
+		PORTRAIT_FS_COUNTER_PHONE_SCALE,
+		PORTRAIT_FS_COUNTER_WIDTH_FRAC,
+		PORTRAIT_FS_COUNTER_Y_GAP,
 		SYMBOL_SIZE,
+		getPortraitMobileTier,
 	} from '../game/constants';
 	import LocaleGlyph from './LocaleGlyph.svelte';
 	import { anchorToPivot, BitmapText, Container, Sprite, type Sizes } from 'pixi-svelte';
@@ -34,6 +38,16 @@
 	const PANEL_RATIO = 1233 / 613;
 
 	const isPortrait = $derived(stateLayoutDerived.layoutType() === 'portrait');
+	const canvasSizeType = $derived(stateLayoutDerived.canvasSizeType());
+	const isPortraitPhone = $derived(
+		isPortrait && (canvasSizeType === 'smallMobile' || canvasSizeType === 'mobile'),
+	);
+	const portraitPhoneScale = $derived.by(() => {
+		if (!isPortraitPhone) return 1;
+		const { width, height } = stateLayoutDerived.canvasSizes();
+		const tier = getPortraitMobileTier(canvasSizeType, Math.min(width, height));
+		return PORTRAIT_FS_COUNTER_PHONE_SCALE[tier];
+	});
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
 	const ml = $derived(stateLayoutDerived.mainLayout());
 
@@ -48,7 +62,9 @@
 	// Portrait: panel centered at the same Y as where "− Spin +" normally appears.
 	// spinCenterY from computePortraitHudCanvas is in canvas CSS px; invert
 	// portraitLocalToCanvasY → localY = ml.height/2 + (canvasY − ml.y) / ml.scale
-	const portraitPanelWidth = $derived(boardLayout.visualWidth * 0.55);
+	const portraitPanelWidth = $derived(
+		boardLayout.visualWidth * PORTRAIT_FS_COUNTER_WIDTH_FRAC * portraitPhoneScale,
+	);
 	const portraitPanelSizes = $derived({
 		width: portraitPanelWidth,
 		height: portraitPanelWidth / PANEL_RATIO,
@@ -60,7 +76,10 @@
 		// spinClusterCenterX = canvas.width * 0.5 = ml.width / 2 in local coords (spinClusterShiftX = 0)
 		return {
 			x: ml.width / 2 - portraitPanelWidth * 0.5,
-			y: spinLocalCenterY - portraitPanelSizes.height / 2 - 100,
+			y:
+				spinLocalCenterY -
+				portraitPanelSizes.height / 2 -
+				PORTRAIT_FS_COUNTER_Y_GAP * portraitPhoneScale,
 		};
 	});
 
