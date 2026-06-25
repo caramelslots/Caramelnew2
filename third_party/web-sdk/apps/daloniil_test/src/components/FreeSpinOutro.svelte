@@ -89,6 +89,7 @@
 			waitForTimeout(scaleMsByGameSpeed(1000, stateGame.gameSpeed)).then(() => {
 				cookieOpened = true;
 				coinsEmit = true;
+				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });
 			});
 			winAmount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;

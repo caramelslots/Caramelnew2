@@ -20,7 +20,7 @@
 	const disabled = $derived(!context.stateXstateDerived.isIdle() || !canIncreaseBet());
 
 	const onpress = () => {
-		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+		context.eventEmitter.broadcast({ type: 'soundPressPlus' });
 
 		const nextBigger = [...stateConfig.betAmountOptions]
 			.sort((a, b) => a - b)

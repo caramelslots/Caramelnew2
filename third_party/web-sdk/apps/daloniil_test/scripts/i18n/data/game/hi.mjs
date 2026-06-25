@@ -54,6 +54,28 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'मुफ़्त स्पिन के दौरान 4 बिल्ली प्रतीक इकट्ठा करें और पाएं',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	GAME_INFO_TITLE: 'गेम जानकारी',
+	GAME_INFO_ABOUT_TITLE: 'गेम के बारे में',
+	GAME_INFO_ABOUT_BODY:
+		'Wok Fury 5 रील, 5 पंक्ति और 25 पेलाइन वाला स्लॉट है। जीत बाएँ से दाएँ, सन्निकट रीलों पर, सबसे बाएँ रील से शुरू होकर दी जाती है। प्रति लाइन केवल सबसे बड़ी जीत का भुगतान होता है।',
+	GAME_INFO_WILD_TITLE: 'WILD प्रतीक',
+	GAME_INFO_WILD_BODY:
+		'Wild प्रतीक Bonus प्रतीक को छोड़कर सभी भुगतान वाले प्रतीकों की जगह लेता है। Wild 5 मिलान पर 225× दांव देता है।',
+	GAME_INFO_FS_TITLE: 'मुफ़्त स्पिन',
+	GAME_INFO_FS_BODY:
+		'बेस गेम में 3 Bonus प्रतीक लगाएँ और 10 मुफ़्त स्पिन वाला Normal Bonus पाएँ। 4 या अधिक Bonus प्रतीक लगाएँ और 10 मुफ़्त स्पिन तथा शुरुआत से 1 Sticky Mystery Reel वाला Super Bonus पाएँ।',
+	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
+	GAME_INFO_MYSTERY_BODY:
+		'मुफ़्त स्पिन के दौरान 4 Bonus प्रतीक इकट्ठा करके Progress Ladder पर एक स्तर ऊपर जाएँ। प्रत्येक स्तर 3 अतिरिक्त मुफ़्त स्पिन और 1 अतिरिक्त Sticky Mystery Reel देता है। Mystery रील अपनी जगह रहती हैं और हर स्पिन पर एक ही प्रतीक दिखाती हैं।',
+	GAME_INFO_BET_MODES_TITLE: 'दांव मोड',
+	GAME_INFO_BET_MODES_BODY:
+		'बेस मोड RTP 96.01% है। Bonus Boost की कीमत 2× दांव है और मुफ़्त स्पिन ट्रिगर की संभावना बढ़ाता है। Special Spins की कीमत 30× दांव है। Normal Bonus खरीदने की कीमत 100× दांव है। Super Bonus खरीदने की कीमत 200× दांव है। हर मोड में अधिकतम जीत 50,000× दांव है।',
+	GAME_INFO_PAYTABLE_TITLE: 'पेटेबल (× दांव)',
+	GAME_INFO_PAYTABLE_BODY:
+		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
+	GAME_INFO_LEGAL_TITLE: 'कानूनी सूचना',
+	GAME_INFO_LEGAL_BODY:
+		'खराबी से सभी भुगतान और खेल रद्द हो जाते हैं। स्थिर इंटरनेट कनेक्शन आवश्यक है। डिस्कनेक्शन होने पर अधूरे राउंड पूरे करने के लिए गेम रीलोड करें। सैद्धांतिक RTP कई स्पिन पर आधारित है। रील की गति केवल दिखावटी है।',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'अपर्याप्त धनराशि',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'खेल जारी रखने के लिए बैलेंस बढ़ाएँ या दांव कम करें।',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'हानि सीमा पहुँची',

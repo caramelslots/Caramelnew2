@@ -8,7 +8,11 @@
 		| { type: 'soundStop'; name: SoundName }
 		| { type: 'soundFade'; name: SoundName; from: number; to: number; duration: number }
 		| { type: 'soundScatterCounterIncrease' }
-		| { type: 'soundScatterCounterClear' };
+		| { type: 'soundScatterCounterClear' }
+		| { type: 'soundPressGeneral' }
+		| { type: 'soundPressMinus' }
+		| { type: 'soundPressPlus' }
+		| { type: 'soundPressBet' };
 </script>
 
 <script lang="ts">
@@ -37,6 +41,14 @@
 			}
 		},
 		soundPressGeneral: () => sound.players.once.play({ name: 'sfx_btn_general' }),
+		soundPressMinus: () => {
+			sound.stop({ name: 'sfx_btn_minus' });
+			sound.players.once.play({ name: 'sfx_btn_minus', forcePlay: true });
+		},
+		soundPressPlus: () => {
+			sound.stop({ name: 'sfx_btn_plus' });
+			sound.players.once.play({ name: 'sfx_btn_plus', forcePlay: true });
+		},
 		soundPressBet: () => sound.players.once.play({ name: 'sfx_btn_spin' }),
 		// scatterCounter
 		soundScatterCounterIncrease: () => (context.stateGame.scatterCounter = context.stateGame.scatterCounter + 1), // prettier-ignore

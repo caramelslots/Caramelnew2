@@ -60,7 +60,7 @@
 		const prev = [...betOptions].reverse().find((opt) => opt < stateBet.betAmount);
 		if (prev != null) {
 			stateBetDerived.setBetAmount(prev);
-			context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+			context.eventEmitter.broadcast({ type: 'soundPressMinus' });
 		}
 	};
 
@@ -68,7 +68,7 @@
 		const next = betOptions.find((opt) => opt > stateBet.betAmount);
 		if (next != null) {
 			stateBetDerived.setBetAmount(next);
-			context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+			context.eventEmitter.broadcast({ type: 'soundPressPlus' });
 		}
 	};
 

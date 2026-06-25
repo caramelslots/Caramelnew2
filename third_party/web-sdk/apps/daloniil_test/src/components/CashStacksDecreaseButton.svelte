@@ -22,7 +22,7 @@
 	);
 
 	const onpress = () => {
-		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+		context.eventEmitter.broadcast({ type: 'soundPressMinus' });
 
 		const nextSmaller = [...stateConfig.betAmountOptions]
 			.sort((a, b) => b - a)

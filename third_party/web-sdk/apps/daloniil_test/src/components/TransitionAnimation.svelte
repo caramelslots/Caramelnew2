@@ -14,6 +14,8 @@
 	const context = getContext();
 
 	onMount(() => {
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_transition_steam' });
+
 		if (!props.onThemeSwitch) return;
 
 		const timer = setTimeout(

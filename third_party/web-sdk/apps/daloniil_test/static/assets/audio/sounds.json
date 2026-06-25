@@ -14,6 +14,8 @@
 		"sfx_anticipation_start": [263000, 1000],
 		"sfx_bigwin_coinloop": [264983, 17267, true],
 		"sfx_btn_general": [284000, 58.66213151927013],
+		"sfx_btn_minus": [414953, 544],
+		"sfx_btn_plus": [415620, 552],
 		"sfx_btn_spin": [286000, 1005.5782312925317],
 		"sfx_fs_respins": [289000, 4062.49433106575],
 		"sfx_multiplier_combine_a": [295000, 1208.843537414964],
@@ -48,7 +50,8 @@
 		"sfx_winlevel_small": [380000, 1000.5668934240362],
 		"sfx_winlevel_standard": [383000, 1250],
 		"sfx_winlevel_substantial": [386000, 2490.317460317442],
-		"sfx_youwon_panel": [390000, 2996.689342403613],
+		"sfx_youwon_panel": [416445, 693],
+		"sfx_transition_steam": [417354, 3251],
 		"tumble_win_1": [394000, 996.2358276644068],
 		"tumble_win_2": [396000, 1134.671201814058],
 		"tumble_win_3": [399000, 1134.8299319727744],
@@ -56,9 +59,8 @@
 		"tumble_win_5": [404000, 989.6145124716327]
 	},
 	"src": [
-		"./assets/audio/sounds.ogg",
-		"./assets/audio/sounds.m4a",
 		"./assets/audio/sounds.mp3",
+		"./assets/audio/sounds.m4a",
 		"./assets/audio/sounds.ac3"
 	],
 	"config": {
@@ -76,6 +78,8 @@
 		"sfx_anticipation_start": { "volume": 1 },
 		"sfx_bigwin_coinloop": { "volume": 1 },
 		"sfx_btn_general": { "volume": 1 },
+		"sfx_btn_minus": { "volume": 1 },
+		"sfx_btn_plus": { "volume": 1 },
 		"sfx_btn_spin": { "volume": 1 },
 		"sfx_fs_respins": { "volume": 1 },
 		"sfx_multiplier_combine_a": { "volume": 1 },
@@ -111,6 +115,7 @@
 		"sfx_winlevel_standard": { "volume": 1 },
 		"sfx_winlevel_substantial": { "volume": 1 },
 		"sfx_youwon_panel": { "volume": 1 },
+		"sfx_transition_steam": { "volume": 1 },
 		"tumble_win_1": { "volume": 1 },
 		"tumble_win_2": { "volume": 1 },
 		"tumble_win_3": { "volume": 1 },

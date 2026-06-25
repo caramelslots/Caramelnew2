@@ -73,11 +73,13 @@
 
 	const displayProgress = $derived(dragProgress ?? roundsToProgress(roundsCount));
 
-	const applyRounds = (value: number, playSound = true) => {
+	const applyRounds = (value: number, playSound: 'minus' | 'plus' | 'general' | false = false) => {
 		const next = String(value);
 		if (next === stateUi.autoSpinsText) return;
 		stateUi.autoSpinsText = next as typeof stateUi.autoSpinsText;
-		if (playSound) context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+		if (playSound === 'minus') context.eventEmitter.broadcast({ type: 'soundPressMinus' });
+		if (playSound === 'plus') context.eventEmitter.broadcast({ type: 'soundPressPlus' });
+		if (playSound === 'general') context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 	};
 
 	const setRoundByClientX = (clientX: number) => {
@@ -124,12 +126,12 @@
 
 	const onDecreasePress = () => {
 		if (decreaseDisabled) return;
-		applyRounds(roundsCount - 1);
+		applyRounds(roundsCount - 1, 'minus');
 	};
 
 	const onIncreasePress = () => {
 		if (increaseDisabled) return;
-		applyRounds(roundsCount + 1);
+		applyRounds(roundsCount + 1, 'plus');
 	};
 
 	const close = () => {

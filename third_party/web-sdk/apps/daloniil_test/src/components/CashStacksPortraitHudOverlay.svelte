@@ -176,7 +176,7 @@
 
 	const onDecreasePress = () => {
 		if (decreaseDisabled) return;
-		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+		context.eventEmitter.broadcast({ type: 'soundPressMinus' });
 		const nextSmaller = [...stateConfig.betAmountOptions]
 			.sort((a, b) => b - a)
 			.find((option) => option < stateBet.betAmount);
@@ -185,7 +185,7 @@
 
 	const onIncreasePress = () => {
 		if (increaseDisabled) return;
-		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+		context.eventEmitter.broadcast({ type: 'soundPressPlus' });
 		const nextBigger = [...stateConfig.betAmountOptions]
 			.sort((a, b) => a - b)
 			.find((option) => option > stateBet.betAmount);

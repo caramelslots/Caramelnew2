@@ -12,7 +12,8 @@ const STAKE_LOCALES = [
 	'ar', 'de', 'en', 'es', 'fi', 'fr', 'hi', 'id', 'ja', 'ko', 'pl', 'pt', 'ru', 'tr', 'vi', 'zh',
 ];
 
-const quote = (value) => `'${String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+const quote = (value) =>
+	`'${String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r')}'`;
 
 const toTsObject = (entries) => {
 	const lines = Object.entries(entries).map(([key, value]) => {
