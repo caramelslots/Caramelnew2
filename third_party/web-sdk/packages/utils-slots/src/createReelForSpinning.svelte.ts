@@ -285,38 +285,6 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		await reelY.set(targetY, { duration, easing });
 	};
 
-	/**
-	 * Like slideY but re-samples speed every animation frame via `getSpeed()`.
-	 * When the speed changes mid-slide (e.g. cat-anticipation slow-down fires),
-	 * the Svelte Tween is restarted from the current position with a new duration
-	 * so the reel visibly decelerates without snapping.
-	 */
-	const slideDynamic = async ({
-		reelY: targetY,
-		getSpeed,
-	}: {
-		reelY: number;
-		getSpeed: () => number;
-	}) => {
-		const dist = Math.abs(reelY.current - targetY);
-		if (dist < 0.5) return;
-
-		let currentSpeed = getSpeed();
-		reelY.set(targetY, { duration: dist / currentSpeed });
-
-		while (true) {
-			await waitForAnimationFrame();
-			if (reelState.motion !== 'spinning') break;
-			const remaining = Math.abs(reelY.current - targetY);
-			if (remaining < 0.5) break;
-			const newSpeed = getSpeed();
-			if (newSpeed !== currentSpeed) {
-				currentSpeed = newSpeed;
-				reelY.set(targetY, { duration: remaining / newSpeed });
-			}
-		}
-	};
-
 	const placeY = (targetY: number) => reelY.set(targetY, { duration: 0 });
 
 	const removePaddingAndBounceBack = async () => {
@@ -704,10 +672,9 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			slideDown: async () => {
 				const bounceSize = reelOptions.symbolHeight * reelState.spinOptions().reelBounceSizeMulti;
 
-				// Use slideDynamic so the speed can be updated mid-spin (e.g. cat anticipation).
-				await slideDynamic({
+				await slideY({
 					reelY: getMainSpinTargetY(),
-					getSpeed: () => reelState.spinOptions().reelSpinSpeed,
+					speed: reelState.spinOptions().reelSpinSpeed,
 				});
 				await slideY({
 					reelY: defaultY + bounceSize,
