@@ -20,7 +20,8 @@
 		FONT_PROSTOI_VI,
 		FONT_PROSTOI_CJK,
 		fontForLocale,
-		LOCALE_TEXT_FILL_WHITE,
+		isArabicLocale,
+		LOCALE_TEXT_FILL_GOLD,
 		SYMBOL_SIZE,
 	} from '../game/constants';
 	import LocaleGlyph from './LocaleGlyph.svelte';
@@ -86,6 +87,12 @@
 			FONT_PROSTOI_CJK,
 		),
 	);
+	/** Digits/separators always use prostoi bitmap — not Arabic TTF. */
+	const counterBitmapFont = $derived(
+		isArabicLocale(stateI18n.i18n.locale)
+			? FONT_PROSTOI
+			: labelFont,
+	);
 
 	let show = $state(false);
 	let current = $state(0);
@@ -126,7 +133,7 @@
 		>
 			<LocaleGlyph
 				text={titleText}
-				fallbackFill={LOCALE_TEXT_FILL_WHITE}
+				fallbackFill={LOCALE_TEXT_FILL_GOLD}
 				style={{
 					fontFamily: labelFont,
 					fontSize,
@@ -139,7 +146,7 @@
 				{...counterPosition}
 				anchor={{ x: 0.5, y: 0 }}
 				style={{
-					fontFamily: labelFont,
+					fontFamily: counterBitmapFont,
 					fontSize,
 				}}
 				onresize={(sizes) => (counterSizes = sizes)}

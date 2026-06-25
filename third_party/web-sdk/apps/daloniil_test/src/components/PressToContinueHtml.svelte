@@ -4,6 +4,7 @@
 	import { stateI18n } from 'state-shared';
 
 	import { ensureLocaleFontsLoaded, needsLocaleFontLoad } from '../game/localeFonts';
+	import { arabicLocaleTextStyle } from '../game/arabicTextStyle';
 	import {
 		BITMAP_FONT_SCALE,
 		FONT_PROSTOI_WHITE,
@@ -28,6 +29,7 @@
 	const text = $derived(context.i18nDerived.pressToContinue());
 	const locale = $derived(stateI18n.i18n.locale);
 	const useBitmap = $derived(supportsBitmapFont(locale));
+	const usePixiRender = $derived(useBitmap || isArabicLocale(locale));
 	const textDirection = $derived(localeTextDirection(locale));
 	const resolvedFontFamily = $derived(
 		fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, locale, FONT_PROSTOI_WHITE_HI, FONT_PROSTOI_WHITE_VI, FONT_PROSTOI_WHITE_CJK),
@@ -35,6 +37,8 @@
 	const needsCustomFont = $derived(needsLocaleFontLoad(locale));
 
 	let localeFontReady = $state(!needsCustomFont);
+
+	const canRender = $derived(useBitmap || (isArabicLocale(locale) && localeFontReady));
 
 	$effect(() => {
 		if (!needsCustomFont) {
@@ -62,7 +66,7 @@
 	);
 
 	$effect(() => {
-		if (!useBitmap) return;
+		if (!usePixiRender || !canRender) return;
 
 		const renderer = context.stateApp.pixiApplication?.renderer;
 		if (!renderer || !imgEl) return;
@@ -72,24 +76,44 @@
 		const maxWidth = ml.width * 0.95;
 
 		const container = new PIXI.Container();
-		const bitmapText = new PIXI.BitmapText({
-			text,
-			style: {
-				fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, locale, FONT_PROSTOI_WHITE_HI, FONT_PROSTOI_WHITE_VI, FONT_PROSTOI_WHITE_CJK),
-				fontSize,
-				align: 'center',
-				letterSpacing: 2,
-			},
-		});
+		const textNode = useBitmap
+			? new PIXI.BitmapText({
+					text,
+					style: {
+						fontFamily: fontForLocale(
+							FONT_PROSTOI_WHITE,
+							FONT_PROSTOI_WHITE_RU,
+							locale,
+							FONT_PROSTOI_WHITE_HI,
+							FONT_PROSTOI_WHITE_VI,
+							FONT_PROSTOI_WHITE_CJK,
+						),
+						fontSize,
+						align: 'center',
+						letterSpacing: 2,
+					},
+				})
+			: new PIXI.Text({
+					text,
+					style: arabicLocaleTextStyle(
+						{
+							fontFamily: resolvedFontFamily,
+							fontSize,
+							align: 'center',
+							letterSpacing: 0,
+						},
+						LOCALE_TEXT_FILL_WHITE,
+					),
+				});
 
-		const scale = Math.min(maxWidth / (bitmapText.width || 1), 1);
-		bitmapText.scale.set(scale);
-		bitmapText.anchor.set(0.5, 1);
+		const scale = Math.min(maxWidth / (textNode.width || 1), 1);
+		textNode.scale.set(scale);
+		textNode.anchor.set(0.5, 1);
 
-		const w = Math.max(1, Math.ceil(bitmapText.width));
-		const h = Math.max(1, Math.ceil(bitmapText.height));
-		bitmapText.position.set(w / 2, h);
-		container.addChild(bitmapText);
+		const w = Math.max(1, Math.ceil(textNode.width));
+		const h = Math.max(1, Math.ceil(textNode.height));
+		textNode.position.set(w / 2, h);
+		container.addChild(textNode);
 
 		const rt = PIXI.RenderTexture.create({ width: w, height: h });
 		renderer.render({ container, target: rt });
@@ -102,13 +126,14 @@
 		return () => {
 			rt.destroy(true);
 			container.destroy({ children: true });
+			textNode.destroy();
 		};
 	});
 </script>
 
-{#if useBitmap}
+{#if usePixiRender && canRender}
 	<img bind:this={imgEl} class="press-label" style={positionStyle} alt="" />
-{:else if localeFontReady}
+{:else if !usePixiRender && localeFontReady}
 	<p
 		class="press-label press-label--system"
 		class:press-label--cjk={isCjkLocale(locale)}

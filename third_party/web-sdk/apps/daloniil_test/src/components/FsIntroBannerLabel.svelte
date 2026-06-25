@@ -4,6 +4,7 @@
 	import { stateI18n } from 'state-shared';
 
 	import { ensureLocaleFontsLoaded, needsLocaleFontLoad } from '../game/localeFonts';
+	import { arabicLocaleTextStyle } from '../game/arabicTextStyle';
 	import {
 		BITMAP_FONT_SCALE,
 		fontForLocale,
@@ -47,6 +48,7 @@
 	const context = getContext();
 	const locale = $derived(stateI18n.i18n.locale);
 	const useBitmap = $derived(supportsBitmapFont(locale));
+	const usePixiRender = $derived(useBitmap || isArabicLocale(locale));
 	const textDirection = $derived(localeTextDirection(locale));
 	const needsCustomFont = $derived(needsLocaleFontLoad(locale));
 	const fontFamily = $derived(
@@ -61,6 +63,8 @@
 	);
 
 	let localeFontReady = $state(!needsCustomFont);
+
+	const canRender = $derived(useBitmap || (isArabicLocale(locale) && localeFontReady));
 
 	$effect(() => {
 		if (!needsCustomFont) {
@@ -138,7 +142,7 @@
 	});
 
 	$effect(() => {
-		if (!useBitmap) return;
+		if (!usePixiRender || !canRender) return;
 
 		const renderer = context.stateApp.pixiApplication?.renderer;
 		if (!renderer || !imgEl) return;
@@ -147,26 +151,38 @@
 		const renderMaxWidth = basePanelWidth * (props.maxWidthRatio ?? 0.88);
 
 		const container = new PIXI.Container();
-		const bitmapText = new PIXI.BitmapText({
-			text: props.text,
-			style: {
-				fontFamily,
-				fontSize: renderFontSize,
-				align: 'center',
-				fontWeight: 'bold',
-				letterSpacing: 0,
-			},
-		});
+		const textNode = useBitmap
+			? new PIXI.BitmapText({
+					text: props.text,
+					style: {
+						fontFamily,
+						fontSize: renderFontSize,
+						align: 'center',
+						fontWeight: 'bold',
+						letterSpacing: 0,
+					},
+				})
+			: new PIXI.Text({
+					text: props.text,
+					style: arabicLocaleTextStyle(
+						{
+							fontFamily,
+							fontSize: renderFontSize,
+							align: 'center',
+						},
+						props.fallbackFill,
+					),
+				});
 
-		const naturalWidth = bitmapText.getLocalBounds().width;
+		const naturalWidth = textNode.getLocalBounds().width;
 		const scale = fitScaleToWidth(naturalWidth, renderMaxWidth);
-		bitmapText.scale.set(scale);
-		bitmapText.anchor.set(0.5, 0.5);
+		textNode.scale.set(scale);
+		textNode.anchor.set(0.5, 0.5);
 
-		const w = Math.max(1, Math.ceil(bitmapText.width));
-		const h = Math.max(1, Math.ceil(bitmapText.height));
-		bitmapText.position.set(w / 2, h / 2);
-		container.addChild(bitmapText);
+		const w = Math.max(1, Math.ceil(textNode.width));
+		const h = Math.max(1, Math.ceil(textNode.height));
+		textNode.position.set(w / 2, h / 2);
+		container.addChild(textNode);
 
 		const rt = PIXI.RenderTexture.create({ width: w, height: h });
 		renderer.render({ container, target: rt });
@@ -179,13 +195,14 @@
 		return () => {
 			rt.destroy(true);
 			container.destroy({ children: true });
+			textNode.destroy();
 		};
 	});
 </script>
 
-{#if useBitmap}
+{#if usePixiRender && canRender}
 	<img bind:this={imgEl} class="label" style={positionStyle} alt="" />
-{:else if localeFontReady}
+{:else if !usePixiRender && localeFontReady}
 	<p
 		bind:this={systemEl}
 		class="label label--system"

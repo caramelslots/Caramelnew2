@@ -8,6 +8,7 @@
 		supportsBitmapFont,
 		systemTextFontFamily,
 	} from '../game/constants';
+	import { arabicLocaleTextStyle } from '../game/arabicTextStyle';
 	import { ensureLocaleFontsLoaded, needsLocaleFontLoad } from '../game/localeFonts';
 
 	type Style = NonNullable<BitmapTextProps['style']>;
@@ -41,16 +42,23 @@
 		};
 	});
 
+	const fallbackFill = $derived(
+		props.fallbackFill ?? props.style.fill ?? LOCALE_TEXT_FILL_WHITE,
+	);
+
 	const resolvedStyle = $derived(
 		useBitmap
 			? props.style
-			: {
-					...props.style,
-					fontFamily: isArabicLocale(locale)
-						? props.style.fontFamily
-						: systemTextFontFamily(locale),
-					fill: props.fallbackFill ?? props.style.fill ?? LOCALE_TEXT_FILL_WHITE,
-				},
+			: isArabicLocale(locale)
+				? arabicLocaleTextStyle(
+						{ ...props.style, fontFamily: props.style.fontFamily },
+						fallbackFill,
+					)
+				: {
+						...props.style,
+						fontFamily: systemTextFontFamily(locale),
+						fill: fallbackFill,
+					},
 	);
 </script>
 
