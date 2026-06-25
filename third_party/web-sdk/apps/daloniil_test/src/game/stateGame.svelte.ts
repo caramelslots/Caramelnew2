@@ -243,6 +243,17 @@ const scatterLandIndex = () => {
 const boardReelsActive = () =>
 	stateGame.board.some((reel) => reel.reelState.motion !== 'stopped');
 
+/** True while any visible cell plays Mystery reveal or collapse spine. */
+const boardMysteryAnimating = () =>
+	stateGame.board.some((reel) =>
+		reel.reelState.symbols
+			.slice(0, reel.reelState.activeSymbolCount)
+			.some(
+				(symbol) =>
+					symbol.symbolState === 'mysteryReveal' || symbol.symbolState === 'mysteryCollapse',
+			),
+	);
+
 const { enhanceBoard } = createEnhanceBoard();
 const enhancedBoard = enhanceBoard({ board: stateGame.board });
 
@@ -255,6 +266,7 @@ export const stateGameDerived = {
 	boardLayout,
 	boardRaw,
 	boardReelsActive,
+	boardMysteryAnimating,
 	scatterLandIndex,
 	enhancedBoard,
 	getWinLevelDataByWinLevelAlias,

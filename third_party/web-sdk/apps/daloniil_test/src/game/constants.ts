@@ -867,6 +867,19 @@ export const DIM_NON_WINNING = {
  * resting symbol. */
 export const M_SIZE = 1.3;
 
+/** Peak `Effects`/`Aura` scale in `Mystery/explosion` (see Mystery.json @ 1.7667s). */
+const MYSTERY_EXPLOSION_AURA_PEAK_SCALE = 3;
+
+/**
+ * Extra board mask above/below the grid while M cells play reveal/collapse
+ * with reels stopped (see BoardMask `mysteryMaskActive`). Derived from aura
+ * peak radius minus half a cell — edge-row centers sit one half-cell inset
+ * from the grid border.
+ */
+export const BOARD_MASK_MYSTERY_OVERFLOW = Math.ceil(
+	(SYMBOL_SIZE * M_SIZE * MYSTERY_EXPLOSION_AURA_PEAK_SCALE) / 2 - SYMBOL_SIZE / 2,
+);
+
 export const MYSTERY_REVEAL_TIER: Record<string, 'high' | 'mid' | 'low'> = {
 	H1: 'high',
 	H2: 'high',

@@ -9,7 +9,7 @@
 	import SymbolWrap from './SymbolWrap.svelte';
 	import { getSymbolInfo, getSymbolX, toRevealedRawSymbol } from '../game/utils';
 	import { WIN_BOUNCE, DIM_NON_WINNING, MYSTERY_BG_UNCOVER_MS, SYMBOL_SIZE, BOARD_DIMENSIONS, isVisibleBoardSymbolIndex } from '../game/constants';
-	import { stateGame, stateGameDerived } from '../game/stateGame.svelte';
+	import { stateGame } from '../game/stateGame.svelte';
 	import type { ReelSymbol } from '../game/stateGame.svelte';
 
 	type Props = {
@@ -46,10 +46,10 @@
 	const isPaddingSymbol = $derived(
 		!isVisibleBoardSymbolIndex(props.reelSymbol.symbolIndex, activeSymbolCount),
 	);
-	// Parked padding rows sit at y≈−50 / y≈550. While reels move, hide them when
-	// still outside the 5×5 grid so spin mask runway cannot flash off-screen symbols.
-	const hideParkedPaddingDuringSpin = $derived.by(() => {
-		if (!stateGameDerived.boardReelsActive() || !isPaddingSymbol) return false;
+	// Padding rows (top/bottom of the padded strip) must never render outside
+	// the visible grid — even when the board mask expands for win/mystery VFX.
+	const hideOffGridPadding = $derived.by(() => {
+		if (!isPaddingSymbol) return false;
 		const y = props.reelSymbol.symbolY();
 		const half = SYMBOL_SIZE / 2;
 		const gridBottom = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
@@ -156,7 +156,7 @@
 	);
 </script>
 
-{#if showBgSymbol && revealedRawSymbol && !hideParkedPaddingDuringSpin}
+{#if showBgSymbol && revealedRawSymbol && !hideOffGridPadding}
 	<SymbolWrap
 		x={getSymbolX(props.reelIndex)}
 		y={props.reelSymbol.symbolY()}
@@ -173,7 +173,7 @@
 	</SymbolWrap>
 {/if}
 
-{#if !hideParkedPaddingDuringSpin}
+{#if !hideOffGridPadding}
 	<SymbolWrap
 		x={getSymbolX(props.reelIndex)}
 		y={props.reelSymbol.symbolY() + (applyWinPresentation ? winYOffset.current : 0)}
