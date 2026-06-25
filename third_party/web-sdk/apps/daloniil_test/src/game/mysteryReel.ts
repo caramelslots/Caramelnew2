@@ -45,9 +45,27 @@ export const freezeMysteryReel = (reelIndex: number) => {
 	);
 };
 
+/** In-flight collapse from the previous spin's `reveal` (see Board.svelte). */
+let activeMysteryCollapse: Promise<void> | null = null;
+
+/** Registers a collapse task so `playMysteryRevealBatch` can await it. */
+export const trackMysteryCollapse = (task: Promise<void>) => {
+	const tracked = (activeMysteryCollapse ?? Promise.resolve()).then(() => task);
+	activeMysteryCollapse = tracked;
+	tracked.finally(() => {
+		if (activeMysteryCollapse === tracked) activeMysteryCollapse = null;
+	});
+};
+
+/** Waits until any in-flight collapse animation finishes (no-op if idle). */
+export const awaitMysteryCollapseIdle = async () => {
+	if (activeMysteryCollapse) await activeMysteryCollapse;
+};
+
 export const resetMysteryReelSession = () => {
 	stateGame.mysteryReelsFrozen = [];
 	stateGame.mysteryReelsPendingCollapse = {};
+	activeMysteryCollapse = null;
 };
 
 export const shouldSpinMysteryReel = (reelIndex: number) =>

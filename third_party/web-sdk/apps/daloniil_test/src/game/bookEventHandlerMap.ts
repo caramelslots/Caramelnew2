@@ -14,6 +14,7 @@ import {
 	resetMysteryReelSession,
 	markMysteryReelPendingCollapse,
 	getMysteryReelsPendingCollapseIndices,
+	awaitMysteryCollapseIdle,
 } from './mysteryReel';
 import {
 	WIN_INFO_PRE_DELAY_MS,
@@ -422,6 +423,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 /** Math emits one `mysteryReveal` per sticky reel — batch plays them in parallel on the client. */
 export const playMysteryRevealBatch = async (bookEvents: BookEventOfType<'mysteryReveal'>[]) => {
 	if (bookEvents.length === 0) return;
+
+	// Collapse from the previous spin's reveal may still be running (it plays
+	// concurrently with the reel scroll). Wait here so mysteryReveal never races
+	// the reverse-explosion on the same cells.
+	await awaitMysteryCollapseIdle();
 
 	const syncAnimation = bookEvents.length > 1;
 

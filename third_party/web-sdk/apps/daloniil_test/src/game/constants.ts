@@ -907,6 +907,14 @@ export const WIN_SCREEN_POST_COUNT_UP_DELAY_MS = 1500;
 
 /** Full-screen dim behind FS end (FreeSpinOutro) count-up panel. */
 export const FS_OUTRO_DIM_ALPHA = 0.85;
+/** FS end fortune-cookie spine width as a fraction of board width (desktop/tablet). */
+export const FS_OUTRO_SPINE_WIDTH_FRAC = 0.72;
+/** Extra shrink for FS end cookie on phones (portrait + landscape). */
+export const FS_OUTRO_PHONE_SCALE = {
+	small: 0.82,
+	medium: 0.86,
+	large: 0.89,
+} as const;
 
 /**
  * Pause after reels finish landing, before bonus cats play the paw-wave

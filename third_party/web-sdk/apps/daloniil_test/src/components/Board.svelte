@@ -35,10 +35,12 @@
 </script>
 
 <script lang="ts">
-	import { waitForResolve } from 'utils-shared/wait';
+	import { stateBetDerived } from 'state-shared';
+	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 
 	import { getContext } from '../game/context';
-	import { freezeMysteryReel } from '../game/mysteryReel';
+	import { MYSTERY_EXPLOSION_DURATION_S } from '../game/constants';
+	import { freezeMysteryReel, trackMysteryCollapse } from '../game/mysteryReel';
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardMask from './BoardMask.svelte';
 	import BoardBase from './BoardBase.svelte';
@@ -50,6 +52,46 @@
 	let show = $state(true);
 
 	type MysteryCell = { reelSymbol: ReelSymbol; revealedSymbol: SymbolName; reelIndex: number };
+
+	const mysteryAnimationTimeoutMs = (durationS: number) =>
+		Math.ceil((durationS * 1000 + 400) / stateBetDerived.timeScale());
+
+	const waitForSymbolComplete = (reelSymbol: ReelSymbol, timeoutMs: number) =>
+		Promise.race([
+			waitForResolve((resolve) => {
+				reelSymbol.oncomplete = resolve;
+			}),
+			waitForTimeout(timeoutMs),
+		]);
+
+	const runMysteryCollapseReels = async (reelIndices: number[]) => {
+		const cells: { reelSymbol: ReelSymbol; reelIndex: number }[] = [];
+		for (const reelIndex of reelIndices) {
+			const reel = context.stateGame.board[reelIndex];
+			for (let row = 0; row < reel.reelLength; row++) {
+				cells.push({ reelSymbol: reel.reelState.symbols[row], reelIndex });
+			}
+		}
+
+		for (const { reelSymbol } of cells) {
+			reelSymbol.rawSymbol = { name: 'M' };
+			reelSymbol.symbolState = 'mysteryCollapse';
+		}
+
+		const collapseTimeoutMs = mysteryAnimationTimeoutMs(MYSTERY_EXPLOSION_DURATION_S / 2);
+		await Promise.all(
+			cells.map(({ reelSymbol }) => waitForSymbolComplete(reelSymbol, collapseTimeoutMs)),
+		);
+
+		const frozenSet = new Set<number>();
+		for (const { reelSymbol, reelIndex } of cells) {
+			reelSymbol.symbolState = 'static';
+			frozenSet.add(reelIndex);
+		}
+		for (const reelIndex of frozenSet) {
+			freezeMysteryReel(reelIndex);
+		}
+	};
 
 	const runMysteryRevealBatch = async ({
 		reveals,
@@ -74,22 +116,17 @@
 			}
 		}
 
-		// Phase 1: wait for the explosion animation to complete on all cells.
+		const revealTimeoutMs = mysteryAnimationTimeoutMs(MYSTERY_EXPLOSION_DURATION_S);
 		await Promise.all(
-			cells.map(
-				({ reelSymbol }) =>
-					new Promise<void>((resolve) => {
-						reelSymbol.oncomplete = resolve;
-					}),
-			),
+			cells.map(({ reelSymbol }) => waitForSymbolComplete(reelSymbol, revealTimeoutMs)),
 		);
 
-		// Phase 2: show the revealed symbol (land → static).
+		const landTimeoutMs = mysteryAnimationTimeoutMs(0.35);
 		await Promise.all(
 			cells.map(async ({ reelSymbol, revealedSymbol }) => {
 				reelSymbol.rawSymbol = toRevealedRawSymbol(revealedSymbol);
 				reelSymbol.symbolState = 'land';
-				await waitForResolve((resolve) => (reelSymbol.oncomplete = resolve));
+				await waitForSymbolComplete(reelSymbol, landTimeoutMs);
 				reelSymbol.symbolState = 'static';
 			}),
 		);
@@ -124,42 +161,8 @@
 		boardMysteryRevealBatch: async ({ reveals, syncAnimation }) => {
 			await runMysteryRevealBatch({ reveals, syncAnimation });
 		},
-		boardMysteryCollapseReels: async ({ reelIndices }) => {
-			// Collect all visible cells for each pending-collapse reel.
-			const cells: { reelSymbol: ReelSymbol; reelIndex: number }[] = [];
-			for (const reelIndex of reelIndices) {
-				const reel = context.stateGame.board[reelIndex];
-				for (let row = 0; row < reel.reelLength; row++) {
-					cells.push({ reelSymbol: reel.reelState.symbols[row], reelIndex });
-				}
-			}
-
-			// Transition cells to the reverse-explosion (collapse) animation.
-			// animationEnd on the descriptor limits playback to the closing half only.
-			for (const { reelSymbol } of cells) {
-				reelSymbol.rawSymbol = { name: 'M' };
-				reelSymbol.symbolState = 'mysteryCollapse';
-			}
-
-			// Wait for the half-duration reverse animation to complete on every cell.
-			await Promise.all(
-				cells.map(
-					({ reelSymbol }) =>
-						new Promise<void>((resolve) => {
-							reelSymbol.oncomplete = resolve;
-						}),
-				),
-			);
-
-			// Snap to static Mystery/? and permanently freeze the reel.
-			const frozenSet = new Set<number>();
-			for (const { reelSymbol, reelIndex } of cells) {
-				reelSymbol.symbolState = 'static';
-				frozenSet.add(reelIndex);
-			}
-			for (const reelIndex of frozenSet) {
-				freezeMysteryReel(reelIndex);
-			}
+		boardMysteryCollapseReels: ({ reelIndices }) => {
+			trackMysteryCollapse(runMysteryCollapseReels(reelIndices));
 		},
 	});
 
