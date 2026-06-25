@@ -69,7 +69,7 @@ export default {
 		'Sammle während der Freispiele 4 Bonus-Symbole, um eine Stufe auf der Progress Ladder zu erreichen. Jede Stufe gewährt 3 zusätzliche Freispiele und schaltet 1 weiteres Sticky Mystery Reel frei. Mystery-Walzen bleiben an Ort und Stelle und zeigen bei jedem Dreh dasselbe Symbol.',
 	GAME_INFO_BET_MODES_TITLE: 'EINSATZMODI',
 	GAME_INFO_BET_MODES_BODY:
-		'Der RTP im Basismodus beträgt 96,01 %. Bonus Boost kostet das 2-Fache des Einsatzes und erhöht die Chance auf Freispiele. Special Spins kosten das 30-Fache des Einsatzes. Normal Bonus kaufen kostet das 100-Fache des Einsatzes. Super Bonus kaufen kostet das 200-Fache des Einsatzes. Der maximale Gewinn beträgt in jedem Modus 50.000× den Einsatz.',
+		'Der RTP im Basismodus beträgt 96,01 %. Bonus Boost kostet das 2-Fache des Einsatzes und erhöht die Chance auf Freispiele. Special Spins kosten das 30-Fache des Einsatzes. Normal Bonus kaufen kostet das 100-Fache des Einsatzes. Super Bonus kaufen kostet das 200-Fache des Einsatzes. Der maximale Gewinn beträgt in jedem Modus 2.500× den Einsatz.',
 	GAME_INFO_PAYTABLE_TITLE: 'AUSZAHLUNGSTABELLE (× EINSATZ)',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',

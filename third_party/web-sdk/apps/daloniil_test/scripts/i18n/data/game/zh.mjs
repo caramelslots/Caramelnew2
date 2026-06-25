@@ -69,7 +69,7 @@ export default {
 		'在免费旋转期间，收集 4 个 Bonus 符号可在 Progress Ladder 上提升一级。每级奖励 3 次额外免费旋转并解锁 1 个额外的 Sticky Mystery Reel。Mystery 转轴保持固定，每次旋转显示相同符号。',
 	GAME_INFO_BET_MODES_TITLE: '投注模式',
 	GAME_INFO_BET_MODES_BODY:
-		'基础模式 RTP 为 96.01%。Bonus Boost 花费 2× 投注并提高触发免费旋转的几率。Special Spins 花费 30× 投注。购买 Normal Bonus 花费 100× 投注，购买 Super Bonus 花费 200× 投注。所有模式的最大赢奖为 50,000× 投注。',
+		'基础模式 RTP 为 96.01%。Bonus Boost 花费 2× 投注并提高触发免费旋转的几率。Special Spins 花费 30× 投注。购买 Normal Bonus 花费 100× 投注，购买 Super Bonus 花费 200× 投注。所有模式的最大赢奖为 2,500× 投注。',
 	GAME_INFO_PAYTABLE_TITLE: '赔付表（× 投注）',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',

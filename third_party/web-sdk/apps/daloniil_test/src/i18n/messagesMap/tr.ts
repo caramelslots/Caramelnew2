@@ -64,7 +64,7 @@ export default {
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY: 'Ücretsiz dönüşler sırasında 4 Bonus sembolü toplayarak Progress Ladder\'da bir seviye yükselin. Her seviye 3 ek ücretsiz dönüş verir ve 1 ek Sticky Mystery Reel açar. Mystery makaralar yerinde kalır ve her dönüşte aynı sembolü gösterir.',
 	GAME_INFO_BET_MODES_TITLE: 'BAHİS MODLARI',
-	GAME_INFO_BET_MODES_BODY: 'Temel mod RTP\'si %96,01\'dir. Bonus Boost, bahsin 2 katına mal olur ve ücretsiz dönüş tetikleme şansını artırır. Special Spins, bahsin 30 katına mal olur. Normal Bonus satın alma bahsin 100 katı, Super Bonus satın alma bahsin 200 katıdır. Her modda maksimum kazanç bahsin 50.000 katıdır.',
+	GAME_INFO_BET_MODES_BODY: 'Temel mod RTP\'si %96,01\'dir. Bonus Boost, bahsin 2 katına mal olur ve ücretsiz dönüş tetikleme şansını artırır. Special Spins, bahsin 30 katına mal olur. Normal Bonus satın alma bahsin 100 katı, Super Bonus satın alma bahsin 200 katıdır. Her modda maksimum kazanç bahsin 2.500 katıdır.',
 	GAME_INFO_PAYTABLE_TITLE: 'ÖDEME TABLOSU (× BAHİS)',
 	GAME_INFO_PAYTABLE_BODY: 'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
 	GAME_INFO_LEGAL_TITLE: 'YASAL UYARI',

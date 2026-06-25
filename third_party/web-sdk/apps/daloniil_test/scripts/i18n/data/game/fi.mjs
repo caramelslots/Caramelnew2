@@ -69,7 +69,7 @@ export default {
 		'Ilmaiskierrosten aikana kerää 4 Bonus-symbolia noustaksesi yhden tason Progress Ladderilla. Jokainen taso antaa 3 lisäilmaiskierrosta ja avaa 1 lisä-Sticky Mystery Reelin. Mystery-rullat pysyvät paikallaan ja paljastavat saman symbolin jokaisella kierroksella.',
 	GAME_INFO_BET_MODES_TITLE: 'PANOSTILAT',
 	GAME_INFO_BET_MODES_BODY:
-		'Perustilan RTP on 96,01 %. Bonus Boost maksaa 2× panoksen ja lisää ilmaiskierrosten käynnistymisen todennäköisyyttä. Special Spins maksaa 30× panoksen. Normal Bonusin osto maksaa 100× panoksen. Super Bonusin osto maksaa 200× panoksen. Maksimivoitto on 50 000× panos kaikissa tiloissa.',
+		'Perustilan RTP on 96,01 %. Bonus Boost maksaa 2× panoksen ja lisää ilmaiskierrosten käynnistymisen todennäköisyyttä. Special Spins maksaa 30× panoksen. Normal Bonusin osto maksaa 100× panoksen. Super Bonusin osto maksaa 200× panoksen. Maksimivoitto on 2 500× panos kaikissa tiloissa.',
 	GAME_INFO_PAYTABLE_TITLE: 'VOITTOTAULUKKO (× PANOS)',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',

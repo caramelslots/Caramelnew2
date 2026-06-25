@@ -180,7 +180,7 @@
 							{/if}
 						{/snippet}
 						{#snippet winAmount({ width })}
-							<Container y={width * 0.14}>
+							<Container y={width * 0.07}>
 								<ResponsiveCurrencyBitmapText
 									anchor={0.5}
 									style={{

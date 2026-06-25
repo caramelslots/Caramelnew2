@@ -64,7 +64,7 @@ export default {
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY: 'Durante as rodadas grátis, recolha 4 símbolos Bonus para subir um nível na Progress Ladder. Cada nível concede 3 rodadas grátis extra e desbloqueia 1 Sticky Mystery Reel adicional. Os rolos Mystery permanecem no lugar e revelam o mesmo símbolo em cada rodada.',
 	GAME_INFO_BET_MODES_TITLE: 'MODOS DE APOSTA',
-	GAME_INFO_BET_MODES_BODY: 'O RTP do modo base é 96,01%. Bonus Boost custa 2× a aposta e aumenta a chance de ativar rodadas grátis. Special Spins custa 30× a aposta. Comprar Normal Bonus custa 100× a aposta. Comprar Super Bonus custa 200× a aposta. O ganho máximo é 50.000× a aposta em todos os modos.',
+	GAME_INFO_BET_MODES_BODY: 'O RTP do modo base é 96,01%. Bonus Boost custa 2× a aposta e aumenta a chance de ativar rodadas grátis. Special Spins custa 30× a aposta. Comprar Normal Bonus custa 100× a aposta. Comprar Super Bonus custa 200× a aposta. O ganho máximo é 2.500× a aposta em todos os modos.',
 	GAME_INFO_PAYTABLE_TITLE: 'TABELA DE PAGAMENTOS (× APOSTA)',
 	GAME_INFO_PAYTABLE_BODY: 'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
 	GAME_INFO_LEGAL_TITLE: 'AVISO LEGAL',

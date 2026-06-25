@@ -19,7 +19,7 @@
 
 	// SPINE_WIDTH drives the uniform scale applied by SpineProvider.
 	// All content inside SpineSlots scales proportionally with this value.
-	const SPINE_WIDTH = BOARD_SIZES.width * 0.6;
+	const SPINE_WIDTH = BOARD_SIZES.width * 0.72;
 
 	let controller = $state<FsPopupSpineController | undefined>();
 

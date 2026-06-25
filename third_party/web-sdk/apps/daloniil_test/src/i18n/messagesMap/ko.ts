@@ -64,7 +64,7 @@ export default {
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY: '무료 스핀 중 Bonus 심볼 4개를 모으면 Progress Ladder에서 한 단계 올라갑니다. 각 단계마다 추가 무료 스핀 3회와 Sticky Mystery Reel 1개가 해제됩니다. Mystery 릴은 고정되며 매 스핀마다 같은 심볼을 공개합니다.',
 	GAME_INFO_BET_MODES_TITLE: '베팅 모드',
-	GAME_INFO_BET_MODES_BODY: '기본 모드 RTP는 96.01%입니다. Bonus Boost는 베팅의 2배이며 무료 스핀 발동 확률이 증가합니다. Special Spins는 베팅의 30배입니다. Normal Bonus 구매는 베팅의 100배, Super Bonus 구매는 베팅의 200배입니다. 모든 모드에서 최대 당첨금은 베팅의 50,000배입니다.',
+	GAME_INFO_BET_MODES_BODY: '기본 모드 RTP는 96.01%입니다. Bonus Boost는 베팅의 2배이며 무료 스핀 발동 확률이 증가합니다. Special Spins는 베팅의 30배입니다. Normal Bonus 구매는 베팅의 100배, Super Bonus 구매는 베팅의 200배입니다. 모든 모드에서 최대 당첨금은 베팅의 2,500배입니다.',
 	GAME_INFO_PAYTABLE_TITLE: '페이테이블 (× 베팅)',
 	GAME_INFO_PAYTABLE_BODY: 'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
 	GAME_INFO_LEGAL_TITLE: '법적 고지',

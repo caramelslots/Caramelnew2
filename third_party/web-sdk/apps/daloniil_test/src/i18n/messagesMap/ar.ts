@@ -64,7 +64,7 @@ export default {
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY: 'أثناء الدورات المجانية، اجمع 4 رموز Bonus للصعود مستوى واحد على Progress Ladder. يمنح كل مستوى 3 دورات مجانية إضافية ويفتح 1 Sticky Mystery Reel إضافي. تبقى بكرات Mystery في مكانها وتكشف عن نفس الرمز في كل دورة.',
 	GAME_INFO_BET_MODES_TITLE: 'أوضاع الرهان',
-	GAME_INFO_BET_MODES_BODY: 'RTP الوضع الأساسي هو 96.01%. يكلف Bonus Boost ضعف الرهان ويزيد فرصة تفعيل الدورات المجانية. تكلف Special Spins 30× الرهان. شراء Normal Bonus يكلف 100× الرهان. شراء Super Bonus يكلف 200× الرهان. الحد الأقصى للفوز هو 50,000× الرهان في كل وضع.',
+	GAME_INFO_BET_MODES_BODY: 'RTP الوضع الأساسي هو 96.01%. يكلف Bonus Boost ضعف الرهان ويزيد فرصة تفعيل الدورات المجانية. تكلف Special Spins 30× الرهان. شراء Normal Bonus يكلف 100× الرهان. شراء Super Bonus يكلف 200× الرهان. الحد الأقصى للفوز هو 2,500× الرهان في كل وضع.',
 	GAME_INFO_PAYTABLE_TITLE: 'جدول المدفوعات (× الرهان)',
 	GAME_INFO_PAYTABLE_BODY: 'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
 	GAME_INFO_LEGAL_TITLE: 'إشعار قانوني',

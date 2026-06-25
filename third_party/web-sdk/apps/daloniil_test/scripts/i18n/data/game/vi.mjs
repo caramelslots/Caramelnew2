@@ -69,7 +69,7 @@ export default {
 		'Trong vòng quay miễn phí, thu thập 4 biểu tượng Bonus để lên một bậc trên Progress Ladder. Mỗi bậc thưởng thêm 3 vòng quay miễn phí và mở khóa 1 Sticky Mystery Reel. Các cuộn Mystery giữ nguyên vị trí và hiển thị cùng một biểu tượng mỗi vòng.',
 	GAME_INFO_BET_MODES_TITLE: 'CHẾ ĐỘ CƯỢC',
 	GAME_INFO_BET_MODES_BODY:
-		'RTP chế độ cơ bản là 96,01%. Bonus Boost có giá 2× cược và tăng cơ hội kích hoạt vòng quay miễn phí. Special Spins có giá 30× cược. Mua Normal Bonus có giá 100× cược. Mua Super Bonus có giá 200× cược. Thắng tối đa là 50.000× cược ở mọi chế độ.',
+		'RTP chế độ cơ bản là 96,01%. Bonus Boost có giá 2× cược và tăng cơ hội kích hoạt vòng quay miễn phí. Special Spins có giá 30× cược. Mua Normal Bonus có giá 100× cược. Mua Super Bonus có giá 200× cược. Thắng tối đa là 2.500× cược ở mọi chế độ.',
 	GAME_INFO_PAYTABLE_TITLE: 'BẢNG TRẢ THƯỞNG (× CƯỢC)',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',

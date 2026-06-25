@@ -69,7 +69,7 @@ export default {
 		'フリースピン中にBonusシンボルを4つ集めると、Progress Ladderで1段階上がります。各段階で追加フリースピン3回とSticky Mystery Reelが1つ解放されます。Mysteryリールは固定され、毎スピン同じシンボルを表示します。',
 	GAME_INFO_BET_MODES_TITLE: 'ベットモード',
 	GAME_INFO_BET_MODES_BODY:
-		'ベースモードのRTPは96.01%です。Bonus Boostはベットの2倍で、フリースピン発動率が上がります。Special Spinsはベットの30倍です。Normal Bonus購入はベットの100倍、Super Bonus購入はベットの200倍です。すべてのモードで最大勝利はベットの50,000倍です。',
+		'ベースモードのRTPは96.01%です。Bonus Boostはベットの2倍で、フリースピン発動率が上がります。Special Spinsはベットの30倍です。Normal Bonus購入はベットの100倍、Super Bonus購入はベットの200倍です。すべてのモードで最大勝利はベットの2,500倍です。',
 	GAME_INFO_PAYTABLE_TITLE: '配当表（×ベット）',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',

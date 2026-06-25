@@ -64,7 +64,7 @@ export default {
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY: 'मुफ़्त स्पिन के दौरान 4 Bonus प्रतीक इकट्ठा करके Progress Ladder पर एक स्तर ऊपर जाएँ। प्रत्येक स्तर 3 अतिरिक्त मुफ़्त स्पिन और 1 अतिरिक्त Sticky Mystery Reel देता है। Mystery रील अपनी जगह रहती हैं और हर स्पिन पर एक ही प्रतीक दिखाती हैं।',
 	GAME_INFO_BET_MODES_TITLE: 'दांव मोड',
-	GAME_INFO_BET_MODES_BODY: 'बेस मोड RTP 96.01% है। Bonus Boost की कीमत 2× दांव है और मुफ़्त स्पिन ट्रिगर की संभावना बढ़ाता है। Special Spins की कीमत 30× दांव है। Normal Bonus खरीदने की कीमत 100× दांव है। Super Bonus खरीदने की कीमत 200× दांव है। हर मोड में अधिकतम जीत 50,000× दांव है।',
+	GAME_INFO_BET_MODES_BODY: 'बेस मोड RTP 96.01% है। Bonus Boost की कीमत 2× दांव है और मुफ़्त स्पिन ट्रिगर की संभावना बढ़ाता है। Special Spins की कीमत 30× दांव है। Normal Bonus खरीदने की कीमत 100× दांव है। Super Bonus खरीदने की कीमत 200× दांव है। हर मोड में अधिकतम जीत 2,500× दांव है।',
 	GAME_INFO_PAYTABLE_TITLE: 'पेटेबल (× दांव)',
 	GAME_INFO_PAYTABLE_BODY: 'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
 	GAME_INFO_LEGAL_TITLE: 'कानूनी सूचना',

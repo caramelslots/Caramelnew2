@@ -64,7 +64,7 @@ export default {
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY: 'Во время фриспинов собирайте 4 символа Bonus, чтобы подняться на следующий уровень Progress Ladder. Каждый уровень даёт 3 дополнительных фриспина и открывает 1 дополнительный Sticky Mystery Reel. Mystery-барабаны остаются на месте и раскрывают один и тот же символ при каждом вращении.',
 	GAME_INFO_BET_MODES_TITLE: 'РЕЖИМЫ СТАВОК',
-	GAME_INFO_BET_MODES_BODY: 'RTP базового режима — 96.01%. Bonus Boost стоит 2× ставки и увеличивает шанс запуска фриспинов. Special Spins стоит 30× ставки. Покупка Normal Bonus стоит 100× ставки. Покупка Super Bonus стоит 200× ставки. Максимальный выигрыш — 50 000× ставки в любом режиме.',
+	GAME_INFO_BET_MODES_BODY: 'RTP базового режима — 96.01%. Bonus Boost стоит 2× ставки и увеличивает шанс запуска фриспинов. Special Spins стоит 30× ставки. Покупка Normal Bonus стоит 100× ставки. Покупка Super Bonus стоит 200× ставки. Максимальный выигрыш — 2 500× ставки в любом режиме.',
 	GAME_INFO_PAYTABLE_TITLE: 'ТАБЛИЦА ВЫПЛАТ (× СТАВКА)',
 	GAME_INFO_PAYTABLE_BODY: 'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
 	GAME_INFO_LEGAL_TITLE: 'ПРАВОВАЯ ИНФОРМАЦИЯ',

@@ -69,7 +69,7 @@ export default {
 		'Selama putaran gratis, kumpulkan 4 simbol Bonus untuk naik satu tingkat di Progress Ladder. Setiap tingkat memberikan 3 putaran gratis tambahan dan membuka 1 Sticky Mystery Reel tambahan. Reel Mystery tetap di tempatnya dan menampilkan simbol yang sama setiap putaran.',
 	GAME_INFO_BET_MODES_TITLE: 'MODE TARUHAN',
 	GAME_INFO_BET_MODES_BODY:
-		'RTP mode dasar adalah 96,01%. Bonus Boost berharga 2× taruhan dan meningkatkan peluang memicu putaran gratis. Special Spins berharga 30× taruhan. Beli Normal Bonus berharga 100× taruhan. Beli Super Bonus berharga 200× taruhan. Kemenangan maksimum adalah 50.000× taruhan di setiap mode.',
+		'RTP mode dasar adalah 96,01%. Bonus Boost berharga 2× taruhan dan meningkatkan peluang memicu putaran gratis. Special Spins berharga 30× taruhan. Beli Normal Bonus berharga 100× taruhan. Beli Super Bonus berharga 200× taruhan. Kemenangan maksimum adalah 2.500× taruhan di setiap mode.',
 	GAME_INFO_PAYTABLE_TITLE: 'TABEL BAYARAN (× TARUHAN)',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
