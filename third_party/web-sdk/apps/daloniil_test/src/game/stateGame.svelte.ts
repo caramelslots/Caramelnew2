@@ -239,6 +239,10 @@ const scatterLandIndex = () => {
 	return stateGame.scatterCounter as 1 | 2 | 3 | 4 | 5;
 };
 
+/** True while any reel is scrolling or landing (pre-spin, spin, bounce). */
+const boardReelsActive = () =>
+	stateGame.board.some((reel) => reel.reelState.motion !== 'stopped');
+
 const { enhanceBoard } = createEnhanceBoard();
 const enhancedBoard = enhanceBoard({ board: stateGame.board });
 
@@ -250,6 +254,7 @@ export const stateGameDerived = {
 	onSymbolLand,
 	boardLayout,
 	boardRaw,
+	boardReelsActive,
 	scatterLandIndex,
 	enhancedBoard,
 	getWinLevelDataByWinLevelAlias,

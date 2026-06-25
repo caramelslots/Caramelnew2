@@ -8,8 +8,8 @@
 	import Symbol from './Symbol.svelte';
 	import SymbolWrap from './SymbolWrap.svelte';
 	import { getSymbolInfo, getSymbolX, toRevealedRawSymbol } from '../game/utils';
-	import { WIN_BOUNCE, DIM_NON_WINNING, MYSTERY_BG_UNCOVER_MS } from '../game/constants';
-	import { stateGame } from '../game/stateGame.svelte';
+	import { WIN_BOUNCE, DIM_NON_WINNING, MYSTERY_BG_UNCOVER_MS, SYMBOL_SIZE, BOARD_DIMENSIONS, isVisibleBoardSymbolIndex } from '../game/constants';
+	import { stateGame, stateGameDerived } from '../game/stateGame.svelte';
 	import type { ReelSymbol } from '../game/stateGame.svelte';
 
 	type Props = {
@@ -42,6 +42,19 @@
 	);
 	const isSpinningSymbol = $derived(props.reelSymbol.symbolState === 'spin');
 	const applyWinPresentation = $derived(isWinningState && !isSpinningSymbol);
+	const activeSymbolCount = $derived(stateGame.board[props.reelIndex].reelState.activeSymbolCount);
+	const isPaddingSymbol = $derived(
+		!isVisibleBoardSymbolIndex(props.reelSymbol.symbolIndex, activeSymbolCount),
+	);
+	// Parked padding rows sit at y≈−50 / y≈550. While reels move, hide them when
+	// still outside the 5×5 grid so spin mask runway cannot flash off-screen symbols.
+	const hideParkedPaddingDuringSpin = $derived.by(() => {
+		if (!stateGameDerived.boardReelsActive() || !isPaddingSymbol) return false;
+		const y = props.reelSymbol.symbolY();
+		const half = SYMBOL_SIZE / 2;
+		const gridBottom = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
+		return y + half <= 0 || y - half >= gridBottom;
+	});
 	const dimAlphaTween = new Tween(1);
 
 	$effect(() => {
@@ -143,7 +156,7 @@
 	);
 </script>
 
-{#if showBgSymbol && revealedRawSymbol}
+{#if showBgSymbol && revealedRawSymbol && !hideParkedPaddingDuringSpin}
 	<SymbolWrap
 		x={getSymbolX(props.reelIndex)}
 		y={props.reelSymbol.symbolY()}
@@ -160,33 +173,35 @@
 	</SymbolWrap>
 {/if}
 
-<SymbolWrap
-	x={getSymbolX(props.reelIndex)}
-	y={props.reelSymbol.symbolY() + (applyWinPresentation ? winYOffset.current : 0)}
-	spinActive={isSpinningSymbol}
-	scaleX={props.reelSymbol.landScaleX() * (applyWinPresentation ? winScale.current : 1)}
-	scaleY={props.reelSymbol.landScaleY() * (applyWinPresentation ? winScale.current : 1)}
-	alpha={isSpinningSymbol ? 1 : dimAlphaTween.current}
->
-	{#key `${props.reelSymbol.symbolState}-${symbolInfo.type}-${symbolInfo.animationName ?? ''}`}
-		<Symbol
-			state={props.reelSymbol.symbolState}
-			rawSymbol={props.reelSymbol.rawSymbol}
-			oncomplete={() => {
-				const state = props.reelSymbol.symbolState;
-				// Container win bounce completes via `runWinBounce` — don't fire
-				// from the spine idle mount oncomplete.
-				if (state === 'win' && !usesDedicatedSpineWin) return;
-				if (
-					state === 'win' ||
-					state === 'mysteryReveal' ||
-					state === 'mysteryCollapse' ||
-					state === 'land'
-				) {
-					props.reelSymbol.oncomplete();
-				}
-				if (state === 'land') props.reelSymbol.symbolState = 'static';
-			}}
-		/>
-	{/key}
-</SymbolWrap>
+{#if !hideParkedPaddingDuringSpin}
+	<SymbolWrap
+		x={getSymbolX(props.reelIndex)}
+		y={props.reelSymbol.symbolY() + (applyWinPresentation ? winYOffset.current : 0)}
+		spinActive={isSpinningSymbol}
+		scaleX={props.reelSymbol.landScaleX() * (applyWinPresentation ? winScale.current : 1)}
+		scaleY={props.reelSymbol.landScaleY() * (applyWinPresentation ? winScale.current : 1)}
+		alpha={isSpinningSymbol ? 1 : dimAlphaTween.current}
+	>
+		{#key `${props.reelSymbol.symbolState}-${symbolInfo.type}-${symbolInfo.animationName ?? ''}`}
+			<Symbol
+				state={props.reelSymbol.symbolState}
+				rawSymbol={props.reelSymbol.rawSymbol}
+				oncomplete={() => {
+					const state = props.reelSymbol.symbolState;
+					// Container win bounce completes via `runWinBounce` — don't fire
+					// from the spine idle mount oncomplete.
+					if (state === 'win' && !usesDedicatedSpineWin) return;
+					if (
+						state === 'win' ||
+						state === 'mysteryReveal' ||
+						state === 'mysteryCollapse' ||
+						state === 'land'
+					) {
+						props.reelSymbol.oncomplete();
+					}
+					if (state === 'land') props.reelSymbol.symbolState = 'static';
+				}}
+			/>
+		{/key}
+	</SymbolWrap>
+{/if}

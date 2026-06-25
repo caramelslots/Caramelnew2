@@ -229,8 +229,7 @@ export const WIN_BOUNCE = {
 
 /**
  * Extra mask coverage above the grid while win symbols bounce — see
- * BoardMask.svelte (`winSpotlightActive`). Kept at 0 in BOARD_MASK_OVERFLOW
- * so spinning symbols stay hidden above the board frame.
+ * BoardMask.svelte (`winSpotlightActive`).
  */
 export const BOARD_MASK_WIN_BOUNCE_TOP =
 	WIN_BOUNCE.yOffsetPeakPx + Math.ceil(((WIN_BOUNCE.scalePeak - 1) * SYMBOL_SIZE) / 2);
@@ -240,11 +239,18 @@ export const BOARD_MASK_WIN_BOUNCE_TOP =
  * slide *behind* the board edge instead of vanishing over the parchment
  * ("in the air"). top/bottom are measured from the grid edges outward.
  *
- * NOTE: at rest the reel parks one padding symbol just below the grid
- * (top edge ~10px under the grid bottom). Keep `bottom` ≲ 10 so that parked
- * symbol stays hidden in the idle state.
+ * Idle values — keep tight so parked padding rows stay hidden (top pad
+ * center ≈ y−50, bottom pad center ≈ y550).
  */
-export const BOARD_MASK_OVERFLOW = { top: 0, bottom: 12 } as const;
+export const BOARD_MASK_OVERFLOW = { top: 0, bottom: 10 } as const;
+
+/**
+ * Bottom mask runway while reels scroll or bounce — see BoardMask.svelte
+ * (`boardReelsActive`). Top stays at 0: any top overflow exposes the parked
+ * padding row (center y−50). Parked padding is culled in ReelSymbol while
+ * reels move; keep bottom modest so symbols do not bleed into the frame gap.
+ */
+export const BOARD_MASK_SPIN_OVERFLOW = { top: 0, bottom: 20 } as const;
 
 export const BACKGROUND_RATIO = 2039 / 1000;
 export const PORTRAIT_BACKGROUND_RATIO = 1242 / 2208;
