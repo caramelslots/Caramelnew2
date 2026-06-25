@@ -296,11 +296,6 @@ export default {
 			scale: 2,
 		},
 	},
-	progressBar: {
-		type: 'sprites',
-		src: assetUrl('assets/sprites/progressBar/progressBar.json'),
-		preload: true,
-	},
 	fsCongBoard: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/fsCong/fs_cong.png'),
