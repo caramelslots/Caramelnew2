@@ -54,4 +54,11 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'RECOLHA 4 SÍMBOLOS DE GATO DURANTE RODADAS GRÁTIS E OBTENHA',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Fundos insuficientes',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Carregue o saldo ou diminua a aposta para continuar a jogar.',
+	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Limite de perdas atingido',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'O jogo automático parou porque o limite de perdas foi atingido.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'Limite de ganho atingido',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'O jogo automático parou porque o limite de ganho único foi atingido.',
+	AUTOPLAY_MSG_OK: 'OK',
 };

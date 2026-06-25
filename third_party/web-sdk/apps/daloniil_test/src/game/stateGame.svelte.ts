@@ -82,6 +82,8 @@ import { devPreview } from './devPreview.svelte';
 import { gameSpeedMultFor } from './gameSpeed';
 
 const REEL_SCROLL_SPEED_MULT_SLOW = 0.5;
+/** Speed multiplier for reels that slow down after 2 cats land (basegame anticipation). */
+const REEL_SCROLL_SPEED_MULT_CAT = 0.35;
 
 const withReelScrollSpeedMult = <T extends typeof SPIN_OPTIONS_DEFAULT>(
 	options: T,
@@ -136,7 +138,8 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 		const base =
 			reel.reelState.spinType === 'fast' ? SPIN_OPTIONS_FAST : SPIN_OPTIONS_DEFAULT;
 		const devMult = devPreview.slowReelScroll ? REEL_SCROLL_SPEED_MULT_SLOW : 1;
-		return withReelScrollSpeedMult(base, devMult * gameSpeedMultFor(stateGame.gameSpeed));
+		const catMult = stateGame.catSlowReels.includes(reelIndex) ? REEL_SCROLL_SPEED_MULT_CAT : 1;
+		return withReelScrollSpeedMult(base, devMult * catMult * gameSpeedMultFor(stateGame.gameSpeed));
 	};
 
 	return reel;
@@ -160,6 +163,8 @@ export const stateGame = $state({
 	gameType: 'basegame' as GameType,
 	multiplierBoard: [] as (MultiplierSymbol | undefined)[][],
 	scatterCounter: 0,
+	/** Reel indices that should spin at reduced speed (cat anticipation in basegame). Reset after each spin. */
+	catSlowReels: [] as number[],
 	// === Cash Stacks specific ===
 	// Bonus-символы, собранные в текущей FS-сессии (drives Progress Ladder).
 	bonusCollected: 0,

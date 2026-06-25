@@ -54,4 +54,11 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'СОБЕРИТЕ 4 СИМВОЛА КОТА ВО ВРЕМЯ ФРИСПИНОВ И ПОЛУЧИТЕ',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Недостаточно средств',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Пополните баланс или уменьшите ставку, чтобы продолжить игру.',
+	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Достигнут лимит потерь',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'Автоигра остановлена, так как достигнут лимит потерь.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'Достигнут лимит выигрыша',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'Автоигра остановлена, так как достигнут лимит одного выигрыша.',
+	AUTOPLAY_MSG_OK: 'ОК',
 };

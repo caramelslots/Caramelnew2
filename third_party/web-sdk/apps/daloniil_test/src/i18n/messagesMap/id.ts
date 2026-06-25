@@ -54,26 +54,11 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'KUMPULKAN 4 SIMBOL KUCING SELAMA PUTARAN GRATIS DAN DAPATKAN',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
-	GAME_INFO_TITLE: 'INFORMASI PERMAINAN',
-	GAME_INFO_ABOUT_TITLE: 'TENTANG PERMAINAN',
-	GAME_INFO_ABOUT_BODY:
-		'Wok Fury adalah slot 5 reel, 5 baris dengan 25 payline. Kemenangan dibayar dari kiri ke kanan pada reel yang berdekatan, dimulai dari reel paling kiri. Hanya kemenangan tertinggi per garis yang dibayar.',
-	GAME_INFO_WILD_TITLE: 'SIMBOL WILD',
-	GAME_INFO_WILD_BODY:
-		'Simbol Wild menggantikan semua simbol berbayar kecuali simbol Bonus. Wild membayar 225× taruhan untuk 5 sejenis.',
-	GAME_INFO_FS_TITLE: 'PUTARAN GRATIS',
-	GAME_INFO_FS_BODY:
-		'Dapatkan 3 simbol Bonus di permainan dasar untuk memicu Normal Bonus dengan 10 putaran gratis. Dapatkan 4 simbol Bonus atau lebih untuk memicu Super Bonus dengan 10 putaran gratis dan 1 Sticky Mystery Reel sejak awal.',
-	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
-	GAME_INFO_MYSTERY_BODY:
-		'Selama putaran gratis, kumpulkan 4 simbol Bonus untuk naik satu tingkat di Progress Ladder. Setiap tingkat memberikan 3 putaran gratis tambahan dan membuka 1 Sticky Mystery Reel tambahan. Reel Mystery tetap di tempatnya dan menampilkan simbol yang sama setiap putaran.',
-	GAME_INFO_BET_MODES_TITLE: 'MODE TARUHAN',
-	GAME_INFO_BET_MODES_BODY:
-		'RTP mode dasar adalah 96,01%. Bonus Boost berharga 2× taruhan dan meningkatkan peluang memicu putaran gratis. Special Spins berharga 30× taruhan. Beli Normal Bonus berharga 100× taruhan. Beli Super Bonus berharga 200× taruhan. Kemenangan maksimum adalah 50.000× taruhan di setiap mode.',
-	GAME_INFO_PAYTABLE_TITLE: 'TABEL BAYARAN (× TARUHAN)',
-	GAME_INFO_PAYTABLE_BODY:
-		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
-	GAME_INFO_LEGAL_TITLE: 'PEMBERITAHUAN HUKUM',
-	GAME_INFO_LEGAL_BODY:
-		'Kerusakan membatalkan semua pembayaran dan permainan. Koneksi internet yang stabil diperlukan. Jika terputus, muat ulang permainan untuk menyelesaikan ronde yang belum selesai. RTP teoretis dihitung dari banyak putaran. Gerakan reel hanya ilustratif.',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Dana tidak cukup',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Isi saldo atau turunkan taruhan untuk melanjutkan permainan.',
+	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Batas kerugian tercapai',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'Main otomatis dihentikan karena batas kerugian telah tercapai.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'Batas kemenangan tercapai',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'Main otomatis dihentikan karena batas kemenangan tunggal telah tercapai.',
+	AUTOPLAY_MSG_OK: 'OK',
 };

@@ -54,4 +54,11 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'THU THẬP 4 BIỂU TƯỢNG MÈO TRONG VÒNG QUAY MIỄN PHÍ VÀ NHẬN',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Không đủ tiền',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Nạp thêm số dư hoặc giảm mức cược để tiếp tục chơi.',
+	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Đạt giới hạn thua',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'Tự chơi đã dừng vì đã đạt giới hạn thua.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'Đạt giới hạn thắng',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'Tự chơi đã dừng vì đã đạt giới hạn thắng đơn.',
+	AUTOPLAY_MSG_OK: 'OK',
 };

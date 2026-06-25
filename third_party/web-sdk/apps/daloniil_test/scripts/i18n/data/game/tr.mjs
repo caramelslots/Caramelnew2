@@ -54,4 +54,11 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'ÜCRETSİZ DÖNÜŞLER SIRASINDA 4 KEDİ SEMBOLÜ TOPLAYIN VE',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL KAZANIN',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Yetersiz bakiye',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Oyuna devam etmek için bakiyenizi yükleyin veya bahsi düşürün.',
+	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Kayıp limitine ulaşıldı',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'Kayıp limitine ulaşıldığı için otomatik oyun durduruldu.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'Kazanç limitine ulaşıldı',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'Tek kazanç limitine ulaşıldığı için otomatik oyun durduruldu.',
+	AUTOPLAY_MSG_OK: 'TAMAM',
 };

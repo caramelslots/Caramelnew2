@@ -54,4 +54,11 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'ZBIERZ 4 SYMBOLE KOTA PODCZAS DARMOWYCH SPINÓW I OTRZYMAJ',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Niewystarczające środki',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Doładuj saldo lub zmniejsz zakład, aby kontynuować grę.',
+	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Osiągnięto limit strat',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'Autogra została zatrzymana, ponieważ osiągnięto limit strat.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'Osiągnięto limit wygranej',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'Autogra została zatrzymana, ponieważ osiągnięto limit pojedynczej wygranej.',
+	AUTOPLAY_MSG_OK: 'OK',
 };

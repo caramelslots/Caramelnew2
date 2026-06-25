@@ -11,10 +11,10 @@
 
 	import ModalError from 'components-ui-html/src/components/ModalError.svelte';
 	import ModalBetMenu from 'components-ui-html/src/components/ModalBetMenu.svelte';
-	import ModalAutoSpinMessage from 'components-ui-html/src/components/ModalAutoSpinMessage.svelte';
 	import ModalPayTable from 'components-ui-html/src/components/ModalPayTable.svelte';
 	import ModalSettings from 'components-ui-html/src/components/ModalSettings.svelte';
 	import ModalGameRules from './ModalGameRules.svelte';
+	import AutoplayMessageOverlay from './AutoplayMessageOverlay.svelte';
 
 	type Props = {
 		version: Snippet;
@@ -28,7 +28,8 @@
 <!-- ModalBuyBonus: заменён на BuyBonusOverlay -->
 <!-- ModalBuyBonusConfirm: заменён на BuyBonusConfirmOverlay -->
 <!-- ModalAutoSpin: заменён на FeaturesAutoSpinOverlay -->
-<ModalAutoSpinMessage />
+<!-- ModalAutoSpinMessage: заменён на AutoplayMessageOverlay (кастомный дизайн) -->
+<AutoplayMessageOverlay />
 <ModalPayTable>
 	{@render props.version()}
 </ModalPayTable>

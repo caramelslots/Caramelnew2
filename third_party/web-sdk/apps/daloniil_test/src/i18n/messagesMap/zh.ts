@@ -54,26 +54,11 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: '在免费旋转期间收集 4 个猫符号可获得',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
-	GAME_INFO_TITLE: '游戏信息',
-	GAME_INFO_ABOUT_TITLE: '关于游戏',
-	GAME_INFO_ABOUT_BODY:
-		'Wok Fury 是一款 5 转轴 5 行、25 条支付线的老虎机。奖金从最左侧转轴开始，在相邻转轴上从左向右支付。每条线仅支付最高奖金。',
-	GAME_INFO_WILD_TITLE: 'WILD 符号',
-	GAME_INFO_WILD_BODY:
-		'Wild 符号可替代除 Bonus 符号外的所有赔付符号。Wild 在 5 连时支付 225× 投注。',
-	GAME_INFO_FS_TITLE: '免费旋转',
-	GAME_INFO_FS_BODY:
-		'在基础游戏中获得 3 个 Bonus 符号可触发含 10 次免费旋转的 Normal Bonus。获得 4 个或更多 Bonus 符号可触发含 10 次免费旋转且从一开始就有 1 个 Sticky Mystery Reel 的 Super Bonus。',
-	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
-	GAME_INFO_MYSTERY_BODY:
-		'在免费旋转期间，收集 4 个 Bonus 符号可在 Progress Ladder 上提升一级。每级奖励 3 次额外免费旋转并解锁 1 个额外的 Sticky Mystery Reel。Mystery 转轴保持固定，每次旋转显示相同符号。',
-	GAME_INFO_BET_MODES_TITLE: '投注模式',
-	GAME_INFO_BET_MODES_BODY:
-		'基础模式 RTP 为 96.01%。Bonus Boost 花费 2× 投注并提高触发免费旋转的几率。Special Spins 花费 30× 投注。购买 Normal Bonus 花费 100× 投注，购买 Super Bonus 花费 200× 投注。所有模式的最大赢奖为 50,000× 投注。',
-	GAME_INFO_PAYTABLE_TITLE: '赔付表（× 投注）',
-	GAME_INFO_PAYTABLE_BODY:
-		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
-	GAME_INFO_LEGAL_TITLE: '法律声明',
-	GAME_INFO_LEGAL_BODY:
-		'故障将使所有赔付和游戏无效。需要稳定的网络连接。如发生断线，请重新加载游戏以完成未结束的回合。理论 RTP 基于大量旋转计算。转轴运动仅供参考。',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: '余额不足',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: '请充值或降低投注额以继续游戏。',
+	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: '已达亏损上限',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY: '自动游戏已停止，因为已达亏损上限。',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: '已达赢奖上限',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: '自动游戏已停止，因为已达单次赢奖上限。',
+	AUTOPLAY_MSG_OK: '确定',
 };

@@ -120,6 +120,28 @@ const animateBonusSymbols = async ({ positions }: { positions: Position[] }) => 
 	await waitForGameSpeed(BONUS_WIN_POST_DELAY_MS, stateGame.gameSpeed);
 };
 
+/**
+ * In basegame only: if the result board contains 2+ cat symbols (B), returns
+ * the indices of every reel that comes AFTER the reel that lands the 2nd cat.
+ * Those reels will receive a reduced scroll speed so they visibly slow down
+ * while the earlier reels (with cats) are already landing.
+ */
+const getCatSlowReels = (revealEvent: BookEventOfType<'reveal'>): number[] => {
+	if (revealEvent.gameType !== 'basegame') return [];
+
+	const reelCount = revealEvent.board.length;
+	let catsFound = 0;
+
+	for (let i = 0; i < reelCount; i++) {
+		catsFound += revealEvent.board[i].filter((s) => s.name === 'B').length;
+		if (catsFound >= 2 && i + 1 < reelCount) {
+			return revealEvent.board.map((_, ri) => ri).filter((ri) => ri > i);
+		}
+	}
+
+	return [];
+};
+
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
 	reveal: async (bookEvent: BookEventOfType<'reveal'>, { bookEvents }: BookEventContext) => {
 		const isBonusGame = checkIsMultipleRevealEvents({ bookEvents });
@@ -171,11 +193,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Full reel scroll starts here once RGS has returned the result board.
 		// Frozen Mystery reels don't spin — they stay showing ? until FS ends.
 		// Pending-collapse reels are also skipped: the collapse handles their display.
+		stateGame.catSlowReels = getCatSlowReels(bookEvent);
 		await stateGameDerived.enhancedBoard.spin({
 			revealEvent: bookEvent,
 			paddingBoard: config.paddingReels[bookEvent.gameType],
 			frozenReelIndices: [...stateGame.mysteryReelsFrozen, ...pendingCollapseReels],
 		});
+		stateGame.catSlowReels = [];
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
 	},
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>, { bookEvents }: BookEventContext) => {

@@ -54,4 +54,11 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'मुफ़्त स्पिन के दौरान 4 बिल्ली प्रतीक इकट्ठा करें और पाएं',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'अपर्याप्त धनराशि',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'खेल जारी रखने के लिए बैलेंस बढ़ाएँ या दांव कम करें।',
+	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'हानि सीमा पहुँची',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'हानि सीमा पूरी होने के कारण ऑटोप्ले रोक दिया गया।',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'जीत सीमा पहुँची',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'एकल जीत सीमा पूरी होने के कारण ऑटोप्ले रोक दिया गया।',
+	AUTOPLAY_MSG_OK: 'ठीक है',
 };

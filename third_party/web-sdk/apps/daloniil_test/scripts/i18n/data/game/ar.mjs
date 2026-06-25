@@ -54,4 +54,11 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'اجمع 4 رموز قطة أثناء الدورات المجانية واحصل على',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'رصيد غير كافٍ',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'أضف رصيداً أو خفّض الرهان لمتابعة اللعب.',
+	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'تم الوصول لحد الخسارة',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'توقف اللعب التلقائي لأنه تم الوصول إلى حد الخسارة.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'تم الوصول لحد الفوز',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'توقف اللعب التلقائي لأنه تم الوصول إلى حد الفوز الواحد.',
+	AUTOPLAY_MSG_OK: 'موافق',
 };

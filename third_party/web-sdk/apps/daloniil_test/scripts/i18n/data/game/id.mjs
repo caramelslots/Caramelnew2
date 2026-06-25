@@ -54,4 +54,11 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'KUMPULKAN 4 SIMBOL KUCING SELAMA PUTARAN GRATIS DAN DAPATKAN',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Dana tidak cukup',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Isi saldo atau turunkan taruhan untuk melanjutkan permainan.',
+	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Batas kerugian tercapai',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'Main otomatis dihentikan karena batas kerugian telah tercapai.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'Batas kemenangan tercapai',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'Main otomatis dihentikan karena batas kemenangan tunggal telah tercapai.',
+	AUTOPLAY_MSG_OK: 'OK',
 };

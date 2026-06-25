@@ -54,4 +54,11 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'COLLECTEZ 4 SYMBOLES CHAT PENDANT LES TOURS GRATUITS ET OBTENEZ',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Fonds insuffisants',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Rechargez votre solde ou réduisez la mise pour continuer à jouer.',
+	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Limite de pertes atteinte',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'Le jeu automatique s\'est arrêté car la limite de pertes a été atteinte.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'Limite de gain atteinte',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'Le jeu automatique s\'est arrêté car la limite de gain unique a été atteinte.',
+	AUTOPLAY_MSG_OK: 'OK',
 };

@@ -54,4 +54,11 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'COLLECT 4 CAT SYMBOLS DURING FREE SPINS AND GET',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Insufficient funds',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Top up your balance or decrease the bet to continue the game.',
+	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Loss limit reached',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'Auto play has stopped because the loss limit was reached.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'Single win limit reached',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'Auto play has stopped because the single win limit was reached.',
+	AUTOPLAY_MSG_OK: 'OK',
 };

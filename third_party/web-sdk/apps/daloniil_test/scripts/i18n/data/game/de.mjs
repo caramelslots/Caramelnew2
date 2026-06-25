@@ -54,4 +54,11 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'SAMMLE 4 KATZEN-SYMBOLE WÄHREND FREISPIELEN UND ERHALTE',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Unzureichendes Guthaben',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Laden Sie Ihr Guthaben auf oder senken Sie den Einsatz, um weiterzuspielen.',
+	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Verlustlimit erreicht',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'Das Autospiel wurde gestoppt, weil das Verlustlimit erreicht wurde.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'Einzelgewinnlimit erreicht',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'Das Autospiel wurde gestoppt, weil das Einzelgewinnlimit erreicht wurde.',
+	AUTOPLAY_MSG_OK: 'OK',
 };

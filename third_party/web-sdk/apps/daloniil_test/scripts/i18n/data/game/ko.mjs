@@ -54,4 +54,11 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: '무료 스핀 중 고양이 심볼 4개를 모아 획득',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: '잔액 부족',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: '게임을 계속하려면 잔액을 충전하거나 베팅을 낮추세요.',
+	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: '손실 한도 도달',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY: '손실 한도에 도달하여 자동 플레이가 중지되었습니다.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: '승리 한도 도달',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: '단일 승리 한도에 도달하여 자동 플레이가 중지되었습니다.',
+	AUTOPLAY_MSG_OK: '확인',
 };

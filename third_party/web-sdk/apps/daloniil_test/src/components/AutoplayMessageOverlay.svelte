@@ -1,8 +1,11 @@
 <!--
 	AutoplayMessageOverlay.svelte — сообщение об остановке автоигры (недостаток средств и др.).
-	bg_autoplay_message_panel + autoplay_message_ok_bg; close — bet/plus.png повёрнутый на 45°.
+	bg_autoplay_message_panel (поздравление фриспины.png) + autoplay_message_ok_bg (b1.png).
+	Close — HUD_ASSETS.betPlus повёрнутый на 45°.
 -->
 <script lang="ts">
+	import { fade, scale } from 'svelte/transition';
+	import { backOut, cubicOut } from 'svelte/easing';
 	import { stateModal } from 'state-shared';
 	import { getContextLayout } from 'utils-layout';
 
@@ -19,29 +22,26 @@
 
 	type AutoSpinMessageKey = 'insufficientFunds' | 'lossLimitReached' | 'singleWinLimitReached';
 
-	const COPY: Record<
-		AutoSpinMessageKey,
-		{ title: string; body: string }
-	> = {
+	const messageMap = $derived<Record<AutoSpinMessageKey, { title: string; body: string }>>({
 		insufficientFunds: {
-			title: 'Insufficient funds',
-			body: 'Top up your balance or decrease the bet to continue the game.',
+			title: context.i18nDerived.autoplayMessageInsufficientFundsTitle(),
+			body: context.i18nDerived.autoplayMessageInsufficientFundsBody(),
 		},
 		lossLimitReached: {
-			title: 'Loss limit reached',
-			body: 'Auto play has stopped because the loss limit was reached.',
+			title: context.i18nDerived.autoplayMessageLossLimitTitle(),
+			body: context.i18nDerived.autoplayMessageLossLimitBody(),
 		},
 		singleWinLimitReached: {
-			title: 'Single win limit reached',
-			body: 'Auto play has stopped because the single win limit was reached.',
+			title: context.i18nDerived.autoplayMessageSingleWinLimitTitle(),
+			body: context.i18nDerived.autoplayMessageSingleWinLimitBody(),
 		},
-	};
+	});
 
 	const isOpen = $derived(stateModal.modal?.name === 'autoSpinMessage');
 	const messageKey = $derived(
 		stateModal.modal?.name === 'autoSpinMessage' ? stateModal.modal.message : 'insufficientFunds',
 	);
-	const copy = $derived(COPY[messageKey]);
+	const copy = $derived(messageMap[messageKey]);
 
 	const layoutType = $derived(stateLayoutDerived.layoutType());
 	const isPortrait = $derived(layoutType === 'portrait');
@@ -61,68 +61,118 @@
 	}}
 />
 
-<div
-	class="message-panel"
-	class:portrait={isPortrait}
-	class:popout-l={isPopout}
-	class:popout-s={isPopoutSmall}
-	role="dialog"
-	aria-modal="true"
-	aria-hidden={!isOpen}
-	data-test="autoplay-message-overlay"
->
-	<img class="panel-bg" src={bgUrl} alt="" draggable="false" loading="eager" />
+{#if isOpen}
+	<div
+		class="message-overlay"
+		role="presentation"
+		transition:fade={{ duration: 180 }}
+	>
+		<button
+			class="message-backdrop"
+			type="button"
+			aria-label="close"
+			onclick={close}
+		></button>
 
-	<div class="panel-content">
-		<header class="panel-header">
-			<button
-				type="button"
-				class="close-button"
-				onclick={close}
-				aria-label="close"
-				data-test="autoplay-message-close"
-			>
-				<img class="close-icon" src={closeIconUrl} alt="" draggable="false" />
-			</button>
-		</header>
+		<div
+			class="message-panel"
+			class:portrait={isPortrait}
+			class:popout-l={isPopout}
+			class:popout-s={isPopoutSmall}
+			role="dialog"
+			aria-modal="true"
+			data-test="autoplay-message-overlay"
+			in:scale={{ duration: 320, easing: backOut, start: 0.88, opacity: 0 }}
+			out:scale={{ duration: 200, easing: cubicOut, start: 0.95, opacity: 0 }}
+		>
+			<div class="panel-bg-clip">
+				<img class="panel-bg" src={bgUrl} alt="" draggable="false" loading="eager" />
+			</div>
 
-		<section class="message-body" aria-live="polite">
-			<h2 class="message-title" data-test="auto-spin-stop-content">{copy.title}</h2>
-			<p class="message-text">{copy.body}</p>
-		</section>
+			<div class="panel-content">
+				<header class="panel-header">
+					<button
+						type="button"
+						class="close-button"
+						onclick={close}
+						aria-label="close"
+						data-test="autoplay-message-close"
+					>
+						<img class="close-icon" src={closeIconUrl} alt="" draggable="false" />
+					</button>
+				</header>
 
-		<footer class="message-actions">
-			<button
-				type="button"
-				class="ok-btn"
-				style:background-image="url('{okButtonBgUrl}')"
-				onclick={close}
-				data-test="autoplay-message-ok"
-			>
-				OK
-			</button>
-		</footer>
+				<section class="message-body" aria-live="polite">
+					<h2 class="message-title" data-test="auto-spin-stop-content">{copy.title}</h2>
+					<p class="message-text">{copy.body}</p>
+				</section>
+
+				<footer class="message-actions">
+					<button
+						type="button"
+						class="ok-btn"
+						style:background-image="url('{okButtonBgUrl}')"
+						onclick={close}
+						data-test="autoplay-message-ok"
+					>
+						{context.i18nDerived.autoplayMessageOk()}
+					</button>
+				</footer>
+			</div>
+		</div>
 	</div>
-</div>
+{/if}
 
 <style lang="scss">
+	.message-overlay {
+		position: fixed;
+		inset: 0;
+		z-index: 9998;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 12px;
+		box-sizing: border-box;
+		background: rgba(0, 0, 0, 0.55);
+		pointer-events: auto;
+	}
+
+	.message-backdrop {
+		position: absolute;
+		inset: 0;
+		border: 0;
+		padding: 0;
+		margin: 0;
+		background: transparent;
+		cursor: default;
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	/* Panel background is 1536×1024 (3:2 ratio). */
 	.message-panel {
-		--panel-width: min(640px, 92vw);
-		--panel-aspect: calc(1445 / 1024);
+		--panel-width: min(620px, 92vw);
+		--panel-aspect: calc(1536 / 1024);
 		position: relative;
 		width: var(--panel-width);
 		aspect-ratio: var(--panel-aspect);
 		max-height: 92vh;
 		pointer-events: auto;
-		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
+		filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.75));
+		z-index: 1;
+	}
+
+	/* Clip the bg image so transparent edges of the PNG don't show as dark lines. */
+	.panel-bg-clip {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
 	}
 
 	.panel-bg {
-		position: absolute;
-		inset: 0;
 		display: block;
-		width: 100%;
+		width: 108%;
 		height: 100%;
+		margin: 0 -4%;
 		object-fit: fill;
 		pointer-events: none;
 		user-select: none;
@@ -138,21 +188,21 @@
 		top: 0;
 		left: 0;
 		right: 0;
-		height: 22%;
+		height: 18%;
 		display: flex;
-		justify-content: flex-end;
 		align-items: flex-start;
-		padding: 0 4% 0 0;
+		justify-content: flex-end;
+		padding: 0 1% 0 0;
 		box-sizing: border-box;
 		pointer-events: none;
 	}
 
 	.close-button {
 		position: relative;
-		width: calc(var(--panel-width) * 0.09);
-		height: calc(var(--panel-width) * 0.09);
-		margin-top: calc(var(--panel-width) * 0.038);
-		margin-right: calc(var(--panel-width) * -0.055);
+		width: calc(var(--panel-width) * 0.082);
+		height: calc(var(--panel-width) * 0.082);
+		margin-top: calc(var(--panel-width) * 0.014);
+		margin-right: calc(var(--panel-width) * -0.048);
 		padding: 0;
 		border: 0;
 		outline: none;
@@ -171,15 +221,16 @@
 		}
 
 		&:hover {
-			filter: brightness(1.12);
-			transform: scale(1.06);
+			filter: brightness(1.15);
+			transform: scale(1.07);
 		}
 
 		&:active {
-			transform: scale(0.96);
+			transform: scale(0.94);
 		}
 	}
 
+	/* betPlus icon rotated 45° → becomes an ✕ */
 	.close-icon {
 		width: 100%;
 		height: 100%;
@@ -187,19 +238,21 @@
 		transform: rotate(45deg);
 		pointer-events: none;
 		user-select: none;
+		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
 	}
 
+	/* Text sits in the wooden board area (below the roof, above the bowl). */
 	.message-body {
 		position: absolute;
-		top: 26%;
-		left: 10%;
-		right: 10%;
-		bottom: 24%;
+		top: 19%;
+		left: 8%;
+		right: 8%;
+		bottom: 26%;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: calc(var(--panel-width) * 0.025);
+		gap: calc(var(--panel-width) * 0.028);
 		text-align: center;
 		box-sizing: border-box;
 	}
@@ -207,47 +260,50 @@
 	.message-title {
 		margin: 0;
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.048);
+		font-size: calc(var(--panel-width) * 0.054);
 		font-weight: 900;
 		line-height: 1.05;
-		letter-spacing: 0.02em;
+		letter-spacing: 0.01em;
 		color: #ffd633;
 		text-shadow:
-			0 2px 0 #000,
-			0 -1px 0 #000,
-			1px 0 0 #000,
-			-1px 0 0 #000;
+			0 2px 0 #3b1a00,
+			0 -1px 0 #3b1a00,
+			1px 0 0 #3b1a00,
+			-1px 0 0 #3b1a00,
+			0 0 12px rgba(255, 160, 0, 0.55);
 	}
 
 	.message-text {
 		margin: 0;
-		max-width: 88%;
+		max-width: 84%;
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.028);
+		font-size: calc(var(--panel-width) * 0.031);
 		font-weight: 700;
-		line-height: 1.25;
-		color: #ffffff;
+		line-height: 1.3;
+		color: #f5e0c0;
 		text-shadow:
 			0 1px 0 #000,
-			1px 1px 2px rgba(0, 0, 0, 0.85);
+			1px 1px 3px rgba(0, 0, 0, 0.9);
 	}
 
+	/* OK button in the lower portion of the panel. */
 	.message-actions {
 		position: absolute;
-		top: 63%;
+		bottom: 25%;
 		left: 0;
 		right: 0;
-		height: 14%;
+		height: 13%;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		box-sizing: border-box;
 	}
 
+	/* Button background is b1.png (343×165). */
 	.ok-btn {
 		width: auto;
 		height: 100%;
-		max-width: 42%;
+		max-width: 46%;
 		aspect-ratio: 343 / 165;
 		padding: 0;
 		border: 0;
@@ -258,69 +314,74 @@
 		background-position: center;
 		background-size: 100% 100%;
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.034);
+		font-size: calc(var(--panel-width) * 0.038);
 		font-weight: 900;
-		letter-spacing: 0.08em;
+		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: #f5e6c8;
-		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+		text-shadow:
+			0 1px 0 #3b1a00,
+			0 0 8px rgba(180, 100, 0, 0.6);
 		transition:
 			transform 0.1s,
 			filter 0.15s;
 
 		&:hover {
-			filter: brightness(1.1);
+			filter: brightness(1.12);
 		}
 
 		&:active {
-			transform: translateY(1px);
+			transform: translateY(2px);
 		}
 	}
 
+	/* ── Portrait ──────────────────────────────────────────────────── */
 	.message-panel.portrait:not(.popout-l):not(.popout-s) {
-		--panel-width: min(680px, 94vw);
+		--panel-width: min(660px, 94vw);
 
 		.close-button {
-			margin-top: calc(var(--panel-width) * 0.045);
-			margin-right: calc(var(--panel-width) * -0.025);
+			margin-top: calc(var(--panel-width) * 0.02);
+			margin-right: calc(var(--panel-width) * -0.04);
 		}
 
 		.message-body {
-			top: 28%;
-			height: 34%;
+			top: 17%;
+			bottom: 28%;
 		}
 
 		.message-title {
-			font-size: calc(var(--panel-width) * 0.052);
+			font-size: calc(var(--panel-width) * 0.058);
 		}
 
 		.message-text {
-			font-size: calc(var(--panel-width) * 0.031);
+			font-size: calc(var(--panel-width) * 0.034);
 		}
 
 		.message-actions {
-			top: 60%;
-			height: 13%;
+			bottom: 24%;
+			height: 12%;
 		}
 	}
 
+	/* ── Popout large ──────────────────────────────────────────────── */
 	.message-panel.popout-l {
-		--panel-width: min(400px, 88vw);
+		--panel-width: min(380px, 88vw);
 	}
 
+	/* ── Popout small ──────────────────────────────────────────────── */
 	.message-panel.popout-s {
-		--panel-width: min(240px, 72vw);
+		--panel-width: min(230px, 72vw);
 
 		.message-title {
-			font-size: calc(var(--panel-width) * 0.055);
+			font-size: calc(var(--panel-width) * 0.062);
 		}
 
 		.message-text {
-			font-size: calc(var(--panel-width) * 0.032);
+			font-size: calc(var(--panel-width) * 0.036);
 		}
 
 		.ok-btn {
-			font-size: calc(var(--panel-width) * 0.038);
+			font-size: calc(var(--panel-width) * 0.043);
 		}
 	}
 </style>

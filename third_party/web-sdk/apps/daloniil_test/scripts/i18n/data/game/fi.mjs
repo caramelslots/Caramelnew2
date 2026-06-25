@@ -54,4 +54,11 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'KERÄÄ 4 KISSA-SYMBOLIA ILMAISKIERROSTEN AIKANA JA SAA',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Riittämätön saldo',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Lataa saldoa tai pienennä panosta jatkaaksesi pelaamista.',
+	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Tappioraja saavutettu',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'Automaattipeli pysäytettiin, koska tappioraja saavutettiin.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'Voittoraja saavutettu',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'Automaattipeli pysäytettiin, koska yksittäisen voiton raja saavutettiin.',
+	AUTOPLAY_MSG_OK: 'OK',
 };
