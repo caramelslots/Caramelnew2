@@ -2,6 +2,7 @@
 	CashStacksModals.svelte — локальная замена SDK-овского <Modals> из
 	components-ui-html. Содержит все стандартные модалки SDK, КРОМЕ:
 	  - ModalAutoSpin → FeaturesAutoSpinOverlay (свой дизайн)
+	  - ModalAutoSpinMessage → AutoplayMessageOverlay (рендерится отдельно в Game.svelte)
 	  - ModalBuyBonus → BuyBonusOverlay (рендерится отдельно в Game.svelte)
 	  - ModalBuyBonusConfirm → BuyBonusConfirmOverlay (рендерится отдельно в Game.svelte)
 -->
@@ -10,7 +11,6 @@
 
 	import ModalError from 'components-ui-html/src/components/ModalError.svelte';
 	import ModalBetMenu from 'components-ui-html/src/components/ModalBetMenu.svelte';
-	import ModalAutoSpinMessage from 'components-ui-html/src/components/ModalAutoSpinMessage.svelte';
 	import ModalPayTable from 'components-ui-html/src/components/ModalPayTable.svelte';
 	import ModalGameRules from 'components-ui-html/src/components/ModalGameRules.svelte';
 	import ModalSettings from 'components-ui-html/src/components/ModalSettings.svelte';
@@ -27,7 +27,7 @@
 <!-- ModalBuyBonus: заменён на BuyBonusOverlay -->
 <!-- ModalBuyBonusConfirm: заменён на BuyBonusConfirmOverlay -->
 <!-- ModalAutoSpin: заменён на FeaturesAutoSpinOverlay -->
-<ModalAutoSpinMessage />
+<!-- ModalAutoSpinMessage: заменён на AutoplayMessageOverlay -->
 <ModalPayTable>
 	{@render props.version()}
 </ModalPayTable>

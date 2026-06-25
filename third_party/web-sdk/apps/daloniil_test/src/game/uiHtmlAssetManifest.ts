@@ -57,6 +57,8 @@ export const SETTINGS_TURBO_URLS = [
 export const AUTOSPIN_ASSETS = {
 	bg: uiHtmlAssetUrl('autoplay/bg_auto_panel.png'),
 	close: uiHtmlAssetUrl('autoplay/cross.png'),
+	messageBg: uiHtmlAssetUrl('autoplay/bg_autoplay_message_panel.png'),
+	messageOkBg: uiHtmlAssetUrl('autoplay/autoplay_message_ok_bg.png'),
 	sliderHead: uiHtmlAssetUrl('autoplay/slider/head.png'),
 	sliderFull: uiHtmlAssetUrl('autoplay/slider/full.png'),
 	sliderButton: uiHtmlAssetUrl('autoplay/slider/button.png'),
@@ -98,6 +100,8 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	...SETTINGS_TURBO_URLS,
 	AUTOSPIN_ASSETS.bg,
 	AUTOSPIN_ASSETS.close,
+	AUTOSPIN_ASSETS.messageBg,
+	AUTOSPIN_ASSETS.messageOkBg,
 	AUTOSPIN_ASSETS.sliderHead,
 	AUTOSPIN_ASSETS.sliderFull,
 	AUTOSPIN_ASSETS.sliderButton,

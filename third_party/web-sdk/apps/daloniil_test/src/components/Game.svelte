@@ -39,6 +39,7 @@
 	import FeaturesAutoSpinOverlay from './FeaturesAutoSpinOverlay.svelte';
 	import CashStacksMenuOverlay from './CashStacksMenuOverlay.svelte';
 	import BuyBonusModalShell from './BuyBonusModalShell.svelte';
+	import AutoplayMessageModalShell from './AutoplayMessageModalShell.svelte';
 	import CashStacksBuyBonusPanel from './CashStacksBuyBonusPanel.svelte';
 	import CashStacksDesktopHudOverlay from './CashStacksDesktopHudOverlay.svelte';
 	import CashStacksPortraitHudOverlay from './CashStacksPortraitHudOverlay.svelte';
@@ -109,9 +110,7 @@
 					{/snippet}
 				</UiCashStacksLayout>
 				<Win />
-				{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
-					<FreeSpinCounter />
-				{/if}
+			<FreeSpinCounter />
 				<FreeSpinOutro />
 				<Transition />
 			</FadeContainer>
@@ -133,6 +132,7 @@
 <CashStacksPortraitHudOverlay />
 <CashStacksMenuOverlay />
 <BuyBonusModalShell />
+<AutoplayMessageModalShell />
 <div class="html-underlays">
 	<ProgressLadder />
 </div>

@@ -10,6 +10,8 @@
 	import { FadeContainer } from 'components-pixi';
 
 	import { getContext } from '../game/context';
+	import { getContextLayout } from 'utils-layout';
+	import { computePortraitHudCanvas } from '../game/portraitHudLayout';
 	import {
 		BITMAP_FONT_SCALE,
 		FONT_PROSTOI,
@@ -26,25 +28,50 @@
 	import { stateI18n } from 'state-shared';
 
 	const context = getContext();
+	const { stateLayoutDerived } = getContextLayout();
+
 	const PANEL_RATIO = 1233 / 613;
-	const panelWidth = $derived(SYMBOL_SIZE * 2);
-	const panelSizes = $derived({
-		width: panelWidth,
-		height: panelWidth / PANEL_RATIO,
-	});
-	const scale = 1;
-	const position = $derived({
-		x:
-			context.stateGameDerived.boardLayout().x -
-			context.stateGameDerived.boardLayout().width * 0.5 -
-			panelSizes.width -
-			SYMBOL_SIZE * 0.7,
-		y:
-			context.stateGameDerived.boardLayout().y -
-			context.stateGameDerived.boardLayout().height * 0.5,
+
+	const isPortrait = $derived(stateLayoutDerived.layoutType() === 'portrait');
+	const boardLayout = $derived(context.stateGameDerived.boardLayout());
+	const ml = $derived(stateLayoutDerived.mainLayout());
+
+	// Desktop/landscape: panel to the left of the board
+	const desktopPanelWidth = SYMBOL_SIZE * 2;
+	const desktopPanelSizes = { width: desktopPanelWidth, height: desktopPanelWidth / PANEL_RATIO };
+	const desktopPosition = $derived({
+		x: boardLayout.x - boardLayout.width * 0.5 - desktopPanelSizes.width - SYMBOL_SIZE * 0.7,
+		y: boardLayout.y - boardLayout.height * 0.5,
 	});
 
-	const fontSize = SYMBOL_SIZE * 0.28 * BITMAP_FONT_SCALE;
+	// Portrait: panel centered at the same Y as where "− Spin +" normally appears.
+	// spinCenterY from computePortraitHudCanvas is in canvas CSS px; invert
+	// portraitLocalToCanvasY → localY = ml.height/2 + (canvasY − ml.y) / ml.scale
+	const portraitPanelWidth = $derived(boardLayout.visualWidth * 0.55);
+	const portraitPanelSizes = $derived({
+		width: portraitPanelWidth,
+		height: portraitPanelWidth / PANEL_RATIO,
+	});
+	const portraitPosition = $derived(() => {
+		const hud = computePortraitHudCanvas(stateLayoutDerived, { hideAutoplay: true });
+		// spinCenterY is in canvas CSS px — invert portraitLocalToCanvasY to get local layout Y
+		const spinLocalCenterY = ml.height / 2 + (hud.spin.centerY - ml.y) / ml.scale;
+		// spinClusterCenterX = canvas.width * 0.5 = ml.width / 2 in local coords (spinClusterShiftX = 0)
+		return {
+			x: ml.width / 2 - portraitPanelWidth * 0.5,
+			y: spinLocalCenterY - portraitPanelSizes.height / 2 - 100,
+		};
+	});
+
+	const panelSizes = $derived(isPortrait ? portraitPanelSizes : desktopPanelSizes);
+	const position = $derived(isPortrait ? portraitPosition() : desktopPosition);
+	const scale = 1;
+
+	const fontSize = $derived(
+		isPortrait
+			? (portraitPanelWidth / desktopPanelWidth) * SYMBOL_SIZE * 0.28 * BITMAP_FONT_SCALE
+			: SYMBOL_SIZE * 0.28 * BITMAP_FONT_SCALE,
+	);
 	const maxTextWidth = $derived(panelSizes.width * 0.88);
 	const minTextScale = 0.55;
 	const counterText = $derived(context.i18nDerived.fsCounterText(current, total));
@@ -67,9 +94,7 @@
 	let counterSizes: Sizes = $state({ width: 0, height: 0 });
 
 	const contentWidth = $derived(Math.max(titleSizes.width, counterSizes.width, 1));
-	const textScale = $derived(
-		Math.min(Math.max(maxTextWidth / contentWidth, minTextScale), 1),
-	);
+	const textScale = $derived(Math.min(Math.max(maxTextWidth / contentWidth, minTextScale), 1));
 
 	const textContainerSizes = $derived({
 		width: titleSizes.width,

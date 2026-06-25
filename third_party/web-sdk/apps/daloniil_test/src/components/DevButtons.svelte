@@ -21,7 +21,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	import { stateBet, stateI18n } from 'state-shared';
+	import { stateBet, stateI18n, stateModal } from 'state-shared';
 
 	import { playBet, playBookEvent, playBookEvents } from '../game/utils';
 	import { eventEmitter } from '../game/eventEmitter';
@@ -786,8 +786,35 @@
 				</div>
 			</section>
 
-			<section>
-				<h4>Full Books</h4>
+		<section>
+			<h4>Modals</h4>
+			<div class="grid">
+				<button
+					type="button"
+					title="Показать autoSpinMessage insufficientFunds"
+					onclick={() => (stateModal.modal = { name: 'autoSpinMessage', message: 'insufficientFunds' })}
+				>
+					Insufficient Funds
+				</button>
+				<button
+					type="button"
+					title="Показать autoSpinMessage lossLimitReached"
+					onclick={() => (stateModal.modal = { name: 'autoSpinMessage', message: 'lossLimitReached' })}
+				>
+					Loss Limit
+				</button>
+				<button
+					type="button"
+					title="Показать autoSpinMessage singleWinLimitReached"
+					onclick={() => (stateModal.modal = { name: 'autoSpinMessage', message: 'singleWinLimitReached' })}
+				>
+					Win Limit
+				</button>
+			</div>
+		</section>
+
+		<section>
+			<h4>Full Books</h4>
 				<div class="grid">
 					<button
 						type="button"
