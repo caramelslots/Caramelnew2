@@ -54,4 +54,26 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'RECOGE 4 SÍMBOLOS DE GATO DURANTE GIROS GRATIS Y OBTÉN',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	GAME_INFO_TITLE: 'INFORMACIÓN DEL JUEGO',
+	GAME_INFO_ABOUT_TITLE: 'SOBRE EL JUEGO',
+	GAME_INFO_ABOUT_BODY:
+		'Wok Fury es una tragamonedas de 5 rodillos y 5 filas con 25 líneas de pago. Los premios se pagan de izquierda a derecha en rodillos adyacentes, empezando por el rodillo más a la izquierda. Solo se paga la mayor ganancia por línea.',
+	GAME_INFO_WILD_TITLE: 'SÍMBOLO WILD',
+	GAME_INFO_WILD_BODY:
+		'El símbolo Wild sustituye a todos los símbolos de pago excepto al símbolo Bonus. Wild paga 225× la apuesta por 5 iguales.',
+	GAME_INFO_FS_TITLE: 'GIROS GRATIS',
+	GAME_INFO_FS_BODY:
+		'Obtén 3 símbolos Bonus en el juego base para activar Normal Bonus con 10 giros gratis. Obtén 4 o más símbolos Bonus para activar Super Bonus con 10 giros gratis y 1 Sticky Mystery Reel desde el inicio.',
+	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
+	GAME_INFO_MYSTERY_BODY:
+		'Durante los giros gratis, recoge 4 símbolos Bonus para subir un nivel en la Progress Ladder. Cada nivel otorga 3 giros gratis extra y desbloquea 1 Sticky Mystery Reel adicional. Los rodillos Mystery permanecen en su lugar y revelan el mismo símbolo en cada giro.',
+	GAME_INFO_BET_MODES_TITLE: 'MODOS DE APUESTA',
+	GAME_INFO_BET_MODES_BODY:
+		'El RTP del modo base es 96,01 %. Bonus Boost cuesta 2× la apuesta y aumenta la probabilidad de activar giros gratis. Special Spins cuesta 30× la apuesta. Comprar Normal Bonus cuesta 100× la apuesta. Comprar Super Bonus cuesta 200× la apuesta. La ganancia máxima es 50.000× la apuesta en todos los modos.',
+	GAME_INFO_PAYTABLE_TITLE: 'TABLA DE PAGOS (× APUESTA)',
+	GAME_INFO_PAYTABLE_BODY:
+		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
+	GAME_INFO_LEGAL_TITLE: 'AVISO LEGAL',
+	GAME_INFO_LEGAL_BODY:
+		'El mal funcionamiento anula todos los pagos y jugadas. Se requiere una conexión a internet estable. En caso de desconexión, recarga el juego para completar las rondas pendientes. El RTP teórico se calcula sobre muchos giros. El movimiento de los rodillos es solo ilustrativo.',
 };

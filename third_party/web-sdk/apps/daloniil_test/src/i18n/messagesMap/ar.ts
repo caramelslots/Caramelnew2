@@ -54,4 +54,26 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'اجمع 4 رموز قطة أثناء الدورات المجانية واحصل على',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	GAME_INFO_TITLE: 'معلومات اللعبة',
+	GAME_INFO_ABOUT_TITLE: 'عن اللعبة',
+	GAME_INFO_ABOUT_BODY:
+		'Wok Fury هي لعبة سلوت بـ 5 بكرات و5 صفوف و25 خط دفع. تُدفع الأرباح من اليسار إلى اليمين على البكرات المجاورة، بدءًا من البكرة اليسرى. يُدفع أعلى ربح فقط لكل خط.',
+	GAME_INFO_WILD_TITLE: 'رمز WILD',
+	GAME_INFO_WILD_BODY:
+		'يحل رمز Wild محل جميع الرموز المدفوعة باستثناء رمز Bonus. يدفع Wild 225× الرهان مقابل 5 من النوع نفسه.',
+	GAME_INFO_FS_TITLE: 'دورات مجانية',
+	GAME_INFO_FS_BODY:
+		'احصل على 3 رموز Bonus في اللعبة الأساسية لتفعيل Normal Bonus مع 10 دورات مجانية. احصل على 4 رموز Bonus أو أكثر لتفعيل Super Bonus مع 10 دورات مجانية و1 Sticky Mystery Reel من البداية.',
+	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
+	GAME_INFO_MYSTERY_BODY:
+		'أثناء الدورات المجانية، اجمع 4 رموز Bonus للصعود مستوى واحد على Progress Ladder. يمنح كل مستوى 3 دورات مجانية إضافية ويفتح 1 Sticky Mystery Reel إضافي. تبقى بكرات Mystery في مكانها وتكشف عن نفس الرمز في كل دورة.',
+	GAME_INFO_BET_MODES_TITLE: 'أوضاع الرهان',
+	GAME_INFO_BET_MODES_BODY:
+		'RTP الوضع الأساسي هو 96.01%. يكلف Bonus Boost ضعف الرهان ويزيد فرصة تفعيل الدورات المجانية. تكلف Special Spins 30× الرهان. شراء Normal Bonus يكلف 100× الرهان. شراء Super Bonus يكلف 200× الرهان. الحد الأقصى للفوز هو 50,000× الرهان في كل وضع.',
+	GAME_INFO_PAYTABLE_TITLE: 'جدول المدفوعات (× الرهان)',
+	GAME_INFO_PAYTABLE_BODY:
+		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
+	GAME_INFO_LEGAL_TITLE: 'إشعار قانوني',
+	GAME_INFO_LEGAL_BODY:
+		'العطل يلغي جميع المدفوعات والألعاب. يلزم اتصال إنترنت مستقر. في حال انقطاع الاتصال، أعد تحميل اللعبة لإكمال أي جولات غير مكتملة. يُحسب RTP النظري على مدى عدد كبير من الدورات. حركة البكرات للتوضيح فقط.',
 };

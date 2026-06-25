@@ -3,6 +3,8 @@ import { stateI18nDerived } from 'state-shared';
 import { i18nDerived as i18nDerivedUiPixi } from 'components-ui-pixi';
 import { i18nDerived as i18nDerivedUiHtml } from 'components-ui-html';
 
+import { getGameInfoSections } from '../game/gameInfoCopy';
+
 const t = (key: string) => stateI18nDerived.translate(key);
 
 export const i18nDerived = {
@@ -78,4 +80,7 @@ export const i18nDerived = {
 	loaderCard3Title: () => t('LOADER_CARD_3_TITLE'),
 	loaderCard3Line1: () => t('LOADER_CARD_3_LINE_1'),
 	loaderCard3Line2: () => t('LOADER_CARD_3_LINE_2'),
+	// Game info / rules
+	gameInfoTitle: () => t('GAME_INFO_TITLE'),
+	gameInfoSections: () => getGameInfoSections(t),
 };

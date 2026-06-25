@@ -54,4 +54,26 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'COLLECTEZ 4 SYMBOLES CHAT PENDANT LES TOURS GRATUITS ET OBTENEZ',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	GAME_INFO_TITLE: 'INFORMATIONS SUR LE JEU',
+	GAME_INFO_ABOUT_TITLE: 'À PROPOS DU JEU',
+	GAME_INFO_ABOUT_BODY:
+		'Wok Fury est une machine à sous à 5 rouleaux et 5 rangées avec 25 lignes de paiement. Les gains sont payés de gauche à droite sur des rouleaux adjacents, en commençant par le rouleau le plus à gauche. Seul le gain le plus élevé par ligne est payé.',
+	GAME_INFO_WILD_TITLE: 'SYMBOLE WILD',
+	GAME_INFO_WILD_BODY:
+		'Le symbole Wild remplace tous les symboles payants sauf le symbole Bonus. Wild paie 225× la mise pour 5 identiques.',
+	GAME_INFO_FS_TITLE: 'TOURS GRATUITS',
+	GAME_INFO_FS_BODY:
+		'Obtenez 3 symboles Bonus dans le jeu de base pour déclencher Normal Bonus avec 10 tours gratuits. Obtenez 4 symboles Bonus ou plus pour déclencher Super Bonus avec 10 tours gratuits et 1 Sticky Mystery Reel dès le départ.',
+	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
+	GAME_INFO_MYSTERY_BODY:
+		'Pendant les tours gratuits, collectez 4 symboles Bonus pour monter d\'un niveau sur la Progress Ladder. Chaque niveau accorde 3 tours gratuits supplémentaires et débloque 1 Sticky Mystery Reel de plus. Les rouleaux Mystery restent en place et révèlent le même symbole à chaque tour.',
+	GAME_INFO_BET_MODES_TITLE: 'MODES DE MISE',
+	GAME_INFO_BET_MODES_BODY:
+		'Le RTP du mode de base est de 96,01 %. Bonus Boost coûte 2× la mise et augmente les chances de déclencher des tours gratuits. Special Spins coûte 30× la mise. Acheter Normal Bonus coûte 100× la mise. Acheter Super Bonus coûte 200× la mise. Le gain maximum est de 50 000× la mise dans chaque mode.',
+	GAME_INFO_PAYTABLE_TITLE: 'TABLE DE PAIEMENT (× MISE)',
+	GAME_INFO_PAYTABLE_BODY:
+		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
+	GAME_INFO_LEGAL_TITLE: 'MENTIONS LÉGALES',
+	GAME_INFO_LEGAL_BODY:
+		'Un dysfonctionnement annule tous les paiements et les parties. Une connexion internet stable est requise. En cas de déconnexion, rechargez le jeu pour terminer les manches inachevées. Le RTP théorique est calculé sur de nombreux tours. Le mouvement des rouleaux est uniquement illustratif.',
 };

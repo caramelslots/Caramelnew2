@@ -54,4 +54,26 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'フリースピン中に猫シンボルを4つ集めて獲得',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	GAME_INFO_TITLE: 'ゲーム情報',
+	GAME_INFO_ABOUT_TITLE: 'ゲームについて',
+	GAME_INFO_ABOUT_BODY:
+		'Wok Furyは5リール×5行、25ペイラインのスロットです。配当は最左リールから隣接リール上で左から右に支払われます。各ラインでは最高配当のみが支払われます。',
+	GAME_INFO_WILD_TITLE: 'WILDシンボル',
+	GAME_INFO_WILD_BODY:
+		'WildシンボルはBonusシンボルを除くすべての配当シンボルの代わりになります。Wildは5つ揃いで225×ベットを支払います。',
+	GAME_INFO_FS_TITLE: 'フリースピン',
+	GAME_INFO_FS_BODY:
+		'ベースゲームでBonusシンボルを3つ揃えると、10回のフリースピン付きNormal Bonusが発動します。Bonusシンボルを4つ以上揃えると、10回のフリースピンと最初から1つのSticky Mystery Reel付きSuper Bonusが発動します。',
+	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
+	GAME_INFO_MYSTERY_BODY:
+		'フリースピン中にBonusシンボルを4つ集めると、Progress Ladderで1段階上がります。各段階で追加フリースピン3回とSticky Mystery Reelが1つ解放されます。Mysteryリールは固定され、毎スピン同じシンボルを表示します。',
+	GAME_INFO_BET_MODES_TITLE: 'ベットモード',
+	GAME_INFO_BET_MODES_BODY:
+		'ベースモードのRTPは96.01%です。Bonus Boostはベットの2倍で、フリースピン発動率が上がります。Special Spinsはベットの30倍です。Normal Bonus購入はベットの100倍、Super Bonus購入はベットの200倍です。すべてのモードで最大勝利はベットの50,000倍です。',
+	GAME_INFO_PAYTABLE_TITLE: '配当表（×ベット）',
+	GAME_INFO_PAYTABLE_BODY:
+		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
+	GAME_INFO_LEGAL_TITLE: '法的通知',
+	GAME_INFO_LEGAL_BODY:
+		'故障時はすべての配当とプレイが無効になります。安定したインターネット接続が必要です。切断された場合は、未完了のラウンドを完了するためにゲームを再読み込みしてください。理論上のRTPは多数のスピンに基づいて計算されます。リールの動きは説明用です。',
 };

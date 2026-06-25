@@ -54,4 +54,26 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: 'ZBIERZ 4 SYMBOLE KOTA PODCZAS DARMOWYCH SPINÓW I OTRZYMAJ',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	GAME_INFO_TITLE: 'INFORMACJE O GRZE',
+	GAME_INFO_ABOUT_TITLE: 'O GRZE',
+	GAME_INFO_ABOUT_BODY:
+		'Wok Fury to automat z 5 bębnami i 5 rzędami oraz 25 liniami wypłat. Wygrane są wypłacane od lewej do prawej na sąsiednich bębnach, zaczynając od skrajnie lewego. Na każdej linii wypłacana jest tylko najwyższa wygrana.',
+	GAME_INFO_WILD_TITLE: 'SYMBOL WILD',
+	GAME_INFO_WILD_BODY:
+		'Symbol Wild zastępuje wszystkie płatne symbole oprócz symbolu Bonus. Wild wypłaca 225× stawki za 5 takich samych.',
+	GAME_INFO_FS_TITLE: 'DARMOWE SPINY',
+	GAME_INFO_FS_BODY:
+		'Zbierz 3 symbole Bonus w grze podstawowej, aby uruchomić Normal Bonus z 10 darmowymi spinami. Zbierz 4 lub więcej symboli Bonus, aby uruchomić Super Bonus z 10 darmowymi spinami i 1 Sticky Mystery Reel od początku.',
+	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
+	GAME_INFO_MYSTERY_BODY:
+		'Podczas darmowych spinów zbieraj 4 symbole Bonus, aby awansować o jeden poziom na Progress Ladder. Każdy poziom daje 3 dodatkowe darmowe spiny i odblokowuje 1 dodatkowy Sticky Mystery Reel. Bębny Mystery pozostają na miejscu i ujawniają ten sam symbol przy każdym spinie.',
+	GAME_INFO_BET_MODES_TITLE: 'TRYBY STAWEK',
+	GAME_INFO_BET_MODES_BODY:
+		'RTP trybu podstawowego wynosi 96,01%. Bonus Boost kosztuje 2× stawki i zwiększa szansę na uruchomienie darmowych spinów. Special Spins kosztuje 30× stawki. Zakup Normal Bonus kosztuje 100× stawki. Zakup Super Bonus kosztuje 200× stawki. Maksymalna wygrana to 50 000× stawki w każdym trybie.',
+	GAME_INFO_PAYTABLE_TITLE: 'TABELA WYPŁAT (× STAWKA)',
+	GAME_INFO_PAYTABLE_BODY:
+		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
+	GAME_INFO_LEGAL_TITLE: 'INFORMACJA PRAWNA',
+	GAME_INFO_LEGAL_BODY:
+		'Awaria unieważnia wszystkie wypłaty i gry. Wymagane jest stabilne połączenie z internetem. W razie rozłączenia przeładuj grę, aby dokończyć niedokończone rundy. Teoretyczny RTP jest obliczany na podstawie wielu spinów. Ruch bębnów ma charakter wyłącznie ilustracyjny.',
 };

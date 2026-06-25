@@ -5,6 +5,7 @@
 	  - ModalAutoSpinMessage → AutoplayMessageOverlay (рендерится отдельно в Game.svelte)
 	  - ModalBuyBonus → BuyBonusOverlay (рендерится отдельно в Game.svelte)
 	  - ModalBuyBonusConfirm → BuyBonusConfirmOverlay (рендерится отдельно в Game.svelte)
+	  - ModalGameRules → локальный ModalGameRules.svelte (текст правил)
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
@@ -12,8 +13,8 @@
 	import ModalError from 'components-ui-html/src/components/ModalError.svelte';
 	import ModalBetMenu from 'components-ui-html/src/components/ModalBetMenu.svelte';
 	import ModalPayTable from 'components-ui-html/src/components/ModalPayTable.svelte';
-	import ModalGameRules from 'components-ui-html/src/components/ModalGameRules.svelte';
 	import ModalSettings from 'components-ui-html/src/components/ModalSettings.svelte';
+	import ModalGameRules from './ModalGameRules.svelte';
 
 	type Props = {
 		version: Snippet;
@@ -31,7 +32,5 @@
 <ModalPayTable>
 	{@render props.version()}
 </ModalPayTable>
-<ModalGameRules>
-	{@render props.version()}
-</ModalGameRules>
+<ModalGameRules />
 <ModalSettings />

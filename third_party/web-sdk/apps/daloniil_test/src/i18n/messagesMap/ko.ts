@@ -54,4 +54,26 @@ export default {
 	LOADER_CARD_3_TITLE: 'STICKY MYSTERY REEL',
 	LOADER_CARD_3_LINE_1: '무료 스핀 중 고양이 심볼 4개를 모아 획득',
 	LOADER_CARD_3_LINE_2: 'STICKY MYSTERY REEL',
+	GAME_INFO_TITLE: '게임 정보',
+	GAME_INFO_ABOUT_TITLE: '게임 소개',
+	GAME_INFO_ABOUT_BODY:
+		'Wok Fury는 5릴 5행, 25개 페이라인 슬롯입니다. 당첨금은 가장 왼쪽 릴부터 인접한 릴에서 왼쪽에서 오른쪽으로 지급됩니다. 각 라인에서는 가장 높은 당첨금만 지급됩니다.',
+	GAME_INFO_WILD_TITLE: 'WILD 심볼',
+	GAME_INFO_WILD_BODY:
+		'Wild 심볼은 Bonus 심볼을 제외한 모든 유료 심볼을 대체합니다. Wild는 5개 일치 시 베팅의 225배를 지급합니다.',
+	GAME_INFO_FS_TITLE: '무료 스핀',
+	GAME_INFO_FS_BODY:
+		'기본 게임에서 Bonus 심볼 3개를 맞추면 10회 무료 스핀이 있는 Normal Bonus가 발동됩니다. Bonus 심볼 4개 이상을 맞추면 10회 무료 스핀과 처음부터 Sticky Mystery Reel 1개가 있는 Super Bonus가 발동됩니다.',
+	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
+	GAME_INFO_MYSTERY_BODY:
+		'무료 스핀 중 Bonus 심볼 4개를 모으면 Progress Ladder에서 한 단계 올라갑니다. 각 단계마다 추가 무료 스핀 3회와 Sticky Mystery Reel 1개가 해제됩니다. Mystery 릴은 고정되며 매 스핀마다 같은 심볼을 공개합니다.',
+	GAME_INFO_BET_MODES_TITLE: '베팅 모드',
+	GAME_INFO_BET_MODES_BODY:
+		'기본 모드 RTP는 96.01%입니다. Bonus Boost는 베팅의 2배이며 무료 스핀 발동 확률이 증가합니다. Special Spins는 베팅의 30배입니다. Normal Bonus 구매는 베팅의 100배, Super Bonus 구매는 베팅의 200배입니다. 모든 모드에서 최대 당첨금은 베팅의 50,000배입니다.',
+	GAME_INFO_PAYTABLE_TITLE: '페이테이블 (× 베팅)',
+	GAME_INFO_PAYTABLE_BODY:
+		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
+	GAME_INFO_LEGAL_TITLE: '법적 고지',
+	GAME_INFO_LEGAL_BODY:
+		'오작동 시 모든 지급과 플레이가 무효가 됩니다. 안정적인 인터넷 연결이 필요합니다. 연결이 끊기면 미완료 라운드를 마치기 위해 게임을 다시 불러오세요. 이론적 RTP는 많은 스핀을 기준으로 계산됩니다. 릴 움직임은 설명용입니다.',
 };
