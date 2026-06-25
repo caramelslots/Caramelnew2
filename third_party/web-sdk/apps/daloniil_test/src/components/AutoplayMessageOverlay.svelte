@@ -1,10 +1,11 @@
 <!--
-	AutoplayMessageOverlay — panel structure identical to BuyBonusOverlay.
-	position: relative, centered by parent flex container in the shell.
+	AutoplayMessageOverlay.svelte — сообщение об остановке автоигры (недостаток средств и др.).
+	bg_autoplay_message_panel + autoplay_message_ok_bg; close — bet/plus.png повёрнутый на 45°.
 -->
 <script lang="ts">
 	import { stateModal } from 'state-shared';
 	import { getContextLayout } from 'utils-layout';
+
 	import { getContext } from '../game/context';
 	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
 	import { AUTOSPIN_ASSETS, HUD_ASSETS } from '../game/uiHtmlAssetManifest';
@@ -18,7 +19,10 @@
 
 	type AutoSpinMessageKey = 'insufficientFunds' | 'lossLimitReached' | 'singleWinLimitReached';
 
-	const COPY: Record<AutoSpinMessageKey, { title: string; body: string }> = {
+	const COPY: Record<
+		AutoSpinMessageKey,
+		{ title: string; body: string }
+	> = {
 		insufficientFunds: {
 			title: 'Insufficient funds',
 			body: 'Top up your balance or decrease the bet to continue the game.',
@@ -51,9 +55,12 @@
 	};
 </script>
 
-<svelte:window onkeydown={(e) => { if (isOpen && e.key === 'Escape') close(); }} />
+<svelte:window
+	onkeydown={(e) => {
+		if (isOpen && e.key === 'Escape') close();
+	}}
+/>
 
-<!-- position:relative — flex child, centered by parent shell .panel-slot (same as BuyBonusOverlay) -->
 <div
 	class="message-panel"
 	class:portrait={isPortrait}
@@ -99,13 +106,13 @@
 </div>
 
 <style lang="scss">
-	/* === Panel — identical structure to BuyBonusOverlay .buy-bonus-panel === */
 	.message-panel {
 		--panel-width: min(640px, 92vw);
+		--panel-aspect: calc(1445 / 1024);
 		position: relative;
 		width: var(--panel-width);
-		/* height: width * (1024/1445) — image is 1445×1024 */
-		height: min(calc(var(--panel-width) * 0.709), 92vh);
+		aspect-ratio: var(--panel-aspect);
+		max-height: 92vh;
 		pointer-events: auto;
 		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
 	}
@@ -155,10 +162,22 @@
 		align-items: center;
 		justify-content: center;
 		pointer-events: auto;
-		transition: transform 0.12s, filter 0.12s;
+		transition:
+			transform 0.12s,
+			filter 0.12s;
 
-		&:hover { filter: brightness(1.12); transform: scale(1.06); }
-		&:active { transform: scale(0.96); }
+		&:focus-visible {
+			outline: none;
+		}
+
+		&:hover {
+			filter: brightness(1.12);
+			transform: scale(1.06);
+		}
+
+		&:active {
+			transform: scale(0.96);
+		}
 	}
 
 	.close-icon {
@@ -193,7 +212,11 @@
 		line-height: 1.05;
 		letter-spacing: 0.02em;
 		color: #ffd633;
-		text-shadow: 0 2px 0 #000, 0 -1px 0 #000, 1px 0 0 #000, -1px 0 0 #000;
+		text-shadow:
+			0 2px 0 #000,
+			0 -1px 0 #000,
+			1px 0 0 #000,
+			-1px 0 0 #000;
 	}
 
 	.message-text {
@@ -204,7 +227,9 @@
 		font-weight: 700;
 		line-height: 1.25;
 		color: #ffffff;
-		text-shadow: 0 1px 0 #000, 1px 1px 2px rgba(0, 0, 0, 0.85);
+		text-shadow:
+			0 1px 0 #000,
+			1px 1px 2px rgba(0, 0, 0, 0.85);
 	}
 
 	.message-actions {
@@ -216,14 +241,17 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		box-sizing: border-box;
 	}
 
 	.ok-btn {
+		width: auto;
 		height: 100%;
 		max-width: 42%;
 		aspect-ratio: 343 / 165;
 		padding: 0;
 		border: 0;
+		border-radius: 0;
 		cursor: pointer;
 		background-color: transparent;
 		background-repeat: no-repeat;
@@ -236,26 +264,63 @@
 		text-transform: uppercase;
 		color: #f5e6c8;
 		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
-		transition: transform 0.1s, filter 0.15s;
+		transition:
+			transform 0.1s,
+			filter 0.15s;
 
-		&:hover { filter: brightness(1.1); }
-		&:active { transform: translateY(1px); }
+		&:hover {
+			filter: brightness(1.1);
+		}
+
+		&:active {
+			transform: translateY(1px);
+		}
 	}
 
-	/* Portrait */
 	.message-panel.portrait:not(.popout-l):not(.popout-s) {
 		--panel-width: min(680px, 94vw);
-		height: min(calc(var(--panel-width) * 0.709), 92vh);
+
+		.close-button {
+			margin-top: calc(var(--panel-width) * 0.045);
+			margin-right: calc(var(--panel-width) * -0.025);
+		}
+
+		.message-body {
+			top: 28%;
+			height: 34%;
+		}
+
+		.message-title {
+			font-size: calc(var(--panel-width) * 0.052);
+		}
+
+		.message-text {
+			font-size: calc(var(--panel-width) * 0.031);
+		}
+
+		.message-actions {
+			top: 60%;
+			height: 13%;
+		}
 	}
 
-	/* Popouts */
 	.message-panel.popout-l {
 		--panel-width: min(400px, 88vw);
-		height: min(calc(var(--panel-width) * 0.709), 92vh);
 	}
 
 	.message-panel.popout-s {
 		--panel-width: min(240px, 72vw);
-		height: min(calc(var(--panel-width) * 0.709), 92vh);
+
+		.message-title {
+			font-size: calc(var(--panel-width) * 0.055);
+		}
+
+		.message-text {
+			font-size: calc(var(--panel-width) * 0.032);
+		}
+
+		.ok-btn {
+			font-size: calc(var(--panel-width) * 0.038);
+		}
 	}
 </style>
