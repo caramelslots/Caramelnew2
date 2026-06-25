@@ -179,6 +179,19 @@ export const INITIAL_BOARD: RawSymbol[][] = [
 
 export const BOARD_DIMENSIONS = { x: INITIAL_BOARD.length, y: INITIAL_BOARD[0].length - 2 };
 
+/** Whether a settled reel-pool index is on the visible grid (not top/bottom padding). */
+export const isVisibleBoardSymbolIndex = (
+	symbolIndex: number,
+	activeSymbolCount: number,
+): boolean => {
+	const visibleRows = BOARD_DIMENSIONS.y;
+	if (activeSymbolCount > visibleRows) {
+		// Padded layout: [top_pad, row0..rowN-1, bottom_pad] → indices 1..N.
+		return symbolIndex >= 1 && symbolIndex <= visibleRows;
+	}
+	return symbolIndex >= 0 && symbolIndex < visibleRows;
+};
+
 export const BOARD_SIZES = {
 	width: SYMBOL_SIZE * BOARD_DIMENSIONS.x - 10,
 	height: SYMBOL_SIZE * BOARD_DIMENSIONS.y - 10,

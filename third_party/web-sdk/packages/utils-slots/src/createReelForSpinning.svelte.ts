@@ -79,13 +79,19 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		// Off-screen pool items beyond activeSymbolCount are excluded to avoid
 		// triggering their $effects unnecessarily.
 		// onSymbolLand fires only for the final settled symbols (first reelLength items).
+		// Games with top/bottom padding should ignore land sounds on padding rows —
+		// see `symbolIndex` / `activeSymbolCount` in the callback args.
 		for (let start = 0; start < count; start += batchSize) {
 			const end = Math.min(start + batchSize, count);
 			for (let i = start; i < end; i++) {
 				const reelSymbol = reelState.symbols[i];
 				reelSymbol.symbolState = value as TSymbolState;
 				if (value === 'land' && i < reelLength) {
-					reelOptions.onSymbolLand({ rawSymbol: reelSymbol.rawSymbol });
+					reelOptions.onSymbolLand({
+						rawSymbol: reelSymbol.rawSymbol,
+						symbolIndex: i,
+						activeSymbolCount: count,
+					});
 				}
 			}
 			if (end < count) {

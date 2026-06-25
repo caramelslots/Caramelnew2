@@ -134,7 +134,13 @@ type ReelCreateOptions<TRawSymbol extends object, TSymbolState extends string> =
 	reelIndex: number;
 	symbolHeight: number;
 	onReelStopping: () => void;
-	onSymbolLand: (args: { rawSymbol: TRawSymbol }) => void;
+	onSymbolLand: (args: {
+		rawSymbol: TRawSymbol;
+		/** Index in the settled reel pool (0 = top padding when padded). */
+		symbolIndex?: number;
+		/** Active pool length at land time — distinguishes padded vs compact boards. */
+		activeSymbolCount?: number;
+	}) => void;
 };
 
 export type SpinningReelCreateOptions<

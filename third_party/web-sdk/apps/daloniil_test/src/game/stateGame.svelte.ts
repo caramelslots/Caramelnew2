@@ -73,6 +73,7 @@ import {
 	getPortraitParchmentSize,
 	INITIAL_BOARD,
 	BOARD_DIMENSIONS,
+	isVisibleBoardSymbolIndex,
 	SPIN_OPTIONS_DEFAULT,
 	SPIN_OPTIONS_FAST,
 	INITIAL_SYMBOL_STATE,
@@ -101,7 +102,17 @@ const withReelScrollSpeedMult = <T extends typeof SPIN_OPTIONS_DEFAULT>(
 	};
 };
 
-const onSymbolLand = ({ rawSymbol }: { rawSymbol: RawSymbol }) => {
+const onSymbolLand = ({
+	rawSymbol,
+	symbolIndex = 0,
+	activeSymbolCount = BOARD_DIMENSIONS.y,
+}: {
+	rawSymbol: RawSymbol;
+	symbolIndex?: number;
+	activeSymbolCount?: number;
+}) => {
+	if (!isVisibleBoardSymbolIndex(symbolIndex, activeSymbolCount)) return;
+
 	if (rawSymbol.name === 'B') {
 		eventEmitter.broadcast({ type: 'soundScatterCounterIncrease' });
 		eventEmitter.broadcast({
