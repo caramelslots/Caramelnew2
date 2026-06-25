@@ -206,6 +206,36 @@ export const BOARD_SIZES = {
 export const BOARD_SIZE_TRIM = { right: 0, bottom: 0 } as const;
 
 /**
+ * Per-symbol win animation — used when `win` shows a frozen idle spine
+ * (H1..H4, L1..L4, M) with a container scale tween. W and B play dedicated
+ * spine win clips (`Special_2/win`, `Special_1/wave`) and skip this bounce.
+ *
+ * Flow (ReelSymbol.svelte): on `state === 'win'`
+ *   1. UP: scale 1 → `scalePeak`, y-offset 0 → `−yOffsetPeakPx` over `upMs` (sineOut)
+ *   2. HOLD `holdMs`
+ *   3. DOWN: scale → 1, y-offset → 0 over `downMs` (sineIn)
+ *   4. Fire `reelSymbol.oncomplete()` → Board moves the symbol to `postWinStatic`.
+ *
+ * Both axes scale uniformly (X = Y), so the symbol grows without
+ * deformation, in contrast to the landing squash which is jelly-like.
+ */
+export const WIN_BOUNCE = {
+	scalePeak: 1.18,
+	yOffsetPeakPx: 18,
+	upMs: 220,
+	holdMs: 80,
+	downMs: 280,
+};
+
+/**
+ * Extra mask coverage above the grid while win symbols bounce — see
+ * BoardMask.svelte (`winSpotlightActive`). Kept at 0 in BOARD_MASK_OVERFLOW
+ * so spinning symbols stay hidden above the board frame.
+ */
+export const BOARD_MASK_WIN_BOUNCE_TOP =
+	WIN_BOUNCE.yOffsetPeakPx + Math.ceil(((WIN_BOUNCE.scalePeak - 1) * SYMBOL_SIZE) / 2);
+
+/**
  * Extra mask coverage (px) beyond the visible board grid so spinning symbols
  * slide *behind* the board edge instead of vanishing over the parchment
  * ("in the air"). top/bottom are measured from the grid edges outward.
@@ -789,28 +819,6 @@ const l4Bounce = {
 	assetKey: 'L4',
 	animationName: 'Low_4/bounce',
 	sizeRatios: bounceSizeRatios,
-};
-
-/**
- * Per-symbol win animation — used when `win` shows a frozen idle spine
- * (H1..H4, L1..L4, M) with a container scale tween. W and B play dedicated
- * spine win clips (`Special_2/win`, `Special_1/wave`) and skip this bounce.
- *
- * Flow (ReelSymbol.svelte): on `state === 'win'`
- *   1. UP: scale 1 → `scalePeak`, y-offset 0 → `−yOffsetPeakPx` over `upMs` (sineOut)
- *   2. HOLD `holdMs`
- *   3. DOWN: scale → 1, y-offset → 0 over `downMs` (sineIn)
- *   4. Fire `reelSymbol.oncomplete()` → Board moves the symbol to `postWinStatic`.
- *
- * Both axes scale uniformly (X = Y), so the symbol grows without
- * deformation, in contrast to the landing squash which is jelly-like.
- */
-export const WIN_BOUNCE = {
-	scalePeak: 1.18,
-	yOffsetPeakPx: 18,
-	upMs: 220,
-	holdMs: 80,
-	downMs: 280,
 };
 
 /**

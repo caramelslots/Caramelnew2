@@ -18,7 +18,6 @@
 	} from '../game/loaderCardsHtmlLayout';
 	import { preloadHtmlImages } from '../game/preloadHtmlImages';
 
-	const SWIPE_THRESHOLD = 0.18;
 	const SNAP_MS = 520;
 	const AUTO_HOLD_MS = 3000;
 	const AUTO_START_DELAY_MS = 900;
@@ -52,18 +51,12 @@
 	);
 
 	let activeIndex = $state(0);
-	let dragDeltaX = $state(0);
-	let isDragging = $state(false);
-	let pointerStartX = 0;
 	let autoAdvanceTimer: ReturnType<typeof setTimeout> | undefined;
 
 	const trackOffset = new Tween(0);
 
 	const trackX = $derived.by(() => {
 		if (!useCarousel) return 0;
-		if (isDragging) {
-			return -activeIndex * carouselMetrics.slideStep + dragDeltaX;
-		}
 		return trackOffset.current;
 	});
 
@@ -77,7 +70,6 @@
 	const snapToIndex = (index: number, animate = true) => {
 		const nextIndex = clampIndex(index);
 		activeIndex = nextIndex;
-		dragDeltaX = 0;
 
 		if (animate) {
 			void trackOffset.set(-nextIndex * carouselMetrics.slideStep, {
@@ -101,52 +93,9 @@
 		if (!useCarousel) return;
 		clearAutoAdvance();
 		autoAdvanceTimer = setTimeout(() => {
-			if (isDragging) {
-				scheduleAutoAdvance(250);
-				return;
-			}
-
 			snapToIndex((activeIndex + 1) % LOADER_CARD_COUNT);
 			scheduleAutoAdvance();
 		}, delay);
-	};
-
-	const onPointerDown = (event: PointerEvent) => {
-		if (!useCarousel) return;
-		clearAutoAdvance();
-		isDragging = true;
-		pointerStartX = event.clientX;
-		dragDeltaX = 0;
-		void trackOffset.set(-activeIndex * carouselMetrics.slideStep, { duration: 0 });
-		event.preventDefault();
-	};
-
-	const onPointerMove = (event: PointerEvent) => {
-		if (!useCarousel || !isDragging) return;
-
-		const rawDelta = event.clientX - pointerStartX;
-		const maxDragRight = activeIndex * carouselMetrics.slideStep;
-		const maxDragLeft = (LOADER_CARD_COUNT - 1 - activeIndex) * carouselMetrics.slideStep;
-		dragDeltaX = Math.max(-maxDragLeft, Math.min(maxDragRight, rawDelta));
-	};
-
-	const onPointerUp = () => {
-		if (!useCarousel || !isDragging) return;
-
-		isDragging = false;
-
-		const swipeRatio = dragDeltaX / carouselMetrics.slideStep;
-		let nextIndex = activeIndex;
-
-		if (Math.abs(swipeRatio) >= SWIPE_THRESHOLD) {
-			nextIndex = swipeRatio > 0 ? activeIndex - 1 : activeIndex + 1;
-		} else {
-			const projectedOffset = -activeIndex * carouselMetrics.slideStep + dragDeltaX;
-			nextIndex = Math.round(-projectedOffset / carouselMetrics.slideStep);
-		}
-
-		snapToIndex(nextIndex);
-		scheduleAutoAdvance();
 	};
 
 	onMount(() => {
@@ -175,12 +124,6 @@
 	});
 </script>
 
-<svelte:window
-	onpointermove={onPointerMove}
-	onpointerup={onPointerUp}
-	onpointercancel={onPointerUp}
-/>
-
 {#if show}
 	<div class="loader-cards-overlay" style={overlayStyle} aria-hidden={!show}>
 		<div class="loader-cards-stack">
@@ -196,8 +139,6 @@
 				class="carousel-viewport"
 				style:width="{carouselMetrics.viewportWidth}px"
 				style:height="{carouselMetrics.cardHeight}px"
-				style:cursor={isDragging ? 'grabbing' : 'grab'}
-				onpointerdown={onPointerDown}
 			>
 				<div class="carousel-track" style={trackStyle}>
 					{#each Array(LOADER_CARD_COUNT) as _, index (index)}
@@ -265,8 +206,6 @@
 
 	.carousel-viewport {
 		overflow: hidden;
-		pointer-events: auto;
-		touch-action: pan-y;
 	}
 
 	.carousel-track {
