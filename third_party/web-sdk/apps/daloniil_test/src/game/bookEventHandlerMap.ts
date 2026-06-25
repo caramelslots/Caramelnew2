@@ -121,25 +121,22 @@ const animateBonusSymbols = async ({ positions }: { positions: Position[] }) => 
 };
 
 /**
- * In basegame only: if the result board contains 2+ cat symbols (B), returns
- * the indices of every reel that comes AFTER the reel that lands the 2nd cat.
- * Those reels will receive a reduced scroll speed so they visibly slow down
- * while the earlier reels (with cats) are already landing.
+ * In basegame only: returns the index of the reel that lands the 2nd cat (B),
+ * or -1 if fewer than 2 cats are on the board or no reels remain after it.
+ * When this reel's onReelStopping fires, the remaining reels switch to slow speed.
  */
-const getCatSlowReels = (revealEvent: BookEventOfType<'reveal'>): number[] => {
-	if (revealEvent.gameType !== 'basegame') return [];
+const computeCatSlowTriggerReel = (revealEvent: BookEventOfType<'reveal'>): number => {
+	if (revealEvent.gameType !== 'basegame') return -1;
 
 	const reelCount = revealEvent.board.length;
 	let catsFound = 0;
 
 	for (let i = 0; i < reelCount; i++) {
 		catsFound += revealEvent.board[i].filter((s) => s.name === 'B').length;
-		if (catsFound >= 2 && i + 1 < reelCount) {
-			return revealEvent.board.map((_, ri) => ri).filter((ri) => ri > i);
-		}
+		if (catsFound >= 2 && i + 1 < reelCount) return i;
 	}
 
-	return [];
+	return -1;
 };
 
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
@@ -193,12 +190,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Full reel scroll starts here once RGS has returned the result board.
 		// Frozen Mystery reels don't spin — they stay showing ? until FS ends.
 		// Pending-collapse reels are also skipped: the collapse handles their display.
-		stateGame.catSlowReels = getCatSlowReels(bookEvent);
+		stateGame.catSlowTriggerReel = computeCatSlowTriggerReel(bookEvent);
+		stateGame.catSlowReels = [];
 		await stateGameDerived.enhancedBoard.spin({
 			revealEvent: bookEvent,
 			paddingBoard: config.paddingReels[bookEvent.gameType],
 			frozenReelIndices: [...stateGame.mysteryReelsFrozen, ...pendingCollapseReels],
 		});
+		stateGame.catSlowTriggerReel = -1;
 		stateGame.catSlowReels = [];
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
 	},
