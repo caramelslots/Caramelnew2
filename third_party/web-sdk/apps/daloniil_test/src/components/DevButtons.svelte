@@ -108,6 +108,14 @@
 		}
 	};
 
+	/** Full page reload — same path as opening the game fresh (auth → loaders → asset pipeline). */
+	const reloadColdStart = () => {
+		const url = new URL(window.location.href);
+		url.searchParams.delete('_cold');
+		url.searchParams.set('_cold', String(Date.now()));
+		window.location.replace(url.href);
+	};
+
 	// === Win Levels (setWin) ===
 	// Cash Stacks 4-tier rework: см. winLevelMap.ts и
 	// math-sdk/games/0_0_daloniil_test/game_config.py (`get_win_level`).
@@ -521,6 +529,19 @@
 
 	{#if open}
 		<div class="dev-body">
+			<section>
+				<h4>Loading</h4>
+				<div class="grid">
+					<button
+						type="button"
+						title="Полная перезагрузка страницы: auth → Stake GIF → Bootstrap → Pixi assets (как первый заход). HTTP-кэш браузера сохраняется — для «чистого» скачивания включите Disable cache в DevTools."
+						onclick={reloadColdStart}
+					>
+						Cold Start Reload
+					</button>
+				</div>
+			</section>
+
 			<section>
 				<h4>Reel Speed</h4>
 				<div class="grid">
