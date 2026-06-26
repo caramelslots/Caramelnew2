@@ -59,9 +59,7 @@
 		"tumble_win_5": [404000, 989.6145124716327]
 	},
 	"src": [
-		"./assets/audio/sounds.mp3",
-		"./assets/audio/sounds.m4a",
-		"./assets/audio/sounds.ac3"
+		"./assets/audio/sounds.mp3"
 	],
 	"config": {
 		"bgm_freespin_intro": { "volume": 1 },
