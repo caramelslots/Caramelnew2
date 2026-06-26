@@ -4,6 +4,8 @@
 	import { SpinePlayer } from '@esotericsoftware/spine-player';
 	import { waitForTimeout } from 'utils-shared/wait';
 
+	import { LOADER_NEXT_SCREEN_BG_URL } from '../game/earlyLoaderPreload';
+
 	type Props = {
 		oncomplete?: () => void;
 	};
@@ -30,13 +32,11 @@
 
 	let loading = $state(true);
 	let playerContainer = $state<HTMLDivElement>();
-	let bgUrl = $state('');
+	const bgUrl = LOADER_NEXT_SCREEN_BG_URL;
 	let player: SpinePlayer | undefined;
 
 	onMount(() => {
 		if (!playerContainer) return;
-
-		bgUrl = resolveStaticUrl('assets/sprites/background/day.png');
 
 		player = new SpinePlayer(playerContainer, {
 			jsonUrl: resolveStaticUrl('logo-loader/skeleton.json'),
@@ -79,7 +79,7 @@
 
 {#if loading}
 	<div class="wrap" transition:fade>
-		<div class="bg" style:background-image={bgUrl ? `url('${bgUrl}')` : undefined} aria-hidden="true"></div>
+		<div class="bg" style:background-image="url('{bgUrl}')" aria-hidden="true"></div>
 		<div class="player" bind:this={playerContainer}></div>
 	</div>
 {/if}

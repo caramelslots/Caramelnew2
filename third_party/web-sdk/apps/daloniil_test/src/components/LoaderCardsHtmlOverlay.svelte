@@ -27,6 +27,7 @@
 	const show = $derived(
 		context.stateLayout.showLoadingScreen && gameEntrance.loadingCardsVisible,
 	);
+	const assetsReady = $derived(context.stateApp.loaded);
 	const useCarousel = $derived(shouldUseLoaderCarousel(context.stateLayoutDerived));
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 
@@ -101,7 +102,7 @@
 	onMount(() => {
 		clearAutoAdvance();
 		void preloadHtmlImages(LOADER_SCREEN_IMAGE_URLS, {
-			priority: [LOADER_NEON_LOGO_URL, LOADER_SCREEN_IMAGE_URLS[1]!],
+			priority: [LOADER_NEON_LOGO_URL, LOADER_SCREEN_IMAGE_URLS[0]!],
 			concurrency: 2,
 		});
 	});
@@ -114,11 +115,24 @@
 		});
 	});
 
+	// Keep card 1 visible while assets load; reset when press-to-continue unlocks.
 	$effect(() => {
-		if (!show || !useCarousel) {
+		if (!show || !useCarousel) return;
+		untrack(() => {
+			if (!assetsReady) {
+				snapToIndex(0, false);
+			}
+		});
+	});
+
+	$effect(() => {
+		if (!show || !useCarousel || !assetsReady) {
 			clearAutoAdvance();
 			return;
 		}
+		untrack(() => {
+			snapToIndex(0, false);
+		});
 		scheduleAutoAdvance(AUTO_START_DELAY_MS);
 		return clearAutoAdvance;
 	});
