@@ -29,11 +29,11 @@ export default {
 	},
 	bonusBarV: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/bonusBar/bar_v.png'),
+		src: assetUrl('assets/sprites/bonusBar/bar_v.webp'),
 	},
 	bonusBarH: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/bonusBar/bar_h.png'),
+		src: assetUrl('assets/sprites/bonusBar/bar_h.webp'),
 	},
 	bonusBarCat: {
 		type: 'sprite',
