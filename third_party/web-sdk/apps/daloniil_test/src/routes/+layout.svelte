@@ -5,7 +5,8 @@
 	import BootstrapLoader from '../components/BootstrapLoader.svelte';
 	import Game from '../components/Game.svelte';
 	import { setContext } from '../game/context';
-	import { startEarlyLoaderBackgroundPreload } from '../game/earlyLoaderPreload';
+	import { startEarlyAssetPreload, startBatch2EarlyPreload } from '../game/earlyAssetPreload';
+	import { setLoaderStage } from '../game/loaderAssetPipeline.svelte';
 
 	import messagesMap from '../i18n/messagesMap';
 
@@ -20,7 +21,7 @@
 	setContext();
 
 	onMount(() => {
-		startEarlyLoaderBackgroundPreload();
+		startEarlyAssetPreload();
 	});
 </script>
 
@@ -32,10 +33,17 @@
 	</Authenticate>
 </GlobalStyle>
 
-<LoaderStakeEngine src={loaderUrlStakeEngine} oncomplete={() => (showYourLoader = true)} />
+<LoaderStakeEngine
+	src={loaderUrlStakeEngine}
+	oncomplete={() => {
+		showYourLoader = true;
+		setLoaderStage('bootstrap');
+		startBatch2EarlyPreload();
+	}}
+/>
 
 {#if showYourLoader}
-	<BootstrapLoader />
+	<BootstrapLoader oncomplete={() => setLoaderStage('cards')} />
 {/if}
 
 {@render props.children()}

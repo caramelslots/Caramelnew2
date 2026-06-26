@@ -5,33 +5,27 @@ const assetUrl = (path: string) =>
 export default {
 	mainBackground: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/background/day.png'),
-		preload: true,
+		src: assetUrl('assets/sprites/background/day.webp'),
 	},
 	featureBackground: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/background/night.png'),
-		preload: true,
+		src: assetUrl('assets/sprites/background/night.webp'),
 	},
 	lanternDay: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/background/lantern_day.png'),
-		preload: true,
+		src: assetUrl('assets/sprites/background/lantern_day.webp'),
 	},
 	lanternNight: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/background/lantern_night.png'),
-		preload: true,
+		src: assetUrl('assets/sprites/background/lantern_night.webp'),
 	},
 	boardDay: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/boardFrame/desk_day.png'),
-		preload: true,
+		src: assetUrl('assets/sprites/boardFrame/desk_day.webp'),
 	},
 	boardNight: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/boardFrame/desk_night.png'),
-		preload: true,
+		src: assetUrl('assets/sprites/boardFrame/desk_night.webp'),
 	},
 	bonusBarV: {
 		type: 'sprite',
@@ -298,15 +292,15 @@ export default {
 	},
 	fsCongBoard: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/fsCong/fs_cong.png'),
+		src: assetUrl('assets/sprites/fsCong/fs_cong.webp'),
 	},
 	fsCongNumber: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/fsCong/10_fs_cong_table.png'),
+		src: assetUrl('assets/sprites/fsCong/10_fs_cong_table.webp'),
 	},
 	fsLeftCounter: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/fsLeftCounter/fs_left_counter.png'),
+		src: assetUrl('assets/sprites/fsLeftCounter/fs_left_counter.webp'),
 	},
 	transition: {
 		type: 'spine',
@@ -323,50 +317,45 @@ export default {
 	sound: {
 		type: 'audio',
 		src: assetUrl('assets/audio/sounds.json'),
-		preload: true,
 	},
 	betPlus: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/ui/bet/plus.png'),
+		src: assetUrl('assets/sprites/ui/bet/plus.webp'),
 	},
 	betMinus: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/ui/bet/minus.png'),
+		src: assetUrl('assets/sprites/ui/bet/minus.webp'),
 	},
 	autoplayButton: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/ui/autoplay/autoplay.png'),
+		src: assetUrl('assets/sprites/ui/autoplay/autoplay.webp'),
 	},
 	autoplayMobileButton: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/ui/autoplay/autoplay_mobile.png'),
+		src: assetUrl('assets/sprites/ui/autoplay/autoplay_mobile.webp'),
 	},
 	spin1: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/ui/spin/spin_1.png'),
-	},
-	spin2: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/ui/spin/spin_2.png'),
+		src: assetUrl('assets/sprites/ui/spin/spin_1.webp'),
 	},
 	menuButton: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/ui/menu/menu.png'),
+		src: assetUrl('assets/sprites/ui/menu/menu.webp'),
 	},
 	infoButton: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/ui/info/info.png'),
+		src: assetUrl('assets/sprites/ui/info/info.webp'),
 	},
 	turbo1: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/ui/turbo/turbo_1.png'),
+		src: assetUrl('assets/sprites/ui/turbo/turbo_1.webp'),
 	},
 	turbo2: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/ui/turbo/turbo_2.png'),
+		src: assetUrl('assets/sprites/ui/turbo/turbo_2.webp'),
 	},
 	turbo3: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/ui/turbo/turbo_3.png'),
+		src: assetUrl('assets/sprites/ui/turbo/turbo_3.webp'),
 	},
 } as const;

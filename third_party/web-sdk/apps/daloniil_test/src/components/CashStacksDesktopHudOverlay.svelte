@@ -36,7 +36,6 @@
 	const minusUrl = HUD_ASSETS.betMinus;
 	const plusUrl = HUD_ASSETS.betPlus;
 	const spin1Url = HUD_ASSETS.spin1;
-	const spin2Url = HUD_ASSETS.spin2;
 	const autoplayUrl = HUD_ASSETS.autoplay;
 	const turboUrls = {
 		1: HUD_ASSETS.turbo1,
@@ -79,7 +78,7 @@
 	const isAutoSpinModalOpen = $derived(stateModal.modal?.name === 'autoSpin');
 	const hasAutoBetCounter = $derived(stateBetDerived.hasAutoBetCounter());
 	const hasCounter = $derived(stateBetDerived.hasAutoBetCounter());
-	const spinSpriteUrl = $derived(hasCounter ? spin2Url : spin1Url);
+	const spinSpriteUrl = $derived(spin1Url);
 
 	const spinCounterText = $derived(
 		stateBet.autoSpinsCounter === Infinity ? '∞' : String(stateBet.autoSpinsCounter),

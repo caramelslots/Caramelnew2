@@ -6,68 +6,64 @@ export const uiHtmlAssetUrl = (path: string) =>
 	`${UI_ASSET_BASE}/${path.replace(/^\//, '')}`;
 
 export const HUD_ASSETS = {
-	info: uiHtmlAssetUrl('info/info.png'),
-	menu: uiHtmlAssetUrl('menu/menu.png'),
-	betMinus: uiHtmlAssetUrl('bet/minus.png'),
-	betPlus: uiHtmlAssetUrl('bet/plus.png'),
-	spin1: uiHtmlAssetUrl('spin/spin_1.png'),
-	spin2: uiHtmlAssetUrl('spin/spin_2.png'),
-	autoplay: uiHtmlAssetUrl('autoplay/autoplay.png'),
-	autoplayMobile: uiHtmlAssetUrl('autoplay/autoplay_mobile.png'),
-	turbo1: uiHtmlAssetUrl('turbo/turbo_1.png'),
-	turbo2: uiHtmlAssetUrl('turbo/turbo_2.png'),
-	turbo3: uiHtmlAssetUrl('turbo/turbo_3.png'),
-	buyBonusPanel: uiHtmlAssetUrl('buy_bonus/buy_bonus.png'),
+	info: uiHtmlAssetUrl('info/info.webp'),
+	menu: uiHtmlAssetUrl('menu/menu.webp'),
+	betMinus: uiHtmlAssetUrl('bet/minus.webp'),
+	betPlus: uiHtmlAssetUrl('bet/plus.webp'),
+	spin1: uiHtmlAssetUrl('spin/spin_1.webp'),
+	autoplay: uiHtmlAssetUrl('autoplay/autoplay.webp'),
+	autoplayMobile: uiHtmlAssetUrl('autoplay/autoplay_mobile.webp'),
+	turbo1: uiHtmlAssetUrl('turbo/turbo_1.webp'),
+	turbo2: uiHtmlAssetUrl('turbo/turbo_2.webp'),
+	turbo3: uiHtmlAssetUrl('turbo/turbo_3.webp'),
+	buyBonusPanel: uiHtmlAssetUrl('buy_bonus/buy_bonus.webp'),
 } as const;
 
 export const BUY_BONUS_ASSETS = {
-	menuBg: uiHtmlAssetUrl('buy_bonus/bg_buy_bonus_panel.png'),
-	confirmBg: uiHtmlAssetUrl('buy_bonus/bg_buy_bonus_confirm_panel.png'),
-	normalCard: uiHtmlAssetUrl('buy_bonus/normal_bonus_card.png'),
-	superCard: uiHtmlAssetUrl('buy_bonus/super_bonus_card.png'),
-	deskL: uiHtmlAssetUrl('buy_bonus/desk_l.png'),
-	deskR: uiHtmlAssetUrl('buy_bonus/desk_r.png'),
-	buyButtonBg: uiHtmlAssetUrl('buy_bonus/buy_button_bg.png'),
-	cancelButtonBg: uiHtmlAssetUrl('buy_bonus/cancel_button_bg.png'),
-	confirmButtonBg: uiHtmlAssetUrl('buy_bonus/confirm_button_bg.png'),
+	menuBg: uiHtmlAssetUrl('buy_bonus/bg_buy_bonus_panel.webp'),
+	confirmBg: uiHtmlAssetUrl('buy_bonus/bg_buy_bonus_confirm_panel.webp'),
+	normalCard: uiHtmlAssetUrl('buy_bonus/normal_bonus_card.webp'),
+	superCard: uiHtmlAssetUrl('buy_bonus/super_bonus_card.webp'),
+	deskL: uiHtmlAssetUrl('buy_bonus/desk_l.webp'),
+	deskR: uiHtmlAssetUrl('buy_bonus/desk_r.webp'),
+	buyButtonBg: uiHtmlAssetUrl('buy_bonus/buy_button_bg.webp'),
+	cancelButtonBg: uiHtmlAssetUrl('buy_bonus/cancel_button_bg.webp'),
+	confirmButtonBg: uiHtmlAssetUrl('buy_bonus/confirm_button_bg.webp'),
 } as const;
 
 export const SETTINGS_ASSETS = {
-	bg: uiHtmlAssetUrl('settings/bg_settings_panel.png'),
-	soundOff: uiHtmlAssetUrl('settings/sound_off.png'),
-	soundLow: uiHtmlAssetUrl('settings/sound_low.png'),
-	soundMid: uiHtmlAssetUrl('settings/sound_mid.png'),
-	soundHigh: uiHtmlAssetUrl('settings/sound_high.png'),
-	sliderEmpty: uiHtmlAssetUrl('settings/slider_empty.png'),
-	sliderFull: uiHtmlAssetUrl('settings/slider_full.png'),
-	sliderKnob: uiHtmlAssetUrl('settings/slider_knob.png'),
-	musicOn: uiHtmlAssetUrl('settings/music_on.png'),
-	musicOff: uiHtmlAssetUrl('settings/music_off.png'),
-	turbo1: uiHtmlAssetUrl('settings/turbo_1.png'),
-	turbo2: uiHtmlAssetUrl('settings/turbo_2.png'),
-	turbo3: uiHtmlAssetUrl('settings/turbo_3.png'),
+	bg: uiHtmlAssetUrl('settings/bg_settings_panel.webp'),
+	soundOff: uiHtmlAssetUrl('settings/sound_off.webp'),
+	soundLow: uiHtmlAssetUrl('settings/sound_low.webp'),
+	soundMid: uiHtmlAssetUrl('settings/sound_mid.webp'),
+	soundHigh: uiHtmlAssetUrl('settings/sound_high.webp'),
+	sliderEmpty: uiHtmlAssetUrl('settings/slider_empty.webp'),
+	sliderFull: uiHtmlAssetUrl('settings/slider_full.webp'),
+	sliderKnob: uiHtmlAssetUrl('settings/slider_knob.webp'),
+	musicOn: uiHtmlAssetUrl('settings/music_on.webp'),
+	musicOff: uiHtmlAssetUrl('settings/music_off.webp'),
 } as const;
 
 export const SETTINGS_TURBO_URLS = [
-	SETTINGS_ASSETS.turbo1,
-	SETTINGS_ASSETS.turbo2,
-	SETTINGS_ASSETS.turbo3,
+	HUD_ASSETS.turbo1,
+	HUD_ASSETS.turbo2,
+	HUD_ASSETS.turbo3,
 ] as const;
 
 export const AUTOSPIN_ASSETS = {
-	bg: uiHtmlAssetUrl('autoplay/bg_auto_panel.png'),
-	close: uiHtmlAssetUrl('autoplay/cross.png'),
-	messageBg: uiHtmlAssetUrl('autoplay/bg_autoplay_message_panel.png'),
-	messageOkBg: uiHtmlAssetUrl('autoplay/autoplay_message_ok_bg.png'),
-	sliderHead: uiHtmlAssetUrl('autoplay/slider/head.png'),
-	sliderFull: uiHtmlAssetUrl('autoplay/slider/full.png'),
-	sliderButton: uiHtmlAssetUrl('autoplay/slider/button.png'),
-	sliderEmpty: uiHtmlAssetUrl('autoplay/slider/empty.png'),
-	startButton: uiHtmlAssetUrl('autoplay/main_button.png'),
+	bg: uiHtmlAssetUrl('autoplay/bg_auto_panel.webp'),
+	close: uiHtmlAssetUrl('autoplay/cross.webp'),
+	messageBg: uiHtmlAssetUrl('autoplay/bg_autoplay_message_panel.webp'),
+	messageOkBg: uiHtmlAssetUrl('autoplay/autoplay_message_ok_bg.webp'),
+	sliderHead: uiHtmlAssetUrl('autoplay/slider/head.webp'),
+	sliderFull: uiHtmlAssetUrl('autoplay/slider/full.webp'),
+	sliderButton: uiHtmlAssetUrl('autoplay/slider/button.webp'),
+	sliderEmpty: uiHtmlAssetUrl('autoplay/slider/empty.webp'),
+	startButton: uiHtmlAssetUrl('autoplay/main_button.webp'),
 } as const;
 
 export const FEATURE_TOGGLE_ASSETS = {
-	bonusSwitchBg: uiHtmlAssetUrl('bonus_switch/bonus_switch.png'),
+	bonusSwitchBg: uiHtmlAssetUrl('bonus_switch/bonus_switch.webp'),
 	menuCatIcon: `${import.meta.env.BASE_URL}assets/sprites/bonusBar/cat_static.png`,
 } as const;
 
@@ -80,7 +76,6 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	HUD_ASSETS.betMinus,
 	HUD_ASSETS.betPlus,
 	HUD_ASSETS.spin1,
-	HUD_ASSETS.spin2,
 	HUD_ASSETS.autoplay,
 	HUD_ASSETS.autoplayMobile,
 	HUD_ASSETS.turbo1,
@@ -154,7 +149,6 @@ export const startBuyBonusFlowPreload = () => {
 
 const LOADING_IDLE_UI_PRIORITY = [
 	HUD_ASSETS.spin1,
-	HUD_ASSETS.spin2,
 	HUD_ASSETS.menu,
 	HUD_ASSETS.info,
 	HUD_ASSETS.buyBonusPanel,

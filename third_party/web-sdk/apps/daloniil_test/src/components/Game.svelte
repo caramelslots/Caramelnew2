@@ -4,7 +4,7 @@
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
-	import { App } from 'pixi-svelte';
+	import GameApp from './GameApp.svelte';
 	import { stateModal } from 'state-shared';
 
 	import { UiGameName } from 'components-ui-pixi';
@@ -70,7 +70,7 @@
 	class="pixi-stage"
 	class:above-html-ui={context.stateGame.transitionActive || context.stateGame.winOverlayActive}
 >
-	<App maxResolution={3} tuneForMobilePortrait>
+	<GameApp maxResolution={3} tuneForMobilePortrait>
 		<EnableSound />
 		<EnableSymbolTextureOptimization />
 		<EnableUiTextureOptimization />
@@ -114,7 +114,7 @@
 				<Transition />
 			</FadeContainer>
 		{/if}
-	</App>
+	</GameApp>
 </div>
 
 <LoaderCardsHtmlOverlay />

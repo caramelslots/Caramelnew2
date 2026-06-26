@@ -4,13 +4,13 @@ export const resolveGameStaticUrl = (path: string) =>
 		.href;
 
 /** Bootstrap splash + Pixi `mainBackground` on the press-to-continue screen. */
-export const LOADER_NEXT_SCREEN_BG_URL = resolveGameStaticUrl('assets/sprites/background/day.png');
+export const LOADER_NEXT_SCREEN_BG_URL = resolveGameStaticUrl('assets/sprites/background/day.webp');
 
 let backgroundPreloadStarted = false;
 
 /**
  * Warm the next-screen background during the Stake Engine GIF loader so
- * BootstrapLoader / press-to-continue do not flash black while day.png decodes.
+ * BootstrapLoader / press-to-continue do not flash black while day.webp decodes.
  */
 export const startEarlyLoaderBackgroundPreload = () => {
 	if (backgroundPreloadStarted || typeof window === 'undefined') return;
