@@ -58,9 +58,11 @@ export default {
 	GAME_INFO_ABOUT_TITLE: 'ОБ ИГРЕ',
 	GAME_INFO_ABOUT_BODY:
 		'Wok Fury — слот с 5 барабанами и 5 рядами, 25 линий выплат. Выигрыши считаются слева направо на соседних барабанах, начиная с крайнего левого. По каждой линии выплачивается только наибольший выигрыш.',
+	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'СПЕЦИАЛЬНЫЕ СИМВОЛЫ',
 	GAME_INFO_WILD_TITLE: 'ВАЙЛД СИМВОЛ',
 	GAME_INFO_WILD_BODY:
 		'Символ Wild заменяет все оплачиваемые символы, кроме Bonus. Wild платит 225× ставки за 5 одинаковых.',
+	GAME_INFO_BONUS_SYMBOL_TITLE: 'СИМВОЛ BONUS',
 	GAME_INFO_FS_TITLE: 'ФРИСПИНЫ',
 	GAME_INFO_FS_BODY:
 		'Соберите 3 символа Bonus в базовой игре, чтобы получить Normal Bonus с 10 фриспинами. Соберите 4 и более символов Bonus, чтобы получить Super Bonus с 10 фриспинами и 1 Sticky Mystery Reel с начала.',
@@ -71,6 +73,7 @@ export default {
 	GAME_INFO_BET_MODES_BODY:
 		'RTP базового режима — 96.01%. Bonus Boost стоит 2× ставки и увеличивает шанс запуска фриспинов. Special Spins стоит 30× ставки. Покупка Normal Bonus стоит 100× ставки. Покупка Super Bonus стоит 200× ставки. Максимальный выигрыш — 2 500× ставки в любом режиме.',
 	GAME_INFO_PAYTABLE_TITLE: 'ТАБЛИЦА ВЫПЛАТ (× СТАВКА)',
+	GAME_INFO_PAYTABLE_NOTE: 'Все значения выплат указаны как множители от общей ставки.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
 	GAME_INFO_LEGAL_TITLE: 'ПРАВОВАЯ ИНФОРМАЦИЯ',

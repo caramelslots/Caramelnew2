@@ -58,9 +58,11 @@ export default {
 	GAME_INFO_ABOUT_TITLE: '게임 소개',
 	GAME_INFO_ABOUT_BODY:
 		'Wok Fury는 5릴 5행, 25개 페이라인 슬롯입니다. 당첨금은 가장 왼쪽 릴부터 인접한 릴에서 왼쪽에서 오른쪽으로 지급됩니다. 각 라인에서는 가장 높은 당첨금만 지급됩니다.',
+	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'WILD 심볼',
 	GAME_INFO_WILD_BODY:
 		'Wild 심볼은 Bonus 심볼을 제외한 모든 유료 심볼을 대체합니다. Wild는 5개 일치 시 베팅의 225배를 지급합니다.',
+	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: '무료 스핀',
 	GAME_INFO_FS_BODY:
 		'기본 게임에서 Bonus 심볼 3개를 맞추면 10회 무료 스핀이 있는 Normal Bonus가 발동됩니다. Bonus 심볼 4개 이상을 맞추면 10회 무료 스핀과 처음부터 Sticky Mystery Reel 1개가 있는 Super Bonus가 발동됩니다.',
@@ -71,6 +73,7 @@ export default {
 	GAME_INFO_BET_MODES_BODY:
 		'기본 모드 RTP는 96.01%입니다. Bonus Boost는 베팅의 2배이며 무료 스핀 발동 확률이 증가합니다. Special Spins는 베팅의 30배입니다. Normal Bonus 구매는 베팅의 100배, Super Bonus 구매는 베팅의 200배입니다. 모든 모드에서 최대 당첨금은 베팅의 2,500배입니다.',
 	GAME_INFO_PAYTABLE_TITLE: '페이테이블 (× 베팅)',
+	GAME_INFO_PAYTABLE_NOTE: 'All payout values are multiples of the total bet.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
 	GAME_INFO_LEGAL_TITLE: '법적 고지',

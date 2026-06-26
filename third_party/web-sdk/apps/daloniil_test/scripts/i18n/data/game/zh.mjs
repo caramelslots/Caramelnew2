@@ -58,9 +58,11 @@ export default {
 	GAME_INFO_ABOUT_TITLE: '关于游戏',
 	GAME_INFO_ABOUT_BODY:
 		'Wok Fury 是一款 5 转轴 5 行、25 条支付线的老虎机。奖金从最左侧转轴开始，在相邻转轴上从左向右支付。每条线仅支付最高奖金。',
+	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'WILD 符号',
 	GAME_INFO_WILD_BODY:
 		'Wild 符号可替代除 Bonus 符号外的所有赔付符号。Wild 在 5 连时支付 225× 投注。',
+	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: '免费旋转',
 	GAME_INFO_FS_BODY:
 		'在基础游戏中获得 3 个 Bonus 符号可触发含 10 次免费旋转的 Normal Bonus。获得 4 个或更多 Bonus 符号可触发含 10 次免费旋转且从一开始就有 1 个 Sticky Mystery Reel 的 Super Bonus。',
@@ -71,6 +73,7 @@ export default {
 	GAME_INFO_BET_MODES_BODY:
 		'基础模式 RTP 为 96.01%。Bonus Boost 花费 2× 投注并提高触发免费旋转的几率。Special Spins 花费 30× 投注。购买 Normal Bonus 花费 100× 投注，购买 Super Bonus 花费 200× 投注。所有模式的最大赢奖为 2,500× 投注。',
 	GAME_INFO_PAYTABLE_TITLE: '赔付表（× 投注）',
+	GAME_INFO_PAYTABLE_NOTE: 'All payout values are multiples of the total bet.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
 	GAME_INFO_LEGAL_TITLE: '法律声明',

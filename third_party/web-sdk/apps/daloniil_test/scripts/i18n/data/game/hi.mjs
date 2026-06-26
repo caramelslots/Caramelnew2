@@ -58,9 +58,11 @@ export default {
 	GAME_INFO_ABOUT_TITLE: 'गेम के बारे में',
 	GAME_INFO_ABOUT_BODY:
 		'Wok Fury 5 रील, 5 पंक्ति और 25 पेलाइन वाला स्लॉट है। जीत बाएँ से दाएँ, सन्निकट रीलों पर, सबसे बाएँ रील से शुरू होकर दी जाती है। प्रति लाइन केवल सबसे बड़ी जीत का भुगतान होता है।',
+	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'WILD प्रतीक',
 	GAME_INFO_WILD_BODY:
 		'Wild प्रतीक Bonus प्रतीक को छोड़कर सभी भुगतान वाले प्रतीकों की जगह लेता है। Wild 5 मिलान पर 225× दांव देता है।',
+	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'मुफ़्त स्पिन',
 	GAME_INFO_FS_BODY:
 		'बेस गेम में 3 Bonus प्रतीक लगाएँ और 10 मुफ़्त स्पिन वाला Normal Bonus पाएँ। 4 या अधिक Bonus प्रतीक लगाएँ और 10 मुफ़्त स्पिन तथा शुरुआत से 1 Sticky Mystery Reel वाला Super Bonus पाएँ।',
@@ -71,6 +73,7 @@ export default {
 	GAME_INFO_BET_MODES_BODY:
 		'बेस मोड RTP 96.01% है। Bonus Boost की कीमत 2× दांव है और मुफ़्त स्पिन ट्रिगर की संभावना बढ़ाता है। Special Spins की कीमत 30× दांव है। Normal Bonus खरीदने की कीमत 100× दांव है। Super Bonus खरीदने की कीमत 200× दांव है। हर मोड में अधिकतम जीत 2,500× दांव है।',
 	GAME_INFO_PAYTABLE_TITLE: 'पेटेबल (× दांव)',
+	GAME_INFO_PAYTABLE_NOTE: 'All payout values are multiples of the total bet.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
 	GAME_INFO_LEGAL_TITLE: 'कानूनी सूचना',

@@ -1,4 +1,5 @@
 import { preloadHtmlImages } from './preloadHtmlImages';
+import { GAME_INFO_SYMBOL_IMAGE_URLS } from './gameInfoSymbols';
 
 const UI_ASSET_BASE = `${import.meta.env.BASE_URL}assets/sprites/ui`;
 
@@ -113,6 +114,7 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	BUY_BONUS_ASSETS.buyButtonBg,
 	BUY_BONUS_ASSETS.cancelButtonBg,
 	BUY_BONUS_ASSETS.confirmButtonBg,
+	...GAME_INFO_SYMBOL_IMAGE_URLS,
 ]);
 
 export const BUY_BONUS_FLOW_IMAGE_URLS = dedupeUrls([

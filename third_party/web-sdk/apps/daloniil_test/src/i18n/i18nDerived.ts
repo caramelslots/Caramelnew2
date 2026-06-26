@@ -90,4 +90,13 @@ export const i18nDerived = {
 	// Game info / rules
 	gameInfoTitle: () => t('GAME_INFO_TITLE'),
 	gameInfoSections: () => getGameInfoSections(t),
+	gameInfoSpecialSymbolsTitle: () => t('GAME_INFO_SPECIAL_SYMBOLS_TITLE'),
+	gameInfoPaytableTitle: () => t('GAME_INFO_PAYTABLE_TITLE'),
+	gameInfoPaytableNote: () => t('GAME_INFO_PAYTABLE_NOTE'),
+	gameInfoBonusSymbolTitle: () => t('GAME_INFO_BONUS_SYMBOL_TITLE'),
+	gameInfoWildTitle: () => t('GAME_INFO_WILD_TITLE'),
+	gameInfoWildBody: () => t('GAME_INFO_WILD_BODY'),
+	gameInfoFsBody: () => t('GAME_INFO_FS_BODY'),
+	gameInfoMysteryTitle: () => t('GAME_INFO_MYSTERY_TITLE'),
+	gameInfoMysteryBody: () => t('GAME_INFO_MYSTERY_BODY'),
 };

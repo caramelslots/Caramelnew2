@@ -58,9 +58,11 @@ export default {
 	GAME_INFO_ABOUT_TITLE: 'ABOUT THE GAME',
 	GAME_INFO_ABOUT_BODY:
 		'Wok Fury is a 5-reel, 5-row slot with 25 paylines. Wins are paid from left to right on adjacent reels, starting from the leftmost reel. Only the highest win per line is paid.',
+	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'WILD SYMBOL',
 	GAME_INFO_WILD_BODY:
 		'The Wild symbol substitutes for all paying symbols except the Bonus symbol. Wild pays 225× bet for 5 of a kind.',
+	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'FREE SPINS',
 	GAME_INFO_FS_BODY:
 		'Land 3 Bonus symbols in the base game to trigger Normal Bonus with 10 free spins. Land 4 or more Bonus symbols to trigger Super Bonus with 10 free spins and 1 Sticky Mystery Reel from the start.',
@@ -71,6 +73,7 @@ export default {
 	GAME_INFO_BET_MODES_BODY:
 		'Base mode RTP is 96.01%. Bonus Boost costs 2× the bet and increases the chance of triggering free spins. Special Spins costs 30× the bet. Buy Normal Bonus costs 100× the bet. Buy Super Bonus costs 200× the bet. Maximum win is 2,500× the bet in every bet mode.',
 	GAME_INFO_PAYTABLE_TITLE: 'PAYTABLE (× BET)',
+	GAME_INFO_PAYTABLE_NOTE: 'All payout values are multiples of the total bet.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
 	GAME_INFO_LEGAL_TITLE: 'LEGAL NOTICE',

@@ -58,9 +58,11 @@ export default {
 	GAME_INFO_ABOUT_TITLE: 'OYUN HAKKINDA',
 	GAME_INFO_ABOUT_BODY:
 		'Wok Fury, 5 makaralı, 5 sıralı ve 25 ödeme hattına sahip bir slot oyunudur. Kazançlar en soldaki makaradan başlayarak bitişik makaralarda soldan sağa ödenir. Her hat için yalnızca en yüksek kazanç ödenir.',
+	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'WILD SEMBOLÜ',
 	GAME_INFO_WILD_BODY:
 		'Wild sembolü, Bonus sembolü hariç tüm ödeme yapan sembollerin yerine geçer. Wild, 5 aynı sembol için 225× bahis öder.',
+	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'ÜCRETSİZ DÖNÜŞLER',
 	GAME_INFO_FS_BODY:
 		'Temel oyunda 3 Bonus sembolü yakalayarak 10 ücretsiz dönüşlü Normal Bonus tetikleyin. 4 veya daha fazla Bonus sembolü yakalayarak 10 ücretsiz dönüş ve baştan 1 Sticky Mystery Reel içeren Super Bonus tetikleyin.',
@@ -71,6 +73,7 @@ export default {
 	GAME_INFO_BET_MODES_BODY:
 		'Temel mod RTP\'si %96,01\'dir. Bonus Boost, bahsin 2 katına mal olur ve ücretsiz dönüş tetikleme şansını artırır. Special Spins, bahsin 30 katına mal olur. Normal Bonus satın alma bahsin 100 katı, Super Bonus satın alma bahsin 200 katıdır. Her modda maksimum kazanç bahsin 2.500 katıdır.',
 	GAME_INFO_PAYTABLE_TITLE: 'ÖDEME TABLOSU (× BAHİS)',
+	GAME_INFO_PAYTABLE_NOTE: 'All payout values are multiples of the total bet.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
 	GAME_INFO_LEGAL_TITLE: 'YASAL UYARI',

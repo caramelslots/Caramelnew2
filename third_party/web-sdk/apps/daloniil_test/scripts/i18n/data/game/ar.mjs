@@ -58,9 +58,11 @@ export default {
 	GAME_INFO_ABOUT_TITLE: 'عن اللعبة',
 	GAME_INFO_ABOUT_BODY:
 		'Wok Fury هي لعبة سلوت بـ 5 بكرات و5 صفوف و25 خط دفع. تُدفع الأرباح من اليسار إلى اليمين على البكرات المجاورة، بدءًا من البكرة اليسرى. يُدفع أعلى ربح فقط لكل خط.',
+	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'رمز WILD',
 	GAME_INFO_WILD_BODY:
 		'يحل رمز Wild محل جميع الرموز المدفوعة باستثناء رمز Bonus. يدفع Wild 225× الرهان مقابل 5 من النوع نفسه.',
+	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'دورات مجانية',
 	GAME_INFO_FS_BODY:
 		'احصل على 3 رموز Bonus في اللعبة الأساسية لتفعيل Normal Bonus مع 10 دورات مجانية. احصل على 4 رموز Bonus أو أكثر لتفعيل Super Bonus مع 10 دورات مجانية و1 Sticky Mystery Reel من البداية.',
@@ -71,6 +73,7 @@ export default {
 	GAME_INFO_BET_MODES_BODY:
 		'RTP الوضع الأساسي هو 96.01%. يكلف Bonus Boost ضعف الرهان ويزيد فرصة تفعيل الدورات المجانية. تكلف Special Spins 30× الرهان. شراء Normal Bonus يكلف 100× الرهان. شراء Super Bonus يكلف 200× الرهان. الحد الأقصى للفوز هو 2,500× الرهان في كل وضع.',
 	GAME_INFO_PAYTABLE_TITLE: 'جدول المدفوعات (× الرهان)',
+	GAME_INFO_PAYTABLE_NOTE: 'All payout values are multiples of the total bet.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
 	GAME_INFO_LEGAL_TITLE: 'إشعار قانوني',
