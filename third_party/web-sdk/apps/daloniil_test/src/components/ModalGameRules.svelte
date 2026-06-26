@@ -15,12 +15,15 @@
 		getSymbolPayRows,
 		type GameInfoSymbolId,
 	} from '../game/gameInfoSymbols';
+	import GameInfoPaylinesGrid from './GameInfoPaylinesGrid.svelte';
 
 	const context = getContext();
 
 	const gameInfoTitle = $derived(context.i18nDerived.gameInfoTitle());
 	const gameInfoSections = $derived(context.i18nDerived.gameInfoSections());
 	const specialSymbolsTitle = $derived(context.i18nDerived.gameInfoSpecialSymbolsTitle());
+	const paylinesTitle = $derived(context.i18nDerived.gameInfoPaylinesTitle());
+	const paylinesNote = $derived(context.i18nDerived.gameInfoPaylinesNote());
 	const paytableTitle = $derived(context.i18nDerived.gameInfoPaytableTitle());
 	const paytableNote = $derived(context.i18nDerived.gameInfoPaytableNote());
 
@@ -75,6 +78,12 @@
 								{#each section.body.split('\n') as line, index (section.title + index)}
 									<p>{line}</p>
 								{/each}
+							</section>
+
+							<section class="section">
+								<h3>{paylinesTitle}</h3>
+								<p class="paytable-note">{paylinesNote}</p>
+								<GameInfoPaylinesGrid />
 							</section>
 
 							<section class="section">
@@ -164,7 +173,7 @@
 
 <style lang="scss">
 	.rules {
-		max-width: min(720px, 92vw);
+		max-width: min(860px, 94vw);
 		max-height: 70vh;
 		overflow-y: auto;
 		text-align: left;

@@ -58,6 +58,9 @@ export default {
 	GAME_INFO_ABOUT_TITLE: 'TENTANG PERMAINAN',
 	GAME_INFO_ABOUT_BODY:
 		'Wok Fury adalah slot 5 reel, 5 baris dengan 25 payline. Kemenangan dibayar dari kiri ke kanan pada reel yang berdekatan, dimulai dari reel paling kiri. Hanya kemenangan tertinggi per garis yang dibayar.',
+	GAME_INFO_PAYLINES_TITLE: 'PAYLINES (25)',
+	GAME_INFO_PAYLINES_NOTE:
+		'All 25 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel.',
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'SIMBOL WILD',
 	GAME_INFO_WILD_BODY:

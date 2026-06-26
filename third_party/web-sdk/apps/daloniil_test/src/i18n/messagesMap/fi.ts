@@ -57,6 +57,8 @@ export default {
 	GAME_INFO_TITLE: 'PELIN TIEDOT',
 	GAME_INFO_ABOUT_TITLE: 'TIETOJA PELISTÄ',
 	GAME_INFO_ABOUT_BODY: 'Wok Fury on 5 rullan ja 5 rivin kolikkopeli, jossa on 25 voittolinjaa. Voitot maksetaan vasemmalta oikealle vierekkäisillä rullilla alkaen vasemmanpuoleisimmasta rullasta. Vain korkein voitto per linja maksetaan.',
+	GAME_INFO_PAYLINES_TITLE: 'PAYLINES (25)',
+	GAME_INFO_PAYLINES_NOTE: 'All 25 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel.',
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'WILD-SYMBOLI',
 	GAME_INFO_WILD_BODY: 'Wild-symboli korvaa kaikki maksavat symbolit paitsi Bonus-symbolin. Wild maksaa 225× panoksen viidestä samanlaisesta.',

@@ -57,6 +57,8 @@ export default {
 	GAME_INFO_TITLE: 'OYUN BİLGİSİ',
 	GAME_INFO_ABOUT_TITLE: 'OYUN HAKKINDA',
 	GAME_INFO_ABOUT_BODY: 'Wok Fury, 5 makaralı, 5 sıralı ve 25 ödeme hattına sahip bir slot oyunudur. Kazançlar en soldaki makaradan başlayarak bitişik makaralarda soldan sağa ödenir. Her hat için yalnızca en yüksek kazanç ödenir.',
+	GAME_INFO_PAYLINES_TITLE: 'PAYLINES (25)',
+	GAME_INFO_PAYLINES_NOTE: 'All 25 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel.',
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'WILD SEMBOLÜ',
 	GAME_INFO_WILD_BODY: 'Wild sembolü, Bonus sembolü hariç tüm ödeme yapan sembollerin yerine geçer. Wild, 5 aynı sembol için 225× bahis öder.',

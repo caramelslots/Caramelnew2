@@ -58,6 +58,9 @@ export default {
 	GAME_INFO_ABOUT_TITLE: 'ABOUT THE GAME',
 	GAME_INFO_ABOUT_BODY:
 		'Wok Fury is a 5-reel, 5-row slot with 25 paylines. Wins are paid from left to right on adjacent reels, starting from the leftmost reel. Only the highest win per line is paid.',
+	GAME_INFO_PAYLINES_TITLE: 'PAYLINES (25)',
+	GAME_INFO_PAYLINES_NOTE:
+		'All 25 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel.',
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'WILD SYMBOL',
 	GAME_INFO_WILD_BODY:

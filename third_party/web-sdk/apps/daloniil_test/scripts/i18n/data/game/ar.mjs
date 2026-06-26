@@ -58,6 +58,9 @@ export default {
 	GAME_INFO_ABOUT_TITLE: 'عن اللعبة',
 	GAME_INFO_ABOUT_BODY:
 		'Wok Fury هي لعبة سلوت بـ 5 بكرات و5 صفوف و25 خط دفع. تُدفع الأرباح من اليسار إلى اليمين على البكرات المجاورة، بدءًا من البكرة اليسرى. يُدفع أعلى ربح فقط لكل خط.',
+	GAME_INFO_PAYLINES_TITLE: 'PAYLINES (25)',
+	GAME_INFO_PAYLINES_NOTE:
+		'All 25 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel.',
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'رمز WILD',
 	GAME_INFO_WILD_BODY:

@@ -58,6 +58,9 @@ export default {
 	GAME_INFO_ABOUT_TITLE: 'VỀ TRÒ CHƠI',
 	GAME_INFO_ABOUT_BODY:
 		'Wok Fury là slot 5 cuộn, 5 hàng với 25 dòng thanh toán. Tiền thắng được trả từ trái sang phải trên các cuộn liền kề, bắt đầu từ cuộn ngoài cùng bên trái. Chỉ trả khoản thắng cao nhất trên mỗi dòng.',
+	GAME_INFO_PAYLINES_TITLE: 'PAYLINES (25)',
+	GAME_INFO_PAYLINES_NOTE:
+		'All 25 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel.',
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'BIỂU TƯỢNG WILD',
 	GAME_INFO_WILD_BODY:

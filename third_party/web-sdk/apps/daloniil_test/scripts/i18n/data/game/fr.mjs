@@ -58,6 +58,9 @@ export default {
 	GAME_INFO_ABOUT_TITLE: 'À PROPOS DU JEU',
 	GAME_INFO_ABOUT_BODY:
 		'Wok Fury est une machine à sous à 5 rouleaux et 5 rangées avec 25 lignes de paiement. Les gains sont payés de gauche à droite sur des rouleaux adjacents, en commençant par le rouleau le plus à gauche. Seul le gain le plus élevé par ligne est payé.',
+	GAME_INFO_PAYLINES_TITLE: 'PAYLINES (25)',
+	GAME_INFO_PAYLINES_NOTE:
+		'All 25 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel.',
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'SYMBOLE WILD',
 	GAME_INFO_WILD_BODY:

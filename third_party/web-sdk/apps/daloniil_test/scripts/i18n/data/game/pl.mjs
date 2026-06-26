@@ -58,6 +58,9 @@ export default {
 	GAME_INFO_ABOUT_TITLE: 'O GRZE',
 	GAME_INFO_ABOUT_BODY:
 		'Wok Fury to automat z 5 bębnami i 5 rzędami oraz 25 liniami wypłat. Wygrane są wypłacane od lewej do prawej na sąsiednich bębnach, zaczynając od skrajnie lewego. Na każdej linii wypłacana jest tylko najwyższa wygrana.',
+	GAME_INFO_PAYLINES_TITLE: 'PAYLINES (25)',
+	GAME_INFO_PAYLINES_NOTE:
+		'All 25 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel.',
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'SYMBOL WILD',
 	GAME_INFO_WILD_BODY:

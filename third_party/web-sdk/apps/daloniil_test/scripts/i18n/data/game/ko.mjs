@@ -58,6 +58,9 @@ export default {
 	GAME_INFO_ABOUT_TITLE: '게임 소개',
 	GAME_INFO_ABOUT_BODY:
 		'Wok Fury는 5릴 5행, 25개 페이라인 슬롯입니다. 당첨금은 가장 왼쪽 릴부터 인접한 릴에서 왼쪽에서 오른쪽으로 지급됩니다. 각 라인에서는 가장 높은 당첨금만 지급됩니다.',
+	GAME_INFO_PAYLINES_TITLE: 'PAYLINES (25)',
+	GAME_INFO_PAYLINES_NOTE:
+		'All 25 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel.',
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'WILD 심볼',
 	GAME_INFO_WILD_BODY:

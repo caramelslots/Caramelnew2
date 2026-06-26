@@ -58,6 +58,9 @@ export default {
 	GAME_INFO_ABOUT_TITLE: '关于游戏',
 	GAME_INFO_ABOUT_BODY:
 		'Wok Fury 是一款 5 转轴 5 行、25 条支付线的老虎机。奖金从最左侧转轴开始，在相邻转轴上从左向右支付。每条线仅支付最高奖金。',
+	GAME_INFO_PAYLINES_TITLE: 'PAYLINES (25)',
+	GAME_INFO_PAYLINES_NOTE:
+		'All 25 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel.',
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'WILD 符号',
 	GAME_INFO_WILD_BODY:

@@ -57,6 +57,8 @@ export default {
 	GAME_INFO_TITLE: 'INFORMAÇÕES DO JOGO',
 	GAME_INFO_ABOUT_TITLE: 'SOBRE O JOGO',
 	GAME_INFO_ABOUT_BODY: 'Wok Fury é um slot de 5 rolos e 5 linhas com 25 linhas de pagamento. Os ganhos são pagos da esquerda para a direita em rolos adjacentes, começando pelo rolo mais à esquerda. Apenas o maior ganho por linha é pago.',
+	GAME_INFO_PAYLINES_TITLE: 'PAYLINES (25)',
+	GAME_INFO_PAYLINES_NOTE: 'All 25 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel.',
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'SÍMBOLO WILD',
 	GAME_INFO_WILD_BODY: 'O símbolo Wild substitui todos os símbolos pagantes, exceto o símbolo Bonus. Wild paga 225× a aposta por 5 iguais.',
