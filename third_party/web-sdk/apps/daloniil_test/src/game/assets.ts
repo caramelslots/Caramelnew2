@@ -206,6 +206,14 @@ export default {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/symbolsNew/Mystery_bg.png'),
 	},
+	anticipation: {
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/anticipation/anticipation.atlas'),
+			skeleton: assetUrl('assets/spines/anticipation/anticipation.json'),
+			scale: 2,
+		},
+	},
 	babloFont: {
 		type: 'font',
 		src: assetUrl('assets/fonts/babloFont/bablo.fnt'),

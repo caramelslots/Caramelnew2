@@ -78,11 +78,9 @@ export const getLocaleSpecificFontKeys = (locale: string): readonly (keyof typeo
 };
 
 /**
- * Cards screen — bonus bar, win variants, locale fonts (all declared for
- * count check), coins, HUD sprites. Must finish before "Press to continue".
- *
- * NOTE: anticipation is intentionally absent — REDESIGN_PLAN §2.4 disabled
- * the effect and the math never emits anticipation > 0.
+ * Cards screen — bonus bar, win variants, anticipation overlay, locale fonts
+ * (all declared for count check), coins, HUD sprites. Must finish before
+ * "Press to continue".
  */
 export const LOADER_BATCH_3_KEYS = [
 	'bonusBarV',
@@ -90,6 +88,7 @@ export const LOADER_BATCH_3_KEYS = [
 	'bonusBarCat',
 	'WWin',
 	'BWin',
+	'anticipation',
 	...LOCALE_FONT_KEYS,
 	'coins',
 	'betPlus',
