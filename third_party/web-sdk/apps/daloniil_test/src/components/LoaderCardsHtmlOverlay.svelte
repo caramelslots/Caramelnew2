@@ -27,8 +27,6 @@
 	const show = $derived(
 		context.stateLayout.showLoadingScreen && gameEntrance.loadingCardsVisible,
 	);
-	const loadingProgress = $derived(Math.round(context.stateApp.loadingProgress));
-	const showLoadProgress = $derived(show && !context.stateApp.loaded);
 	const useCarousel = $derived(shouldUseLoaderCarousel(context.stateLayoutDerived));
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 
@@ -168,14 +166,6 @@
 				{/each}
 			</div>
 		{/if}
-		{#if showLoadProgress}
-			<div class="load-progress" aria-hidden="true">
-				<div class="load-progress__track">
-					<div class="load-progress__fill" style:width="{loadingProgress}%"></div>
-				</div>
-				<span class="load-progress__label">{loadingProgress}%</span>
-			</div>
-		{/if}
 		</div>
 	</div>
 {/if}
@@ -230,38 +220,5 @@
 		align-items: center;
 		justify-content: center;
 		height: 100%;
-	}
-
-	.load-progress {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 6px;
-		margin-top: 14px;
-		min-width: min(280px, 72vw);
-	}
-
-	.load-progress__track {
-		width: 100%;
-		height: 6px;
-		border-radius: 999px;
-		background: rgba(255, 255, 255, 0.12);
-		overflow: hidden;
-		box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-	}
-
-	.load-progress__fill {
-		height: 100%;
-		border-radius: inherit;
-		background: linear-gradient(90deg, #ff4fd8 0%, #7c5cff 100%);
-		transition: width 120ms linear;
-	}
-
-	.load-progress__label {
-		font-family: 'JetBrains Mono', 'Menlo', monospace;
-		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.08em;
-		color: rgba(255, 255, 255, 0.72);
 	}
 </style>
