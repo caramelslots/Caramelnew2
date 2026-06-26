@@ -1,6 +1,7 @@
 import type { Asset, Assets } from 'pixi-svelte';
 
 import assets from './assets';
+import { isCjkLocale } from './constants';
 import { LOADER_SCREEN_IMAGE_URLS } from './loaderCardAssets';
 
 /** Stake GIF screen — day backgrounds, audio manifest, transition, press font, high symbols. */
@@ -49,26 +50,47 @@ export const LOADER_BATCH_2_KEYS = [
 	'babloFont',
 ] as const satisfies readonly (keyof typeof assets)[];
 
-/** Cards screen — bonus bar, win variants, CJK fonts, bigwin/fs, coins, HUD sprites. */
+/**
+ * All six locale-specific font keys. Always declared in batch 3 so the
+ * key-count check (LOADER_ASSET_KEY_COUNT === Object.keys(assets).length)
+ * passes. Only the subset matching the active locale is actually loaded by
+ * GameAssetsLoader — the rest are intentionally skipped.
+ */
+export const LOCALE_FONT_KEYS = [
+	'prostoiFontHi',
+	'prostoiWhiteFontHi',
+	'prostoiFontVi',
+	'prostoiWhiteFontVi',
+	'prostoiFontCjk',
+	'prostoiWhiteFontCjk',
+] as const satisfies readonly (keyof typeof assets)[];
+
+/**
+ * Returns only the locale-specific font keys needed for the given locale.
+ * All other locales (en, ru, ar, …) use the base prostoi/krutoi atlases
+ * already in batch 1 & 2 and need no extra files here.
+ */
+export const getLocaleSpecificFontKeys = (locale: string): readonly (keyof typeof assets)[] => {
+	if (locale === 'hi') return ['prostoiFontHi', 'prostoiWhiteFontHi'];
+	if (locale === 'vi') return ['prostoiFontVi', 'prostoiWhiteFontVi'];
+	if (isCjkLocale(locale)) return ['prostoiFontCjk', 'prostoiWhiteFontCjk'];
+	return [];
+};
+
+/**
+ * Cards screen — bonus bar, win variants, locale fonts (all declared for
+ * count check), coins, HUD sprites. Must finish before "Press to continue".
+ *
+ * NOTE: anticipation is intentionally absent — REDESIGN_PLAN §2.4 disabled
+ * the effect and the math never emits anticipation > 0.
+ */
 export const LOADER_BATCH_3_KEYS = [
 	'bonusBarV',
 	'bonusBarH',
 	'bonusBarCat',
 	'WWin',
 	'BWin',
-	'anticipation',
-	'prostoiFontHi',
-	'prostoiFontVi',
-	'prostoiFontCjk',
-	'prostoiWhiteFontHi',
-	'prostoiWhiteFontVi',
-	'prostoiWhiteFontCjk',
-	'bigwin',
-	'fsPopup',
-	'reelhouse',
-	'fsCongBoard',
-	'fsCongNumber',
-	'fsLeftCounter',
+	...LOCALE_FONT_KEYS,
 	'coins',
 	'betPlus',
 	'betMinus',
@@ -82,10 +104,26 @@ export const LOADER_BATCH_3_KEYS = [
 	'turbo3',
 ] as const satisfies readonly (keyof typeof assets)[];
 
+/**
+ * Post-entry deferred batch — heavy Spine animations only needed for bonus
+ * events (big win, free-spin intro/outro, reel-house glow). These assets
+ * are never rendered until after the cloud transition completes, so they
+ * load in the background while the player reads "Press to continue".
+ */
+export const LOADER_BATCH_4_KEYS = [
+	'bigwin',
+	'fsPopup',
+	'reelhouse',
+	'fsCongBoard',
+	'fsCongNumber',
+	'fsLeftCounter',
+] as const satisfies readonly (keyof typeof assets)[];
+
 export const LOADER_ASSET_BATCHES = [
 	LOADER_BATCH_1_KEYS,
 	LOADER_BATCH_2_KEYS,
 	LOADER_BATCH_3_KEYS,
+	LOADER_BATCH_4_KEYS,
 ] as const;
 
 export const LOADER_ASSET_KEY_COUNT = LOADER_ASSET_BATCHES.reduce(
@@ -117,6 +155,18 @@ export const collectBatchHttpUrls = (
 	}
 
 	return [...urls];
+};
+
+/**
+ * Returns batch-3 keys filtered to the active locale — skips the 4 locale
+ * font keys that don't apply (saves 0.8–3 MB of Pixi loads for most users).
+ */
+export const getBatch3KeysForLocale = (locale: string): readonly string[] => {
+	const activeFontKeys = new Set(getLocaleSpecificFontKeys(locale));
+	const localeFontSet = new Set<string>(LOCALE_FONT_KEYS);
+	return LOADER_BATCH_3_KEYS.filter(
+		(key) => !localeFontSet.has(key) || activeFontKeys.has(key),
+	);
 };
 
 /** HTTP warm-up during the Stake GIF (before Pixi / auth may be ready). */

@@ -9,8 +9,10 @@
 	import {
 		LOADER_ASSET_BATCHES,
 		LOADER_ASSET_KEY_COUNT,
+		getBatch3KeysForLocale,
 	} from '../game/assetLoadPlan';
 	import { waitForLoaderStage } from '../game/loaderAssetPipeline.svelte';
+	import { stateUrlDerived } from 'state-shared';
 
 	type Props = { children: Snippet };
 
@@ -70,7 +72,14 @@
 				loadedCount = 0;
 				context.stateApp.loadingProgress = 0;
 
-				const [batch1, batch2, batch3] = LOADER_ASSET_BATCHES;
+				const [batch1, batch2, , batch4] = LOADER_ASSET_BATCHES;
+
+				// Batch 3 is filtered to the active locale — locale-specific font keys
+				// for other scripts (hi / vi / cjk) are skipped, saving 0.8–3 MB for
+				// most users. LOADER_ASSET_KEY_COUNT still includes all locale font keys
+				// so the progress bar slightly undershoots 100% before we force it below.
+				const locale = stateUrlDerived.lang();
+				const batch3 = getBatch3KeysForLocale(locale);
 
 				const batch1Assets = await loadAssetBatch(batch1);
 				mergeLoadedAssets(batch1Assets);
@@ -86,6 +95,13 @@
 
 				context.stateApp.loadingProgress = 100;
 				context.stateApp.loaded = true;
+
+				// Batch 4 contains heavy bonus-event assets (bigwin, fsPopup, reelhouse, etc.)
+				// that are only rendered after the cloud transition completes. Load them in the
+				// background while the player reads "Press to continue" and watches the transition.
+				void loadAssetBatch(batch4).then((batch4Assets) => {
+					mergeLoadedAssets(batch4Assets);
+				});
 			})();
 		}
 	});

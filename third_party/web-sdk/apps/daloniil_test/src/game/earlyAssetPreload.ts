@@ -1,6 +1,8 @@
 import {
 	collectBatch1EarlyPreloadUrls,
 	collectBatch2EarlyPreloadUrls,
+	collectBatchHttpUrls,
+	getBatch3KeysForLocale,
 } from './assetLoadPlan';
 
 const warmHttpCache = async (urls: readonly string[], concurrency: number) => {
@@ -45,4 +47,25 @@ export const startBatch2EarlyPreload = () => {
 	batch2Started = true;
 
 	void warmHttpCache(collectBatch2EarlyPreloadUrls(), 8);
+};
+
+let batch3Started = false;
+
+/**
+ * Warm batch-3 bytes during Bootstrap so that by the time the cards stage
+ * begins, the browser HTTP cache already holds the essential pre-continue
+ * assets (bonus bar, win variants, coins, HUD sprites, locale fonts).
+ * Called at the same time as setLoaderStage('bootstrap') to maximise the
+ * 2300 ms Bootstrap window.
+ *
+ * Uses the same locale-aware key filter as GameAssetsLoader so we only
+ * pre-fetch the font files the player will actually need.
+ */
+export const startBatch3EarlyPreload = () => {
+	if (batch3Started || typeof window === 'undefined') return;
+	batch3Started = true;
+
+	const locale = new URLSearchParams(window.location.search).get('lang') || 'en';
+	const batch3Keys = getBatch3KeysForLocale(locale);
+	void warmHttpCache(collectBatchHttpUrls(batch3Keys), 6);
 };
