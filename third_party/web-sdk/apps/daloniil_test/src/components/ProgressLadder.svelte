@@ -77,7 +77,8 @@
 		getPortraitBonusBarHeightPx,
 		getPortraitBonusBarWidthPx,
 		getPopoutBonusBarVScale,
-		getPortraitSmallMobileScaleFactor,
+		getPortraitDeviceWidth,
+		getPortraitPhoneScaleFactor,
 		isPopoutViewport,
 	} from '../game/constants';
 	import assets from '../game/assets';
@@ -141,7 +142,9 @@
 	const canvasSizeType = $derived(context.stateLayoutDerived.canvasSizeType());
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 	const isPopout = $derived(isPopoutViewport(canvasSizes));
-	const portraitCompactScale = $derived(getPortraitSmallMobileScaleFactor(canvasSizeType));
+	const portraitCompactScale = $derived(
+		getPortraitPhoneScaleFactor(canvasSizeType, getPortraitDeviceWidth(canvasSizes)),
+	);
 	const popoutBarScale = $derived(getPopoutBonusBarVScale(canvasSizes));
 
 	// devPreview.ladder toggled from the DEV panel (DevButtons.svelte).
@@ -159,8 +162,8 @@
 	const BAR_DIMS = $derived({
 		v: getDesktopBonusBarVDims(canvasSizes),
 		h: {
-			w: getPortraitBonusBarWidthPx(canvasSizeType),
-			h: getPortraitBonusBarHeightPx(canvasSizeType),
+			w: getPortraitBonusBarWidthPx(canvasSizeType, getPortraitDeviceWidth(canvasSizes)),
+			h: getPortraitBonusBarHeightPx(canvasSizeType, getPortraitDeviceWidth(canvasSizes)),
 		},
 	});
 	const barCompactScale = $derived(isDesktop ? popoutBarScale : portraitCompactScale);

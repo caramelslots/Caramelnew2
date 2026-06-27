@@ -4,6 +4,7 @@ import {
 	BOARD_LAYOUT_OFFSETS,
 	BOARD_SIZES,
 	getPortraitBoardScale,
+	getPortraitDeviceWidth,
 	getPortraitParchmentSize,
 	PORTRAIT_UI_LAYOUT,
 } from './constants';
@@ -45,7 +46,11 @@ export const portraitBoardBottomLocal = (layoutDerived: LayoutDerived) => {
 	const halfH =
 		layoutType === 'portrait'
 			? (getPortraitParchmentSize().height / 2) *
-					getPortraitBoardScale(ml.scale, layoutDerived.canvasSizeType())
+					getPortraitBoardScale(
+						ml.scale,
+						layoutDerived.canvasSizeType(),
+						getPortraitDeviceWidth(layoutDerived.canvasSizes()),
+					)
 			: BOARD_SIZES.height / 2;
 	return ml.height * 0.5 + off.y + halfH;
 };

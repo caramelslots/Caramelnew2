@@ -453,11 +453,34 @@ export const PORTRAIT_FS_COUNTER_PHONE_SCALE = {
 export const PORTRAIT_FS_COUNTER_Y_GAP = 100;
 
 /**
- * Portrait phone board scale (uniform — board + bonus bar scale together).
- * `smallMobile` ≤375px (iPhone SE), `mobile` ≤480px (iPhone 12/13/14, etc.).
+ * Stake embed viewport presets (reference).
+ * Desktop 1200×675 · Laptop 1024×576 · Popout L 800×450 · Popout S 400×225
+ * Mobile L 425×812 · Mobile M 375×667 · Mobile S 320×568
  */
-export const PORTRAIT_SMALL_MOBILE_SCALE = 0.72;
-export const PORTRAIT_MOBILE_SCALE = 0.85;
+export const STAKE_EMBED_VIEWPORTS = {
+	desktop: { width: 1200, height: 675 },
+	laptop: { width: 1024, height: 576 },
+	popoutL: { width: 800, height: 450 },
+	popoutS: { width: 400, height: 225 },
+	mobileL: { width: 425, height: 812 },
+	mobileM: { width: 375, height: 667 },
+	mobileS: { width: 320, height: 568 },
+} as const;
+
+/**
+ * Portrait phone board scale (uniform — board + bonus bar scale together).
+ * Tiers by short edge: S ≤374 (320) · M 375–424 (375) · L ≥425 (425).
+ */
+export const PORTRAIT_PHONE_BOARD_SCALE = {
+	small: 0.72,
+	medium: 0.88,
+	large: 0.99,
+} as const;
+
+/** @deprecated use PORTRAIT_PHONE_BOARD_SCALE */
+export const PORTRAIT_SMALL_MOBILE_SCALE = PORTRAIT_PHONE_BOARD_SCALE.small;
+/** @deprecated use PORTRAIT_PHONE_BOARD_SCALE */
+export const PORTRAIT_MOBILE_SCALE = PORTRAIT_PHONE_BOARD_SCALE.medium;
 
 export type PortraitCanvasSizeType =
 	| 'smallMobile'
@@ -466,15 +489,35 @@ export type PortraitCanvasSizeType =
 	| 'largeTablet'
 	| 'desktop';
 
-export const getPortraitSmallMobileScaleFactor = (canvasSizeType: PortraitCanvasSizeType) => {
-	if (canvasSizeType === 'smallMobile') return PORTRAIT_SMALL_MOBILE_SCALE;
-	if (canvasSizeType === 'mobile') return PORTRAIT_MOBILE_SCALE;
-	return 1;
+export const getPortraitDeviceWidth = (canvasSizes: { width: number; height: number }) =>
+	Math.min(canvasSizes.width, canvasSizes.height);
+
+export const getPortraitPhoneScaleFactor = (
+	canvasSizeType: PortraitCanvasSizeType,
+	deviceWidth: number,
+) => {
+	if (canvasSizeType !== 'smallMobile' && canvasSizeType !== 'mobile') return 1;
+	const tier = getPortraitMobileTier(canvasSizeType, deviceWidth);
+	return PORTRAIT_PHONE_BOARD_SCALE[tier];
 };
 
-/** Portrait width tiers (px) for buy panel text. */
-export const PORTRAIT_MOBILE_BREAKPOINT_M = 375;
-export const PORTRAIT_MOBILE_BREAKPOINT_L = 414;
+/** @deprecated use getPortraitPhoneScaleFactor */
+export const getPortraitSmallMobileScaleFactor = (
+	canvasSizeType: PortraitCanvasSizeType,
+	deviceWidth?: number,
+) => {
+	if (canvasSizeType !== 'smallMobile' && canvasSizeType !== 'mobile') return 1;
+	const width =
+		deviceWidth ??
+		(canvasSizeType === 'smallMobile'
+			? PORTRAIT_MOBILE_BREAKPOINT_M
+			: PORTRAIT_MOBILE_BREAKPOINT_L);
+	return getPortraitPhoneScaleFactor(canvasSizeType, width);
+};
+
+/** Portrait width tiers (px, short edge) — aligned with Stake Mobile S/M/L presets. */
+export const PORTRAIT_MOBILE_BREAKPOINT_M = 374;
+export const PORTRAIT_MOBILE_BREAKPOINT_L = 424;
 
 export type PortraitMobileTier = 'small' | 'medium' | 'large';
 export type BuyPanelLayoutKey =
@@ -610,11 +653,15 @@ export const resolveBuyPanelText = (options: {
 /** @deprecated use BUY_PANEL_TEXT_PX.portrait */
 export const PORTRAIT_BUY_PANEL_TEXT = BUY_PANEL_TEXT_PX.portrait;
 
-export const getPortraitBonusBarWidthPx = (canvasSizeType: PortraitCanvasSizeType) =>
-	PORTRAIT_BONUS_BAR_WIDTH_PX * getPortraitSmallMobileScaleFactor(canvasSizeType);
+export const getPortraitBonusBarWidthPx = (
+	canvasSizeType: PortraitCanvasSizeType,
+	deviceWidth: number,
+) => PORTRAIT_BONUS_BAR_WIDTH_PX * getPortraitPhoneScaleFactor(canvasSizeType, deviceWidth);
 
-export const getPortraitBonusBarHeightPx = (canvasSizeType: PortraitCanvasSizeType) =>
-	PORTRAIT_BONUS_BAR_HEIGHT_PX * getPortraitSmallMobileScaleFactor(canvasSizeType);
+export const getPortraitBonusBarHeightPx = (
+	canvasSizeType: PortraitCanvasSizeType,
+	deviceWidth: number,
+) => PORTRAIT_BONUS_BAR_HEIGHT_PX * getPortraitPhoneScaleFactor(canvasSizeType, deviceWidth);
 
 /** ProgressLadder horizontal bar nudge from screen center (screen px, + = right). */
 export const BONUS_BAR_H_SHIFT_SCREEN_X = 6;
@@ -631,15 +678,19 @@ export const getPortraitParchmentSize = () => ({
 });
 
 /** Uniform board scale for portrait: parchment width on screen ≈ bonus bar − trim. */
-export const getPortraitBoardTargetWidthPx = (canvasSizeType: PortraitCanvasSizeType) =>
+export const getPortraitBoardTargetWidthPx = (
+	canvasSizeType: PortraitCanvasSizeType,
+	deviceWidth: number,
+) =>
 	(PORTRAIT_BONUS_BAR_WIDTH_PX - PORTRAIT_BOARD_WIDTH_TRIM_PX) *
-	getPortraitSmallMobileScaleFactor(canvasSizeType);
+	getPortraitPhoneScaleFactor(canvasSizeType, deviceWidth);
 
 export const getPortraitBoardScale = (
 	mainLayoutScale: number,
 	canvasSizeType: PortraitCanvasSizeType,
+	deviceWidth: number,
 ) =>
-	getPortraitBoardTargetWidthPx(canvasSizeType) /
+	getPortraitBoardTargetWidthPx(canvasSizeType, deviceWidth) /
 	(getPortraitParchmentSize().width * mainLayoutScale);
 
 /** Stake popout embed — 400×225 (mini) or 800×450 (expanded). Not phone portrait. */

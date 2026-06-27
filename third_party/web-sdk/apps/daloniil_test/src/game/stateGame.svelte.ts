@@ -70,6 +70,7 @@ import {
 	BOARD_SIZES,
 	BOARD_LAYOUT_OFFSETS,
 	getPortraitBoardScale,
+	getPortraitDeviceWidth,
 	getPortraitParchmentSize,
 	INITIAL_BOARD,
 	BOARD_DIMENSIONS,
@@ -214,7 +215,11 @@ const boardLayout = () => {
 	const parchment = layoutType === 'portrait' ? getPortraitParchmentSize() : null;
 	const scale =
 		layoutType === 'portrait'
-			? getPortraitBoardScale(ml.scale, stateLayoutDerived.canvasSizeType())
+			? getPortraitBoardScale(
+					ml.scale,
+					stateLayoutDerived.canvasSizeType(),
+					getPortraitDeviceWidth(stateLayoutDerived.canvasSizes()),
+				)
 			: 1;
 
 	return {
