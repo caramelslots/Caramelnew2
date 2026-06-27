@@ -87,7 +87,7 @@ const winLevelSoundsStop = (options?: { music?: 'bgm_main' | 'bgm_freespin' }) =
 	eventEmitter.broadcastAsync({ type: 'uiShow' });
 };
 
-/** Stops looping count-up audio (coin SFX + win-level BGM) without switching main music. */
+/** Stops looping count-up audio (coin SFX + win-level BGM) and resumes paused loop BGM. */
 export const stopWinLevelCountUpSounds = () => {
 	eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_bigwin_coinloop' });
 	for (const name of [
@@ -98,6 +98,13 @@ export const stopWinLevelCountUpSounds = () => {
 		'bgm_winlevel_mega',
 	] as const) {
 		eventEmitter.broadcast({ type: 'soundStop', name });
+	}
+	// Win-level overlay BGM pauses loop tracks (bgm_freespin / bgm_main) — resume them
+	// so FS End (and other celebrations) stay audible after count-up finishes.
+	if (stateBet.activeBetModeKey === 'SUPERSPIN' || stateGame.gameType === 'freegame') {
+		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
+	} else {
+		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
 	}
 };
 
