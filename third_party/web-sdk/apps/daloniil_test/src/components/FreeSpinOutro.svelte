@@ -31,6 +31,7 @@
 		FONT_KRUTOI_CJK,
 		fontForLocale,
 		FS_OUTRO_DIM_ALPHA,
+		getFsOutroPopupPosition,
 		LOCALE_TEXT_FILL_GOLD,
 		LOCALE_TEXT_FILL_WHITE,
 	} from '../game/constants';
@@ -49,6 +50,14 @@
 	import WinCoins from './WinCoins.svelte';
 
 	const context = getContext();
+
+	const fsOutroPopupPosition = $derived(
+		getFsOutroPopupPosition({
+			boardLayout: context.stateGameDerived.boardLayout(),
+			mainLayout: context.stateLayoutDerived.mainLayout(),
+			canvasSizeType: context.stateLayoutDerived.canvasSizeType(),
+		}),
+	);
 
 	let show = $state(true);
 	let winAmount = $state(0);
@@ -184,11 +193,11 @@
 								<ResponsiveCurrencyBitmapText
 									anchor={0.5}
 									style={{
-										fontSize: width * 0.6 * BITMAP_FONT_SCALE,
+										fontSize: width * 0.74 * BITMAP_FONT_SCALE,
 									}}
 									amount={countUpAmount}
 									bookEvent
-									maxWidth={width * 3.4}
+									maxWidth={width * 3.6}
 								/>
 							</Container>
 						{/snippet}
@@ -196,7 +205,12 @@
 				{/key}
 
 				{#if cookieOpened && !closing}
-					<WinCoins emit={coinsEmit} levelAlias={winLevelData?.alias} />
+					<WinCoins
+						emit={coinsEmit}
+						levelAlias={winLevelData?.alias}
+						x={fsOutroPopupPosition.x}
+						y={fsOutroPopupPosition.y}
+					/>
 				{/if}
 
 				{#if !closing}

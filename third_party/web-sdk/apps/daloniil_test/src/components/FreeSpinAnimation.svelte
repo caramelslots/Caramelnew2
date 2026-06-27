@@ -9,6 +9,7 @@
 		BOARD_SIZES,
 		FS_OUTRO_PHONE_SCALE,
 		FS_OUTRO_SPINE_WIDTH_FRAC,
+		getFsOutroPopupPosition,
 		getPortraitMobileTier,
 	} from '../game/constants';
 	import FsPopupSpineController from './FsPopupSpineController.svelte';
@@ -34,6 +35,19 @@
 		return base * FS_OUTRO_PHONE_SCALE[tier];
 	});
 
+	const popupPosition = $derived(
+		getFsOutroPopupPosition({
+			boardLayout: context.stateGameDerived.boardLayout(),
+			mainLayout: context.stateLayoutDerived.mainLayout(),
+			canvasSizeType: context.stateLayoutDerived.canvasSizeType(),
+		}),
+	);
+
+	const layoutRefWidth = $derived(spineWidth / FS_OUTRO_SPINE_WIDTH_FRAC);
+	const layoutRefHeight = $derived(
+		BOARD_SIZES.height * (layoutRefWidth / BOARD_SIZES.width),
+	);
+
 	let controller = $state<FsPopupSpineController | undefined>();
 
 	export function playDisappear(): Promise<void> {
@@ -42,18 +56,14 @@
 </script>
 
 <MainContainer>
-	<!-- Container sits at board centre; spine root is at the same point. -->
-	<Container
-		x={context.stateGameDerived.boardLayout().x}
-		y={context.stateGameDerived.boardLayout().y}
-	>
+	<Container x={popupPosition.x} y={popupPosition.y}>
 		<SpineProvider key="fsPopup" width={spineWidth}>
 			<FsPopupSpineController bind:this={controller} />
 			<SpineSlot slotName="text_placeholder_1">
-				{@render props.title({ width: BOARD_SIZES.width, height: BOARD_SIZES.height })}
+				{@render props.title({ width: layoutRefWidth, height: layoutRefHeight })}
 			</SpineSlot>
 			<SpineSlot slotName="text_placeholder_2">
-				{@render props.winAmount({ width: BOARD_SIZES.width, height: BOARD_SIZES.height })}
+				{@render props.winAmount({ width: layoutRefWidth, height: layoutRefHeight })}
 			</SpineSlot>
 		</SpineProvider>
 	</Container>

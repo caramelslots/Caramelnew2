@@ -929,6 +929,21 @@ export const FS_OUTRO_PHONE_SCALE = {
 	large: 0.89,
 } as const;
 
+/** FS end popup anchor in main-layout coords. Phones use viewport centre, not board centre. */
+export const getFsOutroPopupPosition = (args: {
+	boardLayout: { x: number; y: number };
+	mainLayout: { width: number; height: number };
+	canvasSizeType: 'smallMobile' | 'mobile' | 'tablet' | 'largeTablet' | 'desktop';
+}) => {
+	const isPhone = args.canvasSizeType === 'smallMobile' || args.canvasSizeType === 'mobile';
+	if (!isPhone) return { x: args.boardLayout.x, y: args.boardLayout.y };
+
+	return {
+		x: args.mainLayout.width * 0.5,
+		y: args.mainLayout.height * 0.5,
+	};
+};
+
 /**
  * Pause after reels finish landing, before bonus cats play the paw-wave
  * win animation (freeSpinTrigger / bonusCollect). Lets the BONUS-letter
