@@ -140,9 +140,19 @@
 		}
 	}
 
+	@media (max-width: 560px) {
+		.payline-num {
+			font-size: 0.9rem;
+		}
+	}
+
 	@media (max-width: 420px) {
 		.paylines-grid {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.payline-card:last-child:nth-child(odd) {
+			grid-column: 1 / -1;
 		}
 	}
 </style>

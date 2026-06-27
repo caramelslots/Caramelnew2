@@ -15,13 +15,15 @@
 	панель свёрнута до маленькой кнопки в верхнем-левом углу — чтобы не
 	перекрывать игру. Дев-фича, мобильная вёрстка не оптимизирована.
 
-	Совместима с DevCheats (Shift+E ×100 ускорение): можно ускорить ×100,
-	потом нажать BIG WIN — count-up отыграет в 100 раз быстрее.
+	Совместима с DevCheats (×100 ускорение анимаций, если включено вручную в коде).
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
 
 	import { stateBet, stateI18n, stateModal } from 'state-shared';
+
+	/** Set to true to show DEV / LANG toggles locally. */
+	const SHOW_DEV_PANEL = false;
 
 	import { playBet, playBookEvent, playBookEvents } from '../game/utils';
 	import { eventEmitter } from '../game/eventEmitter';
@@ -491,7 +493,7 @@
 	});
 </script>
 
-<div class="dev-panel" class:dev-panel--open={open}>
+<div class="dev-panel" class:dev-panel--open={open} class:dev-panel--hidden={!SHOW_DEV_PANEL}>
 	<button class="dev-toggle" onclick={() => (open = !open)} type="button">
 		{open ? 'DEV ▴' : 'DEV ▾'}
 	</button>
@@ -835,7 +837,7 @@
 				</div>
 			</section>
 
-			<p class="hint">Shift+D — toggle · Shift+E — ×100 speed</p>
+			<p class="hint">Shift+D — toggle</p>
 		</div>
 	{/if}
 </div>
@@ -850,6 +852,10 @@
 		font-size: 11px;
 		color: #fff;
 		user-select: none;
+	}
+
+	.dev-panel--hidden {
+		display: none;
 	}
 
 	.dev-toggle {

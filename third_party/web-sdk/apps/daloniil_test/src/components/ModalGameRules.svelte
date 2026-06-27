@@ -321,8 +321,58 @@
 	}
 
 	@media (max-width: 560px) {
+		:global(.ui-modal-title-wrap) {
+			font-size: 1.2rem;
+			font-weight: 800;
+		}
+
+		h3 {
+			font-size: 1.15rem;
+		}
+
+		h4 {
+			font-size: 1rem;
+		}
+
+		p {
+			font-size: 1.05rem;
+		}
+
+		.paytable-note {
+			font-size: 1rem;
+		}
+
+		.symbol-image {
+			width: 84px;
+			height: 84px;
+		}
+
+		.mystery-symbol {
+			width: 84px;
+			height: 84px;
+		}
+
+		.pay-symbol-image {
+			width: 80px;
+			height: 80px;
+		}
+
+		.pay-card:last-child:nth-child(odd) .pay-symbol-image {
+			width: 96px;
+			height: 96px;
+		}
+
+		.pay-rows li {
+			font-size: 1.05rem;
+			line-height: 1.45;
+		}
+
 		.paytable-grid {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.pay-card:last-child:nth-child(odd) {
+			grid-column: 1 / -1;
 		}
 
 		.special-card {
