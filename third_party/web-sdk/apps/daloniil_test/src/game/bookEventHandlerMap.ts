@@ -29,6 +29,7 @@ import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
 // `reveal` мог отменить его при старте нового спина раньше истечения задержки.
 let spotlightClearTimer: ReturnType<typeof setTimeout> | null = null;
 import { toRevealedRawSymbol } from './utils';
+import { resetIdleBounceSymbols } from './boardIdleBounce';
 
 /**
  * Немедленно снимает затемнение невыигрышных символов и скрывает paylines,
@@ -55,6 +56,20 @@ const findNextSetWin = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
 		if (event.type === 'reveal') break;
 	}
 	return undefined;
+};
+
+const IDLE_BOUNCE_BLOCKING_EVENTS = new Set(['winInfo', 'setWin', 'finalWin']);
+
+/** True when this reveal's round includes a win — idle symbol tease stays off. */
+const revealHasWinBeforeNextReveal = (bookEvents: BookEvent[], revealEvent: BookEvent) => {
+	const startIdx = bookEvents.indexOf(revealEvent);
+	if (startIdx < 0) return false;
+	for (let i = startIdx + 1; i < bookEvents.length; i++) {
+		const event = bookEvents[i];
+		if (event.type === 'reveal') break;
+		if (IDLE_BOUNCE_BLOCKING_EVENTS.has(event.type)) return true;
+	}
+	return false;
 };
 
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
@@ -140,6 +155,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// последующих reveal внутри одного бета). При нажатии Bet это уже
 		// сделано в actor.onNewGameStart, поэтому здесь — идемпотентный no-op.
 		clearWinSpotlight();
+		resetIdleBounceSymbols();
 
 		stateGame.gameType = bookEvent.gameType;
 
@@ -184,9 +200,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			paddingBoard: config.paddingReels[bookEvent.gameType],
 			frozenReelIndices: [...stateGame.mysteryReelsFrozen, ...pendingCollapseReels],
 		});
+		stateGame.idleBounceAllowed = !revealHasWinBeforeNextReveal(bookEvents, bookEvent);
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
 	},
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>, { bookEvents }: BookEventContext) => {
+		stateGame.idleBounceAllowed = false;
+
 		// Breathing room after the reels land before the win celebration kicks
 		// in (also lets the symbol bounce animation finish landing).
 		await waitForGameSpeed(WIN_INFO_PRE_DELAY_MS, stateGame.gameSpeed);

@@ -9,6 +9,7 @@ import { playBet, convertTorResumableBet } from './utils';
 import { stateGameDerived } from './stateGame.svelte';
 import { eventEmitter } from './eventEmitter';
 import { clearWinSpotlight } from './bookEventHandlerMap';
+import { resetIdleBounceSymbols } from './boardIdleBounce';
 
 const primaryMachines = createPrimaryMachines<Bet>({
 	onResumeGameActive: (betToResume) => convertTorResumableBet(betToResume),
@@ -25,6 +26,7 @@ const primaryMachines = createPrimaryMachines<Bet>({
 		// предыдущего выигрыша, чтобы они пропадали одновременно со стартом
 		// барабанов, а не после него (см. clearWinSpotlight).
 		clearWinSpotlight();
+		resetIdleBounceSymbols();
 		stateBet.winBookEventAmount = 0;
 		eventEmitter.broadcast({ type: 'winHide' });
 		// Reel scroll starts in `reveal` when RGS returns the result board —

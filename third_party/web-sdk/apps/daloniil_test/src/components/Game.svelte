@@ -20,6 +20,7 @@
 	import EnableSymbolTextureOptimization from './EnableSymbolTextureOptimization.svelte';
 	import EnableUiTextureOptimization from './EnableUiTextureOptimization.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
+	import EnableBoardIdleBounce from './EnableBoardIdleBounce.svelte';
 	import ResumeBet from './ResumeBet.svelte';
 	import Sound from './Sound.svelte';
 	import Background from './Background.svelte';
@@ -76,6 +77,7 @@
 		<EnableUiTextureOptimization />
 		<EnableHotkey />
 		<EnableGameActor />
+		<EnableBoardIdleBounce />
 		<EnablePixiExtension />
 
 		<Background />

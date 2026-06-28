@@ -227,12 +227,38 @@ export const WIN_BOUNCE = {
 	downMs: 280,
 };
 
+/** Idle board tease: first bounce after the board settles with no win. */
+export const IDLE_BOUNCE_INITIAL_DELAY_MS = 10000;
+/** Pause between consecutive idle-bounce cycles on the same settled board. */
+export const IDLE_BOUNCE_CYCLE_DELAY_MS = 2000;
+/** Safety timeout while waiting for an idle-bounce tween to finish. */
+export const IDLE_BOUNCE_ANIMATION_TIMEOUT_MS = 800;
+
+/**
+ * Idle symbol tease — snappy pop up ("pew") then slower settle down.
+ * Applied on the SymbolWrap container in ReelSymbol.svelte.
+ */
+export const IDLE_BOUNCE = {
+	scalePeak: 1.2,
+	yOffsetPeakPx: 10,
+	/** Fast snap to peak — the "pew". */
+	riseMs: 350,
+	/** Slower return to rest. */
+	fallMs: 480,
+} as const;
+
 /**
  * Extra mask coverage above the grid while win symbols bounce — see
  * BoardMask.svelte (`winSpotlightActive`).
  */
 export const BOARD_MASK_WIN_BOUNCE_TOP =
 	WIN_BOUNCE.yOffsetPeakPx + Math.ceil(((WIN_BOUNCE.scalePeak - 1) * SYMBOL_SIZE) / 2);
+
+/** Extra mask above the grid while idle-tease symbols pop — see BoardMask.svelte. */
+export const BOARD_MASK_IDLE_BOUNCE_TOP =
+	IDLE_BOUNCE.yOffsetPeakPx +
+	Math.ceil(((IDLE_BOUNCE.scalePeak - 1) * SYMBOL_SIZE) / 2) +
+	6;
 
 /**
  * Extra mask coverage (px) beyond the visible board grid so spinning symbols

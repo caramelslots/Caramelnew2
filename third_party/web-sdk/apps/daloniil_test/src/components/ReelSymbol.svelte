@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Tween } from 'svelte/motion';
-	import { sineOut, sineIn, sineInOut } from 'svelte/easing';
+	import { backOut, cubicIn, sineIn, sineInOut, sineOut } from 'svelte/easing';
 	import { untrack } from 'svelte';
 
 	import { stateBetDerived } from 'state-shared';
@@ -8,7 +8,15 @@
 	import Symbol from './Symbol.svelte';
 	import SymbolWrap from './SymbolWrap.svelte';
 	import { getSymbolInfo, getSymbolX, toRevealedRawSymbol } from '../game/utils';
-	import { WIN_BOUNCE, DIM_NON_WINNING, MYSTERY_BG_UNCOVER_MS, SYMBOL_SIZE, BOARD_DIMENSIONS, isVisibleBoardSymbolIndex } from '../game/constants';
+	import {
+		WIN_BOUNCE,
+		IDLE_BOUNCE,
+		DIM_NON_WINNING,
+		MYSTERY_BG_UNCOVER_MS,
+		SYMBOL_SIZE,
+		BOARD_DIMENSIONS,
+		isVisibleBoardSymbolIndex,
+	} from '../game/constants';
 	import { stateGame } from '../game/stateGame.svelte';
 	import type { ReelSymbol } from '../game/stateGame.svelte';
 
@@ -18,6 +26,9 @@
 	};
 
 	const props: Props = $props();
+	const symbolRenderState = $derived(
+		props.reelSymbol.symbolState === 'idleBounce' ? 'static' : props.reelSymbol.symbolState,
+	);
 	const symbolInfo = $derived(
 		getSymbolInfo({ rawSymbol: props.reelSymbol.rawSymbol, state: props.reelSymbol.symbolState }),
 	);
@@ -30,8 +41,11 @@
 		symbolInfo.animationName === 'Special_2/win' ||
 			symbolInfo.animationName === 'Special_1/wave',
 	);
+	const isIdleBouncing = $derived(props.reelSymbol.symbolState === 'idleBounce');
 	const winScale = new Tween(1);
 	const winYOffset = new Tween(0);
+	const idleScale = new Tween(1);
+	const idleYOffset = new Tween(0);
 
 	// Затемнение невыигрышных символов на время подсветки выигрыша.
 	// `winSpotlightActive` поднимается хелпером `animateSymbols`
@@ -42,6 +56,7 @@
 	);
 	const isSpinningSymbol = $derived(props.reelSymbol.symbolState === 'spin');
 	const applyWinPresentation = $derived(isWinningState && !isSpinningSymbol);
+	const applyIdleBouncePresentation = $derived(isIdleBouncing);
 	const activeSymbolCount = $derived(stateGame.board[props.reelIndex].reelState.activeSymbolCount);
 	const isPaddingSymbol = $derived(
 		!isVisibleBoardSymbolIndex(props.reelSymbol.symbolIndex, activeSymbolCount),
@@ -57,12 +72,23 @@
 	});
 	const dimAlphaTween = new Tween(1);
 
+	const wrapYOffset = $derived(
+		(applyWinPresentation ? winYOffset.current : 0) +
+			(applyIdleBouncePresentation ? idleYOffset.current : 0),
+	);
+	const wrapScale = $derived(
+		(applyWinPresentation ? winScale.current : 1) *
+			(applyIdleBouncePresentation ? idleScale.current : 1),
+	);
+
 	$effect(() => {
 		const state = props.reelSymbol.symbolState;
 		if (state === 'spin' || state === 'static' || state === 'land') {
 			untrack(() => {
 				winScale.set(1, { duration: 0 });
 				winYOffset.set(0, { duration: 0 });
+				idleScale.set(1, { duration: 0 });
+				idleYOffset.set(0, { duration: 0 });
 				if (state === 'spin') {
 					dimAlphaTween.set(1, { duration: 0 });
 				}
@@ -78,7 +104,20 @@
 		});
 	});
 
-	const runWinBounce = async () => {
+	const finishWinBounce = () => {
+		if (props.reelSymbol.symbolState === 'win') {
+			props.reelSymbol.oncomplete();
+		}
+	};
+
+	const finishIdleBounce = () => {
+		if (props.reelSymbol.symbolState === 'idleBounce') {
+			props.reelSymbol.symbolState = 'static';
+			props.reelSymbol.oncomplete();
+		}
+	};
+
+	const runWinContainerBounce = async (onDone: () => void, isActive: () => boolean) => {
 		const peak = WIN_BOUNCE.scalePeak;
 		const lift = WIN_BOUNCE.yOffsetPeakPx;
 		const speed = stateBetDerived.timeScale();
@@ -96,10 +135,25 @@
 		void winScale.set(1, { duration: downMs, easing: sineIn });
 		await winYOffset.set(0, { duration: downMs, easing: sineIn });
 
-		// Fire only if we're still in win state — defensively skips the call
-		// if the state was reset externally (e.g. spin restarted mid-bounce).
-		if (props.reelSymbol.symbolState === 'win') {
-			props.reelSymbol.oncomplete();
+		if (isActive()) onDone();
+	};
+
+	/** CSS-style smooth scale pop for idle tease — no spine bounce clip. */
+	const runIdlePopAnimation = async () => {
+		const peak = IDLE_BOUNCE.scalePeak;
+		const lift = IDLE_BOUNCE.yOffsetPeakPx;
+		const speed = stateBetDerived.timeScale();
+		const riseMs = IDLE_BOUNCE.riseMs / speed;
+		const fallMs = IDLE_BOUNCE.fallMs / speed;
+
+		void idleScale.set(peak, { duration: riseMs, easing: backOut });
+		await idleYOffset.set(-lift, { duration: riseMs, easing: backOut });
+
+		void idleScale.set(1, { duration: fallMs, easing: cubicIn });
+		await idleYOffset.set(0, { duration: fallMs, easing: cubicIn });
+
+		if (props.reelSymbol.symbolState === 'idleBounce') {
+			finishIdleBounce();
 		}
 	};
 
@@ -107,7 +161,16 @@
 		const state = props.reelSymbol.symbolState;
 		untrack(() => {
 			if (state === 'win' && !usesDedicatedSpineWin) {
-				runWinBounce();
+				runWinContainerBounce(finishWinBounce, () => props.reelSymbol.symbolState === 'win');
+			}
+		});
+	});
+
+	$effect(() => {
+		const state = props.reelSymbol.symbolState;
+		untrack(() => {
+			if (state === 'idleBounce') {
+				runIdlePopAnimation();
 			}
 		});
 	});
@@ -176,20 +239,19 @@
 {#if !hideOffGridPadding}
 	<SymbolWrap
 		x={getSymbolX(props.reelIndex)}
-		y={props.reelSymbol.symbolY() + (applyWinPresentation ? winYOffset.current : 0)}
+		y={props.reelSymbol.symbolY() + wrapYOffset}
 		spinActive={isSpinningSymbol}
-		scaleX={props.reelSymbol.landScaleX() * (applyWinPresentation ? winScale.current : 1)}
-		scaleY={props.reelSymbol.landScaleY() * (applyWinPresentation ? winScale.current : 1)}
+		scaleX={props.reelSymbol.landScaleX() * wrapScale}
+		scaleY={props.reelSymbol.landScaleY() * wrapScale}
 		alpha={isSpinningSymbol ? 1 : dimAlphaTween.current}
 	>
-		{#key `${props.reelSymbol.symbolState}-${symbolInfo.type}-${symbolInfo.animationName ?? ''}`}
+		{#key `${symbolRenderState}-${symbolInfo.type}-${symbolInfo.animationName ?? ''}`}
 			<Symbol
-				state={props.reelSymbol.symbolState}
+				state={symbolRenderState}
 				rawSymbol={props.reelSymbol.rawSymbol}
 				oncomplete={() => {
 					const state = props.reelSymbol.symbolState;
-					// Container win bounce completes via `runWinBounce` — don't fire
-					// from the spine idle mount oncomplete.
+					if (state === 'idleBounce') return;
 					if (state === 'win' && !usesDedicatedSpineWin) return;
 					if (
 						state === 'win' ||

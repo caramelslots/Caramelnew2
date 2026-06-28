@@ -21,6 +21,7 @@ export const SYMBOL_STATES = [
 	'land',
 	'win',
 	'postWinStatic',
+	'idleBounce',
 	'mysteryReveal',
 	'mysteryCollapse',
 ] as const;

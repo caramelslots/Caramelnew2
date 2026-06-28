@@ -194,6 +194,9 @@ export const stateGame = $state({
 	// затемняются (см. DIM_NON_WINNING + ReelSymbol.svelte). Поднимается
 	// хелпером animateSymbols в bookEventHandlerMap, сбрасывается в reveal.
 	winSpotlightActive: false,
+	// Idle symbol tease (matching symbols bounce while waiting). Disabled after
+	// any win on the current board; re-enabled when the next losing spin settles.
+	idleBounceAllowed: true,
 	// Cloud transition covers HTML overlays (e.g. ProgressLadder) while active.
 	transitionActive: false,
 	// Big-win overlay only — raises Pixi canvas above HTML HUD so celebration
@@ -258,6 +261,14 @@ const boardMysteryAnimating = () =>
 			),
 	);
 
+/** True while any visible cell plays idle-tease pop animation. */
+const boardIdleBouncing = () =>
+	stateGame.board.some((reel) =>
+		reel.reelState.symbols
+			.slice(0, reel.reelState.activeSymbolCount)
+			.some((symbol) => symbol.symbolState === 'idleBounce'),
+	);
+
 const { enhanceBoard } = createEnhanceBoard();
 const enhancedBoard = enhanceBoard({ board: stateGame.board });
 
@@ -271,6 +282,7 @@ export const stateGameDerived = {
 	boardRaw,
 	boardReelsActive,
 	boardMysteryAnimating,
+	boardIdleBouncing,
 	scatterLandIndex,
 	enhancedBoard,
 	getWinLevelDataByWinLevelAlias,
