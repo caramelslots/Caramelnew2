@@ -4,6 +4,17 @@
 Все команды запускаются из директории игры и предполагают, что venv
 лежит в `/tmp/csmath_venv/`.
 
+## 0. Venv (один раз, если `ModuleNotFoundError`)
+
+```bash
+/opt/homebrew/bin/python3.12 -m venv /tmp/csmath_venv
+/tmp/csmath_venv/bin/pip install -r /Users/danylolepetynskyi/Desktop/Caramelnew2/third_party/math-sdk/requirements.txt
+```
+
+Проверка: `/tmp/csmath_venv/bin/python -c "import zstandard; print('OK')"`
+
+---
+
 ## Общие переменные окружения
 
 ```bash
@@ -41,23 +52,19 @@ grep -E "AssertionError|Error|Traceback" /tmp/m5.log # на всякий
 
 ## 2. M6 — production sim (1e6 per mode, ~2-4 часа)
 
-Когда: финальная итерация перед публикацией. Тот же `run.py`, но с
-большим `num_sim_args`. Меняем 1e5 → 1e6 в `run.py:31-37`:
+Когда: финальная итерация перед публикацией на Stake RGS.
 
-```python
-num_sim_args = {
-    "base":          int(1e6),
-    "bonus_boost":   int(1e6),
-    "special_spins": int(1e6),
-    "bonus_normal":  int(1e6),
-    "bonus_super":   int(1e6),
-}
-```
-
-Запуск (то же самое, что M5):
+`run.py` уже на **1e6** per mode. Запуск:
 
 ```bash
 $PY run.py 2>&1 | tee /tmp/m6.log
+```
+
+Проверка прогресса (~2-4 ч):
+
+```bash
+grep "^Thread 0 finished" /tmp/m6.log | tail -5
+grep -E "AssertionError|Error|Traceback" /tmp/m6.log
 ```
 
 После M6 → §3 Resample → §4 Sync.

@@ -26,14 +26,13 @@ if __name__ == "__main__":
     compression = True
     profiling = False
 
-    # M5 intermediate (1e5 sims per mode) — ~10-15 минут.
-    # Production target: 1e6 (см. MATH_BLOCKERS.md M5).
+    # M6 production (1e6 sims per mode) — ~2-4 часа. Для dev/M5 верни 1e5.
     num_sim_args = {
-        "base": int(1e5),
-        "bonus_boost": int(1e5),
-        "special_spins": int(1e5),
-        "bonus_normal": int(1e5),
-        "bonus_super": int(1e5),
+        "base": int(1e6),
+        "bonus_boost": int(1e6),
+        "special_spins": int(1e6),
+        "bonus_normal": int(1e6),
+        "bonus_super": int(1e6),
     }
 
     run_conditions = {
