@@ -79,9 +79,9 @@ export default {
 	GAME_INFO_PAYTABLE_NOTE: 'All payout values are multiples of the total bet.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
-	GAME_INFO_LEGAL_TITLE: '法律声明',
+	GAME_INFO_LEGAL_TITLE: '一般游戏免责声明',
 	GAME_INFO_LEGAL_BODY:
-		'故障将使所有赔付和游戏无效。需要稳定的网络连接。如发生断线，请重新加载游戏以完成未结束的回合。理论 RTP 基于大量旋转计算。转轴运动仅供参考。',
+		'故障将使所有奖金和游戏无效。需要稳定的网络连接。如发生断线，请重新加载游戏以完成未结束的回合。预期回报基于大量游戏计算。游戏画面不代表任何物理设备，仅供参考。奖金根据从 Remote Game Server 收到的金额结算，而非根据网页浏览器内的事件。TM 和 © 2026 Stake Engine。',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: '余额不足',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: '请充值或降低投注额以继续游戏。',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: '已达亏损上限',

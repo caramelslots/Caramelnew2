@@ -79,9 +79,9 @@ export default {
 	GAME_INFO_PAYTABLE_NOTE: 'All payout values are multiples of the total bet.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
-	GAME_INFO_LEGAL_TITLE: 'AVISO LEGAL',
+	GAME_INFO_LEGAL_TITLE: 'AVISO GENERAL DEL JUEGO',
 	GAME_INFO_LEGAL_BODY:
-		'El mal funcionamiento anula todos los pagos y jugadas. Se requiere una conexión a internet estable. En caso de desconexión, recarga el juego para completar las rondas pendientes. El RTP teórico se calcula sobre muchos giros. El movimiento de los rodillos es solo ilustrativo.',
+		'El mal funcionamiento anula todas las ganancias y jugadas. Se requiere una conexión a internet estable. En caso de desconexión, recarga el juego para completar las rondas pendientes. El retorno esperado se calcula sobre muchas partidas. La pantalla del juego no representa ningún dispositivo físico y es solo con fines ilustrativos. Las ganancias se liquidan según el importe recibido del Remote Game Server y no según los eventos del navegador web. TM y © 2026 Stake Engine.',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Fondos insuficientes',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Recarga tu saldo o reduce la apuesta para continuar jugando.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Límite de pérdidas alcanzado',

@@ -79,9 +79,9 @@ export default {
 	GAME_INFO_PAYTABLE_NOTE: 'All payout values are multiples of the total bet.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
-	GAME_INFO_LEGAL_TITLE: 'YASAL UYARI',
+	GAME_INFO_LEGAL_TITLE: 'GENEL OYUN SORUMLULUK REDDİ',
 	GAME_INFO_LEGAL_BODY:
-		'Arıza tüm ödemeleri ve oyunları geçersiz kılar. Kararlı bir internet bağlantısı gereklidir. Bağlantı kesilirse, tamamlanmamış turları bitirmek için oyunu yeniden yükleyin. Teorik RTP birçok dönüş üzerinden hesaplanır. Makara hareketi yalnızca gösterim amaçlıdır.',
+		'Arıza tüm kazançları ve oyunları geçersiz kılar. Kararlı bir internet bağlantısı gereklidir. Bağlantı kesilirse, tamamlanmamış turları bitirmek için oyunu yeniden yükleyin. Beklenen getiri birçok oyun üzerinden hesaplanır. Oyun ekranı herhangi bir fiziksel cihazı temsil etmez ve yalnızca açıklama amaçlıdır. Kazançlar, web tarayıcısındaki olaylara göre değil, Remote Game Server\'dan alınan tutara göre ödenir. TM ve © 2026 Stake Engine.',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Yetersiz bakiye',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Oyuna devam etmek için bakiyenizi yükleyin veya bahsi düşürün.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Kayıp limitine ulaşıldı',
