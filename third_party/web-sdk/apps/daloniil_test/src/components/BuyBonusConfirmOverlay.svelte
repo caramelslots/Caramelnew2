@@ -14,7 +14,7 @@
 		BUY_SUPER_COST_MULT,
 		canAffordBuyBonus,
 	} from '../game/buyBonusBalance';
-	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
+	import { isPopoutSmallViewport, isPopoutViewport, HUD_BALANCE_BET_FONT_FAMILY } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS } from '../game/uiHtmlAssetManifest';
 	import FitCardText from './FitCardText.svelte';
@@ -166,11 +166,14 @@
 </div>
 
 <style lang="scss">
+	@import url('https://fonts.googleapis.com/css2?family=Philosopher:wght@700&family=Reggae+One&display=swap');
+
 	.confirm-panel {
 		--panel-width: min(700px, 90vw);
 		--panel-height-scale: 1.32;
 		--bb-card-price-fs: calc(var(--panel-width) * 0.024);
 		--bb-confirm-action-fs: calc(var(--panel-width) * 0.020);
+		font-family: v-bind(HUD_BALANCE_BET_FONT_FAMILY);
 		position: relative;
 		width: var(--panel-width);
 		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 98vh);
@@ -296,7 +299,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-family: 'proxima-nova', sans-serif;
+		font-family: inherit;
 		font-size: calc(var(--panel-width) * 0.021);
 		font-weight: 900;
 		font-style: italic;
@@ -318,7 +321,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-family: 'proxima-nova', sans-serif;
+		font-family: inherit;
 		font-size: calc(var(--panel-width) * 0.0135);
 		line-height: 1.15;
 		font-weight: 700;
@@ -384,7 +387,7 @@
 	}
 
 	.card-price {
-		font-family: 'proxima-nova', sans-serif;
+		font-family: inherit;
 		font-size: var(--bb-card-price-fs);
 		font-weight: 900;
 		letter-spacing: 0.01em;
@@ -427,7 +430,7 @@
 		background-repeat: no-repeat;
 		background-position: center;
 		background-size: 100% 100%;
-		font-family: 'proxima-nova', sans-serif;
+		font-family: inherit;
 		font-size: var(--bb-confirm-action-fs);
 		font-weight: 900;
 		letter-spacing: 0.06em;

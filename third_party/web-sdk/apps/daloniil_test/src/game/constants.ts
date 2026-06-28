@@ -125,6 +125,13 @@ export const PRESS_TO_CONTINUE_FONT_SIZE = 38;
 /** Distance from bottom of main layout (ref px). */
 export const PRESS_TO_CONTINUE_BOTTOM_OFFSET = 18;
 
+/** HTML HUD balance/bet — system/web font stack (not bitmap). */
+export const HUD_BALANCE_BET_FONT_FAMILY = "'Reggae One', 'Philosopher', Georgia, serif";
+/** Gold label color for HUD balance/bet lines. */
+export const HUD_BALANCE_BET_LABEL_COLOR = '#ffd54a';
+/** Amount color for HUD balance/bet lines. */
+export const HUD_BALANCE_BET_VALUE_COLOR = '#fff8ec';
+
 export const REEL_PADDING = 0.53;
 
 // Wok Fury: 5 reels × 5 rows, padded top and bottom (7 cells per column).

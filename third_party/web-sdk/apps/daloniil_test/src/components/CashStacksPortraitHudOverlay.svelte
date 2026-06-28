@@ -15,6 +15,7 @@
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
 	import { computePortraitHudCanvas } from '../game/portraitHudLayout';
+	import HudBalanceBetLine from './HudBalanceBetLine.svelte';
 	import { portraitHudAnchors } from '../game/portraitHudAnchors.svelte';
 	import { getRoundsCounter } from '../game/autoplay';
 	import { canAffordSpin, canIncreaseBet } from '../game/buyBonusBalance';
@@ -77,13 +78,6 @@
 		});
 	});
 
-	const balanceLine = $derived(
-		`${context.i18nDerived.balance()} ${numberToCurrencyString(stateBet.balanceAmount)}`,
-	);
-	const betLine = $derived(
-		`${context.i18nDerived.bet()} ${numberToCurrencyString(stateBet.betAmount)}`,
-	);
-
 	let balanceWrapEl = $state<HTMLDivElement | null>(null);
 	let balanceFontSize = $state(16);
 
@@ -93,8 +87,8 @@
 
 		const maxWidth = hud.util.balance.maxWidth;
 		let size = hud.util.fontSize;
-		void balanceLine;
-		void betLine;
+		void stateBet.balanceAmount;
+		void stateBet.betAmount;
 		void maxWidth;
 
 		const measure = (fontSize: number) => {
@@ -319,8 +313,14 @@
 			style:font-size="{balanceFontSize}px"
 			style:max-width="{hud.util.balance.maxWidth}px"
 		>
-			<span class="hud-balance-bet-line">{balanceLine}</span>
-			<span class="hud-balance-bet-line">{betLine}</span>
+			<HudBalanceBetLine
+				label={context.i18nDerived.balance()}
+				value={numberToCurrencyString(stateBet.balanceAmount)}
+			/>
+			<HudBalanceBetLine
+				label={context.i18nDerived.bet()}
+				value={numberToCurrencyString(stateBet.betAmount)}
+			/>
 		</div>
 
 		{#if !isFreeSpins}
@@ -356,12 +356,13 @@
 {/if}
 
 <style lang="scss">
+	@import url('https://fonts.googleapis.com/css2?family=Philosopher:wght@700&family=Reggae+One&display=swap');
+
 	.portrait-hud-overlay {
 		position: fixed;
 		inset: 0;
 		z-index: 44;
 		pointer-events: none;
-		font-family: Arial, sans-serif;
 	}
 
 	.hud-icon-btn {
@@ -416,20 +417,11 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.1em;
+		gap: 0.12em;
 		margin: 0;
 		padding: 0;
-		color: #fff;
-		font-weight: 400;
-		letter-spacing: 0.02em;
 		text-align: center;
 		pointer-events: none;
 		user-select: none;
-		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
-	}
-
-	.hud-balance-bet-line {
-		white-space: nowrap;
-		line-height: 1.1;
 	}
 </style>

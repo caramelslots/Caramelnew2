@@ -28,6 +28,8 @@
 	import { isSdkTurboSpin } from '../game/gameSpeed';
 	import { getContextLayout } from 'utils-layout';
 
+	import HudBalanceBetLine from './HudBalanceBetLine.svelte';
+
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 
@@ -230,20 +232,26 @@
 		></button>
 
 		<p
-			class="hud-label"
+			class="hud-balance-bet"
 			style:left="{pos.balance.x}px"
 			style:top="{pos.balance.y}px"
 			style:font-size="{pos.balance.fontSize}px"
 		>
-			{context.i18nDerived.balance()} {numberToCurrencyString(stateBet.balanceAmount)}
+			<HudBalanceBetLine
+				label={context.i18nDerived.balance()}
+				value={numberToCurrencyString(stateBet.balanceAmount)}
+			/>
 		</p>
 		<p
-			class="hud-label"
+			class="hud-balance-bet"
 			style:left="{pos.bet.x}px"
 			style:top="{pos.bet.y}px"
 			style:font-size="{pos.bet.fontSize}px"
 		>
-			{context.i18nDerived.bet()} {numberToCurrencyString(stateBet.betAmount)}
+			<HudBalanceBetLine
+				label={context.i18nDerived.bet()}
+				value={numberToCurrencyString(stateBet.betAmount)}
+			/>
 		</p>
 
 		{#if !isFreeSpins}
@@ -334,7 +342,6 @@
 		inset: 0;
 		z-index: 44;
 		pointer-events: none;
-		font-family: Arial, sans-serif;
 	}
 
 	.hud-icon-btn,
@@ -400,18 +407,12 @@
 		transform: translateY(4%);
 	}
 
-	.hud-label {
+	.hud-balance-bet {
 		position: absolute;
 		transform: translate(0, -50%);
 		margin: 0;
-		color: #fff;
-		font-weight: 400;
-		letter-spacing: 0.02em;
-		line-height: 1.2;
 		text-align: left;
-		white-space: nowrap;
 		pointer-events: none;
 		user-select: none;
-		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
 	}
 </style>

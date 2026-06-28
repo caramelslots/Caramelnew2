@@ -14,7 +14,7 @@
 		BUY_SUPER_COST_MULT,
 		canAffordBuyBonus,
 	} from '../game/buyBonusBalance';
-	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
+	import { isPopoutSmallViewport, isPopoutViewport, HUD_BALANCE_BET_FONT_FAMILY } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { getContextLayout } from 'utils-layout';
 	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS, HUD_ASSETS } from '../game/uiHtmlAssetManifest';
@@ -213,11 +213,14 @@
 </div>
 
 <style lang="scss">
+	@import url('https://fonts.googleapis.com/css2?family=Philosopher:wght@700&family=Reggae+One&display=swap');
+
 	.buy-bonus-panel {
 		--panel-width: min(700px, 90vw);
 		--panel-height-scale: 1.32;
 		--bb-card-price-fs: calc(var(--panel-width) * 0.024);
 		--bb-buy-btn-fs: calc(var(--panel-width) * 0.020);
+		font-family: v-bind(HUD_BALANCE_BET_FONT_FAMILY);
 		position: relative;
 		z-index: 10;
 		width: var(--panel-width);
@@ -259,7 +262,7 @@
 		margin: calc(var(--panel-width) * 0.072) 0 0;
 		grid-column: 1;
 		width: 100%;
-		font-family: 'proxima-nova', sans-serif;
+		font-family: inherit;
 		font-size: calc(var(--panel-width) * 0.062);
 		font-style: italic;
 		font-weight: 900;
@@ -389,7 +392,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-family: 'proxima-nova', sans-serif;
+		font-family: inherit;
 		font-size: calc(var(--panel-width) * 0.021);
 		font-weight: 900;
 		font-style: italic;
@@ -410,7 +413,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-family: 'proxima-nova', sans-serif;
+		font-family: inherit;
 		font-size: calc(var(--panel-width) * 0.0135);
 		line-height: 1.15;
 		font-weight: 700;
@@ -476,7 +479,7 @@
 	}
 
 	.card-price {
-		font-family: 'proxima-nova', sans-serif;
+		font-family: inherit;
 		font-size: var(--bb-card-price-fs);
 		font-weight: 900;
 		letter-spacing: 0.01em;
@@ -505,7 +508,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-family: 'proxima-nova', sans-serif;
+		font-family: inherit;
 		font-size: var(--bb-buy-btn-fs);
 		font-weight: 900;
 		letter-spacing: 0.06em;
@@ -600,7 +603,7 @@
 
 	.features-section :global(.feature-row.compact .feature-name),
 	.features-section :global(.feature-row .feature-name) {
-		font-family: 'proxima-nova', sans-serif;
+		font-family: inherit;
 		font-size: calc(var(--panel-width) * 0.026);
 		font-style: italic;
 		font-weight: 900;
@@ -618,7 +621,7 @@
 	}
 
 	.features-section :global(.feature-cost) {
-		font-family: 'proxima-nova', sans-serif;
+		font-family: inherit;
 		font-size: calc(var(--panel-width) * 0.0185);
 		font-weight: 700;
 		color: #4cd964;
@@ -717,7 +720,7 @@
 	}
 
 	.bet-label {
-		font-family: 'proxima-nova', sans-serif;
+		font-family: inherit;
 		font-size: calc(var(--panel-width) * 0.026);
 		font-weight: 800;
 		line-height: 1;
@@ -727,7 +730,7 @@
 	}
 
 	.bet-value {
-		font-family: 'proxima-nova', sans-serif;
+		font-family: inherit;
 		font-size: calc(var(--panel-width) * 0.036);
 		font-weight: 900;
 		line-height: 1;

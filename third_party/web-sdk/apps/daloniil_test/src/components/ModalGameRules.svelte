@@ -8,6 +8,8 @@
 	import BaseTitle from 'components-ui-html/src/components/BaseTitle.svelte';
 
 	import { getContext } from '../game/context';
+	import { HUD_BALANCE_BET_FONT_FAMILY } from '../game/constants';
+	import { AUTOSPIN_ASSETS } from '../game/uiHtmlAssetManifest';
 	import {
 		GAME_INFO_MYSTERY_BG_IMAGE,
 		GAME_INFO_PAYING_SYMBOL_IDS,
@@ -18,6 +20,9 @@
 	import GameInfoPaylinesGrid from './GameInfoPaylinesGrid.svelte';
 
 	const context = getContext();
+
+	const fontFamily = HUD_BALANCE_BET_FONT_FAMILY;
+	const closeIconUrl = AUTOSPIN_ASSETS.close;
 
 	const gameInfoTitle = $derived(context.i18nDerived.gameInfoTitle());
 	const gameInfoSections = $derived(context.i18nDerived.gameInfoSections());
@@ -66,7 +71,7 @@
 </script>
 
 {#if stateModal.modal?.name === 'gameRules'}
-	<Popup zIndex={zIndex.modal} onclose={() => (stateModal.modal = null)}>
+	<Popup zIndex={zIndex.modal} {closeIconUrl} onclose={() => (stateModal.modal = null)}>
 		<BaseContent maxWidth="100%">
 			<BaseTitle>{gameInfoTitle}</BaseTitle>
 			<BaseScrollable type="column">
@@ -172,12 +177,32 @@
 {/if}
 
 <style lang="scss">
+	@import url('https://fonts.googleapis.com/css2?family=Philosopher:wght@700&family=Reggae+One&display=swap');
+
+	:global(.pop-up-wrap) {
+		font-family: v-bind(fontFamily);
+	}
+
+	:global(.ui-modal-title-wrap) {
+		font-family: v-bind(fontFamily);
+		font-size: 1.15rem;
+		font-weight: 800;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: #ffd54a;
+		text-shadow:
+			0 0 8px rgba(255, 196, 48, 0.45),
+			0 1px 0 rgba(92, 58, 8, 0.75),
+			0 2px 6px rgba(0, 0, 0, 0.7);
+	}
+
 	.rules {
 		max-width: min(860px, 94vw);
 		max-height: 70vh;
 		overflow-y: auto;
 		text-align: left;
 		padding: 0 1rem 1rem;
+		font-family: v-bind(fontFamily);
 	}
 
 	.section + .section {
@@ -186,11 +211,15 @@
 
 	h3 {
 		margin: 0 0 0.5rem;
-		font-size: 1rem;
+		font-size: 0.95rem;
 		font-weight: 800;
 		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		color: #ffd51a;
+		letter-spacing: 0.08em;
+		color: #ffd54a;
+		text-shadow:
+			0 0 8px rgba(255, 196, 48, 0.45),
+			0 1px 0 rgba(92, 58, 8, 0.75),
+			0 2px 6px rgba(0, 0, 0, 0.7);
 	}
 
 	h4 {
@@ -198,15 +227,24 @@
 		font-size: 0.85rem;
 		font-weight: 800;
 		text-transform: uppercase;
-		letter-spacing: 0.03em;
-		color: #ffd51a;
+		letter-spacing: 0.08em;
+		color: #ffd54a;
+		text-shadow:
+			0 0 8px rgba(255, 196, 48, 0.45),
+			0 1px 0 rgba(92, 58, 8, 0.75),
+			0 2px 6px rgba(0, 0, 0, 0.7);
 	}
 
 	p {
 		margin: 0 0 0.35rem;
 		font-size: 0.9rem;
 		line-height: 1.5;
-		color: #fff;
+		font-weight: 700;
+		letter-spacing: 0.02em;
+		color: #fff8ec;
+		text-shadow:
+			0 0 8px rgba(255, 196, 96, 0.28),
+			0 1px 5px rgba(0, 0, 0, 0.85);
 	}
 
 	p:last-child {
@@ -300,13 +338,17 @@
 		gap: 0.35rem;
 		font-size: 0.82rem;
 		line-height: 1.35;
-		color: #fff;
+		font-weight: 700;
+		color: #fff8ec;
+		text-shadow:
+			0 0 8px rgba(255, 196, 96, 0.28),
+			0 1px 5px rgba(0, 0, 0, 0.85);
 	}
 
 	.pay-count {
 		min-width: 0.75rem;
 		text-align: right;
-		font-weight: 700;
+		font-weight: 800;
 	}
 
 	.pay-separator {
@@ -316,26 +358,29 @@
 	.pay-value {
 		min-width: 2.5rem;
 		text-align: left;
-		font-weight: 700;
-		color: #ffd51a;
+		font-weight: 800;
+		color: #ffd54a;
+		text-shadow:
+			0 0 8px rgba(255, 196, 48, 0.45),
+			0 1px 0 rgba(92, 58, 8, 0.75),
+			0 2px 6px rgba(0, 0, 0, 0.7);
 	}
 
 	@media (max-width: 560px) {
 		:global(.ui-modal-title-wrap) {
-			font-size: 1.2rem;
-			font-weight: 800;
+			font-size: 1.35rem;
 		}
 
 		h3 {
-			font-size: 1.15rem;
+			font-size: 1.05rem;
 		}
 
 		h4 {
-			font-size: 1rem;
+			font-size: 0.95rem;
 		}
 
 		p {
-			font-size: 1.05rem;
+			font-size: 1rem;
 		}
 
 		.paytable-note {

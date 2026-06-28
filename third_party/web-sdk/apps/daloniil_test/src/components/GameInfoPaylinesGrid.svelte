@@ -78,8 +78,13 @@
 		font-size: 0.72rem;
 		font-weight: 800;
 		line-height: 1;
-		color: #ffd51a;
-		letter-spacing: 0.04em;
+		color: #ffd54a;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		text-shadow:
+			0 0 8px rgba(255, 196, 48, 0.45),
+			0 1px 0 rgba(92, 58, 8, 0.75),
+			0 2px 6px rgba(0, 0, 0, 0.7);
 	}
 
 	.payline-board {
@@ -129,8 +134,8 @@
 	}
 
 	.payline-node {
-		fill: #ffd51a;
-		stroke: #fff;
+		fill: #ffd54a;
+		stroke: #fff8ec;
 		stroke-width: 0.6;
 	}
 
