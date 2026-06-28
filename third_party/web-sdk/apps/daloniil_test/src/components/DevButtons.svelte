@@ -18,13 +18,12 @@
 	Совместима с DevCheats (×100 ускорение анимаций, если включено вручную в коде).
 -->
 <script lang="ts">
-	import { dev } from '$app/environment';
 	import { onMount } from 'svelte';
 
 	import { stateBet, stateI18n, stateModal, stateUrlDerived } from 'state-shared';
 
-	/** Visible in local dev (`pnpm dev`); hidden in production builds. */
-	const SHOW_DEV_PANEL = dev;
+	/** Set to true to show DEV / LANG / SOCIAL toggles locally. */
+	const SHOW_DEV_PANEL = false;
 
 	import { playBet, playBookEvent, playBookEvents } from '../game/utils';
 	import { eventEmitter } from '../game/eventEmitter';
