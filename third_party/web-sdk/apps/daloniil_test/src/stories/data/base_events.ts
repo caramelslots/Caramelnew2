@@ -1,4 +1,4 @@
-// Cash Stacks (daloniil_test) — mock book-events для Storybook.
+// Wok Fury (daloniil_test) — mock book-events для Storybook.
 // 5 reels × 5 rows. Padding-positions используются для spin-animation
 // (stride внутри padding-reels из config.ts). Здесь — стартовые мок-значения.
 
@@ -153,7 +153,7 @@ export default {
 		amount: 1200,
 		winLevel: 3,
 	},
-	// === Cash Stacks specific ===
+	// === Wok Fury specific ===
 	// SDK math-events: positions всегда в padded coords (visible row+1).
 	bonusCollect: {
 		type: 'bonusCollect',

@@ -7,12 +7,12 @@ import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 
 import { CASH_STACKS_DEFAULT_ROUND } from './autoplay';
 
-// Cash Stacks default: предвыбранные 50 раундов автоигры (SDK по дефолту
+// Wok Fury default: предвыбранные 50 раундов автоигры (SDK по дефолту
 // ставит '10'). Делается при импорте модуля, до первого открытия модалки.
 stateUi.autoSpinsText = String(CASH_STACKS_DEFAULT_ROUND) as typeof stateUi.autoSpinsText;
 
 /*
-	Cash Stacks использует кастомные bet-mode keys (`bonus_normal`,
+	Wok Fury использует кастомные bet-mode keys (`bonus_normal`,
 	`bonus_super`, `bonus_boost`, `special_spins`) — это то, что отдаёт math
 	(см. game/config.ts). SDK-овский `stateMeta.betModeMeta` по дефолту
 	содержит только BASE/ANTE/SUPERANTE/BONUS/SUPER (см. state-shared
@@ -171,7 +171,7 @@ export const stateGame = $state({
 	gameType: 'basegame' as GameType,
 	multiplierBoard: [] as (MultiplierSymbol | undefined)[][],
 	scatterCounter: 0,
-	// === Cash Stacks specific ===
+	// === Wok Fury specific ===
 	// Bonus-символы, собранные в текущей FS-сессии (drives Progress Ladder).
 	bonusCollected: 0,
 	// Текущий уровень Progress Ladder (0 = старт, +1 каждые 4 собранных Bonus).
@@ -245,8 +245,7 @@ const scatterLandIndex = () => {
 };
 
 /** True while any reel is scrolling or landing (pre-spin, spin, bounce). */
-const boardReelsActive = () =>
-	stateGame.board.some((reel) => reel.reelState.motion !== 'stopped');
+const boardReelsActive = () => stateGame.board.some((reel) => reel.reelState.motion !== 'stopped');
 
 /** True while any visible cell plays Mystery reveal or collapse spine. */
 const boardMysteryAnimating = () =>

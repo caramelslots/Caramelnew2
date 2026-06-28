@@ -1,7 +1,7 @@
-"""Cash Stacks game-specific executables.
+"""Wok Fury game-specific executables.
 
 Inherits all standard SDK helpers; overrides the lines-evaluation hook so
-optional Cash Stacks adjustments (e.g. ignoring `B`/`M` for line wins) can be
+optional Wok Fury adjustments (e.g. ignoring `B`/`M` for line wins) can be
 plugged in later. For Этап 2 mock — same behaviour as 0_0_lines:
 `Lines.get_lines` ignores symbols that have no paytable entry, so `B` and `M`
 безопасно проигнорируются.

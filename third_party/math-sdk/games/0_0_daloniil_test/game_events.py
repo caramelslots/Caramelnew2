@@ -1,4 +1,4 @@
-"""Cash Stacks specific book-events.
+"""Wok Fury specific book-events.
 
 Mirrors the JS-side definitions в
   apps/daloniil_test/src/game/typesBookEvent.ts

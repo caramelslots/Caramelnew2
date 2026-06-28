@@ -127,7 +127,7 @@ export const PRESS_TO_CONTINUE_BOTTOM_OFFSET = 18;
 
 export const REEL_PADDING = 0.53;
 
-// Cash Stacks: 5 reels × 5 rows, padded top and bottom (7 cells per column).
+// Wok Fury: 5 reels × 5 rows, padded top and bottom (7 cells per column).
 // Order: [top_padding, row0..row4, bottom_padding]
 export const INITIAL_BOARD: RawSymbol[][] = [
 	[

@@ -1,4 +1,4 @@
-"""Cash Stacks (daloniil_test) — game configuration.
+"""Wok Fury (daloniil_test) — game configuration.
 
 5 reels × 5 rows, 25 paylines (smooth-only), RTP 96%, max win ×2500.
 Donor: 0_0_lines. См. games/0_0_daloniil_test/readme.txt и
@@ -24,13 +24,13 @@ class GameConfig(Config):
         super().__init__()
         self.game_id = "0_0_daloniil_test"
         self.provider_number = 0
-        self.working_name = "Cash Stacks"
+        self.working_name = "Wok Fury"
         self.wincap = 2_500.0
         self.win_type = "lines"
         self.rtp = 0.96
         self.construct_paths()
 
-        # === Cash Stacks dimensions ===
+        # === Wok Fury dimensions ===
         self.num_reels = 5
         self.num_rows = [5] * self.num_reels
 
@@ -114,7 +114,7 @@ class GameConfig(Config):
         }
 
         self.include_padding = True
-        # В Cash Stacks Bonus ('B') играет роль scatter (триггер FS, collectible в FS).
+        # В Wok Fury Bonus ('B') играет роль scatter (триггер FS, collectible в FS).
         # Wild имеет multiplier в FS (как в lines).
         self.special_symbols = {
             "wild": ["W"],
@@ -126,7 +126,7 @@ class GameConfig(Config):
         # FS triggers: 3× B → Normal Bonus (10 FS), 4× B → Super Bonus (10 FS).
         # На доске максимум 4 B (см. max_bonus_on_board + enforce_bonus_symbol_rules).
         #
-        # ВАЖНО: в Cash Stacks **единственный** retrigger source — Progress Ladder
+        # ВАЖНО: в Wok Fury **единственный** retrigger source — Progress Ladder
         # (+3 spins per tier, max 5 tier-ов; см. game_override.check_ladder_tier_up).
         # SDK-стандартный scatter-retrigger в FS НЕ используется:
         #   - run_freespin не вызывает check_fs_condition / update_fs_retrigger_amt
@@ -137,7 +137,7 @@ class GameConfig(Config):
             self.basegame_type: {3: 10, 4: 10},
             self.freegame_type: {},
         }
-        # Cash Stacks spec: max B symbols visible on board at once (also max 1 per reel).
+        # Wok Fury spec: max B symbols visible on board at once (also max 1 per reel).
         self.max_bonus_on_board = 4
         # anticipation_triggers — порог для anticipation animation.
         # M4b (REDESIGN_PLAN §2.4): anticipation полностью отключён в обоих
@@ -151,7 +151,7 @@ class GameConfig(Config):
             self.freegame_type: self.num_reels + 1,
         }
 
-        # === Cash Stacks-specific params ===
+        # === Wok Fury-specific params ===
         # Progress Ladder: каждые N собранных Bonus = новый tier.
         self.ladder_bonuses_per_tier = 4
         self.ladder_max_tier = 5
@@ -527,7 +527,7 @@ class GameConfig(Config):
             ),
         ]
 
-    # NOTE: Cash Stacks 4-tier win-level map (overrides SDK default 10-tier
+    # NOTE: Wok Fury 4-tier win-level map (overrides SDK default 10-tier
     # `standard`/`endFeature` tables in src/config/config.py).
     #
     # Front-end (web-sdk apps/daloniil_test/src/game/winLevelMap.ts) interprets

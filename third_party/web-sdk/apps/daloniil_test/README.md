@@ -1,4 +1,4 @@
-# Cash Stacks (`daloniil_test`)
+# Wok Fury (`daloniil_test`)
 
 Stake Engine slot app — Wild-West тематика, 5×6 grid, 50 paylines.
 
@@ -19,20 +19,20 @@ pnpm --filter daloniil_test storybook    # → http://localhost:6007
 
 ## Спецификация
 
-| Параметр       | Значение                                              |
-| -------------- | ----------------------------------------------------- |
-| Provider       | `sample_provider`                                     |
-| Game ID        | `0_0_daloniil_test`                                   |
-| Grid           | 5 reels × 6 rows                                      |
-| Paylines       | 50                                                    |
-| RTP            | 96.01%                                                |
-| Max Win        | ×50 000                                               |
-| Bet modes      | `base`, `bonus_boost` (×2), `special_spins` (×30), `bonus_normal` (buy ×100), `bonus_super` (buy ×200) |
-| Symbols (Hi)   | H1 (×100/×10/×2), H2 (×50/×5/×1.2), H3 (×30/×3/×0.8), H4 (×20/×2/×0.5) |
-| Symbols (Low)  | L1–L4 (×1/×0.2/×0.1)                                  |
-| Wild           | W (×150 for 5)                                        |
-| Bonus          | B (триггер FS, collectible в FS)                      |
-| Mystery        | M (sticky reel в FS, раскрывается в один символ)      |
+| Параметр      | Значение                                                                                               |
+| ------------- | ------------------------------------------------------------------------------------------------------ |
+| Provider      | `sample_provider`                                                                                      |
+| Game ID       | `0_0_daloniil_test`                                                                                    |
+| Grid          | 5 reels × 6 rows                                                                                       |
+| Paylines      | 50                                                                                                     |
+| RTP           | 96.01%                                                                                                 |
+| Max Win       | ×50 000                                                                                                |
+| Bet modes     | `base`, `bonus_boost` (×2), `special_spins` (×30), `bonus_normal` (buy ×100), `bonus_super` (buy ×200) |
+| Symbols (Hi)  | H1 (×100/×10/×2), H2 (×50/×5/×1.2), H3 (×30/×3/×0.8), H4 (×20/×2/×0.5)                                 |
+| Symbols (Low) | L1–L4 (×1/×0.2/×0.1)                                                                                   |
+| Wild          | W (×150 for 5)                                                                                         |
+| Bonus         | B (триггер FS, collectible в FS)                                                                       |
+| Mystery       | M (sticky reel в FS, раскрывается в один символ)                                                       |
 
 ### Free Spins / Progress Ladder
 
@@ -62,7 +62,7 @@ src/
 │   ├── stateGame.svelte.ts               — + bonusCollected, ladderTier, mysteryReels, activeFeature
 │   ├── typesBookEvent.ts                 — + bonusCollect, ladderTierUp, mysteryReelActivate, mysteryReveal
 │   ├── typesEmitterEvent.ts              — + EmitterEventPaylineOverlay, MysteryReel, ProgressLadder
-│   └── bookEventHandlerMap.ts            — handlers для Cash Stacks-событий
+│   └── bookEventHandlerMap.ts            — handlers для Wok Fury-событий
 ├── i18n/
 │   ├── messagesMap/
 │   │   ├── en.ts                         — английский словарь
@@ -93,7 +93,7 @@ python3 sync_to_web_sdk.py   # → apps/daloniil_test/src/stories/data/*.ts
 ```
 reveal              ← board paint
 winInfo             ← paylineShow → animateSymbols → paylineHide
-freeSpinTrigger     ← reset Cash Stacks state, animate B positions, FS intro
+freeSpinTrigger     ← reset Wok Fury state, animate B positions, FS intro
 updateFreeSpin      ← counter
 bonusCollect ★      ← +collected, animate B positions
 ladderTierUp ★      ← +1 tier, +3 spins, pulse on ladder
@@ -102,7 +102,7 @@ mysteryReveal ★     ← animate reveal of M cells to revealed symbol
 setWin / setTotalWin / finalWin / freeSpinEnd
 ```
 
-★ = новые Cash Stacks события (Этап 2 math должен их сгенерировать).
+★ = новые Wok Fury события (Этап 2 math должен их сгенерировать).
 
 ---
 
@@ -111,6 +111,7 @@ setWin / setTotalWin / finalWin / freeSpinEnd
 ### Используются **стоковые** ассеты SDK (Money Mining theme)
 
 Из `static/assets/`:
+
 - `spines/symbols/h1.json … h4.json` — высокие символы (через `SYMBOL_INFO_MAP`)
 - `spines/symbols/l1.json … l4.json` — низкие символы
 - `spines/symbols3/W.json` — Wild (динамит)
@@ -124,14 +125,14 @@ setWin / setTotalWin / finalWin / freeSpinEnd
 
 ### Используются **placeholder**'ы (нужно нарисовать в Wild-West теме)
 
-| Что                       | Где                                          | Текущая реализация    |
-| ------------------------- | -------------------------------------------- | --------------------- |
-| Символ `B` (Bonus)        | board cells                                  | оранжевый rect + «B»  |
-| Символ `M` (Mystery)      | sticky reels во FS                           | фиолетовый rect + «?» |
-| Bonus иконка x3           | NORMAL карточка в Buy Bonus menu             | оранжевый rect        |
-| Bonus иконка x4           | SUPER карточка в Buy Bonus menu              | розовый rect          |
-| Лого «CASH STACKS»        | верхний правый угол UI                       | золотой текст         |
-| Sticky Mystery overlay    | подсветка reel во FS                         | фиолетовая рамка + ?  |
+| Что                    | Где                              | Текущая реализация    |
+| ---------------------- | -------------------------------- | --------------------- |
+| Символ `B` (Bonus)     | board cells                      | оранжевый rect + «B»  |
+| Символ `M` (Mystery)   | sticky reels во FS               | фиолетовый rect + «?» |
+| Bonus иконка x3        | NORMAL карточка в Buy Bonus menu | оранжевый rect        |
+| Bonus иконка x4        | SUPER карточка в Buy Bonus menu  | розовый rect          |
+| Лого «Wok Fury»        | верхний правый угол UI           | золотой текст         |
+| Sticky Mystery overlay | подсветка reel во FS             | фиолетовая рамка + ?  |
 
 > Когда придут реальные Wild West ассеты — заменить `SymbolPlaceholder`/`AssetPlaceholder`
 > на `Sprite`/`Spine` (см. примеры в `SymbolSprite.svelte` / `SymbolSpine.svelte`).

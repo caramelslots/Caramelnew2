@@ -1,4 +1,4 @@
-# Cash Stacks — Math Retention Plan
+# Wok Fury — Math Retention Plan
 
 Живой документ с решениями по перенастройке математики для повышения engagement.
 Обсуждение ведётся **поэтапно**. Изменения в код вносятся только после финализации всех этапов.
@@ -13,19 +13,19 @@
 
 ### Текущее состояние
 
-| Режим | Hit rate (line) | Dead spin quota | Basegame quota | FS quota |
-|---|---|---|---|---|
-| `base` | ~8.85% | 83% | 6.9% | 10% |
-| `bonus_boost` | ~9.17% | 75% | 6.9% | 18% |
+| Режим         | Hit rate (line) | Dead spin quota | Basegame quota | FS quota |
+| ------------- | --------------- | --------------- | -------------- | -------- |
+| `base`        | ~8.85%          | 83%             | 6.9%           | 10%      |
+| `bonus_boost` | ~9.17%          | 75%             | 6.9%           | 18%      |
 
 Профиль: **high volatility** — редкие line wins, 55% RTP из FS, optimizer штрафует wins < 5×.
 
 ### Цель
 
-| Режим | Target hit rate | Target RTP |
-|---|---|---|
-| `base` | **18–20%** | **96%** |
-| `bonus_boost` | **18–20%** | **96%** |
+| Режим         | Target hit rate | Target RTP |
+| ------------- | --------------- | ---------- |
+| `base`        | **18–20%**      | **96%**    |
+| `bonus_boost` | **18–20%**      | **96%**    |
 
 > Сейчас в `game_config.py` стоит `rtp = 0.9601` (96.01%).  
 > **Принято:** оба режима таргетируют **ровно 96.00%** после retune + optimization rerun.
@@ -40,23 +40,23 @@
 
 #### RTP budget — `base` mode (должен суммироваться в 0.96)
 
-| Criteria | RTP share | Статус |
-|---|---|---|
-| `wincap` | 1% | без изменений |
-| `0` (dead) | 0% | без изменений |
-| `freegame` | **55%** | без изменений (FS не трогаем) |
-| `basegame` | **40%** | перераспределяем внутри: чаще hits, меньше avg win |
-| **Total** | **96%** | hard target |
+| Criteria   | RTP share | Статус                                             |
+| ---------- | --------- | -------------------------------------------------- |
+| `wincap`   | 1%        | без изменений                                      |
+| `0` (dead) | 0%        | без изменений                                      |
+| `freegame` | **55%**   | без изменений (FS не трогаем)                      |
+| `basegame` | **40%**   | перераспределяем внутри: чаще hits, меньше avg win |
+| **Total**  | **96%**   | hard target                                        |
 
 #### RTP budget — `bonus_boost` mode (должен суммироваться в 0.96)
 
-| Criteria | RTP share | Статус |
-|---|---|---|
-| `wincap` | 1% | без изменений |
-| `0` (dead) | 0% | без изменений |
-| `freegame` | **65%** | без изменений (FS не трогаем) |
-| `basegame` | **30%** | перераспределяем внутри: чаще hits, меньше avg win |
-| **Total** | **96%** | hard target |
+| Criteria   | RTP share | Статус                                             |
+| ---------- | --------- | -------------------------------------------------- |
+| `wincap`   | 1%        | без изменений                                      |
+| `0` (dead) | 0%        | без изменений                                      |
+| `freegame` | **65%**   | без изменений (FS не трогаем)                      |
+| `basegame` | **30%**   | перераспределяем внутри: чаще hits, меньше avg win |
+| **Total**  | **96%**   | hard target                                        |
 
 > ⚠️ `bonus_boost` имеет **другой RTP split** (65/30 vs 55/40), потому что FS quota выше (18% vs 10%).
 > Hit rate target одинаковый (18–20%), но base RTP budget меньше — avg win per hit в bonus_boost
@@ -87,13 +87,13 @@
 
 Формула: `base_RTP = hit_rate × avg_win_per_hit`
 
-| | Сейчас | Цель |
-|---|---|---|
-| Hit rate | ~9% | ~19% |
-| Base RTP share (`base`) | ~40% | ~40% (без изменений) |
-| Base RTP share (`bonus_boost`) | ~30% | ~30% (без изменений) |
-| Avg win per hit (`base`) | ~4.5× | **~2.1×** |
-| Avg win per hit (`bonus_boost`) | ~3.3× | **~1.6×** |
+|                                 | Сейчас | Цель                 |
+| ------------------------------- | ------ | -------------------- |
+| Hit rate                        | ~9%    | ~19%                 |
+| Base RTP share (`base`)         | ~40%   | ~40% (без изменений) |
+| Base RTP share (`bonus_boost`)  | ~30%   | ~30% (без изменений) |
+| Avg win per hit (`base`)        | ~4.5×  | **~2.1×**            |
+| Avg win per hit (`bonus_boost`) | ~3.3×  | **~1.6×**            |
 
 Игрок выигрывает **в 2× чаще**, но каждый win **меньше** → total RTP **96%** сохраняется, FS не трогаем.
 
@@ -101,21 +101,21 @@
 
 #### `base` mode
 
-| Criteria | Сейчас | Target |
-|---|---|---|
-| `0` (dead) | 83% | **63%** |
-| `basegame` (line win) | 6.9% | **19%** |
-| `freegame` | 10% | **10%** (без изменений) |
-| `wincap` | 0.1% | 0.1% (без изменений) |
+| Criteria              | Сейчас | Target                  |
+| --------------------- | ------ | ----------------------- |
+| `0` (dead)            | 83%    | **63%**                 |
+| `basegame` (line win) | 6.9%   | **19%**                 |
+| `freegame`            | 10%    | **10%** (без изменений) |
+| `wincap`              | 0.1%   | 0.1% (без изменений)    |
 
 #### `bonus_boost` mode
 
-| Criteria | Сейчас | Target |
-|---|---|---|
-| `0` (dead) | 75% | **63%** |
-| `basegame` (line win) | 6.9% | **19%** |
-| `freegame` | 18% | **18%** (без изменений) |
-| `wincap` | 0.1% | 0.1% (без изменений) |
+| Criteria              | Сейчас | Target                  |
+| --------------------- | ------ | ----------------------- |
+| `0` (dead)            | 75%    | **63%**                 |
+| `basegame` (line win) | 6.9%   | **19%**                 |
+| `freegame`            | 18%    | **18%** (без изменений) |
+| `wincap`              | 0.1%   | 0.1% (без изменений)    |
 
 > Combined «что-то произошло» в base ≈ 28% (19% hit + 10% FS − overlap).
 
@@ -123,28 +123,28 @@
 
 #### Basegame conditions — `base` mode
 
-| Параметр | Сейчас | Draft target |
-|---|---|---|
-| `hr` | 12 | **5.5** |
+| Параметр               | Сейчас | Draft target               |
+| ---------------------- | ------ | -------------------------- |
+| `hr`                   | 12     | **5.5**                    |
 | `rtp` (basegame share) | 0.4001 | **0.40** (→ total RTP 96%) |
-| implied avg win | ~4.8× | **~2.1×** |
+| implied avg win        | ~4.8×  | **~2.1×**                  |
 
 #### Basegame conditions — `bonus_boost` mode
 
-| Параметр | Сейчас | Draft target |
-|---|---|---|
-| `hr` | 12 | **5.5** |
+| Параметр               | Сейчас | Draft target               |
+| ---------------------- | ------ | -------------------------- |
+| `hr`                   | 12     | **5.5**                    |
 | `rtp` (basegame share) | 0.3001 | **0.30** (→ total RTP 96%) |
-| implied avg win | ~3.6× | **~1.6×** |
+| implied avg win        | ~3.6×  | **~1.6×**                  |
 
 #### Basegame scaling
 
-| Win range | Сейчас | Draft target | Логика |
-|---|---|---|---|
-| 0.3–2× | — | **scale 1.5** | Поощрять micro-wins |
-| 2–5× | scale 0.3 | **scale 1.2** | Основная масса hits |
-| 5–20× | scale 1.8 | **scale 0.8** | Резать крупные base hits |
-| 20–50× | — | **scale 0.5** | Редкий base tail |
+| Win range | Сейчас    | Draft target  | Логика                   |
+| --------- | --------- | ------------- | ------------------------ |
+| 0.3–2×    | —         | **scale 1.5** | Поощрять micro-wins      |
+| 2–5×      | scale 0.3 | **scale 1.2** | Основная масса hits      |
+| 5–20×     | scale 1.8 | **scale 0.8** | Резать крупные base hits |
+| 20–50×    | —         | **scale 0.5** | Редкий base tail         |
 
 #### Freegame conditions — БЕЗ ИЗМЕНЕНИЙ
 
@@ -158,10 +158,10 @@ scaling: as current
 
 **Принято: Вариант A — только line wins.**
 
-| Метрика | Определение | Target |
-|---|---|---|
-| **Hit rate** | % спинов с выплатой по линиям в base | **18–20%** |
-| **Feature rate** | % спинов с FS trigger | **10%** (base) / **18%** (bonus_boost) — отдельная метрика |
+| Метрика          | Определение                          | Target                                                     |
+| ---------------- | ------------------------------------ | ---------------------------------------------------------- |
+| **Hit rate**     | % спинов с выплатой по линиям в base | **18–20%**                                                 |
+| **Feature rate** | % спинов с FS trigger                | **10%** (base) / **18%** (bonus_boost) — отдельная метрика |
 
 FS trigger **не входит** в hit rate. Combined «что-то произошло» ≈ hit + feature − overlap (~28% в base).
 
@@ -171,27 +171,28 @@ FS trigger **не входит** в hit rate. Combined «что-то произ�
 
 #### Paytable changes (draft)
 
-| Symbol | 3-OAK | 4-OAK | 5-OAK | Статус |
-|---|---|---|---|---|
-| L1 | — | 0.5× | 3.0× | без изменений |
-| L2 | — | 0.5× | 3.0× | без изменений |
-| L3 | **0.1×** | 0.5× | 3.0× | **добавить 3-OAK** |
-| L4 | **0.1×** | 0.5× | 3.0× | **добавить 3-OAK** |
-| H1–H4 | as now | as now | as now | без изменений |
+| Symbol | 3-OAK    | 4-OAK  | 5-OAK  | Статус             |
+| ------ | -------- | ------ | ------ | ------------------ |
+| L1     | —        | 0.5×   | 3.0×   | без изменений      |
+| L2     | —        | 0.5×   | 3.0×   | без изменений      |
+| L3     | **0.1×** | 0.5×   | 3.0×   | **добавить 3-OAK** |
+| L4     | **0.1×** | 0.5×   | 3.0×   | **добавить 3-OAK** |
+| H1–H4  | as now   | as now | as now | без изменений      |
 
 > Stake RGS: payout cents кратны 10 → pay **0.1×** (не 0.15×).
 
 #### Win mix target (base mode, ~19% hit)
 
-| Tier | Источник | Доля wins | Total win |
-|---|---|---|---|
-| Micro | L3/L4 3-OAK | ~40% | 0.1–0.5× bet |
-| Medium | L1/L2 4-OAK, H4 3-OAK | ~45% | 0.5–2× bet |
-| Nice | H2/H3 3-OAK+ | ~15% | 2–8× bet |
+| Tier   | Источник              | Доля wins | Total win    |
+| ------ | --------------------- | --------- | ------------ |
+| Micro  | L3/L4 3-OAK           | ~40%      | 0.1–0.5× bet |
+| Medium | L1/L2 4-OAK, H4 3-OAK | ~45%      | 0.5–2× bet   |
+| Nice   | H2/H3 3-OAK+          | ~15%      | 2–8× bet     |
 
 #### Web-sdk requirement (не math, но обязательно)
 
 Micro-wins (**total win < 1× bet**):
+
 - только count-up ticker, **без** BIG WIN banner / fanfare;
 - не акцентировать multi-line 3-OAK L3/L4 как «большую победу».
 
@@ -203,11 +204,11 @@ Micro-wins (**total win < 1× bet**):
 
 #### Math — без изменений
 
-| Level | Диапазон | Banner | Статус |
-|---|---|---|---|
-| 1–2 | 0 – 1× | нет | без изменений |
-| 3–5 | 1 – 10× | нет | **усилить UX на клиенте** |
-| 6+ | 10×+ | BIG WIN ladder | **порог 10× сохраняем** |
+| Level | Диапазон | Banner         | Статус                    |
+| ----- | -------- | -------------- | ------------------------- |
+| 1–2   | 0 – 1×   | нет            | без изменений             |
+| 3–5   | 1 – 10×  | нет            | **усилить UX на клиенте** |
+| 6+    | 10×+     | BIG WIN ladder | **порог 10× сохраняем**   |
 
 `get_win_level()` в `game_config.py` **не меняем**.
 
@@ -229,12 +230,12 @@ Micro-wins (levels 1–2, total < 1× bet): **только ticker**, без fanf
 
 #### BR0 — `generate_reels.py` / `BR0.csv`
 
-| Symbol | Сейчас (per reel) | Target | Δ |
-|---|---|---|---|
-| W | 37 | **28** | −9 |
-| L3 | 30 | **34** | +4 |
-| L4 | 30 | **35** | +5 |
-| L1, L2, H1–H4, B | as now | as now | — |
+| Symbol           | Сейчас (per reel) | Target | Δ   |
+| ---------------- | ----------------- | ------ | --- |
+| W                | 37                | **28** | −9  |
+| L3               | 30                | **34** | +4  |
+| L4               | 30                | **35** | +5  |
+| L1, L2, H1–H4, B | as now            | as now | —   |
 
 - W share: ~17% → **~13%**
 - **B не меняем** → FS trigger rate сохраняется
@@ -242,12 +243,12 @@ Micro-wins (levels 1–2, total < 1× bet): **только ticker**, без fanf
 
 #### BR1 — `BR1.csv`
 
-| Symbol | Сейчас (per reel) | Target | Δ |
-|---|---|---|---|
-| W | 22 | **22** | — |
-| L3 | 36 | **38** | +2 |
-| L4 | 36 | **38** | +2 |
-| B | 6–7 | as now | — |
+| Symbol | Сейчас (per reel) | Target | Δ   |
+| ------ | ----------------- | ------ | --- |
+| W      | 22                | **22** | —   |
+| L3     | 36                | **38** | +2  |
+| L4     | 36                | **38** | +2  |
+| B      | 6–7               | as now | —   |
 
 > W на BR1 уже ниже (~10%) — дополнительное снижение не нужно.
 
@@ -281,27 +282,29 @@ Micro-wins (levels 1–2, total < 1× bet): **только ticker**, без fanf
 
 ## ✅ Этап 1 — Summary (все решения)
 
-| # | Тема | Решение |
-|---|---|---|
-| 0 | RTP | **96%** base + bonus_boost |
-| 1 | FS | **Не трогаем** (quota, RTP, HR, mechanics) |
-| 2 | Стратегия | Hit ↑, avg win ↓ (micro-wins) |
-| 3 | Quotas | dead **63%**, basegame **19%**, FS unchanged |
-| 4 | Optimizer | HR **5.5**, inverted scaling, base RTP 40%/30% |
-| Q1 | Hit definition | **Line wins only** (18–20%) |
-| Q2 | Paytable | **3-OAK L3/L4 @ 0.1×** (hybrid) |
-| Q3 | Celebrations | **BIG WIN от 10×**, усилить levels 3–5 (web-sdk) |
-| Q4 | Reelstrips | **BR0 W 37→28**, +L3/L4; BR1 W=22, +L3/L4 |
-| Q5 | Zerowin strip | **BR0/BR1** (same), BR0_ZW → **Этап 2** |
+| #   | Тема           | Решение                                          |
+| --- | -------------- | ------------------------------------------------ |
+| 0   | RTP            | **96%** base + bonus_boost                       |
+| 1   | FS             | **Не трогаем** (quota, RTP, HR, mechanics)       |
+| 2   | Стратегия      | Hit ↑, avg win ↓ (micro-wins)                    |
+| 3   | Quotas         | dead **63%**, basegame **19%**, FS unchanged     |
+| 4   | Optimizer      | HR **5.5**, inverted scaling, base RTP 40%/30%   |
+| Q1  | Hit definition | **Line wins only** (18–20%)                      |
+| Q2  | Paytable       | **3-OAK L3/L4 @ 0.1×** (hybrid)                  |
+| Q3  | Celebrations   | **BIG WIN от 10×**, усилить levels 3–5 (web-sdk) |
+| Q4  | Reelstrips     | **BR0 W 37→28**, +L3/L4; BR1 W=22, +L3/L4        |
+| Q5  | Zerowin strip  | **BR0/BR1** (same), BR0_ZW → **Этап 2**          |
 
 ### Файлы для изменения (когда начнём реализацию)
 
 **Math-sdk:**
+
 - `game_config.py` — paytable, quotas, rtp=0.96
 - `game_optimization.py` — HR, scaling
 - `generate_reels.py` + `reels/BR0.csv`, `reels/BR1.csv`
 
 **Web-sdk:**
+
 - `src/game/config.ts` — paytable mirror
 - `Win.svelte`, `winLevelMap.ts` — levels 3–5 UX, micro-win ticker
 
@@ -337,12 +340,12 @@ dead spins (63%) не выглядят как «пустота», а как «п
 
 ### Связь с Этапом 1
 
-| Этап 1 | Этап 2 |
-|---|---|
-| Hit 19% (реальные выплаты) | Near-miss среди 63% dead |
-| BR0/BR1 для wins | **BR0_ZW / BR1_ZW** для controlled dead |
-| Micro-wins L3/L4 | Visual clusters L/H **off-line** |
-| FS 10%/18% без изменений | 2-scatter tease → drive к FS |
+| Этап 1                     | Этап 2                                  |
+| -------------------------- | --------------------------------------- |
+| Hit 19% (реальные выплаты) | Near-miss среди 63% dead                |
+| BR0/BR1 для wins           | **BR0_ZW / BR1_ZW** для controlled dead |
+| Micro-wins L3/L4           | Visual clusters L/H **off-line**        |
+| FS 10%/18% без изменений   | 2-scatter tease → drive к FS            |
 
 ### Три типа near-miss
 
@@ -402,10 +405,10 @@ lowest frustration risk, совпадает с исходной идеей по�
 
 #### Near-miss mix (тип A only) — ✅ Q3 принято
 
-| Sub-type | Доля dead | Доля всех спинов (base, dead=63%) |
-|---|---|---|
-| Plain dead | **60%** | ~38% |
-| **A: visual cluster** | **40%** | **~25%** |
+| Sub-type              | Доля dead | Доля всех спинов (base, dead=63%) |
+| --------------------- | --------- | --------------------------------- |
+| Plain dead            | **60%**   | ~38%                              |
+| **A: visual cluster** | **40%**   | **~25%**                          |
 
 Combined player feel (base): 19% hit + 10% FS + 25% cluster ≈ **~54%** спинов с «событием на экране».
 
@@ -424,6 +427,7 @@ Combined player feel (base): 19% hit + 10% FS + 25% cluster ≈ **~54%** спи�
 #### Логика
 
 Каждый cluster dead book:
+
 1. Выбирается **один dominant symbol** (weighted по rarity)
 2. На доске **4–6 копий** этого символа, **off-line** (ни одна payline не даёт 3+ OAK)
 3. Остальные cells — filler, не создающий line win
@@ -432,15 +436,15 @@ Combined player feel (base): 19% hit + 10% FS + 25% cluster ≈ **~54%** спи�
 
 Веса **обратно пропорциональны** частоте символа на base-ленте:
 
-| Symbol | Rarity (BR0) | Cluster weight | ~% cluster boards |
-|---|---|---|---|
-| L3, L4 | common | **6** each | ~14% each (~28% combined) |
-| L1, L2 | common | **5** each | ~12% each (~24% combined) |
-| H4 | medium | **4** | ~9% |
-| H3 | medium | **3** | ~7% |
-| H2 | uncommon | **2** | ~5% |
-| H1 | rare | **1** | ~2% |
-| W | very rare | **1** | ~2% |
+| Symbol | Rarity (BR0) | Cluster weight | ~% cluster boards         |
+| ------ | ------------ | -------------- | ------------------------- |
+| L3, L4 | common       | **6** each     | ~14% each (~28% combined) |
+| L1, L2 | common       | **5** each     | ~12% each (~24% combined) |
+| H4     | medium       | **4**          | ~9%                       |
+| H3     | medium       | **3**          | ~7%                       |
+| H2     | uncommon     | **2**          | ~5%                       |
+| H1     | rare         | **1**          | ~2%                       |
+| W      | very rare    | **1**          | ~2%                       |
 
 > W включён **редко** — визуально сильный, но 5×W на экране может намекать на huge win.
 > При реализации: mirror weights per strip (BR1_ZW, BR2_ZW, FR0_ZW — свои веса от ленты).
@@ -488,34 +492,34 @@ Combined player feel (base): 19% hit + 10% FS + 25% cluster ≈ **~54%** спи�
 
 #### FS near-miss strips
 
-| FS strip | Modes |
-|---|---|
+| FS strip   | Modes                                             |
+| ---------- | ------------------------------------------------- |
 | **FR0_ZW** | base, bonus_boost, special_spins, bonus_normal FS |
-| **FR1_ZW** | bonus_super FS |
+| **FR1_ZW** | bonus_super FS                                    |
 
 > FR0_ZW weights пересчитываются от FR0 symbol density; FR1_ZW — от FR1.
 > Mystery reels / ladder logic **не меняются** — cluster только на zero-win FS reveals.
 
 ### ✅ Этап 2 — Summary (все решения)
 
-| # | Тема | Решение |
-|---|---|---|
-| Q1 | Scope | **Все bet modes** |
-| Q2 | Тип | **A only** (visual cluster) |
-| Q3 | Пропорции | **40%** cluster / **60%** plain dead |
-| Q4 | Символы | **Weighted by rarity** (L часто, H1/W редко) |
-| Q5 | Scatter tease | **Не включаем** |
-| Q6 | Клиент | **Без подсветки** — organic |
-| Q7 | FS | **Да** — cluster в FS dead spins (FR0_ZW / FR1_ZW) |
+| #   | Тема          | Решение                                            |
+| --- | ------------- | -------------------------------------------------- |
+| Q1  | Scope         | **Все bet modes**                                  |
+| Q2  | Тип           | **A only** (visual cluster)                        |
+| Q3  | Пропорции     | **40%** cluster / **60%** plain dead               |
+| Q4  | Символы       | **Weighted by rarity** (L часто, H1/W редко)       |
+| Q5  | Scatter tease | **Не включаем**                                    |
+| Q6  | Клиент        | **Без подсветки** — organic                        |
+| Q7  | FS            | **Да** — cluster в FS dead spins (FR0_ZW / FR1_ZW) |
 
 #### Strips (при реализации)
 
-| Strip | Назначение |
-|---|---|
-| BR0_ZW | base / buy trigger zerowin |
-| BR1_ZW | bonus_boost zerowin |
-| BR2_ZW | special_spins zerowin |
-| FR0_ZW | FS dead spins (default) |
+| Strip  | Назначение                  |
+| ------ | --------------------------- |
+| BR0_ZW | base / buy trigger zerowin  |
+| BR1_ZW | bonus_boost zerowin         |
+| BR2_ZW | special_spins zerowin       |
+| FR0_ZW | FS dead spins (default)     |
 | FR1_ZW | FS dead spins (bonus_super) |
 
 ### ❓ Открытые вопросы (Этап 2)
@@ -531,9 +535,9 @@ Combined player feel (base): 19% hit + 10% FS + 25% cluster ≈ **~54%** спи�
 <details>
 <summary>Старый draft с B и C (не принят)</summary>
 
-| Sub-type | Доля dead |
-|---|---|
-| Plain ~55% | A ~25% | C ~12% | B ~8% |
+| Sub-type   | Доля dead |
+| ---------- | --------- | ------ | ----- |
+| Plain ~55% | A ~25%    | C ~12% | B ~8% |
 
 </details>
 
@@ -541,13 +545,13 @@ Combined player feel (base): 19% hit + 10% FS + 25% cluster ≈ **~54%** спи�
 
 **Принято: near-miss (тип A) — во всех bet modes.**
 
-| Mode | Base zerowin strip | FS zerowin strip |
-|---|---|---|
-| `base` | BR0_ZW | FR0_ZW |
-| `bonus_boost` | BR1_ZW | FR0_ZW |
-| `special_spins` | BR2_ZW | FR0_ZW |
-| `bonus_normal` | BR0_ZW | FR0_ZW |
-| `bonus_super` | BR0_ZW | FR1_ZW |
+| Mode            | Base zerowin strip | FS zerowin strip |
+| --------------- | ------------------ | ---------------- |
+| `base`          | BR0_ZW             | FR0_ZW           |
+| `bonus_boost`   | BR1_ZW             | FR0_ZW           |
+| `special_spins` | BR2_ZW             | FR0_ZW           |
+| `bonus_normal`  | BR0_ZW             | FR0_ZW           |
+| `bonus_super`   | BR0_ZW             | FR1_ZW           |
 
 > Buy/special modes в основном FS — near-miss на **base trigger spin** и на **dead FS spins**
 > (если Q7 = да). RTP по-прежнему не меняется.
@@ -556,23 +560,23 @@ Combined player feel (base): 19% hit + 10% FS + 25% cluster ≈ **~54%** спи�
 
 ## Журнал решений
 
-| Дата | Решение | Статус |
-|---|---|---|
-| 2026-06-05 | RTP `base` + `bonus_boost` = **96%** (hard constraint) | ✅ Принято |
-| 2026-06-05 | FS не трогаем (quota, RTP, HR, avg win, mechanics) | ✅ Принято |
-| 2026-06-05 | Hit ↑ за счёт micro-wins, не за счёт FS budget | ✅ Принято |
-| 2026-06-05 | Q1: Hit = **только line wins** (Вариант A) | ✅ Принято |
-| 2026-06-05 | Q2: Micro-wins = **Вариант C** (3-OAK L3/L4 @ 0.1×) | ✅ Принято |
-| 2026-06-05 | Q3: BIG WIN **от 10×** + усилить levels 3–5 (web-sdk) | ✅ Принято |
-| 2026-06-05 | Q4: **BR0 W 37→28**, BR1 W=22, +L3/L4 на обеих лентах | ✅ Принято |
-| 2026-06-05 | Q5: Zerowin = BR0/BR1 (same); BR0_ZW → Этап 2 | ✅ Принято |
-| 2026-06-05 | Quotas: dead 63%, basegame 19%, FS unchanged | ✅ Принято |
-| 2026-06-05 | **Этап 1 обсуждение завершено** — код не меняли | ✅ Done |
-| 2026-06-05 | Этап 2 Q1: near-miss **во всех bet modes** | ✅ Принято |
-| 2026-06-05 | Этап 2 Q3: **40%** dead = cluster, **60%** plain | ✅ Принято |
-| 2026-06-05 | Этап 2 Q4: cluster symbol **weighted by rarity** | ✅ Принято |
-| 2026-06-05 | Этап 2 Q5: тип **C / anticipation** — **не включаем** | ✅ Принято |
-| 2026-06-05 | Этап 2 Q6: cluster **без подсветки** на клиенте | ✅ Принято |
+| Дата       | Решение                                                  | Статус     |
+| ---------- | -------------------------------------------------------- | ---------- |
+| 2026-06-05 | RTP `base` + `bonus_boost` = **96%** (hard constraint)   | ✅ Принято |
+| 2026-06-05 | FS не трогаем (quota, RTP, HR, avg win, mechanics)       | ✅ Принято |
+| 2026-06-05 | Hit ↑ за счёт micro-wins, не за счёт FS budget           | ✅ Принято |
+| 2026-06-05 | Q1: Hit = **только line wins** (Вариант A)               | ✅ Принято |
+| 2026-06-05 | Q2: Micro-wins = **Вариант C** (3-OAK L3/L4 @ 0.1×)      | ✅ Принято |
+| 2026-06-05 | Q3: BIG WIN **от 10×** + усилить levels 3–5 (web-sdk)    | ✅ Принято |
+| 2026-06-05 | Q4: **BR0 W 37→28**, BR1 W=22, +L3/L4 на обеих лентах    | ✅ Принято |
+| 2026-06-05 | Q5: Zerowin = BR0/BR1 (same); BR0_ZW → Этап 2            | ✅ Принято |
+| 2026-06-05 | Quotas: dead 63%, basegame 19%, FS unchanged             | ✅ Принято |
+| 2026-06-05 | **Этап 1 обсуждение завершено** — код не меняли          | ✅ Done    |
+| 2026-06-05 | Этап 2 Q1: near-miss **во всех bet modes**               | ✅ Принято |
+| 2026-06-05 | Этап 2 Q3: **40%** dead = cluster, **60%** plain         | ✅ Принято |
+| 2026-06-05 | Этап 2 Q4: cluster symbol **weighted by rarity**         | ✅ Принято |
+| 2026-06-05 | Этап 2 Q5: тип **C / anticipation** — **не включаем**    | ✅ Принято |
+| 2026-06-05 | Этап 2 Q6: cluster **без подсветки** на клиенте          | ✅ Принято |
 | 2026-06-05 | Этап 2 Q7: cluster в **FS dead spins** (FR0_ZW / FR1_ZW) | ✅ Принято |
-| 2026-06-05 | **Этап 2 обсуждение завершено** — код не меняли | ✅ Done |
-| 2026-06-05 | Этап 2 Q2: **тип A only** (B/C excluded) | ✅ Принято |
+| 2026-06-05 | **Этап 2 обсуждение завершено** — код не меняли          | ✅ Done    |
+| 2026-06-05 | Этап 2 Q2: **тип A only** (B/C excluded)                 | ✅ Принято |

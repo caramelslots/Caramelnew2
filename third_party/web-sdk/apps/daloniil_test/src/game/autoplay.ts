@@ -1,5 +1,5 @@
 /**
- * autoplay.ts — диапазон раундов Cash Stacks для autoplay.
+ * autoplay.ts — диапазон раундов Wok Fury для autoplay.
  *
  * Слайдер позволяет выбрать любое целое от MIN до MAX (10–100).
  * Метки 10/25/50/75/100 на bg_auto — только визуальный ориентир.
@@ -18,7 +18,7 @@ import { canAffordSpin } from './buyBonusBalance';
 export const CASH_STACKS_MIN_ROUNDS = 10;
 export const CASH_STACKS_MAX_ROUNDS = 100;
 
-/** Дефолт по дизайну Cash Stacks (предвыбран при первом открытии модалки). */
+/** Дефолт по дизайну Wok Fury (предвыбран при первом открытии модалки). */
 export const CASH_STACKS_DEFAULT_ROUND = 50;
 
 /** Метки на фоне bg_auto.png — не ограничивают выбор. */
@@ -45,7 +45,8 @@ export const roundsToProgress = (rounds: number): number => {
 
 export const progressToRounds = (progress: number): number =>
 	clampRounds(
-		CASH_STACKS_MIN_ROUNDS + Math.max(0, Math.min(1, progress)) * (CASH_STACKS_MAX_ROUNDS - CASH_STACKS_MIN_ROUNDS),
+		CASH_STACKS_MIN_ROUNDS +
+			Math.max(0, Math.min(1, progress)) * (CASH_STACKS_MAX_ROUNDS - CASH_STACKS_MIN_ROUNDS),
 	);
 
 type AutoplayBroadcastEvent = { type: 'soundPressGeneral' } | { type: 'autoBet' };

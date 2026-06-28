@@ -1,4 +1,4 @@
-"""Sync published Cash Stacks books → web-sdk storybook .ts modules.
+"""Sync published Wok Fury books → web-sdk storybook .ts modules.
 
 Reads:
   library/books/books_<mode>.json     (output of run_storybook.py)

@@ -78,7 +78,7 @@ export const computeLoaderCarouselMetrics = (
 	};
 };
 
-/** Neon WOK FURY title — centered above the loader cards (ref. CASH STACKS on info screen). */
+/** Neon WOK FURY title — centered above the loader cards (ref. Wok Fury on info screen). */
 export const computeLoaderLogoMetrics = (layoutDerived: LayoutDerived) => {
 	const canvasSizes = layoutDerived.canvasSizes();
 	const canvasWidth = canvasSizes.width;

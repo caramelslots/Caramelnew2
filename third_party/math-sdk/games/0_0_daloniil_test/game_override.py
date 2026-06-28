@@ -1,6 +1,6 @@
-"""Cash Stacks state overrides.
+"""Wok Fury state overrides.
 
-Расширяет lines-донор Cash Stacks-механиками:
+Расширяет lines-донор Wok Fury-механиками:
 
   - Progress Ladder:        каждые N собранных Bonus (config.ladder_bonuses_per_tier)
                             = новый tier (+spins, +sticky mystery reel)
@@ -36,7 +36,7 @@ class GameStateOverride(GameExecutables):
 
     def reset_book(self):
         super().reset_book()
-        # Cash Stacks FS-state — обнуляется на каждом новом round.
+        # Wok Fury FS-state — обнуляется на каждом новом round.
         self.bonus_collected = 0
         self.ladder_tier = 0
         self.mystery_reels: list[int] = []
@@ -140,7 +140,7 @@ class GameStateOverride(GameExecutables):
             self.record({"criteria": self.criteria})
         super().imprint_wins()
 
-    # ---- Cash Stacks specific ----
+    # ---- Wok Fury specific ----
 
     def get_current_distribution_conditions(self) -> dict:
         """Return distribution conditions, applying natural FS profile overrides."""

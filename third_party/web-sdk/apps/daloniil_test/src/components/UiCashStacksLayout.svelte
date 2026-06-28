@@ -1,5 +1,5 @@
 <!--
-	UiCashStacksLayout.svelte — кастомный layout для Cash Stacks.
+	UiCashStacksLayout.svelte — кастомный layout для Wok Fury.
 	  - BuyBonus  : CashStacksBuyBonusPanel (HTML)
 	  - HUD bar + spin cluster : CashStacksDesktopHudOverlay (HTML), кроме portrait
 	  - WIN — Pixi под доской

@@ -6,7 +6,7 @@
 	Why this is needed: `mm_bigwin.json` ships 5 banner attachments
 	(MM_BigWin / MM_SuperWin / MM_MegaWin / MM_EpicWin / MM_MaxWin). Each
 	`*_intro` animation has a keyframe that sets `BIG_WIN.attachment` to
-	one of these. The 4-tier Cash Stacks rework uses the `max_win_*`
+	one of these. The 4-tier Wok Fury rework uses the `max_win_*`
 	track for "Sensational Win" — but the baked label says "MAX WIN".
 	Replacing it requires either an art rebuild (TODO) or this runtime
 	override.

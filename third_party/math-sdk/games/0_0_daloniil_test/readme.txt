@@ -1,8 +1,8 @@
-# Cash Stacks (`0_0_daloniil_test`)
+# Wok Fury (`0_0_daloniil_test`)
 
 5×5 lines-pay slot, 20 paylines, RTP 96.01%, max win ×2,500.
 
-Donor: `0_0_lines`. Cash Stacks adds:
+Donor: `0_0_lines`. Wok Fury adds:
   - 5×5 board (5 rows)
   - 30 paylines (rows 0..4, см. `game_config.paylines`)
   - Bonus symbol `B` — scatter-like trigger в base, collectible в FS (Progress Ladder)
@@ -74,7 +74,7 @@ Max win ×2,500 формально достижим и в base (5×W = 225×20 =
 
 ## FS retrigger policy
 
-В Cash Stacks **единственный** источник дополнительных FS spins — Progress Ladder
+В Wok Fury **единственный** источник дополнительных FS spins — Progress Ladder
 (`+3 spins per tier`, до 5 tier-ов). SDK-стандартный scatter-retrigger
 **не используется** — мы не вызываем `update_fs_retrigger_amt` в `run_freespin`,
 и SDK сам этот метод никогда не вызывает.
@@ -87,7 +87,7 @@ Max win ×2,500 формально достижим и в base (5×W = 225×20 =
 ```
 game_config.py        — config (paytable, paylines, bet-modes, reelstrips, distribution)
 gamestate.py          — run_spin / run_freespin loop
-game_override.py      — Cash Stacks-specific hooks:
+game_override.py      — Wok Fury-specific hooks:
                           - reset_book (bonus_collected, ladder_tier, mystery_reels)
                           - apply_mystery_reels (M overlay на sticky reels)
                           - emit_mystery_reveal (M → revealed symbol, реальный substitution)
@@ -97,7 +97,7 @@ game_override.py      — Cash Stacks-specific hooks:
                           - init_natural_fs_mystery_reels (0/1/2 при 3/4/5 B)
 game_executables.py   — evaluate_lines_board (использует Lines из SDK)
 game_calculations.py  — passthrough к SDK
-game_events.py        — Cash Stacks events (bonusCollect, ladderTierUp, ...)
+game_events.py        — Wok Fury events (bonusCollect, ladderTierUp, ...)
 game_optimization.py  — optimizer params для 5 bet-modes
 run.py                — entry point
 sync_to_web_sdk.py    — копирует library/books/*.json → web-sdk stories

@@ -1,4 +1,4 @@
-"""Generate Cash Stacks reelstrips deterministically.
+"""Generate Wok Fury reelstrips deterministically.
 
 Each CSV row = one stop position across all 5 reels (columns).
 Format: same as 0_0_lines reels (comma-separated symbol names).

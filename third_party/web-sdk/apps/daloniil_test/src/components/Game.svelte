@@ -109,7 +109,7 @@
 					{/snippet}
 				</UiCashStacksLayout>
 				<Win />
-			<FreeSpinCounter />
+				<FreeSpinCounter />
 				<FreeSpinOutro />
 				<Transition />
 			</FadeContainer>

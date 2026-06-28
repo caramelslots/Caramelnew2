@@ -1,5 +1,5 @@
-// Cash Stacks (daloniil_test) — bonus (FS) mock events.
-// Те же сценарии, но в контексте FS. Все доски 5×5, символы — Cash Stacks.
+// Wok Fury (daloniil_test) — bonus (FS) mock events.
+// Те же сценарии, но в контексте FS. Все доски 5×5, символы — Wok Fury.
 
 const reel = (symbols: string[]) => symbols.map((name) => ({ name }));
 

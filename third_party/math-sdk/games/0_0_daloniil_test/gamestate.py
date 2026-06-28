@@ -1,11 +1,11 @@
-"""Cash Stacks game-state — лoop для одного раунда."""
+"""Wok Fury game-state — лoop для одного раунда."""
 
 from game_override import GameStateOverride
 from src.events.events import reveal_event
 
 
 class GameState(GameStateOverride):
-    """Cash Stacks lines-pay slot, 5×5, 20 paylines.
+    """Wok Fury lines-pay slot, 5×5, 20 paylines.
 
     Базовая игра — стандартный lines flow (как 0_0_lines).
     Free Spins расширены Progress Ladder / Sticky Mystery Reels / Super Bonus.
@@ -64,7 +64,7 @@ class GameState(GameStateOverride):
             # 3. Стандартный line-pay evaluation (доска уже raised).
             self.evaluate_lines_board()
 
-            # NB: В Cash Stacks retrigger FS-спинов идёт через Progress Ladder
+            # NB: В Wok Fury retrigger FS-спинов идёт через Progress Ladder
             # (см. check_ladder_tier_up: +3 spins на каждый tier). Стандартный SDK
             # scatter-retrigger НЕ используется, чтобы не дублировать награды.
 

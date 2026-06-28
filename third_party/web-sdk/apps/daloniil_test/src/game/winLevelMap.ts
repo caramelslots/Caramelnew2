@@ -16,8 +16,7 @@ export const WIN_BGM_MS = {
 } as const;
 
 /** Cumulative ladder time through Epic (Big + Super + Epic). */
-const WIN_LADDER_THROUGH_EPIC_MS =
-	WIN_BGM_MS.big + WIN_BGM_MS.superwin + WIN_BGM_MS.epic;
+const WIN_LADDER_THROUGH_EPIC_MS = WIN_BGM_MS.big + WIN_BGM_MS.superwin + WIN_BGM_MS.epic;
 
 /**
  * One spine track for every big-win tier (Big → Super → Epic → Sensational).
@@ -32,7 +31,7 @@ export const UNIFIED_BIG_WIN_SPINE = {
 } as const;
 
 /**
- * Cash Stacks 4-tier win-level visual map.
+ * Wok Fury 4-tier win-level visual map.
  *
  * MUST stay in sync with math-sdk override in
  * `third_party/math-sdk/games/0_0_daloniil_test/game_config.py`

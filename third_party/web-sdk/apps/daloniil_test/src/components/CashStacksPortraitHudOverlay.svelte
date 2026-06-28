@@ -250,7 +250,7 @@
 				style:height="{hud.spin.smallSize}px"
 				style:background-image="url('{minusUrl}')"
 				disabled={decreaseDisabled}
-				aria-label="decrease bet"
+				aria-label={context.i18nDerived.ariaDecreaseAmount()}
 				onclick={onDecreasePress}
 			></button>
 
@@ -282,7 +282,7 @@
 				style:height="{hud.spin.smallSize}px"
 				style:background-image="url('{plusUrl}')"
 				disabled={increaseDisabled}
-				aria-label="increase bet"
+				aria-label={context.i18nDerived.ariaIncreaseAmount()}
 				onclick={onIncreasePress}
 			></button>
 		{/if}

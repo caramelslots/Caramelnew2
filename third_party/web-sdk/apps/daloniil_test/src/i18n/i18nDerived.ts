@@ -1,4 +1,4 @@
-import { stateI18nDerived } from 'state-shared';
+import { stateI18nDerived, stateUrlDerived } from 'state-shared';
 
 import { i18nDerived as i18nDerivedUiPixi } from 'components-ui-pixi';
 import { i18nDerived as i18nDerivedUiHtml } from 'components-ui-html';
@@ -7,15 +7,29 @@ import { getGameInfoSections } from '../game/gameInfoCopy';
 
 const t = (key: string) => stateI18nDerived.translate(key);
 
+/** Real-money vs social (`?social=true`) string from parallel `KEY` / `KEY_SOCIAL` entries. */
+const ts = (key: string) => {
+	if (!stateUrlDerived.social()) return t(key);
+	const socialKey = `${key}_SOCIAL`;
+	const socialValue = t(socialKey);
+	return socialValue !== socialKey ? socialValue : t(key);
+};
+
 export const i18nDerived = {
 	...i18nDerivedUiPixi,
 	...i18nDerivedUiHtml,
+	// SDK keys — override html/pixi spread (html bet() would otherwise win).
+	bet: () => ts('BET'),
+	win: () => ts('WIN'),
+	buyBonus: () => (stateUrlDerived.social() ? t('BUY_BONUS_SOCIAL') : t('BUY BONUS')),
+	ariaDecreaseAmount: () => ts('ARIA_DECREASE_AMOUNT'),
+	ariaIncreaseAmount: () => ts('ARIA_INCREASE_AMOUNT'),
 	home: () => t('HOME'),
 	notTranslated: () => t('NOT TRANSLATED'),
-	// Cash Stacks
+	// Wok Fury
 	gameTitle: () => t('GAME_TITLE'),
 	// Buy Bonus
-	buyBonusTitle: () => t('BUY_BONUS_TITLE'),
+	buyBonusTitle: () => ts('BUY_BONUS_TITLE'),
 	normalBonus: () => t('NORMAL_BONUS'),
 	superBonus: () => t('SUPER_BONUS'),
 	buyNormalCost: () => t('BUY_NORMAL_COST'),
@@ -26,9 +40,9 @@ export const i18nDerived = {
 	buySuperDescCount: () => t('BUY_SUPER_DESC_COUNT'),
 	buySuperDescSpins: () => t('BUY_SUPER_DESC_SPINS'),
 	buySuperDescFeature: () => t('BUY_SUPER_DESC_FEATURE'),
-	buyConfirm: () => t('BUY_CONFIRM'),
+	buyConfirm: () => ts('BUY_CONFIRM'),
 	buyCancel: () => t('BUY_CANCEL'),
-	buyBonusPanelButton: () => t('BUY_BONUS_PANEL_BUTTON'),
+	buyBonusPanelButton: () => ts('BUY_BONUS_PANEL_BUTTON'),
 	bonusBoostPanelDesc: () => t('BONUS_BOOST_PANEL_DESC'),
 	// Settings menu
 	settingsMenuTitle: () => t('SETTINGS_MENU_TITLE'),
@@ -39,13 +53,13 @@ export const i18nDerived = {
 	autoplayStart: () => t('AUTOPLAY_START'),
 	autoplayStartWithRounds: (rounds: string) => `${t('AUTOPLAY_START_LABEL')} (${rounds})`,
 	autoplayMessageInsufficientFundsTitle: () => t('AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE'),
-	autoplayMessageInsufficientFundsBody: () => t('AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY'),
-	autoplayMessageLossLimitTitle: () => t('AUTOPLAY_MSG_LOSS_LIMIT_TITLE'),
-	autoplayMessageLossLimitBody: () => t('AUTOPLAY_MSG_LOSS_LIMIT_BODY'),
-	autoplayMessageSingleWinLimitTitle: () => t('AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE'),
-	autoplayMessageSingleWinLimitBody: () => t('AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY'),
+	autoplayMessageInsufficientFundsBody: () => ts('AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY'),
+	autoplayMessageLossLimitTitle: () => ts('AUTOPLAY_MSG_LOSS_LIMIT_TITLE'),
+	autoplayMessageLossLimitBody: () => ts('AUTOPLAY_MSG_LOSS_LIMIT_BODY'),
+	autoplayMessageSingleWinLimitTitle: () => ts('AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE'),
+	autoplayMessageSingleWinLimitBody: () => ts('AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY'),
 	autoplayMessageOk: () => t('AUTOPLAY_MSG_OK'),
-	autobet: () => t('AUTO_BET'),
+	autobet: () => ts('AUTO_BET'),
 	bonusBoost: () => t('BONUS_BOOST'),
 	bonusBoostDesc: () => t('BONUS_BOOST_DESC'),
 	/* Стоимость фичи: не используем плейсхолдеры `{cost}` (Lingui интерпретирует
@@ -60,8 +74,7 @@ export const i18nDerived = {
 	rtpLabel: () => t('RTP_LABEL'),
 	// Free Spins
 	fsCounterLabel: () => t('FS_COUNTER_LABEL'),
-	fsCounterText: (current: number, total: number) =>
-		`${current} ${t('FS_COUNTER_OF')} ${total}`,
+	fsCounterText: (current: number, total: number) => `${current} ${t('FS_COUNTER_OF')} ${total}`,
 	fsRemaining: () => t('FS_REMAINING'),
 	progressLadder: () => t('PROGRESS_LADDER'),
 	bonusCollected: () => t('BONUS_COLLECTED'),
@@ -74,7 +87,7 @@ export const i18nDerived = {
 	mysteryReelUnlockedSubtitle: () => t('MYSTERY_REEL_UNLOCKED_SUBTITLE'),
 	freeSpinsAwarded: (n: number) => `+${n} ${t('FREE_SPINS_AWARDED_SUFFIX')}`,
 	// Misc
-	maxWin: () => t('MAX_WIN'),
+	maxWin: () => ts('MAX_WIN'),
 	pressToContinue: () => t('PRESS_TO_CONTINUE').toUpperCase(),
 	// Loader cards
 	loaderCard1Title: () => t('LOADER_CARD_1_TITLE'),
@@ -89,16 +102,16 @@ export const i18nDerived = {
 	loaderCard3Line2: () => t('LOADER_CARD_3_LINE_2'),
 	// Game info / rules
 	gameInfoTitle: () => t('GAME_INFO_TITLE'),
-	gameInfoSections: () => getGameInfoSections(t),
+	gameInfoSections: () => getGameInfoSections(ts),
 	gameInfoSpecialSymbolsTitle: () => t('GAME_INFO_SPECIAL_SYMBOLS_TITLE'),
 	gameInfoPaylinesTitle: () => t('GAME_INFO_PAYLINES_TITLE'),
-	gameInfoPaylinesNote: () => t('GAME_INFO_PAYLINES_NOTE'),
-	gameInfoPaytableTitle: () => t('GAME_INFO_PAYTABLE_TITLE'),
-	gameInfoPaytableNote: () => t('GAME_INFO_PAYTABLE_NOTE'),
+	gameInfoPaylinesNote: () => ts('GAME_INFO_PAYLINES_NOTE'),
+	gameInfoPaytableTitle: () => ts('GAME_INFO_PAYTABLE_TITLE'),
+	gameInfoPaytableNote: () => ts('GAME_INFO_PAYTABLE_NOTE'),
 	gameInfoBonusSymbolTitle: () => t('GAME_INFO_BONUS_SYMBOL_TITLE'),
 	gameInfoWildTitle: () => t('GAME_INFO_WILD_TITLE'),
-	gameInfoWildBody: () => t('GAME_INFO_WILD_BODY'),
+	gameInfoWildBody: () => ts('GAME_INFO_WILD_BODY'),
 	gameInfoFsBody: () => t('GAME_INFO_FS_BODY'),
 	gameInfoMysteryTitle: () => t('GAME_INFO_MYSTERY_TITLE'),
-	gameInfoMysteryBody: () => t('GAME_INFO_MYSTERY_BODY'),
+	gameInfoMysteryBody: () => ts('GAME_INFO_MYSTERY_BODY'),
 };

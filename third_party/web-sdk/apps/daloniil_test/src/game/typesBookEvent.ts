@@ -78,7 +78,7 @@ type BookEventCreateBonusSnapshot = {
 	bookEvents: BookEvent[];
 };
 
-// === Cash Stacks specific ===
+// === Wok Fury specific ===
 
 // Игрок собрал N бонус-символов в текущем FS-цикле.
 type BookEventBonusCollect = {
@@ -136,7 +136,7 @@ export type BookEvent =
 	| BookEventFinalWin
 	| BookEventSetWin
 	| BookEventFreeSpinEnd
-	// Cash Stacks customised
+	// Wok Fury customised
 	| BookEventBonusCollect
 	| BookEventLadderTierUp
 	| BookEventMysteryReelActivate

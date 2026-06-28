@@ -69,7 +69,7 @@ export const LEVEL_PARTICLE_COIN_MAP = {
 		emitterLifetime: -1,
 		spawnOption: { type: 'rect', spawnRect: { x: -250, y: 0, w: 500, h: 0 } },
 	},
-	// Cash Stacks 4-tier rework — `sensational` is the top win banner
+	// Wok Fury 4-tier rework — `sensational` is the top win banner
 	// (250x..wincap+). Slightly denser/faster than `max` to read as the
 	// crescendo above `epic`.
 	sensational: {

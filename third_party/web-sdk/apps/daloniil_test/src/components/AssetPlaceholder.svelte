@@ -1,6 +1,6 @@
 <!--
 	AssetPlaceholder.svelte — HTML-плейсхолдер для UI-элементов, для которых
-	нет стоковых ассетов в SDK (логотип Cash Stacks, иконки Bonus x3/x4/x5
+	нет стоковых ассетов в SDK (логотип Wok Fury, иконки Bonus x3/x4/x5
 	в меню Buy Bonus, и т.п.). Используется ТОЛЬКО в HTML-overlay, не в PIXI.
 -->
 <script lang="ts">
@@ -24,9 +24,13 @@
 
 	const variant = $derived(props.variant ?? 'neutral');
 	const colors = $derived(VARIANT_COLORS[variant]);
-	const width = $derived(typeof props.width === 'number' ? `${props.width}px` : (props.width ?? '100%'));
-	const height = $derived(typeof props.height === 'number' ? `${props.height}px` : (props.height ?? '100%'));
-	const radius = $derived(props.rounded ?? true ? '8px' : '0');
+	const width = $derived(
+		typeof props.width === 'number' ? `${props.width}px` : (props.width ?? '100%'),
+	);
+	const height = $derived(
+		typeof props.height === 'number' ? `${props.height}px` : (props.height ?? '100%'),
+	);
+	const radius = $derived((props.rounded ?? true) ? '8px' : '0');
 </script>
 
 <div

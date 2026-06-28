@@ -192,7 +192,7 @@
 				style:background-image="url('{minusUrl}')"
 				onclick={decreaseBet}
 				disabled={!canDecrease}
-				aria-label="decrease bet"
+				aria-label={context.i18nDerived.ariaDecreaseAmount()}
 				data-test="bet-decrease"
 			></button>
 			<div class="bet-display">
@@ -205,7 +205,7 @@
 				style:background-image="url('{plusUrl}')"
 				onclick={increaseBet}
 				disabled={!canIncrease}
-				aria-label="increase bet"
+				aria-label={context.i18nDerived.ariaIncreaseAmount()}
 				data-test="bet-increase"
 			></button>
 		</footer>

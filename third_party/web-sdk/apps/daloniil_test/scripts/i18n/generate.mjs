@@ -39,12 +39,20 @@ const loadDir = async (subdir) => {
 };
 
 const gameLocales = await loadDir('game');
+const { default: socialKeysByLocale } = await import(
+	pathToFileURL(join(__dirname, 'data/social-keys.mjs')).href,
+);
 const { uiPixi, uiHtml } = await import(pathToFileURL(join(__dirname, 'data/ui-translations.mjs')).href);
 const uiPixiLocales = uiPixi;
 const uiHtmlLocales = uiHtml;
 
 for (const locale of STAKE_LOCALES) {
-	if (gameLocales[locale]) writeLocaleFile(gameRoot, locale, gameLocales[locale]);
+	if (gameLocales[locale]) {
+		writeLocaleFile(gameRoot, locale, {
+			...gameLocales[locale],
+			...(socialKeysByLocale[locale] ?? socialKeysByLocale.en),
+		});
+	}
 	if (uiPixiLocales[locale]) writeLocaleFile(pixiRoot, locale, uiPixiLocales[locale]);
 	if (uiHtmlLocales[locale]) writeLocaleFile(htmlRoot, locale, uiHtmlLocales[locale]);
 }

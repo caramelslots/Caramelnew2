@@ -18,17 +18,19 @@
 	Совместима с DevCheats (×100 ускорение анимаций, если включено вручную в коде).
 -->
 <script lang="ts">
+	import { dev } from '$app/environment';
 	import { onMount } from 'svelte';
 
-	import { stateBet, stateI18n, stateModal } from 'state-shared';
+	import { stateBet, stateI18n, stateModal, stateUrlDerived } from 'state-shared';
 
-	/** Set to true to show DEV / LANG toggles locally. */
-	const SHOW_DEV_PANEL = false;
+	/** Visible in local dev (`pnpm dev`); hidden in production builds. */
+	const SHOW_DEV_PANEL = dev;
 
 	import { playBet, playBookEvent, playBookEvents } from '../game/utils';
 	import { eventEmitter } from '../game/eventEmitter';
 	import { devPreview } from '../game/devPreview.svelte';
 	import { LANG_LABELS, setGameLanguage, STAKE_LOCALES } from '../game/devLang';
+	import { setGameSocialMode } from '../game/devSocial';
 	import baseEvents from '../stories/data/base_events';
 	import baseBooks from '../stories/data/base_books';
 	import bonusBooks from '../stories/data/bonus_books';
@@ -111,7 +113,7 @@
 	};
 
 	// === Win Levels (setWin) ===
-	// Cash Stacks 4-tier rework: см. winLevelMap.ts и
+	// Wok Fury 4-tier rework: см. winLevelMap.ts и
 	// math-sdk/games/0_0_daloniil_test/game_config.py (`get_win_level`).
 	// `amount` — book-event units (BOOK_AMOUNT_MULTIPLIER=100 → 1x = 100).
 	// Каждое демо-значение лежит в середине соответствующего диапазона
@@ -196,7 +198,7 @@
 		reel(['H3', 'L3', 'L4', 'H1', 'H1']),
 	];
 
-	// 4×B для Bonus Collect (под Cash Stacks ladder-tier).
+	// 4×B для Bonus Collect (под Wok Fury ladder-tier).
 	const BONUS_COLLECT_BOARD = FS_TRIGGER_SUPER_BOARD;
 
 	// 1 mystery reel (sticky на reel 0) — для mysteryReveal.
@@ -385,10 +387,7 @@
 
 	const playTripleBonusCat = () =>
 		guard(async () => {
-			await playBookEvents([
-				reveal(FS_TRIGGER_BOARD),
-				bonusCollectForBoard(FS_TRIGGER_BOARD),
-			]);
+			await playBookEvents([reveal(FS_TRIGGER_BOARD), bonusCollectForBoard(FS_TRIGGER_BOARD)]);
 		});
 
 	const playQuadrupleBonusCat = () =>
@@ -399,7 +398,7 @@
 			]);
 		});
 
-	// === Cash Stacks specifics ===
+	// === Wok Fury specifics ===
 	const playBonusCollect = () =>
 		guard(async () => {
 			await playBookEvents([
@@ -504,7 +503,18 @@
 		type="button"
 		onclick={() => (langOpen = !langOpen)}
 	>
-		LANG {langOpen ? '▴' : '▾'} {stateI18n.i18n.locale.toUpperCase()}
+		LANG {langOpen ? '▴' : '▾'}
+		{stateI18n.i18n.locale.toUpperCase()}
+	</button>
+
+	<button
+		class="dev-toggle social-toggle"
+		class:social-toggle--on={stateUrlDerived.social()}
+		type="button"
+		title="Toggle ?social=true (Stake.us social casino UI strings)"
+		onclick={() => setGameSocialMode(!stateUrlDerived.social())}
+	>
+		SOCIAL {stateUrlDerived.social() ? 'ON' : 'OFF'}
 	</button>
 
 	{#if langOpen}
@@ -709,7 +719,7 @@
 			</section>
 
 			<section>
-			<h4>Cash Stacks</h4>
+				<h4>Wok Fury</h4>
 				<div class="grid">
 					<button
 						type="button"
@@ -788,35 +798,38 @@
 				</div>
 			</section>
 
-		<section>
-			<h4>Modals</h4>
-			<div class="grid">
-				<button
-					type="button"
-					title="Показать autoSpinMessage insufficientFunds"
-					onclick={() => (stateModal.modal = { name: 'autoSpinMessage', message: 'insufficientFunds' })}
-				>
-					Insufficient Funds
-				</button>
-				<button
-					type="button"
-					title="Показать autoSpinMessage lossLimitReached"
-					onclick={() => (stateModal.modal = { name: 'autoSpinMessage', message: 'lossLimitReached' })}
-				>
-					Loss Limit
-				</button>
-				<button
-					type="button"
-					title="Показать autoSpinMessage singleWinLimitReached"
-					onclick={() => (stateModal.modal = { name: 'autoSpinMessage', message: 'singleWinLimitReached' })}
-				>
-					Win Limit
-				</button>
-			</div>
-		</section>
+			<section>
+				<h4>Modals</h4>
+				<div class="grid">
+					<button
+						type="button"
+						title="Показать autoSpinMessage insufficientFunds"
+						onclick={() =>
+							(stateModal.modal = { name: 'autoSpinMessage', message: 'insufficientFunds' })}
+					>
+						Insufficient Funds
+					</button>
+					<button
+						type="button"
+						title="Показать autoSpinMessage lossLimitReached"
+						onclick={() =>
+							(stateModal.modal = { name: 'autoSpinMessage', message: 'lossLimitReached' })}
+					>
+						Loss Limit
+					</button>
+					<button
+						type="button"
+						title="Показать autoSpinMessage singleWinLimitReached"
+						onclick={() =>
+							(stateModal.modal = { name: 'autoSpinMessage', message: 'singleWinLimitReached' })}
+					>
+						Win Limit
+					</button>
+				</div>
+			</section>
 
-		<section>
-			<h4>Full Books</h4>
+			<section>
+				<h4>Full Books</h4>
 				<div class="grid">
 					<button
 						type="button"
@@ -885,6 +898,21 @@
 	}
 	.lang-toggle--open {
 		background: rgba(91, 33, 182, 0.95);
+	}
+
+	.social-toggle {
+		display: block;
+		margin-top: 4px;
+		background: rgba(5, 150, 105, 0.92);
+	}
+	.social-toggle:hover {
+		background: rgba(4, 120, 87, 0.95);
+	}
+	.social-toggle--on {
+		background: rgba(234, 88, 12, 0.92);
+	}
+	.social-toggle--on:hover {
+		background: rgba(194, 65, 12, 0.95);
 	}
 
 	.lang-body {

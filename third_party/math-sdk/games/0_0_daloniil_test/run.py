@@ -1,4 +1,4 @@
-"""Main file для генерации результатов Cash Stacks (daloniil_test).
+"""Main file для генерации результатов Wok Fury (daloniil_test).
 
 Запуск:
   cd third_party/math-sdk/games/0_0_daloniil_test
@@ -67,7 +67,7 @@ if __name__ == "__main__":
         generate_configs(gamestate)
 
     if run_conditions["run_analysis"]:
-        # Cash Stacks-custom analytics keys:
+        # Wok Fury-custom analytics keys:
         custom_keys = [
             {"symbol": "scatter"},  # Bonus collects
             {"kind": 5, "symbol": "W"},  # Wild ×5

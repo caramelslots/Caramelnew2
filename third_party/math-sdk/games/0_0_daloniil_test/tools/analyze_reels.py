@@ -19,7 +19,7 @@ from collections import Counter
 REELS_DIR = Path(__file__).resolve().parent.parent / "reels"
 RESULT_DIR = Path(__file__).resolve().parent.parent / "tools" / "out"
 
-# Cash Stacks layout
+# Wok Fury layout
 NUM_REELS = 5
 WINDOW = 5  # rows visible per reel
 PAYLINES = 30

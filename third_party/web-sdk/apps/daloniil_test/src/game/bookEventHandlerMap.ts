@@ -199,7 +199,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// чтобы overlay рисовал линию от левого до правого края, а не только
 		// до последнего выигрышного символа (см. скриншот референса).
 		for (const win of bookEvent.wins) {
-			const paylineRows = config.paylines[String(win.meta.lineIndex) as keyof typeof config.paylines];
+			const paylineRows =
+				config.paylines[String(win.meta.lineIndex) as keyof typeof config.paylines];
 			eventEmitter.broadcast({
 				type: 'paylineShow',
 				lineIndex: win.meta.lineIndex,
@@ -243,17 +244,23 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// затемнение и paylines. Если до этого стартует новый спин, `reveal`
 		// отменит таймер через clearTimeout выше.
 		if (spotlightClearTimer !== null) clearTimeout(spotlightClearTimer);
-		spotlightClearTimer = setTimeout(() => {
-			spotlightClearTimer = null;
-			stateGame.winSpotlightActive = false;
-			eventEmitter.broadcast({ type: 'paylineClearAll' });
-		}, scaleMsByGameSpeed(WIN_SPOTLIGHT_CLEAR_DELAY_MS, stateGame.gameSpeed));
+		spotlightClearTimer = setTimeout(
+			() => {
+				spotlightClearTimer = null;
+				stateGame.winSpotlightActive = false;
+				eventEmitter.broadcast({ type: 'paylineClearAll' });
+			},
+			scaleMsByGameSpeed(WIN_SPOTLIGHT_CLEAR_DELAY_MS, stateGame.gameSpeed),
+		);
 	},
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
 		stateBet.winBookEventAmount = bookEvent.amount;
 	},
-	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>, { bookEvents }: BookEventContext) => {
-		// Сброс Cash Stacks FS-state при входе в FS.
+	freeSpinTrigger: async (
+		bookEvent: BookEventOfType<'freeSpinTrigger'>,
+		{ bookEvents }: BookEventContext,
+	) => {
+		// Сброс Wok Fury FS-state при входе в FS.
 		stateGame.bonusCollected = 0;
 		stateGame.ladderTier = 0;
 		stateGame.mysteryReels = [];
@@ -307,7 +314,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	freeSpinEnd: async (bookEvent: BookEventOfType<'freeSpinEnd'>) => {
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
 
-		// Очистка Cash Stacks FS state.
+		// Очистка Wok Fury FS state.
 		stateGame.bonusCollected = 0;
 		stateGame.ladderTier = 0;
 		stateGame.mysteryReels = [];
@@ -370,7 +377,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	finalWin: async (bookEvent: BookEventOfType<'finalWin'>) => {
 		// Do nothing
 	},
-	// === Cash Stacks custom events ===
+	// === Wok Fury custom events ===
 	bonusCollect: async (bookEvent: BookEventOfType<'bonusCollect'>) => {
 		stateGame.bonusCollected = bookEvent.collectedTotal;
 		await animateBonusSymbols({ positions: bookEvent.positions });

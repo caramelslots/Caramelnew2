@@ -1,4 +1,4 @@
-"""Optimization-program setup для Cash Stacks (5 bet-modes).
+"""Optimization-program setup для Wok Fury (5 bet-modes).
 
 MATH_LOW_VOL_PLAN Stage 3: line hit ~37%, low avg win per hit (~1.08× base),
 RTP 96%. FS optimizer profile unchanged (Q2).
@@ -68,7 +68,7 @@ def _bonus_scaling():
 
 
 class OptimizationSetup:
-    """Build opt_params for всех 5 bet-modes Cash Stacks."""
+    """Build opt_params for всех 5 bet-modes Wok Fury."""
 
     def __init__(self, game_config):
         self.game_config = game_config

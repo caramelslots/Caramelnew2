@@ -115,7 +115,7 @@
 	{template}
 />
 
-<!-- === Cash Stacks specific stories === -->
+<!-- === Wok Fury specific stories === -->
 
 <Story
 	name="revealLineWin"

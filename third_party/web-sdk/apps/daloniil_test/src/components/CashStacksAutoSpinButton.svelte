@@ -1,6 +1,6 @@
 <!--
 	CashStacksAutoSpinButton.svelte — кастомная замена SDK-кнопки
-	ButtonAutoSpin для Cash Stacks. Имеет три состояния:
+	ButtonAutoSpin для Wok Fury. Имеет три состояния:
 
 	  1. autoSpin modal открыт → клик закрывает модалку (вид кнопки без изменений).
 	  2. Автоигра запущена → клик останавливает автоигру.

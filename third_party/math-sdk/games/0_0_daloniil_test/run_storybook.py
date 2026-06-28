@@ -1,4 +1,4 @@
-"""Storybook-oriented dev sim run для Cash Stacks.
+"""Storybook-oriented dev sim run для Wok Fury.
 
 Генерирует МАЛЕНЬКИЙ pool published books (uncompressed .json)
 для использования как фикстуры в apps/daloniil_test/src/stories/data/.
