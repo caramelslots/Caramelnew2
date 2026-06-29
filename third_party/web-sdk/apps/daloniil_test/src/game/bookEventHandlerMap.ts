@@ -24,6 +24,7 @@ import {
 	WIN_SPOTLIGHT_CLEAR_DELAY_MS,
 } from './constants';
 import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
+import { computeCatSlowTriggerReel } from './catAnticipation';
 
 // Таймер фонового снятия затемнения/paylines. Хранится здесь, чтобы
 // `reveal` мог отменить его при старте нового спина раньше истечения задержки.
@@ -195,11 +196,18 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Full reel scroll starts here once RGS has returned the result board.
 		// Frozen Mystery reels don't spin — they stay showing ? until FS ends.
 		// Pending-collapse reels are also skipped: the collapse handles their display.
-		await stateGameDerived.enhancedBoard.spin({
-			revealEvent: bookEvent,
-			paddingBoard: config.paddingReels[bookEvent.gameType],
-			frozenReelIndices: [...stateGame.mysteryReelsFrozen, ...pendingCollapseReels],
-		});
+		stateGame.catSlowTriggerReel = computeCatSlowTriggerReel(bookEvent.board, bookEvent.gameType);
+		stateGame.catSlowReels = [];
+		try {
+			await stateGameDerived.enhancedBoard.spin({
+				revealEvent: bookEvent,
+				paddingBoard: config.paddingReels[bookEvent.gameType],
+				frozenReelIndices: [...stateGame.mysteryReelsFrozen, ...pendingCollapseReels],
+			});
+		} finally {
+			stateGame.catSlowTriggerReel = -1;
+			stateGame.catSlowReels = [];
+		}
 		stateGame.idleBounceAllowed = !revealHasWinBeforeNextReveal(bookEvents, bookEvent);
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
 	},

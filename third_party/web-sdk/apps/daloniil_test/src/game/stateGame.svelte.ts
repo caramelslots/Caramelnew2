@@ -82,6 +82,7 @@ import {
 } from './constants';
 import { devPreview } from './devPreview.svelte';
 import { gameSpeedMultFor } from './gameSpeed';
+import { REEL_SCROLL_SPEED_MULT_CAT, catSlowReelsAfterTrigger } from './catAnticipation';
 
 const REEL_SCROLL_SPEED_MULT_SLOW = 0.5;
 
@@ -140,6 +141,12 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 				name: 'sfx_reel_stop_1',
 				forcePlay: !stateBet.isTurbo,
 			});
+			if (stateGame.catSlowTriggerReel === reelIndex) {
+				stateGame.catSlowReels = catSlowReelsAfterTrigger(
+					reelIndex,
+					stateGame.board.length,
+				);
+			}
 		},
 		onSymbolLand,
 	});
@@ -147,7 +154,8 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 	reel.reelState.spinOptions = () => {
 		const base = reel.reelState.spinType === 'fast' ? SPIN_OPTIONS_FAST : SPIN_OPTIONS_DEFAULT;
 		const devMult = devPreview.slowReelScroll ? REEL_SCROLL_SPEED_MULT_SLOW : 1;
-		return withReelScrollSpeedMult(base, devMult * gameSpeedMultFor(stateGame.gameSpeed));
+		const catMult = stateGame.catSlowReels.includes(reelIndex) ? REEL_SCROLL_SPEED_MULT_CAT : 1;
+		return withReelScrollSpeedMult(base, devMult * catMult * gameSpeedMultFor(stateGame.gameSpeed));
 	};
 
 	return reel;
@@ -171,6 +179,10 @@ export const stateGame = $state({
 	gameType: 'basegame' as GameType,
 	multiplierBoard: [] as (MultiplierSymbol | undefined)[][],
 	scatterCounter: 0,
+	/** Reels that slow down after the 2nd cat lands (basegame). Cleared after each spin. */
+	catSlowReels: [] as number[],
+	/** Reel whose stop activates cat slow-down (-1 = off). Set before spin, cleared after. */
+	catSlowTriggerReel: -1 as number,
 	// === Wok Fury specific ===
 	// Bonus-символы, собранные в текущей FS-сессии (drives Progress Ladder).
 	bonusCollected: 0,

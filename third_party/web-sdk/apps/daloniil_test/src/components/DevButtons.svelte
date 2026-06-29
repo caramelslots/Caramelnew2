@@ -23,7 +23,7 @@
 	import { stateBet, stateI18n, stateModal, stateUrlDerived } from 'state-shared';
 
 	/** Set to true to show DEV / LANG / SOCIAL toggles locally. */
-	const SHOW_DEV_PANEL = false;
+	const SHOW_DEV_PANEL = true;
 
 	import { playBet, playBookEvent, playBookEvents } from '../game/utils';
 	import { eventEmitter } from '../game/eventEmitter';
@@ -168,6 +168,15 @@
 		reel(['L3', 'L2', 'L3', 'L1', 'H2']),
 		reel(['H4', 'H3', 'L1', 'L2', 'L4']),
 		reel(['H3', 'L1', 'L4', 'H1', 'L2']),
+	];
+
+	// 2×B на барабанах 0 и 1 — после 2-го кота барабаны 2–4 замедляются.
+	const TWO_CAT_SLOW_BOARD = [
+		reel(['B', 'L2', 'L4', 'H2', 'L1']),
+		reel(['H1', 'L4', 'B', 'H3', 'L4']),
+		reel(['L3', 'L1', 'L3', 'H4', 'L4']),
+		reel(['H4', 'H3', 'L4', 'L2', 'L1']),
+		reel(['H3', 'L3', 'L4', 'H1', 'H1']),
 	];
 
 	// 1×B по центру (reel 2, visible row=2 = padded row=3) — land-анимация.
@@ -377,6 +386,11 @@
 				total: 10,
 			});
 			fsCounterPreview = true;
+		});
+
+	const play2CatSlowSpin = () =>
+		guard(async () => {
+			await playBookEvent(reveal(TWO_CAT_SLOW_BOARD), { bookEvents: [] });
 		});
 
 	const playSingleBonusCat = () =>
@@ -720,6 +734,14 @@
 			<section>
 				<h4>Wok Fury</h4>
 				<div class="grid">
+					<button
+						type="button"
+						disabled={busy}
+						title="2× B на барабанах 0 и 1 — оставшиеся барабаны замедляются после 2-го кота"
+						onclick={play2CatSlowSpin}
+					>
+						2× Cat Slow Spin
+					</button>
 					<button
 						type="button"
 						disabled={busy}

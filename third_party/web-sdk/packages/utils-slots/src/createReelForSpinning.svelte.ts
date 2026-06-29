@@ -285,6 +285,36 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		await reelY.set(targetY, { duration, easing });
 	};
 
+	/**
+	 * Like slideY but re-reads speed every frame via `getSpeed()`.
+	 * Used when reel scroll speed can change mid-slide (e.g. cat anticipation).
+	 */
+	const slideDynamic = async ({
+		reelY: targetY,
+		getSpeed,
+	}: {
+		reelY: number;
+		getSpeed: () => number;
+	}) => {
+		const dist = Math.abs(reelY.current - targetY);
+		if (dist < 0.5) return;
+
+		let currentSpeed = getSpeed();
+		reelY.set(targetY, { duration: dist / currentSpeed });
+
+		while (true) {
+			await waitForAnimationFrame();
+			if (reelState.motion !== 'spinning') break;
+			const remaining = Math.abs(reelY.current - targetY);
+			if (remaining < 0.5) break;
+			const newSpeed = getSpeed();
+			if (newSpeed !== currentSpeed) {
+				currentSpeed = newSpeed;
+				reelY.set(targetY, { duration: remaining / newSpeed });
+			}
+		}
+	};
+
 	const placeY = (targetY: number) => reelY.set(targetY, { duration: 0 });
 
 	const removePaddingAndBounceBack = async () => {
@@ -672,9 +702,9 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			slideDown: async () => {
 				const bounceSize = reelOptions.symbolHeight * reelState.spinOptions().reelBounceSizeMulti;
 
-				await slideY({
+				await slideDynamic({
 					reelY: getMainSpinTargetY(),
-					speed: reelState.spinOptions().reelSpinSpeed,
+					getSpeed: () => reelState.spinOptions().reelSpinSpeed,
 				});
 				await slideY({
 					reelY: defaultY + bounceSize,
