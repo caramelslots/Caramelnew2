@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { stateI18n } from 'state-shared';
 
+	import { isLatinScriptLocale } from '../game/constants';
+	import { ensureKnewaveFontLoaded } from '../game/knewaveFont';
+
 	type Variant = 'spin-label' | 'trigger';
 
 	type Props = {
@@ -18,6 +21,18 @@
 
 	const locale = $derived(stateI18n.i18n.locale);
 	const dir = $derived(locale === 'ar' ? 'rtl' : 'ltr');
+	const useKnewave = $derived(isLatinScriptLocale(locale));
+	let knewaveFontReady = $state(false);
+
+	$effect(() => {
+		let cancelled = false;
+		void ensureKnewaveFontLoaded().then(() => {
+			if (!cancelled) knewaveFontReady = true;
+		});
+		return () => {
+			cancelled = true;
+		};
+	});
 
 	const lineHeightFactor = $derived(variant === 'spin-label' ? 0.92 : 0.95);
 
@@ -110,6 +125,7 @@
 
 <div
 	class="fit-card-text"
+	class:fit-card-text--knewave={useKnewave && knewaveFontReady}
 	class:fit-card-text--spin-label={variant === 'spin-label'}
 	class:fit-card-text--trigger={variant === 'trigger'}
 	class:fit-card-text--lines-2={maxLines === 2}
@@ -162,7 +178,7 @@
 
 	.fit-card-text__inner.desc-spin-label {
 		font-size: var(--bb-desc-spin-label-fs, 1em);
-		font-weight: 800;
+		font-weight: 900;
 		line-height: 0.92;
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
@@ -170,9 +186,16 @@
 
 	.fit-card-text__inner.desc-trigger {
 		font-size: var(--bb-desc-trigger-fs, 1em);
-		font-weight: 700;
+		font-weight: 800;
 		line-height: 0.95;
 		letter-spacing: 0.02em;
 		text-transform: uppercase;
+	}
+
+	:global(.fit-card-text--knewave) .fit-card-text__inner {
+		font-family: 'Knewave', sans-serif;
+		font-style: normal;
+		font-weight: 400;
+		letter-spacing: 0;
 	}
 </style>

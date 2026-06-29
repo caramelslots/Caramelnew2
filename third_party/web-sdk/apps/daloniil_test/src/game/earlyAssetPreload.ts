@@ -4,6 +4,7 @@ import {
 	collectBatchHttpUrls,
 	getBatch3KeysForLocale,
 } from './assetLoadPlan';
+import { knewaveFontUrl } from './knewaveFont';
 
 const warmHttpCache = async (urls: readonly string[], concurrency: number) => {
 	if (urls.length === 0) return;
@@ -39,6 +40,7 @@ export const startEarlyAssetPreload = () => {
 	batch1Started = true;
 
 	void warmHttpCache(collectBatch1EarlyPreloadUrls(), 8);
+	void warmHttpCache([knewaveFontUrl()], 1);
 };
 
 /** Warm batch-2 bytes during Bootstrap (parallel with gated Pixi batch 2). */

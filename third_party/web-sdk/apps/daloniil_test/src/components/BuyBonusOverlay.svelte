@@ -4,7 +4,7 @@
 	--panel-width для desktop, portrait, popout L (800×450) и popout S (400×225).
 -->
 <script lang="ts">
-	import { stateModal, stateBet, stateBetDerived, stateConfig } from 'state-shared';
+	import { stateModal, stateBet, stateBetDerived, stateConfig, stateI18n } from 'state-shared';
 	import { stateBonus } from 'components-ui-html/src/stateBonus.svelte';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
@@ -14,7 +14,13 @@
 		BUY_SUPER_COST_MULT,
 		canAffordBuyBonus,
 	} from '../game/buyBonusBalance';
-	import { isPopoutSmallViewport, isPopoutViewport, HUD_BALANCE_BET_FONT_FAMILY } from '../game/constants';
+	import {
+		isPopoutSmallViewport,
+		isPopoutViewport,
+		HUD_BALANCE_BET_FONT_FAMILY,
+		isLatinScriptLocale,
+	} from '../game/constants';
+	import { ensureKnewaveFontLoaded } from '../game/knewaveFont';
 	import { getContext } from '../game/context';
 	import { getContextLayout } from 'utils-layout';
 	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS, HUD_ASSETS } from '../game/uiHtmlAssetManifest';
@@ -23,6 +29,10 @@
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
+
+	const locale = $derived(stateI18n.i18n.locale);
+	const useLatinKnewave = $derived(isLatinScriptLocale(locale));
+	let knewaveFontReady = $state(false);
 
 	const bgUrl = BUY_BONUS_ASSETS.menuBg;
 	const normalCardUrl = BUY_BONUS_ASSETS.normalCard;
@@ -35,6 +45,19 @@
 	const plusUrl = HUD_ASSETS.betPlus;
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonus');
+
+	$effect(() => {
+		let cancelled = false;
+		void ensureKnewaveFontLoaded().then(() => {
+			if (!cancelled) knewaveFontReady = true;
+		});
+		return () => {
+			cancelled = true;
+		};
+	});
+
+	const showKnewaveLabels = $derived(useLatinKnewave && knewaveFontReady);
+
 	const layoutType = $derived(stateLayoutDerived.layoutType());
 	const isPortrait = $derived(layoutType === 'portrait');
 	const canvasSizes = $derived(stateLayoutDerived.canvasSizes());
@@ -94,7 +117,7 @@
 	data-test="buy-bonus-overlay"
 	aria-hidden={!isOpen}
 >
-			<img class="panel-bg" src={bgUrl} alt="" draggable="false" loading="eager" />
+	<img class="panel-bg" src={bgUrl} alt="" draggable="false" loading="eager" />
 
 	<div class="panel-content">
 		<header class="panel-header">
@@ -110,6 +133,8 @@
 			</button>
 		</header>
 
+		<p class="panel-subtitle" data-test="buy-bonus-title">{context.i18nDerived.buyBonusTitle()}</p>
+
 		<section class="cards-section" aria-label="bonus options">
 			<button
 				type="button"
@@ -120,9 +145,13 @@
 			>
 				<img class="card-bg" src={normalCardUrl} alt="" draggable="false" />
 				<div class="card-content">
-					<div class="card-title">{context.i18nDerived.normalBonus()}</div>
+					<div class="card-title" class:card-label-knewave={showKnewaveLabels}>
+						{context.i18nDerived.normalBonus()}
+					</div>
 					<div class="card-desc card-desc-stacked">
-						<span class="desc-spin-count">{context.i18nDerived.buyNormalDescCount()}</span>
+						<span class="desc-spin-count" class:card-count-knewave={knewaveFontReady}
+							>{context.i18nDerived.buyNormalDescCount()}</span
+						>
 						<FitCardText
 							variant="spin-label"
 							text={context.i18nDerived.buyNormalDescSpins()}
@@ -152,9 +181,13 @@
 			>
 				<img class="card-bg" src={superCardUrl} alt="" draggable="false" />
 				<div class="card-content">
-					<div class="card-title">{context.i18nDerived.superBonus()}</div>
+					<div class="card-title" class:card-label-knewave={showKnewaveLabels}>
+						{context.i18nDerived.superBonus()}
+					</div>
 					<div class="card-desc card-desc-stacked">
-						<span class="desc-spin-count">{context.i18nDerived.buySuperDescCount()}</span>
+						<span class="desc-spin-count" class:card-count-knewave={knewaveFontReady}
+							>{context.i18nDerived.buySuperDescCount()}</span
+						>
 						<FitCardText
 							variant="spin-label"
 							text={context.i18nDerived.buySuperDescSpins()}
@@ -219,7 +252,7 @@
 		--panel-width: min(700px, 90vw);
 		--panel-height-scale: 1.32;
 		--bb-card-price-fs: calc(var(--panel-width) * 0.024);
-		--bb-buy-btn-fs: calc(var(--panel-width) * 0.020);
+		--bb-buy-btn-fs: calc(var(--panel-width) * 0.02);
 		font-family: v-bind(HUD_BALANCE_BET_FONT_FAMILY);
 		position: relative;
 		z-index: 10;
@@ -314,6 +347,32 @@
 		user-select: none;
 	}
 
+	.panel-subtitle {
+		position: absolute;
+		top: 21.5%;
+		left: 50%;
+		transform: translateX(calc(-50% - var(--panel-width) * 0.01));
+		margin: 0;
+		width: 72%;
+		font-family: inherit;
+		font-size: calc(var(--panel-width) * 0.032);
+		font-style: italic;
+		font-weight: 900;
+		text-transform: uppercase;
+		color: #d4b44a;
+		text-shadow:
+			0 1px 0 rgba(0, 0, 0, 0.85),
+			0 2px 6px rgba(0, 0, 0, 0.65);
+		line-height: 1.1;
+		letter-spacing: 0.03em;
+		text-align: center;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		pointer-events: none;
+		user-select: none;
+	}
+
 	.cards-section {
 		position: absolute;
 		top: 24.2%;
@@ -393,7 +452,8 @@
 		align-items: center;
 		justify-content: center;
 		font-family: inherit;
-		font-size: calc(var(--panel-width) * 0.021);
+		--bb-card-title-fs: calc(var(--panel-width) * 0.021);
+		font-size: var(--bb-card-title-fs);
 		font-weight: 900;
 		font-style: italic;
 		letter-spacing: 0.03em;
@@ -402,6 +462,29 @@
 		text-align: center;
 		color: #f5e6c8;
 		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+	}
+
+	.card-title.card-label-knewave {
+		font-family: 'Knewave', sans-serif;
+		font-style: normal;
+		font-weight: 400;
+		letter-spacing: 0;
+		paint-order: stroke fill;
+		-webkit-font-smoothing: antialiased;
+	}
+
+	.card-normal .card-title.card-label-knewave,
+	.card-super .card-title.card-label-knewave {
+		-webkit-text-stroke: calc(var(--bb-card-title-fs) * 0.034) rgba(58, 32, 14, 0.92);
+		text-shadow: 0 calc(var(--bb-card-title-fs) * 0.045) calc(var(--bb-card-title-fs) * 0.055)
+			rgba(0, 0, 0, 0.55);
+	}
+
+	.card .card-desc.card-desc-stacked .desc-spin-count.card-count-knewave {
+		font-family: 'Knewave', sans-serif;
+		font-style: normal;
+		font-weight: 400;
+		letter-spacing: 0;
 	}
 
 	.card-desc {
@@ -429,14 +512,16 @@
 		flex-direction: column;
 		justify-content: flex-start;
 		align-items: center;
-		--bb-desc-count-fs: calc(var(--panel-width) * 0.060);
-		--bb-desc-count-stroke: calc(var(--bb-desc-count-fs) * 0.058);
+		--bb-desc-count-fs: calc(var(--panel-width) * 0.06);
+		--bb-desc-count-stroke: calc(var(--bb-desc-count-fs) * 0.092);
 		--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.022);
-		--bb-desc-spin-label-stroke: calc(var(--bb-desc-spin-label-fs) * 0.058);
+		--bb-desc-spin-label-stroke: calc(var(--bb-desc-spin-label-fs) * 0.092);
 		--bb-desc-trigger-fs: calc(var(--panel-width) * 0.013);
-		--bb-desc-trigger-stroke: calc(var(--bb-desc-trigger-fs) * 0.058);
+		--bb-desc-trigger-stroke: calc(var(--bb-desc-trigger-fs) * 0.092);
 		--bb-desc-gap-count-label: calc(var(--bb-desc-count-fs) * 0.12);
 		--bb-desc-gap-label-trigger: calc(var(--bb-desc-spin-label-fs) * 0.28);
+		--bb-knewave-stroke-weight: 0.034;
+		--bb-knewave-count-stroke-weight: 0.072;
 		gap: 0;
 		text-transform: uppercase;
 		font-size: inherit;
@@ -466,12 +551,28 @@
 	}
 
 	.card-super .card-desc.card-desc-stacked .desc-spin-count {
-		-webkit-text-stroke: var(--bb-desc-count-stroke) rgba(42, 12, 6, 0.94);
+		-webkit-text-stroke: var(--bb-desc-count-stroke) rgba(255, 244, 225, 0.96);
 		text-shadow:
-			0 calc(var(--bb-desc-count-fs) * 0.04) 0 rgba(0, 0, 0, 0.72),
-			0 calc(var(--bb-desc-count-fs) * 0.07) calc(var(--bb-desc-count-fs) * 0.1)
-				rgba(0, 0, 0, 0.58),
-			0 0 calc(var(--bb-desc-count-fs) * 0.14) rgba(255, 168, 64, 0.28);
+			0 calc(var(--bb-desc-count-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
+			0 calc(var(--bb-desc-count-fs) * 0.07) calc(var(--bb-desc-count-fs) * 0.1) rgba(0, 0, 0, 0.66),
+			0 0 calc(var(--bb-desc-count-fs) * 0.12) rgba(255, 228, 185, 0.38);
+	}
+
+	.card-normal .card-desc.card-desc-stacked .desc-spin-count.card-count-knewave {
+		-webkit-text-stroke: calc(var(--bb-desc-count-fs) * var(--bb-knewave-count-stroke-weight))
+			rgba(255, 244, 225, 0.96);
+		text-shadow:
+			0 calc(var(--bb-desc-count-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
+			0 calc(var(--bb-desc-count-fs) * 0.055) calc(var(--bb-desc-count-fs) * 0.09)
+				rgba(0, 0, 0, 0.38);
+	}
+
+	.card-super .card-desc.card-desc-stacked .desc-spin-count.card-count-knewave {
+		-webkit-text-stroke: calc(var(--bb-desc-count-fs) * var(--bb-knewave-count-stroke-weight))
+			rgba(45, 12, 6, 0.94);
+		text-shadow:
+			0 calc(var(--bb-desc-count-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
+			0 calc(var(--bb-desc-count-fs) * 0.07) calc(var(--bb-desc-count-fs) * 0.1) rgba(0, 0, 0, 0.66);
 	}
 
 	.card .card-desc.card-desc-stacked :global(.fit-card-text__inner) {
@@ -500,21 +601,65 @@
 	}
 
 	.card-super .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-spin-label) {
-		-webkit-text-stroke: var(--bb-desc-spin-label-stroke) rgba(42, 12, 6, 0.94);
+		-webkit-text-stroke: var(--bb-desc-spin-label-stroke) rgba(255, 244, 225, 0.96);
 		text-shadow:
-			0 calc(var(--bb-desc-spin-label-fs) * 0.04) 0 rgba(0, 0, 0, 0.72),
+			0 calc(var(--bb-desc-spin-label-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
 			0 calc(var(--bb-desc-spin-label-fs) * 0.07) calc(var(--bb-desc-spin-label-fs) * 0.1)
-				rgba(0, 0, 0, 0.58),
-			0 0 calc(var(--bb-desc-spin-label-fs) * 0.14) rgba(255, 168, 64, 0.28);
+				rgba(0, 0, 0, 0.66),
+			0 0 calc(var(--bb-desc-spin-label-fs) * 0.12) rgba(255, 228, 185, 0.38);
 	}
 
 	.card-super .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-trigger) {
-		-webkit-text-stroke: var(--bb-desc-trigger-stroke) rgba(42, 12, 6, 0.94);
+		-webkit-text-stroke: var(--bb-desc-trigger-stroke) rgba(255, 244, 225, 0.96);
 		text-shadow:
-			0 calc(var(--bb-desc-trigger-fs) * 0.04) 0 rgba(0, 0, 0, 0.72),
+			0 calc(var(--bb-desc-trigger-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
 			0 calc(var(--bb-desc-trigger-fs) * 0.07) calc(var(--bb-desc-trigger-fs) * 0.1)
-				rgba(0, 0, 0, 0.58),
-			0 0 calc(var(--bb-desc-trigger-fs) * 0.14) rgba(255, 168, 64, 0.28);
+				rgba(0, 0, 0, 0.66),
+			0 0 calc(var(--bb-desc-trigger-fs) * 0.12) rgba(255, 228, 185, 0.38);
+	}
+
+	.card-normal
+		.card-desc.card-desc-stacked
+		:global(.fit-card-text--knewave .fit-card-text__inner.desc-spin-label) {
+		-webkit-text-stroke: calc(var(--bb-desc-spin-label-fs) * var(--bb-knewave-count-stroke-weight))
+			rgba(255, 244, 225, 0.96);
+		text-shadow:
+			0 calc(var(--bb-desc-spin-label-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
+			0 calc(var(--bb-desc-spin-label-fs) * 0.055) calc(var(--bb-desc-spin-label-fs) * 0.09)
+				rgba(0, 0, 0, 0.38);
+	}
+
+	.card-normal
+		.card-desc.card-desc-stacked
+		:global(.fit-card-text--knewave .fit-card-text__inner.desc-trigger) {
+		-webkit-text-stroke: calc(var(--bb-desc-trigger-fs) * var(--bb-knewave-count-stroke-weight))
+			rgba(255, 244, 225, 0.96);
+		text-shadow:
+			0 calc(var(--bb-desc-trigger-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
+			0 calc(var(--bb-desc-trigger-fs) * 0.055) calc(var(--bb-desc-trigger-fs) * 0.09)
+				rgba(0, 0, 0, 0.38);
+	}
+
+	.card-super
+		.card-desc.card-desc-stacked
+		:global(.fit-card-text--knewave .fit-card-text__inner.desc-spin-label) {
+		-webkit-text-stroke: calc(var(--bb-desc-spin-label-fs) * var(--bb-knewave-count-stroke-weight))
+			rgba(45, 12, 6, 0.94);
+		text-shadow:
+			0 calc(var(--bb-desc-spin-label-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
+			0 calc(var(--bb-desc-spin-label-fs) * 0.07) calc(var(--bb-desc-spin-label-fs) * 0.1)
+				rgba(0, 0, 0, 0.66);
+	}
+
+	.card-super
+		.card-desc.card-desc-stacked
+		:global(.fit-card-text--knewave .fit-card-text__inner.desc-trigger) {
+		-webkit-text-stroke: calc(var(--bb-desc-trigger-fs) * var(--bb-knewave-count-stroke-weight))
+			rgba(45, 12, 6, 0.94);
+		text-shadow:
+			0 calc(var(--bb-desc-trigger-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
+			0 calc(var(--bb-desc-trigger-fs) * 0.07) calc(var(--bb-desc-trigger-fs) * 0.1)
+				rgba(0, 0, 0, 0.66);
 	}
 
 	.card .card-desc.card-desc-stacked :global(.fit-card-text--spin-label) {
@@ -920,6 +1065,11 @@
 			line-height: 1.08;
 		}
 
+		.panel-subtitle {
+			font-size: calc(var(--panel-width) * 0.026);
+			line-height: 1.08;
+		}
+
 		.features-section :global(.feature-cost) {
 			font-size: calc(var(--panel-width) * 0.0165);
 			line-height: 1.08;
@@ -1083,6 +1233,11 @@
 			line-height: 1.08;
 		}
 
+		.panel-subtitle {
+			font-size: calc(var(--panel-width) * 0.036);
+			line-height: 1.08;
+		}
+
 		.features-section :global(.feature-cost) {
 			font-size: calc(var(--panel-width) * 0.026);
 			line-height: 1.08;
@@ -1218,6 +1373,11 @@
 
 		.features-section :global(.feature-row .feature-name) {
 			font-size: calc(var(--panel-width) * 0.021);
+			line-height: 1.08;
+		}
+
+		.panel-subtitle {
+			font-size: calc(var(--panel-width) * 0.026);
 			line-height: 1.08;
 		}
 
@@ -1358,6 +1518,11 @@
 
 		.features-section :global(.feature-row .feature-name) {
 			font-size: calc(var(--panel-width) * 0.021);
+			line-height: 1.08;
+		}
+
+		.panel-subtitle {
+			font-size: calc(var(--panel-width) * 0.026);
 			line-height: 1.08;
 		}
 

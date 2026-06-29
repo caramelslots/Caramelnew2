@@ -127,6 +127,12 @@ export const PRESS_TO_CONTINUE_BOTTOM_OFFSET = 18;
 
 /** HTML HUD balance/bet — system/web font stack (not bitmap). */
 export const HUD_BALANCE_BET_FONT_FAMILY = "'Reggae One', 'Philosopher', Georgia, serif";
+/** Buy-bonus card display font (Latin script only; digits always). */
+export const FONT_KNEWAVE = 'Knewave';
+export const BUY_BONUS_CARD_KNEWAVE_FONT_FAMILY = `'${FONT_KNEWAVE}'`;
+/** True for locales whose UI script is Latin (en, de, es, … — not ru / ar / ja / hi). */
+export const isLatinScriptLocale = (locale: string): boolean =>
+	localeScriptGroup(locale) === 'latin';
 /** Gold label color for HUD balance/bet lines. */
 export const HUD_BALANCE_BET_LABEL_COLOR = '#ffd54a';
 /** Amount color for HUD balance/bet lines. */
