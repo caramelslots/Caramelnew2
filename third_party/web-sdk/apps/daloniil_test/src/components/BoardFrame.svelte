@@ -12,6 +12,7 @@
 
 	import {
 		BOARD_FRAME_OFFSET,
+		BOARD_SIGN_OFFSET_Y,
 		DESK_PARCHMENT,
 		DESK_PARCHMENT_PADDING,
 		REELHOUSE_GLOW_SCALE,
@@ -36,6 +37,8 @@
 		width: DESK_SIZE.width,
 		height: DESK_SIZE.height,
 	});
+
+	const signProps = $derived({ ...deskProps, y: deskProps.y + BOARD_SIGN_OFFSET_Y });
 
 	const GLOW_SIZE = $derived({
 		width: boardLayout.width * REELHOUSE_GLOW_SCALE.width,
@@ -105,16 +108,25 @@
 			</SpineProvider>
 		{/if}
 
-		{#if alphaDay.current > 0}
-			<Container alpha={alphaDay.current} zIndex={0}>
-				<Sprite key="boardDay" {...deskProps} />
-			</Container>
-		{/if}
+	{#if alphaDay.current > 0}
+		<Container alpha={alphaDay.current} zIndex={0}>
+			<Sprite key="boardDayBase" {...deskProps} />
+		</Container>
+	{/if}
 
-		{#if alphaNight.current > 0}
-			<Container alpha={alphaNight.current} zIndex={0}>
-				<Sprite key="boardNight" {...deskProps} />
-			</Container>
-		{/if}
+	{#if alphaNight.current > 0}
+		<Container alpha={alphaNight.current} zIndex={0}>
+			<Sprite key="boardNightBase" {...deskProps} />
+		</Container>
+	{/if}
+
+	{#if alphaDay.current > 0 || alphaNight.current > 0}
+		<Container zIndex={1}>
+			<Sprite key="boardSign" {...signProps} />
+		</Container>
+		<Container zIndex={2}>
+			<Sprite key="boardContour" {...deskProps} />
+		</Container>
+	{/if}
 	</Container>
 </Container>

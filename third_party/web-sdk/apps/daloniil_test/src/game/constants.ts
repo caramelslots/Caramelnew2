@@ -263,9 +263,7 @@ export const BOARD_MASK_WIN_BOUNCE_TOP =
 
 /** Extra mask above the grid while idle-tease symbols pop — see BoardMask.svelte. */
 export const BOARD_MASK_IDLE_BOUNCE_TOP =
-	IDLE_BOUNCE.yOffsetPeakPx +
-	Math.ceil(((IDLE_BOUNCE.scalePeak - 1) * SYMBOL_SIZE) / 2) +
-	6;
+	IDLE_BOUNCE.yOffsetPeakPx + Math.ceil(((IDLE_BOUNCE.scalePeak - 1) * SYMBOL_SIZE) / 2) + 6;
 
 /**
  * Extra mask coverage (px) beyond the visible board grid so spinning symbols
@@ -421,7 +419,7 @@ export const REELHOUSE_GLOW_SCALE = { width: 0.58, height: 0.62 } as const;
 
 /**
  * Geometry of the parchment playfield inside the desk artwork
- * (`boardDay` / `boardNight`, 1920×940). Measured from the day variant —
+ * (`boardDayBase` / `boardNightBase`, 1920×940). Measured from the day variant —
  * night uses the same composition. Values are fractions of the source image.
  *
  *   PARCH_*_FRAC     — parchment bbox size as a fraction of image size.
@@ -431,12 +429,17 @@ export const REELHOUSE_GLOW_SCALE = { width: 0.58, height: 0.62 } as const;
  * Used by `BoardFrame.svelte` to scale the desk image so the parchment
  * wraps the 5×5 board, and to position it so the parchment center coincides
  * with the board-frame center.
+ *
+ * NOTE: Re-measured after decomposing the old combined desk artwork into
+ * separate layers (base / sign / contour). The old combined image baked in
+ * a sky background that shifted the parchment ~40 px lower; the new base
+ * layer has no sky, so offsetYFrac is roughly halved.
  */
 export const DESK_PARCHMENT = {
 	widthFrac: 0.3042,
 	heightFrac: 0.5277,
-	offsetXFrac: 0.0078,
-	offsetYFrac: 0.0819,
+	offsetXFrac: 0.0083,
+	offsetYFrac: 0.0372,
 } as const;
 
 /**
@@ -465,6 +468,8 @@ export const BOARD_LAYOUT_OFFSETS = {
 } as const;
 /** Frame bezel + glow offset from board center (px): +x right, +y down. */
 export const BOARD_FRAME_OFFSET = { x: 6, y: 8 } as const;
+/** Vertical nudge (game px, +y = down) applied only to the WOK FURY sign layer. */
+export const BOARD_SIGN_OFFSET_Y = 40;
 
 /**
  * ProgressLadder `.bar-h` rendered width (px). Portrait desk parchment width

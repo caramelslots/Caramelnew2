@@ -8,7 +8,9 @@ import { LOADER_SCREEN_IMAGE_URLS } from './loaderCardAssets';
 export const LOADER_BATCH_1_KEYS = [
 	'mainBackground',
 	'lanternDay',
-	'boardDay',
+	'boardDayBase',
+	'boardSign',
+	'boardContour',
 	'sound',
 	'transition',
 	'prostoiWhiteFont',
@@ -26,7 +28,7 @@ export const LOADER_BATCH_1_KEYS = [
 export const LOADER_BATCH_2_KEYS = [
 	'featureBackground',
 	'lanternNight',
-	'boardNight',
+	'boardNightBase',
 	'L1',
 	'L2',
 	'L3',

@@ -19,13 +19,21 @@ export default {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/background/lantern_night.webp'),
 	},
-	boardDay: {
+	boardDayBase: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/boardFrame/desk_day.webp'),
+		src: assetUrl('assets/sprites/boardFrame/desk_day_base.webp'),
 	},
-	boardNight: {
+	boardNightBase: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/boardFrame/desk_night.webp'),
+		src: assetUrl('assets/sprites/boardFrame/desk_night_base.webp'),
+	},
+	boardSign: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/boardFrame/desk_sign.webp'),
+	},
+	boardContour: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/boardFrame/desk_contour.webp'),
 	},
 	bonusBarV: {
 		type: 'sprite',
