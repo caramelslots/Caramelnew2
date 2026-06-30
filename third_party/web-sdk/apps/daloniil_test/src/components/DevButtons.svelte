@@ -170,6 +170,48 @@
 		reel(['H3', 'L1', 'L4', 'H1', 'L2']),
 	];
 
+	// Вся доска L1 — выигрывают все 25 paylines (5-of-a-kind на каждой).
+	const ALL_L1_BOARD = Array.from({ length: 5 }, () => reel(['L1', 'L1', 'L1', 'L1', 'L1']));
+
+	// 4 линии через центр: горизонталь (3), V (7), две диагонали (12, 13).
+	const FEW_LINES_BOARD = [
+		reel(['L1', 'L1', 'L1', 'L2', 'L1']),
+		reel(['L2', 'L1', 'L1', 'L1', 'L2']),
+		reel(['L2', 'L2', 'L1', 'L1', 'L2']),
+		reel(['L2', 'L1', 'L1', 'L1', 'L2']),
+		reel(['L1', 'L1', 'L1', 'L2', 'L1']),
+	];
+
+	const buildPaylinesWinInfo = (lineIndices: number[], perLineWin = 50) => {
+		const wins = lineIndices.map((lineIndex) => {
+			const rows = config.paylines[String(lineIndex) as keyof typeof config.paylines];
+			const positions = rows.map((visibleRow, reel) => ({
+				reel,
+				row: visibleRow + 1,
+			}));
+			return {
+				symbol: 'L1',
+				kind: 5,
+				win: perLineWin,
+				positions,
+				meta: {
+					lineIndex,
+					multiplier: 1,
+					winWithoutMult: perLineWin,
+					globalMult: 1,
+					lineMultiplier: 1.0,
+				},
+			};
+		});
+		return {
+			type: 'winInfo' as const,
+			totalWin: perLineWin * wins.length,
+			wins,
+		};
+	};
+
+	const ALL_PAYLINE_INDICES = Object.keys(config.paylines).map(Number);
+
 	// 2×B на барабанах 0 и 1 — после 2-го кота барабаны 2–4 замедляются.
 	const TWO_CAT_SLOW_BOARD = [
 		reel(['B', 'L2', 'L4', 'H2', 'L1']),
@@ -305,6 +347,22 @@
 						},
 					],
 				}),
+			]);
+		});
+
+	const playFewPaylinesWin = () =>
+		guard(async () => {
+			await playBookEvents([
+				reveal(FEW_LINES_BOARD),
+				asEvent(buildPaylinesWinInfo([3, 7, 12, 13])),
+			]);
+		});
+
+	const playMultiPaylinesWin = () =>
+		guard(async () => {
+			await playBookEvents([
+				reveal(ALL_L1_BOARD),
+				asEvent(buildPaylinesWinInfo(ALL_PAYLINE_INDICES, 20)),
 			]);
 		});
 
@@ -611,6 +669,22 @@
 						onclick={playVShapeWin}
 					>
 						V-Shape Win (5-of-a-kind)
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="reveal → 4 paylines (3, 7, 12, 13) через центр доски"
+						onclick={playFewPaylinesWin}
+					>
+						Multi Paylines (×4)
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="reveal доска L1×25 → winInfo со всеми 25 paylines одновременно"
+						onclick={playMultiPaylinesWin}
+					>
+						Multi Paylines (×25)
 					</button>
 				</div>
 			</section>
