@@ -15,6 +15,7 @@
 		BOARD_SIGN_OFFSET_Y,
 		DESK_PARCHMENT,
 		DESK_PARCHMENT_PADDING,
+		DESK_VISUAL_OFFSET_Y,
 		REELHOUSE_GLOW_SCALE,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
@@ -32,7 +33,7 @@
 
 	const deskProps = $derived({
 		x: frameX - DESK_PARCHMENT.offsetXFrac * DESK_SIZE.width,
-		y: frameY - DESK_PARCHMENT.offsetYFrac * DESK_SIZE.height,
+		y: frameY - DESK_PARCHMENT.offsetYFrac * DESK_SIZE.height + DESK_VISUAL_OFFSET_Y,
 		anchor: 0.5,
 		width: DESK_SIZE.width,
 		height: DESK_SIZE.height,

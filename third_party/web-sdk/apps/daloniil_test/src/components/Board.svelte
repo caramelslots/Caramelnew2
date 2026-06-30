@@ -44,6 +44,7 @@
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardMask from './BoardMask.svelte';
 	import BoardBase from './BoardBase.svelte';
+	import CatAnticipationFrames from './CatAnticipationFrames.svelte';
 	import PaylineOverlay from './PaylineOverlay.svelte';
 	import PaylineWinAmounts from './PaylineWinAmounts.svelte';
 
@@ -173,6 +174,7 @@
 	<BoardContainer>
 		<BoardMask />
 		<BoardBase />
+		<CatAnticipationFrames />
 		<PaylineOverlay />
 		<PaylineWinAmounts />
 	</BoardContainer>

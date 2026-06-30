@@ -35,6 +35,10 @@ export default {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/boardFrame/desk_contour.webp'),
 	},
+	catAnticipationFrame: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/boardFrame/cat_anticipation_frame.webp'),
+	},
 	bonusBarV: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/bonusBar/bar_v.webp'),
