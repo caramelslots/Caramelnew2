@@ -476,7 +476,7 @@ export const BOARD_LAYOUT_OFFSETS = {
 export const BOARD_FRAME_OFFSET = { x: 6, y: 8 } as const;
 /** Vertical nudge (game px, +y = down) applied to all desk artwork layers (base / sign / contour)
  *  without moving the reel grid or UI buttons. */
-export const DESK_VISUAL_OFFSET_Y = 5;
+export const DESK_VISUAL_OFFSET_Y = 2.5;
 /** Vertical nudge (game px, +y = down) applied only to the WOK FURY sign layer. */
 export const BOARD_SIGN_OFFSET_Y = 40;
 
