@@ -55,7 +55,7 @@
 	const TAPER_MAX = 1.0;
 	/** Доля пути у каждого края для плавного нарастания / убывания толщины. */
 	const TAPER_RAMP = 0.2;
-	const WIGGLE_AMPLITUDE = 7;
+	const WIGGLE_AMPLITUDE = 4;
 	const WIGGLE_WAVES = 2.4;
 	const WIGGLE_SPEED = 4.2;
 	const SPARKLE_RAY_COUNT = 10;
@@ -63,12 +63,12 @@
 
 	// От внешнего halo к яркому бело-жёлтому core.
 	const GLOW_LAYERS: { width: number; color: number; alpha: number }[] = [
-		{ width: 38, color: 0xff3300, alpha: 0.07 },
-		{ width: 28, color: 0xff5500, alpha: 0.13 },
-		{ width: 20, color: 0xff7700, alpha: 0.24 },
-		{ width: 13, color: 0xffaa00, alpha: 0.42 },
-		{ width: 7, color: 0xffdd44, alpha: 0.72 },
-		{ width: 3.5, color: 0xfff8e8, alpha: 1.0 },
+		{ width: 26, color: 0xff3300, alpha: 0.07 },
+		{ width: 19, color: 0xff5500, alpha: 0.13 },
+		{ width: 14, color: 0xff7700, alpha: 0.24 },
+		{ width: 9, color: 0xffaa00, alpha: 0.42 },
+		{ width: 5, color: 0xffdd44, alpha: 0.72 },
+		{ width: 2.5, color: 0xfff8e8, alpha: 1.0 },
 	];
 
 	let activeLines = $state<ActiveLine[]>([]);
