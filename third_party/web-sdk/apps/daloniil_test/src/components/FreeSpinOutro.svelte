@@ -31,7 +31,7 @@
 		FONT_KRUTOI_CJK,
 		fontForLocale,
 		FS_OUTRO_DIM_ALPHA,
-		getFsOutroPopupPosition,
+		getFsOutroPopupVisualCenter,
 		LOCALE_TEXT_FILL_GOLD,
 		LOCALE_TEXT_FILL_WHITE,
 	} from '../game/constants';
@@ -40,10 +40,7 @@
 	import ResponsiveLocaleText from './ResponsiveLocaleText.svelte';
 	import { scaleMsByGameSpeed } from '../game/gameSpeed';
 	import { stateGame } from '../game/stateGame.svelte';
-	import {
-		getFsOutroCongratulationsText,
-		getFsOutroYouWonText,
-	} from '../game/fsOutroBannerText';
+	import { getFsOutroCongratulationsText, getFsOutroYouWonText } from '../game/fsOutroBannerText';
 	import { stopWinLevelCountUpSounds } from '../game/bookEventHandlerMap';
 	import FreeSpinAnimation from './FreeSpinAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
@@ -51,13 +48,16 @@
 
 	const context = getContext();
 
-	const fsOutroPopupPosition = $derived(
-		getFsOutroPopupPosition({
-			boardLayout: context.stateGameDerived.boardLayout(),
-			mainLayout: context.stateLayoutDerived.mainLayout(),
-			canvasSizeType: context.stateLayoutDerived.canvasSizeType(),
-		}),
-	);
+	const fsOutroPopupCenter = $derived.by(() => {
+		const ml = context.stateLayoutDerived.mainLayout();
+		const cs = context.stateLayoutDerived.canvasSizes();
+		// Popup spine is in MainContainer at (ml.width*0.5, ml.height*0.3).
+		// Convert to canvas px: screenPos = canvasCenter + (localPos - ml.center) * scale
+		return {
+			x: cs.width * 0.5,
+			y: cs.height * 0.5 + (ml.height * 0.3 - ml.height * 0.5) * ml.scale,
+		};
+	});
 
 	let show = $state(true);
 	let winAmount = $state(0);
@@ -113,121 +113,143 @@
 		{@const duration = winLevelData.presentDuration}
 		{@const isBigWin = winLevelData.type === 'big'}
 		{#key winAmount}
-		<WinCountUpProvider
-			amount={winAmount}
-			{duration}
-			oncomplete={() => {
-				coinsEmit = false;
-				stopWinLevelCountUpSounds();
-				onCountUpComplete();
-			}}
-		>
-			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
-				<OnMount
-					onmount={async () => {
-						await startCountUp();
-					}}
-				/>
+			<WinCountUpProvider
+				amount={winAmount}
+				{duration}
+				oncomplete={() => {
+					coinsEmit = false;
+					stopWinLevelCountUpSounds();
+					onCountUpComplete();
+				}}
+			>
+				{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
+					<OnMount
+						onmount={async () => {
+							await startCountUp();
+						}}
+					/>
 
-				{#if !closing}
-					<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={FS_OUTRO_DIM_ALPHA} />
-				{/if}
+					{#if !closing}
+						<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={FS_OUTRO_DIM_ALPHA} />
+					{/if}
 
-				{#key winAmount}
-					<FreeSpinAnimation bind:this={fsAnimation}>
-						{#snippet title({ width })}
-							{@const lang = stateUrlDerived.lang()}
-							{@const youWon = getFsOutroYouWonText(lang)}
-							{@const titleLineGap = width * 0.22}
-							{@const titleYOffset = width * 0.06}
-							{#if isBigWin}
-								<Container y={titleYOffset}>
+					{#key winAmount}
+						<FreeSpinAnimation bind:this={fsAnimation}>
+							{#snippet title({ width })}
+								{@const lang = stateUrlDerived.lang()}
+								{@const youWon = getFsOutroYouWonText(lang)}
+								{@const titleLineGap = width * 0.22}
+								{@const titleYOffset = width * 0.06}
+								{#if isBigWin}
+									<Container y={titleYOffset}>
+										<ResponsiveLocaleText
+											anchor={0.5}
+											y={-(titleLineGap * 3.0)}
+											text={getFsOutroCongratulationsText(lang)}
+											maxWidth={width * 3.5}
+											fallbackFill={LOCALE_TEXT_FILL_GOLD}
+											style={{
+												fontFamily: fontForLocale(
+													FONT_KRUTOI,
+													FONT_KRUTOI_RU,
+													stateI18n.i18n.locale,
+													FONT_PROSTOI_HI,
+													FONT_KRUTOI_VI,
+													FONT_KRUTOI_CJK,
+												),
+												fontSize: width * 0.7 * BITMAP_FONT_SCALE,
+												align: 'center',
+												fontWeight: 'bold',
+												letterSpacing: 0,
+											}}
+										/>
+										<ResponsiveLocaleText
+											anchor={0.5}
+											y={titleLineGap * 2.0}
+											text={youWon}
+											maxWidth={width * 3.2}
+											fallbackFill={LOCALE_TEXT_FILL_WHITE}
+											style={{
+												fontFamily: fontForLocale(
+													FONT_PROSTOI_WHITE,
+													FONT_PROSTOI_WHITE_RU,
+													stateI18n.i18n.locale,
+													FONT_PROSTOI_WHITE_HI,
+													FONT_PROSTOI_WHITE_VI,
+													FONT_PROSTOI_WHITE_CJK,
+												),
+												fontSize: width * 0.52 * BITMAP_FONT_SCALE,
+												align: 'center',
+												fontWeight: 'bold',
+												letterSpacing: 0,
+											}}
+										/>
+									</Container>
+								{:else}
 									<ResponsiveLocaleText
 										anchor={0.5}
-										y={-titleLineGap}
-										text={getFsOutroCongratulationsText(lang)}
-										maxWidth={width * 3.5}
-										fallbackFill={LOCALE_TEXT_FILL_GOLD}
-										style={{
-											fontFamily: fontForLocale(FONT_KRUTOI, FONT_KRUTOI_RU, stateI18n.i18n.locale, FONT_PROSTOI_HI, FONT_KRUTOI_VI, FONT_KRUTOI_CJK),
-											fontSize: width * 0.7 * BITMAP_FONT_SCALE,
-											align: 'center',
-											fontWeight: 'bold',
-											letterSpacing: 0,
-										}}
-									/>
-									<ResponsiveLocaleText
-										anchor={0.5}
-										y={titleLineGap}
+										y={titleYOffset}
 										text={youWon}
 										maxWidth={width * 3.2}
 										fallbackFill={LOCALE_TEXT_FILL_WHITE}
 										style={{
-											fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale, FONT_PROSTOI_WHITE_HI, FONT_PROSTOI_WHITE_VI, FONT_PROSTOI_WHITE_CJK),
-											fontSize: width * 0.52 * BITMAP_FONT_SCALE,
+											fontFamily: fontForLocale(
+												FONT_PROSTOI_WHITE,
+												FONT_PROSTOI_WHITE_RU,
+												stateI18n.i18n.locale,
+												FONT_PROSTOI_WHITE_HI,
+												FONT_PROSTOI_WHITE_VI,
+												FONT_PROSTOI_WHITE_CJK,
+											),
+											fontSize: width * 0.62 * BITMAP_FONT_SCALE,
 											align: 'center',
 											fontWeight: 'bold',
 											letterSpacing: 0,
 										}}
 									/>
+								{/if}
+							{/snippet}
+							{#snippet winAmount({ width })}
+								<Container y={width * 0.05}>
+									<ResponsiveCurrencyBitmapText
+										anchor={0.5}
+										style={{
+											fontSize: width * 0.74 * BITMAP_FONT_SCALE,
+										}}
+										amount={countUpAmount}
+										bookEvent
+										maxWidth={width * 3.6}
+									/>
 								</Container>
-							{:else}
-								<ResponsiveLocaleText
-									anchor={0.5}
-									y={titleYOffset}
-									text={youWon}
-									maxWidth={width * 3.2}
-									fallbackFill={LOCALE_TEXT_FILL_WHITE}
-									style={{
-										fontFamily: fontForLocale(FONT_PROSTOI_WHITE, FONT_PROSTOI_WHITE_RU, stateI18n.i18n.locale, FONT_PROSTOI_WHITE_HI, FONT_PROSTOI_WHITE_VI, FONT_PROSTOI_WHITE_CJK),
-										fontSize: width * 0.62 * BITMAP_FONT_SCALE,
-										align: 'center',
-										fontWeight: 'bold',
-										letterSpacing: 0,
-									}}
-								/>
-							{/if}
-						{/snippet}
-						{#snippet winAmount({ width })}
-							<Container y={width * 0.07}>
-								<ResponsiveCurrencyBitmapText
-									anchor={0.5}
-									style={{
-										fontSize: width * 0.74 * BITMAP_FONT_SCALE,
-									}}
-									amount={countUpAmount}
-									bookEvent
-									maxWidth={width * 3.6}
-								/>
-							</Container>
-						{/snippet}
-					</FreeSpinAnimation>
-				{/key}
+							{/snippet}
+						</FreeSpinAnimation>
+					{/key}
 
-				{#if cookieOpened && !closing}
-					<WinCoins
-						emit={coinsEmit}
-						levelAlias={winLevelData?.alias}
-						x={fsOutroPopupPosition.x}
-						y={fsOutroPopupPosition.y}
-					/>
-				{/if}
+					{#if cookieOpened && !closing}
+						<WinCoins
+							emit={coinsEmit}
+							levelAlias={winLevelData?.alias}
+							canvasSpace
+							x={fsOutroPopupCenter.x}
+							y={fsOutroPopupCenter.y}
+						/>
+					{/if}
 
-				{#if !closing}
-					<PressToContinue
-						onpress={() => {
-							if (countUpCompleted) {
-								finishOutro();
-							} else {
-								coinsEmit = false;
-								stopWinLevelCountUpSounds();
-								finishCountUp();
-							}
-						}}
-					/>
-				{/if}
-			{/snippet}
-		</WinCountUpProvider>
+					{#if !closing}
+						<PressToContinue
+							onpress={() => {
+								if (countUpCompleted) {
+									finishOutro();
+								} else {
+									coinsEmit = false;
+									stopWinLevelCountUpSounds();
+									finishCountUp();
+								}
+							}}
+						/>
+					{/if}
+				{/snippet}
+			</WinCountUpProvider>
 		{/key}
 	{/if}
 </FadeContainer>

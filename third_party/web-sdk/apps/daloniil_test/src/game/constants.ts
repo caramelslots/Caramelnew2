@@ -1019,7 +1019,23 @@ export const WIN_SCREEN_POST_COUNT_UP_DELAY_MS = 1500;
 /** Full-screen dim behind FS end (FreeSpinOutro) count-up panel. */
 export const FS_OUTRO_DIM_ALPHA = 0.85;
 /** FS end fortune-cookie spine width as a fraction of board width (desktop/tablet). */
-export const FS_OUTRO_SPINE_WIDTH_FRAC = 0.72;
+export const FS_OUTRO_SPINE_WIDTH_FRAC = 2.5;
+/** Skeleton bounds height / width from fs_popup export (load-time scale cancels out). */
+export const FS_OUTRO_SPINE_ASPECT = 1023.8 / 1978.27;
+/** Text layout ref as a fraction of board width; compensates for spine slot scaling. */
+export const FS_OUTRO_TEXT_LAYOUT_FRAC = 0.3;
+/** fsPopup skeleton load scale from assets.ts (parser.scale). */
+export const FS_OUTRO_SKELETON_LOAD_SCALE = 2;
+/** fs_popup export bounds (pre-load-scale). */
+const FS_OUTRO_SKELETON_BOUNDS = {
+	x: -983.87,
+	y: -519.42,
+	width: 1978.27,
+	height: 1023.8,
+} as const;
+/** Skeleton data width after load scale — used for SpineProvider width fit. */
+export const FS_OUTRO_SKELETON_DATA_WIDTH =
+	FS_OUTRO_SKELETON_BOUNDS.width * FS_OUTRO_SKELETON_LOAD_SCALE;
 /** Extra shrink for FS end cookie on phones (portrait + landscape). */
 export const FS_OUTRO_PHONE_SCALE = {
 	small: 0.82,
@@ -1027,20 +1043,23 @@ export const FS_OUTRO_PHONE_SCALE = {
 	large: 0.89,
 } as const;
 
-/** FS end popup anchor in main-layout coords. Phones use viewport centre, not board centre. */
-export const getFsOutroPopupPosition = (args: {
-	boardLayout: { x: number; y: number };
-	mainLayout: { width: number; height: number };
+/** FS end popup spine render width in main-layout px. */
+export const getFsOutroSpineWidth = (args: {
 	canvasSizeType: 'smallMobile' | 'mobile' | 'tablet' | 'largeTablet' | 'desktop';
+	canvasSizes: { width: number; height: number };
 }) => {
-	const isPhone = args.canvasSizeType === 'smallMobile' || args.canvasSizeType === 'mobile';
-	if (!isPhone) return { x: args.boardLayout.x, y: args.boardLayout.y };
+	const base = BOARD_SIZES.width * FS_OUTRO_SPINE_WIDTH_FRAC;
+	if (args.canvasSizeType !== 'smallMobile' && args.canvasSizeType !== 'mobile') return base;
 
-	return {
-		x: args.mainLayout.width * 0.5,
-		y: args.mainLayout.height * 0.5,
-	};
+	const tier = getPortraitMobileTier(args.canvasSizeType, Math.min(args.canvasSizes.width, args.canvasSizes.height));
+	return base * FS_OUTRO_PHONE_SCALE[tier];
 };
+
+/** FS end popup visual centre in main-layout coords (screen centre). */
+export const getFsOutroPopupVisualCenter = (mainLayout: { width: number; height: number }) => ({
+	x: mainLayout.width * 0.5,
+	y: mainLayout.height * 0.5,
+});
 
 /**
  * Pause after reels finish landing, before bonus cats play the paw-wave

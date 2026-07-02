@@ -7,10 +7,9 @@
 	import { getContext } from '../game/context';
 	import {
 		BOARD_SIZES,
-		FS_OUTRO_PHONE_SCALE,
 		FS_OUTRO_SPINE_WIDTH_FRAC,
-		getFsOutroPopupPosition,
-		getPortraitMobileTier,
+		FS_OUTRO_TEXT_LAYOUT_FRAC,
+		getFsOutroSpineWidth,
 	} from '../game/constants';
 	import FsPopupSpineController from './FsPopupSpineController.svelte';
 
@@ -25,28 +24,19 @@
 
 	// SPINE_WIDTH drives the uniform scale applied by SpineProvider.
 	// All content inside SpineSlots scales proportionally with this value.
-	const spineWidth = $derived.by(() => {
-		const base = BOARD_SIZES.width * FS_OUTRO_SPINE_WIDTH_FRAC;
-		const canvasSizeType = context.stateLayoutDerived.canvasSizeType();
-		if (canvasSizeType !== 'smallMobile' && canvasSizeType !== 'mobile') return base;
+	const mainLayout = $derived(context.stateLayoutDerived.mainLayout());
 
-		const { width, height } = context.stateLayoutDerived.canvasSizes();
-		const tier = getPortraitMobileTier(canvasSizeType, Math.min(width, height));
-		return base * FS_OUTRO_PHONE_SCALE[tier];
-	});
-
-	const popupPosition = $derived(
-		getFsOutroPopupPosition({
-			boardLayout: context.stateGameDerived.boardLayout(),
-			mainLayout: context.stateLayoutDerived.mainLayout(),
+	const spineWidth = $derived.by(() =>
+		getFsOutroSpineWidth({
 			canvasSizeType: context.stateLayoutDerived.canvasSizeType(),
+			canvasSizes: context.stateLayoutDerived.canvasSizes(),
 		}),
 	);
 
-	const layoutRefWidth = $derived(spineWidth / FS_OUTRO_SPINE_WIDTH_FRAC);
-	const layoutRefHeight = $derived(
-		BOARD_SIZES.height * (layoutRefWidth / BOARD_SIZES.width),
+	const layoutRefWidth = $derived(
+		(spineWidth / FS_OUTRO_SPINE_WIDTH_FRAC) * FS_OUTRO_TEXT_LAYOUT_FRAC,
 	);
+	const layoutRefHeight = $derived(BOARD_SIZES.height * (layoutRefWidth / BOARD_SIZES.width));
 
 	let controller = $state<FsPopupSpineController | undefined>();
 
@@ -56,7 +46,7 @@
 </script>
 
 <MainContainer>
-	<Container x={popupPosition.x} y={popupPosition.y}>
+	<Container x={mainLayout.width * 0.5} y={mainLayout.height * 0.3}>
 		<SpineProvider key="fsPopup" width={spineWidth}>
 			<FsPopupSpineController bind:this={controller} />
 			<SpineSlot slotName="text_placeholder_1">
