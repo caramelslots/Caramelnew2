@@ -7,9 +7,9 @@ import { LOADER_SCREEN_IMAGE_URLS } from './loaderCardAssets';
 /** Stake GIF screen — day backgrounds, audio manifest, transition, press font, high symbols. */
 export const LOADER_BATCH_1_KEYS = [
 	'mainBackground',
+	'neonBackground',
 	'lanternDay',
 	'boardDayBase',
-	'boardSign',
 	'boardContour',
 	'sound',
 	'transition',

@@ -474,11 +474,9 @@ export const BOARD_LAYOUT_OFFSETS = {
 } as const;
 /** Frame bezel + glow offset from board center (px): +x right, +y down. */
 export const BOARD_FRAME_OFFSET = { x: 6, y: 8 } as const;
-/** Vertical nudge (game px, +y = down) applied to all desk artwork layers (base / sign / contour)
+/** Vertical nudge (game px, +y = down) applied to all desk artwork layers (base / contour)
  *  without moving the reel grid or UI buttons. */
 export const DESK_VISUAL_OFFSET_Y = 2.5;
-/** Vertical nudge (game px, +y = down) applied only to the WOK FURY sign layer. */
-export const BOARD_SIGN_OFFSET_Y = 40;
 
 /**
  * ProgressLadder `.bar-h` rendered width (px). Portrait desk parchment width

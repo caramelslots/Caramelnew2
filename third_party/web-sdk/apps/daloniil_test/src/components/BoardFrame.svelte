@@ -12,7 +12,6 @@
 
 	import {
 		BOARD_FRAME_OFFSET,
-		BOARD_SIGN_OFFSET_Y,
 		DESK_PARCHMENT,
 		DESK_PARCHMENT_PADDING,
 		DESK_VISUAL_OFFSET_Y,
@@ -38,8 +37,6 @@
 		width: DESK_SIZE.width,
 		height: DESK_SIZE.height,
 	});
-
-	const signProps = $derived({ ...deskProps, y: deskProps.y + BOARD_SIGN_OFFSET_Y });
 
 	const GLOW_SIZE = $derived({
 		width: boardLayout.width * REELHOUSE_GLOW_SCALE.width,
@@ -122,9 +119,6 @@
 	{/if}
 
 	{#if alphaDay.current > 0 || alphaNight.current > 0}
-		<Container zIndex={1}>
-			<Sprite key="boardSign" {...signProps} />
-		</Container>
 		<Container zIndex={2}>
 			<Sprite key="boardContour" {...deskProps} />
 		</Container>

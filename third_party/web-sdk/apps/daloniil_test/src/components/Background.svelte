@@ -4,18 +4,28 @@
 	import { SECOND } from 'constants-shared/time';
 
 	import { getContext } from '../game/context';
+	import { getNeonOverlayProps, coverFit, BG_RATIO, BG_Y_OFFSET } from '../game/neonBackgroundLayout';
 	import Lantern from './Lantern.svelte';
+	import NeonBackgroundOverlay from './NeonBackgroundOverlay.svelte';
 
 	const context = getContext();
 
-	// Source artwork dimensions (designer_assets/day.png, night.png). Both are
-	// 1920×940, so cover-fit math is shared.
-	const BG_RATIO = 1920 / 940;
+	const cover = (ratio: number) => coverFit(context.stateLayoutDerived.canvasSizes(), ratio);
 
-	// Vertical offset (fraction of canvas height) applied on top of the
-	// centred cover-fit. New artwork is composed around the centre, so no
-	// vertical shift is needed.
-	const BG_Y_OFFSET = 0;
+	const spriteProps = $derived.by(() => {
+		const canvas = context.stateLayoutDerived.canvasSizes();
+		const bgCover = cover(BG_RATIO);
+		return {
+			x: canvas.width / 2,
+			y: canvas.height * (0.5 - BG_Y_OFFSET),
+			anchor: 0.5,
+			...bgCover,
+		};
+	});
+
+	const neonOverlayProps = $derived.by(() =>
+		getNeonOverlayProps(context.stateLayoutDerived.canvasSizes()),
+	);
 
 	// Lantern composition (fractions of the canvas size). Both lanterns are
 	// suspended from the top edge and sized as a fraction of canvas height,
@@ -24,25 +34,6 @@
 	const LANTERN_TOP_RATIO = -0.04;
 	const LANTERN_LEFT_RATIO = 0.17;
 	const LANTERN_RIGHT_RATIO = 0.86;
-
-	const cover = (ratio: number) => {
-		const canvas = context.stateLayoutDerived.canvasSizes();
-		const canvasRatio = canvas.width / canvas.height;
-		if (canvasRatio > ratio) {
-			return { width: canvas.width, height: canvas.width / ratio };
-		}
-		return { width: canvas.height * ratio, height: canvas.height };
-	};
-
-	const spriteProps = $derived.by(() => {
-		const canvas = context.stateLayoutDerived.canvasSizes();
-		return {
-			x: canvas.width / 2,
-			y: canvas.height * (0.5 - BG_Y_OFFSET),
-			anchor: 0.5,
-			...cover(BG_RATIO),
-		};
-	});
 
 	const lanternLayout = $derived.by(() => {
 		const canvas = context.stateLayoutDerived.canvasSizes();
@@ -64,6 +55,14 @@
 
 <FadeContainer show={showBaseBackground} duration={SECOND} zIndex={-2}>
 	<Sprite key="mainBackground" {...spriteProps} />
+	<NeonBackgroundOverlay
+		layer="behind"
+		skin="day"
+		x={neonOverlayProps.x}
+		y={neonOverlayProps.y}
+		width={neonOverlayProps.width}
+		height={neonOverlayProps.height}
+	/>
 	<Lantern
 		assetKey="lanternDay"
 		x={lanternLayout.leftX}
@@ -81,6 +80,14 @@
 
 <FadeContainer show={showFeatureBackground} duration={SECOND} zIndex={-1}>
 	<Sprite key="featureBackground" {...spriteProps} />
+	<NeonBackgroundOverlay
+		layer="behind"
+		skin="night"
+		x={neonOverlayProps.x}
+		y={neonOverlayProps.y}
+		width={neonOverlayProps.width}
+		height={neonOverlayProps.height}
+	/>
 	<Lantern
 		assetKey="lanternNight"
 		x={lanternLayout.leftX}

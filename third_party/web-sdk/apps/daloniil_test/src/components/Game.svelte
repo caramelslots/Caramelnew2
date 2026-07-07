@@ -24,6 +24,7 @@
 	import ResumeBet from './ResumeBet.svelte';
 	import Sound from './Sound.svelte';
 	import Background from './Background.svelte';
+	import NeonForegroundOverlay from './NeonForegroundOverlay.svelte';
 	import LoaderCardsHtmlOverlay from './LoaderCardsHtmlOverlay.svelte';
 	import LoadingScreen from './LoadingScreen.svelte';
 	import BoardFrame from './BoardFrame.svelte';
@@ -104,6 +105,8 @@
 				<MainContainer>
 					<Board />
 				</MainContainer>
+
+				<NeonForegroundOverlay />
 
 				<UiCashStacksLayout>
 					{#snippet gameName()}

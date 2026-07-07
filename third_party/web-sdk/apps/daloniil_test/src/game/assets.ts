@@ -19,6 +19,13 @@ export default {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/background/lantern_night.webp'),
 	},
+	neonBackground: {
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/neonBackground/skeleton.atlas'),
+			skeleton: assetUrl('assets/spines/neonBackground/skeleton.json'),
+		},
+	},
 	boardDayBase: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/boardFrame/desk_day_base.webp'),
@@ -26,10 +33,6 @@ export default {
 	boardNightBase: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/boardFrame/desk_night_base.webp'),
-	},
-	boardSign: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/boardFrame/desk_sign.webp'),
 	},
 	boardContour: {
 		type: 'sprite',
