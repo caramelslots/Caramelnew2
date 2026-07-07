@@ -31,8 +31,7 @@
 		boardBounds={boardBounds}
 		x={neonOverlayProps.x}
 		y={neonOverlayProps.y}
-		width={neonOverlayProps.width}
-		height={neonOverlayProps.height}
+		scale={neonOverlayProps.scale}
 	/>
 </FadeContainer>
 
@@ -43,7 +42,6 @@
 		boardBounds={boardBounds}
 		x={neonOverlayProps.x}
 		y={neonOverlayProps.y}
-		width={neonOverlayProps.width}
-		height={neonOverlayProps.height}
+		scale={neonOverlayProps.scale}
 	/>
 </FadeContainer>

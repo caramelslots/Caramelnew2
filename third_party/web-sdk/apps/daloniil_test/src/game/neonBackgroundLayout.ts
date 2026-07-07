@@ -15,16 +15,23 @@ export const coverFit = (canvas: CanvasSize, ratio: number) => {
 	return { width: canvas.height * ratio, height: canvas.height };
 };
 
+/**
+ * Вычисляет позицию и масштаб Spine-оверлея для neon-фона.
+ *
+ * Используется anchor=0 (нет pivot): Spine-точка (0,0) = (x, y) в canvas.
+ * Формула рендера: canvas_x = x + bone.x * scale
+ *                  canvas_y = y - bone.y * scale   ← Spine Y-ось инвертирована
+ *
+ * Это гарантирует линейное (пропорциональное) масштабирование при ресайзе.
+ */
 export const getNeonOverlayProps = (canvas: CanvasSize) => {
 	const bgCover = coverFit(canvas, BG_RATIO);
-	const scale = (bgCover.width / BG_NATIVE.width) * NEON_OVERLAY_TUNING.scale;
-	const offsetX = NEON_OVERLAY_TUNING.centerX + NEON_OVERLAY_TUNING.offsetX;
-	const offsetY = NEON_OVERLAY_TUNING.centerY + NEON_OVERLAY_TUNING.offsetY;
+	const spineScale = (bgCover.width / BG_NATIVE.width) * NEON_OVERLAY_TUNING.scale;
 
 	return {
-		x: canvas.width / 2 + offsetX * scale,
-		y: canvas.height * (0.5 - BG_Y_OFFSET) + offsetY * scale,
-		width: SPINE_NATIVE.width * scale,
-		height: SPINE_NATIVE.height * scale,
+		// Spine (0,0) помещается в canvas-center + сдвиг в Spine design-единицах
+		x: canvas.width / 2 + NEON_OVERLAY_TUNING.offsetX * spineScale,
+		y: canvas.height * (0.5 - BG_Y_OFFSET) + NEON_OVERLAY_TUNING.offsetY * spineScale,
+		scale: spineScale,
 	};
 };

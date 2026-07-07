@@ -14,11 +14,10 @@
 		boardBounds?: BoardCanvasBounds;
 		overlayX: number;
 		overlayY: number;
-		overlayWidth: number;
-		overlayHeight: number;
+		overlayScale: number;
 	};
 
-	const { skin, layer, boardBounds, overlayX, overlayY, overlayWidth, overlayHeight }: Props = $props();
+	const { skin, layer, boardBounds, overlayX, overlayY, overlayScale }: Props = $props();
 	const spine = getContextSpine();
 
 	// All board_glow_* slots use additive blending. On the light parchment board background
@@ -98,7 +97,7 @@
 			if (layer === 'front' && boardBounds) {
 				alignNeonBoardBone(
 					spine,
-					{ x: overlayX, y: overlayY, width: overlayWidth, height: overlayHeight },
+					{ x: overlayX, y: overlayY, scale: overlayScale },
 					boardBounds,
 					NEON_BOARD_ALIGNMENT,
 				);

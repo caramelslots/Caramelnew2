@@ -1,6 +1,5 @@
 import type { Spine } from '@esotericsoftware/spine-pixi-v8';
 
-import { SPINE_NATIVE } from './neonBackgroundLayout';
 import type { NeonElementTuning } from './neonBackgroundTuning';
 
 /**
@@ -11,10 +10,12 @@ import type { NeonElementTuning } from './neonBackgroundTuning';
 export const NEON_BOARD_NATIVE = { width: 621, height: 534 } as const;
 
 export type NeonOverlayTransform = {
+	/** Canvas X-позиция Spine (0,0) — результат getNeonOverlayProps(). */
 	x: number;
+	/** Canvas Y-позиция Spine (0,0) — результат getNeonOverlayProps(). */
 	y: number;
-	width: number;
-	height: number;
+	/** Spine-масштаб (px per Spine design-unit). */
+	scale: number;
 };
 
 export type BoardCanvasBounds = {
@@ -88,20 +89,16 @@ export const alignNeonBoardBone = (
 	const boardBone = spine.skeleton.findBone('board');
 	if (!boardBone) return;
 
-	// px per Spine design-unit (from SpineProvider width / skeleton width)
-	const spineScale = overlay.width / SPINE_NATIVE.width;
+	const spineScale = overlay.scale;
 
-	// SpineProvider uses anchor=0.5 → pivot = (overlayWidth/2, overlayHeight/2) in local Spine units.
-	// Pixi formula: canvas = overlayPos + (bonePos - pivot) * scale
-	// Spine Y is flipped: canvas_y = overlayY + (-bone_y - pivotY) * scale
-	// Inverse → bone position:
-	const pivotX = overlay.width / 2;
-	const pivotY = overlay.height / 2;
+	// anchor=0 (нет pivot): Spine (0,0) = (overlay.x, overlay.y) в canvas.
+	// Рендер: canvas_x = overlay.x + bone.x * spineScale
+	//         canvas_y = overlay.y - bone.y * spineScale   ← Spine Y-up инвертирован
+	// Обратная формула → bone position:
+	const localX = (board.centerX - overlay.x) / spineScale + (tuning.x ?? 0);
+	const localY = -(board.centerY - overlay.y) / spineScale + (tuning.y ?? 0);
 
-	const localX = (board.centerX - overlay.x) / spineScale + pivotX + (tuning.x ?? 0);
-	const localY = -(board.centerY - overlay.y) / spineScale - pivotY + (tuning.y ?? 0);
-
-	// Scale so NEON_BOARD_NATIVE fills the board area
+	// Scale: glow-меш (NEON_BOARD_NATIVE) должен занять board.width × board.height canvas-px
 	const scaleX = (board.width / spineScale / NEON_BOARD_NATIVE.width) * (tuning.scaleX ?? 1);
 	const scaleY = (board.height / spineScale / NEON_BOARD_NATIVE.height) * (tuning.scaleY ?? 1);
 

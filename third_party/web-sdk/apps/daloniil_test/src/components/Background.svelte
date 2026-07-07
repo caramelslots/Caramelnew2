@@ -60,8 +60,7 @@
 		skin="day"
 		x={neonOverlayProps.x}
 		y={neonOverlayProps.y}
-		width={neonOverlayProps.width}
-		height={neonOverlayProps.height}
+		scale={neonOverlayProps.scale}
 	/>
 	<Lantern
 		assetKey="lanternDay"
@@ -85,8 +84,7 @@
 		skin="night"
 		x={neonOverlayProps.x}
 		y={neonOverlayProps.y}
-		width={neonOverlayProps.width}
-		height={neonOverlayProps.height}
+		scale={neonOverlayProps.scale}
 	/>
 	<Lantern
 		assetKey="lanternNight"

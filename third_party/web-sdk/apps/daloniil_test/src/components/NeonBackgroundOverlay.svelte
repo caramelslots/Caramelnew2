@@ -10,20 +10,19 @@
 		boardBounds?: import('../game/neonBoardAlignment').BoardCanvasBounds;
 		x: number;
 		y: number;
-		width: number;
-		height: number;
+		scale: number;
 	};
 
 	const props: Props = $props();
 </script>
 
+<!-- anchor не передаётся (=0): Spine (0,0) = (x, y) в canvas-координатах.
+     Это даёт линейное масштабирование при ресайзе (без квадратичного drift). -->
 <SpineProvider
 	key="neonBackground"
 	x={props.x}
 	y={props.y}
-	width={props.width}
-	height={props.height}
-	anchor={0.5}
+	scale={props.scale}
 >
 	<NeonBackgroundSpineController
 		skin={props.skin}
@@ -31,7 +30,6 @@
 		boardBounds={props.boardBounds}
 		overlayX={props.x}
 		overlayY={props.y}
-		overlayWidth={props.width}
-		overlayHeight={props.height}
+		overlayScale={props.scale}
 	/>
 </SpineProvider>

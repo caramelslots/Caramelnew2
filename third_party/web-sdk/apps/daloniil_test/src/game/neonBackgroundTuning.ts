@@ -6,13 +6,20 @@ export type NeonElementTuning = {
 	scaleY?: number;
 };
 
-/** Глобальная подгонка всего neon-слоя относительно фона (1922×1074 art px). */
+/**
+ * Глобальная подгонка neon-слоя.
+ *
+ * Spine (0,0) размещается в центре canvas + offsetX/offsetY * spineScale.
+ * Единицы: Spine design-px (1 единица = 1 px при spineScale=1).
+ * +offsetX → вправо, +offsetY → вниз по экрану.
+ *
+ * Эти значения эквивалентны старым (offsetX:600, offsetY:400, centerX:6.13, centerY:31.19)
+ * при spineScale≈0.64 (canvas ~1024px) и дают правильный пропорциональный адаптив при ресайзе.
+ */
 export const NEON_OVERLAY_TUNING = {
-	offsetX: 600,
-	offsetY: 400,
+	offsetX: -13,
+	offsetY: 56,
 	scale: 1.2,
-	centerX: 6.13,
-	centerY: 31.19,
 };
 
 /**
@@ -20,12 +27,12 @@ export const NEON_OVERLAY_TUNING = {
  * Имена костей: signboard_left, signboard_right, text_wok, board, …
  */
 export const NEON_BONE_TUNING: Record<string, NeonElementTuning> = {
-	signboard_left: { x: 200, y: -20 },
+	signboard_left: { x: 50, y: 25 },
 	signboard_left_bottom: { x: 0, y: 0 },
 
-	signboard_right: { x: 0, y: 0 },
+	signboard_right: { x: -50, y: 25 },
 
-	text_wok: { x: 40, y: 15 },
+	text_wok: { x: 2.5, y: 35 },
 
 	text_fury: { x: 0, y: 0 },
 	text_mivina: { x: 0, y: 0 },
