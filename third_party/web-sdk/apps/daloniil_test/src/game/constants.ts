@@ -4,7 +4,7 @@ import type { RawSymbol, SymbolState } from './types';
 
 export const SYMBOL_SIZE = 100;
 
-/** Native symbol PNG edge length (symbolsNew/*.png). */
+/** Native symbol sprite edge length (symbolsNew/*.webp). */
 export const SYMBOL_TEXTURE_NATIVE_PX = 196;
 
 /** Cap mainLayout.scale so reel symbols are not upscaled past texture density. */

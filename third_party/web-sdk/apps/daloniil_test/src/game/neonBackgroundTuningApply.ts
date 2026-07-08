@@ -7,6 +7,15 @@ import {
 
 import type { NeonElementTuning } from './neonBackgroundTuning';
 
+/**
+ * SkeletonData — общий объект для всех инстансов с одним key="neonBackground".
+ * Модификации bone.data / attachment.vertices применяются к нему только ОДИН раз,
+ * иначе при каждом монтировании нового инстанса (day→night, base→FS) смещения
+ * накапливаются и позиционирование уезжает.
+ */
+const tunedBoneData = new WeakSet<object>();
+const tunedSlotData = new WeakSet<object>();
+
 const hasTuning = (tuning: NeonElementTuning) =>
 	Boolean(tuning.x || tuning.y || (tuning.scaleX && tuning.scaleX !== 1) || (tuning.scaleY && tuning.scaleY !== 1));
 
@@ -38,6 +47,10 @@ export const applyNeonBoneTuning = (
 	spine: Spine,
 	boneTuning: Record<string, NeonElementTuning>,
 ) => {
+	const skeletonData = spine.skeleton.data;
+	if (tunedBoneData.has(skeletonData)) return;
+	tunedBoneData.add(skeletonData);
+
 	for (const [boneName, tuning] of Object.entries(boneTuning)) {
 		if (!hasTuning(tuning)) continue;
 
@@ -55,6 +68,10 @@ export const applyNeonSlotTuning = (
 	spine: Spine,
 	slotTuning: Record<string, NeonElementTuning>,
 ) => {
+	const skeletonData = spine.skeleton.data;
+	if (tunedSlotData.has(skeletonData)) return;
+	tunedSlotData.add(skeletonData);
+
 	for (const [slotName, tuning] of Object.entries(slotTuning)) {
 		if (!hasTuning(tuning)) continue;
 

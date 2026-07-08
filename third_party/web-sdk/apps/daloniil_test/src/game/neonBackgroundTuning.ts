@@ -23,6 +23,39 @@ export const NEON_OVERLAY_TUNING = {
 };
 
 /**
+ * Масштаб text_wok для каждого типа устройства.
+ * Portrait розбитий на три розміри — portrait-large/medium/small (Mobile L/M/S).
+ */
+export const TEXT_WOK_SCALE_BY_LAYOUT: Record<string, number> = {
+	desktop: 1.0,
+	tablet: 1.0,
+	landscape: 1.0,
+	'portrait-large': 0.7,
+	'portrait-medium': 0.7,
+	'portrait-small': 0.7,
+};
+
+/**
+ * Дополнительное смещение text_wok (Spine design-px) для каждого типа устройства.
+ * Применяется каждый кадр ПОВЕРХ базовой позиции из NEON_BONE_TUNING и анимации.
+ * +x → вправо, +y → вниз.
+ */
+/**
+ * Portrait розбитий на три розміри (по короткій стороні екрану):
+ *   portrait-large  > 424px   (Mobile L, напр. iPhone 14 Plus 430px)
+ *   portrait-medium 375–424px (Mobile M, напр. iPhone 14 375px)
+ *   portrait-small  ≤ 374px   (Mobile S, напр. iPhone SE 320px)
+ */
+export const TEXT_WOK_OFFSET_BY_LAYOUT: Record<string, { x: number; y: number }> = {
+	desktop: { x: 0, y: 0 },
+	tablet: { x: 0, y: 0 },
+	landscape: { x: 0, y: 0 },
+	'portrait-large': { x: 40, y: 0 },
+	'portrait-medium': { x: 40, y: 25 },
+	'portrait-small': { x: 40, y: 15 },
+};
+
+/**
  * Сдвиг целой группы (кость). Двигает все слоты на этой кости.
  * Имена костей: signboard_left, signboard_right, text_wok, board, …
  */
@@ -32,7 +65,7 @@ export const NEON_BONE_TUNING: Record<string, NeonElementTuning> = {
 
 	signboard_right: { x: -50, y: 25 },
 
-	text_wok: { x: 2.5, y: 35 },
+	text_wok: { x: 5, y: 100 },
 
 	text_fury: { x: 0, y: 0 },
 	text_mivina: { x: 0, y: 0 },

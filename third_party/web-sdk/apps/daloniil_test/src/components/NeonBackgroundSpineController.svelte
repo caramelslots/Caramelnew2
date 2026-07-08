@@ -4,9 +4,11 @@
 
 	import { SpineTrack, getContextSpine } from 'pixi-svelte';
 
-	import { NEON_BONE_TUNING, NEON_BOARD_ALIGNMENT, NEON_FOREGROUND_BONE_SET, NEON_SLOT_TUNING } from '../game/neonBackgroundTuning';
+	import { NEON_BONE_TUNING, NEON_BOARD_ALIGNMENT, NEON_FOREGROUND_BONE_SET, NEON_SLOT_TUNING, TEXT_WOK_SCALE_BY_LAYOUT, TEXT_WOK_OFFSET_BY_LAYOUT } from '../game/neonBackgroundTuning';
 	import { alignNeonBoardBone, type BoardCanvasBounds } from '../game/neonBoardAlignment';
 	import { applyNeonBoneTuning, applyNeonSlotTuning } from '../game/neonBackgroundTuningApply';
+	import { getContext } from '../game/context';
+	import { getPortraitMobileTier, getPortraitDeviceWidth } from '../game/constants';
 
 	type Props = {
 		skin: 'day' | 'night';
@@ -18,6 +20,7 @@
 	};
 
 	const { skin, layer, boardBounds, overlayX, overlayY, overlayScale }: Props = $props();
+	const context = getContext();
 	const spine = getContextSpine();
 
 	// All board_glow_* slots use additive blending. On the light parchment board background
@@ -94,6 +97,26 @@
 			previous?.(...args);
 			hideStaticSlots();
 			filterSlotsByLayer();
+
+			if (layer === 'front') {
+				const textWokBone = spine.skeleton.findBone('text_wok');
+				if (textWokBone) {
+					const layoutType = context.stateLayoutDerived.layoutType();
+					const layoutKey =
+						layoutType === 'portrait'
+							? `portrait-${getPortraitMobileTier(context.stateLayoutDerived.canvasSizeType(), getPortraitDeviceWidth(context.stateLayoutDerived.canvasSizes()))}`
+							: layoutType;
+					const s = TEXT_WOK_SCALE_BY_LAYOUT[layoutKey] ?? 1;
+					textWokBone.scaleX = s;
+					textWokBone.scaleY = s;
+					const offset = TEXT_WOK_OFFSET_BY_LAYOUT[layoutKey];
+					if (offset) {
+						textWokBone.x = textWokBone.data.x + offset.x;
+						textWokBone.y = textWokBone.data.y + offset.y;
+					}
+				}
+			}
+
 			if (layer === 'front' && boardBounds) {
 				alignNeonBoardBone(
 					spine,

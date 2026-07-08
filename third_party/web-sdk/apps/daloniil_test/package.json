@@ -27,6 +27,8 @@
 		"eslint-config-custom": "workspace:*"
 	},
 	"dependencies": {
+		"@barvynkoa/particle-emitter": "0.0.1",
+		"@esotericsoftware/spine-pixi-v8": "4.2.74",
 		"@esotericsoftware/spine-player": "4.2.74",
 		"@lingui/core": "5.2.0",
 		"@sveltejs/kit": "2.17.3",

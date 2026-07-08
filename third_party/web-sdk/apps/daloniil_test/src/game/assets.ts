@@ -170,56 +170,56 @@ export default {
 			scale: 1,
 		},
 	},
-	// Static sprites for resting symbols. Each PNG comes straight from the
-	// designer handoff (`designer_assets/Symbols/images/`) — no spritesheet
+	// Static sprites for resting symbols. Each WebP is cut straight from the
+	// packed atlas by `scripts/extractSymbolSprites.py` — no spritesheet
 	// because the per-symbol sizes differ (H/L 196², Mystery 256², W/B masked).
 	H1Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/High_1.png'),
+		src: assetUrl('assets/sprites/symbolsNew/High_1.webp'),
 	},
 	H2Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/High_2.png'),
+		src: assetUrl('assets/sprites/symbolsNew/High_2.webp'),
 	},
 	H3Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/High_3.png'),
+		src: assetUrl('assets/sprites/symbolsNew/High_3.webp'),
 	},
 	H4Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/High_4.png'),
+		src: assetUrl('assets/sprites/symbolsNew/High_4.webp'),
 	},
 	L1Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Low_1.png'),
+		src: assetUrl('assets/sprites/symbolsNew/Low_1.webp'),
 	},
 	L2Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Low_2.png'),
+		src: assetUrl('assets/sprites/symbolsNew/Low_2.webp'),
 	},
 	L3Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Low_3.png'),
+		src: assetUrl('assets/sprites/symbolsNew/Low_3.webp'),
 	},
 	L4Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Low_4.png'),
+		src: assetUrl('assets/sprites/symbolsNew/Low_4.webp'),
 	},
 	BImg: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Special_1.png'),
+		src: assetUrl('assets/sprites/symbolsNew/Special_1.webp'),
 	},
 	WImg: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Special_2.png'),
+		src: assetUrl('assets/sprites/symbolsNew/Special_2.webp'),
 	},
 	MImg: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Mystery_sign.png'),
+		src: assetUrl('assets/sprites/symbolsNew/Mystery_sign.webp'),
 	},
 	MBgImg: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Mystery_bg.png'),
+		src: assetUrl('assets/sprites/symbolsNew/Mystery_bg.webp'),
 	},
 	anticipation: {
 		type: 'spine',
