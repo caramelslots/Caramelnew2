@@ -187,16 +187,14 @@
 
 <style lang="scss">
 	@import url('https://fonts.googleapis.com/css2?family=Philosopher:wght@700&family=Reggae+One&display=swap');
+	@import './buyBonusPanelDimensions.scss';
 
 	.confirm-panel {
-		--panel-width: min(700px, 90vw);
-		--panel-height-scale: 1.32;
+		@include buy-bonus-panel-dimensions();
 		--bb-card-price-fs: calc(var(--panel-width) * 0.024);
 		--bb-confirm-action-fs: calc(var(--panel-width) * 0.020);
 		font-family: v-bind(HUD_BALANCE_BET_FONT_FAMILY);
 		position: relative;
-		width: var(--panel-width);
-		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 98vh);
 		pointer-events: auto;
 		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
 	}
@@ -728,8 +726,6 @@
 
 	/* Portrait */
 	.confirm-panel.portrait:not(.popout-l):not(.popout-s) {
-		--panel-height-scale: 1.32;
-		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
 		--bb-card-price-fs: calc(var(--panel-width) * 0.036);
 		--bb-confirm-action-fs: calc(var(--panel-width) * 0.028);
 
@@ -806,9 +802,6 @@
 
 	/* Popout L */
 	.confirm-panel.popout-l {
-		--panel-width: min(425px, 86vw);
-		--panel-height-scale: 1.28;
-		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
 		filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.6));
 		--bb-card-price-fs: calc(var(--panel-width) * 0.028);
 		--bb-confirm-action-fs: calc(var(--panel-width) * 0.024);
@@ -862,9 +855,6 @@
 
 	/* Popout S */
 	.confirm-panel.popout-s {
-		--panel-width: min(240px, 60vw);
-		--panel-height-scale: 1.28;
-		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
 		filter: drop-shadow(
 			0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.075) rgba(0, 0, 0, 0.55)
 		);
@@ -920,17 +910,8 @@
 		}
 	}
 
-	@media (max-width: 1024px) and (min-width: 601px) {
-		.confirm-panel:not(.portrait):not(.popout-l):not(.popout-s) {
-			--panel-width: min(630px, 90vw);
-		}
-	}
-
 	@media (max-width: 600px) {
 		.confirm-panel.portrait:not(.popout-l):not(.popout-s) {
-			--panel-height-scale: 1.5;
-			height: min(calc(var(--panel-width) * var(--panel-height-scale)), 98vh);
-
 			.confirm-card-section {
 				height: 49%;
 			}

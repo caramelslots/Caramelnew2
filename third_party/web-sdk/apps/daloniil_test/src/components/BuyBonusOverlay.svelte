@@ -247,17 +247,15 @@
 
 <style lang="scss">
 	@import url('https://fonts.googleapis.com/css2?family=Philosopher:wght@700&family=Reggae+One&display=swap');
+	@import './buyBonusPanelDimensions.scss';
 
 	.buy-bonus-panel {
-		--panel-width: min(700px, 90vw);
-		--panel-height-scale: 1.32;
+		@include buy-bonus-panel-dimensions();
 		--bb-card-price-fs: calc(var(--panel-width) * 0.024);
 		--bb-buy-btn-fs: calc(var(--panel-width) * 0.02);
 		font-family: v-bind(HUD_BALANCE_BET_FONT_FAMILY);
 		position: relative;
 		z-index: 10;
-		width: var(--panel-width);
-		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 98vh);
 		pointer-events: auto;
 		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
 	}
@@ -1098,8 +1096,6 @@
 
 	/* Portrait mobile */
 	.buy-bonus-panel.portrait:not(.popout-l):not(.popout-s) {
-		--panel-height-scale: 1.32;
-		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
 		--bb-card-price-fs: calc(var(--panel-width) * 0.036);
 		--bb-buy-btn-fs: calc(var(--panel-width) * 0.032);
 
@@ -1266,9 +1262,6 @@
 
 	/* Stake popout L — 800×450 (laptop embed) */
 	.buy-bonus-panel.popout-l {
-		--panel-width: min(425px, 86vw);
-		--panel-height-scale: 1.28;
-		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
 		filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.6));
 		--bb-card-price-fs: calc(var(--panel-width) * 0.028);
 		--bb-buy-btn-fs: calc(var(--panel-width) * 0.024);
@@ -1409,9 +1402,6 @@
 
 	/* Stake popout S — 400×225 (те же пропорции что popout L, меньший --panel-width) */
 	.buy-bonus-panel.popout-s {
-		--panel-width: min(240px, 60vw);
-		--panel-height-scale: 1.28;
-		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
 		filter: drop-shadow(
 			0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.075) rgba(0, 0, 0, 0.55)
 		);
@@ -1555,8 +1545,6 @@
 	/* Laptop 1024×576 */
 	@media (max-width: 1024px) and (min-width: 601px) {
 		.buy-bonus-panel:not(.popout-l):not(.popout-s):not(.portrait) {
-			--panel-width: min(630px, 90vw);
-
 			.card-super .card-desc.card-desc-stacked {
 				--bb-desc-count-fs: calc(var(--panel-width) * 0.07);
 				--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.027);
@@ -1568,22 +1556,6 @@
 				--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.027);
 				--bb-desc-trigger-fs: calc(var(--panel-width) * 0.017);
 			}
-		}
-	}
-
-	@media (max-width: 600px) {
-		.buy-bonus-panel:not(.popout-l):not(.popout-s) {
-			--panel-width: min(480px, 94vw);
-			--panel-height-scale: 1.36;
-			height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
-		}
-	}
-
-	@media (max-height: 500px) {
-		.buy-bonus-panel:not(.popout-l):not(.popout-s):not(.portrait) {
-			--panel-width: min(360px, 58vw);
-			--panel-height-scale: 1.22;
-			height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
 		}
 	}
 </style>

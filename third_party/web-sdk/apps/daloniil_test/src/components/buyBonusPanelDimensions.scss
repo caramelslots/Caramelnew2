@@ -1,0 +1,45 @@
+@mixin buy-bonus-panel-dimensions() {
+	--panel-width: min(700px, 90vw);
+	--panel-height-scale: 1.32;
+	width: var(--panel-width);
+	height: min(calc(var(--panel-width) * var(--panel-height-scale)), 98vh);
+
+	&.portrait:not(.popout-l):not(.popout-s) {
+		--panel-height-scale: 1.32;
+		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
+	}
+
+	&.popout-l {
+		--panel-width: min(425px, 86vw);
+		--panel-height-scale: 1.28;
+		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
+	}
+
+	&.popout-s {
+		--panel-width: min(240px, 60vw);
+		--panel-height-scale: 1.28;
+		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
+	}
+
+	@media (max-width: 1024px) and (min-width: 601px) {
+		&:not(.portrait):not(.popout-l):not(.popout-s) {
+			--panel-width: min(630px, 90vw);
+		}
+	}
+
+	@media (max-width: 600px) {
+		&:not(.popout-l):not(.popout-s) {
+			--panel-width: min(480px, 94vw);
+			--panel-height-scale: 1.36;
+			height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
+		}
+	}
+
+	@media (max-height: 500px) {
+		&:not(.popout-l):not(.popout-s):not(.portrait) {
+			--panel-width: min(360px, 58vw);
+			--panel-height-scale: 1.22;
+			height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
+		}
+	}
+}
