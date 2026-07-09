@@ -6,15 +6,32 @@ import { requestBet, requestEndRound } from 'rgs-requests';
 
 import type { BaseBet } from './types';
 
+const isActiveRoundError = (error: unknown) => {
+	if (!error || typeof error !== 'object') return false;
+	const { error: code, message } = error as { error?: string; message?: string };
+	return (
+		code === 'ERR_VAL' &&
+		typeof message === 'string' &&
+		message.toLowerCase().includes('active round')
+	);
+};
+
 const handleRequestBet = async ({ onError }: { onError: () => void }) => {
 	try {
-		const data = await requestBet({
+		const requestBetArgs = {
 			rgsUrl: stateUrlDerived.rgsUrl(),
 			sessionID: stateUrlDerived.sessionID(),
 			currency: stateBet.currency,
 			mode: stateBet.activeBetModeKey,
 			amount: stateBet.betAmount,
-		});
+		};
+
+		let data = await requestBet(requestBetArgs);
+
+		if (data?.error && isActiveRoundError(data)) {
+			await handleRequestEndRound();
+			data = await requestBet(requestBetArgs);
+		}
 
 		if (data?.error) {
 			throw data;
@@ -93,7 +110,12 @@ function createPrimaryMachines<TBet extends BaseBet>(options: Options<TBet>) {
 	const BET_TYPE_METHODS_MAP = {
 		noWin: {
 			newGame: async () => undefined,
-			endGame: async () => undefined,
+			endGame: async () => {
+				const data = await handleRequestEndRound();
+				if (data?.balance) {
+					handleUpdateBalance({ balanceAmountFromApi: data.balance.amount });
+				}
+			},
 		},
 		singleRoundWin: {
 			newGame: async () => {
@@ -125,7 +147,7 @@ function createPrimaryMachines<TBet extends BaseBet>(options: Options<TBet>) {
 		const isBonusGame = checkIsBonusGame(bet);
 
 		if (bet.active === true) {
-			if (isBonusGame) return 'bonusWin';
+			return 'bonusWin';
 		}
 
 		if (bet.payoutMultiplier && bet.payoutMultiplier > 0) {

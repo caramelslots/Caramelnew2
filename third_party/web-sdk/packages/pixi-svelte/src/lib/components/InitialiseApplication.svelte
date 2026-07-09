@@ -6,7 +6,16 @@
 	import { getContextApp } from '../context.svelte';
 	import { preloadFont } from '../utils.svelte';
 
-	type Props = { children: Snippet };
+	type Props = {
+		children: Snippet;
+		// Optional upper bound on the renderer resolution (device pixel ratio).
+		// Capping at e.g. 2 avoids rendering 3×+ pixels on high-DPR phones/Retina,
+		// which is a major fill-rate cost. Undefined = no cap (previous behavior).
+		maxResolution?: number;
+		antialias?: boolean;
+		/** On phone portrait: cap resolution at 2.5 and disable MSAA. */
+		tuneForMobilePortrait?: boolean;
+	};
 
 	const props: Props = $props();
 	const context = getContextApp();
@@ -18,17 +27,27 @@
 		PIXI.Assets.reset();
 
 		await preloadFont();
+		const dpr = devicePixelRatio.current ?? 1;
+		const isPhonePortrait =
+			typeof window !== 'undefined' &&
+			window.innerWidth <= 480 &&
+			window.innerHeight > window.innerWidth;
+		const mobileTuned = props.tuneForMobilePortrait && isPhonePortrait;
+		const maxRes =
+			mobileTuned && props.maxResolution ? Math.min(props.maxResolution, 2.5) : props.maxResolution;
+		const resolution = maxRes ? Math.min(dpr, maxRes) : dpr;
+		const antialias = props.antialias ?? !mobileTuned;
 		context.stateApp.pixiApplication = new PIXI.Application<PIXI.Renderer<HTMLCanvasElement>>();
 		await context.stateApp.pixiApplication.init({
 			autoDensity: true,
 			backgroundAlpha: 0,
 			hello: true,
 			multiView: false,
-			antialias: true,
+			antialias,
 			clearBeforeRender: true,
 			preference: 'webgpu',
 			powerPreference: 'high-performance',
-			resolution: devicePixelRatio.current,
+			resolution,
 			resizeTo: window,
 		});
 

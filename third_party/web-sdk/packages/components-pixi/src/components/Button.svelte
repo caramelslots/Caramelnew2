@@ -48,6 +48,16 @@
 	let hovered = $state(false);
 	let pressed = $state(false);
 
+	const PRESS_SCALE = 0.97;
+	const PRESS_ALPHA = 0.85;
+	const isPressed = $derived(pressed && !disabled);
+	const pressScale = $derived(isPressed ? PRESS_SCALE : 1);
+	const pressAlpha = $derived(isPressed ? PRESS_ALPHA : 1);
+
+	const releasePress = () => {
+		pressed = false;
+	};
+
 	$effect(() => {
 		if (disabled) {
 			hovered = false;
@@ -61,6 +71,8 @@
 	eventMode="static"
 	cursor={disabled ? 'not-allowed' : 'pointer'}
 	pivot={anchorToPivot({ sizes, anchor })}
+	scale={pressScale}
+	alpha={pressAlpha}
 	onpointerover={() => {
 		if (disabled) return;
 		hovered = true;
@@ -68,6 +80,7 @@
 	onpointerout={() => {
 		if (disabled) return;
 		hovered = false;
+		releasePress();
 	}}
 	onpointerdown={() => {
 		if (disabled) return;
@@ -75,8 +88,12 @@
 	}}
 	onpointerup={() => {
 		if (disabled) return;
-		pressed = false;
+		releasePress();
 		onpress();
+	}}
+	onpointerupoutside={() => {
+		if (disabled) return;
+		releasePress();
 	}}
 >
 	{#if debug}

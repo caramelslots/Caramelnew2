@@ -31,6 +31,8 @@ export const createLayout = (layoutOptions: {
 		portrait: number;
 	};
 	mainSizesMap: MainSizesMap;
+	/** Optional upper bound on mainLayout.scale — prevents upscaling raster art past native texel density. */
+	maxScale?: number;
 }) => {
 	const canvasSizes = () => ({ width: innerWidth.current ?? 1, height: innerHeight.current ?? 1 }); // because of resizeTo: window
 	const canvasRatio = () => getRatio(canvasSizes());
@@ -62,7 +64,11 @@ export const createLayout = (layoutOptions: {
 		const mainSizes = mainSizesMap[layoutType()];
 		const widthScale = canvasSizes().width / mainSizes.width;
 		const heightScale = canvasSizes().height / mainSizes.height;
-		const scale = Math.min(widthScale, heightScale);
+		const rawScale = Math.min(widthScale, heightScale);
+		const scale =
+			layoutOptions.maxScale !== undefined
+				? Math.min(rawScale, layoutOptions.maxScale)
+				: rawScale;
 
 		return {
 			x,

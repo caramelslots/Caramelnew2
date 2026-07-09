@@ -10,6 +10,7 @@
 		children: Snippet;
 		zIndex: number;
 		persistent?: boolean;
+		closeIconUrl?: string;
 		onclose: () => void;
 	};
 
@@ -57,7 +58,18 @@
 
 		{#if !props.persistent}
 			<div class="close-button-wrap" style="--zIndex: {zIndexInternal.closeButton}">
-				<button class="close-button" data-test="close-button" onclick={closeModal}>×</button>
+				<button
+					class="close-button"
+					class:close-button--icon={Boolean(props.closeIconUrl)}
+					data-test="close-button"
+					onclick={closeModal}
+				>
+					{#if props.closeIconUrl}
+						<img class="close-icon" src={props.closeIconUrl} alt="" draggable="false" />
+					{:else}
+						×
+					{/if}
+				</button>
 			</div>
 		{/if}
 		{@render props.children()}
@@ -130,5 +142,35 @@
 		line-height: 0px; /* to remove the button style influence */
 		width: 3rem;
 		height: 3rem;
+		padding: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition:
+			transform 0.12s,
+			filter 0.12s;
+
+		&:hover {
+			filter: brightness(1.12);
+			transform: scale(1.06);
+		}
+
+		&:active {
+			transform: scale(0.96);
+		}
+	}
+
+	.close-button--icon {
+		width: 3.25rem;
+		height: 3.25rem;
+	}
+
+	.close-icon {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		transform: rotate(45deg);
+		pointer-events: none;
+		user-select: none;
 	}
 </style>

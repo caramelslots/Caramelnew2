@@ -88,19 +88,33 @@ export function propsSyncEffect<TProps extends object, TTarget>({
 	target?: TTarget | (() => TTarget);
 	ignore?: (keyof TProps)[];
 }) {
-	$effect(() => {
-		// The whole thing is wrapped inside an $effect
-		// and because of ”props[key]“，it will react with every single props updated.
-		let targetInstance = target instanceof Function ? target() : target;
-		if (targetInstance) {
-			(Object.keys(props) as (keyof TProps)[])
-				.filter((key) => (ignore ? !ignore.includes(key) : true))
-				.forEach((key) => {
-					if (props[key] !== undefined) {
-						// @ts-ignore
-						targetInstance[key] = props[key];
-					}
-				});
-		}
-	});
+	// Enumerate the synced keys once. The prop shape of a pixi-svelte component
+	// is static for the lifetime of the instance, so we avoid calling
+	// Object.keys(props) on every effect run — that triggers the $state proxy's
+	// ownKeys/getOwnPropertyDescriptor traps each frame for every object and shows
+	// up as a real cost during spins.
+	const ignoreSet = ignore ? new Set<keyof TProps>(ignore) : undefined;
+	const keys = (Object.keys(props) as (keyof TProps)[]).filter(
+		(key) => (ignoreSet ? !ignoreSet.has(key) : true),
+	);
+
+	// One effect per prop instead of a single effect reading every prop.
+	// A combined effect re-runs (and re-writes all props) whenever ANY prop
+	// changes — so during a spin, where only `y` updates each frame, it would
+	// still re-read and re-write x/scale/alpha/visible for every symbol every
+	// frame. Splitting per prop means only the prop that actually changed
+	// re-runs, cutting per-frame work for animated objects roughly N-fold.
+	// Keys are static (see above), so the number of effects is fixed at init.
+	for (const key of keys) {
+		$effect(() => {
+			const targetInstance = target instanceof Function ? target() : target;
+			// Reading props[key] here is what subscribes this effect to that
+			// single prop.
+			const value = props[key];
+			if (targetInstance && value !== undefined) {
+				// @ts-ignore
+				targetInstance[key] = value;
+			}
+		});
+	}
 }

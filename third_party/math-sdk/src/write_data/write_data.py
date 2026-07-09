@@ -247,12 +247,13 @@ def output_lookup_and_force_files(
             with open(filename, "r", encoding="UTF-8") as infile:
                 outfile.write(infile.read())
 
-    # Write _0 file if it does not exist
-    if not (os.path.exists(gamestate.output_files.get_optimized_lookup_name(betmode))):
-        shutil.copy(
-            gamestate.output_files.get_final_lookup_name(betmode),
-            gamestate.output_files.get_optimized_lookup_name(betmode),
-        )
+    # Always refresh publish LUT from the latest simulation merge. Stale _0.csv
+    # files cause Stake RGS publish failure: "lookup table CSV payouts do not
+    # match payoutMultiplier value in event file".
+    shutil.copy(
+        gamestate.output_files.get_final_lookup_name(betmode),
+        gamestate.output_files.get_optimized_lookup_name(betmode),
+    )
     with open(
         gamestate.output_files.get_final_segmented_name(betmode),
         "w",

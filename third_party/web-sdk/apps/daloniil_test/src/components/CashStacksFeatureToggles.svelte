@@ -1,0 +1,351 @@
+<!--
+	Общие строки Bonus Boost / Special Spins с тумблерами (Special Spins скрыт в UI по умолчанию).
+	Используются в FeaturesAutoSpinOverlay и BuyBonusOverlay — одно состояние
+	через stateGame.activeFeature (см. game/activeFeature.ts).
+-->
+<script lang="ts">
+	import { stateBet } from 'state-shared';
+	import { numberToCurrencyString } from 'utils-shared/amount';
+
+	import { canAffordBonusBoost } from '../game/buyBonusBalance';
+	import { getContext } from '../game/context';
+	import {
+		BONUS_BOOST_COST_MULT,
+		SPECIAL_SPINS_COST_MULT,
+		toggleActiveFeature,
+		type ActiveFeature,
+	} from '../game/activeFeature';
+	import { stateGame } from '../game/stateGame.svelte';
+	import { FEATURE_TOGGLE_ASSETS } from '../game/uiHtmlAssetManifest';
+
+	type Props = {
+		/** Заголовок секции «Функции» (только в меню автоигры). */
+		showSectionTitle?: boolean;
+		/** Какие фичи показывать (по умолчанию обе). */
+		features?: ActiveFeature[];
+		/** Компактная строка: название + тумблер, без cost. */
+		compact?: boolean;
+		/** Подпись как на портретной панели (BONUS_BOOST_PANEL_DESC). */
+		panelDesc?: boolean;
+		/** Фон designer_assets/bonus_switch.png (панель под Buy Bonus). */
+		usePanelBg?: boolean;
+		/** Inline font-size для portrait buy panel (перебивает scoped CSS). */
+		panelNameFontSize?: string;
+		panelCostFontSize?: string;
+		/** Блокирует переключение во время спина (как buy bonus). */
+		disabled?: boolean;
+		/** Не менять фон при hover (карточки в BuyBonusOverlay). */
+		noHoverBg?: boolean;
+		/** Иконка кота слева (меню buy bonus / wok frame). */
+		showMenuCatIcon?: boolean;
+	};
+
+	const {
+		showSectionTitle = false,
+		features = ['bonus_boost'],
+		compact = false,
+		panelDesc = false,
+		usePanelBg = false,
+		panelNameFontSize,
+		panelCostFontSize,
+		disabled = false,
+		noHoverBg = false,
+		showMenuCatIcon = false,
+	}: Props = $props();
+
+	const bonusSwitchBgUrl = FEATURE_TOGGLE_ASSETS.bonusSwitchBg;
+	const menuCatIconUrl = FEATURE_TOGGLE_ASSETS.menuCatIcon;
+
+	const context = getContext();
+
+	const bonusBoostActive = $derived(stateGame.activeFeature === 'bonus_boost');
+	const bonusBoostDisabled = $derived(
+		disabled || (!bonusBoostActive && !canAffordBonusBoost()),
+	);
+
+	const bonusBoostCost = $derived(
+		numberToCurrencyString(stateBet.betAmount * BONUS_BOOST_COST_MULT),
+	);
+	const specialSpinsCost = $derived(
+		numberToCurrencyString(stateBet.betAmount * SPECIAL_SPINS_COST_MULT),
+	);
+
+	const onToggle = (feature: ActiveFeature) => {
+		if (feature === 'bonus_boost' && bonusBoostDisabled) return;
+		if (disabled) return;
+		toggleActiveFeature(feature);
+		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+	};
+</script>
+
+{#if showSectionTitle}
+	<div class="section-title">{context.i18nDerived.autoplayFeatures()}</div>
+{/if}
+
+{#if features.includes('bonus_boost')}
+	<button
+		type="button"
+		class="feature-row bonus-boost"
+		class:compact
+		class:panel-bg={usePanelBg}
+		class:panel-sprite-btn={usePanelBg}
+		class:no-hover-bg={noHoverBg}
+		class:menu-cat={showMenuCatIcon}
+		class:active={bonusBoostActive}
+		disabled={bonusBoostDisabled}
+		onclick={() => onToggle('bonus_boost')}
+		data-test="feature-bonus-boost"
+		style:background-image={usePanelBg ? `url("${bonusSwitchBgUrl}")` : undefined}
+	>
+		{#if showMenuCatIcon}
+			<img class="feature-cat-icon" src={menuCatIconUrl} alt="" draggable="false" />
+		{/if}
+		<div class="feature-info">
+			<div
+				class="feature-name"
+				style:font-size={panelNameFontSize}
+			>
+				{panelDesc
+					? context.i18nDerived.bonusBoostPanelDesc()
+					: context.i18nDerived.bonusBoost()}
+			</div>
+			{#if !compact}
+				<div
+					class="feature-cost"
+					style:font-size={panelCostFontSize}
+				>
+					{context.i18nDerived.featurePerSpinCost(bonusBoostCost)}
+				</div>
+			{/if}
+		</div>
+		<div class="feature-toggle" class:on={bonusBoostActive}>
+			<span class="knob"></span>
+		</div>
+	</button>
+{/if}
+
+{#if features.includes('special_spins')}
+	<button
+		type="button"
+		class="feature-row"
+		class:compact
+		class:no-hover-bg={noHoverBg}
+		class:active={stateGame.activeFeature === 'special_spins'}
+		{disabled}
+		onclick={() => onToggle('special_spins')}
+		data-test="feature-special-spins"
+	>
+		<div class="feature-info">
+			<div class="feature-name">{context.i18nDerived.specialSpins()}</div>
+			{#if !compact}
+				<div class="feature-cost">
+					{context.i18nDerived.featurePerSpinCost(specialSpinsCost)}
+				</div>
+			{/if}
+		</div>
+		<div class="feature-toggle" class:on={stateGame.activeFeature === 'special_spins'}>
+			<span class="knob"></span>
+		</div>
+	</button>
+{/if}
+
+<style lang="scss">
+	.section-title {
+		font-size: 1.1rem;
+		font-weight: 800;
+		color: #f0c674;
+		text-align: center;
+		letter-spacing: 0.01em;
+		margin-bottom: 0.15rem;
+	}
+
+	.feature-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.6rem;
+		width: 100%;
+		padding: 0.55rem 0.7rem;
+		background: rgba(0, 0, 0, 0.28);
+		border: 1px solid rgba(255, 255, 255, 0.04);
+		border-radius: 10px;
+		cursor: pointer;
+		text-align: left;
+		color: inherit;
+		font-family: inherit;
+		transition: background-color 0.15s, border-color 0.15s, transform 0.1s, filter 0.1s;
+
+		&:hover:not(:disabled):not(.panel-sprite-btn):not(.no-hover-bg) {
+			background-color: rgba(0, 0, 0, 0.36);
+		}
+
+		&:not(.panel-sprite-btn):active:not(:disabled) {
+			transform: scale(0.98);
+			filter: brightness(0.9);
+		}
+
+		&:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+			pointer-events: none;
+		}
+
+		&.active {
+			border-color: rgba(76, 200, 120, 0.45);
+		}
+
+		&.compact {
+			padding: 0.5rem 0.6rem;
+		}
+	}
+
+	.feature-row.compact .feature-name {
+		font-size: 0.78rem;
+		font-weight: 600;
+		line-height: 1.25;
+	}
+
+	.feature-row.bonus-boost:not(.panel-bg):hover:not(:disabled):not(.no-hover-bg) {
+		background-color: rgba(0, 0, 0, 0.28);
+		filter: none;
+	}
+
+	.feature-row.bonus-boost:not(.panel-sprite-btn):active:not(:disabled) {
+		transform: scale(0.97);
+		filter: brightness(0.9);
+	}
+
+	.feature-row.panel-bg.panel-sprite-btn {
+		box-sizing: border-box;
+		transition: filter 0.15s, opacity 0.15s, transform 0.1s;
+
+		&:hover:not(:disabled):not(:active) {
+			background-color: transparent;
+			filter: none;
+			transform: none;
+		}
+
+		&:active:not(:disabled) {
+			transform: scale(0.97);
+			filter: brightness(0.9);
+		}
+	}
+
+	.feature-row.panel-bg {
+		aspect-ratio: 1233 / 613;
+		padding: 0 12%;
+		background-color: transparent;
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: 100% 100%;
+		border: 0;
+		border-radius: 0;
+
+		&:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+			pointer-events: none;
+			filter: none;
+		}
+
+		&.active {
+			border-color: transparent;
+		}
+
+		&.compact {
+			padding: 0 8%;
+		}
+	}
+
+	.feature-row.panel-bg .feature-name {
+		font-weight: 800;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		text-shadow:
+			0 0 10px rgba(80, 200, 255, 0.75),
+			0 2px 6px rgba(0, 0, 0, 0.85);
+	}
+
+	.feature-row.panel-bg.compact .feature-name {
+		font-size: 0.48rem;
+		line-height: 1.1;
+		letter-spacing: 0.02em;
+	}
+
+	.feature-row.panel-bg .feature-cost {
+		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+	}
+
+	.feature-row.menu-cat {
+		padding: 0;
+		gap: 0;
+	}
+
+	.feature-cat-icon {
+		display: block;
+		flex: 0 0 auto;
+		object-fit: contain;
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.feature-info {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.feature-row:not(.panel-bg) .feature-name {
+		font-size: 0.9rem;
+		font-weight: 700;
+		color: #fff;
+	}
+
+	.feature-row:not(.panel-bg) .feature-cost {
+		font-size: 0.72rem;
+		font-weight: 700;
+		color: #4cd964;
+		letter-spacing: 0.03em;
+	}
+
+	.feature-row.panel-bg .feature-name,
+	.feature-row.panel-bg .feature-cost {
+		font-weight: 700;
+		color: #fff;
+	}
+
+	.feature-row.panel-bg .feature-cost {
+		color: #4cd964;
+		letter-spacing: 0.03em;
+	}
+
+	.feature-toggle {
+		flex: 0 0 auto;
+		width: 38px;
+		height: 22px;
+		background: rgba(0, 0, 0, 0.5);
+		border-radius: 999px;
+		position: relative;
+		transition: background 0.2s;
+	}
+
+	.feature-toggle.on { background: #4cd964; }
+
+	.knob {
+		position: absolute;
+		top: 2px;
+		left: 2px;
+		width: 18px;
+		height: 18px;
+		background: #6e6e6e;
+		border-radius: 50%;
+		transition: left 0.2s, background 0.2s;
+	}
+
+	.feature-toggle.on .knob {
+		left: 18px;
+		background: #fff;
+	}
+</style>

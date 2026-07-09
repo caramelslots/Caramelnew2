@@ -1,0 +1,22 @@
+skeleton.webp
+size:2048,1024
+filter:Linear,Linear
+Cookies
+bounds:476,2,411,334
+Cookies_l
+bounds:1617,277,261,402
+Cookies_r
+bounds:1332,280,283,399
+crmbs1
+bounds:1018,284,395,312
+rotate:90
+particles
+bounds:504,338,512,341
+placeholder
+bounds:1880,678,1,1
+plaque (4)
+bounds:2,110,382,185
+ray1
+bounds:2,297,500,382
+smoke
+bounds:889,29,254,253

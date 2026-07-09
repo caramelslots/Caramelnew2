@@ -1,0 +1,67 @@
+<script lang="ts">
+	import type { Snippet } from 'svelte';
+
+	import { Container } from 'pixi-svelte';
+
+	import { SYMBOL_SIZE, BOARD_DIMENSIONS } from '../game/constants';
+
+	type Props = {
+		debug?: boolean;
+		x: number;
+		y: number;
+		/**
+		 * Per-axis scale on the wrapping Container. Defaults to 1.
+		 * The inner sprite/spine is centred at the container origin (anchor
+		 * 0.5 at 0,0), so scaling compresses/stretches the symbol around its
+		 * own centre without shifting its on-screen position.
+		 *
+		 * Used together by the reel-level landing squash (`landScaleY`) and
+		 * the derived jelly stretch (`landScaleX`) — see createReelForSpinning.
+		 */
+		scaleX?: number;
+		scaleY?: number;
+		/**
+		 * Прозрачность всей символьной обёртки. Используется для затемнения
+		 * невыигрышных символов во время win-анимации — см. DIM_NON_WINNING и
+		 * stateGame.winSpotlightActive. Применяется на уровне родительского
+		 * Container'а, поэтому автоматически касается sprite/spine/multiplier-
+		 * текста — отдельно править вложенные компоненты не нужно.
+		 */
+		alpha?: number;
+		/**
+		 * Keep rendering while the reel is scrolling — SymbolWrap culling is
+		 * based on the visible board window only; fast spins can temporarily
+		 * move pool symbols outside that window even though they are on-screen
+		 * through the BoardMask.
+		 */
+		spinActive?: boolean;
+		children: Snippet;
+	};
+
+	const props: Props = $props();
+
+	// Culling window: keep a symbol rendered while any part of it may be
+	// visible through the BoardMask (y=0 … boardHeight).
+	// TOP  — one full symbol above the mask so the Pixi mask smoothly clips
+	//         symbols entering from above the board edge.
+	// BOTTOM — one full symbol BELOW the mask bottom so symbols exiting at the
+	//         bottom are smoothly clipped by the mask instead of abruptly
+	//         disappearing (the inFrame check used to fire at y=boardHeight+1
+	//         while 49 px were still inside the mask).
+	const top = -SYMBOL_SIZE;
+	const bottom = SYMBOL_SIZE * (BOARD_DIMENSIONS.y + 1);
+	const inFrame = $derived(
+		props.spinActive || (props.y >= top && props.y <= bottom),
+	);
+</script>
+
+{#if props.debug || inFrame}
+	<Container
+		x={props.x}
+		y={props.y}
+		scale={{ x: props.scaleX ?? 1, y: props.scaleY ?? 1 }}
+		alpha={props.alpha ?? 1}
+	>
+		{@render props.children()}
+	</Container>
+{/if}

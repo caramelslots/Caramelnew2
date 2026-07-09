@@ -5,6 +5,11 @@
 
 	export type Props = OverwriteCursor<PIXI.SpriteOptions> & {
 		isMask?: boolean;
+		// Fires once with the underlying PIXI.Sprite right after creation.
+		// Lets callers drive cheap per-frame properties (e.g. rotation) directly
+		// on the instance via a ticker, bypassing Svelte reactivity — critical
+		// for hot 60fps animations where reactive prop sync is too expensive.
+		oncreate?: (sprite: PIXI.Sprite) => void;
 	};
 </script>
 
@@ -17,7 +22,9 @@
 	const parentContext = getContextParent();
 	const sprite = new PIXI.Sprite(props.texture);
 
-	propsSyncEffect({ props, target: sprite, ignore: ['isMask'] });
+	propsSyncEffect({ props, target: sprite, ignore: ['isMask', 'oncreate'] });
+
+	props.oncreate?.(sprite);
 
 	$effect(() => {
 		if (props.isMask !== undefined) {

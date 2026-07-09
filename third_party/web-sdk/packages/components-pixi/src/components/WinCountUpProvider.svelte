@@ -30,6 +30,7 @@
 	const resetCountUp = () => countUpAmount.set(props.amount, { duration: 0 });
 	const finishCountUp = () => interruptible.interrupt();
 	const startCountUp = async () => {
+		countUpCompleted = false;
 		await interruptible.add(countUp);
 		resetCountUp();
 		countUpCompleted = true;

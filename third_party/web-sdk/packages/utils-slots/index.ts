@@ -6,3 +6,4 @@ export * from './src/createEnhanceBoard';
 export * from './src/createEnhanceBoardSpin';
 export * from './src/createEnhanceBoardPreSpin';
 export * from './src/createGetEmptyPaddedBoard';
+export { stateSlots } from './src/stateSlots.svelte';

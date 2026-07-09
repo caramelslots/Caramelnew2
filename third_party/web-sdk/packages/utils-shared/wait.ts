@@ -10,3 +10,9 @@ export const waitForTimeout = (time: number) =>
 			resolve();
 		}, time);
 	});
+
+/** Yields until the next compositor frame — spreads sync Svelte work across frames. */
+export const waitForAnimationFrame = () =>
+	new Promise<void>((resolve) => {
+		requestAnimationFrame(() => resolve());
+	});
