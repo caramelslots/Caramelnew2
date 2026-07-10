@@ -193,16 +193,44 @@
 
 	let pendingGlowSlots: SkeletonSlot[] = [...staggerSlotByName.values()];
 
+	/**
+	 * Slots currently in the flicker-on sequence: slot → activation timestamp (ms).
+	 * Once the flicker phase ends (~380ms) the Spine animation takes over.
+	 */
+	const flickeringSlots = new Map<SkeletonSlot, number>();
+
 	const resetPendingGlowSlots = () => {
 		const pending = [...staggerSlotByName.values()];
 		pendingGlowSlots = hideMobileSignboardsPlain
 			? pending.filter((slot) => !mobileHiddenSignboardSlotSet.has(slot.data.name))
 			: pending;
+		flickeringSlots.clear();
+	};
+
+	/**
+	 * Neon-flicker alpha during sign turn-on.
+	 * Returns the forced alpha value, or null once the phase is over
+	 * (let Spine animation drive the slot from that point on).
+	 *
+	 * Pattern: dark → flash → dark → on → brief dark → (animation takes over)
+	 */
+	const flickerAlpha = (elapsed: number): number | null => {
+		if (elapsed >= 380) return null; // done — let animation show through
+		if (elapsed < 60) return 0;      // initial dark
+		if (elapsed < 120) return 1;     // brief flash on
+		if (elapsed < 180) return 0;     // dark
+		if (elapsed < 320) return 1;     // settling on
+		return 0;                         // one last brief dark before full on
 	};
 
 	const activateStaggerGroup = (group: readonly string[]) => {
 		const activated = new Set<string>(group);
-		pendingGlowSlots = pendingGlowSlots.filter((slot) => !activated.has(slot.data.name));
+		const now = Date.now();
+		pendingGlowSlots = pendingGlowSlots.filter((slot) => {
+			if (!activated.has(slot.data.name)) return true; // keep pending
+			flickeringSlots.set(slot, now);
+			return false; // move to flickering
+		});
 	};
 
 	const hideMobileSignboards = () => {
@@ -218,8 +246,20 @@
 	};
 
 	const zeroStaggerControlledGlow = () => {
+		const now = Date.now();
 		for (const slot of alwaysZeroAdditiveSlots) slot.color.a = 0;
 		for (const slot of pendingGlowSlots) slot.color.a = 0;
+		// Apply per-slot flicker during turn-on; remove from map when done.
+		const done: SkeletonSlot[] = [];
+		for (const [slot, activatedAt] of flickeringSlots) {
+			const alpha = flickerAlpha(now - activatedAt);
+			if (alpha === null) {
+				done.push(slot); // flicker complete — animation drives from here
+			} else {
+				slot.color.a = alpha;
+			}
+		}
+		for (const slot of done) flickeringSlots.delete(slot);
 	};
 
 	onMount(() => {
@@ -319,7 +359,7 @@
 		return () => {
 			clearTimeout(startTimer);
 			for (const t of groupTimers) clearTimeout(t);
-			resetPendingGlowSlots();
+			resetPendingGlowSlots(); // also clears flickeringSlots
 			isAnimationStarted = false;
 		};
 	});
