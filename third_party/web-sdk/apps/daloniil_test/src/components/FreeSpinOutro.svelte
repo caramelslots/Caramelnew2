@@ -108,7 +108,7 @@
 	});
 </script>
 
-<FadeContainer {show}>
+<FadeContainer {show} zIndex={10}>
 	{#if winLevelData}
 		{@const duration = winLevelData.presentDuration}
 		{@const isBigWin = winLevelData.type === 'big'}
@@ -137,7 +137,6 @@
 						<FreeSpinAnimation bind:this={fsAnimation}>
 							{#snippet title({ width })}
 								{@const lang = stateUrlDerived.lang()}
-								{@const youWon = getFsOutroYouWonText(lang)}
 								{@const titleLineGap = width * 0.22}
 								{@const titleYOffset = width * 0.06}
 								{#if isBigWin}
@@ -163,32 +162,17 @@
 												letterSpacing: 0,
 											}}
 										/>
-										<ResponsiveLocaleText
-											anchor={0.5}
-											y={titleLineGap * 2.0}
-											text={youWon}
-											maxWidth={width * 3.2}
-											fallbackFill={LOCALE_TEXT_FILL_WHITE}
-											style={{
-												fontFamily: fontForLocale(
-													FONT_PROSTOI_WHITE,
-													FONT_PROSTOI_WHITE_RU,
-													stateI18n.i18n.locale,
-													FONT_PROSTOI_WHITE_HI,
-													FONT_PROSTOI_WHITE_VI,
-													FONT_PROSTOI_WHITE_CJK,
-												),
-												fontSize: width * 0.52 * BITMAP_FONT_SCALE,
-												align: 'center',
-												fontWeight: 'bold',
-												letterSpacing: 0,
-											}}
-										/>
 									</Container>
-								{:else}
+								{/if}
+							{/snippet}
+							{#snippet winAmount({ width })}
+								{@const lang = stateUrlDerived.lang()}
+								{@const youWon = getFsOutroYouWonText(lang)}
+								{@const lineGap = width * 0.22}
+								<Container y={width * 0.05}>
 									<ResponsiveLocaleText
 										anchor={0.5}
-										y={titleYOffset}
+										y={isBigWin ? -lineGap * 0.65 : -lineGap * 0.75}
 										text={youWon}
 										maxWidth={width * 3.2}
 										fallbackFill={LOCALE_TEXT_FILL_WHITE}
@@ -201,20 +185,17 @@
 												FONT_PROSTOI_WHITE_VI,
 												FONT_PROSTOI_WHITE_CJK,
 											),
-											fontSize: width * 0.62 * BITMAP_FONT_SCALE,
+											fontSize: width * (isBigWin ? 0.58 : 0.68) * BITMAP_FONT_SCALE,
 											align: 'center',
 											fontWeight: 'bold',
 											letterSpacing: 0,
 										}}
 									/>
-								{/if}
-							{/snippet}
-							{#snippet winAmount({ width })}
-								<Container y={width * 0.05}>
 									<ResponsiveCurrencyBitmapText
 										anchor={0.5}
+										y={isBigWin ? lineGap * 1.85 : lineGap * 1.05}
 										style={{
-											fontSize: width * 0.74 * BITMAP_FONT_SCALE,
+											fontSize: width * 0.62 * BITMAP_FONT_SCALE,
 										}}
 										amount={countUpAmount}
 										bookEvent

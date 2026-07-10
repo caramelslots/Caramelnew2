@@ -219,3 +219,70 @@ export const NEON_SLOT_TUNING: Record<string, NeonElementTuning> = {
 	Glow_purple8: { x: 0, y: 0 },
 	Glow_purple_bottom: { x: 0, y: 0 },
 };
+
+// ---------------------------------------------------------------------------
+// Staggered neon activation (left → right)
+// ---------------------------------------------------------------------------
+
+/** Delay (ms) before the first sign lights up after game entrance. */
+export const NEON_START_DELAY_MS = 1000;
+
+/** Gap (ms) between each sign group activating. */
+export const NEON_STAGGER_GAP_MS = 0;
+
+/**
+ * Additive glow slots grouped left-to-right.
+ * Each group activates NEON_START_DELAY_MS + index * NEON_STAGGER_GAP_MS after
+ * game entrance (started=true). HIDDEN_SLOTS are excluded — they stay invisible.
+ */
+export const NEON_STAGGER_GROUPS: readonly (readonly string[])[] = [
+	// Group 0 — left lantern lights
+	['light_l_top2', 'light_l_top3', 'light_l_glow2', 'light_l_glow3'],
+	// Group 1 — left signboard text (Chinese characters)
+	['text_left_1a', 'text_left_1a2', 'text_left_2a', 'text_left_2a2', 'j1', 'j2', 'ji2', 'ji5'],
+	// Group 2 — left-bottom signboard (cat, bonus, bottom lights)
+	['text_bonus2', 'cat2', 'cat3', 'light_glow_l3', 'light_glow_l4', 'light_l3', 'light_l4'],
+	// Group 3 — WOK FURY (center top)
+	['text_wok2', 'text_fury_ad'],
+	// Group 4 — mivina sign
+	['mivina_ad'],
+	// Group 5 — right signboard (lights + text)
+	[
+		'light _r_bottom2',
+		'light _r_bottom3',
+		'light_glow_bottom2',
+		'light_glow_bottom3',
+		'light_r_top2',
+		'light_r_top3',
+		'light_glow_r_top2',
+		'light_glow_r_top3',
+		'text_right_bottom5',
+		'text_right_bottom7',
+		'text_right_bottom2',
+		'text_right_bottom6',
+		'text_right_bottom3',
+		'text_right_bottom4',
+		'text_right_top1',
+		'text_right_top5',
+		'text_right_top9',
+		'text_right_top2',
+		'text_right_top6',
+		'text_right_top10',
+		'text_right_top3',
+		'text_right_top7',
+		'text_right_top11',
+		'text_right_top4',
+		'text_right_top8',
+		'text_right_top12',
+	],
+	// Group 6 — board purple glow (Glow_purple_* bones)
+	[
+		'Glow_purple_bottom',
+		'Glow_purple3',
+		'Glow_purple4',
+		'Glow_purple5',
+		'Glow_purple6',
+		'Glow_purple7',
+		'Glow_purple8',
+	],
+];

@@ -38,9 +38,12 @@ export default {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/boardFrame/desk_contour.webp'),
 	},
-	catAnticipationFrame: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/boardFrame/cat_anticipation_frame.webp'),
+	outlineReel: {
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/outlineReel/skeleton.atlas'),
+			skeleton: assetUrl('assets/spines/outlineReel/skeleton.json'),
+		},
 	},
 	bonusBarV: {
 		type: 'sprite',

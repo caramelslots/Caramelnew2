@@ -1,26 +1,18 @@
 <script lang="ts">
 	import { getContext } from '../game/context';
-	import { getSymbolX } from '../game/utils';
-	import { getCatAnticipationFrameMetrics } from '../game/catAnticipation';
-	import CatAnticipationFrame from './CatAnticipationFrame.svelte';
+	import CatAnticipationOutline from './CatAnticipationOutline.svelte';
 
 	const context = getContext();
 
-	const frameMetrics = getCatAnticipationFrameMetrics();
-
-	const slowSpinningReels = $derived(
-		context.stateGame.board.filter(
-			(reel, reelIndex) =>
-				context.stateGame.catSlowReels.includes(reelIndex) && reel.reelState.motion === 'spinning',
+	const slowReels = $derived(
+		context.stateGame.board.filter((reel, reelIndex) =>
+			context.stateGame.catSlowReels.includes(reelIndex),
 		),
 	);
 </script>
 
-{#each slowSpinningReels as reel (reel.reelIndex)}
-	<CatAnticipationFrame
-		x={getSymbolX(reel.reelIndex)}
-		y={frameMetrics.centerY}
-		width={frameMetrics.width}
-		height={frameMetrics.height}
-	/>
+{#each slowReels as reel (reel.reelIndex)}
+	{#if reel.reelState.motion === 'spinning' || reel.reelState.motion === 'bouncing'}
+		<CatAnticipationOutline {reel} />
+	{/if}
 {/each}

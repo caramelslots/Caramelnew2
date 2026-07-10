@@ -91,7 +91,7 @@ export const LOADER_BATCH_3_KEYS = [
 	'WWin',
 	'BWin',
 	'anticipation',
-	'catAnticipationFrame',
+	'outlineReel',
 	...LOCALE_FONT_KEYS,
 	'coins',
 	'betPlus',

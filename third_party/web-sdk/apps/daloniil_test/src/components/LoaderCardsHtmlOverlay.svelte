@@ -141,13 +141,8 @@
 {#if show}
 	<div class="loader-cards-overlay" style={overlayStyle} aria-hidden={!show}>
 		<div class="loader-cards-stack">
-			<img
-				class="loader-neon-logo"
-				src={LOADER_NEON_LOGO_URL}
-				alt="Wok Fury"
-				style={logoStyle}
-				draggable="false"
-			/>
+			<!-- Neon logo is rendered by NeonForegroundOverlay (Spine canvas) instead. -->
+			<div class="loader-neon-logo-placeholder" style={logoStyle}></div>
 			{#if useCarousel}
 			<div
 				class="carousel-viewport"
@@ -185,15 +180,12 @@
 {/if}
 
 <style lang="scss">
-	.loader-neon-logo {
+	.loader-neon-logo-placeholder {
 		position: absolute;
 		left: 50%;
 		bottom: 100%;
 		display: block;
-		object-fit: contain;
 		pointer-events: none;
-		user-select: none;
-		mix-blend-mode: screen;
 	}
 
 	.loader-cards-stack {

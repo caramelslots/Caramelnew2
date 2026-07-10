@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { Rectangle, Sprite } from 'pixi-svelte';
+	import { Container, Rectangle, Sprite } from 'pixi-svelte';
 	import { FadeContainer } from 'components-pixi';
 	import { SECOND } from 'constants-shared/time';
 
 	import { getContext } from '../game/context';
+	import { catBackgroundZoom } from '../game/catAnticipationBoardZoom.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { getNeonOverlayProps, coverFit, BG_RATIO, BG_Y_OFFSET } from '../game/neonBackgroundLayout';
 	import Lantern from './Lantern.svelte';
@@ -50,56 +51,71 @@
 
 	const showBaseBackground = $derived(context.stateGame.gameType === 'basegame');
 	const showFeatureBackground = $derived(context.stateGame.gameType === 'freegame');
+
+	const canvasCenter = $derived.by(() => {
+		const canvas = context.stateLayoutDerived.canvasSizes();
+		return { x: canvas.width / 2, y: canvas.height / 2 };
+	});
+
+	const backgroundZoom = $derived(catBackgroundZoom.current);
 </script>
 
 <Rectangle {...context.stateLayoutDerived.canvasSizes()} backgroundColor={0x000000} zIndex={-3} />
 
 <FadeContainer show={showBaseBackground} duration={SECOND} zIndex={-2}>
-	<Sprite key="mainBackground" {...spriteProps} />
-	<NeonBackgroundOverlay
-		layer="behind"
-		skin="day"
-		x={neonOverlayProps.x}
-		y={neonOverlayProps.y}
-		scale={neonOverlayProps.scale}
-		started={gameEntrance.showContent}
-	/>
-	<Lantern
-		assetKey="lanternDay"
-		x={lanternLayout.leftX}
-		y={lanternLayout.y}
-		height={lanternLayout.height}
-	/>
-	<Lantern
-		assetKey="lanternDay"
-		x={lanternLayout.rightX}
-		y={lanternLayout.y}
-		height={lanternLayout.height}
-		phase={Math.PI}
-	/>
+	<Container x={canvasCenter.x} y={canvasCenter.y} scale={backgroundZoom}>
+		<Container x={-canvasCenter.x} y={-canvasCenter.y}>
+			<Sprite key="mainBackground" {...spriteProps} />
+			<NeonBackgroundOverlay
+				layer="behind"
+				skin="day"
+				x={neonOverlayProps.x}
+				y={neonOverlayProps.y}
+				scale={neonOverlayProps.scale}
+				started={gameEntrance.showContent}
+			/>
+			<Lantern
+				assetKey="lanternDay"
+				x={lanternLayout.leftX}
+				y={lanternLayout.y}
+				height={lanternLayout.height}
+			/>
+			<Lantern
+				assetKey="lanternDay"
+				x={lanternLayout.rightX}
+				y={lanternLayout.y}
+				height={lanternLayout.height}
+				phase={Math.PI}
+			/>
+		</Container>
+	</Container>
 </FadeContainer>
 
 <FadeContainer show={showFeatureBackground} duration={SECOND} zIndex={-1}>
-	<Sprite key="featureBackground" {...spriteProps} />
-	<NeonBackgroundOverlay
-		layer="behind"
-		skin="night"
-		x={neonOverlayProps.x}
-		y={neonOverlayProps.y}
-		scale={neonOverlayProps.scale}
-		started={gameEntrance.showContent}
-	/>
-	<Lantern
-		assetKey="lanternNight"
-		x={lanternLayout.leftX}
-		y={lanternLayout.y}
-		height={lanternLayout.height}
-	/>
-	<Lantern
-		assetKey="lanternNight"
-		x={lanternLayout.rightX}
-		y={lanternLayout.y}
-		height={lanternLayout.height}
-		phase={Math.PI}
-	/>
+	<Container x={canvasCenter.x} y={canvasCenter.y} scale={backgroundZoom}>
+		<Container x={-canvasCenter.x} y={-canvasCenter.y}>
+			<Sprite key="featureBackground" {...spriteProps} />
+			<NeonBackgroundOverlay
+				layer="behind"
+				skin="night"
+				x={neonOverlayProps.x}
+				y={neonOverlayProps.y}
+				scale={neonOverlayProps.scale}
+				started={gameEntrance.showContent}
+			/>
+			<Lantern
+				assetKey="lanternNight"
+				x={lanternLayout.leftX}
+				y={lanternLayout.y}
+				height={lanternLayout.height}
+			/>
+			<Lantern
+				assetKey="lanternNight"
+				x={lanternLayout.rightX}
+				y={lanternLayout.y}
+				height={lanternLayout.height}
+				phase={Math.PI}
+			/>
+		</Container>
+	</Container>
 </FadeContainer>

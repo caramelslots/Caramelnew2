@@ -10,6 +10,9 @@
 		NEON_BOARD_ALIGNMENT,
 		NEON_FOREGROUND_BONE_SET,
 		NEON_SLOT_TUNING,
+		NEON_START_DELAY_MS,
+		NEON_STAGGER_GAP_MS,
+		NEON_STAGGER_GROUPS,
 		TEXT_WOK_SCALE_BY_LAYOUT,
 		TEXT_WOK_OFFSET_BY_LAYOUT,
 	} from '../game/neonBackgroundTuning';
@@ -17,6 +20,7 @@
 	import { applyNeonBoneTuning, applyNeonSlotTuning } from '../game/neonBackgroundTuningApply';
 	import { getContext } from '../game/context';
 	import { getPortraitMobileTier, getPortraitDeviceWidth } from '../game/constants';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
 
 	type Props = {
 		skin: 'day' | 'night';
@@ -106,31 +110,54 @@
 		spine.beforeUpdateWorldTransforms = (...args) => {
 			previous?.(...args);
 
-					// During loading (before game entrance) hide everything completely.
+					hideStaticSlots();
+
 			if (!started) {
-				for (const slot of spine.skeleton.slots) {
-					slot.color.a = 0;
+				if (gameEntrance.loadingCardsVisible) {
+					// 3rd loader screen: show ALL non-hidden slots in off-state
+					// (panels visible, glow=0) so WOK FURY appears on loader.
+					for (const slot of spine.skeleton.slots) {
+						if (slot.data.blendMode === BlendMode.Additive) slot.color.a = 0;
+					}
+				} else {
+					// Transition phase (user pressed continue, game not yet visible):
+					// hide front-layer elements (WOK FURY, mivina) from behind-layer
+					// so they are completely invisible during the transition animation.
+					filterSlotsByLayer();
+					for (const slot of spine.skeleton.slots) {
+						if (slot.data.blendMode === BlendMode.Additive) slot.color.a = 0;
+					}
 				}
 				return;
 			}
 
-			hideStaticSlots();
+			// Layer filtering only applies during game (after game entrance).
+			// When started=true, filterSlotsByLayer immediately hides front-layer
+			// elements from the behind-layer instance. This makes WOK FURY/mivina
+			// disappear completely during the transition; the front-layer instance
+			// (inside the showContent FadeContainer) then fades them back in
+			// together with the board, just like any other game content.
 			filterSlotsByLayer();
 
-			// During the "off" state (before delay elapses): force all additive
-			// (glow/neon) slots to alpha=0 so they can't blink or show through.
-			// isActivePlain is a plain JS variable (not $state) to ensure correct
-			// reads inside this Pixi ticker closure.
-			if (!isActivePlain) {
+			// Staggered glow activation: zero slots whose group hasn't activated yet.
+			// activeGlowSlots and isAnimationStarted are plain JS vars for safe
+			// closure reads inside this Pixi ticker callback.
+			if (!isAnimationStarted) {
+				// Before animation starts: zero ALL additive slots.
 				for (const slot of spine.skeleton.slots) {
 					if (slot.data.blendMode === BlendMode.Additive) {
 						slot.color.a = 0;
 					}
 				}
-				// Belt-and-suspenders: explicitly zero WOK FURY glow slots by name.
-				for (const name of ['text_wok2', 'text_fury_ad']) {
-					const s = spine.skeleton.findSlot(name);
-					if (s) s.color.a = 0;
+			} else {
+				// Animation running: zero only slots whose group hasn't activated yet.
+				for (const slot of spine.skeleton.slots) {
+					if (
+						slot.data.blendMode === BlendMode.Additive &&
+						!activeGlowSlots.has(slot.data.name)
+					) {
+						slot.color.a = 0;
+					}
 				}
 			}
 
@@ -168,40 +195,55 @@
 		};
 	});
 
-	/** Задержка (мс) между появлением игры и стартом анимации включения вывесок. */
-	const NEON_START_DELAY_MS = 2000;
+	/**
+	 * Set of additive slot names whose glow is currently allowed to show.
+	 * Plain JS (not $state) — mutated by setTimeout callbacks and read inside
+	 * the Pixi ticker closure. Starts empty; groups are added progressively.
+	 */
+	const activeGlowSlots = new Set<string>();
 
 	/**
-	 * Plain JS variable (NOT $state) — used inside the Pixi ticker closure set up
-	 * in onMount. Using $state here risks stale reads in non-reactive contexts.
+	 * True once the "in" animation has been unfrozen (NEON_START_DELAY_MS elapsed).
+	 * Plain JS variable for safe reads inside the Pixi ticker closure.
 	 */
-	let isActivePlain = false;
+	let isAnimationStarted = false;
 
 	$effect(() => {
 		if (!started) return;
-		isActivePlain = false;
+		activeGlowSlots.clear();
+		isAnimationStarted = false;
 
-		// Play "in" frozen at frame 0 → shows the "off" state:
-		// panels visible, neon lights dark (frame 0 of "in" animation).
+		// Freeze "in" at frame 0 → off-state (panels visible, neon dark).
 		spine.skeleton.setSlotsToSetupPose();
 		const entry = spine.state.setAnimation(0, 'in', false);
 		entry.timeScale = 0;
-
 		entry.listener = {
 			complete: () => {
 				spine.state.setAnimation(0, 'idle', true);
 			},
 		};
 
-		// After delay — unfreeze → neon lights turn on.
-		const timer = setTimeout(() => {
-			isActivePlain = true;
+		// After the initial delay: unfreeze the animation.
+		const startTimer = setTimeout(() => {
+			isAnimationStarted = true;
 			entry.timeScale = 1;
 		}, NEON_START_DELAY_MS);
 
+		// Staggered group activation: each group joins NEON_STAGGER_GAP_MS apart.
+		const groupTimers = NEON_STAGGER_GROUPS.map((group, i) =>
+			setTimeout(
+				() => {
+					for (const name of group) activeGlowSlots.add(name);
+				},
+				NEON_START_DELAY_MS + i * NEON_STAGGER_GAP_MS,
+			),
+		);
+
 		return () => {
-			clearTimeout(timer);
-			isActivePlain = false;
+			clearTimeout(startTimer);
+			for (const t of groupTimers) clearTimeout(t);
+			activeGlowSlots.clear();
+			isAnimationStarted = false;
 		};
 	});
 </script>
