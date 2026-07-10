@@ -2,9 +2,17 @@
 	import { onMount } from 'svelte';
 	import { Skin } from '@esotericsoftware/spine-pixi-v8';
 
-	import { SpineTrack, getContextSpine } from 'pixi-svelte';
+	import { getContextSpine } from 'pixi-svelte';
+	import { BlendMode } from '@esotericsoftware/spine-pixi-v8';
 
-	import { NEON_BONE_TUNING, NEON_BOARD_ALIGNMENT, NEON_FOREGROUND_BONE_SET, NEON_SLOT_TUNING, TEXT_WOK_SCALE_BY_LAYOUT, TEXT_WOK_OFFSET_BY_LAYOUT } from '../game/neonBackgroundTuning';
+	import {
+		NEON_BONE_TUNING,
+		NEON_BOARD_ALIGNMENT,
+		NEON_FOREGROUND_BONE_SET,
+		NEON_SLOT_TUNING,
+		TEXT_WOK_SCALE_BY_LAYOUT,
+		TEXT_WOK_OFFSET_BY_LAYOUT,
+	} from '../game/neonBackgroundTuning';
 	import { alignNeonBoardBone, type BoardCanvasBounds } from '../game/neonBoardAlignment';
 	import { applyNeonBoneTuning, applyNeonSlotTuning } from '../game/neonBackgroundTuningApply';
 	import { getContext } from '../game/context';
@@ -17,9 +25,11 @@
 		overlayX: number;
 		overlayY: number;
 		overlayScale: number;
+		/** false = всі слоти приховані, анімація не грає (до кінця лоадера) */
+		started: boolean;
 	};
 
-	const { skin, layer, boardBounds, overlayX, overlayY, overlayScale }: Props = $props();
+	const { skin, layer, boardBounds, overlayX, overlayY, overlayScale, started }: Props = $props();
 	const context = getContext();
 	const spine = getContextSpine();
 
@@ -95,8 +105,27 @@
 		const previous = spine.beforeUpdateWorldTransforms;
 		spine.beforeUpdateWorldTransforms = (...args) => {
 			previous?.(...args);
+
+					// During loading (before game entrance) hide everything completely.
+			if (!started) {
+				for (const slot of spine.skeleton.slots) {
+					slot.color.a = 0;
+				}
+				return;
+			}
+
 			hideStaticSlots();
 			filterSlotsByLayer();
+
+			// During the "off" state (before delay elapses): force all additive
+			// (glow/neon) slots to alpha=0 so they can't blink or show through.
+			if (!isActive) {
+				for (const slot of spine.skeleton.slots) {
+					if (slot.data.blendMode === BlendMode.Additive) {
+						slot.color.a = 0;
+					}
+				}
+			}
 
 			if (layer === 'front') {
 				const textWokBone = spine.skeleton.findBone('text_wok');
@@ -132,19 +161,34 @@
 		};
 	});
 
-	type Phase = 'in' | 'idle';
-	let phase = $state<Phase>('in');
+	/** Задержка (мс) между появлением игры и стартом анимации включения вывесок. */
+	const NEON_START_DELAY_MS = 2000;
 
-	const onTrackComplete = (entry: { animation?: { name?: string } }) => {
-		if (entry.animation?.name === 'in') {
-			phase = 'idle';
-		}
-	};
+	/** true = задержка истекла, анимация "in" идёт / уже сыграла → idle. */
+	let isActive = $state(false);
+
+	$effect(() => {
+		if (!started) return;
+		isActive = false;
+
+		// Play "in" frozen at frame 0 → shows the "off" state:
+		// panels visible, neon lights dark (frame 0 of "in" animation).
+		spine.skeleton.setSlotsToSetupPose();
+		const entry = spine.state.setAnimation(0, 'in', false);
+		entry.timeScale = 0;
+
+		entry.listener = {
+			complete: () => {
+				spine.state.setAnimation(0, 'idle', true);
+			},
+		};
+
+		// After delay — unfreeze → neon lights turn on.
+		const timer = setTimeout(() => {
+			isActive = true;
+			entry.timeScale = 1;
+		}, NEON_START_DELAY_MS);
+
+		return () => clearTimeout(timer);
+	});
 </script>
-
-<SpineTrack
-	trackIndex={0}
-	animationName={phase}
-	loop={phase === 'idle'}
-	listener={{ complete: onTrackComplete }}
-/>

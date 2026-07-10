@@ -286,30 +286,41 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	};
 
 	/**
-	 * Like slideY but re-reads speed every frame via `getSpeed()`.
-	 * Used when reel scroll speed can change mid-slide (e.g. cat anticipation).
+	 * Like slideY but re-reads target and speed every frame via getters.
+	 * Used when reel scroll speed or distance can change mid-slide (cat anticipation).
 	 */
 	const slideDynamic = async ({
-		reelY: targetY,
+		getTargetY,
 		getSpeed,
 	}: {
-		reelY: number;
+		getTargetY: () => number;
 		getSpeed: () => number;
 	}) => {
-		const dist = Math.abs(reelY.current - targetY);
-		if (dist < 0.5) return;
-
 		let currentSpeed = getSpeed();
-		reelY.set(targetY, { duration: dist / currentSpeed });
+		let lastTargetY = getTargetY();
+
+		const driveToTarget = () => {
+			const targetY = getTargetY();
+			const remaining = Math.abs(reelY.current - targetY);
+			if (remaining < 0.5) return false;
+			currentSpeed = getSpeed();
+			lastTargetY = targetY;
+			reelY.set(targetY, { duration: remaining / currentSpeed });
+			return true;
+		};
+
+		if (!driveToTarget()) return;
 
 		while (true) {
 			await waitForAnimationFrame();
 			if (reelState.motion !== 'spinning') break;
+			const targetY = getTargetY();
 			const remaining = Math.abs(reelY.current - targetY);
 			if (remaining < 0.5) break;
 			const newSpeed = getSpeed();
-			if (newSpeed !== currentSpeed) {
+			if (newSpeed !== currentSpeed || targetY !== lastTargetY) {
 				currentSpeed = newSpeed;
+				lastTargetY = targetY;
 				reelY.set(targetY, { duration: remaining / newSpeed });
 			}
 		}
@@ -703,7 +714,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 				const bounceSize = reelOptions.symbolHeight * reelState.spinOptions().reelBounceSizeMulti;
 
 				await slideDynamic({
-					reelY: getMainSpinTargetY(),
+					getTargetY: getMainSpinTargetY,
 					getSpeed: () => reelState.spinOptions().reelSpinSpeed,
 				});
 				await slideY({
@@ -743,6 +754,8 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		paddingReel: TRawSymbol[];
 		onSpinFinishing: () => void;
 		previousPaddingSize: number;
+		/** Additional fake symbol rows prepended before the math result (e.g. cat anticipation). */
+		extraPaddingSymbols?: number;
 	}) => {
 		reelState.spinType = prepareToSpinOptions.spinType;
 
@@ -753,10 +766,11 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		paddingRawReel = prepareToSpinOptions.paddingReel;
 		onSpinFinishing = prepareToSpinOptions.onSpinFinishing;
 
+		const extraPadding = prepareToSpinOptions.extraPaddingSymbols ?? 0;
 		const GET_PADDING_SIZE_MAP = {
 			fast: prepareToSpinOptions.previousPaddingSize + 0,
-			normal: prepareToSpinOptions.previousPaddingSize + basePaddingSize(),
-			anticipated: prepareToSpinOptions.previousPaddingSize + anticipatedPaddingSize(),
+			normal: prepareToSpinOptions.previousPaddingSize + basePaddingSize() + extraPadding,
+			anticipated: prepareToSpinOptions.previousPaddingSize + anticipatedPaddingSize() + extraPadding,
 		};
 
 		paddingSize = GET_PADDING_SIZE_MAP[prepareToSpinOptions.spinType];

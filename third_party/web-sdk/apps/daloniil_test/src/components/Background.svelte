@@ -4,6 +4,7 @@
 	import { SECOND } from 'constants-shared/time';
 
 	import { getContext } from '../game/context';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { getNeonOverlayProps, coverFit, BG_RATIO, BG_Y_OFFSET } from '../game/neonBackgroundLayout';
 	import Lantern from './Lantern.svelte';
 	import NeonBackgroundOverlay from './NeonBackgroundOverlay.svelte';
@@ -61,6 +62,7 @@
 		x={neonOverlayProps.x}
 		y={neonOverlayProps.y}
 		scale={neonOverlayProps.scale}
+		started={gameEntrance.showContent}
 	/>
 	<Lantern
 		assetKey="lanternDay"
@@ -85,6 +87,7 @@
 		x={neonOverlayProps.x}
 		y={neonOverlayProps.y}
 		scale={neonOverlayProps.scale}
+		started={gameEntrance.showContent}
 	/>
 	<Lantern
 		assetKey="lanternNight"

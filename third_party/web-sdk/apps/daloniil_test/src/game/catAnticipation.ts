@@ -1,8 +1,17 @@
 import type { GameType, RawSymbol } from './types';
-import { BOARD_MASK_SPIN_OVERFLOW, BOARD_SIZES } from './constants';
+import { BOARD_DIMENSIONS, BOARD_MASK_SPIN_OVERFLOW, BOARD_SIZES } from './constants';
 
 /** Scroll speed multiplier for reels after the 2nd cat lands (basegame only). */
-export const REEL_SCROLL_SPEED_MULT_CAT = 0.55;
+export const REEL_SCROLL_SPEED_MULT_CAT = 0.35;
+
+/** Extra padding rows on cat-slow reels (= one visible-grid rotation, 5 symbols). */
+export const CAT_SLOW_EXTRA_SYMBOL_ROWS = BOARD_DIMENSIONS.y;
+
+/** Board scale at peak cat slow-down (1 = no zoom). */
+export const CAT_SLOW_BOARD_ZOOM = 1.025;
+
+/** Time constant (ms) for gradual zoom-in over the slow phase (exp curve). */
+export const CAT_SLOW_BOARD_ZOOM_RAMP_MS = 2200;
 
 /** Native pixel size of `cat_anticipation_frame.webp` (designer asset). */
 const CAT_ANTICIPATION_FRAME_NATIVE = { width: 340, height: 1473 } as const;
@@ -30,10 +39,7 @@ export const getCatAnticipationFrameMetrics = () => {
  * Index of the reel that completes the 2nd cat (B) on the result board,
  * or -1 when anticipation should not run (freegame, <2 cats, or no reels left).
  */
-export const computeCatSlowTriggerReel = (
-	board: RawSymbol[][],
-	gameType: GameType,
-): number => {
+export const computeCatSlowTriggerReel = (board: RawSymbol[][], gameType: GameType): number => {
 	if (gameType !== 'basegame') return -1;
 
 	const reelCount = board.length;
@@ -50,5 +56,8 @@ export const computeCatSlowTriggerReel = (
 /** Reel indices that should slow down once `triggerReelIndex` has stopped. */
 export const catSlowReelsAfterTrigger = (triggerReelIndex: number, reelCount: number): number[] => {
 	if (triggerReelIndex < 0 || triggerReelIndex + 1 >= reelCount) return [];
-	return Array.from({ length: reelCount - triggerReelIndex - 1 }, (_, i) => triggerReelIndex + 1 + i);
+	return Array.from(
+		{ length: reelCount - triggerReelIndex - 1 },
+		(_, i) => triggerReelIndex + 1 + i,
+	);
 };

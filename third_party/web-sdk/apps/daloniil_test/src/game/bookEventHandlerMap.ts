@@ -24,7 +24,7 @@ import {
 	WIN_SPOTLIGHT_CLEAR_DELAY_MS,
 } from './constants';
 import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
-import { computeCatSlowTriggerReel } from './catAnticipation';
+import { computeCatSlowTriggerReel, catSlowReelsAfterTrigger, CAT_SLOW_EXTRA_SYMBOL_ROWS } from './catAnticipation';
 
 // Таймер фонового снятия затемнения/paylines. Хранится здесь, чтобы
 // `reveal` мог отменить его при старте нового спина раньше истечения задержки.
@@ -198,11 +198,17 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Pending-collapse reels are also skipped: the collapse handles their display.
 		stateGame.catSlowTriggerReel = computeCatSlowTriggerReel(bookEvent.board, bookEvent.gameType);
 		stateGame.catSlowReels = [];
+		const catSlowReelIndices = catSlowReelsAfterTrigger(
+			stateGame.catSlowTriggerReel,
+			bookEvent.board.length,
+		);
 		try {
 			await stateGameDerived.enhancedBoard.spin({
 				revealEvent: bookEvent,
 				paddingBoard: config.paddingReels[bookEvent.gameType],
 				frozenReelIndices: [...stateGame.mysteryReelsFrozen, ...pendingCollapseReels],
+				getExtraPaddingSymbols: (reelIndex) =>
+					catSlowReelIndices.includes(reelIndex) ? CAT_SLOW_EXTRA_SYMBOL_ROWS : 0,
 			});
 		} finally {
 			stateGame.catSlowTriggerReel = -1;

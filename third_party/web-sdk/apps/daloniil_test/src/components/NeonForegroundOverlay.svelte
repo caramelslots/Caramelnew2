@@ -32,6 +32,7 @@
 		x={neonOverlayProps.x}
 		y={neonOverlayProps.y}
 		scale={neonOverlayProps.scale}
+		started={true}
 	/>
 </FadeContainer>
 
@@ -43,5 +44,6 @@
 		x={neonOverlayProps.x}
 		y={neonOverlayProps.y}
 		scale={neonOverlayProps.scale}
+		started={true}
 	/>
 </FadeContainer>

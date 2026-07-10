@@ -60,10 +60,10 @@ export const TEXT_WOK_OFFSET_BY_LAYOUT: Record<string, { x: number; y: number }>
  * Имена костей: signboard_left, signboard_right, text_wok, board, …
  */
 export const NEON_BONE_TUNING: Record<string, NeonElementTuning> = {
-	signboard_left: { x: 50, y: 25 },
+	signboard_left: { x: 50, y: 60 },
 	signboard_left_bottom: { x: 0, y: 0 },
 
-	signboard_right: { x: -50, y: 25 },
+	signboard_right: { x: -50, y: 60 },
 
 	text_wok: { x: 5, y: 100 },
 

@@ -18,10 +18,12 @@
 		REELHOUSE_GLOW_SCALE,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
+	import { catBoardZoom } from '../game/catAnticipationBoardZoom.svelte';
 
 	const context = getContext();
 
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
+	const boardScale = $derived(boardLayout.scale * catBoardZoom.current);
 	const frameX = $derived(boardLayout.pivot.x + BOARD_FRAME_OFFSET.x);
 	const frameY = $derived(boardLayout.pivot.y + BOARD_FRAME_OFFSET.y);
 
@@ -72,7 +74,7 @@
 	});
 </script>
 
-<Container x={boardLayout.x} y={boardLayout.y} scale={boardLayout.scale}>
+<Container x={boardLayout.x} y={boardLayout.y} scale={boardScale}>
 	<Container x={-boardLayout.pivot.x} y={-boardLayout.pivot.y} sortableChildren={true}>
 		{#if animationName}
 			<SpineProvider

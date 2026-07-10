@@ -11,6 +11,7 @@
 		x: number;
 		y: number;
 		scale: number;
+		started: boolean;
 	};
 
 	const props: Props = $props();
@@ -31,5 +32,6 @@
 		overlayX={props.x}
 		overlayY={props.y}
 		overlayScale={props.scale}
+		started={props.started}
 	/>
 </SpineProvider>

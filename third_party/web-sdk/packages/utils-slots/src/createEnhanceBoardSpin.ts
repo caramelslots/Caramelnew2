@@ -23,11 +23,14 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 		revealEvent,
 		paddingBoard,
 		frozenReelIndices = [],
+		getExtraPaddingSymbols,
 	}: {
 		revealEvent: RevealEvent;
 		paddingBoard?: TRawSymbol[][];
 		/** Reel indices that must not spin this round (e.g. frozen Mystery reels). */
 		frozenReelIndices?: number[];
+		/** Per-reel fake symbol rows prepended before the math result (cat anticipation, etc.). */
+		getExtraPaddingSymbols?: (reelIndex: number) => number;
 	}) {
 		if (stateSlots.isPreSpinning) {
 			await Promise.all(
@@ -74,6 +77,7 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 				// @ts-ignore Ignored because paddingPosition is not required by createCascadingReel
 				paddingPosition,
 				previousPaddingSize,
+				extraPaddingSymbols: getExtraPaddingSymbols?.(reelIndex) ?? 0,
 				onSpinFinishing: () => {
 					reel.onReelStopping();
 					const nextReelIndex = reelIndex + 1;
