@@ -29,6 +29,7 @@
 	import { getContextLayout } from 'utils-layout';
 
 	import HudBalanceBetLine from './HudBalanceBetLine.svelte';
+	import SpinHudButton from './SpinHudButton.svelte';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
@@ -37,7 +38,6 @@
 	const menuUrl = HUD_ASSETS.menu;
 	const minusUrl = HUD_ASSETS.betMinus;
 	const plusUrl = HUD_ASSETS.betPlus;
-	const spin1Url = HUD_ASSETS.spin1;
 	const autoplayUrl = HUD_ASSETS.autoplay;
 	const turboUrls = {
 		1: HUD_ASSETS.turbo1,
@@ -47,6 +47,7 @@
 
 	let uiVisible = $state(true);
 	let stopDisabled = $state(false);
+	let spinHudButton = $state<SpinHudButton | undefined>();
 
 	context.eventEmitter.subscribeOnMount({
 		uiShow: () => {
@@ -80,8 +81,6 @@
 	const isAutoSpinModalOpen = $derived(stateModal.modal?.name === 'autoSpin');
 	const hasAutoBetCounter = $derived(stateBetDerived.hasAutoBetCounter());
 	const hasCounter = $derived(stateBetDerived.hasAutoBetCounter());
-	const spinSpriteUrl = $derived(spin1Url);
-
 	const spinCounterText = $derived(
 		stateBet.autoSpinsCounter === Infinity ? '∞' : String(stateBet.autoSpinsCounter),
 	);
@@ -177,6 +176,7 @@
 
 		context.eventEmitter.broadcast({ type: 'soundPressBet' });
 		if (context.stateXstateDerived.isIdle()) {
+			spinHudButton?.playAnimation();
 			if (stateBetDerived.activeBetMode()?.type === 'buy') stateBet.activeBetModeKey = 'BASE';
 			context.eventEmitter.broadcast({ type: 'bet' });
 		} else if (!stopDisabled) {
@@ -269,23 +269,18 @@
 				onclick={onDecreasePress}
 			></button>
 
-			<button
-				type="button"
-				class="hud-icon-btn spin-btn"
-				class:dimmed={spinDisabled}
-				style:left="{pos.spin.x}px"
-				style:top="{pos.spin.y}px"
-				style:width="{pos.spin.size}px"
-				style:height="{pos.spin.size}px"
-				style:background-image="url('{spinSpriteUrl}')"
+			<SpinHudButton
+				bind:this={spinHudButton}
+				x={pos.spin.x}
+				y={pos.spin.y}
+				size={pos.spin.size}
+				dimmed={spinDisabled}
 				disabled={spinDisabled}
-				aria-label="spin"
-				onclick={onSpinPress}
-			>
-				{#if hasCounter}
-					<span class="spin-counter" style:font-size="{spinCounterFontSize}px">{spinCounterText}</span>
-				{/if}
-			</button>
+				onpress={onSpinPress}
+				hasCounter={hasCounter}
+				counterText={spinCounterText}
+				counterFontSize={spinCounterFontSize}
+			/>
 
 			<button
 				type="button"
@@ -389,22 +384,6 @@
 		text-align: center;
 		pointer-events: none;
 		user-select: none;
-	}
-
-	.spin-btn {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.spin-counter {
-		color: #fff;
-		font-family: 'proxima-nova', Arial, sans-serif;
-		font-weight: 700;
-		line-height: 1;
-		pointer-events: none;
-		user-select: none;
-		transform: translateY(4%);
 	}
 
 	.hud-balance-bet {

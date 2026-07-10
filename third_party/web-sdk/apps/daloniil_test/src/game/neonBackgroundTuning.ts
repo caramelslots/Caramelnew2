@@ -77,6 +77,16 @@ export const NEON_BONE_TUNING: Record<string, NeonElementTuning> = {
 };
 
 /**
+ * Side signboard bone roots omitted on phone canvas sizes (mobile / smallMobile)
+ * to cut neon draw load. WOK FURY, board glow, and mivina are unaffected.
+ */
+export const NEON_MOBILE_HIDDEN_SIGNBOARD_BONES = [
+	'signboard_left',
+	'signboard_right',
+	'signboard_left_bottom',
+] as const;
+
+/**
  * Масштаб рамки свечения доски.
  * 1.0 = точно по размеру доски, 1.1 = +10% больше, 0.9 = -10% меньше.
  */

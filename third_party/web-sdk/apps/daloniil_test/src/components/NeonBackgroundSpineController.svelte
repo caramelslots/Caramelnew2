@@ -9,6 +9,7 @@
 		NEON_BONE_TUNING,
 		NEON_BOARD_ALIGNMENT,
 		NEON_FOREGROUND_BONE_SET,
+		NEON_MOBILE_HIDDEN_SIGNBOARD_BONES,
 		NEON_SLOT_TUNING,
 		NEON_START_DELAY_MS,
 		NEON_STAGGER_GAP_MS,
@@ -37,6 +38,27 @@
 	const context = getContext();
 	const spine = getContextSpine();
 
+	/**
+	 * Plain JS mirror — read inside the Pixi ticker closure in onMount.
+	 * Neon is hidden behind celebration/transition overlays; freeze updates there.
+	 */
+	let neonPausedPlain = false;
+
+	/** Phone canvas (mobile / smallMobile): side signboards are not rendered. */
+	let hideMobileSignboardsPlain = false;
+
+	$effect(() => {
+		neonPausedPlain =
+			context.stateGame.winOverlayActive || context.stateGame.transitionActive;
+		spine.autoUpdate = !neonPausedPlain;
+	});
+
+	$effect(() => {
+		const canvasSizeType = context.stateLayoutDerived.canvasSizeType();
+		hideMobileSignboardsPlain =
+			canvasSizeType === 'mobile' || canvasSizeType === 'smallMobile';
+	});
+
 	// All board_glow_* slots use additive blending. On the light parchment board background
 	// (R≈220, G≈192, B≈147), additive purple (R≈174, G≈133, B≈249) saturates channels to
 	// white. The purple frame effect is preserved by Glow_purple_* child bone ring meshes
@@ -58,6 +80,8 @@
 		'Glow_blue',
 		'Glow_blue2',
 	] as const;
+
+	const hiddenSlotSet = new Set<string>(HIDDEN_SLOTS);
 
 	const applySkin = (skinName: 'day' | 'night') => {
 		const combined = new Skin('neonBackground');
@@ -94,12 +118,23 @@
 	const filterSlotsByLayer = () => {
 		for (const slot of spine.skeleton.slots) {
 			const slotName = slot.data.name;
-			if ((HIDDEN_SLOTS as readonly string[]).includes(slotName)) continue;
+			if (hiddenSlotSet.has(slotName)) continue;
 
 			const onForeground = NEON_FOREGROUND_BONE_SET.has(slot.bone.data.name);
 			const show = layer === 'front' ? onForeground : !onForeground;
 			if (!show) slot.attachment = null;
 		}
+	};
+
+	const signboardRootBoneSet = new Set<string>(NEON_MOBILE_HIDDEN_SIGNBOARD_BONES);
+
+	const isSlotUnderMobileHiddenSignboard = (slot: (typeof spine.skeleton.slots)[number]) => {
+		let bone = slot.bone;
+		while (bone) {
+			if (signboardRootBoneSet.has(bone.data.name)) return true;
+			bone = bone.parent;
+		}
+		return false;
 	};
 
 	/** Apply layout-aware scale/offset to the text_wok bone every frame. */
@@ -121,23 +156,87 @@
 		}
 	};
 
-	onMount(() => {
-		applySkin(skin);
-		applyTuning();
+	/**
+	 * True once the "in" animation has been unfrozen (NEON_START_DELAY_MS elapsed).
+	 * Plain JS variable for safe reads inside the Pixi ticker closure.
+	 */
+	let isAnimationStarted = false;
 
+	applySkin(skin);
+	applyTuning();
+
+	type SkeletonSlot = (typeof spine.skeleton.slots)[number];
+
+	// Built once — reused in the ticker instead of scanning all 93 slots per frame.
+	const allAdditiveSlots = spine.skeleton.slots.filter(
+		(slot) => slot.data.blendMode === BlendMode.Additive,
+	);
+
+	const mobileHiddenSignboardSlots = spine.skeleton.slots.filter(isSlotUnderMobileHiddenSignboard);
+	const mobileHiddenSignboardSlotSet = new Set(
+		mobileHiddenSignboardSlots.map((slot) => slot.data.name),
+	);
+
+	const staggerSlotByName = new Map<string, SkeletonSlot>();
+	for (const group of NEON_STAGGER_GROUPS) {
+		for (const name of group) {
+			if (staggerSlotByName.has(name)) continue;
+			const slot = spine.skeleton.findSlot(name);
+			if (slot) staggerSlotByName.set(name, slot);
+		}
+	}
+
+	// Additive glow slots outside stagger groups stay forced-off during gameplay.
+	const alwaysZeroAdditiveSlots = allAdditiveSlots.filter(
+		(slot) => !staggerSlotByName.has(slot.data.name),
+	);
+
+	let pendingGlowSlots: SkeletonSlot[] = [...staggerSlotByName.values()];
+
+	const resetPendingGlowSlots = () => {
+		const pending = [...staggerSlotByName.values()];
+		pendingGlowSlots = hideMobileSignboardsPlain
+			? pending.filter((slot) => !mobileHiddenSignboardSlotSet.has(slot.data.name))
+			: pending;
+	};
+
+	const activateStaggerGroup = (group: readonly string[]) => {
+		const activated = new Set<string>(group);
+		pendingGlowSlots = pendingGlowSlots.filter((slot) => !activated.has(slot.data.name));
+	};
+
+	const hideMobileSignboards = () => {
+		if (!hideMobileSignboardsPlain) return;
+		for (const slot of mobileHiddenSignboardSlots) {
+			slot.attachment = null;
+			slot.color.a = 0;
+		}
+	};
+
+	const zeroAllAdditive = () => {
+		for (const slot of allAdditiveSlots) slot.color.a = 0;
+	};
+
+	const zeroStaggerControlledGlow = () => {
+		for (const slot of alwaysZeroAdditiveSlots) slot.color.a = 0;
+		for (const slot of pendingGlowSlots) slot.color.a = 0;
+	};
+
+	onMount(() => {
 		const previous = spine.beforeUpdateWorldTransforms;
 		spine.beforeUpdateWorldTransforms = (...args) => {
 			previous?.(...args);
 
+			if (neonPausedPlain) return;
+
 			hideStaticSlots();
+			hideMobileSignboards();
 
 			if (!started) {
 				if (gameEntrance.loadingCardsVisible) {
 					// 3rd loader screen: show ALL non-hidden slots in off-state
 					// (panels visible, glow=0) so WOK FURY appears on loader.
-					for (const slot of spine.skeleton.slots) {
-						if (slot.data.blendMode === BlendMode.Additive) slot.color.a = 0;
-					}
+					zeroAllAdditive();
 					// Apply mobile-aware text_wok scaling on the loader too
 					// (behind-layer shows text_wok during loader without layer filtering).
 					applyTextWokTransform();
@@ -146,9 +245,7 @@
 					// hide front-layer elements (WOK FURY, mivina) from behind-layer
 					// so they are completely invisible during the transition animation.
 					filterSlotsByLayer();
-					for (const slot of spine.skeleton.slots) {
-						if (slot.data.blendMode === BlendMode.Additive) slot.color.a = 0;
-					}
+					zeroAllAdditive();
 				}
 				return;
 			}
@@ -161,22 +258,11 @@
 			// together with the board, just like any other game content.
 			filterSlotsByLayer();
 
-			// Staggered glow activation: zero slots whose group hasn't activated yet.
-			// activeGlowSlots and isAnimationStarted are plain JS vars for safe
-			// closure reads inside this Pixi ticker callback.
+			// Staggered glow activation: zero only cached additive lists.
 			if (!isAnimationStarted) {
-				for (const slot of spine.skeleton.slots) {
-					if (slot.data.blendMode === BlendMode.Additive) slot.color.a = 0;
-				}
+				zeroAllAdditive();
 			} else {
-				for (const slot of spine.skeleton.slots) {
-					if (
-						slot.data.blendMode === BlendMode.Additive &&
-						!activeGlowSlots.has(slot.data.name)
-					) {
-						slot.color.a = 0;
-					}
-				}
+				zeroStaggerControlledGlow();
 			}
 
 			if (layer === 'front') {
@@ -198,22 +284,10 @@
 		};
 	});
 
-	/**
-	 * Set of additive slot names whose glow is currently allowed to show.
-	 * Plain JS (not $state) — mutated by setTimeout callbacks and read inside
-	 * the Pixi ticker closure. Starts empty; groups are added progressively.
-	 */
-	const activeGlowSlots = new Set<string>();
-
-	/**
-	 * True once the "in" animation has been unfrozen (NEON_START_DELAY_MS elapsed).
-	 * Plain JS variable for safe reads inside the Pixi ticker closure.
-	 */
-	let isAnimationStarted = false;
-
 	$effect(() => {
 		if (!started) return;
-		activeGlowSlots.clear();
+		hideMobileSignboardsPlain;
+		resetPendingGlowSlots();
 		isAnimationStarted = false;
 
 		// Freeze "in" at frame 0 → off-state (panels visible, neon dark).
@@ -236,7 +310,7 @@
 		const groupTimers = NEON_STAGGER_GROUPS.map((group, i) =>
 			setTimeout(
 				() => {
-					for (const name of group) activeGlowSlots.add(name);
+					activateStaggerGroup(group);
 				},
 				NEON_START_DELAY_MS + i * NEON_STAGGER_GAP_MS,
 			),
@@ -245,7 +319,7 @@
 		return () => {
 			clearTimeout(startTimer);
 			for (const t of groupTimers) clearTimeout(t);
-			activeGlowSlots.clear();
+			resetPendingGlowSlots();
 			isAnimationStarted = false;
 		};
 	});
