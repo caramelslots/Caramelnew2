@@ -119,11 +119,18 @@
 
 			// During the "off" state (before delay elapses): force all additive
 			// (glow/neon) slots to alpha=0 so they can't blink or show through.
-			if (!isActive) {
+			// isActivePlain is a plain JS variable (not $state) to ensure correct
+			// reads inside this Pixi ticker closure.
+			if (!isActivePlain) {
 				for (const slot of spine.skeleton.slots) {
 					if (slot.data.blendMode === BlendMode.Additive) {
 						slot.color.a = 0;
 					}
+				}
+				// Belt-and-suspenders: explicitly zero WOK FURY glow slots by name.
+				for (const name of ['text_wok2', 'text_fury_ad']) {
+					const s = spine.skeleton.findSlot(name);
+					if (s) s.color.a = 0;
 				}
 			}
 
@@ -164,12 +171,15 @@
 	/** Задержка (мс) между появлением игры и стартом анимации включения вывесок. */
 	const NEON_START_DELAY_MS = 2000;
 
-	/** true = задержка истекла, анимация "in" идёт / уже сыграла → idle. */
-	let isActive = $state(false);
+	/**
+	 * Plain JS variable (NOT $state) — used inside the Pixi ticker closure set up
+	 * in onMount. Using $state here risks stale reads in non-reactive contexts.
+	 */
+	let isActivePlain = false;
 
 	$effect(() => {
 		if (!started) return;
-		isActive = false;
+		isActivePlain = false;
 
 		// Play "in" frozen at frame 0 → shows the "off" state:
 		// panels visible, neon lights dark (frame 0 of "in" animation).
@@ -185,10 +195,13 @@
 
 		// After delay — unfreeze → neon lights turn on.
 		const timer = setTimeout(() => {
-			isActive = true;
+			isActivePlain = true;
 			entry.timeScale = 1;
 		}, NEON_START_DELAY_MS);
 
-		return () => clearTimeout(timer);
+		return () => {
+			clearTimeout(timer);
+			isActivePlain = false;
+		};
 	});
 </script>

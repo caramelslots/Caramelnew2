@@ -3,6 +3,7 @@
 	import { SECOND } from 'constants-shared/time';
 
 	import { getContext } from '../game/context';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { getBoardCanvasBounds } from '../game/neonBoardAlignment';
 	import { getNeonOverlayProps } from '../game/neonBackgroundLayout';
 	import NeonBackgroundOverlay from './NeonBackgroundOverlay.svelte';
@@ -32,7 +33,7 @@
 		x={neonOverlayProps.x}
 		y={neonOverlayProps.y}
 		scale={neonOverlayProps.scale}
-		started={true}
+		started={gameEntrance.showContent}
 	/>
 </FadeContainer>
 
@@ -44,6 +45,6 @@
 		x={neonOverlayProps.x}
 		y={neonOverlayProps.y}
 		scale={neonOverlayProps.scale}
-		started={true}
+		started={gameEntrance.showContent}
 	/>
 </FadeContainer>
