@@ -27,7 +27,7 @@
 
 <!-- Scale from board center: outer = center point, inner = top-left origin -->
 <Container x={boardLayout.x} y={boardLayout.y} scale={boardScale}>
-	<Container x={-boardLayout.pivot.x} y={-boardLayout.pivot.y}>
+<Container x={-boardLayout.pivot.x} y={-boardLayout.pivot.y} sortableChildren={true}>
 		{@render props.children()}
 	</Container>
 </Container>

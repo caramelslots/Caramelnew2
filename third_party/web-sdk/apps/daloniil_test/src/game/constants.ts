@@ -279,15 +279,19 @@ export const BOARD_MASK_IDLE_BOUNCE_TOP =
  * Idle values — keep tight so parked padding rows stay hidden (top pad
  * center ≈ y−50, bottom pad center ≈ y550).
  */
-export const BOARD_MASK_OVERFLOW = { top: 0, bottom: 10 } as const;
+export const BOARD_MASK_OVERFLOW = { top: 0, bottom: 48 } as const;
 
 /**
  * Bottom mask runway while reels scroll or bounce — see BoardMask.svelte
  * (`boardReelsActive`). Top stays at 0: any top overflow exposes the parked
  * padding row (center y−50). Parked padding is culled in ReelSymbol while
- * reels move; keep bottom modest so symbols do not bleed into the frame gap.
+ * reels move. Bottom matches BOARD_MASK_FEATHER so the soft fade sits below
+ * the visible grid, not inside it.
  */
-export const BOARD_MASK_SPIN_OVERFLOW = { top: 0, bottom: 20 } as const;
+export const BOARD_MASK_SPIN_OVERFLOW = { top: 0, bottom: 48 } as const;
+
+/** Soft vertical fade at the visible grid edges (symbols + reel VFX). */
+export const BOARD_MASK_FEATHER = 44;
 
 export const BACKGROUND_RATIO = 2039 / 1000;
 export const PORTRAIT_BACKGROUND_RATIO = 1242 / 2208;
@@ -1049,7 +1053,10 @@ export const getFsOutroSpineWidth = (args: {
 	const base = BOARD_SIZES.width * FS_OUTRO_SPINE_WIDTH_FRAC;
 	if (args.canvasSizeType !== 'smallMobile' && args.canvasSizeType !== 'mobile') return base;
 
-	const tier = getPortraitMobileTier(args.canvasSizeType, Math.min(args.canvasSizes.width, args.canvasSizes.height));
+	const tier = getPortraitMobileTier(
+		args.canvasSizeType,
+		Math.min(args.canvasSizes.width, args.canvasSizes.height),
+	);
 	return base * FS_OUTRO_PHONE_SCALE[tier];
 };
 

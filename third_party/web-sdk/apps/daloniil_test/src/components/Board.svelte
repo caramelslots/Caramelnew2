@@ -37,6 +37,7 @@
 <script lang="ts">
 	import { stateBetDerived } from 'state-shared';
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
+	import { Container } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
 	import { MYSTERY_EXPLOSION_DURATION_S } from '../game/constants';
@@ -172,10 +173,13 @@
 
 {#if show}
 	<BoardContainer>
-		<BoardMask />
-		<BoardBase />
+		<!-- Feather mask applies to symbols only — outline spine uses its own clip mask. -->
+		<Container>
+			<BoardMask />
+			<BoardBase />
+			<PaylineOverlay />
+			<PaylineWinAmounts />
+		</Container>
 		<CatAnticipationFrames />
-		<PaylineOverlay />
-		<PaylineWinAmounts />
 	</BoardContainer>
 {/if}

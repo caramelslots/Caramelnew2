@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { Rectangle } from 'pixi-svelte';
+	import { onDestroy } from 'svelte';
+	import { BaseSprite, Rectangle } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
 	import {
@@ -9,7 +10,12 @@
 		BOARD_MASK_WIN_BOUNCE_TOP,
 		BOARD_MASK_IDLE_BOUNCE_TOP,
 		BOARD_MASK_MYSTERY_OVERFLOW,
+		BOARD_MASK_FEATHER,
 	} from '../game/constants';
+	import {
+		createBoardFeatherMaskTexture,
+		destroyBoardFeatherMaskTexture,
+	} from '../game/boardFeatherMask';
 	import { stateGame } from '../game/stateGame.svelte';
 
 	type Props = { debug?: boolean };
@@ -20,9 +26,6 @@
 	const reelsActive = $derived(context.stateGameDerived.boardReelsActive());
 	const mysteryAnimating = $derived(context.stateGameDerived.boardMysteryAnimating());
 	const idleBouncing = $derived(context.stateGameDerived.boardIdleBouncing());
-	// Mystery VFX needs extra mask runway, but only while reels are stopped —
-	// during collapse+spin a global top/bottom overflow would expose scrolling
-	// symbols from other columns above/below the frame.
 	const mysteryMaskActive = $derived(mysteryAnimating && !reelsActive);
 	const maskTopOverflow = $derived(
 		stateGame.winSpotlightActive
@@ -42,6 +45,26 @@
 				? BOARD_MASK_SPIN_OVERFLOW.bottom
 				: BOARD_MASK_OVERFLOW.bottom,
 	);
+
+	const maskX = $derived(-SYMBOL_SIZE);
+	const maskY = $derived(-maskTopOverflow);
+	const maskWidth = $derived(layout.width + SYMBOL_SIZE * 2);
+	const maskHeight = $derived(layout.height + maskTopOverflow + maskBottomOverflow);
+
+	const maskTexture = $derived.by(() =>
+		createBoardFeatherMaskTexture({
+			width: maskWidth,
+			height: maskHeight,
+			topOverflow: maskTopOverflow,
+			bottomOverflow: maskBottomOverflow,
+			gridHeight: layout.height,
+			feather: BOARD_MASK_FEATHER,
+		}),
+	);
+
+	onDestroy(() => {
+		destroyBoardFeatherMaskTexture();
+	});
 </script>
 
 {#if props.debug}
@@ -53,10 +76,8 @@
 	/>
 {/if}
 
-<Rectangle
-	isMask
-	x={-SYMBOL_SIZE}
-	y={-maskTopOverflow}
-	width={layout.width + SYMBOL_SIZE * 2}
-	height={layout.height + maskTopOverflow + maskBottomOverflow}
-/>
+<BaseSprite isMask texture={maskTexture} x={maskX} y={maskY} />
+
+{#if props.debug}
+	<BaseSprite texture={maskTexture} x={maskX} y={maskY} alpha={0.35} />
+{/if}
