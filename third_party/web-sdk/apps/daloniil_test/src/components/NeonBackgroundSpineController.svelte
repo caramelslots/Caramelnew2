@@ -102,6 +102,25 @@
 		}
 	};
 
+	/** Apply layout-aware scale/offset to the text_wok bone every frame. */
+	const applyTextWokTransform = () => {
+		const textWokBone = spine.skeleton.findBone('text_wok');
+		if (!textWokBone) return;
+		const layoutType = context.stateLayoutDerived.layoutType();
+		const layoutKey =
+			layoutType === 'portrait'
+				? `portrait-${getPortraitMobileTier(context.stateLayoutDerived.canvasSizeType(), getPortraitDeviceWidth(context.stateLayoutDerived.canvasSizes()))}`
+				: layoutType;
+		const s = TEXT_WOK_SCALE_BY_LAYOUT[layoutKey] ?? 1;
+		textWokBone.scaleX = s;
+		textWokBone.scaleY = s;
+		const offset = TEXT_WOK_OFFSET_BY_LAYOUT[layoutKey];
+		if (offset) {
+			textWokBone.x = textWokBone.data.x + offset.x;
+			textWokBone.y = textWokBone.data.y + offset.y;
+		}
+	};
+
 	onMount(() => {
 		applySkin(skin);
 		applyTuning();
@@ -110,7 +129,7 @@
 		spine.beforeUpdateWorldTransforms = (...args) => {
 			previous?.(...args);
 
-					hideStaticSlots();
+			hideStaticSlots();
 
 			if (!started) {
 				if (gameEntrance.loadingCardsVisible) {
@@ -119,6 +138,9 @@
 					for (const slot of spine.skeleton.slots) {
 						if (slot.data.blendMode === BlendMode.Additive) slot.color.a = 0;
 					}
+					// Apply mobile-aware text_wok scaling on the loader too
+					// (behind-layer shows text_wok during loader without layer filtering).
+					applyTextWokTransform();
 				} else {
 					// Transition phase (user pressed continue, game not yet visible):
 					// hide front-layer elements (WOK FURY, mivina) from behind-layer
@@ -143,14 +165,10 @@
 			// activeGlowSlots and isAnimationStarted are plain JS vars for safe
 			// closure reads inside this Pixi ticker callback.
 			if (!isAnimationStarted) {
-				// Before animation starts: zero ALL additive slots.
 				for (const slot of spine.skeleton.slots) {
-					if (slot.data.blendMode === BlendMode.Additive) {
-						slot.color.a = 0;
-					}
+					if (slot.data.blendMode === BlendMode.Additive) slot.color.a = 0;
 				}
 			} else {
-				// Animation running: zero only slots whose group hasn't activated yet.
 				for (const slot of spine.skeleton.slots) {
 					if (
 						slot.data.blendMode === BlendMode.Additive &&
@@ -162,22 +180,7 @@
 			}
 
 			if (layer === 'front') {
-				const textWokBone = spine.skeleton.findBone('text_wok');
-				if (textWokBone) {
-					const layoutType = context.stateLayoutDerived.layoutType();
-					const layoutKey =
-						layoutType === 'portrait'
-							? `portrait-${getPortraitMobileTier(context.stateLayoutDerived.canvasSizeType(), getPortraitDeviceWidth(context.stateLayoutDerived.canvasSizes()))}`
-							: layoutType;
-					const s = TEXT_WOK_SCALE_BY_LAYOUT[layoutKey] ?? 1;
-					textWokBone.scaleX = s;
-					textWokBone.scaleY = s;
-					const offset = TEXT_WOK_OFFSET_BY_LAYOUT[layoutKey];
-					if (offset) {
-						textWokBone.x = textWokBone.data.x + offset.x;
-						textWokBone.y = textWokBone.data.y + offset.y;
-					}
-				}
+				applyTextWokTransform();
 			}
 
 			if (layer === 'front' && boardBounds) {

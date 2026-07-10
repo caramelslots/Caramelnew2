@@ -66,14 +66,6 @@
 	<Container x={canvasCenter.x} y={canvasCenter.y} scale={backgroundZoom}>
 		<Container x={-canvasCenter.x} y={-canvasCenter.y}>
 			<Sprite key="mainBackground" {...spriteProps} />
-			<NeonBackgroundOverlay
-				layer="behind"
-				skin="day"
-				x={neonOverlayProps.x}
-				y={neonOverlayProps.y}
-				scale={neonOverlayProps.scale}
-				started={gameEntrance.showContent}
-			/>
 			<Lantern
 				assetKey="lanternDay"
 				x={lanternLayout.leftX}
@@ -86,6 +78,14 @@
 				y={lanternLayout.y}
 				height={lanternLayout.height}
 				phase={Math.PI}
+			/>
+			<NeonBackgroundOverlay
+				layer="behind"
+				skin="day"
+				x={neonOverlayProps.x}
+				y={neonOverlayProps.y}
+				scale={neonOverlayProps.scale}
+				started={gameEntrance.showContent}
 			/>
 		</Container>
 	</Container>
@@ -95,14 +95,6 @@
 	<Container x={canvasCenter.x} y={canvasCenter.y} scale={backgroundZoom}>
 		<Container x={-canvasCenter.x} y={-canvasCenter.y}>
 			<Sprite key="featureBackground" {...spriteProps} />
-			<NeonBackgroundOverlay
-				layer="behind"
-				skin="night"
-				x={neonOverlayProps.x}
-				y={neonOverlayProps.y}
-				scale={neonOverlayProps.scale}
-				started={gameEntrance.showContent}
-			/>
 			<Lantern
 				assetKey="lanternNight"
 				x={lanternLayout.leftX}
@@ -115,6 +107,14 @@
 				y={lanternLayout.y}
 				height={lanternLayout.height}
 				phase={Math.PI}
+			/>
+			<NeonBackgroundOverlay
+				layer="behind"
+				skin="night"
+				x={neonOverlayProps.x}
+				y={neonOverlayProps.y}
+				scale={neonOverlayProps.scale}
+				started={gameEntrance.showContent}
 			/>
 		</Container>
 	</Container>
