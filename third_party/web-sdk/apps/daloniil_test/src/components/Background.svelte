@@ -7,6 +7,10 @@
 	import { catBackgroundZoom } from '../game/catAnticipationBoardZoom.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { getNeonOverlayProps, coverFit, BG_RATIO, BG_Y_OFFSET } from '../game/neonBackgroundLayout';
+	import {
+		getLanternLayoutKey,
+		resolveLanternLayout,
+	} from '../game/lanternLayoutTuning';
 	import Lantern from './Lantern.svelte';
 	import NeonBackgroundOverlay from './NeonBackgroundOverlay.svelte';
 
@@ -29,23 +33,19 @@
 		getNeonOverlayProps(context.stateLayoutDerived.canvasSizes()),
 	);
 
-	// Lantern composition (fractions of the canvas size). Both lanterns are
-	// suspended from the top edge and sized as a fraction of canvas height,
-	// so they scale with the layout instead of being absolute pixels.
-	const LANTERN_HEIGHT_RATIO = 0.42;
-	const LANTERN_TOP_RATIO = -0.04;
-	const LANTERN_LEFT_RATIO = 0.17;
-	const LANTERN_RIGHT_RATIO = 0.86;
-
 	const lanternLayout = $derived.by(() => {
 		const canvas = context.stateLayoutDerived.canvasSizes();
-		const height = canvas.height * LANTERN_HEIGHT_RATIO;
-		const y = canvas.height * LANTERN_TOP_RATIO;
+		const layoutKey = getLanternLayoutKey(
+			context.stateLayoutDerived.layoutType(),
+			context.stateLayoutDerived.canvasSizeType(),
+			canvas,
+		);
+		const tuning = resolveLanternLayout(layoutKey);
 		return {
-			height,
-			y,
-			leftX: canvas.width * LANTERN_LEFT_RATIO,
-			rightX: canvas.width * LANTERN_RIGHT_RATIO,
+			height: canvas.height * tuning.heightRatio,
+			y: canvas.height * tuning.topRatio,
+			leftX: canvas.width * tuning.leftRatio,
+			rightX: canvas.width * tuning.rightRatio,
 		};
 	});
 

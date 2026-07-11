@@ -28,6 +28,7 @@
 	import { playBet, playBookEvent, playBookEvents } from '../game/utils';
 	import { eventEmitter } from '../game/eventEmitter';
 	import { devPreview } from '../game/devPreview.svelte';
+	import { stateGame } from '../game/stateGame.svelte';
 	import { LANG_LABELS, setGameLanguage, STAKE_LOCALES } from '../game/devLang';
 	import { setGameSocialMode } from '../game/devSocial';
 	import baseEvents from '../stories/data/base_events';
@@ -492,8 +493,22 @@
 	const playLadderTierUp = () =>
 		guard(() => playBookEvent(asEvent(baseEvents.ladderTierUp), { bookEvents: [] }));
 
+	/** MysteryReelUnlockOverlay — collect 4 B in FS → +3 FS + sticky mystery reel unlock. */
 	const playMysteryReelUnlockCelebration = () =>
-		guard(() => playBookEvent(asEvent(baseEvents.mysteryReelUnlock), { bookEvents: [] }));
+		guard(async () => {
+			stateGame.gameType = 'freegame';
+			stateGame.bonusCollected = 4;
+			stateGame.ladderTier = 1;
+			stateGame.mysteryReels = [2];
+			devPreview.ladder = true;
+			devPreview.ladderFilled = 4;
+			await eventEmitter.broadcastAsync({
+				type: 'mysteryReelUnlock',
+				reels: [2],
+				tierAfter: 1,
+				rewardSpins: 3,
+			});
+		});
 
 	const playMysteryReveal = () =>
 		guard(async () => {
@@ -852,10 +867,10 @@
 					<button
 						type="button"
 						disabled={busy}
-						title="mysteryReelUnlock: поздравление +3 FS при tier-up Progress Ladder"
+						title="MysteryReelUnlockOverlay: 4× B в FS → Sticky Mystery Reel +3 FS"
 						onclick={playMysteryReelUnlockCelebration}
 					>
-						+3 FS Celebration
+						Sticky Mystery Unlock +3
 					</button>
 					<button
 						type="button"

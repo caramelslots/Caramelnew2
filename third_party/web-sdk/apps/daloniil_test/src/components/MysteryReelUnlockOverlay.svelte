@@ -60,12 +60,10 @@
 {#if visible}
 	<div class="overlay" data-test="mystery-reel-unlock-overlay" transition:fade={{ duration: FADE_MS }}>
 		<div
-			class="card"
+			class="unlock-card"
 			in:scale={{ duration: 400, easing: backOut, start: 0.5 }}
 			out:scale={{ duration: FADE_MS, easing: cubicOut, start: 1 }}
 		>
-			<div class="glow"></div>
-
 			<div class="title">{context.i18nDerived.mysteryReelUnlocked()}</div>
 			<div class="subtitle">
 				{#if reelsCount > 1}+{reelsCount} {/if}{context.i18nDerived.mysteryReelUnlockedSubtitle()}
@@ -91,34 +89,47 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		padding: 1.25rem;
+		box-sizing: border-box;
 		background: rgba(0, 0, 0, 0.55);
 		z-index: 60;
 		pointer-events: none;
+
+		/* Soft ambient glow — stays inside viewport (body has overflow:hidden). */
+		&::before {
+			content: '';
+			position: absolute;
+			inset: 0;
+			background: radial-gradient(
+				ellipse 70% 45% at 50% 50%,
+				rgba(255, 208, 0, 0.24) 0%,
+				rgba(255, 154, 60, 0.1) 42%,
+				transparent 75%
+			);
+			pointer-events: none;
+			animation: pulse-glow 1.4s ease-in-out infinite;
+		}
 	}
 
-	.card {
+	.unlock-card {
 		position: relative;
-		min-width: 380px;
-		max-width: 540px;
+		z-index: 1;
+		box-sizing: border-box;
+		width: fit-content;
+		max-width: min(540px, 100%);
+		min-width: min(380px, 100%);
 		padding: 2rem 3rem;
 		background: linear-gradient(180deg, rgba(40, 30, 20, 0.96), rgba(20, 15, 10, 0.96));
 		border: 2px solid rgba(255, 208, 0, 0.6);
 		border-radius: 18px;
 		box-shadow:
 			0 12px 64px rgba(0, 0, 0, 0.7),
-			0 0 80px rgba(255, 208, 0, 0.3),
+			0 0 40px rgba(255, 208, 0, 0.2),
+			0 0 80px rgba(255, 154, 60, 0.1),
 			inset 0 1px 0 rgba(255, 255, 255, 0.05);
 		text-align: center;
 		font-family: 'proxima-nova', sans-serif;
 		color: #fff;
-	}
-
-	.glow {
-		position: absolute;
-		inset: -40%;
-		background: radial-gradient(circle, rgba(255, 208, 0, 0.25) 0%, transparent 60%);
-		pointer-events: none;
-		animation: pulse-glow 1.4s ease-in-out infinite;
 	}
 
 	.title {
@@ -194,6 +205,27 @@
 		}
 		50% {
 			opacity: 1;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.unlock-card {
+			min-width: 0;
+			width: min(380px, 100%);
+			padding: 1.5rem 1.75rem;
+		}
+
+		.title {
+			font-size: 1.1rem;
+			letter-spacing: 0.12em;
+		}
+
+		.subtitle {
+			font-size: 1.75rem;
+		}
+
+		.reward {
+			font-size: 0.95rem;
 		}
 	}
 </style>
