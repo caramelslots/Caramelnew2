@@ -46,6 +46,7 @@
 	import BoardMask from './BoardMask.svelte';
 	import BoardBase from './BoardBase.svelte';
 	import CatAnticipationFrames from './CatAnticipationFrames.svelte';
+	import CatAnticipationSound from './CatAnticipationSound.svelte';
 	import PaylineOverlay from './PaylineOverlay.svelte';
 	import PaylineWinAmounts from './PaylineWinAmounts.svelte';
 
@@ -184,5 +185,6 @@
 		     board mask so VFX composite over parchment instead of a transparent RT. -->
 		<BoardBase mysteryFx />
 		<CatAnticipationFrames />
+		<CatAnticipationSound />
 	</BoardContainer>
 {/if}
