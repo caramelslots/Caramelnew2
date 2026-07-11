@@ -15,7 +15,6 @@
 		MYSTERY_BG_UNCOVER_MS,
 		SYMBOL_SIZE,
 		BOARD_DIMENSIONS,
-		isVisibleBoardSymbolIndex,
 	} from '../game/constants';
 	import { stateGame } from '../game/stateGame.svelte';
 	import type { ReelSymbol } from '../game/stateGame.svelte';
@@ -57,18 +56,23 @@
 	const isSpinningSymbol = $derived(props.reelSymbol.symbolState === 'spin');
 	const applyWinPresentation = $derived(isWinningState && !isSpinningSymbol);
 	const applyIdleBouncePresentation = $derived(isIdleBouncing);
-	const activeSymbolCount = $derived(stateGame.board[props.reelIndex].reelState.activeSymbolCount);
-	const isPaddingSymbol = $derived(
-		!isVisibleBoardSymbolIndex(props.reelSymbol.symbolIndex, activeSymbolCount),
+	const maskRunwayActive = $derived(
+		stateGame.board[props.reelIndex].reelState.motion !== 'stopped' ||
+			isSpinningSymbol ||
+			applyWinPresentation ||
+			applyIdleBouncePresentation,
 	);
-	// Padding rows (top/bottom of the padded strip) must never render outside
-	// the visible grid — even when the board mask expands for win/mystery VFX.
-	const hideOffGridPadding = $derived.by(() => {
-		if (!isPaddingSymbol) return false;
+	// Off-grid symbols (padding rows or post-settle pool parked above/below the
+	// visible grid) must not render once the reel has stopped — even when the
+	// board mask expands for win/mystery VFX. While reels move, keep them
+	// visible so the top/bottom feather mask can clip the scroll smoothly.
+	const hideOffGridSymbol = $derived.by(() => {
+		if (maskRunwayActive) return false;
+
 		const y = props.reelSymbol.symbolY();
 		const half = SYMBOL_SIZE / 2;
 		const gridBottom = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
-		return y + half <= 0 || y - half >= gridBottom;
+		return y - half < 0 || y + half > gridBottom;
 	});
 	const dimAlphaTween = new Tween(1);
 
@@ -219,11 +223,11 @@
 	);
 </script>
 
-{#if showBgSymbol && revealedRawSymbol && !hideOffGridPadding}
+{#if showBgSymbol && revealedRawSymbol && !hideOffGridSymbol}
 	<SymbolWrap
 		x={getSymbolX(props.reelIndex)}
 		y={props.reelSymbol.symbolY()}
-		spinActive={isSpinningSymbol}
+		spinActive={maskRunwayActive}
 		alpha={bgAlphaTween.current}
 	>
 		<Symbol
@@ -236,11 +240,11 @@
 	</SymbolWrap>
 {/if}
 
-{#if !hideOffGridPadding}
+{#if !hideOffGridSymbol}
 	<SymbolWrap
 		x={getSymbolX(props.reelIndex)}
 		y={props.reelSymbol.symbolY() + wrapYOffset}
-		spinActive={isSpinningSymbol}
+		spinActive={maskRunwayActive}
 		scaleX={props.reelSymbol.landScaleX() * wrapScale}
 		scaleY={props.reelSymbol.landScaleY() * wrapScale}
 		alpha={isSpinningSymbol ? 1 : dimAlphaTween.current}

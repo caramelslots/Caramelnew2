@@ -66,6 +66,10 @@
 		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
 	);
 	const show = $derived(isPortrait && gameEntrance.showContent && uiVisible);
+	const spinPrewarmActive = $derived(
+		isPortrait && gameEntrance.preloadContent && uiVisible && !isFreeSpins,
+	);
+	const overlayMounted = $derived(show || spinPrewarmActive);
 
 	const hud = $derived.by(() => {
 		void stateGame.gameType;
@@ -231,122 +235,132 @@
 	};
 </script>
 
-{#if show}
-	<div class="portrait-hud-overlay daloniil-ui-enter" aria-label="game controls">
-		{#if !isFreeSpins}
+{#if overlayMounted}
+	<div
+		class="portrait-hud-overlay"
+		class:daloniil-ui-enter={show}
+		class:prewarm={!show}
+		aria-label="game controls"
+		aria-hidden={!show}
+	>
+		{#if show}
+			{#if !isFreeSpins}
+				<button
+					type="button"
+					class="hud-icon-btn"
+					class:dimmed={decreaseDisabled}
+					style:left="{hud.spin.centerX - hud.spin.betControlOffsetX}px"
+					style:top="{hud.spin.centerY}px"
+					style:width="{hud.spin.smallSize}px"
+					style:height="{hud.spin.smallSize}px"
+					style:background-image="url('{minusUrl}')"
+					disabled={decreaseDisabled}
+					aria-label={context.i18nDerived.ariaDecreaseAmount()}
+					onclick={onDecreasePress}
+				></button>
+
+				<button
+					type="button"
+					class="hud-icon-btn"
+					class:dimmed={increaseDisabled}
+					style:left="{hud.spin.centerX + hud.spin.betControlOffsetX}px"
+					style:top="{hud.spin.centerY}px"
+					style:width="{hud.spin.smallSize}px"
+					style:height="{hud.spin.smallSize}px"
+					style:background-image="url('{plusUrl}')"
+					disabled={increaseDisabled}
+					aria-label={context.i18nDerived.ariaIncreaseAmount()}
+					onclick={onIncreasePress}
+				></button>
+			{/if}
+
 			<button
 				type="button"
 				class="hud-icon-btn"
-				class:dimmed={decreaseDisabled}
-				style:left="{hud.spin.centerX - hud.spin.betControlOffsetX}px"
-				style:top="{hud.spin.centerY}px"
-				style:width="{hud.spin.smallSize}px"
-				style:height="{hud.spin.smallSize}px"
-				style:background-image="url('{minusUrl}')"
-				disabled={decreaseDisabled}
-				aria-label={context.i18nDerived.ariaDecreaseAmount()}
-				onclick={onDecreasePress}
+				style:left="{hud.util.x.info}px"
+				style:top="{hud.util.centerY}px"
+				style:width="{hud.util.iconSize}px"
+				style:height="{hud.util.iconSize}px"
+				style:background-image="url('{infoUrl}')"
+				aria-label="info"
+				onclick={onInfoPress}
 			></button>
 
+			<button
+				type="button"
+				class="hud-icon-btn"
+				style:left="{hud.util.x.menu}px"
+				style:top="{hud.util.centerY}px"
+				style:width="{hud.util.iconSize}px"
+				style:height="{hud.util.iconSize}px"
+				style:background-image="url('{menuUrl}')"
+				aria-label="menu"
+				onclick={onMenuPress}
+			></button>
+
+			<div
+				bind:this={balanceWrapEl}
+				class="hud-balance-bet"
+				style:left="{hud.util.balance.centerX}px"
+				style:top="{hud.util.centerY}px"
+				style:font-size="{balanceFontSize}px"
+				style:max-width="{hud.util.balance.maxWidth}px"
+			>
+				<HudBalanceBetLine
+					label={context.i18nDerived.balance()}
+					value={numberToCurrencyString(stateBet.balanceAmount)}
+				/>
+				<HudBalanceBetLine
+					label={context.i18nDerived.bet()}
+					value={numberToCurrencyString(stateBet.betAmount)}
+				/>
+			</div>
+
+			{#if !isFreeSpins}
+				<button
+					type="button"
+					class="hud-icon-btn"
+					class:dimmed={autoplayDisabled && !isAutoSpinModalOpen}
+					style:left="{hud.util.x.autoplay}px"
+					style:top="{hud.util.centerY}px"
+					style:width="{hud.util.iconSize}px"
+					style:height="{hud.util.iconSize}px"
+					style:background-image="url('{autoplayUrl}')"
+					disabled={autoplayDisabled}
+					aria-label={context.i18nDerived.autoplayTitle()}
+					onclick={onAutoplayPress}
+				></button>
+			{/if}
+
+			<button
+				type="button"
+				class="hud-icon-btn"
+				class:dimmed={turboDisabled}
+				style:left="{hud.util.x.turbo}px"
+				style:top="{hud.util.centerY}px"
+				style:width="{hud.util.iconSize}px"
+				style:height="{hud.util.iconSize}px"
+				style:background-image="url('{turboUrl}')"
+				disabled={turboDisabled}
+				aria-label="turbo"
+				onclick={onTurboPress}
+			></button>
+		{/if}
+
+		{#if !isFreeSpins}
 			<SpinHudButton
 				bind:this={spinHudButton}
 				x={hud.spin.centerX}
 				y={hud.spin.centerY + hud.spin.raiseY}
 				size={hud.spin.size}
 				dimmed={spinDisabled}
-				disabled={spinDisabled}
+				disabled={spinDisabled || !show}
 				onpress={onSpinPress}
 				hasCounter={hasCounter}
 				counterText={spinCounterText}
 				counterFontSize={spinCounterFontSize}
 			/>
-
-			<button
-				type="button"
-				class="hud-icon-btn"
-				class:dimmed={increaseDisabled}
-				style:left="{hud.spin.centerX + hud.spin.betControlOffsetX}px"
-				style:top="{hud.spin.centerY}px"
-				style:width="{hud.spin.smallSize}px"
-				style:height="{hud.spin.smallSize}px"
-				style:background-image="url('{plusUrl}')"
-				disabled={increaseDisabled}
-				aria-label={context.i18nDerived.ariaIncreaseAmount()}
-				onclick={onIncreasePress}
-			></button>
 		{/if}
-
-		<button
-			type="button"
-			class="hud-icon-btn"
-			style:left="{hud.util.x.info}px"
-			style:top="{hud.util.centerY}px"
-			style:width="{hud.util.iconSize}px"
-			style:height="{hud.util.iconSize}px"
-			style:background-image="url('{infoUrl}')"
-			aria-label="info"
-			onclick={onInfoPress}
-		></button>
-
-		<button
-			type="button"
-			class="hud-icon-btn"
-			style:left="{hud.util.x.menu}px"
-			style:top="{hud.util.centerY}px"
-			style:width="{hud.util.iconSize}px"
-			style:height="{hud.util.iconSize}px"
-			style:background-image="url('{menuUrl}')"
-			aria-label="menu"
-			onclick={onMenuPress}
-		></button>
-
-		<div
-			bind:this={balanceWrapEl}
-			class="hud-balance-bet"
-			style:left="{hud.util.balance.centerX}px"
-			style:top="{hud.util.centerY}px"
-			style:font-size="{balanceFontSize}px"
-			style:max-width="{hud.util.balance.maxWidth}px"
-		>
-			<HudBalanceBetLine
-				label={context.i18nDerived.balance()}
-				value={numberToCurrencyString(stateBet.balanceAmount)}
-			/>
-			<HudBalanceBetLine
-				label={context.i18nDerived.bet()}
-				value={numberToCurrencyString(stateBet.betAmount)}
-			/>
-		</div>
-
-		{#if !isFreeSpins}
-			<button
-				type="button"
-				class="hud-icon-btn"
-				class:dimmed={autoplayDisabled && !isAutoSpinModalOpen}
-				style:left="{hud.util.x.autoplay}px"
-				style:top="{hud.util.centerY}px"
-				style:width="{hud.util.iconSize}px"
-				style:height="{hud.util.iconSize}px"
-				style:background-image="url('{autoplayUrl}')"
-				disabled={autoplayDisabled}
-				aria-label={context.i18nDerived.autoplayTitle()}
-				onclick={onAutoplayPress}
-			></button>
-		{/if}
-
-		<button
-			type="button"
-			class="hud-icon-btn"
-			class:dimmed={turboDisabled}
-			style:left="{hud.util.x.turbo}px"
-			style:top="{hud.util.centerY}px"
-			style:width="{hud.util.iconSize}px"
-			style:height="{hud.util.iconSize}px"
-			style:background-image="url('{turboUrl}')"
-			disabled={turboDisabled}
-			aria-label="turbo"
-			onclick={onTurboPress}
-		></button>
 	</div>
 {/if}
 
@@ -358,6 +372,10 @@
 		inset: 0;
 		z-index: 44;
 		pointer-events: none;
+
+		&.prewarm {
+			visibility: hidden;
+		}
 	}
 
 	.hud-icon-btn {

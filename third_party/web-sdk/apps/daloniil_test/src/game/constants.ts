@@ -276,19 +276,16 @@ export const BOARD_MASK_IDLE_BOUNCE_TOP =
  * slide *behind* the board edge instead of vanishing over the parchment
  * ("in the air"). top/bottom are measured from the grid edges outward.
  *
- * Idle values — keep tight so parked padding rows stay hidden (top pad
- * center ≈ y−50, bottom pad center ≈ y550).
+ * Matches BOARD_MASK_FEATHER so the soft fade sits outside the visible grid,
+ * not inside it. Parked off-grid padding is culled in ReelSymbol / SymbolWrap.
  */
-export const BOARD_MASK_OVERFLOW = { top: 0, bottom: 48 } as const;
+export const BOARD_MASK_OVERFLOW = { top: 48, bottom: 48 } as const;
 
 /**
- * Bottom mask runway while reels scroll or bounce — see BoardMask.svelte
- * (`boardReelsActive`). Top stays at 0: any top overflow exposes the parked
- * padding row (center y−50). Parked padding is culled in ReelSymbol while
- * reels move. Bottom matches BOARD_MASK_FEATHER so the soft fade sits below
- * the visible grid, not inside it.
+ * Mask runway while reels scroll — see BoardMask.svelte (`boardReelsActive`).
+ * Same values as BOARD_MASK_OVERFLOW (top mirrors bottom).
  */
-export const BOARD_MASK_SPIN_OVERFLOW = { top: 0, bottom: 48 } as const;
+export const BOARD_MASK_SPIN_OVERFLOW = { top: 12, bottom: 48 } as const;
 
 /** Soft vertical fade at the visible grid edges (symbols + reel VFX). */
 export const BOARD_MASK_FEATHER = 44;

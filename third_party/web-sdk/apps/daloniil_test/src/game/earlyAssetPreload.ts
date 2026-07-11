@@ -5,6 +5,7 @@ import {
 	getBatch3KeysForLocale,
 } from './assetLoadPlan';
 import { knewaveFontUrl } from './knewaveFont';
+import { SPIN_BUTTON_SPINE_ASSET_URLS } from './spinButtonHtmlSpine';
 
 const warmHttpCache = async (urls: readonly string[], concurrency: number) => {
 	if (urls.length === 0) return;
@@ -69,5 +70,5 @@ export const startBatch3EarlyPreload = () => {
 
 	const locale = new URLSearchParams(window.location.search).get('lang') || 'en';
 	const batch3Keys = getBatch3KeysForLocale(locale);
-	void warmHttpCache(collectBatchHttpUrls(batch3Keys), 6);
+	void warmHttpCache([...collectBatchHttpUrls(batch3Keys), ...SPIN_BUTTON_SPINE_ASSET_URLS], 6);
 };

@@ -1,5 +1,9 @@
 import { preloadHtmlImages } from './preloadHtmlImages';
 import { GAME_INFO_SYMBOL_IMAGE_URLS } from './gameInfoSymbols';
+import {
+	SPIN_BUTTON_SPINE_WEBP_URL,
+	startSpinButtonSpinePreload,
+} from './spinButtonHtmlSpine';
 
 const UI_ASSET_BASE = `${import.meta.env.BASE_URL}assets/sprites/ui`;
 
@@ -77,6 +81,7 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	HUD_ASSETS.betMinus,
 	HUD_ASSETS.betPlus,
 	HUD_ASSETS.spin1,
+	SPIN_BUTTON_SPINE_WEBP_URL,
 	HUD_ASSETS.autoplay,
 	HUD_ASSETS.autoplayMobile,
 	HUD_ASSETS.turbo1,
@@ -150,6 +155,7 @@ export const startBuyBonusFlowPreload = () => {
 };
 
 const LOADING_IDLE_UI_PRIORITY = [
+	SPIN_BUTTON_SPINE_WEBP_URL,
 	HUD_ASSETS.spin1,
 	HUD_ASSETS.menu,
 	HUD_ASSETS.info,
@@ -173,6 +179,8 @@ let loadingIdleUiPreloadStarted = false;
 export const startLoadingIdleUiPreload = () => {
 	if (loadingIdleUiPreloadStarted) return;
 	loadingIdleUiPreloadStarted = true;
+
+	startSpinButtonSpinePreload();
 
 	void preloadHtmlImages(LOADING_IDLE_UI_IMAGE_URLS, {
 		priority: LOADING_IDLE_UI_PRIORITY,

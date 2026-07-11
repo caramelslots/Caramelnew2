@@ -45,16 +45,17 @@ export const createBoardFeatherMaskTexture = (params: BoardFeatherMaskParams): P
 
 		if (topOverflow > 0 && y < gridTop) {
 			const topFeather = Math.min(feather, topOverflow);
-			if (y < topFeather) {
+			const fadeEnd = topFeather;
+			if (y < fadeEnd) {
 				alpha = smoothstep(y / topFeather);
 			}
 		}
 
 		if (bottomOverflow > 0 && y >= gridBottom) {
 			const bottomFeather = Math.min(feather, bottomOverflow);
-			const fadeStart = height - bottomFeather;
+			const fadeStart = gridBottom + bottomOverflow - bottomFeather;
 			if (y >= fadeStart) {
-				alpha *= smoothstep((height - y) / bottomFeather);
+				alpha *= smoothstep((gridBottom + bottomOverflow - y) / bottomFeather);
 			}
 		}
 
