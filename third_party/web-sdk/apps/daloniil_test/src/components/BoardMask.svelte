@@ -76,7 +76,15 @@
 	/>
 {/if}
 
-<BaseSprite isMask texture={maskTexture} x={maskX} y={maskY} />
+<BaseSprite
+	isMask
+	texture={maskTexture}
+	x={maskX}
+	y={maskY}
+	oncreate={(sprite) => {
+		sprite.renderable = false;
+	}}
+/>
 
 {#if props.debug}
 	<BaseSprite texture={maskTexture} x={maskX} y={maskY} alpha={0.35} />

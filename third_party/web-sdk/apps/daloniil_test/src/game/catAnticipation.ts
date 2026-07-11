@@ -30,14 +30,19 @@ export const OUTLINE_REEL_EFFECT = {
 } as const;
 
 /** Fine-tune outline reel spine placement (canvas px). Negative offsetY = up. */
-export const OUTLINE_REEL_TUNING = { offsetX: 0, offsetY: -110, heightExtra: 10 } as const;
+export const OUTLINE_REEL_TUNING = {
+	offsetX: 0,
+	offsetY: -110,
+	widthExtra: 7,
+	heightExtra: 10,
+} as const;
 
 /** Target size for one slow reel column on the board. */
 export const getOutlineReelColumnMetrics = () => {
 	const visibleHeight = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
 	const height = visibleHeight + OUTLINE_REEL_TUNING.heightExtra;
 	return {
-		width: SYMBOL_SIZE,
+		width: SYMBOL_SIZE + OUTLINE_REEL_TUNING.widthExtra,
 		height,
 		/** Center of visible row centers (y = 0.5..4.5 × symbol size). */
 		centerY: visibleHeight / 2,

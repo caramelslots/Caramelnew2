@@ -180,6 +180,9 @@
 			<PaylineOverlay />
 			<PaylineWinAmounts />
 		</Container>
+		<!-- Mystery explosion uses screen-blend Aura slots — render outside the
+		     board mask so VFX composite over parchment instead of a transparent RT. -->
+		<BoardBase mysteryFx />
 		<CatAnticipationFrames />
 	</BoardContainer>
 {/if}
