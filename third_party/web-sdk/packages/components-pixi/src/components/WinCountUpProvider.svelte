@@ -26,6 +26,18 @@
 
 	let countUpCompleted = $state(false);
 
+	/**
+	 * Most RGS book totals are integers. Tween floats invent junk like 70093.6258
+	 * → "$700.936258". Snap the displayed book amount to an integer when the
+	 * target is (near-)integer; keep fractions for real sub-cent books (7.5, …).
+	 */
+	const targetIsIntegerBook = $derived(
+		Math.abs(props.amount - Math.round(props.amount)) < 0.005,
+	);
+	const displayCountUpAmount = $derived(
+		targetIsIntegerBook ? Math.round(countUpAmount.current) : countUpAmount.current,
+	);
+
 	const countUp = () => countUpAmount.set(props.amount, { duration: props.duration });
 	const resetCountUp = () => countUpAmount.set(props.amount, { duration: 0 });
 	const finishCountUp = () => interruptible.interrupt();
@@ -40,7 +52,7 @@
 </script>
 
 {@render props.children({
-	countUpAmount: countUpAmount.current,
+	countUpAmount: displayCountUpAmount,
 	startCountUp,
 	finishCountUp,
 	countUpCompleted,

@@ -78,10 +78,21 @@ export const bookEventAmountToBetAmountMultiplier = (bookEventAmount: number) =>
 export const quantizeToApiAmount = (value: number) =>
 	Math.round(numberToFloat(value) * API_AMOUNT_MULTIPLIER) / API_AMOUNT_MULTIPLIER;
 
+/** Integer API micro-units for a display/currency value (avoids binary float leftovers). */
+export const toApiMicros = (value: number) =>
+	Math.round(numberToFloat(value) * API_AMOUNT_MULTIPLIER);
+
 export const bookEventAmountToNormalisedAmount = (bookEventAmount: number) => {
-	// Exact: (bet micro-units × book amount) / (BOOK × API)
-	const betMicro = Math.round(stateBet.wageredBetAmount * API_AMOUNT_MULTIPLIER);
-	return (betMicro * bookEventAmount) / (BOOK_AMOUNT_MULTIPLIER * API_AMOUNT_MULTIPLIER);
+	// Exact via integer micros: round(betMicro × book / BOOK) / API
+	const betMicro = toApiMicros(stateBet.wageredBetAmount);
+	// Count-up tweens and float maths can leave tiny fractions on otherwise
+	// integer book amounts (e.g. 1630.0023). Snap those; keep real fractions
+	// needed for sub-cent wins (7.5 → $0.075, 12.3456 → $0.123456).
+	const nearestInt = Math.round(bookEventAmount);
+	const book =
+		Math.abs(bookEventAmount - nearestInt) < 0.005 ? nearestInt : bookEventAmount;
+	const winMicro = Math.round((betMicro * book) / BOOK_AMOUNT_MULTIPLIER);
+	return winMicro / API_AMOUNT_MULTIPLIER;
 };
 
 const formatPlainAmount = (value: number, decimals: number) =>
@@ -90,6 +101,59 @@ const formatPlainAmount = (value: number, decimals: number) =>
 		maximumFractionDigits: decimals,
 		useGrouping: true,
 	});
+
+/**
+ * Win amount body (no currency symbol).
+ * Default: currency decimals (USD → 2, `$16.30`).
+ * Extra digits only when the amount truly has sub-cent precision (`$0.075`).
+ */
+export const formatWinAmountBody = (value: number, currency = stateBet.currency) => {
+	const meta = getCurrencyMeta(currency);
+	const minDigits = Math.max(0, meta.decimals);
+	const micros = Math.abs(toApiMicros(value));
+	const sign = toApiMicros(value) < 0 ? '-' : '';
+	const whole = Math.floor(micros / API_AMOUNT_MULTIPLIER);
+	const fracMicros = micros % API_AMOUNT_MULTIPLIER;
+
+	const wholeFormatted = whole.toLocaleString(stateI18n.i18n.locale || 'en', {
+		useGrouping: true,
+		maximumFractionDigits: 0,
+		numberingSystem: 'latn',
+	});
+
+	if (meta.decimals <= 0) {
+		// JPY / XGC: no fraction unless there is a real fractional remainder.
+		if (fracMicros === 0) return `${sign}${wholeFormatted}`;
+	}
+
+	// Unit for currency decimals in micros (USD 2dp → 10_000 micros = $0.01).
+	const currencyUnit =
+		minDigits > 0 ? 10 ** (WIN_AMOUNT_MAX_FRACTION_DIGITS - minDigits) : API_AMOUNT_MULTIPLIER;
+	const hasSubCurrencyPrecision = minDigits > 0 && fracMicros % currencyUnit !== 0;
+
+	let fracStr: string;
+	if (!hasSubCurrencyPrecision) {
+		// Default: exactly currency decimals ( Balancе/Bet-like 2dp for USD ).
+		const roundedFrac =
+			minDigits > 0
+				? Math.round(fracMicros / currencyUnit) % 10 ** minDigits
+				: 0;
+		// Handle round-up carrying into whole (e.g. 0.999999 → next dollar) — rare after toApiMicros.
+		fracStr = String(roundedFrac).padStart(minDigits, '0');
+	} else {
+		// Real sub-cent win — keep needed digits, trim trailing zeros.
+		fracStr = String(fracMicros).padStart(WIN_AMOUNT_MAX_FRACTION_DIGITS, '0');
+		while (fracStr.length > minDigits && fracStr.endsWith('0')) {
+			fracStr = fracStr.slice(0, -1);
+		}
+	}
+
+	if (!fracStr) {
+		return `${sign}${wholeFormatted}`;
+	}
+
+	return `${sign}${wholeFormatted}.${fracStr}`;
+};
 
 /** Balance / bet / costs — currency-native decimals (XGC=0, USD=2, JPY=0, …). */
 export const numberToCurrencyString = (value: number) => {
@@ -103,16 +167,10 @@ export const numberToCurrencyString = (value: number) => {
 	return `${meta.symbol}${formatted}`;
 };
 
-/** Win displays — full API precision (up to 6dp), without rounding down to currency cents. */
+/** Win displays — significant API digits only (trim trailing zeros; min = currency decimals). */
 export const numberToWinCurrencyString = (value: number) => {
-	const amount = quantizeToApiAmount(value);
 	const meta = getCurrencyMeta();
-	const minDigits = meta.decimals;
-	const formatted = amount.toLocaleString(stateI18n.i18n.locale || 'en', {
-		minimumFractionDigits: minDigits,
-		maximumFractionDigits: WIN_AMOUNT_MAX_FRACTION_DIGITS,
-		useGrouping: true,
-	});
+	const formatted = formatWinAmountBody(value);
 
 	if (meta.symbolAfter) {
 		return `${formatted} ${meta.symbol}`;

@@ -1,9 +1,8 @@
-import { stateBet, stateI18n } from 'state-shared';
+import { stateBet } from 'state-shared';
 import {
 	bookEventAmountToNormalisedAmount,
+	formatWinAmountBody,
 	getCurrencyMeta,
-	quantizeToApiAmount,
-	WIN_AMOUNT_MAX_FRACTION_DIGITS,
 } from 'utils-shared/amount';
 
 export type CurrencyTextSegment = { kind: 'symbol' | 'body'; text: string };
@@ -33,23 +32,16 @@ const pushSegment = (
 /**
  * Split a formatted win amount: symbol → bablo, digits/separators → krutoi.
  * Uses authenticate currency (including social XGC/XSC). Balance/Bet use numberToCurrencyString.
+ * Win body keeps necessary precision only (e.g. $0.075), not float noise like $16.300023.
  */
 export const amountToCurrencySegments = (
 	amount: number,
 	bookEvent = false,
 ): CurrencyTextSegment[] => {
-	const value = quantizeToApiAmount(
-		bookEvent ? bookEventAmountToNormalisedAmount(amount) : amount,
-	);
+	const value = bookEvent ? bookEventAmountToNormalisedAmount(amount) : amount;
 	const meta = getCurrencyMeta(stateBet.currency);
 	const segments: CurrencyTextSegment[] = [];
-
-	const body = value.toLocaleString(stateI18n.i18n.locale || 'en', {
-		minimumFractionDigits: meta.decimals,
-		maximumFractionDigits: WIN_AMOUNT_MAX_FRACTION_DIGITS,
-		useGrouping: true,
-		numberingSystem: 'latn',
-	});
+	const body = formatWinAmountBody(value, stateBet.currency);
 
 	if (meta.symbolAfter) {
 		pushSegment(segments, 'body', body);
