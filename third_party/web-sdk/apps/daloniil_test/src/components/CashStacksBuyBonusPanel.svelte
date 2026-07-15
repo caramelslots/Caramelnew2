@@ -5,7 +5,7 @@
 	Popout S/L — тот же блок что desktop (слева от доски).
 -->
 <script lang="ts">
-	import { stateModal } from 'state-shared';
+	import { stateModal, stateUi } from 'state-shared';
 
 	import CashStacksFeatureToggles from './CashStacksFeatureToggles.svelte';
 	import { isFreeSpinsActive } from '../game/activeFeature';
@@ -45,7 +45,10 @@
 		});
 	});
 	const show = $derived(
-		(isDesktop || isPortrait) && gameEntrance.showContent && !isFreeSpinsActive(),
+		(isDesktop || isPortrait) &&
+			gameEntrance.showContent &&
+			!isFreeSpinsActive() &&
+			stateUi.config.mode !== 'replay',
 	);
 
 	const buyDisabled = $derived(!context.stateXstateDerived.isIdle());

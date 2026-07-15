@@ -10,8 +10,8 @@
 
 	import { clearActiveFeature } from '../game/activeFeature';
 	import {
-		BUY_NORMAL_COST_MULT,
-		BUY_SUPER_COST_MULT,
+		buyNormalCostMultiplier,
+		buySuperCostMultiplier,
 		canAffordBuyBonus,
 	} from '../game/buyBonusBalance';
 	import {
@@ -66,16 +66,24 @@
 
 	type BonusVariant = 'normal' | 'super';
 
-	const normalPrice = $derived(numberToCurrencyString(stateBet.betAmount * BUY_NORMAL_COST_MULT));
-	const superPrice = $derived(numberToCurrencyString(stateBet.betAmount * BUY_SUPER_COST_MULT));
+	const normalPrice = $derived(
+		numberToCurrencyString(stateBet.betAmount * buyNormalCostMultiplier()),
+	);
+	const superPrice = $derived(
+		numberToCurrencyString(stateBet.betAmount * buySuperCostMultiplier()),
+	);
 	const currentBet = $derived(numberToCurrencyString(stateBet.betAmount));
-	const canBuyNormal = $derived(canAffordBuyBonus(BUY_NORMAL_COST_MULT));
-	const canBuySuper = $derived(canAffordBuyBonus(BUY_SUPER_COST_MULT));
+	const canBuyNormal = $derived(canAffordBuyBonus(buyNormalCostMultiplier()));
+	const canBuySuper = $derived(canAffordBuyBonus(buySuperCostMultiplier()));
 	const featureTogglesDisabled = $derived(!context.stateXstateDerived.isIdle());
 
 	const betOptions = $derived([...stateConfig.betAmountOptions].sort((a, b) => a - b));
-	const minBet = $derived(betOptions[0]);
-	const maxBet = $derived(betOptions[betOptions.length - 1]);
+	const minBet = $derived(
+		stateConfig.minBet > 0 ? stateConfig.minBet : betOptions[0],
+	);
+	const maxBet = $derived(
+		stateConfig.maxBet > 0 ? stateConfig.maxBet : betOptions[betOptions.length - 1],
+	);
 	const canDecrease = $derived(stateBet.betAmount > minBet);
 	const canIncrease = $derived(stateBet.betAmount < maxBet);
 
@@ -96,7 +104,8 @@
 	};
 
 	const onBuy = (variant: BonusVariant) => {
-		const costMult = variant === 'normal' ? BUY_NORMAL_COST_MULT : BUY_SUPER_COST_MULT;
+		const costMult =
+			variant === 'normal' ? buyNormalCostMultiplier() : buySuperCostMultiplier();
 		if (!canAffordBuyBonus(costMult)) return;
 		clearActiveFeature();
 		stateBonus.selectedBetModeKey = variant === 'normal' ? 'bonus_normal' : 'bonus_super';

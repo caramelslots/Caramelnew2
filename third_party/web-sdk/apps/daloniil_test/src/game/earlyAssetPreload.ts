@@ -6,6 +6,7 @@ import {
 } from './assetLoadPlan';
 import { knewaveFontUrl } from './knewaveFont';
 import { SPIN_BUTTON_SPINE_ASSET_URLS } from './spinButtonHtmlSpine';
+import { resolveLanguage } from 'state-shared';
 
 const warmHttpCache = async (urls: readonly string[], concurrency: number) => {
 	if (urls.length === 0) return;
@@ -68,7 +69,10 @@ export const startBatch3EarlyPreload = () => {
 	if (batch3Started || typeof window === 'undefined') return;
 	batch3Started = true;
 
-	const locale = new URLSearchParams(window.location.search).get('lang') || 'en';
+	const params = new URLSearchParams(window.location.search);
+	const locale = resolveLanguage(params.get('lang'), {
+		social: params.get('social') === 'true',
+	});
 	const batch3Keys = getBatch3KeysForLocale(locale);
 	void warmHttpCache([...collectBatchHttpUrls(batch3Keys), ...SPIN_BUTTON_SPINE_ASSET_URLS], 6);
 };

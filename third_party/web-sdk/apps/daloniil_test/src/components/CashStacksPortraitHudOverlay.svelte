@@ -26,6 +26,7 @@
 	import { stateGame } from '../game/stateGame.svelte';
 	import { isSdkTurboSpin } from '../game/gameSpeed';
 	import { getContextLayout } from 'utils-layout';
+	import { OnHotkey } from 'components-shared';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
@@ -65,6 +66,7 @@
 	const isFreeSpins = $derived(
 		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
 	);
+	const isReplay = $derived(stateUi.config.mode === 'replay');
 	const show = $derived(isPortrait && gameEntrance.showContent && uiVisible);
 	const spinPrewarmActive = $derived(
 		isPortrait && gameEntrance.preloadContent && uiVisible && !isFreeSpins,
@@ -79,7 +81,7 @@
 			portraitHudAnchors.buyPanelBottom > 0 ? portraitHudAnchors.buyPanelBottom : undefined;
 		return computePortraitHudCanvas(stateLayoutDerived, {
 			buyPanelBottomCanvas,
-			hideAutoplay: isFreeSpins,
+			hideAutoplay: isFreeSpins || isReplay,
 		});
 	});
 
@@ -142,9 +144,13 @@
 		return true;
 	});
 
-	const smallestBet = $derived(stateConfig.betAmountOptions[0]);
+	const smallestBet = $derived(
+		stateConfig.minBet > 0 ? stateConfig.minBet : stateConfig.betAmountOptions[0],
+	);
 	const biggestBet = $derived(
-		stateConfig.betAmountOptions[stateConfig.betAmountOptions.length - 1],
+		stateConfig.maxBet > 0
+			? stateConfig.maxBet
+			: stateConfig.betAmountOptions[stateConfig.betAmountOptions.length - 1],
 	);
 	const decreaseDisabled = $derived(
 		!context.stateXstateDerived.isIdle() || stateBet.betAmount === smallestBet,
@@ -244,7 +250,7 @@
 		aria-hidden={!show}
 	>
 		{#if show}
-			{#if !isFreeSpins}
+			{#if !isFreeSpins && !isReplay}
 				<button
 					type="button"
 					class="hud-icon-btn"
@@ -316,7 +322,7 @@
 				/>
 			</div>
 
-			{#if !isFreeSpins}
+			{#if !isFreeSpins && !isReplay}
 				<button
 					type="button"
 					class="hud-icon-btn"
@@ -347,7 +353,12 @@
 			></button>
 		{/if}
 
-		{#if !isFreeSpins}
+		{#if !isFreeSpins && !isReplay}
+			<OnHotkey
+				hotkey="Space"
+				disabled={spinDisabled || !show || isAutoSpinModalOpen}
+				onpress={onSpinPress}
+			/>
 			<SpinHudButton
 				bind:this={spinHudButton}
 				x={hud.spin.centerX}

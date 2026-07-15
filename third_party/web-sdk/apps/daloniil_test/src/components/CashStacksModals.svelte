@@ -15,6 +15,8 @@
 	import ModalSettings from 'components-ui-html/src/components/ModalSettings.svelte';
 	import ModalGameRules from './ModalGameRules.svelte';
 	import AutoplayMessageOverlay from './AutoplayMessageOverlay.svelte';
+	import ModalBetReplay from './ModalBetReplay.svelte';
+	import ModalReplayComplete from './ModalReplayComplete.svelte';
 
 	type Props = {
 		version: Snippet;
@@ -30,6 +32,8 @@
 <!-- ModalAutoSpin: заменён на FeaturesAutoSpinOverlay -->
 <!-- ModalAutoSpinMessage: заменён на AutoplayMessageOverlay (кастомный дизайн) -->
 <AutoplayMessageOverlay />
+<ModalBetReplay />
+<ModalReplayComplete />
 <ModalPayTable>
 	{@render props.version()}
 </ModalPayTable>

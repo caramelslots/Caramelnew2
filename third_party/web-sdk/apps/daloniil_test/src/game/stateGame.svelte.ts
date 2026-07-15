@@ -50,15 +50,17 @@ const makeMeta = (
 
 stateMeta.betModeMeta = {
 	...stateMeta.betModeMeta,
-	BASE: stateMeta.betModeMeta.BASE,
-	BONUS_BOOST: makeMeta('bonus_boost', 'activate', 2, 'BONUS BOOST'),
-	bonus_boost: makeMeta('bonus_boost', 'activate', 2, 'BONUS BOOST'),
-	SPECIAL_SPINS: makeMeta('special_spins', 'activate', 30, 'SPECIAL SPINS'),
-	special_spins: makeMeta('special_spins', 'activate', 30, 'SPECIAL SPINS'),
-	BONUS_NORMAL: makeMeta('bonus_normal', 'buy', 100, 'NORMAL BONUS'),
-	bonus_normal: makeMeta('bonus_normal', 'buy', 100, 'NORMAL BONUS'),
-	BONUS_SUPER: makeMeta('bonus_super', 'buy', 200, 'SUPER BONUS'),
-	bonus_super: makeMeta('bonus_super', 'buy', 200, 'SUPER BONUS'),
+	// Align mode display name with in-game "Base (1×)" terminology (not raw "BASE").
+	BASE: makeMeta('BASE', 'default', 1, 'Base'),
+	base: makeMeta('BASE', 'default', 1, 'Base'),
+	BONUS_BOOST: makeMeta('bonus_boost', 'activate', 2, 'Bonus Boost'),
+	bonus_boost: makeMeta('bonus_boost', 'activate', 2, 'Bonus Boost'),
+	SPECIAL_SPINS: makeMeta('special_spins', 'activate', 30, 'Special Spin'),
+	special_spins: makeMeta('special_spins', 'activate', 30, 'Special Spin'),
+	BONUS_NORMAL: makeMeta('bonus_normal', 'buy', 100, 'Normal Bonus'),
+	bonus_normal: makeMeta('bonus_normal', 'buy', 100, 'Normal Bonus'),
+	BONUS_SUPER: makeMeta('bonus_super', 'buy', 200, 'Super Bonus'),
+	bonus_super: makeMeta('bonus_super', 'buy', 200, 'Super Bonus'),
 };
 
 import type { GameType, RawSymbol, SymbolState } from './types';

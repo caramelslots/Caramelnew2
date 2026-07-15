@@ -55,6 +55,17 @@ export const AUTO_SPINS_SINGLE_WIN_LIMIT_MULTIPLIER_MAP = {
 
 export type UIConfigMode = 'default' | 'replay';
 
+export type ReplaySummary = {
+	/** Raw replay payload kept so the round can be started / replayed again. */
+	payload: unknown;
+	modeKey: string;
+	baseBet: number;
+	costMultiplier: number;
+	totalBetCost: number;
+	payoutMultiplier: number;
+	totalWin: number;
+};
+
 export const stateUi = $state({
 	autoSpinsText: '10' as AutoSpinsText,
 	autoSpinsLossLimitText: INFINITY_MARK as LossLimitText,
@@ -67,5 +78,7 @@ export const stateUi = $state({
 	drawerButtonShow: false,
 	config: {
 		mode: 'default' as UIConfigMode,
-	}
+	},
+	/** Filled when `?replay=true` loads a past round (pre-start + complete UI). */
+	replay: null as ReplaySummary | null,
 });

@@ -16,7 +16,9 @@
 	const context = getContext();
 	const { width, height } = $derived(uiScaledSize(UI_BASE_SIZE, props.sizeScale));
 	const sizes = $derived({ width, height });
-	const smallest = $derived(stateConfig.betAmountOptions[0]);
+	const smallest = $derived(
+		stateConfig.minBet > 0 ? stateConfig.minBet : stateConfig.betAmountOptions[0],
+	);
 	const disabled = $derived(
 		!context.stateXstateDerived.isIdle() || stateBet.betAmount === smallest,
 	);

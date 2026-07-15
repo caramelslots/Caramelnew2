@@ -26,10 +26,19 @@
 		return messages;
 	};
 
+	const resolveLangAndMessages = () => {
+		const requested = stateUrlDerived.lang();
+		const messages = loadMessages(requested);
+		if (messages) return { lang: requested, messages };
+
+		console.warn(`Unsupported or missing locale messages for "${requested}", falling back to "en"`);
+		return { lang: 'en' as Language, messages: loadMessages('en') };
+	};
+
 	onMount(() => {
 		try {
-			const messages = loadMessages(stateUrlDerived.lang());
-			stateI18nDerived.init(stateUrlDerived.lang(), messages);
+			const { lang, messages } = resolveLangAndMessages();
+			stateI18nDerived.init(lang, messages);
 		} catch (error) {
 			console.error("Loading fallback locale 'en' because of error", error);
 			try {

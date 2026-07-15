@@ -27,6 +27,7 @@
 	import { stateGame } from '../game/stateGame.svelte';
 	import { isSdkTurboSpin } from '../game/gameSpeed';
 	import { getContextLayout } from 'utils-layout';
+	import { OnHotkey } from 'components-shared';
 
 	import HudBalanceBetLine from './HudBalanceBetLine.svelte';
 	import SpinHudButton from './SpinHudButton.svelte';
@@ -71,6 +72,7 @@
 	const isFreeSpins = $derived(
 		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
 	);
+	const isReplay = $derived(stateUi.config.mode === 'replay');
 	const show = $derived(
 		useDesktopHud && gameEntrance.showContent && uiVisible,
 	);
@@ -113,9 +115,13 @@
 		return true;
 	});
 
-	const smallestBet = $derived(stateConfig.betAmountOptions[0]);
+	const smallestBet = $derived(
+		stateConfig.minBet > 0 ? stateConfig.minBet : stateConfig.betAmountOptions[0],
+	);
 	const biggestBet = $derived(
-		stateConfig.betAmountOptions[stateConfig.betAmountOptions.length - 1],
+		stateConfig.maxBet > 0
+			? stateConfig.maxBet
+			: stateConfig.betAmountOptions[stateConfig.betAmountOptions.length - 1],
 	);
 	const decreaseDisabled = $derived(
 		!context.stateXstateDerived.isIdle() || stateBet.betAmount === smallestBet,
@@ -265,7 +271,7 @@
 				/>
 			</p>
 
-			{#if !isFreeSpins}
+			{#if !isFreeSpins && !isReplay}
 				<button
 					type="button"
 					class="hud-icon-btn"
@@ -328,7 +334,12 @@
 			></button>
 		{/if}
 
-		{#if !isFreeSpins}
+		{#if !isFreeSpins && !isReplay}
+			<OnHotkey
+				hotkey="Space"
+				disabled={spinDisabled || !show || isAutoSpinModalOpen}
+				onpress={onSpinPress}
+			/>
 			<SpinHudButton
 				bind:this={spinHudButton}
 				x={pos.spin.x}

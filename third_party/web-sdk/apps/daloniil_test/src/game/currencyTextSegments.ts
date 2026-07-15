@@ -1,13 +1,10 @@
 import { stateBet, stateI18n } from 'state-shared';
 import {
 	bookEventAmountToNormalisedAmount,
-	numberToFloat,
+	getCurrencyMeta,
+	quantizeToApiAmount,
+	WIN_AMOUNT_MAX_FRACTION_DIGITS,
 } from 'utils-shared/amount';
-
-const NO_LOCALISATION_CURRENCY_MAP: Record<string, string> = {
-	XGC: 'GC',
-	XSC: 'SC',
-};
 
 export type CurrencyTextSegment = { kind: 'symbol' | 'body'; text: string };
 
@@ -33,30 +30,33 @@ const pushSegment = (
 	}
 };
 
-/** Split a formatted currency value: symbol → bablo, digits/separators → krutoi. */
+/**
+ * Split a formatted win amount: symbol → bablo, digits/separators → krutoi.
+ * Uses authenticate currency (including social XGC/XSC). Balance/Bet use numberToCurrencyString.
+ */
 export const amountToCurrencySegments = (
 	amount: number,
 	bookEvent = false,
 ): CurrencyTextSegment[] => {
-	const value = bookEvent ? bookEventAmountToNormalisedAmount(amount) : amount;
+	const value = quantizeToApiAmount(
+		bookEvent ? bookEventAmountToNormalisedAmount(amount) : amount,
+	);
+	const meta = getCurrencyMeta(stateBet.currency);
 	const segments: CurrencyTextSegment[] = [];
 
-	if (stateBet.currency in NO_LOCALISATION_CURRENCY_MAP) {
-		pushSegment(segments, 'symbol', NO_LOCALISATION_CURRENCY_MAP[stateBet.currency]);
-		pushSegment(segments, 'body', ` ${numberToFloat(value).toFixed(2)}`);
-		return segments;
-	}
-
-	const parts = new Intl.NumberFormat(stateI18n.i18n.locale, {
-		style: 'currency',
-		currency: stateBet.currency,
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2,
+	const body = value.toLocaleString(stateI18n.i18n.locale || 'en', {
+		minimumFractionDigits: meta.decimals,
+		maximumFractionDigits: WIN_AMOUNT_MAX_FRACTION_DIGITS,
+		useGrouping: true,
 		numberingSystem: 'latn',
-	}).formatToParts(value);
+	});
 
-	for (const part of parts) {
-		pushSegment(segments, part.type === 'currency' ? 'symbol' : 'body', part.value);
+	if (meta.symbolAfter) {
+		pushSegment(segments, 'body', body);
+		pushSegment(segments, 'symbol', ` ${meta.symbol}`);
+	} else {
+		pushSegment(segments, 'symbol', meta.symbol);
+		pushSegment(segments, 'body', body);
 	}
 
 	return segments;

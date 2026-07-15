@@ -110,12 +110,8 @@ function createPrimaryMachines<TBet extends BaseBet>(options: Options<TBet>) {
 	const BET_TYPE_METHODS_MAP = {
 		noWin: {
 			newGame: async () => undefined,
-			endGame: async () => {
-				const data = await handleRequestEndRound();
-				if (data?.balance) {
-					handleUpdateBalance({ balanceAmountFromApi: data.balance.amount });
-				}
-			},
+			// No payout / inactive round — Play already closed it. Calling end-round returns 400.
+			endGame: async () => undefined,
 		},
 		singleRoundWin: {
 			newGame: async () => {

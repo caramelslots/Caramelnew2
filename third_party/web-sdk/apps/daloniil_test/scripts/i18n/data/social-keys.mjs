@@ -22,18 +22,27 @@ const en = {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
 		'Autoplay has stopped because the single prize limit was reached.',
 	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury is a 5-reel, 5-row slot with 25 paylines. Prizes are awarded from left to right on adjacent reels, starting from the leftmost reel. Only the highest prize per line is awarded.',
+		'Wok Fury is a 5-reel, 5-row slot with 25 paylines. Prizes are awarded from left to right on adjacent reels, starting from the leftmost reel. A minimum of 3 matching symbols on a payline is required for a prize. Only the highest prize per line is awarded.',
 	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'All 25 paylines are always active. Prizes are awarded from left to right on adjacent reels, starting from the leftmost reel.',
+		'All 25 paylines are always active. Prizes are awarded from left to right on adjacent reels, starting from the leftmost reel. A minimum of 3 matching symbols on adjacent reels is required to create a valid winning line.',
 	GAME_INFO_WILD_BODY_SOCIAL:
 		'The Wild symbol substitutes for all paying symbols except the Bonus symbol. Wild pays 225× spin for 5 of a kind.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'PLAY MODES',
 	GAME_INFO_BET_MODES_BODY_SOCIAL:
-		'Base mode RTP is 96.01%. Bonus Boost costs 2× the spin and increases the chance of triggering free spins. Special Spins costs 30× the spin. Play Normal Bonus costs 100× the spin. Play Super Bonus costs 200× the spin. Maximum prize is 2,500× the spin in every play mode.',
+		'Base (1×): The default mode. Each spin costs 1× your base spin. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All prizes are calculated as multiples of your base spin. RTP 96.03%. Maximum prize 2,500× your base spin.\nBonus Boost (2×): Enable this mode to play at 2× your base spin per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All prizes are calculated as multiples of your base spin, not the 2× mode cost. RTP 96.04%. Maximum prize 2,355.2× your base spin.\nSpecial Spins (30×): Enable this mode to play at 30× your base spin per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All prizes are calculated as multiples of your base spin, not the 30× mode cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Normal Bonus (100×): Play Normal Bonus for 100× your base spin to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Super Bonus (200×): Play Super Bonus for 200× your base spin to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.',
+	GAME_INFO_CONTROLS_TITLE_SOCIAL: 'USER INTERACTION GUIDE',
+	GAME_INFO_CONTROLS_BODY_SOCIAL:
+		'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nSpin amount (− / +): Use the minus and plus buttons to change your spin amount. Amount changes are only available while the game is idle.\nPlay Bonus / Feature: Open Play Bonus to play Normal Bonus or Super Bonus, or to turn Bonus Boost on or off. Confirm to start the selected feature immediately.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it. You can also enable Bonus Boost from the Autoplay panel before starting.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance and Spin displays: Show your current balance and selected spin amount. These are informational and are not buttons.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'PAYTABLE (× SPIN)',
-	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All payout values are multiples of the total spin.',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All payout values are multiples of the base spin.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Malfunction voids all prizes and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Rewards are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Stake Engine.',
+	REPLAY_TITLE_SOCIAL: 'Play Replay',
+	REPLAY_BASE_BET_SOCIAL: 'Base Play',
+	REPLAY_COST_MULTIPLIER_SOCIAL: 'Feature Multiplier',
+	REPLAY_TOTAL_BET_COST_SOCIAL: 'Total Play Cost',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Final Multiplier',
+	REPLAY_TOTAL_WIN_SOCIAL: 'Total Prize',
 };
 
 const ru = {
@@ -58,16 +67,19 @@ const ru = {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
 		'Автоигра остановлена, так как достигнут лимит одного приза.',
 	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury — слот с 5 барабанами и 5 рядами, 25 линий выплат. Призы начисляются слева направо на соседних барабанах, начиная с крайнего левого. По каждой линии начисляется только наибольший приз.',
+		'Wok Fury — слот с 5 барабанами и 5 рядами, 25 линий выплат. Призы начисляются слева направо на соседних барабанах, начиная с крайнего левого. Для приза на линии требуется минимум 3 одинаковых символа. По каждой линии начисляется только наибольший приз.',
 	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Все 25 линий всегда активны. Призы начисляются слева направо на соседних барабанах, начиная с крайнего левого.',
+		'Все 25 линий всегда активны. Призы начисляются слева направо на соседних барабанах, начиная с крайнего левого. Для выигрышной линии требуется минимум 3 одинаковых символа на соседних барабанах.',
 	GAME_INFO_WILD_BODY_SOCIAL:
 		'Символ Wild заменяет все оплачиваемые символы, кроме Bonus. Wild платит 225× спина за 5 одинаковых.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'РЕЖИМЫ ИГРЫ',
 	GAME_INFO_BET_MODES_BODY_SOCIAL:
-		'RTP базового режима — 96.01%. Bonus Boost стоит 2× спина и увеличивает шанс запуска фриспинов. Special Spins стоит 30× спина. Игра Normal Bonus стоит 100× спина. Игра Super Bonus стоит 200× спина. Максимальный приз — 2 500× спина в любом режиме.',
+		'Base (1×): Режим по умолчанию. Каждый спин стоит 1× базового спина. 3 символа Bonus запускают Normal Bonus (10 фриспинов), 4 и более — Super Bonus (10 фриспинов и 1 Sticky Mystery Reel с начала). Все призы считаются как множители базового спина. RTP 96.03%. Максимальный приз 2 500× базового спина.\nBonus Boost (2×): Включите режим, чтобы играть за 2× базового спина. На барабанах больше символов Bonus, поэтому фриспины выпадают чаще. Условия запуска те же, что в Base (3 Bonus = Normal Bonus, 4+ = Super Bonus). Все призы считаются как множители базового спина, а не стоимости режима 2×. RTP 96.04%. Максимальный приз 2 355.2× базового спина.\nSpecial Spins (30×): Включите режим, чтобы играть за 30× базового спина. Почти каждый спин сразу запускает фриспины. Обычно это Normal Bonus (10 фриспинов), иногда Super Bonus (10 фриспинов и 1 Sticky Mystery Reel). Все призы считаются как множители базового спина, а не стоимости режима 30×. RTP 96.01%. Максимальный приз 2 500× базового спина.\nИгра Normal Bonus (100×): Сыграйте Normal Bonus за 100× базового спина, чтобы сразу войти в бонус. Даёт 10 фриспинов без Sticky Mystery Reel на старте. Дополнительные фриспины и Mystery Reel доступны только через Progress Ladder. Все призы считаются как множители базового спина, а не стоимости игры. RTP 96.01%. Максимальный приз 2 500× базового спина.\nИгра Super Bonus (200×): Сыграйте Super Bonus за 200× базового спина, чтобы сразу войти в бонус. Даёт 10 фриспинов и 1 Sticky Mystery Reel с начала. Дополнительные фриспины и Mystery Reel доступны только через Progress Ladder. Все призы считаются как множители базового спина, а не стоимости игры. RTP 96.01%. Максимальный приз 2 500× базового спина.',
+	GAME_INFO_CONTROLS_TITLE_SOCIAL: 'РУКОВОДСТВО ПО УПРАВЛЕНИЮ',
+	GAME_INFO_CONTROLS_BODY_SOCIAL:
+		'Спин: нажмите кнопку Spin, чтобы начать раунд. Во время раунда та же кнопка может остановить барабаны или автоигру, если это доступно. Новый раунд нельзя начать, пока идёт другой раунд или анимация, либо если недостаточно средств.\nПробел: нажмите Space, чтобы выполнить то же действие, что и кнопка Spin. Удерживайте Space для непрерывной быстрой игры. Когда открыта панель Autoplay, Space запускает автоигру. Space также продолжает экраны с текстом Press to Continue.\nСумма спина (− / +): кнопки минус и плюс меняют размер спина. Менять сумму можно только когда игра в режиме ожидания.\nPlay Bonus / Feature: откройте Play Bonus, чтобы сыграть Normal Bonus или Super Bonus либо включить/выключить Bonus Boost. Подтвердите, чтобы сразу запустить выбранный бонус.\nAutoplay: откройте Autoplay, чтобы выбрать число раундов и запустить автоигру. Нажмите Autoplay снова во время работы, чтобы остановить её. Перед стартом в панели Autoplay можно включить Bonus Boost.\nTurbo: нажмите Turbo, чтобы переключать скорость игры по уровням 1, 2 и 3 для более быстрых анимаций. Скорость также можно задать в Menu / Settings.\nInfo: открывает этот экран Game Information.\nMenu: открывает Settings, где можно настроить скорость игры, общую громкость и громкость музыки.\nБаланс и спин: показывают текущий баланс и выбранную сумму спина. Это информационные поля, а не кнопки.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'ТАБЛИЦА ВЫПЛАТ (× СПИН)',
-	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Все значения выплат указаны как множители от общего спина.',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Все значения выплат указаны как множители от базового спина.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Неисправность аннулирует все призы и игры. Требуется стабильное интернет-соединение. В случае разрыва соединения перезагрузите игру, чтобы завершить незавершённые раунды. Ожидаемая отдача рассчитывается на большом количестве игр. Отображение игры не является представлением какого-либо физического устройства и предназначено только для иллюстрации. Награды рассчитываются согласно сумме, полученной от Remote Game Server, а не по событиям в веб-браузере. TM и © 2026 Stake Engine.',
 };
@@ -94,16 +106,16 @@ const de = {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
 		'Autospiel wurde gestoppt, weil das Einzelpreislimit erreicht wurde.',
 	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury ist ein Slot mit 5 Walzen, 5 Reihen und 25 Gewinnlinien. Preise werden von links nach rechts auf benachbarten Walzen vergeben, beginnend bei der linken Walze. Pro Linie wird nur der höchste Preis vergeben.',
+		'Wok Fury ist ein Slot mit 5 Walzen, 5 Reihen und 25 Gewinnlinien. Preise werden von links nach rechts auf benachbarten Walzen vergeben, beginnend bei der linken Walze. Für einen Preis auf einer Linie sind mindestens 3 übereinstimmende Symbole erforderlich. Pro Linie wird nur der höchste Preis vergeben.',
 	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Alle 25 Gewinnlinien sind immer aktiv. Preise werden von links nach rechts auf benachbarten Walzen vergeben, beginnend bei der linken Walze.',
+		'Alle 25 Gewinnlinien sind immer aktiv. Preise werden von links nach rechts auf benachbarten Walzen vergeben, beginnend bei der linken Walze. Für einen gültigen Gewinn sind mindestens 3 übereinstimmende Symbole auf benachbarten Walzen erforderlich.',
 	GAME_INFO_WILD_BODY_SOCIAL:
 		'Das Wild-Symbol ersetzt alle zahlenden Symbole außer Bonus. Wild zahlt 225× Spin für 5 gleiche.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'SPIELMODI',
 	GAME_INFO_BET_MODES_BODY_SOCIAL:
-		'Der RTP im Basismodus beträgt 96,01 %. Bonus Boost kostet 2× Spin und erhöht die Chance auf Freispiele. Special Spins kostet 30× Spin. Normal Bonus spielen kostet 100× Spin. Super Bonus spielen kostet 200× Spin. Maximaler Preis ist 2.500× Spin in jedem Spielmodus.',
+		'Base (1×): The default mode. Each spin costs 1× your base spin. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All prizes are calculated as multiples of your base spin. RTP 96.03%. Maximum prize 2,500× your base spin.\nBonus Boost (2×): Enable this mode to play at 2× your base spin per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All prizes are calculated as multiples of your base spin, not the 2× mode cost. RTP 96.04%. Maximum prize 2,355.2× your base spin.\nSpecial Spins (30×): Enable this mode to play at 30× your base spin per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All prizes are calculated as multiples of your base spin, not the 30× mode cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Normal Bonus (100×): Play Normal Bonus for 100× your base spin to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Super Bonus (200×): Play Super Bonus for 200× your base spin to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'AUSZAHLUNGSTABELLE (× SPIN)',
-	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Alle Auszahlungswerte sind Vielfache des Gesamt-Spins.',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Alle Auszahlungswerte sind Vielfache des Basis-Spins.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Bei Fehlfunktion sind alle Preise und Spiele ungültig. Eine stabile Internetverbindung ist erforderlich. Bei Verbindungsabbruch das Spiel neu laden, um unvollständige Runden abzuschließen. Die erwartete Rendite wird über viele Spiele berechnet. Die Spielanzeige stellt kein physisches Gerät dar und dient nur zur Veranschaulichung. Belohnungen werden gemäß dem vom Remote Game Server erhaltenen Betrag abgerechnet, nicht nach Ereignissen im Webbrowser. TM und © 2026 Stake Engine.',
 };
@@ -130,16 +142,16 @@ const es = {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
 		'El autojuego se detuvo porque se alcanzó el límite de premio único.',
 	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury es una tragamonedas de 5 rodillos y 5 filas con 25 líneas de pago. Los premios se otorgan de izquierda a derecha en rodillos adyacentes, empezando por el rodillo más a la izquierda. Solo se otorga el premio más alto por línea.',
+		'Wok Fury es una tragamonedas de 5 rodillos y 5 filas con 25 líneas de pago. Los premios se otorgan de izquierda a derecha en rodillos adyacentes, empezando por el rodillo más a la izquierda. Se necesitan al menos 3 símbolos iguales en una línea de pago para obtener un premio. Solo se otorga el premio más alto por línea.',
 	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Las 25 líneas de pago están siempre activas. Los premios se otorgan de izquierda a derecha en rodillos adyacentes, empezando por el rodillo más a la izquierda.',
+		'Las 25 líneas de pago están siempre activas. Los premios se otorgan de izquierda a derecha en rodillos adyacentes, empezando por el rodillo más a la izquierda. Se necesitan al menos 3 símbolos iguales en rodillos adyacentes para crear una línea ganadora válida.',
 	GAME_INFO_WILD_BODY_SOCIAL:
 		'El símbolo Wild sustituye a todos los símbolos de pago excepto Bonus. Wild paga 225× giro por 5 iguales.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'MODOS DE JUEGO',
 	GAME_INFO_BET_MODES_BODY_SOCIAL:
-		'El RTP del modo base es 96,01 %. Bonus Boost cuesta 2× giro y aumenta la probabilidad de activar giros gratis. Special Spins cuesta 30× giro. Jugar Normal Bonus cuesta 100× giro. Jugar Super Bonus cuesta 200× giro. El premio máximo es 2.500× giro en todos los modos.',
+		'Base (1×): The default mode. Each spin costs 1× your base spin. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All prizes are calculated as multiples of your base spin. RTP 96.03%. Maximum prize 2,500× your base spin.\nBonus Boost (2×): Enable this mode to play at 2× your base spin per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All prizes are calculated as multiples of your base spin, not the 2× mode cost. RTP 96.04%. Maximum prize 2,355.2× your base spin.\nSpecial Spins (30×): Enable this mode to play at 30× your base spin per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All prizes are calculated as multiples of your base spin, not the 30× mode cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Normal Bonus (100×): Play Normal Bonus for 100× your base spin to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Super Bonus (200×): Play Super Bonus for 200× your base spin to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'TABLA DE PAGOS (× GIRO)',
-	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Todos los valores de pago son múltiplos del giro total.',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Todos los valores de pago son múltiplos del giro base.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'El mal funcionamiento anula todos los premios y jugadas. Se requiere conexión a internet estable. Si se pierde la conexión, recarga el juego para completar rondas pendientes. El retorno esperado se calcula en muchas partidas. La pantalla no representa ningún dispositivo físico y es solo ilustrativa. Las recompensas se liquidan según el importe recibido del Remote Game Server y no según eventos del navegador. TM y © 2026 Stake Engine.',
 };
@@ -166,16 +178,16 @@ const fr = {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
 		'Le jeu auto s’est arrêté car la limite de prix unique a été atteinte.',
 	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury est une machine à 5 rouleaux et 5 rangées avec 25 lignes de paiement. Les prix sont attribués de gauche à droite sur des rouleaux adjacents, à partir du rouleau le plus à gauche. Seul le prix le plus élevé par ligne est attribué.',
+		'Wok Fury est une machine à 5 rouleaux et 5 rangées avec 25 lignes de paiement. Les prix sont attribués de gauche à droite sur des rouleaux adjacents, à partir du rouleau le plus à gauche. Un minimum de 3 symboles identiques sur une ligne de paiement est requis pour un prix. Seul le prix le plus élevé par ligne est attribué.',
 	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Les 25 lignes de paiement sont toujours actives. Les prix sont attribués de gauche à droite sur des rouleaux adjacents, à partir du rouleau le plus à gauche.',
+		'Les 25 lignes de paiement sont toujours actives. Les prix sont attribués de gauche à droite sur des rouleaux adjacents, à partir du rouleau le plus à gauche. Un minimum de 3 symboles identiques sur des rouleaux adjacents est requis pour une ligne gagnante valide.',
 	GAME_INFO_WILD_BODY_SOCIAL:
 		'Le symbole Wild remplace tous les symboles payants sauf Bonus. Wild paie 225× spin pour 5 identiques.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'MODES DE JEU',
 	GAME_INFO_BET_MODES_BODY_SOCIAL:
-		'Le RTP du mode de base est de 96,01 %. Bonus Boost coûte 2× spin et augmente les chances de déclencher des tours gratuits. Special Spins coûte 30× spin. Jouer Normal Bonus coûte 100× spin. Jouer Super Bonus coûte 200× spin. Le prix maximum est de 2 500× spin dans chaque mode.',
+		'Base (1×): The default mode. Each spin costs 1× your base spin. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All prizes are calculated as multiples of your base spin. RTP 96.03%. Maximum prize 2,500× your base spin.\nBonus Boost (2×): Enable this mode to play at 2× your base spin per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All prizes are calculated as multiples of your base spin, not the 2× mode cost. RTP 96.04%. Maximum prize 2,355.2× your base spin.\nSpecial Spins (30×): Enable this mode to play at 30× your base spin per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All prizes are calculated as multiples of your base spin, not the 30× mode cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Normal Bonus (100×): Play Normal Bonus for 100× your base spin to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Super Bonus (200×): Play Super Bonus for 200× your base spin to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'TABLE DE PAIEMENT (× SPIN)',
-	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Toutes les valeurs de paiement sont des multiples du spin total.',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Toutes les valeurs de paiement sont des multiples du spin de base.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Un dysfonctionnement annule tous les prix et parties. Une connexion internet stable est requise. En cas de déconnexion, rechargez le jeu pour terminer les manches incomplètes. Le retour attendu est calculé sur de nombreuses parties. L’affichage ne représente aucun appareil physique et est illustratif. Les récompenses sont réglées selon le montant reçu du Remote Game Server et non selon les événements du navigateur. TM et © 2026 Stake Engine.',
 };
@@ -202,16 +214,16 @@ const pl = {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
 		'Autogra zatrzymana, ponieważ osiągnięto limit pojedynczej nagrody.',
 	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury to slot 5×5 z 25 liniami wypłat. Nagrody są przyznawane od lewej do prawej na sąsiednich bębnach, zaczynając od skrajnie lewego. Na linii wypłacana jest tylko najwyższa nagroda.',
+		'Wok Fury to slot 5×5 z 25 liniami wypłat. Nagrody są przyznawane od lewej do prawej na sąsiednich bębnach, zaczynając od skrajnie lewego. Do nagrody na linii potrzeba minimum 3 pasujących symboli. Na linii wypłacana jest tylko najwyższa nagroda.',
 	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Wszystkie 25 linii jest zawsze aktywnych. Nagrody są przyznawane od lewej do prawej na sąsiednich bębnach, zaczynając od skrajnie lewego.',
+		'Wszystkie 25 linii jest zawsze aktywnych. Nagrody są przyznawane od lewej do prawej na sąsiednich bębnach, zaczynając od skrajnie lewego. Do utworzenia ważnej linii wygrywającej potrzeba minimum 3 pasujących symboli na sąsiednich bębnach.',
 	GAME_INFO_WILD_BODY_SOCIAL:
 		'Symbol Wild zastępuje wszystkie płatne symbole oprócz Bonus. Wild płaci 225× spin za 5 takich samych.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'TRYBY GRY',
 	GAME_INFO_BET_MODES_BODY_SOCIAL:
-		'RTP trybu bazowego to 96,01%. Bonus Boost kosztuje 2× spin i zwiększa szansę na darmowe obroty. Special Spins kosztuje 30× spin. Gra Normal Bonus kosztuje 100× spin. Gra Super Bonus kosztuje 200× spin. Maksymalna nagroda to 2 500× spin w każdym trybie.',
+		'Base (1×): The default mode. Each spin costs 1× your base spin. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All prizes are calculated as multiples of your base spin. RTP 96.03%. Maximum prize 2,500× your base spin.\nBonus Boost (2×): Enable this mode to play at 2× your base spin per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All prizes are calculated as multiples of your base spin, not the 2× mode cost. RTP 96.04%. Maximum prize 2,355.2× your base spin.\nSpecial Spins (30×): Enable this mode to play at 30× your base spin per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All prizes are calculated as multiples of your base spin, not the 30× mode cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Normal Bonus (100×): Play Normal Bonus for 100× your base spin to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Super Bonus (200×): Play Super Bonus for 200× your base spin to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'TABELA WYPŁAT (× SPIN)',
-	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Wszystkie wartości wypłat to wielokrotności całkowitego spina.',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Wszystkie wartości wypłat to wielokrotności spinu bazowego.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Awarie unieważniają wszystkie nagrody i gry. Wymagane stabilne połączenie internetowe. Po rozłączeniu przeładuj grę, aby dokończyć niedokończone rundy. Oczekiwany zwrot liczony jest na wielu grach. Wyświetlacz nie przedstawia urządzenia fizycznego i służy wyłącznie ilustracji. Nagrody rozliczane są według kwoty z Remote Game Server, a nie zdarzeń w przeglądarce. TM i © 2026 Stake Engine.',
 };
@@ -238,16 +250,16 @@ const pt = {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
 		'O jogo auto parou porque o limite de prémio único foi atingido.',
 	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury é uma slot de 5 rolos e 5 filas com 25 linhas de pagamento. Os prémios são atribuídos da esquerda para a direita em rolos adjacentes, começando no rolos mais à esquerda. Apenas o prémio mais alto por linha é atribuído.',
+		'Wok Fury é uma slot de 5 rolos e 5 filas com 25 linhas de pagamento. Os prémios são atribuídos da esquerda para a direita em rolos adjacentes, começando no rolos mais à esquerda. É necessário um mínimo de 3 símbolos iguais numa linha de pagamento para um prémio. Apenas o prémio mais alto por linha é atribuído.',
 	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Todas as 25 linhas estão sempre ativas. Os prémios são atribuídos da esquerda para a direita em rolos adjacentes, começando no rolos mais à esquerda.',
+		'Todas as 25 linhas estão sempre ativas. Os prémios são atribuídos da esquerda para a direita em rolos adjacentes, começando no rolos mais à esquerda. É necessário um mínimo de 3 símbolos iguais em rolos adjacentes para criar uma linha vencedora válida.',
 	GAME_INFO_WILD_BODY_SOCIAL:
 		'O símbolo Wild substitui todos os símbolos pagantes exceto Bonus. Wild paga 225× giro por 5 iguais.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'MODOS DE JOGO',
 	GAME_INFO_BET_MODES_BODY_SOCIAL:
-		'O RTP do modo base é 96,01%. Bonus Boost custa 2× giro e aumenta a hipótese de free spins. Special Spins custa 30× giro. Jogar Normal Bonus custa 100× giro. Jogar Super Bonus custa 200× giro. O prémio máximo é 2.500× giro em todos os modos.',
+		'Base (1×): The default mode. Each spin costs 1× your base spin. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All prizes are calculated as multiples of your base spin. RTP 96.03%. Maximum prize 2,500× your base spin.\nBonus Boost (2×): Enable this mode to play at 2× your base spin per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All prizes are calculated as multiples of your base spin, not the 2× mode cost. RTP 96.04%. Maximum prize 2,355.2× your base spin.\nSpecial Spins (30×): Enable this mode to play at 30× your base spin per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All prizes are calculated as multiples of your base spin, not the 30× mode cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Normal Bonus (100×): Play Normal Bonus for 100× your base spin to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Super Bonus (200×): Play Super Bonus for 200× your base spin to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'TABELA DE PAGAMENTOS (× GIRO)',
-	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Todos os valores de pagamento são múltiplos do giro total.',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Todos os valores de pagamento são múltiplos do giro base.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Avaria anula todos os prémios e jogadas. É necessária ligação estável à internet. Se a ligação cair, recarregue o jogo para concluir rondas incompletas. O retorno esperado é calculado em muitas jogadas. O ecrã não representa qualquer dispositivo físico e é apenas ilustrativo. As recompensas são liquidadas conforme o montante recebido do Remote Game Server e não eventos no browser. TM e © 2026 Stake Engine.',
 };
@@ -274,16 +286,16 @@ const tr = {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
 		'Otomatik oyun tek ödül limitine ulaşıldığı için durdu.',
 	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury, 25 ödeme hattına sahip 5 makaralı, 5 sıralı bir slottur. Ödüller en soldaki makaradan başlayarak bitişik makaralarda soldan sağa verilir. Her hatta yalnızca en yüksek ödül verilir.',
+		'Wok Fury, 25 ödeme hattına sahip 5 makaralı, 5 sıralı bir slottur. Ödüller en soldaki makaradan başlayarak bitişik makaralarda soldan sağa verilir. Bir ödül için ödeme hattında en az 3 eşleşen sembol gerekir. Her hatta yalnızca en yüksek ödül verilir.',
 	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'25 hat her zaman aktiftir. Ödüller en soldaki makaradan başlayarak bitişik makaralarda soldan sağa verilir.',
+		'25 hat her zaman aktiftir. Ödüller en soldaki makaradan başlayarak bitişik makaralarda soldan sağa verilir. Geçerli bir kazanç hattı için bitişik makaralarda en az 3 eşleşen sembol gerekir.',
 	GAME_INFO_WILD_BODY_SOCIAL:
 		'Wild sembolü Bonus hariç tüm ödeme sembollerinin yerine geçer. Wild, 5 aynı için 225× spin öder.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'OYUN MODLARI',
 	GAME_INFO_BET_MODES_BODY_SOCIAL:
-		'Temel mod RTP %96,01. Bonus Boost 2× spin maliyetindedir ve free spin şansını artırır. Special Spins 30× spin maliyetindedir. Normal Bonus oynamak 100× spin. Super Bonus oynamak 200× spin. Maksimum ödül her modda 2.500× spindir.',
+		'Base (1×): The default mode. Each spin costs 1× your base spin. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All prizes are calculated as multiples of your base spin. RTP 96.03%. Maximum prize 2,500× your base spin.\nBonus Boost (2×): Enable this mode to play at 2× your base spin per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All prizes are calculated as multiples of your base spin, not the 2× mode cost. RTP 96.04%. Maximum prize 2,355.2× your base spin.\nSpecial Spins (30×): Enable this mode to play at 30× your base spin per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All prizes are calculated as multiples of your base spin, not the 30× mode cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Normal Bonus (100×): Play Normal Bonus for 100× your base spin to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Super Bonus (200×): Play Super Bonus for 200× your base spin to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'ÖDEME TABLOSU (× SPIN)',
-	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Tüm ödeme değerleri toplam spinin katlarıdır.',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Tüm ödeme değerleri temel spinin katlarıdır.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Arıza tüm ödülleri ve oyunları geçersiz kılar. Kararlı internet bağlantısı gerekir. Bağlantı kesilirse tamamlanmamış turları bitirmek için oyunu yeniden yükleyin. Beklenen getiri birçok oyun üzerinden hesaplanır. Oyun ekranı fiziksel bir cihazı temsil etmez ve yalnızca açıklama amaçlıdır. Ödüller web tarayıcısındaki olaylara göre değil, Remote Game Server\'dan alınan tutara göre ödenir. TM ve © 2026 Stake Engine.',
 };
@@ -309,16 +321,16 @@ const vi = {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Đã đạt giới hạn thưởng đơn',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: 'Tự chơi đã dừng vì đạt giới hạn thưởng đơn.',
 	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury là slot 5 cuộn, 5 hàng với 25 payline. Thưởng được trao từ trái sang phải trên các cuộn liền kề, bắt đầu từ cuộn ngoài cùng bên trái. Mỗi line chỉ trao thưởng cao nhất.',
+		'Wok Fury là slot 5 cuộn, 5 hàng với 25 payline. Thưởng được trao từ trái sang phải trên các cuộn liền kề, bắt đầu từ cuộn ngoài cùng bên trái. Để thắng cần tối thiểu 3 biểu tượng khớp trên một payline. Mỗi line chỉ trao thưởng cao nhất.',
 	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Cả 25 payline luôn hoạt động. Thưởng được trao từ trái sang phải trên các cuộn liền kề, bắt đầu từ cuộn ngoài cùng bên trái.',
+		'Cả 25 payline luôn hoạt động. Thưởng được trao từ trái sang phải trên các cuộn liền kề, bắt đầu từ cuộn ngoài cùng bên trái. Cần tối thiểu 3 biểu tượng khớp trên các cuộn liền kề để tạo dòng thắng hợp lệ.',
 	GAME_INFO_WILD_BODY_SOCIAL:
 		'Wild thay thế mọi biểu tượng trả thưởng trừ Bonus. Wild trả 225× lượt quay cho 5 giống nhau.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'CHẾ ĐỘ CHƠI',
 	GAME_INFO_BET_MODES_BODY_SOCIAL:
-		'RTP chế độ cơ bản 96,01%. Bonus Boost tốn 2× lượt quay và tăng cơ hội free spin. Special Spins tốn 30× lượt quay. Chơi Normal Bonus tốn 100× lượt quay. Chơi Super Bonus tốn 200× lượt quay. Thưởng tối đa 2.500× lượt quay ở mọi chế độ.',
+		'Base (1×): The default mode. Each spin costs 1× your base spin. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All prizes are calculated as multiples of your base spin. RTP 96.03%. Maximum prize 2,500× your base spin.\nBonus Boost (2×): Enable this mode to play at 2× your base spin per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All prizes are calculated as multiples of your base spin, not the 2× mode cost. RTP 96.04%. Maximum prize 2,355.2× your base spin.\nSpecial Spins (30×): Enable this mode to play at 30× your base spin per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All prizes are calculated as multiples of your base spin, not the 30× mode cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Normal Bonus (100×): Play Normal Bonus for 100× your base spin to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Super Bonus (200×): Play Super Bonus for 200× your base spin to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'BẢNG TRẢ (× QUAY)',
-	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Mọi giá trị trả thưởng là bội số của tổng lượt quay.',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Mọi giá trị trả thưởng là bội số của lượt quay cơ bản.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Sự cố vô hiệu mọi thưởng và lượt chơi. Cần kết nối internet ổn định. Nếu mất kết nối, tải lại game để hoàn tất vòng chưa xong. Lợi nhuận kỳ vọng tính trên nhiều lượt chơi. Màn hình không đại diện thiết bị thật và chỉ mang tính minh họa. Phần thưởng được thanh toán theo số tiền từ Remote Game Server, không theo sự kiện trình duyệt. TM và © 2026 Stake Engine.',
 };
@@ -345,16 +357,16 @@ const id = {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
 		'Main otomatis berhenti karena batas hadiah tunggal tercapai.',
 	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury adalah slot 5 reel, 5 baris dengan 25 payline. Hadiah diberikan kiri ke kanan pada reel bersebelahan, mulai dari reel paling kiri. Hanya hadiah tertinggi per line yang diberikan.',
+		'Wok Fury adalah slot 5 reel, 5 baris dengan 25 payline. Hadiah diberikan kiri ke kanan pada reel bersebelahan, mulai dari reel paling kiri. Minimal 3 simbol yang cocok pada payline diperlukan untuk hadiah. Hanya hadiah tertinggi per line yang diberikan.',
 	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Semua 25 payline selalu aktif. Hadiah diberikan kiri ke kanan pada reel bersebelahan, mulai dari reel paling kiri.',
+		'Semua 25 payline selalu aktif. Hadiah diberikan kiri ke kanan pada reel bersebelahan, mulai dari reel paling kiri. Minimal 3 simbol cocok pada reel bersebelahan diperlukan untuk garis kemenangan yang valid.',
 	GAME_INFO_WILD_BODY_SOCIAL:
 		'Simbol Wild menggantikan semua simbol berbayar kecuali Bonus. Wild membayar 225× spin untuk 5 sama.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'MODE MAIN',
 	GAME_INFO_BET_MODES_BODY_SOCIAL:
-		'RTP mode dasar 96,01%. Bonus Boost biaya 2× spin dan meningkatkan peluang free spin. Special Spins biaya 30× spin. Main Normal Bonus biaya 100× spin. Main Super Bonus biaya 200× spin. Hadiah maksimum 2.500× spin di setiap mode.',
+		'Base (1×): The default mode. Each spin costs 1× your base spin. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All prizes are calculated as multiples of your base spin. RTP 96.03%. Maximum prize 2,500× your base spin.\nBonus Boost (2×): Enable this mode to play at 2× your base spin per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All prizes are calculated as multiples of your base spin, not the 2× mode cost. RTP 96.04%. Maximum prize 2,355.2× your base spin.\nSpecial Spins (30×): Enable this mode to play at 30× your base spin per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All prizes are calculated as multiples of your base spin, not the 30× mode cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Normal Bonus (100×): Play Normal Bonus for 100× your base spin to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Super Bonus (200×): Play Super Bonus for 200× your base spin to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'TABEL BAYAR (× SPIN)',
-	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Semua nilai bayaran adalah kelipatan total spin.',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Semua nilai bayaran adalah kelipatan spin dasar.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Kerusakan membatalkan semua hadiah dan permainan. Koneksi internet stabil diperlukan. Jika terputus, muat ulang game untuk menyelesaikan ronde yang belum selesai. Return yang diharapkan dihitung dari banyak permainan. Tampilan game tidak mewakili perangkat fisik dan hanya ilustrasi. Hadiah diselesaikan menurut jumlah dari Remote Game Server, bukan peristiwa browser. TM dan © 2026 Stake Engine.',
 };
@@ -381,16 +393,16 @@ const fi = {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
 		'Automaattipeli pysähtyi, koska yksittäisen palkinnon raja saavutettiin.',
 	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury on 5 rullan ja 5 rivin slotti, 25 voittolinjalla. Palkinnot myönnetään vasemmalta oikealle vierekkäisillä rullilla, alkaen vasemmanpuoleisimmasta. Linjaa kohden maksetaan vain korkein palkinto.',
+		'Wok Fury on 5 rullan ja 5 rivin slotti, 25 voittolinjalla. Palkinnot myönnetään vasemmalta oikealle vierekkäisillä rullilla, alkaen vasemmanpuoleisimmasta. Palkintoon tarvitaan vähintään 3 samaa symbolia voittolinjan varrella. Linjaa kohden maksetaan vain korkein palkinto.',
 	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Kaikki 25 linjaa ovat aina aktiivisia. Palkinnot myönnetään vasemmalta oikealle vierekkäisillä rullilla, alkaen vasemmanpuoleisimmasta.',
+		'Kaikki 25 linjaa ovat aina aktiivisia. Palkinnot myönnetään vasemmalta oikealle vierekkäisillä rullilla, alkaen vasemmanpuoleisimmasta. Voittavan linjan muodostamiseen tarvitaan vähintään 3 samaa symbolia vierekkäisillä rullilla.',
 	GAME_INFO_WILD_BODY_SOCIAL:
 		'Wild korvaa kaikki maksavat symbolit paitsi Bonus. Wild maksaa 225× spin viidestä samasta.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'PELI TILAT',
 	GAME_INFO_BET_MODES_BODY_SOCIAL:
-		'Perustilan RTP on 96,01 %. Bonus Boost maksaa 2× spin ja lisää ilmaiskierrosten todennäköisyyttä. Special Spins maksaa 30× spin. Normal Bonus -pelaaminen maksaa 100× spin. Super Bonus -pelaaminen maksaa 200× spin. Maksimipalkinto on 2 500× spin kaikissa tiloissa.',
+		'Base (1×): The default mode. Each spin costs 1× your base spin. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All prizes are calculated as multiples of your base spin. RTP 96.03%. Maximum prize 2,500× your base spin.\nBonus Boost (2×): Enable this mode to play at 2× your base spin per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All prizes are calculated as multiples of your base spin, not the 2× mode cost. RTP 96.04%. Maximum prize 2,355.2× your base spin.\nSpecial Spins (30×): Enable this mode to play at 30× your base spin per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All prizes are calculated as multiples of your base spin, not the 30× mode cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Normal Bonus (100×): Play Normal Bonus for 100× your base spin to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Super Bonus (200×): Play Super Bonus for 200× your base spin to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'VOITTOTAULUKKO (× SPIN)',
-	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Kaikki voittoarvot ovat kerrannaisia kokonaisspinistä.',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Kaikki voittoarvot ovat kerrannaisia perusspinistä.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Toimintahäiriö mitätöi kaikki palkinnot ja pelit. Vakaa internetyhteys vaaditaan. Yhteyden katketessa lataa peli uudelleen viimeistelläksesi keskeneräiset kierrokset. Odotettu tuotto lasketaan monista peleistä. Näyttö ei edusta fyysistä laitetta ja on vain havainnollistava. Palkinnot maksetaan Remote Game Serveriltä saadun summan mukaan, ei selaimen tapahtumien perusteella. TM ja © 2026 Stake Engine.',
 };
@@ -417,16 +429,16 @@ const ar = {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
 		'توقف اللعب التلقائي لأنه تم الوصول إلى حد الجائزة الواحدة.',
 	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury سلوت بـ 5 بكرات و5 صفوف و25 خط دفع. تُمنح الجوائز من اليسار إلى اليمين على البكرات المجاورة، بدءاً من أقصى اليسار. تُمنح أعلى جائزة فقط لكل خط.',
+		'Wok Fury سلوت بـ 5 بكرات و5 صفوف و25 خط دفع. تُمنح الجوائز من اليسار إلى اليمين على البكرات المجاورة، بدءاً من أقصى اليسار. يلزم حد أدنى 3 رموز متطابقة على خط الدفع للحصول على جائزة. تُمنح أعلى جائزة فقط لكل خط.',
 	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'جميع خطوط الـ 25 نشطة دائماً. تُمنح الجوائز من اليسار إلى اليمين على البكرات المجاورة، بدءاً من أقصى اليسار.',
+		'جميع خطوط الـ 25 نشطة دائماً. تُمنح الجوائز من اليسار إلى اليمين على البكرات المجاورة، بدءاً من أقصى اليسار. يلزم حد أدنى 3 رموز متطابقة على البكرات المجاورة لإنشاء خط فوز صالح.',
 	GAME_INFO_WILD_BODY_SOCIAL:
 		'رمز Wild يستبدل جميع الرموز المدفوعة ما عدا Bonus. Wild يدفع 225× اللفة لـ 5 متطابقة.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'أوضاع اللعب',
 	GAME_INFO_BET_MODES_BODY_SOCIAL:
-		'RTP للوضع الأساسي 96.01%. Bonus Boost يكلف 2× اللفة ويزيد فرصة تفعيل الدورات المجانية. Special Spins يكلف 30× اللفة. لعب Normal Bonus يكلف 100× اللفة. لعب Super Bonus يكلف 200× اللفة. الحد الأقصى للجائزة 2,500× اللفة في كل وضع.',
+		'Base (1×): The default mode. Each spin costs 1× your base spin. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All prizes are calculated as multiples of your base spin. RTP 96.03%. Maximum prize 2,500× your base spin.\nBonus Boost (2×): Enable this mode to play at 2× your base spin per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All prizes are calculated as multiples of your base spin, not the 2× mode cost. RTP 96.04%. Maximum prize 2,355.2× your base spin.\nSpecial Spins (30×): Enable this mode to play at 30× your base spin per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All prizes are calculated as multiples of your base spin, not the 30× mode cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Normal Bonus (100×): Play Normal Bonus for 100× your base spin to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Super Bonus (200×): Play Super Bonus for 200× your base spin to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'جدول الدفع (× اللفة)',
-	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'جميع قيم الدفع مضاعفات إجمالي اللفة.',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'جميع قيم الدفع مضاعفات اللفة الأساسية.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'العطل يلغي جميع الجوائز والجولات. يلزم اتصال إنترنت مستقر. في حال انقطاع الاتصال، أعد تحميل اللعبة لإكمال أي جولات غير مكتملة. يُحسب العائد المتوقع على مدى عدد كبير من الجولات. عرض اللعبة لا يمثل أي جهاز فعلي وهو لأغراض توضيحية فقط. تُسوَّى المكافآت وفق المبلغ المستلم من Remote Game Server وليس وفق الأحداث داخل متصفح الويب. TM و© 2026 Stake Engine.',
 };
@@ -453,16 +465,16 @@ const hi = {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
 		'ऑटोप्ले रुका क्योंकि एकल पुरस्कार सीमा पहुँच गई।',
 	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury 5 रील, 5 पंक्ति स्लॉट है, 25 पेलाइन के साथ। पुरस्कार बाएँ से दाएँ, सटे हुए रीलों पर, सबसे बाएँ रील से शुरू होकर दिए जाते हैं। प्रति लाइन केवल सबसे बड़ा पुरस्कार दिया जाता है।',
+		'Wok Fury 5 रील, 5 पंक्ति स्लॉट है, 25 पेलाइन के साथ। पुरस्कार बाएँ से दाएँ, सटे हुए रीलों पर, सबसे बाएँ रील से शुरू होकर दिए जाते हैं। पुरस्कार के लिए पेलाइन पर न्यूनतम 3 समान प्रतीक आवश्यक हैं। प्रति लाइन केवल सबसे बड़ा पुरस्कार दिया जाता है।',
 	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'सभी 25 पेलाइन हमेशा सक्रिय हैं। पुरस्कार बाएँ से दाएँ, सटे हुए रीलों पर, सबसे बाएँ रील से शुरू होकर दिए जाते हैं।',
+		'सभी 25 पेलाइन हमेशा सक्रिय हैं। पुरस्कार बाएँ से दाएँ, सटे हुए रीलों पर, सबसे बाएँ रील से शुरू होकर दिए जाते हैं। वैध विनिंग लाइन के लिए सटे रीलों पर न्यूनतम 3 समान प्रतीक आवश्यक हैं।',
 	GAME_INFO_WILD_BODY_SOCIAL:
 		'Wild प्रतीक Bonus को छोड़कर सभी भुगतान प्रतीकों की जगह लेता है। Wild 5 एक जैसे के लिए 225× स्पिन देता है।',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'खेल मोड',
 	GAME_INFO_BET_MODES_BODY_SOCIAL:
-		'बेस मोड RTP 96.01% है। Bonus Boost 2× स्पिन की लागत पर है और free spin की संभावना बढ़ाता है। Special Spins 30× स्पिन की लागत पर है। Normal Bonus खेलने की लागत 100× स्पिन। Super Bonus खेलने की लागत 200× स्पिन। अधिकतम पुरस्कार हर मोड में 2,500× स्पिन है।',
+		'Base (1×): The default mode. Each spin costs 1× your base spin. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All prizes are calculated as multiples of your base spin. RTP 96.03%. Maximum prize 2,500× your base spin.\nBonus Boost (2×): Enable this mode to play at 2× your base spin per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All prizes are calculated as multiples of your base spin, not the 2× mode cost. RTP 96.04%. Maximum prize 2,355.2× your base spin.\nSpecial Spins (30×): Enable this mode to play at 30× your base spin per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All prizes are calculated as multiples of your base spin, not the 30× mode cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Normal Bonus (100×): Play Normal Bonus for 100× your base spin to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Super Bonus (200×): Play Super Bonus for 200× your base spin to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'पेटेबल (× स्पिन)',
-	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'सभी भुगतान मूल्य कुल स्पिन के गुणक हैं।',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'सभी भुगतान मूल्य बेस स्पिन के गुणक हैं।',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'खराबी सभी पुरस्कार और खेल रद्द कर देती है। स्थिर इंटरनेट कनेक्शन आवश्यक है। डिस्कनेक्शन पर अधूरे राउंड पूरे करने के लिए गेम रीलोड करें। अपेक्षित रिटर्न कई खेलों पर गणना की जाती है। डिस्प्ले किसी भौतिक उपकरण का प्रतिनिधित्व नहीं करता। पुरस्कार Remote Game Server से प्राप्त राशि के अनुसार तय होते हैं, ब्राउज़र घटनाओं के अनुसार नहीं। TM और © 2026 Stake Engine.',
 };
@@ -488,16 +500,16 @@ const ja = {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: '単一賞上限に到達',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: '単一賞上限に達したため、オートプレイを停止しました。',
 	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Furyは5リール5行25ペイラインのスロットです。賞は最左リールから隣接リール上で左から右に付与されます。ラインごとに最高賞のみが付与されます。',
+		'Wok Furyは5リール5行25ペイラインのスロットです。賞は最左リールから隣接リール上で左から右に付与されます。有効な配当ラインには、一致するシンボルが最低3つ必要です。ラインごとに最高賞のみが付与されます。',
 	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'25ペイラインは常に有効です。賞は最左リールから隣接リール上で左から右に付与されます。',
+		'25ペイラインは常に有効です。賞は最左リールから隣接リール上で左から右に付与されます。有効な配当ラインには、隣接リール上で一致するシンボルが最低3つ必要です。',
 	GAME_INFO_WILD_BODY_SOCIAL:
 		'WildシンボルはBonusを除くすべての配当シンボルの代わりになります。Wildは5一致で225×スピンを払います。',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'プレイモード',
 	GAME_INFO_BET_MODES_BODY_SOCIAL:
-		'ベースモードRTPは96.01%。Bonus Boostは2×スピンでフリースピン発動率が上がります。Special Spinsは30×スピン。Normal Bonusプレイは100×スピン。Super Bonusプレイは200×スピン。最大賞は全モードで2,500×スピンです。',
+		'Base (1×): The default mode. Each spin costs 1× your base spin. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All prizes are calculated as multiples of your base spin. RTP 96.03%. Maximum prize 2,500× your base spin.\nBonus Boost (2×): Enable this mode to play at 2× your base spin per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All prizes are calculated as multiples of your base spin, not the 2× mode cost. RTP 96.04%. Maximum prize 2,355.2× your base spin.\nSpecial Spins (30×): Enable this mode to play at 30× your base spin per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All prizes are calculated as multiples of your base spin, not the 30× mode cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Normal Bonus (100×): Play Normal Bonus for 100× your base spin to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Super Bonus (200×): Play Super Bonus for 200× your base spin to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: '配当表 (× スピン)',
-	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'すべての配当値は合計スピンの倍数です。',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'すべての配当値はベーススピンの倍数です。',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'故障時はすべての賞とプレイが無効になります。安定したインターネット接続が必要です。切断時は未完了ラウンドを完了するためゲームを再読み込みしてください。期待リターンは多数のプレイに基づき計算されます。表示は物理デバイスを表しません。賞はRemote Game Serverから受け取った金額に基づき精算され、ブラウザ内イベントではありません。TM and © 2026 Stake Engine.',
 };
@@ -524,16 +536,16 @@ const ko = {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
 		'단일 상금 한도에 도달하여 자동 플레이가 중지되었습니다.',
 	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury는 5릴 5행 25페이라인 슬롯입니다. 상금은 가장 왼쪽 릴부터 인접 릴에서 왼쪽에서 오른쪽으로 지급됩니다. 라인당 가장 높은 상금만 지급됩니다.',
+		'Wok Fury는 5릴 5행 25페이라인 슬롯입니다. 상금은 가장 왼쪽 릴부터 인접 릴에서 왼쪽에서 오른쪽으로 지급됩니다. 유효한 당첨 라인을 만들려면 일치하는 심볼이 최소 3개 필요합니다. 라인당 가장 높은 상금만 지급됩니다.',
 	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'25개 페이라인은 항상 활성입니다. 상금은 가장 왼쪽 릴부터 인접 릴에서 왼쪽에서 오른쪽으로 지급됩니다.',
+		'25개 페이라인은 항상 활성입니다. 상금은 가장 왼쪽 릴부터 인접 릴에서 왼쪽에서 오른쪽으로 지급됩니다. 유효한 당첨 라인을 만들려면 인접 릴에서 일치하는 심볼이 최소 3개 필요합니다.',
 	GAME_INFO_WILD_BODY_SOCIAL:
 		'Wild 심볼은 Bonus를 제외한 모든 유료 심볼을 대체합니다. Wild는 5개 일치 시 225× 스핀을 지급합니다.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: '플레이 모드',
 	GAME_INFO_BET_MODES_BODY_SOCIAL:
-		'기본 모드 RTP는 96.01%입니다. Bonus Boost는 2× 스핀이며 프리 스핀 발동 확률이 증가합니다. Special Spins는 30× 스핀입니다. Normal Bonus 플레이는 100× 스핀, Super Bonus 플레이는 200× 스핀입니다. 최대 상금은 모든 모드에서 2,500× 스핀입니다.',
+		'Base (1×): The default mode. Each spin costs 1× your base spin. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All prizes are calculated as multiples of your base spin. RTP 96.03%. Maximum prize 2,500× your base spin.\nBonus Boost (2×): Enable this mode to play at 2× your base spin per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All prizes are calculated as multiples of your base spin, not the 2× mode cost. RTP 96.04%. Maximum prize 2,355.2× your base spin.\nSpecial Spins (30×): Enable this mode to play at 30× your base spin per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All prizes are calculated as multiples of your base spin, not the 30× mode cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Normal Bonus (100×): Play Normal Bonus for 100× your base spin to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Super Bonus (200×): Play Super Bonus for 200× your base spin to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: '배당표 (× 스핀)',
-	GAME_INFO_PAYTABLE_NOTE_SOCIAL: '모든 배당 값은 총 스핀의 배수입니다.',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: '모든 배당 값은 기본 스핀의 배수입니다.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'오작동 시 모든 상금과 플레이가 무효화됩니다. 안정적인 인터넷 연결이 필요합니다. 연결이 끊기면 미완료 라운드를 마치려면 게임을 다시 로드하세요. 기대 수익은 많은 플레이를 기준으로 계산됩니다. 화면은 실제 기기를 나타내지 않으며 설명용입니다. 상금은 브라우저 이벤트가 아니라 Remote Game Server에서 받은 금액 기준으로 정산됩니다. TM and © 2026 Stake Engine.',
 };
@@ -559,16 +571,16 @@ const zh = {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: '已达单次奖励上限',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: '自动游戏已停止，因为已达单次奖励上限。',
 	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury 是一款 5 轴 5 行、25 条支付线的老虎机。奖励从最左轴开始，在相邻轴上从左到右发放。每条线只发放最高奖励。',
+		'Wok Fury 是一款 5 轴 5 行、25 条支付线的老虎机。奖励从最左轴开始，在相邻轴上从左到右发放。一条有效中奖线至少需要 3 个相同符号。每条线只发放最高奖励。',
 	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'25 条支付线始终有效。奖励从最左轴开始，在相邻轴上从左到右发放。',
+		'25 条支付线始终有效。奖励从最左轴开始，在相邻轴上从左到右发放。一条有效中奖线至少需要相邻轴上 3 个相同符号。',
 	GAME_INFO_WILD_BODY_SOCIAL:
 		'Wild 符号可替代除 Bonus 外的所有付费符号。Wild 在 5 连时支付 225× 旋转。',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: '游戏模式',
 	GAME_INFO_BET_MODES_BODY_SOCIAL:
-		'基础模式 RTP 为 96.01%。Bonus Boost 花费 2× 旋转并提高免费旋转触发概率。Special Spins 花费 30× 旋转。玩 Normal Bonus 花费 100× 旋转。玩 Super Bonus 花费 200× 旋转。所有模式最大奖励为 2,500× 旋转。',
+		'Base (1×): The default mode. Each spin costs 1× your base spin. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All prizes are calculated as multiples of your base spin. RTP 96.03%. Maximum prize 2,500× your base spin.\nBonus Boost (2×): Enable this mode to play at 2× your base spin per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All prizes are calculated as multiples of your base spin, not the 2× mode cost. RTP 96.04%. Maximum prize 2,355.2× your base spin.\nSpecial Spins (30×): Enable this mode to play at 30× your base spin per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All prizes are calculated as multiples of your base spin, not the 30× mode cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Normal Bonus (100×): Play Normal Bonus for 100× your base spin to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.\nPlay Super Bonus (200×): Play Super Bonus for 200× your base spin to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base spin, not the play cost. RTP 96.01%. Maximum prize 2,500× your base spin.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: '赔付表 (× 旋转)',
-	GAME_INFO_PAYTABLE_NOTE_SOCIAL: '所有赔付值为总旋转的倍数。',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: '所有赔付值为基础旋转的倍数。',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'故障将使所有奖励和游戏无效。需要稳定的网络连接。如发生断线，请重新加载游戏以完成未结束的回合。预期回报基于大量游戏计算。游戏画面不代表任何物理设备，仅供参考。奖励根据从 Remote Game Server 收到的金额结算，而非浏览器内事件。TM 和 © 2026 Stake Engine.',
 };

@@ -57,10 +57,10 @@ export default {
 	GAME_INFO_TITLE: 'معلومات اللعبة',
 	GAME_INFO_ABOUT_TITLE: 'عن اللعبة',
 	GAME_INFO_ABOUT_BODY:
-		'Wok Fury هي لعبة سلوت بـ 5 بكرات و5 صفوف و25 خط دفع. تُدفع الأرباح من اليسار إلى اليمين على البكرات المجاورة، بدءًا من البكرة اليسرى. يُدفع أعلى ربح فقط لكل خط.',
+		'Wok Fury هي لعبة سلوت بـ 5 بكرات و5 صفوف و25 خط دفع. تُدفع الأرباح من اليسار إلى اليمين على البكرات المجاورة، بدءًا من البكرة اليسرى. يلزم حد أدنى 3 رموز متطابقة على خط الدفع للحصول على فوز. يُدفع أعلى ربح فقط لكل خط.',
 	GAME_INFO_PAYLINES_TITLE: 'PAYLINES (25)',
 	GAME_INFO_PAYLINES_NOTE:
-		'All 25 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel.',
+		'All 25 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel. A minimum of 3 matching symbols on adjacent reels is required to create a valid winning line.',
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'رمز WILD',
 	GAME_INFO_WILD_BODY:
@@ -68,17 +68,20 @@ export default {
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'دورات مجانية',
 	GAME_INFO_FS_BODY:
-		'احصل على 3 رموز Bonus في اللعبة الأساسية لتفعيل Normal Bonus مع 10 دورات مجانية. احصل على 4 رموز Bonus أو أكثر لتفعيل Super Bonus مع 10 دورات مجانية و1 Sticky Mystery Reel من البداية.',
+		'احصل على 3 رموز Bonus في اللعبة الأساسية لتفعيل Normal Bonus مع 10 دورات مجانية. احصل على 4 رموز Bonus أو أكثر لتفعيل Super Bonus مع 10 دورات مجانية و1 Sticky Mystery Reel من البداية. لا يمكن إعادة تفعيل الدورات المجانية بظهور رموز Bonus أثناء الميزة. تُمنح الدورات المجانية الإضافية فقط عبر Progress Ladder.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY:
-		'أثناء الدورات المجانية، اجمع 4 رموز Bonus للصعود مستوى واحد على Progress Ladder. يمنح كل مستوى 3 دورات مجانية إضافية ويفتح 1 Sticky Mystery Reel إضافي. تبقى بكرات Mystery في مكانها وتكشف عن نفس الرمز في كل دورة.',
+		'أثناء الدورات المجانية، يُجمع كل رمز Bonus يظهر نحو Progress Ladder. كل 4 رموز Bonus مجمعة ترفع مستوى واحدًا. يمنح كل مستوى 3 دورات مجانية إضافية ويفتح 1 Sticky Mystery Reel إضافي، بحد أقصى 5 مستويات (15 دورة مجانية إضافية). تبقى بكرات Mystery في مكانها وتكشف عن نفس الرمز في كل دورة.',
 	GAME_INFO_BET_MODES_TITLE: 'أوضاع الرهان',
 	GAME_INFO_BET_MODES_BODY:
-		'RTP الوضع الأساسي هو 96.01%. يكلف Bonus Boost ضعف الرهان ويزيد فرصة تفعيل الدورات المجانية. تكلف Special Spins 30× الرهان. شراء Normal Bonus يكلف 100× الرهان. شراء Super Bonus يكلف 200× الرهان. الحد الأقصى للفوز هو 2,500× الرهان في كل وضع.',
+		'Base (1×): The default mode. Each spin costs 1× your base bet. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All wins are calculated as multiples of your base bet. RTP 96.03%. Maximum win 2,500× your base bet.\nBonus Boost (2×): Enable this mode to play at 2× your base bet per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All wins are calculated as multiples of your base bet, not the 2× mode cost. RTP 96.04%. Maximum win 2,355.2× your base bet.\nSpecial Spins (30×): Enable this mode to play at 30× your base bet per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All wins are calculated as multiples of your base bet, not the 30× mode cost. RTP 96.01%. Maximum win 2,500× your base bet.\nBuy Normal Bonus (100×): Purchase Normal Bonus for 100× your base bet to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.\nBuy Super Bonus (200×): Purchase Super Bonus for 200× your base bet to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.',
 	GAME_INFO_PAYTABLE_TITLE: 'جدول المدفوعات (× الرهان)',
-	GAME_INFO_PAYTABLE_NOTE: 'All payout values are multiples of the total bet.',
+	GAME_INFO_PAYTABLE_NOTE: 'All payout values are multiples of the base bet.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
+		GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
+	GAME_INFO_CONTROLS_BODY:
+		'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nBet amount (− / +): Use the minus and plus buttons to change your bet amount. Bet changes are only available while the game is idle.\nBuy Bonus / Feature: Open Buy Bonus to purchase Normal Bonus or Super Bonus, or to turn Bonus Boost on or off. Confirm a purchase to start the selected feature immediately.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it. You can also enable Bonus Boost from the Autoplay panel before starting.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance and Bet displays: Show your current balance and selected bet amount. These are informational and are not buttons.',
 	GAME_INFO_LEGAL_TITLE: 'إخلاء مسؤولية عام عن اللعبة',
 	GAME_INFO_LEGAL_BODY:
 		'يؤدي العطل إلى إلغاء جميع الأرباح والجولات. يلزم اتصال إنترنت مستقر. في حال انقطاع الاتصال، أعد تحميل اللعبة لإكمال أي جولات غير مكتملة. يُحسب العائد المتوقع على مدى عدد كبير من الجولات. عرض اللعبة لا يمثل أي جهاز فعلي وهو لأغراض توضيحية فقط. تُسوَّى الأرباح وفق المبلغ المستلم من Remote Game Server وليس وفق الأحداث داخل متصفح الويب. TM و© 2026 Stake Engine.',
@@ -89,4 +92,17 @@ export default {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'تم الوصول لحد الفوز',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'توقف اللعب التلقائي لأنه تم الوصول إلى حد الفوز الواحد.',
 	AUTOPLAY_MSG_OK: 'موافق',
+	REPLAY_BADGE: 'REPLAY',
+	REPLAY_TITLE: 'Bet Replay',
+	REPLAY_MODE: 'Mode',
+	REPLAY_MODE_BASE: 'Base',
+	REPLAY_BASE_BET: 'Base Bet',
+	REPLAY_COST_MULTIPLIER: 'Cost Multiplier',
+	REPLAY_TOTAL_BET_COST: 'Total Bet Cost',
+	REPLAY_PAYOUT_MULTIPLIER: 'Payout Multiplier',
+	REPLAY_TOTAL_WIN: 'Total Win',
+	REPLAY_START: 'Start Replay',
+	REPLAY_AGAIN: 'Replay Again',
+	REPLAY_COMPLETE_TITLE: 'Replay Complete',
+	REPLAY_DISCLAIMER: 'This is a replay of a previous bet round. No bets will be placed.',
 };
