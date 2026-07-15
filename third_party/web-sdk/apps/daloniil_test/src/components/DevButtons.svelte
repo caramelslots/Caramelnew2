@@ -23,7 +23,7 @@
 	import { stateBet, stateI18n, stateModal, stateUrlDerived } from 'state-shared';
 
 	/** Set to true to show DEV / LANG / SOCIAL toggles locally. */
-	const SHOW_DEV_PANEL = false;
+	const SHOW_DEV_PANEL = true;
 
 	import { playBet, playBookEvent, playBookEvents } from '../game/utils';
 	import { eventEmitter } from '../game/eventEmitter';

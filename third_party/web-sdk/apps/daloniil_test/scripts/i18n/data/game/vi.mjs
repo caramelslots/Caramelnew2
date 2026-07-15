@@ -60,7 +60,7 @@ export default {
 		'Wok Fury là slot 5 cuộn, 5 hàng với 25 dòng thanh toán. Tiền thắng được trả từ trái sang phải trên các cuộn liền kề, bắt đầu từ cuộn ngoài cùng bên trái. Cần tối thiểu 3 biểu tượng khớp trên một dòng trả thưởng để thắng. Chỉ trả khoản thắng cao nhất trên mỗi dòng.',
 	GAME_INFO_PAYLINES_TITLE: 'PAYLINES (25)',
 	GAME_INFO_PAYLINES_NOTE:
-		'All 25 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel. A minimum of 3 matching symbols on adjacent reels is required to create a valid winning line.',
+		'Cả 25 payline luôn hoạt động. Thắng được trả từ trái sang phải trên các cuộn liền kề, bắt đầu từ cuộn ngoài cùng bên trái. Cần tối thiểu 3 biểu tượng khớp trên các cuộn liền kề để tạo dòng thắng hợp lệ.',
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'BIỂU TƯỢNG WILD',
 	GAME_INFO_WILD_BODY:
@@ -76,7 +76,7 @@ export default {
 	GAME_INFO_BET_MODES_BODY:
 		'Base (1×): The default mode. Each spin costs 1× your base bet. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All wins are calculated as multiples of your base bet. RTP 96.03%. Maximum win 2,500× your base bet.\nBonus Boost (2×): Enable this mode to play at 2× your base bet per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All wins are calculated as multiples of your base bet, not the 2× mode cost. RTP 96.04%. Maximum win 2,355.2× your base bet.\nSpecial Spins (30×): Enable this mode to play at 30× your base bet per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All wins are calculated as multiples of your base bet, not the 30× mode cost. RTP 96.01%. Maximum win 2,500× your base bet.\nBuy Normal Bonus (100×): Purchase Normal Bonus for 100× your base bet to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.\nBuy Super Bonus (200×): Purchase Super Bonus for 200× your base bet to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.',
 	GAME_INFO_PAYTABLE_TITLE: 'BẢNG TRẢ THƯỞNG (× CƯỢC)',
-	GAME_INFO_PAYTABLE_NOTE: 'All payout values are multiples of the base bet.',
+	GAME_INFO_PAYTABLE_NOTE: 'Mọi giá trị trả thưởng là bội số của mức cược cơ bản.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
 		GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
