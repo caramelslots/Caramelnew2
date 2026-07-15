@@ -63,9 +63,7 @@
 
 	const layoutType = $derived(stateLayoutDerived.layoutType());
 	const isPortrait = $derived(layoutType === 'portrait');
-	const isFreeSpins = $derived(
-		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
-	);
+	const isFreeSpins = $derived(stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow);
 	const isReplay = $derived(stateUi.config.mode === 'replay');
 	const show = $derived(isPortrait && gameEntrance.showContent && uiVisible);
 	const spinPrewarmActive = $derived(
@@ -155,9 +153,7 @@
 	const decreaseDisabled = $derived(
 		!context.stateXstateDerived.isIdle() || stateBet.betAmount === smallestBet,
 	);
-	const increaseDisabled = $derived(
-		!context.stateXstateDerived.isIdle() || !canIncreaseBet(),
-	);
+	const increaseDisabled = $derived(!context.stateXstateDerived.isIdle() || !canIncreaseBet());
 
 	const autoplayDisabled = $derived.by(() => {
 		if (stateBet.isSpaceHold) return true;
@@ -312,10 +308,12 @@
 				style:font-size="{balanceFontSize}px"
 				style:max-width="{hud.util.balance.maxWidth}px"
 			>
-				<HudBalanceBetLine
-					label={context.i18nDerived.balance()}
-					value={numberToCurrencyString(stateBet.balanceAmount)}
-				/>
+				{#if !isReplay}
+					<HudBalanceBetLine
+						label={context.i18nDerived.balance()}
+						value={numberToCurrencyString(stateBet.balanceAmount)}
+					/>
+				{/if}
 				<HudBalanceBetLine
 					label={context.i18nDerived.bet()}
 					value={numberToCurrencyString(stateBet.betAmount)}
@@ -367,7 +365,7 @@
 				dimmed={spinDisabled}
 				disabled={spinDisabled || !show}
 				onpress={onSpinPress}
-				hasCounter={hasCounter}
+				{hasCounter}
 				counterText={spinCounterText}
 				counterFontSize={spinCounterFontSize}
 			/>
@@ -402,7 +400,10 @@
 		pointer-events: auto;
 		-webkit-tap-highlight-color: transparent;
 		touch-action: manipulation;
-		transition: transform 0.1s, filter 0.15s, opacity 0.15s;
+		transition:
+			transform 0.1s,
+			filter 0.15s,
+			opacity 0.15s;
 
 		&:active:not(:disabled) {
 			transform: translate(-50%, -50%) scale(0.97);

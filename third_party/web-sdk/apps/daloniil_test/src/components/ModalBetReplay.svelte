@@ -39,6 +39,9 @@
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 
 		const mode = summary.modeKey || stateUrlDerived.mode();
+		// Re-apply stake before play — wins scale from wageredBetAmount.
+		stateBet.betAmount = summary.baseBet;
+		stateBet.wageredBetAmount = summary.baseBet;
 		// @ts-ignore — resume machine expects a bet-shaped payload
 		stateBet.betToResume = {
 			...(summary.payload as object),

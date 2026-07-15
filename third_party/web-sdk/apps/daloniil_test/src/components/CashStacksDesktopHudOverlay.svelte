@@ -15,10 +15,7 @@
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
 	import { isPopoutViewport, isPopoutSmallViewport } from '../game/constants';
-	import {
-		computeDesktopHudLayout,
-		resolveDesktopHudConfig,
-	} from '../game/desktopHudLayout';
+	import { computeDesktopHudLayout, resolveDesktopHudConfig } from '../game/desktopHudLayout';
 	import { getRoundsCounter } from '../game/autoplay';
 	import { canAffordSpin, canIncreaseBet } from '../game/buyBonusBalance';
 	import { getContext } from '../game/context';
@@ -69,13 +66,9 @@
 	const isPopout = $derived(isPopoutViewport(stateLayoutDerived.canvasSizes()));
 	const isPopoutSmall = $derived(isPopoutSmallViewport(stateLayoutDerived.canvasSizes()));
 	const useDesktopHud = $derived(layoutType !== 'portrait');
-	const isFreeSpins = $derived(
-		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
-	);
+	const isFreeSpins = $derived(stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow);
 	const isReplay = $derived(stateUi.config.mode === 'replay');
-	const show = $derived(
-		useDesktopHud && gameEntrance.showContent && uiVisible,
-	);
+	const show = $derived(useDesktopHud && gameEntrance.showContent && uiVisible);
 	const spinPrewarmActive = $derived(
 		useDesktopHud && gameEntrance.preloadContent && uiVisible && !isFreeSpins,
 	);
@@ -126,9 +119,7 @@
 	const decreaseDisabled = $derived(
 		!context.stateXstateDerived.isIdle() || stateBet.betAmount === smallestBet,
 	);
-	const increaseDisabled = $derived(
-		!context.stateXstateDerived.isIdle() || !canIncreaseBet(),
-	);
+	const increaseDisabled = $derived(!context.stateXstateDerived.isIdle() || !canIncreaseBet());
 
 	const autoplayDisabled = $derived.by(() => {
 		if (stateBet.isSpaceHold) return true;
@@ -248,17 +239,19 @@
 				onclick={onMenuPress}
 			></button>
 
-			<p
-				class="hud-balance-bet"
-				style:left="{pos.balance.x}px"
-				style:top="{pos.balance.y}px"
-				style:font-size="{pos.balance.fontSize}px"
-			>
-				<HudBalanceBetLine
-					label={context.i18nDerived.balance()}
-					value={numberToCurrencyString(stateBet.balanceAmount)}
-				/>
-			</p>
+			{#if !isReplay}
+				<p
+					class="hud-balance-bet"
+					style:left="{pos.balance.x}px"
+					style:top="{pos.balance.y}px"
+					style:font-size="{pos.balance.fontSize}px"
+				>
+					<HudBalanceBetLine
+						label={context.i18nDerived.balance()}
+						value={numberToCurrencyString(stateBet.balanceAmount)}
+					/>
+				</p>
+			{/if}
 			<p
 				class="hud-balance-bet"
 				style:left="{pos.bet.x}px"
@@ -348,7 +341,7 @@
 				dimmed={spinDisabled}
 				disabled={spinDisabled || !show}
 				onpress={onSpinPress}
-				hasCounter={hasCounter}
+				{hasCounter}
 				counterText={spinCounterText}
 				counterFontSize={spinCounterFontSize}
 			/>
@@ -382,7 +375,10 @@
 		pointer-events: auto;
 		-webkit-tap-highlight-color: transparent;
 		touch-action: manipulation;
-		transition: transform 0.1s, filter 0.15s, opacity 0.15s;
+		transition:
+			transform 0.1s,
+			filter 0.15s,
+			opacity 0.15s;
 
 		&:active:not(:disabled) {
 			transform: translate(-50%, -50%) scale(0.97);

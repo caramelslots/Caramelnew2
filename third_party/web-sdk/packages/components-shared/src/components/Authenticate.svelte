@@ -188,8 +188,10 @@
 	const handleReplay = async () => {
 		const modeKey = stateUrlDerived.mode();
 		const baseBet = fromApiAmount(stateUrlDerived.amount()) || 0;
-		stateBetDerived.setBetAmount(baseBet);
-		stateBet.wageredBetAmount = stateBet.betAmount;
+		// Replay has no wallet/balance — do NOT use setBetAmount (it snaps to
+		// affordable ladder levels and collapses to min when balance is 0).
+		stateBet.betAmount = baseBet;
+		stateBet.wageredBetAmount = baseBet;
 		if (modeKey) stateBet.activeBetModeKey = modeKey;
 
 		const data = await requestReplay({
