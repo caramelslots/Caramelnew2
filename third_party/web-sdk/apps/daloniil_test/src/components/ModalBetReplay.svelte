@@ -12,7 +12,12 @@
 
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
-	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
+	import {
+		getPortraitDeviceWidth,
+		getPortraitMobileTier,
+		isPopoutSmallViewport,
+		isPopoutViewport,
+	} from '../game/constants';
 	import {
 		formatReplayMultiplier,
 		getReplayModeLabel,
@@ -31,6 +36,14 @@
 	const canvasSizes = $derived(stateLayoutDerived.canvasSizes());
 	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
 	const isPopout = $derived(isPopoutViewport(canvasSizes) && !isPopoutSmall);
+	const mobileTier = $derived(
+		isPortrait
+			? getPortraitMobileTier(
+					stateLayoutDerived.canvasSizeType(),
+					getPortraitDeviceWidth(canvasSizes),
+				)
+			: null,
+	);
 
 	const modeLabel = $derived(summary ? getReplayModeLabel(summary.modeKey) : '');
 
@@ -65,6 +78,9 @@
 			class:portrait={isPortrait}
 			class:popout-l={isPopout}
 			class:popout-s={isPopoutSmall}
+			class:mobile-s={mobileTier === 'small'}
+			class:mobile-m={mobileTier === 'medium'}
+			class:mobile-l={mobileTier === 'large'}
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="bet-replay-title"
@@ -286,22 +302,307 @@
 		max-width: 22rem;
 	}
 
-	.replay-panel.portrait {
-		width: min(100%, 22rem);
-		padding: 1.25rem 1rem 1.1rem;
-	}
+	/* Portrait base (Mobile M default) */
+	.replay-panel.portrait:not(.popout-l):not(.popout-s) {
+		width: min(94vw, 28rem);
+		gap: 1rem;
+		padding: 1.65rem 1.3rem 1.4rem;
+		border-radius: 1.25rem;
 
-	.replay-panel.popout-s {
-		width: min(100%, 18rem);
-		gap: 0.65rem;
+		.replay-badge {
+			font-size: 0.82rem;
+			padding: 0.28rem 0.88rem;
+		}
 
 		.replay-title {
-			font-size: 1.35rem;
+			font-size: 2rem;
+		}
+
+		.replay-card {
+			gap: 0.7rem;
+			padding: 1.05rem 1.1rem;
+			border-radius: 0.95rem;
+		}
+
+		.row {
+			min-height: 1.4rem;
+			gap: 0.8rem;
+		}
+
+		.row.highlight {
+			margin: 0.1rem -0.35rem;
+			padding: 0.48rem 0.4rem;
+			border-radius: 0.6rem;
+		}
+
+		.label {
+			font-size: 1.12rem;
+		}
+
+		.value {
+			font-size: 1.2rem;
+		}
+
+		.value.strong {
+			font-size: 1.32rem;
+		}
+
+		.start-btn {
+			padding: 1.05rem 1.1rem;
+			font-size: 1.22rem;
+			border-radius: 1.05rem;
+			gap: 0.55rem;
+		}
+
+		.play-icon {
+			border-width: 0.5rem 0 0.5rem 0.82rem;
+		}
+
+		.disclaimer {
+			font-size: 0.92rem;
+			max-width: 25rem;
+			line-height: 1.4;
+		}
+	}
+
+	/* Mobile S (≤374px) */
+	.replay-panel.portrait.mobile-s:not(.popout-l):not(.popout-s) {
+		width: min(94vw, 24rem);
+		gap: 0.75rem;
+		padding: 1.25rem 1.05rem 1.1rem;
+		border-radius: 1.1rem;
+
+		.replay-badge {
+			font-size: 0.72rem;
+			padding: 0.22rem 0.7rem;
+		}
+
+		.replay-title {
+			font-size: 1.65rem;
+		}
+
+		.replay-card {
+			gap: 0.55rem;
+			padding: 0.85rem 0.9rem;
+		}
+
+		.row {
+			min-height: 1.3rem;
+			gap: 0.65rem;
+		}
+
+		.row.highlight {
+			padding: 0.4rem 0.35rem;
 		}
 
 		.label,
 		.value {
+			font-size: 0.98rem;
+		}
+
+		.value.strong {
+			font-size: 1.08rem;
+		}
+
+		.start-btn {
+			padding: 0.9rem 0.95rem;
+			font-size: 1.08rem;
+			border-radius: 0.9rem;
+			gap: 0.5rem;
+		}
+
+		.play-icon {
+			border-width: 0.45rem 0 0.45rem 0.72rem;
+		}
+
+		.disclaimer {
+			font-size: 0.8rem;
+			max-width: 21rem;
+		}
+	}
+
+	/* Mobile L (≥425px) */
+	.replay-panel.portrait.mobile-l:not(.popout-l):not(.popout-s) {
+		width: min(97vw, 34rem);
+		gap: 1.25rem;
+		padding: 2.1rem 1.65rem 1.75rem;
+		border-radius: 1.45rem;
+
+		.replay-badge {
+			font-size: 0.95rem;
+			padding: 0.36rem 1.05rem;
+		}
+
+		.replay-title {
+			font-size: 2.45rem;
+		}
+
+		.replay-card {
+			gap: 0.95rem;
+			padding: 1.25rem 1.3rem;
+			border-radius: 1.1rem;
+		}
+
+		.row {
+			min-height: 1.7rem;
+			gap: 1rem;
+		}
+
+		.row.highlight {
+			margin: 0.14rem -0.45rem;
+			padding: 0.62rem 0.5rem;
+			border-radius: 0.7rem;
+		}
+
+		.label {
+			font-size: 1.28rem;
+		}
+
+		.value {
+			font-size: 1.38rem;
+		}
+
+		.value.strong {
+			font-size: 1.52rem;
+		}
+
+		.start-btn {
+			padding: 1.25rem 1.3rem;
+			font-size: 1.4rem;
+			border-radius: 1.2rem;
+			gap: 0.7rem;
+		}
+
+		.play-icon {
+			border-width: 0.6rem 0 0.6rem 1rem;
+		}
+
+		.disclaimer {
+			font-size: 1.05rem;
+			max-width: 30rem;
+			line-height: 1.4;
+		}
+	}
+
+	/* Popout L — compact relative to the small iframe */
+	.replay-panel.popout-l {
+		width: min(88%, 15.5rem);
+		gap: 0.5rem;
+		padding: 0.85rem 0.75rem 0.75rem;
+		border-radius: 0.85rem;
+
+		.replay-badge {
+			font-size: 0.55rem;
+			padding: 0.12rem 0.5rem;
+		}
+
+		.replay-title {
+			font-size: 1.15rem;
+		}
+
+		.replay-card {
+			gap: 0.35rem;
+			padding: 0.55rem 0.6rem;
+			border-radius: 0.6rem;
+		}
+
+		.row {
+			min-height: 1.05rem;
+			gap: 0.45rem;
+		}
+
+		.row.highlight {
+			margin: 0.05rem -0.2rem;
+			padding: 0.28rem 0.25rem;
+		}
+
+		.label,
+		.value {
+			font-size: 0.72rem;
+		}
+
+		.value.strong {
+			font-size: 0.8rem;
+		}
+
+		.start-btn {
+			padding: 0.55rem 0.7rem;
 			font-size: 0.82rem;
+			border-radius: 0.6rem;
+			gap: 0.35rem;
+		}
+
+		.play-icon {
+			border-width: 0.32rem 0 0.32rem 0.52rem;
+		}
+
+		.disclaimer {
+			font-size: 0.58rem;
+			max-width: 14rem;
+			line-height: 1.3;
+		}
+	}
+
+	/* Popout S — bumped up for readability in 400×225 */
+	.replay-panel.popout-s {
+		width: min(92%, 14.5rem);
+		gap: 0.48rem;
+		padding: 0.75rem 0.65rem 0.65rem;
+		border-radius: 0.75rem;
+
+		.replay-badge {
+			font-size: 0.55rem;
+			padding: 0.12rem 0.48rem;
+		}
+
+		.replay-title {
+			font-size: 1.1rem;
+		}
+
+		.replay-card {
+			gap: 0.32rem;
+			padding: 0.5rem 0.55rem;
+			border-radius: 0.55rem;
+		}
+
+		.row {
+			min-height: 1rem;
+			gap: 0.35rem;
+		}
+
+		.row.highlight {
+			margin: 0;
+			padding: 0.24rem 0.22rem;
+		}
+
+		.divider {
+			margin: 0.06rem 0;
+		}
+
+		.label,
+		.value {
+			font-size: 0.68rem;
+		}
+
+		.value.strong {
+			font-size: 0.75rem;
+		}
+
+		.start-btn {
+			padding: 0.5rem 0.6rem;
+			font-size: 0.78rem;
+			border-radius: 0.55rem;
+			gap: 0.32rem;
+		}
+
+		.play-icon {
+			border-width: 0.3rem 0 0.3rem 0.5rem;
+		}
+
+		.disclaimer {
+			font-size: 0.55rem;
+			max-width: 13rem;
+			line-height: 1.25;
 		}
 	}
 </style>

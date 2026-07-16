@@ -8,7 +8,12 @@
 	import { getContextLayout } from 'utils-layout';
 
 	import { getContext } from '../game/context';
-	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
+	import {
+		getPortraitDeviceWidth,
+		getPortraitMobileTier,
+		isPopoutSmallViewport,
+		isPopoutViewport,
+	} from '../game/constants';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
@@ -20,6 +25,14 @@
 	const canvasSizes = $derived(stateLayoutDerived.canvasSizes());
 	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
 	const isPopout = $derived(isPopoutViewport(canvasSizes) && !isPopoutSmall);
+	const mobileTier = $derived(
+		isPortrait
+			? getPortraitMobileTier(
+					stateLayoutDerived.canvasSizeType(),
+					getPortraitDeviceWidth(canvasSizes),
+				)
+			: null,
+	);
 
 	const openStartAgain = () => {
 		if (!stateUi.replay?.payload) return;
@@ -40,6 +53,9 @@
 			class:portrait={isPortrait}
 			class:popout-l={isPopout}
 			class:popout-s={isPopoutSmall}
+			class:mobile-s={mobileTier === 'small'}
+			class:mobile-m={mobileTier === 'medium'}
+			class:mobile-l={mobileTier === 'large'}
 			role="dialog"
 			aria-modal="true"
 			aria-labelledby="replay-complete-title"
@@ -164,15 +180,161 @@
 		border-color: transparent transparent transparent #111827;
 	}
 
-	.replay-panel.portrait {
-		width: min(100%, 20rem);
+	.replay-panel.portrait:not(.popout-l):not(.popout-s) {
+		width: min(94vw, 26rem);
+		gap: 1rem;
+		padding: 1.65rem 1.3rem 1.4rem;
+		border-radius: 1.25rem;
+
+		.replay-badge {
+			font-size: 0.82rem;
+			padding: 0.28rem 0.88rem;
+		}
+
+		.replay-title {
+			font-size: 1.95rem;
+		}
+
+		.start-btn {
+			padding: 1.05rem 1.1rem;
+			font-size: 1.22rem;
+			border-radius: 1.05rem;
+			gap: 0.55rem;
+		}
+
+		.play-icon {
+			border-width: 0.5rem 0 0.5rem 0.82rem;
+		}
+
+		.disclaimer {
+			font-size: 0.92rem;
+			max-width: 23rem;
+			line-height: 1.4;
+		}
+	}
+
+	.replay-panel.portrait.mobile-s:not(.popout-l):not(.popout-s) {
+		width: min(94vw, 22rem);
+		gap: 0.75rem;
+		padding: 1.25rem 1.05rem 1.1rem;
+
+		.replay-badge {
+			font-size: 0.72rem;
+			padding: 0.22rem 0.7rem;
+		}
+
+		.replay-title {
+			font-size: 1.6rem;
+		}
+
+		.start-btn {
+			padding: 0.9rem 0.95rem;
+			font-size: 1.08rem;
+			border-radius: 0.9rem;
+		}
+
+		.play-icon {
+			border-width: 0.45rem 0 0.45rem 0.72rem;
+		}
+
+		.disclaimer {
+			font-size: 0.8rem;
+			max-width: 19rem;
+		}
+	}
+
+	.replay-panel.portrait.mobile-l:not(.popout-l):not(.popout-s) {
+		width: min(97vw, 32rem);
+		gap: 1.25rem;
+		padding: 2.1rem 1.65rem 1.75rem;
+		border-radius: 1.45rem;
+
+		.replay-badge {
+			font-size: 0.95rem;
+			padding: 0.36rem 1.05rem;
+		}
+
+		.replay-title {
+			font-size: 2.35rem;
+		}
+
+		.start-btn {
+			padding: 1.25rem 1.3rem;
+			font-size: 1.4rem;
+			border-radius: 1.2rem;
+			gap: 0.7rem;
+		}
+
+		.play-icon {
+			border-width: 0.6rem 0 0.6rem 1rem;
+		}
+
+		.disclaimer {
+			font-size: 1.05rem;
+			max-width: 28rem;
+			line-height: 1.4;
+		}
+	}
+
+	.replay-panel.popout-l {
+		width: min(88%, 14.5rem);
+		gap: 0.5rem;
+		padding: 0.85rem 0.75rem 0.75rem;
+		border-radius: 0.85rem;
+
+		.replay-badge {
+			font-size: 0.55rem;
+			padding: 0.12rem 0.5rem;
+		}
+
+		.replay-title {
+			font-size: 1.1rem;
+		}
+
+		.start-btn {
+			padding: 0.55rem 0.7rem;
+			font-size: 0.82rem;
+			border-radius: 0.6rem;
+		}
+
+		.play-icon {
+			border-width: 0.32rem 0 0.32rem 0.52rem;
+		}
+
+		.disclaimer {
+			font-size: 0.58rem;
+			max-width: 13rem;
+		}
 	}
 
 	.replay-panel.popout-s {
-		width: min(100%, 17rem);
+		width: min(92%, 14rem);
+		gap: 0.48rem;
+		padding: 0.75rem 0.65rem 0.65rem;
+		border-radius: 0.75rem;
+
+		.replay-badge {
+			font-size: 0.55rem;
+			padding: 0.12rem 0.48rem;
+		}
 
 		.replay-title {
-			font-size: 1.3rem;
+			font-size: 1.05rem;
+		}
+
+		.start-btn {
+			padding: 0.5rem 0.6rem;
+			font-size: 0.78rem;
+			border-radius: 0.55rem;
+		}
+
+		.play-icon {
+			border-width: 0.3rem 0 0.3rem 0.5rem;
+		}
+
+		.disclaimer {
+			font-size: 0.55rem;
+			max-width: 12.5rem;
 		}
 	}
 </style>
