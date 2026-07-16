@@ -38,6 +38,14 @@ type ModalSettings = {
 	name: 'settings';
 };
 
+type ModalBetReplay = {
+	name: 'betReplay';
+};
+
+type ModalReplayComplete = {
+	name: 'replayComplete';
+};
+
 type Modal =
 	| ModalEmpty
 	| ModalError
@@ -48,7 +56,9 @@ type Modal =
 	| ModalAutoSpinMessage
 	| ModalPayTable
 	| ModalGameRules
-	| ModalSettings;
+	| ModalSettings
+	| ModalBetReplay
+	| ModalReplayComplete;
 
 export const stateModal = $state({
 	modal: null as Modal,

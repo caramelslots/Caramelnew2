@@ -57,10 +57,10 @@ export default {
 	GAME_INFO_TITLE: '게임 정보',
 	GAME_INFO_ABOUT_TITLE: '게임 소개',
 	GAME_INFO_ABOUT_BODY:
-		'Wok Fury는 5릴 5행, 25개 페이라인 슬롯입니다. 당첨금은 가장 왼쪽 릴부터 인접한 릴에서 왼쪽에서 오른쪽으로 지급됩니다. 각 라인에서는 가장 높은 당첨금만 지급됩니다.',
+		'Wok Fury는 5릴 5행, 25개 페이라인 슬롯입니다. 당첨금은 가장 왼쪽 릴부터 인접한 릴에서 왼쪽에서 오른쪽으로 지급됩니다. 유효한 당첨 라인을 만들려면 일치하는 심볼이 최소 3개 필요합니다. 각 라인에서는 가장 높은 당첨금만 지급됩니다.',
 	GAME_INFO_PAYLINES_TITLE: 'PAYLINES (25)',
 	GAME_INFO_PAYLINES_NOTE:
-		'All 25 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel.',
+		'25개 페이라인은 항상 활성입니다. 당첨금은 가장 왼쪽 릴부터 인접 릴에서 왼쪽에서 오른쪽으로 지급됩니다. 유효한 당첨 라인을 만들려면 인접 릴에서 일치하는 심볼이 최소 3개 필요합니다.',
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'WILD 심볼',
 	GAME_INFO_WILD_BODY:
@@ -68,17 +68,20 @@ export default {
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: '무료 스핀',
 	GAME_INFO_FS_BODY:
-		'기본 게임에서 Bonus 심볼 3개를 맞추면 10회 무료 스핀이 있는 Normal Bonus가 발동됩니다. Bonus 심볼 4개 이상을 맞추면 10회 무료 스핀과 처음부터 Sticky Mystery Reel 1개가 있는 Super Bonus가 발동됩니다.',
+		'기본 게임에서 Bonus 심볼 3개를 맞추면 10회 무료 스핀이 있는 Normal Bonus가 발동됩니다. Bonus 심볼 4개 이상을 맞추면 10회 무료 스핀과 처음부터 Sticky Mystery Reel 1개가 있는 Super Bonus가 발동됩니다. 기능 중 Bonus 심볼이 나와도 무료 스핀은 재트리거되지 않습니다. 추가 무료 스핀은 Progress Ladder를 통해서만 지급됩니다.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY:
-		'무료 스핀 중 Bonus 심볼 4개를 모으면 Progress Ladder에서 한 단계 올라갑니다. 각 단계마다 추가 무료 스핀 3회와 Sticky Mystery Reel 1개가 해제됩니다. Mystery 릴은 고정되며 매 스핀마다 같은 심볼을 공개합니다.',
+		'무료 스핀 중 나온 모든 Bonus 심볼은 Progress Ladder에 수집됩니다. Bonus 심볼 4개를 모을 때마다 한 단계 올라갑니다. 각 단계마다 추가 무료 스핀 3회와 Sticky Mystery Reel 1개가 해제되며, 최대 5단계(추가 무료 스핀 15회)입니다. Mystery 릴은 고정되며 매 스핀마다 같은 심볼을 공개합니다.',
 	GAME_INFO_BET_MODES_TITLE: '베팅 모드',
 	GAME_INFO_BET_MODES_BODY:
-		'기본 모드 RTP는 96.01%입니다. Bonus Boost는 베팅의 2배이며 무료 스핀 발동 확률이 증가합니다. Special Spins는 베팅의 30배입니다. Normal Bonus 구매는 베팅의 100배, Super Bonus 구매는 베팅의 200배입니다. 모든 모드에서 최대 당첨금은 베팅의 2,500배입니다.',
+		'Base (1×): The default mode. Each spin costs 1× your base bet. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All wins are calculated as multiples of your base bet. RTP 96.03%. Maximum win 2,500× your base bet.\nBonus Boost (2×): Enable this mode to play at 2× your base bet per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All wins are calculated as multiples of your base bet, not the 2× mode cost. RTP 96.04%. Maximum win 2,355.2× your base bet.\nSpecial Spins (30×): Enable this mode to play at 30× your base bet per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All wins are calculated as multiples of your base bet, not the 30× mode cost. RTP 96.01%. Maximum win 2,500× your base bet.\nBuy Normal Bonus (100×): Purchase Normal Bonus for 100× your base bet to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.\nBuy Super Bonus (200×): Purchase Super Bonus for 200× your base bet to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.',
 	GAME_INFO_PAYTABLE_TITLE: '페이테이블 (× 베팅)',
-	GAME_INFO_PAYTABLE_NOTE: 'All payout values are multiples of the total bet.',
+	GAME_INFO_PAYTABLE_NOTE: '모든 배당 값은 기본 베팅의 배수입니다.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
+		GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
+	GAME_INFO_CONTROLS_BODY:
+		'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nBet amount (− / +): Use the minus and plus buttons to change your bet amount. Bet changes are only available while the game is idle.\nBuy Bonus / Feature: Open Buy Bonus to purchase Normal Bonus or Super Bonus, or to turn Bonus Boost on or off. Confirm a purchase to start the selected feature immediately.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it. You can also enable Bonus Boost from the Autoplay panel before starting.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance and Bet displays: Show your current balance and selected bet amount. These are informational and are not buttons.',
 	GAME_INFO_LEGAL_TITLE: '일반 게임 면책 조항',
 	GAME_INFO_LEGAL_BODY:
 		'오작동 시 모든 당첨금과 플레이가 무효가 됩니다. 안정적인 인터넷 연결이 필요합니다. 연결이 끊기면 미완료 라운드를 마치기 위해 게임을 다시 불러오세요. 기대 수익률은 많은 플레이를 기준으로 계산됩니다. 게임 화면은 실제 물리적 기기를 나타내지 않으며 설명 목적으로만 제공됩니다. 당첨금은 웹 브라우저 내 이벤트가 아니라 Remote Game Server에서 받은 금액에 따라 정산됩니다. TM 및 © 2026 Stake Engine.',
@@ -89,4 +92,17 @@ export default {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: '승리 한도 도달',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: '단일 승리 한도에 도달하여 자동 플레이가 중지되었습니다.',
 	AUTOPLAY_MSG_OK: '확인',
+	REPLAY_BADGE: 'REPLAY',
+	REPLAY_TITLE: 'Bet Replay',
+	REPLAY_MODE: 'Mode',
+	REPLAY_MODE_BASE: 'Base',
+	REPLAY_BASE_BET: 'Base Bet',
+	REPLAY_COST_MULTIPLIER: 'Cost Multiplier',
+	REPLAY_TOTAL_BET_COST: 'Total Bet Cost',
+	REPLAY_PAYOUT_MULTIPLIER: 'Payout Multiplier',
+	REPLAY_TOTAL_WIN: 'Total Win',
+	REPLAY_START: 'Start Replay',
+	REPLAY_AGAIN: 'Replay Again',
+	REPLAY_COMPLETE_TITLE: 'Replay Complete',
+	REPLAY_DISCLAIMER: 'This is a replay of a previous bet round. No bets will be placed.',
 };

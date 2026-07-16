@@ -57,10 +57,10 @@ export default {
 	GAME_INFO_TITLE: 'THÔNG TIN TRÒ CHƠI',
 	GAME_INFO_ABOUT_TITLE: 'VỀ TRÒ CHƠI',
 	GAME_INFO_ABOUT_BODY:
-		'Wok Fury là slot 5 cuộn, 5 hàng với 25 dòng thanh toán. Tiền thắng được trả từ trái sang phải trên các cuộn liền kề, bắt đầu từ cuộn ngoài cùng bên trái. Chỉ trả khoản thắng cao nhất trên mỗi dòng.',
+		'Wok Fury là slot 5 cuộn, 5 hàng với 25 dòng thanh toán. Tiền thắng được trả từ trái sang phải trên các cuộn liền kề, bắt đầu từ cuộn ngoài cùng bên trái. Cần tối thiểu 3 biểu tượng khớp trên một dòng trả thưởng để thắng. Chỉ trả khoản thắng cao nhất trên mỗi dòng.',
 	GAME_INFO_PAYLINES_TITLE: 'PAYLINES (25)',
 	GAME_INFO_PAYLINES_NOTE:
-		'All 25 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel.',
+		'Cả 25 payline luôn hoạt động. Thắng được trả từ trái sang phải trên các cuộn liền kề, bắt đầu từ cuộn ngoài cùng bên trái. Cần tối thiểu 3 biểu tượng khớp trên các cuộn liền kề để tạo dòng thắng hợp lệ.',
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'BIỂU TƯỢNG WILD',
 	GAME_INFO_WILD_BODY:
@@ -68,17 +68,20 @@ export default {
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'VÒNG QUAY MIỄN PHÍ',
 	GAME_INFO_FS_BODY:
-		'Có 3 biểu tượng Bonus trong ván cơ bản để kích hoạt Normal Bonus với 10 vòng quay miễn phí. Có 4 biểu tượng Bonus trở lên để kích hoạt Super Bonus với 10 vòng quay miễn phí và 1 Sticky Mystery Reel ngay từ đầu.',
+		'Có 3 biểu tượng Bonus trong ván cơ bản để kích hoạt Normal Bonus với 10 vòng quay miễn phí. Có 4 biểu tượng Bonus trở lên để kích hoạt Super Bonus với 10 vòng quay miễn phí và 1 Sticky Mystery Reel ngay từ đầu. Không thể kích hoạt lại vòng quay miễn phí bằng cách ra biểu tượng Bonus trong tính năng. Vòng quay miễn phí thêm chỉ được trao qua Progress Ladder.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY:
-		'Trong vòng quay miễn phí, thu thập 4 biểu tượng Bonus để lên một bậc trên Progress Ladder. Mỗi bậc thưởng thêm 3 vòng quay miễn phí và mở khóa 1 Sticky Mystery Reel. Các cuộn Mystery giữ nguyên vị trí và hiển thị cùng một biểu tượng mỗi vòng.',
+		'Trong vòng quay miễn phí, mỗi biểu tượng Bonus xuất hiện được thu thập vào Progress Ladder. Cứ 4 biểu tượng Bonus thu thập được sẽ lên một bậc. Mỗi bậc thưởng thêm 3 vòng quay miễn phí và mở khóa 1 Sticky Mystery Reel, tối đa 5 bậc (15 vòng quay miễn phí thêm). Các cuộn Mystery giữ nguyên vị trí và hiển thị cùng một biểu tượng mỗi vòng.',
 	GAME_INFO_BET_MODES_TITLE: 'CHẾ ĐỘ CƯỢC',
 	GAME_INFO_BET_MODES_BODY:
-		'RTP chế độ cơ bản là 96,01%. Bonus Boost có giá 2× cược và tăng cơ hội kích hoạt vòng quay miễn phí. Special Spins có giá 30× cược. Mua Normal Bonus có giá 100× cược. Mua Super Bonus có giá 200× cược. Thắng tối đa là 2.500× cược ở mọi chế độ.',
+		'Base (1×): The default mode. Each spin costs 1× your base bet. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All wins are calculated as multiples of your base bet. RTP 96.03%. Maximum win 2,500× your base bet.\nBonus Boost (2×): Enable this mode to play at 2× your base bet per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All wins are calculated as multiples of your base bet, not the 2× mode cost. RTP 96.04%. Maximum win 2,355.2× your base bet.\nSpecial Spins (30×): Enable this mode to play at 30× your base bet per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All wins are calculated as multiples of your base bet, not the 30× mode cost. RTP 96.01%. Maximum win 2,500× your base bet.\nBuy Normal Bonus (100×): Purchase Normal Bonus for 100× your base bet to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.\nBuy Super Bonus (200×): Purchase Super Bonus for 200× your base bet to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.',
 	GAME_INFO_PAYTABLE_TITLE: 'BẢNG TRẢ THƯỞNG (× CƯỢC)',
-	GAME_INFO_PAYTABLE_NOTE: 'All payout values are multiples of the total bet.',
+	GAME_INFO_PAYTABLE_NOTE: 'Mọi giá trị trả thưởng là bội số của mức cược cơ bản.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
+		GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
+	GAME_INFO_CONTROLS_BODY:
+		'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nBet amount (− / +): Use the minus and plus buttons to change your bet amount. Bet changes are only available while the game is idle.\nBuy Bonus / Feature: Open Buy Bonus to purchase Normal Bonus or Super Bonus, or to turn Bonus Boost on or off. Confirm a purchase to start the selected feature immediately.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it. You can also enable Bonus Boost from the Autoplay panel before starting.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance and Bet displays: Show your current balance and selected bet amount. These are informational and are not buttons.',
 	GAME_INFO_LEGAL_TITLE: 'TUYÊN BỐ MIỄN TRỪ CHUNG CỦA TRÒ CHƠI',
 	GAME_INFO_LEGAL_BODY:
 		'Sự cố làm vô hiệu mọi khoản thắng và lượt chơi. Cần kết nối internet ổn định. Nếu bị ngắt kết nối, hãy tải lại trò chơi để hoàn tất các vòng chưa xong. Tỷ suất hoàn vốn kỳ vọng được tính trên nhiều lượt chơi. Màn hình trò chơi không đại diện cho bất kỳ thiết bị vật lý nào và chỉ mang tính minh họa. Tiền thắng được thanh toán theo số tiền nhận từ Remote Game Server, không theo sự kiện trong trình duyệt web. TM và © 2026 Stake Engine.',
@@ -89,4 +92,17 @@ export default {
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'Đạt giới hạn thắng',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'Tự chơi đã dừng vì đã đạt giới hạn thắng đơn.',
 	AUTOPLAY_MSG_OK: 'OK',
+	REPLAY_BADGE: 'REPLAY',
+	REPLAY_TITLE: 'Bet Replay',
+	REPLAY_MODE: 'Mode',
+	REPLAY_MODE_BASE: 'Base',
+	REPLAY_BASE_BET: 'Base Bet',
+	REPLAY_COST_MULTIPLIER: 'Cost Multiplier',
+	REPLAY_TOTAL_BET_COST: 'Total Bet Cost',
+	REPLAY_PAYOUT_MULTIPLIER: 'Payout Multiplier',
+	REPLAY_TOTAL_WIN: 'Total Win',
+	REPLAY_START: 'Start Replay',
+	REPLAY_AGAIN: 'Replay Again',
+	REPLAY_COMPLETE_TITLE: 'Replay Complete',
+	REPLAY_DISCLAIMER: 'This is a replay of a previous bet round. No bets will be placed.',
 };

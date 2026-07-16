@@ -79,12 +79,17 @@ export const requestReplay = async (options: {
 	mode: string;
 	event: string;
 	rgsUrl: string;
+	/** Operator `?lang=` — passed so replay copy / book text resolve in the same locale. */
+	language?: string;
 }) => {
+	const languageQuery = options.language
+		? `?language=${encodeURIComponent(options.language)}`
+		: '';
 	const data = await rgsFetcher.get({
 		rgsUrl: options.rgsUrl,
 		// @ts-ignore TODO: update the schema.ts
-		url: `/bet/replay/${options.game}/${options.version}/${options.mode}/${options.event}`,
+		url: `/bet/replay/${options.game}/${options.version}/${options.mode}/${options.event}${languageQuery}`,
 	});
 
 	return data;
-}
+};

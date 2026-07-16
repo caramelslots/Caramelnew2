@@ -114,4 +114,18 @@ export const i18nDerived = {
 	gameInfoFsBody: () => t('GAME_INFO_FS_BODY'),
 	gameInfoMysteryTitle: () => t('GAME_INFO_MYSTERY_TITLE'),
 	gameInfoMysteryBody: () => ts('GAME_INFO_MYSTERY_BODY'),
+	// Replay Mode
+	replayBadge: () => t('REPLAY_BADGE'),
+	replayTitle: () => ts('REPLAY_TITLE'),
+	replayMode: () => t('REPLAY_MODE'),
+	replayModeBase: () => t('REPLAY_MODE_BASE'),
+	replayBaseBet: () => ts('REPLAY_BASE_BET'),
+	replayCostMultiplier: () => ts('REPLAY_COST_MULTIPLIER'),
+	replayTotalBetCost: () => ts('REPLAY_TOTAL_BET_COST'),
+	replayPayoutMultiplier: () => ts('REPLAY_PAYOUT_MULTIPLIER'),
+	replayTotalWin: () => ts('REPLAY_TOTAL_WIN'),
+	replayStart: () => t('REPLAY_START'),
+	replayAgain: () => t('REPLAY_AGAIN'),
+	replayCompleteTitle: () => t('REPLAY_COMPLETE_TITLE'),
+	replayDisclaimer: () => t('REPLAY_DISCLAIMER'),
 };

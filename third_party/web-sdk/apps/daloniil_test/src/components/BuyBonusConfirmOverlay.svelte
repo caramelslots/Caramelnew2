@@ -10,8 +10,8 @@
 
 	import { clearActiveFeature } from '../game/activeFeature';
 	import {
-		BUY_NORMAL_COST_MULT,
-		BUY_SUPER_COST_MULT,
+		buyNormalCostMultiplier,
+		buySuperCostMultiplier,
 		canAffordBuyBonus,
 	} from '../game/buyBonusBalance';
 	import { isPopoutSmallViewport, isPopoutViewport, HUD_BALANCE_BET_FONT_FAMILY, isLatinScriptLocale } from '../game/constants';
@@ -57,7 +57,7 @@
 	const isPopout = $derived(isPopoutViewport(canvasSizes) && !isPopoutSmall);
 
 	const isSuper = $derived(stateBonus.selectedBetModeKey === 'bonus_super');
-	const multiplier = $derived(isSuper ? BUY_SUPER_COST_MULT : BUY_NORMAL_COST_MULT);
+	const multiplier = $derived(isSuper ? buySuperCostMultiplier() : buyNormalCostMultiplier());
 	const cardUrl = $derived(isSuper ? superCardUrl : normalCardUrl);
 	const deskUrl = $derived(isSuper ? deskRUrl : deskLUrl);
 	const price = $derived(numberToCurrencyString(stateBet.betAmount * multiplier));

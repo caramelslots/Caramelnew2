@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import { stateBet } from 'state-shared';
+import { stateBet, stateModal, stateUrlDerived } from 'state-shared';
 import { checkIsMultipleRevealEvents } from 'utils-book';
 import { createPrimaryMachines, createIntermediateMachines, createGameActor } from 'utils-xstate';
 
@@ -33,7 +33,13 @@ const primaryMachines = createPrimaryMachines<Bet>({
 		// not while the bet request is in flight (see bookEventHandlerMap).
 	},
 	onNewGameError: () => stateGameDerived.enhancedBoard.settle(),
-	onPlayGame: async (bet) => await playBet(bet),
+	onPlayGame: async (bet) => {
+		await playBet(bet);
+		// End of replay sequence — offer Replay Again (checklist requirement).
+		if (stateUrlDerived.replay()) {
+			stateModal.modal = { name: 'replayComplete' };
+		}
+	},
 	checkIsBonusGame: (bet) => checkIsMultipleRevealEvents({ bookEvents: bet.state }),
 });
 

@@ -1,13 +1,9 @@
-import { stateBet, stateI18n } from 'state-shared';
+import { stateBet } from 'state-shared';
 import {
 	bookEventAmountToNormalisedAmount,
-	numberToFloat,
+	formatWinAmountBody,
+	getCurrencyMeta,
 } from 'utils-shared/amount';
-
-const NO_LOCALISATION_CURRENCY_MAP: Record<string, string> = {
-	XGC: 'GC',
-	XSC: 'SC',
-};
 
 export type CurrencyTextSegment = { kind: 'symbol' | 'body'; text: string };
 
@@ -33,30 +29,26 @@ const pushSegment = (
 	}
 };
 
-/** Split a formatted currency value: symbol → bablo, digits/separators → krutoi. */
+/**
+ * Split a formatted win amount: symbol → bablo, digits/separators → krutoi.
+ * Uses authenticate currency (including social XGC/XSC). Balance/Bet use numberToCurrencyString.
+ * Win body keeps necessary precision only (e.g. $0.075), not float noise like $16.300023.
+ */
 export const amountToCurrencySegments = (
 	amount: number,
 	bookEvent = false,
 ): CurrencyTextSegment[] => {
 	const value = bookEvent ? bookEventAmountToNormalisedAmount(amount) : amount;
+	const meta = getCurrencyMeta(stateBet.currency);
 	const segments: CurrencyTextSegment[] = [];
+	const body = formatWinAmountBody(value, stateBet.currency);
 
-	if (stateBet.currency in NO_LOCALISATION_CURRENCY_MAP) {
-		pushSegment(segments, 'symbol', NO_LOCALISATION_CURRENCY_MAP[stateBet.currency]);
-		pushSegment(segments, 'body', ` ${numberToFloat(value).toFixed(2)}`);
-		return segments;
-	}
-
-	const parts = new Intl.NumberFormat(stateI18n.i18n.locale, {
-		style: 'currency',
-		currency: stateBet.currency,
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2,
-		numberingSystem: 'latn',
-	}).formatToParts(value);
-
-	for (const part of parts) {
-		pushSegment(segments, part.type === 'currency' ? 'symbol' : 'body', part.value);
+	if (meta.symbolAfter) {
+		pushSegment(segments, 'body', body);
+		pushSegment(segments, 'symbol', ` ${meta.symbol}`);
+	} else {
+		pushSegment(segments, 'symbol', meta.symbol);
+		pushSegment(segments, 'body', body);
 	}
 
 	return segments;

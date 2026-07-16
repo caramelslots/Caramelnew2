@@ -204,13 +204,19 @@ export interface components {
 		ConfigObject: {
 			betLevels?: number[];
 			betModes?: {
-				BASE?: components['schemas']['Config'];
+				[mode: string]: components['schemas']['Config'];
 			};
 			/**
-			 * @description Custom bet amounts must be denomiator of this value. Eg if defaultBetLevel = 10 -> $2 / 10 would be a valid bet.
-			 * @example 10
+			 * @description Default bet amount in API micro-units (e.g. 1000000 = 1.00 currency unit).
+			 * @example 1000000
 			 */
 			defaultBetLevel?: number;
+			/** @description Minimum bet in API micro-units. */
+			minBet?: number;
+			/** @description Maximum bet in API micro-units. */
+			maxBet?: number;
+			/** @description Bet step in API micro-units — play amounts must be a multiple of this. */
+			stepBet?: number;
 			jurisdiction: {
 				socialCasino: boolean,
 				disabledFullscreen: boolean,

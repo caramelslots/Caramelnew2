@@ -17,6 +17,11 @@
 	const context = getContext();
 	const { width, height } = $derived(uiScaledSize(UI_BASE_SIZE, props.sizeScale));
 	const sizes = $derived({ width, height });
+	const biggest = $derived(
+		stateConfig.maxBet > 0
+			? stateConfig.maxBet
+			: stateConfig.betAmountOptions[stateConfig.betAmountOptions.length - 1],
+	);
 	const disabled = $derived(!context.stateXstateDerived.isIdle() || !canIncreaseBet());
 
 	const onpress = () => {

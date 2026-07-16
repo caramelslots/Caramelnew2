@@ -20,7 +20,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	import { stateBet, stateI18n, stateModal, stateUrlDerived } from 'state-shared';
+	import { stateBet, stateBetDerived, stateI18n, stateModal, stateUrlDerived } from 'state-shared';
 
 	/** Set to true to show DEV / LANG / SOCIAL toggles locally. */
 	const SHOW_DEV_PANEL = false;
@@ -136,6 +136,54 @@
 		});
 
 	const playSmallWin = () => playSetWin(3, 5 * x);
+
+	/**
+	 * Stake QA — win decimal precision.
+	 * Pins bet to $1 so book amount maps 1:1 to dollars÷100:
+	 *   7.5      → WIN $0.075   (must NOT round to $0.08 / $0.07)
+	 *   12.3456  → WIN $0.123456 (full API precision, balance/bet stay 2dp)
+	 * Plays board + payline label + setWin so HUD / animation / payline all update.
+	 */
+	const playWinPrecisionDemo = (bookAmount: number, label: string) =>
+		guard(async () => {
+			stateBetDerived.setBetAmount(1);
+			stateBet.wageredBetAmount = 1;
+
+			const winInfo = {
+				type: 'winInfo' as const,
+				totalWin: bookAmount,
+				wins: [
+					{
+						symbol: 'H1',
+						kind: 3,
+						win: bookAmount,
+						positions: [
+							{ reel: 0, row: 1 },
+							{ reel: 1, row: 1 },
+							{ reel: 2, row: 1 },
+						],
+						meta: {
+							lineIndex: 1,
+							multiplier: 1,
+							winWithoutMult: bookAmount,
+							globalMult: 1,
+							lineMultiplier: 1.0,
+						},
+					},
+				],
+			};
+
+			// eslint-disable-next-line no-console
+			console.log(
+				`[DEV] ${label}: bet=$1.00 book=${bookAmount} → expect WIN ≈ $${(bookAmount / 100).toFixed(6).replace(/0+$/, '').replace(/\.$/, '')} (no cent-rounding). Balance/Bet stay 2 decimals.`,
+			);
+
+			await playBookEvents([reveal(LINE_WIN_BOARD), asEvent(winInfo)]);
+			stateBet.winBookEventAmount = bookAmount;
+			await playBookEvent(asEvent({ type: 'setWin', amount: bookAmount, winLevel: 3 }), {
+				bookEvents: [],
+			});
+		});
 
 	const playBoardSmallWin = () =>
 		guard(async () => {
@@ -655,6 +703,28 @@
 							{preset.label}
 						</button>
 					{/each}
+				</div>
+			</section>
+
+			<section>
+				<h4>Win Precision (QA)</h4>
+				<div class="grid">
+					<button
+						type="button"
+						disabled={busy}
+						title="Sets bet=$1, shows WIN $0.075 — must NOT round to $0.08. Balance/Bet stay 2dp."
+						onclick={() => playWinPrecisionDemo(7.5, 'Win $0.075')}
+					>
+						Win $0.075 (3dp)
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="Sets bet=$1, shows WIN $0.123456 — full API precision. Balance/Bet stay 2dp."
+						onclick={() => playWinPrecisionDemo(12.3456, 'Win $0.123456')}
+					>
+						Win $0.123456 (6dp)
+					</button>
 				</div>
 			</section>
 

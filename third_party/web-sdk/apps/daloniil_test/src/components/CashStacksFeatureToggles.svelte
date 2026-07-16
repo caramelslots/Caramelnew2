@@ -7,14 +7,13 @@
 	import { stateBet } from 'state-shared';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
-	import { canAffordBonusBoost } from '../game/buyBonusBalance';
-	import { getContext } from '../game/context';
 	import {
-		BONUS_BOOST_COST_MULT,
-		SPECIAL_SPINS_COST_MULT,
-		toggleActiveFeature,
-		type ActiveFeature,
-	} from '../game/activeFeature';
+		bonusBoostCostMultiplier,
+		canAffordBonusBoost,
+		specialSpinsCostMultiplier,
+	} from '../game/buyBonusBalance';
+	import { getContext } from '../game/context';
+	import { toggleActiveFeature, type ActiveFeature } from '../game/activeFeature';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { FEATURE_TOGGLE_ASSETS } from '../game/uiHtmlAssetManifest';
 
@@ -64,10 +63,10 @@
 	);
 
 	const bonusBoostCost = $derived(
-		numberToCurrencyString(stateBet.betAmount * BONUS_BOOST_COST_MULT),
+		numberToCurrencyString(stateBet.betAmount * bonusBoostCostMultiplier()),
 	);
 	const specialSpinsCost = $derived(
-		numberToCurrencyString(stateBet.betAmount * SPECIAL_SPINS_COST_MULT),
+		numberToCurrencyString(stateBet.betAmount * specialSpinsCostMultiplier()),
 	);
 
 	const onToggle = (feature: ActiveFeature) => {

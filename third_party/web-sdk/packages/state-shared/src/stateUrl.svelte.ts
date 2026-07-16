@@ -21,14 +21,36 @@ export type Key =
 	| 'event'
 	;
 
+const SUPPORTED_LOCALES = new Set<string>(locales);
+
 const getUrlSearchParam = (key: Key) => page.url.searchParams.get(key) as string;
 
+type ResolveLanguageOptions = {
+	/** Social mode only supports English — any other/invalid lang falls back to `en`. */
+	social?: boolean;
+};
+
+/**
+ * Resolve operator-provided `?lang=` to a supported locale.
+ * Unsupported values fall back to English. In social mode, always English.
+ */
+export const resolveLanguage = (
+	raw: string | null | undefined,
+	options?: ResolveLanguageOptions,
+): Language => {
+	if (options?.social) return 'en';
+	if (!raw) return 'en';
+	const normalized = raw.trim().toLowerCase();
+	if (normalized === 'br') return 'pt';
+	if (SUPPORTED_LOCALES.has(normalized)) return normalized as Language;
+	return 'en';
+};
+
 // params for play
-const lang = () =>
-	getUrlSearchParam('lang') === 'br' ? 'pt' : (getUrlSearchParam('lang') as Language) || 'en';
+const social = () => getUrlSearchParam('social') === 'true';
+const lang = () => resolveLanguage(getUrlSearchParam('lang'), { social: social() });
 const sessionID = () => getUrlSearchParam('sessionID') || '';
 const rgsUrl = () => getUrlSearchParam('rgs_url') || '';
-const social = () => getUrlSearchParam('social') === 'true';
 
 // params for replay
 const replay = () => getUrlSearchParam('replay') === 'true';
