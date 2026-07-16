@@ -23,13 +23,21 @@
 	import { stateBet, stateBetDerived, stateI18n, stateModal, stateUrlDerived } from 'state-shared';
 
 	/** Set to true to show DEV / LANG / SOCIAL toggles locally. */
-	const SHOW_DEV_PANEL = false;
+	const SHOW_DEV_PANEL = true;
 
 	import { playBet, playBookEvent, playBookEvents } from '../game/utils';
 	import { eventEmitter } from '../game/eventEmitter';
 	import { devPreview } from '../game/devPreview.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
-	import { LANG_LABELS, setGameLanguage, STAKE_LOCALES } from '../game/devLang';
+	import {
+		getRawUrlLang,
+		INVALID_LANG_LABELS,
+		INVALID_TEST_LOCALES,
+		isInvalidTestLang,
+		LANG_LABELS,
+		setGameLanguage,
+		STAKE_LOCALES,
+	} from '../game/devLang';
 	import { setGameSocialMode } from '../game/devSocial';
 	import baseEvents from '../stories/data/base_events';
 	import baseBooks from '../stories/data/base_books';
@@ -638,7 +646,9 @@
 		onclick={() => (langOpen = !langOpen)}
 	>
 		LANG {langOpen ? '▴' : '▾'}
-		{stateI18n.i18n.locale.toUpperCase()}
+		{isInvalidTestLang(getRawUrlLang())
+			? `${getRawUrlLang().toUpperCase()}→EN`
+			: stateI18n.i18n.locale.toUpperCase()}
 	</button>
 
 	<button
@@ -652,14 +662,25 @@
 	</button>
 
 	{#if langOpen}
+		{@const rawLang = getRawUrlLang()}
 		<div class="lang-body">
 			{#each STAKE_LOCALES as lang (lang)}
 				<button
 					type="button"
-					class:active={stateI18n.i18n.locale === lang}
+					class:active={!isInvalidTestLang(rawLang) && stateI18n.i18n.locale === lang}
 					onclick={() => setGameLanguage(lang)}
 				>
 					{LANG_LABELS[lang]}
+				</button>
+			{/each}
+			{#each INVALID_TEST_LOCALES as lang (lang)}
+				<button
+					type="button"
+					class:active={rawLang === lang}
+					title="Unsupported locale — should fall back to English"
+					onclick={() => setGameLanguage(lang)}
+				>
+					{INVALID_LANG_LABELS[lang]}
 				</button>
 			{/each}
 		</div>
