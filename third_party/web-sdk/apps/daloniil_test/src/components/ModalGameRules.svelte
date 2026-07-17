@@ -31,6 +31,8 @@
 	const paylinesNote = $derived(context.i18nDerived.gameInfoPaylinesNote());
 	const paytableTitle = $derived(context.i18nDerived.gameInfoPaytableTitle());
 	const paytableNote = $derived(context.i18nDerived.gameInfoPaytableNote());
+	const progressLadderTitle = $derived(context.i18nDerived.gameInfoProgressLadderTitle());
+	const progressLadderBody = $derived(context.i18nDerived.gameInfoProgressLadderBody());
 
 	const specialSymbolCopy: Record<
 		Extract<GameInfoSymbolId, 'B' | 'W' | 'M'>,
@@ -131,6 +133,13 @@
 										</article>
 									{/each}
 								</div>
+							</section>
+
+							<section class="section">
+								<h3>{progressLadderTitle}</h3>
+								{#each progressLadderBody.split('\n') as line, index ('progress-ladder' + index)}
+									<p>{line}</p>
+								{/each}
 							</section>
 
 							<section class="section">
