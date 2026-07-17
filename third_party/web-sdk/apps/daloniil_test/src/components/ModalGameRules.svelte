@@ -431,14 +431,16 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		min-height: 32px;
-		padding: 0.2rem 0.55rem;
+		box-sizing: border-box;
+		min-width: 7.5rem;
+		min-height: 2.25rem;
+		padding: 0.35rem 0.75rem;
 		border-radius: 6px;
 		border: 1px solid rgba(255, 213, 74, 0.45);
 		background: rgba(0, 0, 0, 0.35);
-		font-size: 0.72rem;
+		font-size: 0.78rem;
 		font-weight: 800;
-		letter-spacing: 0.04em;
+		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		color: #ffd54a;
 		text-shadow:
@@ -623,7 +625,11 @@
 		}
 
 		.control-label {
-			font-size: 0.85rem;
+			min-width: 9.5rem;
+			min-height: 2.75rem;
+			padding: 0.5rem 1rem;
+			font-size: 1.05rem;
+			letter-spacing: 0.08em;
 		}
 	}
 </style>
