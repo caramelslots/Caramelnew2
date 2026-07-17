@@ -17,6 +17,10 @@
 		getSymbolPayRows,
 		type GameInfoSymbolId,
 	} from '../game/gameInfoSymbols';
+	import {
+		getGameInfoControlRows,
+		type GameInfoControlOverlay,
+	} from '../game/gameInfoControls';
 	import GameInfoPaylinesGrid from './GameInfoPaylinesGrid.svelte';
 
 	const context = getContext();
@@ -33,6 +37,16 @@
 	const paytableNote = $derived(context.i18nDerived.gameInfoPaytableNote());
 	const progressLadderTitle = $derived(context.i18nDerived.gameInfoProgressLadderTitle());
 	const progressLadderBody = $derived(context.i18nDerived.gameInfoProgressLadderBody());
+	const controlsTitle = $derived(context.i18nDerived.gameInfoControlsTitle());
+	const controlOverlayLabels = $derived({
+		buyBonus: context.i18nDerived.buyBonusPanelButton(),
+		bonusBoost: context.i18nDerived.bonusBoost(),
+		autoplay: context.i18nDerived.autoplayTitle(),
+	} satisfies Record<GameInfoControlOverlay, string>);
+	const controlRowsByTitle = $derived.by(() => {
+		const controlsSection = gameInfoSections.find((section) => section.title === controlsTitle);
+		return controlsSection ? getGameInfoControlRows(controlsSection.body) : [];
+	});
 
 	const specialSymbolCopy: Record<
 		Extract<GameInfoSymbolId, 'B' | 'W' | 'M'>,
@@ -170,6 +184,48 @@
 									{/each}
 								</div>
 							</section>
+						{:else if section.title === controlsTitle}
+							<section class="section">
+								<h3>{section.title}</h3>
+								<div class="controls-list">
+									{#each controlRowsByTitle as row (row.id)}
+										<article class="control-row">
+											<div
+												class="control-icons"
+												class:control-icons-wide={row.wide}
+												aria-hidden={row.icons.length > 0 ? 'true' : undefined}
+											>
+												{#each row.icons as icon, iconIndex (row.id + iconIndex)}
+													{#if row.overlay && iconIndex === 0}
+														<div
+															class="control-icon-badge"
+															class:control-icon-badge-wide={row.wide}
+															style:background-image="url('{icon}')"
+														>
+															<span class="control-icon-text">
+																{controlOverlayLabels[row.overlay]}
+															</span>
+														</div>
+													{:else}
+														<img
+															class="control-icon"
+															class:control-icon-wide={row.wide}
+															src={icon}
+															alt=""
+															loading="lazy"
+															decoding="async"
+														/>
+													{/if}
+												{/each}
+												{#if row.showLabel && row.label}
+													<span class="control-label">{row.label}</span>
+												{/if}
+											</div>
+											<p>{row.description}</p>
+										</article>
+									{/each}
+								</div>
+							</section>
 						{:else}
 							<section class="section">
 								<h3>{section.title}</h3>
@@ -284,6 +340,111 @@
 	.special-copy {
 		flex: 1;
 		min-width: 0;
+	}
+
+	.controls-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.control-row {
+		display: flex;
+		align-items: center;
+		gap: 0.85rem;
+		padding: 0.65rem 0.75rem;
+		border-radius: 10px;
+		background: rgba(255, 255, 255, 0.06);
+	}
+
+	.control-row p {
+		flex: 1;
+		min-width: 0;
+		margin: 0;
+	}
+
+	.control-icons {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.3rem;
+		flex-shrink: 0;
+		min-width: 52px;
+		min-height: 44px;
+	}
+
+	.control-icons-wide {
+		min-width: 96px;
+	}
+
+	.control-icon {
+		width: 44px;
+		height: 44px;
+		object-fit: contain;
+		flex-shrink: 0;
+	}
+
+	.control-icons:has(.control-icon + .control-icon) .control-icon:not(.control-icon-wide) {
+		width: 36px;
+		height: 36px;
+	}
+
+	.control-icon-wide {
+		width: 96px;
+		height: 44px;
+	}
+
+	.control-icon-badge {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 96px;
+		height: 40px;
+		flex-shrink: 0;
+		background-position: center;
+		background-repeat: no-repeat;
+		background-size: 100% 100%;
+	}
+
+	.control-icon-badge-wide {
+		width: 108px;
+		height: 44px;
+	}
+
+	.control-icon-text {
+		padding: 0 0.35rem;
+		color: #fff;
+		font-family: 'proxima-nova', Arial, sans-serif;
+		font-size: 0.62rem;
+		font-weight: 700;
+		line-height: 1.05;
+		letter-spacing: 0.02em;
+		text-align: center;
+		text-transform: uppercase;
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.control-label {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 32px;
+		padding: 0.2rem 0.55rem;
+		border-radius: 6px;
+		border: 1px solid rgba(255, 213, 74, 0.45);
+		background: rgba(0, 0, 0, 0.35);
+		font-size: 0.72rem;
+		font-weight: 800;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: #ffd54a;
+		text-shadow:
+			0 0 8px rgba(255, 196, 48, 0.45),
+			0 1px 0 rgba(92, 58, 8, 0.75);
+		white-space: nowrap;
 	}
 
 	.paytable-grid {
@@ -433,6 +594,36 @@
 			flex-direction: column;
 			align-items: center;
 			text-align: center;
+		}
+
+		.control-row {
+			flex-direction: column;
+			align-items: center;
+			text-align: center;
+		}
+
+		.control-icon {
+			width: 52px;
+			height: 52px;
+		}
+
+		.control-icon-wide {
+			width: 112px;
+			height: 52px;
+		}
+
+		.control-icon-badge,
+		.control-icon-badge-wide {
+			width: 120px;
+			height: 50px;
+		}
+
+		.control-icon-text {
+			font-size: 0.72rem;
+		}
+
+		.control-label {
+			font-size: 0.85rem;
 		}
 	}
 </style>

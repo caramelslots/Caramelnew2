@@ -116,6 +116,7 @@ export const i18nDerived = {
 	gameInfoMysteryBody: () => ts('GAME_INFO_MYSTERY_BODY'),
 	gameInfoProgressLadderTitle: () => t('GAME_INFO_PROGRESS_LADDER_TITLE'),
 	gameInfoProgressLadderBody: () => t('GAME_INFO_PROGRESS_LADDER_BODY'),
+	gameInfoControlsTitle: () => ts('GAME_INFO_CONTROLS_TITLE'),
 	// Replay Mode
 	replayBadge: () => t('REPLAY_BADGE'),
 	replayTitle: () => ts('REPLAY_TITLE'),
