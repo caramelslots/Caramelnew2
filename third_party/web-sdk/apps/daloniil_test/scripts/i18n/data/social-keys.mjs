@@ -82,6 +82,12 @@ const ru = {
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Все значения выплат указаны как множители от базового спина.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Неисправность аннулирует все призы и игры. Требуется стабильное интернет-соединение. В случае разрыва соединения перезагрузите игру, чтобы завершить незавершённые раунды. Ожидаемая отдача рассчитывается на большом количестве игр. Отображение игры не является представлением какого-либо физического устройства и предназначено только для иллюстрации. Награды рассчитываются согласно сумме, полученной от Remote Game Server, а не по событиям в веб-браузере. TM и © 2026 Stake Engine.',
+	REPLAY_BASE_BET_SOCIAL: 'Базовая игра',
+	REPLAY_COST_MULTIPLIER_SOCIAL: 'Множитель функции',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Итоговый множитель',
+	REPLAY_TITLE_SOCIAL: 'Повтор игры',
+	REPLAY_TOTAL_BET_COST_SOCIAL: 'Итоговая стоимость игры',
+	REPLAY_TOTAL_WIN_SOCIAL: 'Общий приз',
 };
 
 const de = {
@@ -118,6 +124,12 @@ const de = {
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Alle Auszahlungswerte sind Vielfache des Basis-Spins.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Bei Fehlfunktion sind alle Preise und Spiele ungültig. Eine stabile Internetverbindung ist erforderlich. Bei Verbindungsabbruch das Spiel neu laden, um unvollständige Runden abzuschließen. Die erwartete Rendite wird über viele Spiele berechnet. Die Spielanzeige stellt kein physisches Gerät dar und dient nur zur Veranschaulichung. Belohnungen werden gemäß dem vom Remote Game Server erhaltenen Betrag abgerechnet, nicht nach Ereignissen im Webbrowser. TM und © 2026 Stake Engine.',
+	REPLAY_BASE_BET_SOCIAL: 'Basis-Spiel',
+	REPLAY_COST_MULTIPLIER_SOCIAL: 'Feature-Multiplikator',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Endmultiplikator',
+	REPLAY_TITLE_SOCIAL: 'Spiel-Wiederholung',
+	REPLAY_TOTAL_BET_COST_SOCIAL: 'Gesamte Spielkosten',
+	REPLAY_TOTAL_WIN_SOCIAL: 'Gesamtpreis',
 };
 
 const es = {
@@ -154,6 +166,12 @@ const es = {
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Todos los valores de pago son múltiplos del giro base.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'El mal funcionamiento anula todos los premios y jugadas. Se requiere conexión a internet estable. Si se pierde la conexión, recarga el juego para completar rondas pendientes. El retorno esperado se calcula en muchas partidas. La pantalla no representa ningún dispositivo físico y es solo ilustrativa. Las recompensas se liquidan según el importe recibido del Remote Game Server y no según eventos del navegador. TM y © 2026 Stake Engine.',
+	REPLAY_BASE_BET_SOCIAL: 'Jugada base',
+	REPLAY_COST_MULTIPLIER_SOCIAL: 'Multiplicador de función',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Multiplicador final',
+	REPLAY_TITLE_SOCIAL: 'Repetición de jugada',
+	REPLAY_TOTAL_BET_COST_SOCIAL: 'Coste total de la jugada',
+	REPLAY_TOTAL_WIN_SOCIAL: 'Premio total',
 };
 
 const fr = {
@@ -190,6 +208,12 @@ const fr = {
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Toutes les valeurs de paiement sont des multiples du spin de base.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Un dysfonctionnement annule tous les prix et parties. Une connexion internet stable est requise. En cas de déconnexion, rechargez le jeu pour terminer les manches incomplètes. Le retour attendu est calculé sur de nombreuses parties. L’affichage ne représente aucun appareil physique et est illustratif. Les récompenses sont réglées selon le montant reçu du Remote Game Server et non selon les événements du navigateur. TM et © 2026 Stake Engine.',
+	REPLAY_BASE_BET_SOCIAL: 'Jeu de base',
+	REPLAY_COST_MULTIPLIER_SOCIAL: 'Multiplicateur de fonction',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Multiplicateur final',
+	REPLAY_TITLE_SOCIAL: 'Replay de jeu',
+	REPLAY_TOTAL_BET_COST_SOCIAL: 'Coût total du jeu',
+	REPLAY_TOTAL_WIN_SOCIAL: 'Prix total',
 };
 
 const pl = {
@@ -226,6 +250,12 @@ const pl = {
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Wszystkie wartości wypłat to wielokrotności spinu bazowego.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Awarie unieważniają wszystkie nagrody i gry. Wymagane stabilne połączenie internetowe. Po rozłączeniu przeładuj grę, aby dokończyć niedokończone rundy. Oczekiwany zwrot liczony jest na wielu grach. Wyświetlacz nie przedstawia urządzenia fizycznego i służy wyłącznie ilustracji. Nagrody rozliczane są według kwoty z Remote Game Server, a nie zdarzeń w przeglądarce. TM i © 2026 Stake Engine.',
+	REPLAY_BASE_BET_SOCIAL: 'Gra bazowa',
+	REPLAY_COST_MULTIPLIER_SOCIAL: 'Mnożnik funkcji',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Mnożnik końcowy',
+	REPLAY_TITLE_SOCIAL: 'Powtórka gry',
+	REPLAY_TOTAL_BET_COST_SOCIAL: 'Całkowity koszt gry',
+	REPLAY_TOTAL_WIN_SOCIAL: 'Całkowita nagroda',
 };
 
 const pt = {
@@ -262,6 +292,12 @@ const pt = {
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Todos os valores de pagamento são múltiplos do giro base.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Avaria anula todos os prémios e jogadas. É necessária ligação estável à internet. Se a ligação cair, recarregue o jogo para concluir rondas incompletas. O retorno esperado é calculado em muitas jogadas. O ecrã não representa qualquer dispositivo físico e é apenas ilustrativo. As recompensas são liquidadas conforme o montante recebido do Remote Game Server e não eventos no browser. TM e © 2026 Stake Engine.',
+	REPLAY_BASE_BET_SOCIAL: 'Jogo base',
+	REPLAY_COST_MULTIPLIER_SOCIAL: 'Multiplicador de função',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Multiplicador final',
+	REPLAY_TITLE_SOCIAL: 'Replay do jogo',
+	REPLAY_TOTAL_BET_COST_SOCIAL: 'Custo total do jogo',
+	REPLAY_TOTAL_WIN_SOCIAL: 'Prémio total',
 };
 
 const tr = {
@@ -298,6 +334,12 @@ const tr = {
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Tüm ödeme değerleri temel spinin katlarıdır.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Arıza tüm ödülleri ve oyunları geçersiz kılar. Kararlı internet bağlantısı gerekir. Bağlantı kesilirse tamamlanmamış turları bitirmek için oyunu yeniden yükleyin. Beklenen getiri birçok oyun üzerinden hesaplanır. Oyun ekranı fiziksel bir cihazı temsil etmez ve yalnızca açıklama amaçlıdır. Ödüller web tarayıcısındaki olaylara göre değil, Remote Game Server\'dan alınan tutara göre ödenir. TM ve © 2026 Stake Engine.',
+	REPLAY_BASE_BET_SOCIAL: 'Temel Oyun',
+	REPLAY_COST_MULTIPLIER_SOCIAL: 'Özellik Çarpanı',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Son Çarpan',
+	REPLAY_TITLE_SOCIAL: 'Oyun Tekrarı',
+	REPLAY_TOTAL_BET_COST_SOCIAL: 'Toplam Oyun Maliyeti',
+	REPLAY_TOTAL_WIN_SOCIAL: 'Toplam Ödül',
 };
 
 const vi = {
@@ -333,6 +375,12 @@ const vi = {
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Mọi giá trị trả thưởng là bội số của lượt quay cơ bản.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Sự cố vô hiệu mọi thưởng và lượt chơi. Cần kết nối internet ổn định. Nếu mất kết nối, tải lại game để hoàn tất vòng chưa xong. Lợi nhuận kỳ vọng tính trên nhiều lượt chơi. Màn hình không đại diện thiết bị thật và chỉ mang tính minh họa. Phần thưởng được thanh toán theo số tiền từ Remote Game Server, không theo sự kiện trình duyệt. TM và © 2026 Stake Engine.',
+	REPLAY_BASE_BET_SOCIAL: 'Lượt chơi cơ bản',
+	REPLAY_COST_MULTIPLIER_SOCIAL: 'Hệ số tính năng',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Hệ số cuối',
+	REPLAY_TITLE_SOCIAL: 'Phát lại lượt chơi',
+	REPLAY_TOTAL_BET_COST_SOCIAL: 'Tổng chi phí chơi',
+	REPLAY_TOTAL_WIN_SOCIAL: 'Tổng thưởng',
 };
 
 const id = {
@@ -369,6 +417,12 @@ const id = {
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Semua nilai bayaran adalah kelipatan spin dasar.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Kerusakan membatalkan semua hadiah dan permainan. Koneksi internet stabil diperlukan. Jika terputus, muat ulang game untuk menyelesaikan ronde yang belum selesai. Return yang diharapkan dihitung dari banyak permainan. Tampilan game tidak mewakili perangkat fisik dan hanya ilustrasi. Hadiah diselesaikan menurut jumlah dari Remote Game Server, bukan peristiwa browser. TM dan © 2026 Stake Engine.',
+	REPLAY_BASE_BET_SOCIAL: 'Main Dasar',
+	REPLAY_COST_MULTIPLIER_SOCIAL: 'Pengali Fitur',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Pengali Akhir',
+	REPLAY_TITLE_SOCIAL: 'Ulang Main',
+	REPLAY_TOTAL_BET_COST_SOCIAL: 'Total Biaya Main',
+	REPLAY_TOTAL_WIN_SOCIAL: 'Total Hadiah',
 };
 
 const fi = {
@@ -405,6 +459,12 @@ const fi = {
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'Kaikki voittoarvot ovat kerrannaisia perusspinistä.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'Toimintahäiriö mitätöi kaikki palkinnot ja pelit. Vakaa internetyhteys vaaditaan. Yhteyden katketessa lataa peli uudelleen viimeistelläksesi keskeneräiset kierrokset. Odotettu tuotto lasketaan monista peleistä. Näyttö ei edusta fyysistä laitetta ja on vain havainnollistava. Palkinnot maksetaan Remote Game Serveriltä saadun summan mukaan, ei selaimen tapahtumien perusteella. TM ja © 2026 Stake Engine.',
+	REPLAY_BASE_BET_SOCIAL: 'Peruspeli',
+	REPLAY_COST_MULTIPLIER_SOCIAL: 'Ominaisuuskerroin',
+		REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Loppukerroin',
+	REPLAY_TITLE_SOCIAL: 'Pelin toisto',
+	REPLAY_TOTAL_BET_COST_SOCIAL: 'Kokonaispelikustannus',
+	REPLAY_TOTAL_WIN_SOCIAL: 'Kokonaispalkinto',
 };
 
 const ar = {
@@ -441,6 +501,12 @@ const ar = {
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'جميع قيم الدفع مضاعفات اللفة الأساسية.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'العطل يلغي جميع الجوائز والجولات. يلزم اتصال إنترنت مستقر. في حال انقطاع الاتصال، أعد تحميل اللعبة لإكمال أي جولات غير مكتملة. يُحسب العائد المتوقع على مدى عدد كبير من الجولات. عرض اللعبة لا يمثل أي جهاز فعلي وهو لأغراض توضيحية فقط. تُسوَّى المكافآت وفق المبلغ المستلم من Remote Game Server وليس وفق الأحداث داخل متصفح الويب. TM و© 2026 Stake Engine.',
+	REPLAY_BASE_BET_SOCIAL: 'اللعب الأساسي',
+	REPLAY_COST_MULTIPLIER_SOCIAL: 'مضاعف الميزة',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'المضاعف النهائي',
+	REPLAY_TITLE_SOCIAL: 'إعادة اللعب',
+	REPLAY_TOTAL_BET_COST_SOCIAL: 'إجمالي تكلفة اللعب',
+	REPLAY_TOTAL_WIN_SOCIAL: 'إجمالي الجائزة',
 };
 
 const hi = {
@@ -477,6 +543,12 @@ const hi = {
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'सभी भुगतान मूल्य बेस स्पिन के गुणक हैं।',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'खराबी सभी पुरस्कार और खेल रद्द कर देती है। स्थिर इंटरनेट कनेक्शन आवश्यक है। डिस्कनेक्शन पर अधूरे राउंड पूरे करने के लिए गेम रीलोड करें। अपेक्षित रिटर्न कई खेलों पर गणना की जाती है। डिस्प्ले किसी भौतिक उपकरण का प्रतिनिधित्व नहीं करता। पुरस्कार Remote Game Server से प्राप्त राशि के अनुसार तय होते हैं, ब्राउज़र घटनाओं के अनुसार नहीं। TM और © 2026 Stake Engine.',
+	REPLAY_BASE_BET_SOCIAL: 'बेस प्ले',
+	REPLAY_COST_MULTIPLIER_SOCIAL: 'फ़ीचर गुणक',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'अंतिम गुणक',
+	REPLAY_TITLE_SOCIAL: 'प्ले रीप्ले',
+	REPLAY_TOTAL_BET_COST_SOCIAL: 'कुल प्ले लागत',
+	REPLAY_TOTAL_WIN_SOCIAL: 'कुल पुरस्कार',
 };
 
 const ja = {
@@ -512,6 +584,12 @@ const ja = {
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'すべての配当値はベーススピンの倍数です。',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'故障時はすべての賞とプレイが無効になります。安定したインターネット接続が必要です。切断時は未完了ラウンドを完了するためゲームを再読み込みしてください。期待リターンは多数のプレイに基づき計算されます。表示は物理デバイスを表しません。賞はRemote Game Serverから受け取った金額に基づき精算され、ブラウザ内イベントではありません。TM and © 2026 Stake Engine.',
+	REPLAY_BASE_BET_SOCIAL: 'ベースプレイ',
+	REPLAY_COST_MULTIPLIER_SOCIAL: '機能倍率',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: '最終倍率',
+	REPLAY_TITLE_SOCIAL: 'プレイリプレイ',
+	REPLAY_TOTAL_BET_COST_SOCIAL: '合計プレイコスト',
+	REPLAY_TOTAL_WIN_SOCIAL: '合計賞',
 };
 
 const ko = {
@@ -548,6 +626,12 @@ const ko = {
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: '모든 배당 값은 기본 스핀의 배수입니다.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'오작동 시 모든 상금과 플레이가 무효화됩니다. 안정적인 인터넷 연결이 필요합니다. 연결이 끊기면 미완료 라운드를 마치려면 게임을 다시 로드하세요. 기대 수익은 많은 플레이를 기준으로 계산됩니다. 화면은 실제 기기를 나타내지 않으며 설명용입니다. 상금은 브라우저 이벤트가 아니라 Remote Game Server에서 받은 금액 기준으로 정산됩니다. TM and © 2026 Stake Engine.',
+	REPLAY_BASE_BET_SOCIAL: '기본 플레이',
+	REPLAY_COST_MULTIPLIER_SOCIAL: '기능 배율',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: '최종 배율',
+	REPLAY_TITLE_SOCIAL: '플레이 리플레이',
+	REPLAY_TOTAL_BET_COST_SOCIAL: '총 플레이 비용',
+	REPLAY_TOTAL_WIN_SOCIAL: '총 상금',
 };
 
 const zh = {
@@ -583,6 +667,12 @@ const zh = {
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: '所有赔付值为基础旋转的倍数。',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
 		'故障将使所有奖励和游戏无效。需要稳定的网络连接。如发生断线，请重新加载游戏以完成未结束的回合。预期回报基于大量游戏计算。游戏画面不代表任何物理设备，仅供参考。奖励根据从 Remote Game Server 收到的金额结算，而非浏览器内事件。TM 和 © 2026 Stake Engine.',
+	REPLAY_BASE_BET_SOCIAL: '基础游玩',
+	REPLAY_COST_MULTIPLIER_SOCIAL: '功能倍数',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: '最终倍数',
+	REPLAY_TITLE_SOCIAL: '游玩回放',
+	REPLAY_TOTAL_BET_COST_SOCIAL: '总游玩成本',
+	REPLAY_TOTAL_WIN_SOCIAL: '总奖励',
 };
 
 export default {
