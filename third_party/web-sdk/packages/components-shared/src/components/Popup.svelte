@@ -173,4 +173,22 @@
 		pointer-events: none;
 		user-select: none;
 	}
+
+	@media (max-width: 560px) {
+		.close-button-wrap {
+			top: 0.4rem;
+			right: 0.4rem;
+		}
+
+		.close-button {
+			font-size: 5rem;
+			width: 5rem;
+			height: 5rem;
+		}
+
+		.close-button--icon {
+			width: 5.25rem;
+			height: 5.25rem;
+		}
+	}
 </style>
