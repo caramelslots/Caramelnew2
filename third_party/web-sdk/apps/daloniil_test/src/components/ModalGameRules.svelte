@@ -1,3 +1,7 @@
+<!--
+	Game Information modal: about, paylines, special symbols, Progress Ladder,
+	paytable, bet modes, HUD controls (icons from HUD_ASSETS), and legal.
+-->
 <script lang="ts">
 	import { Popup } from 'components-shared';
 	import { zIndex } from 'constants-shared/zIndex';

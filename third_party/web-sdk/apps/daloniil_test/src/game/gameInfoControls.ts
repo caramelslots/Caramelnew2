@@ -1,3 +1,7 @@
+/**
+ * HUD control rows for the Game Information "User Interaction Guide".
+ * Keep entry order in sync with GAME_INFO_CONTROLS_BODY / _SOCIAL paragraphs.
+ */
 import { FEATURE_TOGGLE_ASSETS, HUD_ASSETS } from './uiHtmlAssetManifest';
 
 export type GameInfoControlOverlay = 'buyBonus' | 'bonusBoost' | 'autoplay';
