@@ -68,7 +68,7 @@ export default {
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'دورات مجانية',
 	GAME_INFO_FS_BODY:
-		'احصل على 3 رموز Bonus في اللعبة الأساسية لتفعيل Normal Bonus مع 10 دورات مجانية. احصل على 4 رموز Bonus أو أكثر لتفعيل Super Bonus مع 10 دورات مجانية و1 Sticky Mystery Reel من البداية. لا يمكن إعادة تفعيل الدورات المجانية بظهور رموز Bonus أثناء الميزة. تُمنح الدورات المجانية الإضافية فقط عبر Progress Ladder.',
+		'احصل على 3 رموز Bonus في اللعبة الأساسية لتفعيل Normal Bonus مع 10 دورات مجانية. احصل على 4 رموز Bonus لتفعيل Super Bonus مع 10 دورات مجانية و1 Sticky Mystery Reel من البداية. لا يمكن إعادة تفعيل الدورات المجانية بظهور رموز Bonus أثناء الميزة. تُمنح الدورات المجانية الإضافية فقط عبر Progress Ladder.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY:
 		'أثناء الدورات المجانية، يُجمع كل رمز Bonus يظهر نحو Progress Ladder. كل 4 رموز Bonus مجمعة ترفع مستوى واحدًا. يمنح كل مستوى 3 دورات مجانية إضافية ويفتح 1 Sticky Mystery Reel إضافي، بحد أقصى 5 مستويات (15 دورة مجانية إضافية). تبقى بكرات Mystery في مكانها وتكشف عن نفس الرمز في كل دورة.',

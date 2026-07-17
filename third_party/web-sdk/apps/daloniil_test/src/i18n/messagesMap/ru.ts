@@ -64,7 +64,7 @@ export default {
 	GAME_INFO_WILD_BODY: 'Символ Wild заменяет все оплачиваемые символы, кроме Bonus. Wild платит 225× ставки за 5 одинаковых.',
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'СИМВОЛ BONUS',
 	GAME_INFO_FS_TITLE: 'ФРИСПИНЫ',
-	GAME_INFO_FS_BODY: 'Соберите 3 символа Bonus в базовой игре, чтобы получить Normal Bonus с 10 фриспинами. Соберите 4 и более символов Bonus, чтобы получить Super Bonus с 10 фриспинами и 1 Sticky Mystery Reel с начала. Фриспины нельзя ретриггерить, выпадая символы Bonus во время бонуса. Дополнительные фриспины начисляются только через Progress Ladder.',
+	GAME_INFO_FS_BODY: 'Соберите 3 символа Bonus в базовой игре, чтобы получить Normal Bonus с 10 фриспинами. Соберите 4 символа Bonus, чтобы получить Super Bonus с 10 фриспинами и 1 Sticky Mystery Reel с начала. Фриспины нельзя ретриггерить, выпадая символы Bonus во время бонуса. Дополнительные фриспины начисляются только через Progress Ladder.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY: 'Во время фриспинов каждый выпавший символ Bonus добавляется в Progress Ladder. Каждые 4 собранных символа Bonus повышают уровень на 1. Каждый уровень даёт 3 дополнительных фриспина и открывает 1 дополнительный Sticky Mystery Reel, максимум 5 уровней (15 дополнительных фриспинов). Mystery-барабаны остаются на месте и раскрывают один и тот же символ при каждом вращении.',
 	GAME_INFO_BET_MODES_TITLE: 'РЕЖИМЫ СТАВОК',

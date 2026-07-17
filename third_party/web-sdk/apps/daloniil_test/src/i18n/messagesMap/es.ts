@@ -64,7 +64,7 @@ export default {
 	GAME_INFO_WILD_BODY: 'El símbolo Wild sustituye a todos los símbolos de pago excepto al símbolo Bonus. Wild paga 225× la apuesta por 5 iguales.',
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'GIROS GRATIS',
-	GAME_INFO_FS_BODY: 'Obtén 3 símbolos Bonus en el juego base para activar Normal Bonus con 10 giros gratis. Obtén 4 o más símbolos Bonus para activar Super Bonus con 10 giros gratis y 1 Sticky Mystery Reel desde el inicio. Los giros gratis no se pueden reactivar al obtener símbolos Bonus durante la función. Los giros gratis extra se otorgan solo a través de la Progress Ladder.',
+	GAME_INFO_FS_BODY: 'Obtén 3 símbolos Bonus en el juego base para activar Normal Bonus con 10 giros gratis. Obtén 4 símbolos Bonus para activar Super Bonus con 10 giros gratis y 1 Sticky Mystery Reel desde el inicio. Los giros gratis no se pueden reactivar al obtener símbolos Bonus durante la función. Los giros gratis extra se otorgan solo a través de la Progress Ladder.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY: 'Durante los giros gratis, cada símbolo Bonus que cae se acumula en la Progress Ladder. Cada 4 símbolos Bonus recogidos suben un nivel. Cada nivel otorga 3 giros gratis extra y desbloquea 1 Sticky Mystery Reel adicional, hasta un máximo de 5 niveles (15 giros gratis extra). Los rodillos Mystery permanecen en su lugar y revelan el mismo símbolo en cada giro.',
 	GAME_INFO_BET_MODES_TITLE: 'MODOS DE APUESTA',

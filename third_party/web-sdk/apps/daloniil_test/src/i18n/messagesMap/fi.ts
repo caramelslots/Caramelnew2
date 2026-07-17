@@ -64,7 +64,7 @@ export default {
 	GAME_INFO_WILD_BODY: 'Wild-symboli korvaa kaikki maksavat symbolit paitsi Bonus-symbolin. Wild maksaa 225× panoksen viidestä samanlaisesta.',
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'ILMAISKIERROKSET',
-	GAME_INFO_FS_BODY: 'Saa 3 Bonus-symbolia peruspelissä käynnistääksesi Normal Bonusin 10 ilmaiskierroksella. Saa 4 tai enemmän Bonus-symboleita käynnistääksesi Super Bonusin 10 ilmaiskierroksella ja 1 Sticky Mystery Reelillä alusta alkaen. Ilmaiskierroksia ei voi retriggeröidä saamalla Bonus-symboleita ominaisuuden aikana. Lisäilmaiskierrokset myönnetään vain Progress Ladderin kautta.',
+	GAME_INFO_FS_BODY: 'Saa 3 Bonus-symbolia peruspelissä käynnistääksesi Normal Bonusin 10 ilmaiskierroksella. Saa 4 Bonus-symbolia käynnistääksesi Super Bonusin 10 ilmaiskierroksella ja 1 Sticky Mystery Reelillä alusta alkaen. Ilmaiskierroksia ei voi retriggeröidä saamalla Bonus-symboleita ominaisuuden aikana. Lisäilmaiskierrokset myönnetään vain Progress Ladderin kautta.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY: 'Ilmaiskierrosten aikana jokainen Bonus-symboli kerätään Progress Ladderiin. Joka 4. kerätty Bonus-symboli nostaa yhden tason. Jokainen taso antaa 3 lisäilmaiskierrosta ja avaa 1 lisä-Sticky Mystery Reelin, enintään 5 tasoa (15 lisäilmaiskierrosta). Mystery-rullat pysyvät paikallaan ja paljastavat saman symbolin jokaisella kierroksella.',
 	GAME_INFO_BET_MODES_TITLE: 'PANOSTILAT',

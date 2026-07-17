@@ -64,7 +64,7 @@ export default {
 	GAME_INFO_WILD_BODY: 'Symbol Wild zastępuje wszystkie płatne symbole oprócz symbolu Bonus. Wild wypłaca 225× stawki za 5 takich samych.',
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'DARMOWE SPINY',
-	GAME_INFO_FS_BODY: 'Zbierz 3 symbole Bonus w grze podstawowej, aby uruchomić Normal Bonus z 10 darmowymi spinami. Zbierz 4 lub więcej symboli Bonus, aby uruchomić Super Bonus z 10 darmowymi spinami i 1 Sticky Mystery Reel od początku. Darmowych spinów nie można retriggerować, wypuszczając symbole Bonus podczas funkcji. Dodatkowe darmowe spiny przyznawane są wyłącznie przez Progress Ladder.',
+	GAME_INFO_FS_BODY: 'Zbierz 3 symbole Bonus w grze podstawowej, aby uruchomić Normal Bonus z 10 darmowymi spinami. Zbierz 4 symbole Bonus, aby uruchomić Super Bonus z 10 darmowymi spinami i 1 Sticky Mystery Reel od początku. Darmowych spinów nie można retriggerować, wypuszczając symbole Bonus podczas funkcji. Dodatkowe darmowe spiny przyznawane są wyłącznie przez Progress Ladder.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY: 'Podczas darmowych spinów każdy wypuszczony symbol Bonus jest zbierany do Progress Ladder. Co 4 zebrane symbole Bonus awansują o jeden poziom. Każdy poziom daje 3 dodatkowe darmowe spiny i odblokowuje 1 dodatkowy Sticky Mystery Reel, maksymalnie 5 poziomów (15 dodatkowych darmowych spinów). Bębny Mystery pozostają na miejscu i ujawniają ten sam symbol przy każdym spinie.',
 	GAME_INFO_BET_MODES_TITLE: 'TRYBY STAWEK',

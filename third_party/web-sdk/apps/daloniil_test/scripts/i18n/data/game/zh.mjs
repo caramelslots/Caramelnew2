@@ -68,7 +68,7 @@ export default {
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: '免费旋转',
 	GAME_INFO_FS_BODY:
-		'在基础游戏中获得 3 个 Bonus 符号可触发含 10 次免费旋转的 Normal Bonus。获得 4 个或更多 Bonus 符号可触发含 10 次免费旋转且从一开始就有 1 个 Sticky Mystery Reel 的 Super Bonus。在功能期间出现 Bonus 符号不会重新触发免费旋转。额外免费旋转仅通过 Progress Ladder 发放。',
+		'在基础游戏中获得 3 个 Bonus 符号可触发含 10 次免费旋转的 Normal Bonus。获得 4 个 Bonus 符号可触发含 10 次免费旋转且从一开始就有 1 个 Sticky Mystery Reel 的 Super Bonus。在功能期间出现 Bonus 符号不会重新触发免费旋转。额外免费旋转仅通过 Progress Ladder 发放。',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY:
 		'在免费旋转期间，每个落地的 Bonus 符号都会计入 Progress Ladder。每收集 4 个 Bonus 符号提升一级。每级奖励 3 次额外免费旋转并解锁 1 个额外的 Sticky Mystery Reel，最多 5 级（15 次额外免费旋转）。Mystery 转轴保持固定，每次旋转显示相同符号。',

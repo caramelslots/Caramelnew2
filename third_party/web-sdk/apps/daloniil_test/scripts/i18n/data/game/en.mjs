@@ -68,7 +68,7 @@ export default {
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'FREE SPINS',
 	GAME_INFO_FS_BODY:
-		'Land 3 Bonus symbols in the base game to trigger Normal Bonus with 10 free spins. Land 4 or more Bonus symbols to trigger Super Bonus with 10 free spins and 1 Sticky Mystery Reel from the start. Free spins cannot be retriggered by landing Bonus symbols during the feature. Extra free spins are awarded only through the Progress Ladder.',
+		'Land 3 Bonus symbols in the base game to trigger Normal Bonus with 10 free spins. Land 4 Bonus symbols to trigger Super Bonus with 10 free spins and 1 Sticky Mystery Reel from the start. Free spins cannot be retriggered by landing Bonus symbols during the feature. Extra free spins are awarded only through the Progress Ladder.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY:
 		'During free spins, every Bonus symbol that lands is collected toward the Progress Ladder. Every 4 Bonus symbols collected advance one tier. Each tier awards 3 extra free spins and unlocks 1 additional Sticky Mystery Reel, up to a maximum of 5 tiers (15 extra free spins). Mystery reels stay in place and reveal the same symbol on every spin.',

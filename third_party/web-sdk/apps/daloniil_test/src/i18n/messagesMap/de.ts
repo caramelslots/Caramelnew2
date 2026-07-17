@@ -64,7 +64,7 @@ export default {
 	GAME_INFO_WILD_BODY: 'Das Wild-Symbol ersetzt alle zahlenden Symbole außer dem Bonus-Symbol. Wild zahlt 225× Einsatz für 5 gleiche.',
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'FREISPIELE',
-	GAME_INFO_FS_BODY: 'Erhalte 3 Bonus-Symbole im Basisspiel für Normal Bonus mit 10 Freispielen. Erhalte 4 oder mehr Bonus-Symbole für Super Bonus mit 10 Freispielen und 1 Sticky Mystery Reel von Anfang an. Freispiele können während des Features nicht durch weitere Bonus-Symbole retriggert werden. Zusätzliche Freispiele werden nur über die Progress Ladder vergeben.',
+	GAME_INFO_FS_BODY: 'Erhalte 3 Bonus-Symbole im Basisspiel für Normal Bonus mit 10 Freispielen. Erhalte 4 Bonus-Symbole für Super Bonus mit 10 Freispielen und 1 Sticky Mystery Reel von Anfang an. Freispiele können während des Features nicht durch weitere Bonus-Symbole retriggert werden. Zusätzliche Freispiele werden nur über die Progress Ladder vergeben.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY: 'Während der Freispiele werden alle gelandeten Bonus-Symbole für die Progress Ladder gesammelt. Je 4 gesammelte Bonus-Symbole steigen eine Stufe auf. Jede Stufe gewährt 3 zusätzliche Freispiele und schaltet 1 weiteres Sticky Mystery Reel frei, maximal 5 Stufen (15 zusätzliche Freispiele). Mystery-Walzen bleiben an Ort und Stelle und zeigen bei jedem Dreh dasselbe Symbol.',
 	GAME_INFO_BET_MODES_TITLE: 'EINSATZMODI',

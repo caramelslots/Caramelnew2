@@ -68,7 +68,7 @@ export default {
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'ÜCRETSİZ DÖNÜŞLER',
 	GAME_INFO_FS_BODY:
-		'Temel oyunda 3 Bonus sembolü yakalayarak 10 ücretsiz dönüşlü Normal Bonus tetikleyin. 4 veya daha fazla Bonus sembolü yakalayarak 10 ücretsiz dönüş ve baştan 1 Sticky Mystery Reel içeren Super Bonus tetikleyin. Özellik sırasında Bonus sembolleri yakalayarak ücretsiz dönüşler yeniden tetiklenemez. Ek ücretsiz dönüşler yalnızca Progress Ladder üzerinden verilir.',
+		'Temel oyunda 3 Bonus sembolü yakalayarak 10 ücretsiz dönüşlü Normal Bonus tetikleyin. 4 Bonus sembolü yakalayarak 10 ücretsiz dönüş ve baştan 1 Sticky Mystery Reel içeren Super Bonus tetikleyin. Özellik sırasında Bonus sembolleri yakalayarak ücretsiz dönüşler yeniden tetiklenemez. Ek ücretsiz dönüşler yalnızca Progress Ladder üzerinden verilir.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY:
 		'Ücretsiz dönüşler sırasında gelen her Bonus sembolü Progress Ladder için toplanır. Toplanan her 4 Bonus sembolü bir seviye yükseltir. Her seviye 3 ek ücretsiz dönüş verir ve 1 ek Sticky Mystery Reel açar; en fazla 5 seviye (15 ek ücretsiz dönüş). Mystery makaralar yerinde kalır ve her dönüşte aynı sembolü gösterir.',

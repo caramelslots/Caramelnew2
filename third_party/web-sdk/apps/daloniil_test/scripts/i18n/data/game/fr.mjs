@@ -68,7 +68,7 @@ export default {
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'TOURS GRATUITS',
 	GAME_INFO_FS_BODY:
-		'Obtenez 3 symboles Bonus dans le jeu de base pour déclencher Normal Bonus avec 10 tours gratuits. Obtenez 4 symboles Bonus ou plus pour déclencher Super Bonus avec 10 tours gratuits et 1 Sticky Mystery Reel dès le départ. Les tours gratuits ne peuvent pas être relancés en obtenant des symboles Bonus pendant la fonctionnalité. Les tours gratuits supplémentaires sont attribués uniquement via la Progress Ladder.',
+		'Obtenez 3 symboles Bonus dans le jeu de base pour déclencher Normal Bonus avec 10 tours gratuits. Obtenez 4 symboles Bonus pour déclencher Super Bonus avec 10 tours gratuits et 1 Sticky Mystery Reel dès le départ. Les tours gratuits ne peuvent pas être relancés en obtenant des symboles Bonus pendant la fonctionnalité. Les tours gratuits supplémentaires sont attribués uniquement via la Progress Ladder.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY:
 		'Pendant les tours gratuits, chaque symbole Bonus qui apparaît est collecté pour la Progress Ladder. Tous les 4 symboles Bonus collectés font progresser d\'un niveau. Chaque niveau accorde 3 tours gratuits supplémentaires et débloque 1 Sticky Mystery Reel de plus, jusqu\'à un maximum de 5 niveaux (15 tours gratuits supplémentaires). Les rouleaux Mystery restent en place et révèlent le même symbole à chaque tour.',

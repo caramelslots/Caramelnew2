@@ -68,7 +68,7 @@ export default {
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'RODADAS GRÁTIS',
 	GAME_INFO_FS_BODY:
-		'Obtenha 3 símbolos Bonus no jogo base para ativar Normal Bonus com 10 rodadas grátis. Obtenha 4 ou mais símbolos Bonus para ativar Super Bonus com 10 rodadas grátis e 1 Sticky Mystery Reel desde o início. As rodadas grátis não podem ser reativadas ao obter símbolos Bonus durante a funcionalidade. Rodadas grátis extra são atribuídas apenas através da Progress Ladder.',
+		'Obtenha 3 símbolos Bonus no jogo base para ativar Normal Bonus com 10 rodadas grátis. Obtenha 4 símbolos Bonus para ativar Super Bonus com 10 rodadas grátis e 1 Sticky Mystery Reel desde o início. As rodadas grátis não podem ser reativadas ao obter símbolos Bonus durante a funcionalidade. Rodadas grátis extra são atribuídas apenas através da Progress Ladder.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY:
 		'Durante as rodadas grátis, cada símbolo Bonus que sai é recolhido para a Progress Ladder. A cada 4 símbolos Bonus recolhidos sobe um nível. Cada nível concede 3 rodadas grátis extra e desbloqueia 1 Sticky Mystery Reel adicional, até um máximo de 5 níveis (15 rodadas grátis extra). Os rolos Mystery permanecem no lugar e revelam o mesmo símbolo em cada rodada.',

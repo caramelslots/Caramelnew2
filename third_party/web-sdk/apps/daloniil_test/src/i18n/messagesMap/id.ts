@@ -64,7 +64,7 @@ export default {
 	GAME_INFO_WILD_BODY: 'Simbol Wild menggantikan semua simbol berbayar kecuali simbol Bonus. Wild membayar 225× taruhan untuk 5 sejenis.',
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'PUTARAN GRATIS',
-	GAME_INFO_FS_BODY: 'Dapatkan 3 simbol Bonus di permainan dasar untuk memicu Normal Bonus dengan 10 putaran gratis. Dapatkan 4 simbol Bonus atau lebih untuk memicu Super Bonus dengan 10 putaran gratis dan 1 Sticky Mystery Reel sejak awal. Putaran gratis tidak dapat dipicu ulang dengan mendapatkan simbol Bonus selama fitur. Putaran gratis ekstra hanya diberikan melalui Progress Ladder.',
+	GAME_INFO_FS_BODY: 'Dapatkan 3 simbol Bonus di permainan dasar untuk memicu Normal Bonus dengan 10 putaran gratis. Dapatkan 4 simbol Bonus untuk memicu Super Bonus dengan 10 putaran gratis dan 1 Sticky Mystery Reel sejak awal. Putaran gratis tidak dapat dipicu ulang dengan mendapatkan simbol Bonus selama fitur. Putaran gratis ekstra hanya diberikan melalui Progress Ladder.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY: 'Selama putaran gratis, setiap simbol Bonus yang muncul dikumpulkan ke Progress Ladder. Setiap 4 simbol Bonus terkumpul menaikkan satu tingkat. Setiap tingkat memberikan 3 putaran gratis tambahan dan membuka 1 Sticky Mystery Reel tambahan, maksimal 5 tingkat (15 putaran gratis tambahan). Reel Mystery tetap di tempatnya dan menampilkan simbol yang sama setiap putaran.',
 	GAME_INFO_BET_MODES_TITLE: 'MODE TARUHAN',

@@ -68,7 +68,7 @@ export default {
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: '무료 스핀',
 	GAME_INFO_FS_BODY:
-		'기본 게임에서 Bonus 심볼 3개를 맞추면 10회 무료 스핀이 있는 Normal Bonus가 발동됩니다. Bonus 심볼 4개 이상을 맞추면 10회 무료 스핀과 처음부터 Sticky Mystery Reel 1개가 있는 Super Bonus가 발동됩니다. 기능 중 Bonus 심볼이 나와도 무료 스핀은 재트리거되지 않습니다. 추가 무료 스핀은 Progress Ladder를 통해서만 지급됩니다.',
+		'기본 게임에서 Bonus 심볼 3개를 맞추면 10회 무료 스핀이 있는 Normal Bonus가 발동됩니다. Bonus 심볼 4개를 맞추면 10회 무료 스핀과 처음부터 Sticky Mystery Reel 1개가 있는 Super Bonus가 발동됩니다. 기능 중 Bonus 심볼이 나와도 무료 스핀은 재트리거되지 않습니다. 추가 무료 스핀은 Progress Ladder를 통해서만 지급됩니다.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY:
 		'무료 스핀 중 나온 모든 Bonus 심볼은 Progress Ladder에 수집됩니다. Bonus 심볼 4개를 모을 때마다 한 단계 올라갑니다. 각 단계마다 추가 무료 스핀 3회와 Sticky Mystery Reel 1개가 해제되며, 최대 5단계(추가 무료 스핀 15회)입니다. Mystery 릴은 고정되며 매 스핀마다 같은 심볼을 공개합니다.',

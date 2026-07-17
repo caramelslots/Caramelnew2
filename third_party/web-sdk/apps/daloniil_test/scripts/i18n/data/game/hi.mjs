@@ -68,7 +68,7 @@ export default {
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'मुफ़्त स्पिन',
 	GAME_INFO_FS_BODY:
-		'बेस गेम में 3 Bonus प्रतीक लगाएँ और 10 मुफ़्त स्पिन वाला Normal Bonus पाएँ। 4 या अधिक Bonus प्रतीक लगाएँ और 10 मुफ़्त स्पिन तथा शुरुआत से 1 Sticky Mystery Reel वाला Super Bonus पाएँ। फीचर के दौरान Bonus प्रतीक मिलने से मुफ़्त स्पिन फिर से ट्रिगर नहीं होते। अतिरिक्त मुफ़्त स्पिन केवल Progress Ladder के माध्यम से मिलते हैं।',
+		'बेस गेम में 3 Bonus प्रतीक लगाएँ और 10 मुफ़्त स्पिन वाला Normal Bonus पाएँ। 4 Bonus प्रतीक लगाएँ और 10 मुफ़्त स्पिन तथा शुरुआत से 1 Sticky Mystery Reel वाला Super Bonus पाएँ। फीचर के दौरान Bonus प्रतीक मिलने से मुफ़्त स्पिन फिर से ट्रिगर नहीं होते। अतिरिक्त मुफ़्त स्पिन केवल Progress Ladder के माध्यम से मिलते हैं।',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY:
 		'मुफ़्त स्पिन के दौरान आने वाला हर Bonus प्रतीक Progress Ladder में जुड़ता है। हर 4 एकत्रित Bonus प्रतीक एक स्तर बढ़ाते हैं। प्रत्येक स्तर 3 अतिरिक्त मुफ़्त स्पिन और 1 अतिरिक्त Sticky Mystery Reel देता है, अधिकतम 5 स्तर (15 अतिरिक्त मुफ़्त स्पिन)। Mystery रील अपनी जगह रहती हैं और हर स्पिन पर एक ही प्रतीक दिखाती हैं।',

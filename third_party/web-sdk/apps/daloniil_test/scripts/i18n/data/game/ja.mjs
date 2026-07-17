@@ -68,7 +68,7 @@ export default {
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'フリースピン',
 	GAME_INFO_FS_BODY:
-		'ベースゲームでBonusシンボルを3つ揃えると、10回のフリースピン付きNormal Bonusが発動します。Bonusシンボルを4つ以上揃えると、10回のフリースピンと最初から1つのSticky Mystery Reel付きSuper Bonusが発動します。フィーチャー中にBonusシンボルを出してもフリースピンは再トリガーされません。追加フリースピンはProgress Ladder経由でのみ付与されます。',
+		'ベースゲームでBonusシンボルを3つ揃えると、10回のフリースピン付きNormal Bonusが発動します。Bonusシンボルを4つ揃えると、10回のフリースピンと最初から1つのSticky Mystery Reel付きSuper Bonusが発動します。フィーチャー中にBonusシンボルを出してもフリースピンは再トリガーされません。追加フリースピンはProgress Ladder経由でのみ付与されます。',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY:
 		'フリースピン中に出たBonusシンボルはすべてProgress Ladderに加算されます。4つ集めるごとに1段階上がります。各段階で追加フリースピン3回とSticky Mystery Reelが1つ解放され、最大5段階（追加フリースピン15回）です。Mysteryリールは固定され、毎スピン同じシンボルを表示します。',

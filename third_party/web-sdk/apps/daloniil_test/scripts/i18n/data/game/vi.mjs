@@ -68,7 +68,7 @@ export default {
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'VÒNG QUAY MIỄN PHÍ',
 	GAME_INFO_FS_BODY:
-		'Có 3 biểu tượng Bonus trong ván cơ bản để kích hoạt Normal Bonus với 10 vòng quay miễn phí. Có 4 biểu tượng Bonus trở lên để kích hoạt Super Bonus với 10 vòng quay miễn phí và 1 Sticky Mystery Reel ngay từ đầu. Không thể kích hoạt lại vòng quay miễn phí bằng cách ra biểu tượng Bonus trong tính năng. Vòng quay miễn phí thêm chỉ được trao qua Progress Ladder.',
+		'Có 3 biểu tượng Bonus trong ván cơ bản để kích hoạt Normal Bonus với 10 vòng quay miễn phí. Có 4 biểu tượng Bonus để kích hoạt Super Bonus với 10 vòng quay miễn phí và 1 Sticky Mystery Reel ngay từ đầu. Không thể kích hoạt lại vòng quay miễn phí bằng cách ra biểu tượng Bonus trong tính năng. Vòng quay miễn phí thêm chỉ được trao qua Progress Ladder.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
 	GAME_INFO_MYSTERY_BODY:
 		'Trong vòng quay miễn phí, mỗi biểu tượng Bonus xuất hiện được thu thập vào Progress Ladder. Cứ 4 biểu tượng Bonus thu thập được sẽ lên một bậc. Mỗi bậc thưởng thêm 3 vòng quay miễn phí và mở khóa 1 Sticky Mystery Reel, tối đa 5 bậc (15 vòng quay miễn phí thêm). Các cuộn Mystery giữ nguyên vị trí và hiển thị cùng một biểu tượng mỗi vòng.',
