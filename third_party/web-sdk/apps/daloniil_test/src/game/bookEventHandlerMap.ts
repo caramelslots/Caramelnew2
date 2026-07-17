@@ -21,9 +21,11 @@ import {
 	BONUS_WIN_PRE_DELAY_MS,
 	BONUS_WIN_POST_DELAY_MS,
 	MYSTERY_REVEAL_PRE_DELAY_MS,
+	MYSTERY_REVEAL_POST_DELAY_MS,
 	WIN_SPOTLIGHT_CLEAR_DELAY_MS,
 } from './constants';
 import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
+import { waitForTimeout } from 'utils-shared/wait';
 import { computeCatSlowTriggerReel, catSlowReelsAfterTrigger, CAT_SLOW_EXTRA_SYMBOL_ROWS } from './catAnticipation';
 
 // Таймер фонового снятия затемнения/paylines. Хранится здесь, чтобы
@@ -520,4 +522,13 @@ export const playMysteryRevealBatch = async (bookEvents: BookEventOfType<'myster
 		reel.reelState.symbols.slice(0, reel.reelLength).map(({ rawSymbol }) => ({ ...rawSymbol })),
 	);
 	stateGameDerived.enhancedBoard.settle(settledBoard);
+
+	// Hold on the revealed symbol before winInfo / next spin (collapse runs on
+	// the next reveal). Turbo 3 normally halves waits — keep the full post
+	// delay there so open→close gap stays ~2× longer than the scaled wait.
+	const postDelayMs =
+		stateGame.gameSpeed === 3
+			? MYSTERY_REVEAL_POST_DELAY_MS
+			: scaleMsByGameSpeed(MYSTERY_REVEAL_POST_DELAY_MS, stateGame.gameSpeed);
+	await waitForTimeout(postDelayMs);
 };

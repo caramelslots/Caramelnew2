@@ -62,15 +62,17 @@
 			applyWinPresentation ||
 			applyIdleBouncePresentation,
 	);
-	// Off-grid symbols (padding rows or post-settle pool parked above/below the
-	// visible grid) must not render once the reel has stopped — even when the
-	// board mask expands for win/mystery VFX. While reels move, keep them
-	// visible so the top/bottom feather mask can clip the scroll smoothly.
+	// Cull symbols outside the visible / feather runway. During spin use the
+	// same expanded window as SymbolWrap (±1 row) — never force-render the
+	// whole padding pool (that was a major mobile hitch during scroll).
 	const hideOffGridSymbol = $derived.by(() => {
-		if (maskRunwayActive) return false;
-
 		const y = props.reelSymbol.symbolY();
 		const half = SYMBOL_SIZE / 2;
+		if (maskRunwayActive) {
+			const top = -SYMBOL_SIZE;
+			const bottom = SYMBOL_SIZE * (BOARD_DIMENSIONS.y + 1);
+			return y < top || y > bottom;
+		}
 		const gridBottom = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
 		return y - half < 0 || y + half > gridBottom;
 	});
@@ -249,7 +251,12 @@
 		scaleY={props.reelSymbol.landScaleY() * wrapScale}
 		alpha={isSpinningSymbol ? 1 : dimAlphaTween.current}
 	>
-		{#key `${symbolRenderState}-${symbolInfo.type}-${symbolInfo.animationName ?? ''}`}
+		<!-- Sprites: key by asset so H1Img→L3Img swaps cleanly (cheap remount).
+		     Spines: include state + animationName so B/M idle↔land/win remount
+		     correctly — a spine-only assetKey key left Special_1 / Mystery posed wrong. -->
+		{#key symbolInfo.type === 'sprite'
+			? `sprite:${symbolInfo.assetKey}`
+			: `${symbolRenderState}:spine:${symbolInfo.assetKey}:${symbolInfo.animationName ?? ''}`}
 			<Symbol
 				state={symbolRenderState}
 				rawSymbol={props.reelSymbol.rawSymbol}

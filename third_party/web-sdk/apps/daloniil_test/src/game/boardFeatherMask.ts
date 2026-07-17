@@ -17,6 +17,24 @@ const smoothstep = (t: number) => {
 };
 
 let activeTexture: PIXI.Texture | null = null;
+let activeCacheKey = '';
+
+const cacheKeyFor = (params: {
+	width: number;
+	height: number;
+	topOverflow: number;
+	bottomOverflow: number;
+	gridHeight: number;
+	feather: number;
+}) =>
+	[
+		params.width,
+		params.height,
+		params.topOverflow,
+		params.bottomOverflow,
+		params.gridHeight,
+		params.feather,
+	].join('|');
 
 /** Build an alpha-gradient mask texture (white RGB, soft alpha at mask edges). */
 export const createBoardFeatherMaskTexture = (params: BoardFeatherMaskParams): PIXI.Texture => {
@@ -26,6 +44,19 @@ export const createBoardFeatherMaskTexture = (params: BoardFeatherMaskParams): P
 	const bottomOverflow = Math.max(0, params.bottomOverflow);
 	const gridHeight = Math.max(1, params.gridHeight);
 	const feather = Math.max(1, params.feather);
+	const cacheKey = cacheKeyFor({
+		width,
+		height,
+		topOverflow,
+		bottomOverflow,
+		gridHeight,
+		feather,
+	});
+
+	// Spin start/end flip overflow sizes — reuse GPU texture when dims match.
+	if (activeTexture && activeCacheKey === cacheKey) {
+		return activeTexture;
+	}
 
 	const gridTop = topOverflow;
 	const gridBottom = gridTop + gridHeight;
@@ -60,8 +91,9 @@ export const createBoardFeatherMaskTexture = (params: BoardFeatherMaskParams): P
 		}
 
 		const a = Math.round(alpha * 255);
+		const row = y * width * 4;
 		for (let x = 0; x < width; x++) {
-			const i = (y * width + x) * 4;
+			const i = row + x * 4;
 			data[i] = 255;
 			data[i + 1] = 255;
 			data[i + 2] = 255;
@@ -73,6 +105,7 @@ export const createBoardFeatherMaskTexture = (params: BoardFeatherMaskParams): P
 
 	if (activeTexture) activeTexture.destroy(true);
 	activeTexture = PIXI.Texture.from(canvas);
+	activeCacheKey = cacheKey;
 	return activeTexture;
 };
 
@@ -80,5 +113,6 @@ export const destroyBoardFeatherMaskTexture = () => {
 	if (activeTexture) {
 		activeTexture.destroy(true);
 		activeTexture = null;
+		activeCacheKey = '';
 	}
 };

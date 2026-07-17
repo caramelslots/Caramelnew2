@@ -44,13 +44,13 @@
 	// visible through the BoardMask (y=0 … boardHeight).
 	// TOP / BOTTOM (spin) — one full symbol past the mask for smooth feather clip.
 	// TOP (idle) — grid top edge; parked padding at y−50 must not render.
+	// IMPORTANT: do NOT short-circuit with `spinActive || …` — that rendered the
+	// entire padding pool (~20–30 cells/reel) every spin frame on mobile.
 	const top = $derived(props.spinActive ? -SYMBOL_SIZE : 0);
 	const bottom = $derived(
 		props.spinActive ? SYMBOL_SIZE * (BOARD_DIMENSIONS.y + 1) : SYMBOL_SIZE * BOARD_DIMENSIONS.y,
 	);
-	const inFrame = $derived(
-		props.spinActive || (props.y >= top && props.y <= bottom),
-	);
+	const inFrame = $derived(props.y >= top && props.y <= bottom);
 </script>
 
 {#if props.debug || inFrame}

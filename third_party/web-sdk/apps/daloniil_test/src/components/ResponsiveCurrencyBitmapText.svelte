@@ -93,8 +93,24 @@
 	const afterX = $derived(symbolX + symbolWidth);
 	const pivotX = $derived(totalWidth * anchorX);
 
-	const measureKey = $derived(
-		`${labelText}|${props.amount}|${stateBet.currency}|${stateI18n.i18n.locale}|${labelGapPx}|${minFitScale}|${props.style.fontSize}`,
+	/**
+	 * Remount / width-reset only when layout *structure* changes — not on every
+	 * count-up tick. Updating BitmapText.text in place keeps FPS stable on phones.
+	 */
+	const structureKey = $derived(
+		[
+			labelText,
+			stateBet.currency,
+			stateI18n.i18n.locale,
+			labelGapPx,
+			minFitScale,
+			props.style.fontSize,
+			digitFont,
+			parts.symbol,
+			hasLabel ? '1' : '0',
+			parts.before ? '1' : '0',
+			parts.after ? '1' : '0',
+		].join('|'),
 	);
 
 	const isLayoutReady = $derived(
@@ -106,7 +122,7 @@
 	);
 
 	$effect.pre(() => {
-		measureKey;
+		structureKey;
 		labelWidth = 0;
 		beforeWidth = 0;
 		symbolWidth = 0;
@@ -114,8 +130,8 @@
 	});
 </script>
 
-<!-- Hidden measure row — each glyph measured independently -->
-{#key measureKey}
+<!-- Hidden measure row — remount only on structureKey, not every amount frame -->
+{#key structureKey}
 	<Container visible={false}>
 		{#if hasLabel}
 			<LocaleGlyph

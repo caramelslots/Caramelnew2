@@ -878,6 +878,17 @@ const makePaySymbolIdle = (assetKey: string, clipPrefix: string) => ({
 	sizeRatios: bounceSizeRatios,
 });
 
+/**
+ * Perf: scrolling cells use WebP sprites (H1Img…), not frozen spines.
+ * Spine recreate on every padding swap was hitching phones mid-spin.
+ * Land/win stay on spine for bounce/celebration.
+ */
+const makePaySymbolSpinSprite = (imgKey: string) => ({
+	type: 'sprite' as const,
+	assetKey: imgKey,
+	sizeRatios: bounceSizeRatios,
+});
+
 const h1Static = makePaySymbolIdle('H1', 'High_1');
 const h2Static = makePaySymbolIdle('H2', 'High_2');
 const h3Static = makePaySymbolIdle('H3', 'High_3');
@@ -886,6 +897,15 @@ const l1Static = makePaySymbolIdle('L1', 'Low_1');
 const l2Static = makePaySymbolIdle('L2', 'Low_2');
 const l3Static = makePaySymbolIdle('L3', 'Low_3');
 const l4Static = makePaySymbolIdle('L4', 'Low_4');
+
+const h1Spin = makePaySymbolSpinSprite('H1Img');
+const h2Spin = makePaySymbolSpinSprite('H2Img');
+const h3Spin = makePaySymbolSpinSprite('H3Img');
+const h4Spin = makePaySymbolSpinSprite('H4Img');
+const l1Spin = makePaySymbolSpinSprite('L1Img');
+const l2Spin = makePaySymbolSpinSprite('L2Img');
+const l3Spin = makePaySymbolSpinSprite('L3Img');
+const l4Spin = makePaySymbolSpinSprite('L4Img');
 const h1Bounce = {
 	type: 'spine',
 	assetKey: 'H1',
@@ -998,7 +1018,11 @@ export const MYSTERY_REVEAL_TIER: Record<string, 'high' | 'mid' | 'low'> = {
  */
 export const MYSTERY_REVEAL_PRE_DELAY_MS = 400;
 
-/** Pause after mystery cells finish reveal, before winInfo / next reveal spin. */
+/**
+ * Pause after mystery cells finish reveal, before winInfo / next reveal spin
+ * (collapse back to `?` starts with that next spin). At Turbo 3 this wait is
+ * kept unscaled (~2× the usual turbo-shortened pause).
+ */
 export const MYSTERY_REVEAL_POST_DELAY_MS = 1000;
 
 /**
@@ -1170,70 +1194,65 @@ const bWin = {
 };
 
 export const SYMBOL_INFO_MAP = {
-	// H1..H4, L1..L4: render as the new static PNG everywhere except
-	// `land` — landing plays the per-symbol designer bounce spine
-	// (`High_x/bounce` or `Low_x/bounce`). Win celebration also reuses the
-	// bounce spine so the symbol springs again when it scores; this keeps
-	// the visual consistent with WIN_BOUNCE's translate Tween that
-	// ReelSymbol still applies on top.
+	// H1..H4, L1..L4: `spin` uses WebP sprites (cheap swaps while scrolling).
+	// Rest/win stay on idle spine; `land` plays the designer bounce spine.
 	H1: {
 		win: h1Static,
 		postWinStatic: h1Static,
 		static: h1Static,
-		spin: h1Static,
+		spin: h1Spin,
 		land: h1Bounce,
 	},
 	H2: {
 		win: h2Static,
 		postWinStatic: h2Static,
 		static: h2Static,
-		spin: h2Static,
+		spin: h2Spin,
 		land: h2Bounce,
 	},
 	H3: {
 		win: h3Static,
 		postWinStatic: h3Static,
 		static: h3Static,
-		spin: h3Static,
+		spin: h3Spin,
 		land: h3Bounce,
 	},
 	H4: {
 		win: h4Static,
 		postWinStatic: h4Static,
 		static: h4Static,
-		spin: h4Static,
+		spin: h4Spin,
 		land: h4Bounce,
 	},
 	L1: {
 		win: l1Static,
 		postWinStatic: l1Static,
 		static: l1Static,
-		spin: l1Static,
+		spin: l1Spin,
 		land: l1Bounce,
 	},
 	L2: {
 		win: l2Static,
 		postWinStatic: l2Static,
 		static: l2Static,
-		spin: l2Static,
+		spin: l2Spin,
 		land: l2Bounce,
 	},
 	L3: {
 		win: l3Static,
 		postWinStatic: l3Static,
 		static: l3Static,
-		spin: l3Static,
+		spin: l3Spin,
 		land: l3Bounce,
 	},
 	L4: {
 		win: l4Static,
 		postWinStatic: l4Static,
 		static: l4Static,
-		spin: l4Static,
+		spin: l4Spin,
 		land: l4Bounce,
 	},
-	// Wild — `Special_2/idle` rest pose, bounce spine on land, dedicated
-	// `Special_2/win` celebration spine on win (lights up the W/I/L/D letters).
+	// Wild — spine while scrolling (same skeleton as land/static; avoids sprite⇄spine pop).
 	W: {
 		postWinStatic: wStatic,
 		static: wStatic,
@@ -1241,7 +1260,7 @@ export const SYMBOL_INFO_MAP = {
 		win: wWin,
 		land: wBounce,
 	},
-	// Bonus — landing shows BONUS letters; scatter/collect win plays paw wave.
+	// Bonus — keep spine for spin/static so paw bone stays aligned (sprite ⇄ spine jumps).
 	B: {
 		postWinStatic: bStatic,
 		static: bStatic,
@@ -1249,9 +1268,8 @@ export const SYMBOL_INFO_MAP = {
 		win: bWin,
 		land: bBounce,
 	},
-	// Mystery — `?` sign sprite while waiting for reveal; designer
-	// `Mystery/explosion` spine plays during `mysteryReveal` (handled
-	// dynamically in `getMysteryRevealSymbolInfo`).
+	// Mystery — always full idle spine (bg + ?). A spin-only MImg sprite at M_SIZE
+	// stretched the card on first land; explosion still via getMysteryRevealSymbolInfo.
 	M: {
 		postWinStatic: mStatic,
 		static: mStatic,

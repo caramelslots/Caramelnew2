@@ -219,8 +219,15 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		// Write symbolIndex only when it actually changes to avoid triggering
 		// symbolY() re-evaluation on items that are staying in the same slot.
 		for (let i = 0; i < newLen; i++) {
-			if (!_.isEqual(reelState.symbols[i].rawSymbol, layout[i])) {
-				reelState.symbols[i].rawSymbol = layout[i];
+			const next = layout[i];
+			const prev = reelState.symbols[i].rawSymbol;
+			// Fast path: avoid lodash.isEqual on every padding cell (spin start hitch).
+			if (
+				prev !== next &&
+				((prev as { name?: string }).name !== (next as { name?: string }).name ||
+					!_.isEqual(prev, next))
+			) {
+				reelState.symbols[i].rawSymbol = next;
 			}
 			if (reelState.symbols[i].symbolIndex !== i) {
 				reelState.symbols[i].symbolIndex = i;

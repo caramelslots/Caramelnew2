@@ -151,7 +151,8 @@
 	});
 </script>
 
-<FadeContainer {show}>
+<!-- Above NeonForegroundOverlay (zIndex 5) so the Wok Fury neon logo stays under Big Win. -->
+<FadeContainer {show} zIndex={10}>
 	{#if winLevelData}
 		{@const isBigWin = winLevelData.type === 'big'}
 		{@const duration = winLevelData.presentDuration}
