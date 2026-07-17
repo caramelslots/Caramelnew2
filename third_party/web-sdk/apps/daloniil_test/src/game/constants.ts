@@ -1016,14 +1016,14 @@ export const MYSTERY_REVEAL_TIER: Record<string, 'high' | 'mid' | 'low'> = {
  * the static `?` sprite is invisible to the player. Mirrors the same
  * idea as `WIN_INFO_PRE_DELAY_MS` for paylines.
  */
-export const MYSTERY_REVEAL_PRE_DELAY_MS = 400;
+export const MYSTERY_REVEAL_PRE_DELAY_MS = 200;
 
 /**
  * Pause after mystery cells finish reveal, before winInfo / next reveal spin
  * (collapse back to `?` starts with that next spin). At Turbo 3 this wait is
  * kept unscaled (~2× the usual turbo-shortened pause).
  */
-export const MYSTERY_REVEAL_POST_DELAY_MS = 1000;
+export const MYSTERY_REVEAL_POST_DELAY_MS = 500;
 
 /**
  * Wall-clock offset (ms) into `Mystery/explosion` when the spine drops
