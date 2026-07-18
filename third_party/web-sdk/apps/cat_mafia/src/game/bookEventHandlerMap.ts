@@ -144,6 +144,22 @@ const findNextSetWin = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
 	return undefined;
 };
 
+/** Next `setTotalWin` before the following `reveal`, if any. */
+const findNextSetTotalWin = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
+	const startIdx = bookEvents.indexOf(fromEvent);
+	if (startIdx < 0) return undefined;
+	for (let i = startIdx + 1; i < bookEvents.length; i++) {
+		const event = bookEvents[i];
+		if (event.type === 'setTotalWin') return event;
+		if (event.type === 'reveal') break;
+	}
+	return undefined;
+};
+
+/** SW spins emit multiple winInfo/setTotalWin (pre-expand + product). */
+const spinHasSuperWildExpand = (bookEvents: BookEvent[]) =>
+	bookEvents.some((e) => e.type === 'superWildExpand');
+
 const IDLE_BOUNCE_BLOCKING_EVENTS = new Set(['winInfo', 'setWin', 'finalWin']);
 
 /** True when this reveal's round includes a win — idle symbol tease stays off. */
@@ -400,9 +416,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				nextSetWin != null ? winLevelMap[nextSetWin.winLevel as WinLevel] : undefined;
 			const isSmallWinFlow = !nextWinLevelData || nextWinLevelData.type !== 'big';
 
-			// Phase-2 HUD: skip bump here — next setTotalWin has running_bet_win
-			// (FS cumulative). Assigning spin totalWin would flash the wrong amount.
-			if (isSmallWinFlow && !isPostSwExpand) {
+			// SW spins: do not += spin totals — pre/post expand + product would
+			// flash HUD (e.g. 290 → 250 → 290). setTotalWin is the source of truth.
+			if (
+				isSmallWinFlow &&
+				!isPostSwExpand &&
+				!spinHasSuperWildExpand(bookEvents)
+			) {
 				stateBet.winBookEventAmount = stateBet.winBookEventAmount + bookEvent.totalWin;
 			}
 		}
@@ -433,7 +453,18 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			scaleMsByGameSpeed(WIN_SPOTLIGHT_CLEAR_DELAY_MS, stateGame.gameSpeed),
 		);
 	},
-	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
+	setTotalWin: async (
+		bookEvent: BookEventOfType<'setTotalWin'>,
+		{ bookEvents }: BookEventContext,
+	) => {
+		// Intermediate totals before SW product / phase-2 — skip so HUD only
+		// jumps once to the final cumulative (avoids up→down→up flicker).
+		if (
+			spinHasSuperWildExpand(bookEvents) &&
+			findNextSetTotalWin(bookEvents, bookEvent)
+		) {
+			return;
+		}
 		stateBet.winBookEventAmount = bookEvent.amount;
 	},
 	// Cat Mafia Stage C — target pick before FS intro (natural + buy).
@@ -565,7 +596,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		await eventEmitter.broadcastAsync({ type: 'drawerUnfold' });
 		eventEmitter.broadcast({ type: 'drawerButtonHide' });
 	},
-	setWin: async (bookEvent: BookEventOfType<'setWin'>) => {
+	setWin: async (bookEvent: BookEventOfType<'setWin'>, { bookEvents }: BookEventContext) => {
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
 
 		// Stake UX: small/medium wins are non-blocking — board amount + HUD WIN
@@ -574,9 +605,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			return;
 		}
 
-		// Big-win HUD: поднимаем кумулятив ДО await'а celebration overlay.
-		// math-инвариант: (prev + setWin.amount) ≡ setTotalWin.amount.
-		stateBet.winBookEventAmount = stateBet.winBookEventAmount + bookEvent.amount;
+		// Big-win HUD before celebration. With SW, multiple setWin can fire
+		// (pre-expand + ×product) — `+= spin` double-counts; use next setTotalWin.
+		const nextTotal = findNextSetTotalWin(bookEvents, bookEvent);
+		if (nextTotal) {
+			stateBet.winBookEventAmount = nextTotal.amount;
+		} else {
+			stateBet.winBookEventAmount = stateBet.winBookEventAmount + bookEvent.amount;
+		}
 
 		// For big wins above level 6, the visual ladder starts at Big Win and
 		// advances upward. Start BGM from the first ladder tier (Big Win) so the
