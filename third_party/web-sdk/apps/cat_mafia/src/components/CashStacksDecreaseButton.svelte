@@ -1,0 +1,50 @@
+<!--
+	CashStacksDecreaseButton.svelte — кастомная замена SDK ButtonDecrease.
+	Ref. designer_assets/minus.png
+-->
+<script lang="ts">
+	import { Container, Sprite } from 'pixi-svelte';
+	import { Button, type ButtonProps } from 'components-pixi';
+	import { stateBet, stateBetDerived, stateConfig } from 'state-shared';
+
+	import { UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
+
+	import { getContext } from '../game/context';
+	import { UI_SPRITE_RENDER, uiScaledSize, type UiSizeScaleProps } from '../game/uiButtonSize';
+
+	const props: Partial<Omit<ButtonProps, 'children'>> & UiSizeScaleProps = $props();
+	const context = getContext();
+	const { width, height } = $derived(uiScaledSize(UI_BASE_SIZE, props.sizeScale));
+	const sizes = $derived({ width, height });
+	const smallest = $derived(
+		stateConfig.minBet > 0 ? stateConfig.minBet : stateConfig.betAmountOptions[0],
+	);
+	const disabled = $derived(
+		!context.stateXstateDerived.isIdle() || stateBet.betAmount === smallest,
+	);
+
+	const onpress = () => {
+		context.eventEmitter.broadcast({ type: 'soundPressMinus' });
+
+		const nextSmaller = [...stateConfig.betAmountOptions]
+			.sort((a, b) => b - a)
+			.find((option) => option < stateBet.betAmount);
+
+		stateBetDerived.setBetAmount(nextSmaller || smallest);
+	};
+</script>
+
+<Button {...props} {sizes} {onpress} {disabled}>
+	{#snippet children({ center })}
+		<Container {...center}>
+			<Sprite
+				key="betMinus"
+				width={sizes.width}
+				height={sizes.height}
+				anchor={0.5}
+				alpha={disabled ? 0.45 : 1}
+				{...UI_SPRITE_RENDER}
+			/>
+		</Container>
+	{/snippet}
+</Button>

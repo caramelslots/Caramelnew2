@@ -1,8 +1,15 @@
 # Math SDK — quick command reference
 
-Шпаргалка по основным командам разработки `0_0_daloniil_test`.
+Шпаргалка по основным командам разработки.
+
+- **Cat Mafia (активная):** `games/0_0_cat_mafia`  
+- **Wok Fury (donor):** `games/0_0_daloniil_test`
+
 Все команды запускаются из директории игры и предполагают, что venv
 лежит в `/tmp/csmath_venv/`.
+
+Для Cat Mafia замени путь игры на `0_0_cat_mafia` и web sync target —
+`apps/cat_mafia` (уже в `sync_to_web_sdk.py` этой игры).
 
 ## 0. Venv (один раз, если `ModuleNotFoundError`)
 
@@ -18,7 +25,8 @@
 ## Общие переменные окружения
 
 ```bash
-cd /Users/danylolepetynskyi/Desktop/Caramelnew2/third_party/math-sdk/games/0_0_daloniil_test
+# Cat Mafia (default). For Wok Fury: …/games/0_0_daloniil_test
+cd /Users/danylolepetynskyi/Desktop/Caramelnew2/third_party/math-sdk/games/0_0_cat_mafia
 export PATH="$HOME/.cargo/bin:$PATH"
 export PYTHONPATH=../..:.
 PY=/tmp/csmath_venv/bin/python
@@ -29,11 +37,15 @@ PY=/tmp/csmath_venv/bin/python
 
 ---
 
-## 1. M5 — intermediate sim (1e5 per mode, ~10-15 мин)
+## 1. M5 — intermediate sim (1e5 per mode, ~10-20 мин)
 
 Когда: после правок `game_config.py` / `game_override.py` / `paylines` /
 `paytable` / `reelstrips`. Перепишет `library/publish_files/` для demo +
 RGS publish.
+
+В `0_0_cat_mafia/run.py` должно быть `num_sim_args = 1e5` на режим и
+`run_optimization: True`. Если видишь «Batch 1 of 5» и финиш за ~15 с —
+это **не** M5 (остались dev `1e4` / optimization off).
 
 ```bash
 $PY run.py 2>&1 | tee /tmp/m5.log
@@ -127,7 +139,7 @@ $PY run_storybook.py && $PY sync_to_web_sdk.py
 
 ```bash
 # 0. (один раз) переменные окружения
-cd /Users/danylolepetynskyi/Desktop/Caramelnew2/third_party/math-sdk/games/0_0_daloniil_test
+cd /Users/danylolepetynskyi/Desktop/Caramelnew2/third_party/math-sdk/games/0_0_cat_mafia
 export PATH="$HOME/.cargo/bin:$PATH"
 export PYTHONPATH=../..:.
 PY=/tmp/csmath_venv/bin/python
