@@ -34,7 +34,9 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 	}) {
 		if (stateSlots.isPreSpinning) {
 			await Promise.all(
-				board.map(async (reel) => {
+				board.map(async (reel, reelIndex) => {
+					// Frozen reels skip preSpin — do not wait for their readyToSpin.
+					if (frozenReelIndices.includes(reelIndex)) return;
 					await waitForResolve((resolve) => (reel.reelState.readyToSpin = resolve));
 				}),
 			);

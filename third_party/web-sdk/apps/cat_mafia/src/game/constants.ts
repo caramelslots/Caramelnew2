@@ -1031,6 +1031,15 @@ export const MYSTERY_BG_UNCOVER_MS = 1533;
 /** Pause after reels finish landing, before paylines/win animation start. */
 export const WIN_INFO_PRE_DELAY_MS = 100;
 
+/**
+ * Base SW two-beat: hold phase-1 paylines (lying SW) before clearing for curtain.
+ */
+export const SW_PHASE1_HOLD_MS = 550;
+/** After curtain settles, beat before phase-2 winInfo (post-expand lines). */
+export const SW_PHASE2_PRE_MS = 320;
+/** Extra pre-delay on the post-expand winInfo so the second interaction reads clearly. */
+export const SW_SECOND_WIN_PRE_DELAY_MS = 280;
+
 /** Pause after win amount count-up finishes, before the celebration screen auto-dismisses. */
 export const WIN_SCREEN_POST_COUNT_UP_DELAY_MS = 1500;
 

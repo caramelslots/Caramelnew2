@@ -100,7 +100,7 @@ def build_paw_resolve(board, bet: float = 1.0) -> tuple[list[dict], list[dict], 
 def expand_sw_columns(board, create_symbol, sw_hits: list[dict]) -> tuple[list[dict], int]:
     """Fill SW reel(s) with SW wilds at that mult. Returns (expands, productMult).
 
-    Cat Mafia bonus: at most one SW — callers should pass a single hit.
+    One expand per reel; multiple reels → product of multipliers.
     """
     by_reel: dict[int, dict] = {}
     for h in sw_hits:
@@ -114,6 +114,34 @@ def expand_sw_columns(board, create_symbol, sw_hits: list[dict]) -> tuple[list[d
         stamp_expanded_sw_column(board, create_symbol, reel, mult, row=h["row"])
         expands.append({"reel": reel, "row": h["row"], "mult": mult})
     return expands, product if expands else 1
+
+
+def keep_one_sw_per_reel(board, create_symbol, skip_reels: set[int] | None = None, rng: random.Random | None = None) -> list[dict]:
+    """At most one lying SW cell per reel (skip already-sticky reels)."""
+    rng = rng or random
+    skip = skip_reels or set()
+    hits = find_super_wilds(board)
+    by_reel: dict[int, list[dict]] = {}
+    for h in hits:
+        if h["reel"] in skip:
+            continue
+        by_reel.setdefault(h["reel"], []).append(h)
+    kept: list[dict] = []
+    for reel, group in by_reel.items():
+        keep = rng.choice(group)
+        kept.append(keep)
+        for h in group:
+            if h is keep:
+                continue
+            board[h["reel"]][h["row"]] = create_symbol("L2")
+    return kept
+
+
+def product_of_mults(mults) -> int:
+    product = 1
+    for m in mults:
+        product *= max(1, int(m))
+    return product if product > 0 else 1
 
 
 def stamp_expanded_sw_column(

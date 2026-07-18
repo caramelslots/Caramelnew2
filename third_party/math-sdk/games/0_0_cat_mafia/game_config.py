@@ -110,7 +110,10 @@ class GameConfig(Config):
         self.target_pick_values = [8, 10, 12]
         self.target_pick_count = 6
         self.drum_max = 6
-        self.sw_mult_weights = {2: 40, 4: 30, 6: 20, 8: 10}
+        # Prefer lower SW mults — product of 2 sticky columns grows fast.
+        self.sw_mult_weights = {2: 55, 4: 25, 6: 15, 8: 5}
+        # Cap sticky SW columns in bonus (product of mults grows very fast).
+        self.max_sticky_sw = 2
         # Shoot rewards: empty / +1 / +2 / +3 FS (weights)
         self.shoot_reward_weights = {0: 45, 1: 30, 2: 18, 3: 7}
         self.dead_cluster_fraction = 0.19

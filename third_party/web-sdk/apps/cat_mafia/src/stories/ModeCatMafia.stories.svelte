@@ -99,39 +99,47 @@
 		skipLoadingScreen: true,
 		action: async () => {
 			const lineWin = 300;
+			const postExpandWin = 600;
 			stateBet.winBookEventAmount = 0;
+			const phase1Win = {
+				type: 'winInfo' as const,
+				totalWin: lineWin,
+				wins: [
+					{
+						symbol: 'H2',
+						kind: 5,
+						win: lineWin,
+						positions: [
+							{ reel: 0, row: 1 },
+							{ reel: 1, row: 1 },
+							{ reel: 2, row: 1 },
+							{ reel: 3, row: 1 },
+							{ reel: 4, row: 1 },
+						],
+						meta: {
+							lineIndex: 1,
+							multiplier: 1,
+							winWithoutMult: lineWin,
+							globalMult: 1,
+							lineMultiplier: 1,
+						},
+					},
+				],
+			};
 			await playBookEvents([
 				reveal(
 					[...SW_DEMO_VISIBLE_BOARD].map((reel) => reel.map((s) => ({ ...s }))) as {
 						name: string;
 					}[][],
 				),
-				asEvent({
-					type: 'winInfo',
-					totalWin: lineWin,
-					wins: [
-						{
-							symbol: 'H2',
-							kind: 5,
-							win: lineWin,
-							positions: [
-								{ reel: 0, row: 1 },
-								{ reel: 1, row: 1 },
-								{ reel: 2, row: 1 },
-								{ reel: 3, row: 1 },
-								{ reel: 4, row: 1 },
-							],
-							meta: {
-								lineIndex: 1,
-								multiplier: 1,
-								winWithoutMult: lineWin,
-								globalMult: 1,
-								lineMultiplier: 1,
-							},
-						},
-					],
-				}),
+				asEvent(phase1Win),
 				asEvent(superWildExpandDemo),
+				// Phase 2: post-curtain re-eval (math order after expand).
+				asEvent({
+					...phase1Win,
+					totalWin: postExpandWin,
+					wins: phase1Win.wins.map((w) => ({ ...w, win: postExpandWin })),
+				}),
 			]);
 		},
 	})}
@@ -177,8 +185,37 @@
 	args={templateArgs({
 		skipLoadingScreen: true,
 		action: async () => {
+			// Lying SW in Normal bonus: phase-1 lines → curtain → phase-2 lines.
+			const lineWin = 200;
+			const postExpandWin = 800;
 			stateGame.bonusMode = 'normal';
 			stateGame.gameType = 'freegame';
+			stateGame.stickySwByReel = {};
+			stateGame.stickySwOpened = false;
+			stateBet.winBookEventAmount = 0;
+			const phase1Win = {
+				type: 'winInfo' as const,
+				totalWin: lineWin,
+				wins: [
+					{
+						symbol: 'H2',
+						kind: 3,
+						win: lineWin,
+						positions: [
+							{ reel: 0, row: 1 },
+							{ reel: 1, row: 1 },
+							{ reel: 2, row: 1 },
+						],
+						meta: {
+							lineIndex: 1,
+							multiplier: 1,
+							winWithoutMult: lineWin,
+							globalMult: 1,
+							lineMultiplier: 1,
+						},
+					},
+				],
+			};
 			await playBookEvents([
 				reveal(
 					[...FS_SW_VISIBLE_BOARD].map((reel) => reel.map((s) => ({ ...s }))) as {
@@ -186,7 +223,13 @@
 					}[][],
 					'freegame',
 				),
+				asEvent(phase1Win),
 				asEvent(fsSuperWildExpandDemo),
+				asEvent({
+					...phase1Win,
+					totalWin: postExpandWin,
+					wins: phase1Win.wins.map((w) => ({ ...w, win: postExpandWin })),
+				}),
 			]);
 		},
 	})}

@@ -25,6 +25,8 @@
 	import { eventEmitter } from '../game/eventEmitter';
 	import { devPreview } from '../game/devPreview.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { stateLayout } from '../game/stateLayout';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import {
 		getRawUrlLang,
 		INVALID_LANG_LABELS,
@@ -425,6 +427,54 @@
 			eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
 		});
 
+	let loaderProgressTimer: ReturnType<typeof setInterval> | null = null;
+
+	const stopLoaderProgressTimer = () => {
+		if (loaderProgressTimer) {
+			clearInterval(loaderProgressTimer);
+			loaderProgressTimer = null;
+		}
+	};
+
+	/** Stage A: spine logo-loader + progress bar under the animation. */
+	const showLoaderProgressPreview = () => {
+		stopLoaderProgressTimer();
+		stateLayout.showLoadingScreen = false;
+		gameEntrance.loadingCardsVisible = false;
+		gameEntrance.preloadContent = true;
+		gameEntrance.showContent = false;
+		devPreview.loaderProgress = true;
+		devPreview.loaderProgressValue = 0;
+		loaderProgressTimer = setInterval(() => {
+			if (devPreview.loaderProgressValue >= 100) {
+				stopLoaderProgressTimer();
+				return;
+			}
+			devPreview.loaderProgressValue = Math.min(100, devPreview.loaderProgressValue + 2);
+		}, 40);
+	};
+
+	/** Stage B: info cards + Press to Continue. */
+	const showLoadingCardsPreview = () => {
+		stopLoaderProgressTimer();
+		devPreview.loaderProgress = false;
+		devPreview.loaderProgressValue = 0;
+		gameEntrance.showContent = false;
+		gameEntrance.loadingCardsVisible = true;
+		gameEntrance.preloadContent = true;
+		stateLayout.showLoadingScreen = true;
+	};
+
+	const hideLoadingScreenPreview = () => {
+		stopLoaderProgressTimer();
+		devPreview.loaderProgress = false;
+		devPreview.loaderProgressValue = 0;
+		gameEntrance.preloadContent = true;
+		gameEntrance.showContent = true;
+		gameEntrance.loadingCardsVisible = false;
+		stateLayout.showLoadingScreen = false;
+	};
+
 	const playFsCounterPreview = () =>
 		guard(async () => {
 			fsCounterPreview = !fsCounterPreview;
@@ -509,7 +559,26 @@
 	{/if}
 
 	{#if open}
-		<div class="dev-body">
+		<div class="dev-body" onwheel={(e) => e.stopPropagation()}>
+			<section>
+				<h4>Loading</h4>
+				<div class="grid">
+					<button
+						type="button"
+						class:active={devPreview.loaderProgress}
+						onclick={showLoaderProgressPreview}
+					>
+						Show Progress
+					</button>
+					<button type="button" onclick={showLoadingCardsPreview}>
+						Show Cards
+					</button>
+					<button type="button" onclick={hideLoadingScreenPreview}>
+						Hide Loading
+					</button>
+				</div>
+			</section>
+
 			<section>
 				<h4>Cat Mafia Books</h4>
 				<p class="subhint">Real math books via playBet ({allBooks.length} total)</p>
@@ -854,9 +923,20 @@
 		padding: 10px 10px 6px;
 		min-width: 260px;
 		max-width: 300px;
-		max-height: calc(100vh - 60px);
+		/* Leave room for DEV / LANG / SOCIAL toggles above the panel. */
+		max-height: calc(100vh - 120px);
 		overflow-y: auto;
+		overscroll-behavior: contain;
+		scrollbar-gutter: stable;
 		box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+	}
+
+	.dev-body::-webkit-scrollbar {
+		width: 8px;
+	}
+	.dev-body::-webkit-scrollbar-thumb {
+		background: rgba(96, 165, 250, 0.55);
+		border-radius: 4px;
 	}
 
 	.dev-body section {

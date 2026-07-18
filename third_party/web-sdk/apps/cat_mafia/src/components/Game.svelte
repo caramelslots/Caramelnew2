@@ -25,7 +25,6 @@
 	import Sound from './Sound.svelte';
 	import Background from './Background.svelte';
 	import LoaderCardsHtmlOverlay from './LoaderCardsHtmlOverlay.svelte';
-	import LoaderLogoProgressOverlay from './LoaderLogoProgressOverlay.svelte';
 	import LoadingScreen from './LoadingScreen.svelte';
 	import BoardFrame from './BoardFrame.svelte';
 	import Board from './Board.svelte';
@@ -124,7 +123,6 @@
 	</GameApp>
 </div>
 
-<LoaderLogoProgressOverlay />
 <LoaderCardsHtmlOverlay />
 
 <CashStacksModals>

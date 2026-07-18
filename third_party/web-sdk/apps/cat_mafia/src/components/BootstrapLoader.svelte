@@ -5,9 +5,16 @@
 	import { waitForTimeout } from 'utils-shared/wait';
 
 	import { LOADER_NEXT_SCREEN_BG_URL } from '../game/earlyLoaderPreload';
+	import { stateApp } from '../game/stateApp';
+	import { devPreview } from '../game/devPreview.svelte';
 
 	type Props = {
+		/** Advances the asset pipeline (e.g. setLoaderStage('cards')). */
 		oncomplete?: () => void;
+		/** Called after the splash UI has faded out (real load only). */
+		ondismissed?: () => void;
+		/** Dev remount: fake progress, ignore real asset pipeline. */
+		preview?: boolean;
 	};
 
 	const props: Props = $props();
@@ -34,6 +41,20 @@
 	let playerContainer = $state<HTMLDivElement>();
 	const bgUrl = LOADER_NEXT_SCREEN_BG_URL;
 	let player: SpinePlayer | undefined;
+
+	const progress = $derived(
+		Math.max(
+			0,
+			Math.min(
+				100,
+				props.preview ? devPreview.loaderProgressValue : (stateApp.loadingProgress ?? 0),
+			),
+		),
+	);
+
+	const show = $derived(
+		props.preview ? devPreview.loaderProgress : loading,
+	);
 
 	onMount(() => {
 		if (!playerContainer) return;
@@ -66,9 +87,21 @@
 		});
 
 		void (async () => {
+			if (props.preview) {
+				// Stay until Hide Loading clears `devPreview.loaderProgress`.
+				return;
+			}
+
 			await waitForTimeout(SPLASH_DURATION_MS);
-			loading = false;
+			// Unlock batch-3 / cards assets while the spine splash stays up.
 			props.oncomplete?.();
+
+			while (!stateApp.loaded) {
+				await waitForTimeout(50);
+			}
+
+			loading = false;
+			props.ondismissed?.();
 		})();
 
 		return () => {
@@ -77,10 +110,24 @@
 	});
 </script>
 
-{#if loading}
+{#if show}
 	<div class="wrap" transition:fade>
 		<div class="bg" style:background-image="url('{bgUrl}')" aria-hidden="true"></div>
 		<div class="player" bind:this={playerContainer}></div>
+		<div
+			class="progress-wrap"
+			role="progressbar"
+			aria-valuemin={0}
+			aria-valuemax={100}
+			aria-valuenow={Math.round(progress)}
+			aria-busy="true"
+			aria-live="polite"
+		>
+			<div class="progress-track">
+				<div class="progress-fill" style:width="{progress}%"></div>
+			</div>
+			<span class="progress-label">{Math.round(progress)}%</span>
+		</div>
 	</div>
 {/if}
 
@@ -131,5 +178,44 @@
 	.player :global(.spine-player-controls),
 	.player :global(.spine-player-error) {
 		display: none;
+	}
+
+	.progress-wrap {
+		position: absolute;
+		z-index: 2;
+		left: 50%;
+		top: 50%;
+		/* Below the "Caramel Games" title in the spine logo cluster. */
+		transform: translate(-50%, calc(-50% + min(360px, 45vh)));
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.45rem;
+		width: min(280px, 55vw);
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.progress-track {
+		width: 100%;
+		height: 8px;
+		border-radius: 999px;
+		background: rgba(255, 255, 255, 0.12);
+		overflow: hidden;
+		border: 1px solid rgba(255, 255, 255, 0.18);
+	}
+
+	.progress-fill {
+		height: 100%;
+		border-radius: inherit;
+		background: linear-gradient(90deg, #c9a24a, #f0d78c);
+		transition: width 120ms linear;
+	}
+
+	.progress-label {
+		font-family: 'proxima-nova', sans-serif;
+		font-size: 0.85rem;
+		letter-spacing: 0.06em;
+		color: rgba(255, 255, 255, 0.75);
 	}
 </style>

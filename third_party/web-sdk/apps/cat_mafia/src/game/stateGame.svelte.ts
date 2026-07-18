@@ -241,10 +241,9 @@ export const stateGame = $state({
 	// === Cat Mafia Stage D ===
 	/** Normal vs Super bonus rules for Super Wild. */
 	bonusMode: null as null | 'normal' | 'super',
-	/** FS sticky SW column (one per bonus). */
-	stickySwReel: null as null | number,
-	stickySwMult: null as null | number,
-	/** True once SW is open for the rest of the bonus (Super: from start). */
+	/** FS sticky SW columns: reel index → multiplier (0..many). */
+	stickySwByReel: {} as Record<number, number>,
+	/** True once at least one SW column is open (Super: from start). */
 	stickySwOpened: false,
 	/** Bullets in revolver drum (0..6). */
 	drumCount: 0,

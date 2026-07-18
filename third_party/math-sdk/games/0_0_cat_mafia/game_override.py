@@ -25,9 +25,9 @@ from game_features import (
     collect_bullets,
     run_target_shoot,
     stamp_expanded_sw_column,
-    strip_all_sw,
-    keep_single_sw,
+    keep_one_sw_per_reel,
     pick_sticky_sw_column,
+    product_of_mults,
 )
 
 
@@ -42,10 +42,9 @@ class GameStateOverride(GameExecutables):
         self.fs_extra_phase = False
         self.chosen_fs = 0
         self.target_pick = None
-        # FS sticky Super Wild (one column for the whole bonus).
-        self.sticky_sw_reel: int | None = None
-        self.sticky_sw_mult: int | None = None
-        self.sticky_sw_opened: bool = False
+        # FS sticky Super Wild columns: reel -> multiplier (capped).
+        self.sticky_sw: dict[int, int] = {}
+        self.max_sticky_sw = int(getattr(self.config, "max_sticky_sw", 2))
 
     def assign_special_sym_function(self):
         self.special_symbol_functions = {
@@ -269,16 +268,43 @@ class GameStateOverride(GameExecutables):
 
     # ---- Base / FS feature resolve ----
 
+    def _neutralize_board_sw_mults(self) -> list[tuple]:
+        """Temporarily set SW multipliers to 1 for line eval.
+
+        Spin productMult is applied once afterwards — otherwise symbol mults
+        in Lines + product double-count (and explode with sticky columns).
+        """
+        saved = []
+        for reel, col in enumerate(self.board):
+            for row, cell in enumerate(col):
+                if getattr(cell, "name", None) != "SW":
+                    continue
+                try:
+                    prev = int(cell.get_attribute("multiplier") or 1)
+                except Exception:
+                    prev = 1
+                saved.append((reel, row, prev))
+                cell.assign_attribute({"multiplier": 1})
+        return saved
+
+    def _restore_board_sw_mults(self, saved: list[tuple]) -> None:
+        for reel, row, mult in saved:
+            self.board[reel][row].assign_attribute({"multiplier": int(mult)})
+
     def evaluate_lines_board(self):
-        """Standard lines eval + emit."""
-        self.win_data = Lines.get_lines(
-            self.board,
-            self.config,
-            global_multiplier=self.global_multiplier,
-        )
-        Lines.record_lines_wins(self)
-        self.win_manager.update_spinwin(self.win_data["totalWin"])
-        Lines.emit_linewin_events(self)
+        """Lines eval with SW as wild only; SW product applied later in feature resolve."""
+        saved = self._neutralize_board_sw_mults()
+        try:
+            self.win_data = Lines.get_lines(
+                self.board,
+                self.config,
+                global_multiplier=self.global_multiplier,
+            )
+            Lines.record_lines_wins(self)
+            self.win_manager.update_spinwin(self.win_data["totalWin"])
+            Lines.emit_linewin_events(self)
+        finally:
+            self._restore_board_sw_mults(saved)
 
     def resolve_base_spin_features(self) -> None:
         """After line eval: XOR paw OR superWildExpand."""
@@ -295,10 +321,11 @@ class GameStateOverride(GameExecutables):
             self._apply_paw_resolve()
 
     def init_fs_sticky_sw(self) -> None:
-        """Start of FS: Super picks sticky open column; Normal waits for first land."""
-        self.sticky_sw_reel = None
-        self.sticky_sw_mult = None
-        self.sticky_sw_opened = False
+        """Start of FS: Super starts with one sticky open column; Normal starts empty.
+
+        Both modes may accumulate more sticky SW columns during the bonus.
+        """
+        self.sticky_sw = {}
         self._pending_sw_expands = []
         self._pending_sw_product = 1
         if not self.is_super_bonus():
@@ -312,9 +339,7 @@ class GameStateOverride(GameExecutables):
         except Exception:
             pass
         reel, mult = pick_sticky_sw_column(self.config.num_reels, weights)
-        self.sticky_sw_reel = reel
-        self.sticky_sw_mult = mult
-        self.sticky_sw_opened = True
+        self.sticky_sw[int(reel)] = int(mult)
 
     def _set_padding_symbol(self, reel: int, name: str, mult: int | None = None) -> None:
         """Write top/bottom padding cell for one reel (reveal includes padding)."""
@@ -328,13 +353,13 @@ class GameStateOverride(GameExecutables):
             if name == "SW" and mult is not None:
                 pad[reel].assign_attribute({"multiplier": int(mult)})
 
-    def _strip_padding_sw(self, keep_reel: int | None = None, mult: int | None = None) -> None:
-        """Remove SW from padding; optionally keep sticky reel as expanded SW."""
+    def _sync_sw_padding(self) -> None:
+        """Sticky reels: SW padding. Other reels: strip padding SW (no ghost lands)."""
         if not getattr(self.config, "include_padding", False):
             return
         for reel in range(self.config.num_reels):
-            if keep_reel is not None and reel == keep_reel:
-                self._set_padding_symbol(reel, "SW", mult if mult is not None else 2)
+            if reel in self.sticky_sw:
+                self._set_padding_symbol(reel, "SW", self.sticky_sw[reel])
                 continue
             for attr in ("top_symbols", "bottom_symbols"):
                 pad = getattr(self, attr, None)
@@ -343,60 +368,97 @@ class GameStateOverride(GameExecutables):
                 if getattr(pad[reel], "name", None) == "SW":
                     pad[reel] = self.create_symbol("L2")
 
+    def _sticky_expands_payload(self) -> list[dict]:
+        expands = []
+        for reel, mult in sorted(self.sticky_sw.items()):
+            n_rows = int(self.config.num_rows[reel])
+            expands.append(
+                {
+                    "reel": int(reel),
+                    "row": int(random.randrange(max(1, n_rows))),
+                    "mult": int(mult),
+                }
+            )
+        return expands
+
     def apply_fs_sw_board_rules(self) -> None:
-        """After draw: max 1 SW; Super/sticky-open stamp expanded column before reveal."""
+        """After draw: stamp sticky SW columns; allow extra lying SW on other reels."""
         if self.gametype != self.config.freegame_type:
             return
 
-        if self.sticky_sw_opened and self.sticky_sw_reel is not None:
-            strip_all_sw(self.board, self.create_symbol)
-            n_rows = int(self.config.num_rows[self.sticky_sw_reel])
-            expand = stamp_expanded_sw_column(
+        for reel, mult in self.sticky_sw.items():
+            stamp_expanded_sw_column(
                 self.board,
                 self.create_symbol,
-                self.sticky_sw_reel,
-                int(self.sticky_sw_mult or 2),
-                row=int(random.randrange(max(1, n_rows))),
+                int(reel),
+                int(mult),
+                row=0,
             )
-            # Sticky column only — strip ghost SW from other reels' padding.
-            self._strip_padding_sw(
-                keep_reel=self.sticky_sw_reel,
-                mult=int(self.sticky_sw_mult or 2),
-            )
-            self._pending_sw_expands = [expand]
-            self._pending_sw_product = int(expand["mult"])
-            self.get_special_symbols_on_board()
-            return
 
-        # Normal before first open: one lying SW on the board, never in padding.
-        keep_single_sw(self.board, self.create_symbol)
-        self._strip_padding_sw(keep_reel=None)
+        sticky_reels = set(self.sticky_sw.keys())
+        if len(self.sticky_sw) >= self.max_sticky_sw:
+            # At cap: no new lying SW (would inflate line eval before resolve).
+            for h in find_super_wilds(self.board):
+                if h["reel"] not in sticky_reels:
+                    self.board[h["reel"]][h["row"]] = self.create_symbol("L2")
+        else:
+            # New lands: at most one lying SW per non-sticky reel.
+            keep_one_sw_per_reel(
+                self.board,
+                self.create_symbol,
+                skip_reels=sticky_reels,
+            )
+        self._sync_sw_padding()
+
+        if self.sticky_sw:
+            expands = self._sticky_expands_payload()
+            self._pending_sw_expands = expands
+            self._pending_sw_product = product_of_mults(self.sticky_sw.values())
+        else:
+            self._pending_sw_expands = []
+            self._pending_sw_product = 1
         self.get_special_symbols_on_board()
 
     def resolve_fs_spin_features(self) -> None:
-        """FS: sticky SW rules; bullets on main FS only.
+        """FS: multi sticky SW; bullets on main FS only.
 
-        Bonus-only: SW expands whenever it is on the board — no payline
-        membership check (that gate applies only in base via resolve_base_spin_features).
+        Bonus: SW expands whenever present (no payline gate). Newly opened columns
+        join sticky set for the rest of the bonus. Mults multiply.
         """
-        if self.sticky_sw_opened and self.sticky_sw_reel is not None:
-            # Column already expanded before eval (Super always / Normal after first open).
+        sticky_reels = set(self.sticky_sw.keys())
+        room = max(0, self.max_sticky_sw - len(self.sticky_sw))
+        new_by_reel: dict[int, dict] = {}
+        for h in find_super_wilds(self.board):
+            if h["reel"] in sticky_reels:
+                continue
+            new_by_reel.setdefault(h["reel"], h)
+        new_hits = list(new_by_reel.values())
+        if room <= 0:
+            # Already at sticky cap — strip extra lying SW so they don't act as wilds.
+            for h in new_hits:
+                self.board[h["reel"]][h["row"]] = self.create_symbol("L2")
+            new_hits = []
+        elif len(new_hits) > room:
+            random.shuffle(new_hits)
+            drop = new_hits[room:]
+            new_hits = new_hits[:room]
+            for h in drop:
+                self.board[h["reel"]][h["row"]] = self.create_symbol("L2")
+
+        if new_hits:
+            # New lying SW (Normal/Super): same two-beat as base —
+            # phase-1 lines (SW as single wild) → curtain → phase-2 winInfo.
+            expands_new, _ = expand_sw_columns(self.board, self.create_symbol, new_hits)
+            for e in expands_new:
+                self.sticky_sw[int(e["reel"])] = int(e["mult"])
+            self._sync_sw_padding()
+            product = product_of_mults(self.sticky_sw.values())
+            super_wild_expand_event(self, self._sticky_expands_payload(), product)
+            self._emit_sw_reeval_wins(product)
+            self._pending_sw_expands = []
+            self._pending_sw_product = 1
+        elif self.sticky_sw:
             self._apply_super_product_after_preexpand()
-        else:
-            # Normal: first land — SW lies, then opens and becomes sticky (always).
-            sw_hits = keep_single_sw(self.board, self.create_symbol)
-            if sw_hits:
-                self._apply_super_wild_expand(sw_hits, re_eval=True)
-                expands = getattr(self, "_last_sw_expands", None) or []
-                if expands:
-                    self.sticky_sw_reel = int(expands[0]["reel"])
-                    self.sticky_sw_mult = int(expands[0]["mult"])
-                    self.sticky_sw_opened = True
-                    # Lock sticky padding immediately so no ghost SW remain.
-                    self._strip_padding_sw(
-                        keep_reel=self.sticky_sw_reel,
-                        mult=self.sticky_sw_mult,
-                    )
 
         if not self.fs_extra_phase:
             bullets, new_drum = collect_bullets(
@@ -407,52 +469,73 @@ class GameStateOverride(GameExecutables):
                 bullet_collect_event(self, bullets, self.drum_count)
 
     def _apply_super_product_after_preexpand(self) -> None:
+        """Sticky already open: paint expand event, then apply product to spin win.
+
+        No second winInfo — board was already full-column wild during line eval.
+        New lying SW opens use resolve_fs_spin_features → _emit_sw_reeval_wins (two-beat).
+        """
         expands = getattr(self, "_pending_sw_expands", []) or []
         product = int(getattr(self, "_pending_sw_product", 1) or 1)
-        if not expands and self.sticky_sw_reel is not None:
-            # Random origin row so expand payload is not stuck on row 0 / bottom.
-            n_rows = int(self.config.num_rows[self.sticky_sw_reel])
-            expands = [
-                {
-                    "reel": int(self.sticky_sw_reel),
-                    "row": int(random.randrange(max(1, n_rows))),
-                    "mult": int(self.sticky_sw_mult or 2),
-                }
-            ]
-            product = int(self.sticky_sw_mult or 2)
+        if not expands and self.sticky_sw:
+            expands = self._sticky_expands_payload()
+            product = product_of_mults(self.sticky_sw.values())
         if not expands:
             return
+        # Emit before product setWin so books stay consistent with new-SW opens
+        # (client early-returns when columns are already open).
+        super_wild_expand_event(self, expands, product)
         if product > 1 and self.win_manager.spin_win > 0:
             from src.events.events import set_win_event, set_total_event
 
             self.win_manager.set_spin_win(round(self.win_manager.spin_win * product, 2))
             set_win_event(self)
             set_total_event(self)
-        super_wild_expand_event(self, expands, product)
         self._pending_sw_expands = []
         self._pending_sw_product = 1
+
+    def _emit_sw_reeval_wins(self, product: int) -> None:
+        """Re-eval lines after SW expand; emit winInfo + wins (product applied once).
+
+        Called *after* superWildExpand so the client can show phase-1 paylines,
+        play the curtain, then celebrate the post-expand line set.
+        """
+        from src.events.events import set_total_event
+
+        saved = self._neutralize_board_sw_mults()
+        try:
+            self.win_data = Lines.get_lines(
+                self.board,
+                self.config,
+                global_multiplier=self.global_multiplier,
+            )
+        finally:
+            self._restore_board_sw_mults(saved)
+
+        raw_total = float(self.win_data["totalWin"])
+        prod = max(1, int(product))
+        new_total = round(raw_total * prod, 2)
+        if prod > 1 and raw_total > 0:
+            self.win_data["totalWin"] = new_total
+            for win in self.win_data.get("wins") or []:
+                win["win"] = round(float(win.get("win") or 0) * prod, 2)
+
+        self.win_manager.set_spin_win(new_total)
+        if new_total > 0:
+            Lines.record_lines_wins(self)
+            Lines.emit_linewin_events(self)
+        else:
+            set_total_event(self)
 
     def _apply_super_wild_expand(self, sw_hits, re_eval: bool = True) -> None:
         expands, product = expand_sw_columns(self.board, self.create_symbol, sw_hits)
         self._last_sw_expands = expands
         if not expands:
             return
-        if re_eval:
-            from src.events.events import set_win_event, set_total_event
-
-            self.win_data = Lines.get_lines(
-                self.board,
-                self.config,
-                global_multiplier=self.global_multiplier,
-            )
-            new_total = round(float(self.win_data["totalWin"]) * product, 2)
-            self.win_manager.set_spin_win(new_total)
-            if new_total > 0:
-                Lines.record_lines_wins(self)
-                set_win_event(self)
-            set_total_event(self)
-
+        # Curtain before post-expand winInfo so basegame can show two beats:
+        # lying-SW lines → expand → re-eval lines (× product).
         super_wild_expand_event(self, expands, product)
+        if re_eval:
+            self._emit_sw_reeval_wins(product)
 
     def _apply_paw_resolve(self) -> None:
         paws, rows, total = build_paw_resolve(self.board, bet=1.0)
