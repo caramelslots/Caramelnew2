@@ -7,9 +7,9 @@ Generated strips:
   BR0.csv  — base default reelstrip (~220 rows)
   BR1.csv  — bonus_boost basegame (denser Bonus)
   BR2.csv  — special_spins basegame (very dense Bonus, near-guaranteed FS)
-  FR0.csv  — freegame default
-  FR1.csv  — freegame for super bonus (denser Mystery + Bonus)
-  FRWCAP.csv — wincap freegame (Wild-rich, fewer Bonus)
+  FR0.csv  — freegame default (no scatter B)
+  FR1.csv  — freegame for super bonus (no scatter B)
+  FRWCAP.csv — wincap freegame (Wild-rich, no scatter B)
 
 Запуск:  python3 generate_reels.py
 Output:  reels/*.csv (перезаписывает существующие).
@@ -104,39 +104,34 @@ BR2_WEIGHTS = [
     {"L1": 33, "L2": 33, "L3": 33, "L4": 33, "H4": 7, "H3": 10, "H2": 12, "H1": 14, "W": 16, "B": 14},
 ]
 
-# FR0 — freegame default. 200 cells.
+# FR0 — freegame default. 200 cells. No scatter (B) in FS.
 #   W=15% (30 per reel) — enough for good wins but allows wide payout distribution.
-#   Mystery reveals cover the high-volatility tail (optimizer biases those sessions up).
 #   Target: FS sessions range from ~30× (bad reveals, few W) to 2500× (wincap).
 FR0_WEIGHTS = [
-    {"L1": 30, "L2": 28, "L3": 28, "L4": 26, "H4": 8, "H3": 13, "H2": 17, "H1": 20, "W": 30, "B": 4},
-    {"L1": 30, "L2": 28, "L3": 28, "L4": 26, "H4": 8, "H3": 13, "H2": 17, "H1": 20, "W": 30, "B": 4},
-    {"L1": 29, "L2": 27, "L3": 27, "L4": 25, "H4": 8, "H3": 13, "H2": 17, "H1": 20, "W": 31, "B": 5},
-    {"L1": 30, "L2": 28, "L3": 28, "L4": 26, "H4": 8, "H3": 13, "H2": 17, "H1": 20, "W": 30, "B": 4},
-    {"L1": 30, "L2": 28, "L3": 28, "L4": 26, "H4": 8, "H3": 13, "H2": 17, "H1": 20, "W": 30, "B": 4},
+    {"L1": 34, "L2": 28, "L3": 28, "L4": 26, "H4": 8, "H3": 13, "H2": 17, "H1": 20, "W": 30},
+    {"L1": 34, "L2": 28, "L3": 28, "L4": 26, "H4": 8, "H3": 13, "H2": 17, "H1": 20, "W": 30},
+    {"L1": 34, "L2": 27, "L3": 27, "L4": 25, "H4": 8, "H3": 13, "H2": 17, "H1": 20, "W": 31},
+    {"L1": 34, "L2": 28, "L3": 28, "L4": 26, "H4": 8, "H3": 13, "H2": 17, "H1": 20, "W": 30},
+    {"L1": 34, "L2": 28, "L3": 28, "L4": 26, "H4": 8, "H3": 13, "H2": 17, "H1": 20, "W": 30},
 ]
 
-# FR1 — freegame for super_bonus. Higher W than FR0 for elevated FS outcomes.
-#   W=20% gives frequent Wild combos; mystery Wild (18%) creates bimodal distribution
-#   (low: ~50-200×, high: near-wincap) — ideal for high-volatility optimizer.
+# FR1 — freegame for super_bonus. Higher W than FR0; no scatter (B).
 FR1_WEIGHTS = [
-    {"L1": 26, "L2": 24, "L3": 24, "L4": 22, "H4": 9, "H3": 14, "H2": 18, "H1": 22, "W": 40, "B": 4},
-    {"L1": 26, "L2": 24, "L3": 24, "L4": 22, "H4": 9, "H3": 14, "H2": 18, "H1": 22, "W": 40, "B": 4},
-    {"L1": 25, "L2": 23, "L3": 23, "L4": 21, "H4": 9, "H3": 14, "H2": 18, "H1": 22, "W": 41, "B": 6},
-    {"L1": 26, "L2": 24, "L3": 24, "L4": 22, "H4": 9, "H3": 14, "H2": 18, "H1": 22, "W": 40, "B": 4},
-    {"L1": 26, "L2": 24, "L3": 24, "L4": 22, "H4": 9, "H3": 14, "H2": 18, "H1": 22, "W": 40, "B": 4},
+    {"L1": 30, "L2": 24, "L3": 24, "L4": 22, "H4": 9, "H3": 14, "H2": 18, "H1": 22, "W": 40},
+    {"L1": 30, "L2": 24, "L3": 24, "L4": 22, "H4": 9, "H3": 14, "H2": 18, "H1": 22, "W": 40},
+    {"L1": 31, "L2": 23, "L3": 23, "L4": 21, "H4": 9, "H3": 14, "H2": 18, "H1": 22, "W": 41},
+    {"L1": 30, "L2": 24, "L3": 24, "L4": 22, "H4": 9, "H3": 14, "H2": 18, "H1": 22, "W": 40},
+    {"L1": 30, "L2": 24, "L3": 24, "L4": 22, "H4": 9, "H3": 14, "H2": 18, "H1": 22, "W": 40},
 ]
 
-# FRWCAP — wincap freegame (120 cells). Wild-heavy for max-win approach.
-#   Slight reduction in L (6→4) frees space for extra H — makes premium combos
-#   more likely alongside the dominant Wild mass.
+# FRWCAP — wincap freegame (120 cells). Wild-heavy; no scatter (B).
 #   K_W=38 → (38/120)^5 * 30 ≈ 1/3.5 (5×W every ~3-4 spins in wincap FS).
 FRWCAP_WEIGHTS = [
-    {"L1": 4, "L2": 4, "L3": 4, "L4": 4, "H4": 9, "H3": 11, "H2": 13, "H1": 15, "W": 38, "B": 1},
-    {"L1": 4, "L2": 4, "L3": 4, "L4": 4, "H4": 9, "H3": 11, "H2": 13, "H1": 15, "W": 38, "B": 1},
-    {"L1": 3, "L2": 3, "L3": 3, "L4": 3, "H4": 10, "H3": 12, "H2": 14, "H1": 16, "W": 38, "B": 1},
-    {"L1": 4, "L2": 4, "L3": 4, "L4": 4, "H4": 9, "H3": 11, "H2": 13, "H1": 15, "W": 38, "B": 1},
-    {"L1": 4, "L2": 4, "L3": 4, "L4": 4, "H4": 9, "H3": 11, "H2": 13, "H1": 15, "W": 38, "B": 1},
+    {"L1": 5, "L2": 4, "L3": 4, "L4": 4, "H4": 9, "H3": 11, "H2": 13, "H1": 15, "W": 38},
+    {"L1": 5, "L2": 4, "L3": 4, "L4": 4, "H4": 9, "H3": 11, "H2": 13, "H1": 15, "W": 38},
+    {"L1": 4, "L2": 3, "L3": 3, "L4": 3, "H4": 10, "H3": 12, "H2": 14, "H1": 16, "W": 38},
+    {"L1": 5, "L2": 4, "L3": 4, "L4": 4, "H4": 9, "H3": 11, "H2": 13, "H1": 15, "W": 38},
+    {"L1": 5, "L2": 4, "L3": 4, "L4": 4, "H4": 9, "H3": 11, "H2": 13, "H1": 15, "W": 38},
 ]
 
 # Zerowin strips — low W, high symbol diversity for plain dead spins.
@@ -167,19 +162,19 @@ BR2_ZW_WEIGHTS = [
 ]
 
 FR0_ZW_WEIGHTS = [
-    {"L1": 32, "L2": 30, "L3": 30, "L4": 28, "H4": 9, "H3": 14, "H2": 18, "H1": 21, "W": 12, "B": 4},
-    {"L1": 31, "L2": 31, "L3": 29, "L4": 28, "H4": 9, "H3": 14, "H2": 18, "H1": 21, "W": 12, "B": 5},
-    {"L1": 32, "L2": 30, "L3": 30, "L4": 27, "H4": 9, "H3": 14, "H2": 18, "H1": 21, "W": 12, "B": 5},
-    {"L1": 31, "L2": 30, "L3": 31, "L4": 28, "H4": 9, "H3": 14, "H2": 18, "H1": 21, "W": 12, "B": 4},
-    {"L1": 32, "L2": 29, "L3": 30, "L4": 28, "H4": 9, "H3": 14, "H2": 18, "H1": 21, "W": 12, "B": 4},
+    {"L1": 36, "L2": 30, "L3": 30, "L4": 28, "H4": 9, "H3": 14, "H2": 18, "H1": 21, "W": 12},
+    {"L1": 36, "L2": 31, "L3": 29, "L4": 28, "H4": 9, "H3": 14, "H2": 18, "H1": 21, "W": 12},
+    {"L1": 37, "L2": 30, "L3": 30, "L4": 27, "H4": 9, "H3": 14, "H2": 18, "H1": 21, "W": 12},
+    {"L1": 35, "L2": 30, "L3": 31, "L4": 28, "H4": 9, "H3": 14, "H2": 18, "H1": 21, "W": 12},
+    {"L1": 36, "L2": 29, "L3": 30, "L4": 28, "H4": 9, "H3": 14, "H2": 18, "H1": 21, "W": 12},
 ]
 
 FR1_ZW_WEIGHTS = [
-    {"L1": 28, "L2": 26, "L3": 26, "L4": 24, "H4": 10, "H3": 15, "H2": 19, "H1": 23, "W": 14, "B": 4},
-    {"L1": 27, "L2": 27, "L3": 25, "L4": 24, "H4": 10, "H3": 15, "H2": 19, "H1": 23, "W": 14, "B": 6},
-    {"L1": 28, "L2": 26, "L3": 26, "L4": 23, "H4": 10, "H3": 15, "H2": 19, "H1": 23, "W": 14, "B": 5},
-    {"L1": 27, "L2": 26, "L3": 27, "L4": 24, "H4": 10, "H3": 15, "H2": 19, "H1": 23, "W": 14, "B": 4},
-    {"L1": 28, "L2": 25, "L3": 26, "L4": 24, "H4": 10, "H3": 15, "H2": 19, "H1": 23, "W": 14, "B": 4},
+    {"L1": 32, "L2": 26, "L3": 26, "L4": 24, "H4": 10, "H3": 15, "H2": 19, "H1": 23, "W": 14},
+    {"L1": 33, "L2": 27, "L3": 25, "L4": 24, "H4": 10, "H3": 15, "H2": 19, "H1": 23, "W": 14},
+    {"L1": 33, "L2": 26, "L3": 26, "L4": 23, "H4": 10, "H3": 15, "H2": 19, "H1": 23, "W": 14},
+    {"L1": 31, "L2": 26, "L3": 27, "L4": 24, "H4": 10, "H3": 15, "H2": 19, "H1": 23, "W": 14},
+    {"L1": 32, "L2": 25, "L3": 26, "L4": 24, "H4": 10, "H3": 15, "H2": 19, "H1": 23, "W": 14},
 ]
 
 

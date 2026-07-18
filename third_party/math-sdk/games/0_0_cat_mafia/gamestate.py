@@ -31,15 +31,11 @@ class GameState(GameStateOverride):
         self.drum_count = 0
         self.fs_extra_phase = False
         self.fs_main_total = int(self.tot_fs)
-        self._pending_sw_expands = []
-        self._pending_sw_product = 1
+        self.init_fs_sticky_sw()
 
         while self.fs < self.tot_fs and not self.wincap_triggered:
             self.update_freespin()
             self.draw_board()
-
-            if self.is_super_bonus():
-                self.apply_super_sw_pre_expand()
 
             self.evaluate_lines_board()
             self.resolve_fs_spin_features()

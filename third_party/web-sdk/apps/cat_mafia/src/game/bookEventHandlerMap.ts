@@ -64,29 +64,43 @@ const expandSuperWildColumn = (reelIndex: number, mult: number) => {
 	}
 };
 
-/** Super Bonus: SW already open on land (Stage D). */
-const applySuperBonusPreExpandedWilds = async () => {
-	if (stateGame.bonusMode !== 'super') return;
+/** Sticky / Super: SW column already open on the board after reveal. */
+const applyStickySwPreExpanded = async () => {
+	if (stateGame.gameType !== 'freegame') return;
+	if (!stateGame.stickySwOpened && stateGame.bonusMode !== 'super') return;
+
 	const expands: { reel: number; mult: number }[] = [];
 	for (let reelIndex = 0; reelIndex < stateGame.board.length; reelIndex++) {
 		const reel = stateGame.board[reelIndex];
+		let swRows = 0;
+		let mult = 2;
 		for (let paddedRow = 1; paddedRow <= BOARD_DIMENSIONS.y; paddedRow++) {
 			const cell = reel?.reelState.symbols[paddedRow];
 			if (cell?.rawSymbol.name === 'SW') {
-				const mult = cell.rawSymbol.multiplier || 2;
-				expands.push({ reel: reelIndex, mult });
-				break;
+				swRows += 1;
+				mult = cell.rawSymbol.multiplier || mult;
 			}
 		}
+		// Full column already open → sticky/Super state.
+		if (swRows >= BOARD_DIMENSIONS.y) {
+			expands.push({ reel: reelIndex, mult });
+		}
+	}
+	if (!expands.length && stateGame.stickySwReel != null) {
+		expands.push({
+			reel: stateGame.stickySwReel,
+			mult: stateGame.stickySwMult || 2,
+		});
 	}
 	for (const { reel, mult } of expands) {
-		stateGame.superWildCurtain = { reel, mult, phase: 'expanding' };
-		expandSuperWildColumn(reel, mult);
-		await waitForGameSpeed(280, stateGame.gameSpeed);
+		stateGame.stickySwReel = reel;
+		stateGame.stickySwMult = mult;
+		stateGame.stickySwOpened = true;
 		stateGame.superWildCurtain = { reel, mult, phase: 'done' };
+		expandSuperWildColumn(reel, mult);
 	}
 	if (expands.length) {
-		await waitForGameSpeed(200, stateGame.gameSpeed);
+		await waitForGameSpeed(180, stateGame.gameSpeed);
 		stateGame.superWildCurtain = null;
 	}
 };
@@ -247,16 +261,30 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Full reel scroll starts here once RGS has returned the result board.
 		// Frozen Mystery reels don't spin — they stay showing ? until FS ends.
 		// Pending-collapse reels are also skipped: the collapse handles their display.
-		stateGame.catSlowTriggerReel = computeCatSlowTriggerReel(bookEvent.board, bookEvent.gameType);
+		// Extra FS after shoot: strip BT from the reveal board (math should too;
+		// this guards stale RGS / old storybook books that still land bullets).
+		const revealEvent =
+			stateGame.fsExtraPhase && bookEvent.gameType === 'freegame'
+				? {
+						...bookEvent,
+						board: bookEvent.board.map((reel) =>
+							reel.map((cell) =>
+								cell.name === 'BT' ? { ...cell, name: 'L2' as const } : cell,
+							),
+						),
+					}
+				: bookEvent;
+
+		stateGame.catSlowTriggerReel = computeCatSlowTriggerReel(revealEvent.board, revealEvent.gameType);
 		stateGame.catSlowReels = [];
 		const catSlowReelIndices = catSlowReelsAfterTrigger(
 			stateGame.catSlowTriggerReel,
-			bookEvent.board.length,
+			revealEvent.board.length,
 		);
 		try {
 			await stateGameDerived.enhancedBoard.spin({
-				revealEvent: bookEvent,
-				paddingBoard: config.paddingReels[bookEvent.gameType],
+				revealEvent,
+				paddingBoard: config.paddingReels[revealEvent.gameType],
 				frozenReelIndices: [...stateGame.mysteryReelsFrozen, ...pendingCollapseReels],
 				getExtraPaddingSymbols: (reelIndex) =>
 					catSlowReelIndices.includes(reelIndex) ? CAT_SLOW_EXTRA_SYMBOL_ROWS : 0,
@@ -265,9 +293,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			stateGame.catSlowTriggerReel = -1;
 			stateGame.catSlowReels = [];
 		}
-		// Stage D — Super Bonus: SW curtain already open where it landed.
+		// Sticky / Super: column already open on the landed board.
 		if (bookEvent.gameType === 'freegame') {
-			await applySuperBonusPreExpandedWilds();
+			await applyStickySwPreExpanded();
 		}
 		stateGame.idleBounceAllowed = !revealHasWinBeforeNextReveal(bookEvents, bookEvent);
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
@@ -368,10 +396,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.fsMainTotal = bookEvent.totalFs;
 		stateGame.fsExtraPhase = false;
 		stateGame.bulletFly = null;
+		stateGame.stickySwReel = null;
+		stateGame.stickySwMult = null;
 		stateGame.bonusMode =
 			stateBet.activeBetModeKey === 'bonus_super' || stateGame.bonusMode === 'super'
 				? 'super'
 				: 'normal'; // natural trigger / bonus_normal / bonus_boost → Normal rules
+		// Super: sticky SW open from the first FS. Normal: opens on first land.
+		stateGame.stickySwOpened = stateGame.bonusMode === 'super';
 		// Cat Mafia: target pick already celebrated the trigger — skip Wok-style
 		// scatter/bonusCollect win anim. Also skip if bonusCollect preceded us.
 		const hadTargetPick = bookEvents.some((e) => e.type === 'freeSpinTargetPick');
@@ -435,6 +467,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.fsMainTotal = 0;
 		stateGame.fsExtraPhase = false;
 		stateGame.bulletFly = null;
+		stateGame.stickySwReel = null;
+		stateGame.stickySwMult = null;
+		stateGame.stickySwOpened = false;
 		stateGame.mascotPose = 'idle';
 
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
@@ -510,23 +545,29 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (bookEvents.some((e) => e.type === 'pawCoinResolve')) {
 			console.warn('[Cat Mafia] XOR violated: superWildExpand with pawCoinResolve');
 		}
-		// Super Bonus already expanded on reveal — skip duplicate curtain if columns open.
-		if (stateGame.bonusMode === 'super' && stateGame.gameType === 'freegame') {
-			const product =
-				bookEvent.productMult ||
-				bookEvent.expands.reduce((acc, e) => acc * (e.mult || 1), 1) ||
-				1;
-			if (product > 1 && stateBet.winBookEventAmount > 0) {
-				stateBet.winBookEventAmount = stateBet.winBookEventAmount * product;
+
+		const columnAlreadyOpen = bookEvent.expands.every((e) => {
+			const reel = stateGame.board[e.reel];
+			let swRows = 0;
+			for (let paddedRow = 1; paddedRow <= BOARD_DIMENSIONS.y; paddedRow++) {
+				if (reel?.reelState.symbols[paddedRow]?.rawSymbol.name === 'SW') swRows += 1;
+			}
+			return swRows >= BOARD_DIMENSIONS.y;
+		});
+
+		// Sticky already open (Super every spin / Normal after first open): no curtain again.
+		// Win HUD follows setWin/setTotalWin from math (already includes productMult) — never multiply here.
+		if (stateGame.gameType === 'freegame' && columnAlreadyOpen) {
+			for (const expand of bookEvent.expands) {
+				stateGame.stickySwReel = expand.reel;
+				stateGame.stickySwMult = expand.mult;
+				stateGame.stickySwOpened = true;
+				expandSuperWildColumn(expand.reel, expand.mult);
 			}
 			return;
 		}
 
-		const product =
-			bookEvent.productMult ||
-			bookEvent.expands.reduce((acc, e) => acc * (e.mult || 1), 1) ||
-			1;
-
+		// Normal first open / base: SW was lying as one cell → curtain expand → sticky.
 		stateGame.mascotPose = 'react';
 		for (const expand of bookEvent.expands) {
 			stateGame.superWildCurtain = {
@@ -545,11 +586,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				mult: expand.mult,
 				phase: 'done',
 			};
+			stateGame.stickySwReel = expand.reel;
+			stateGame.stickySwMult = expand.mult;
+			stateGame.stickySwOpened = true;
 		}
 
-		if (product > 1 && stateBet.winBookEventAmount > 0) {
-			stateBet.winBookEventAmount = stateBet.winBookEventAmount * product;
-		}
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
 		await waitForGameSpeed(400, stateGame.gameSpeed);
 		stateGame.superWildCurtain = null;

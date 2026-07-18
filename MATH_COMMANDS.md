@@ -188,6 +188,18 @@ rm -rf library/books library/configs library/forces library/lookup_tables \
 
 ---
 
+## Assert: доп. FS без пуль
+
+После shoot на +FS не должно быть `BT` / `bulletCollect` (включая padding):
+
+```bash
+$PY tools/assert_no_bullets_on_extra_fs.py
+```
+
+Запускай после `run_storybook.py` / M5 / resample.
+
+---
+
 ## Связанные документы
 
 - `third_party/math-sdk/games/0_0_daloniil_test/REDESIGN_PLAN.md` — план математических правок

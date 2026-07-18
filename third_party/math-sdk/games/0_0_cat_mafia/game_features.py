@@ -98,8 +98,10 @@ def build_paw_resolve(board, bet: float = 1.0) -> tuple[list[dict], list[dict], 
 
 
 def expand_sw_columns(board, create_symbol, sw_hits: list[dict]) -> tuple[list[dict], int]:
-    """Fill each SW reel with SW wilds at that mult. Returns (expands, productMult)."""
-    # One expand per reel (first SW on that reel).
+    """Fill SW reel(s) with SW wilds at that mult. Returns (expands, productMult).
+
+    Cat Mafia bonus: at most one SW — callers should pass a single hit.
+    """
     by_reel: dict[int, dict] = {}
     for h in sw_hits:
         by_reel.setdefault(h["reel"], h)
@@ -109,11 +111,70 @@ def expand_sw_columns(board, create_symbol, sw_hits: list[dict]) -> tuple[list[d
     for reel, h in sorted(by_reel.items()):
         mult = max(1, int(h.get("mult") or 2))
         product *= mult
-        for row in range(len(board[reel])):
-            board[reel][row] = create_symbol("SW")
-            board[reel][row].assign_attribute({"multiplier": mult})
+        stamp_expanded_sw_column(board, create_symbol, reel, mult, row=h["row"])
         expands.append({"reel": reel, "row": h["row"], "mult": mult})
     return expands, product if expands else 1
+
+
+def stamp_expanded_sw_column(
+    board,
+    create_symbol,
+    reel: int,
+    mult: int,
+    row: int = 0,
+) -> dict:
+    """Paint a full reel as expanded Super Wild."""
+    mult = max(1, int(mult))
+    for r in range(len(board[reel])):
+        board[reel][r] = create_symbol("SW")
+        board[reel][r].assign_attribute({"multiplier": mult})
+    return {"reel": int(reel), "row": int(row), "mult": mult}
+
+
+def strip_all_sw(board, create_symbol, filler: str = "L2") -> None:
+    for reel, col in enumerate(board):
+        for row, cell in enumerate(col):
+            if _sym_name(cell) == "SW":
+                board[reel][row] = create_symbol(filler)
+
+
+def keep_single_sw(
+    board,
+    create_symbol,
+    prefer_reel: int | None = None,
+    rng: random.Random | None = None,
+) -> list[dict]:
+    """Leave at most one SW on the board.
+
+    Column choice is uniform among reels that have SW (not weighted by how many
+    SW cells sit on a reel — avoids bias to denser / last columns).
+    """
+    hits = find_super_wilds(board)
+    if len(hits) <= 1:
+        return hits
+    rng = rng or random
+    keep = None
+    if prefer_reel is not None:
+        preferred = [h for h in hits if h["reel"] == prefer_reel]
+        if preferred:
+            keep = rng.choice(preferred)
+    if keep is None:
+        reels_with_sw = sorted({h["reel"] for h in hits})
+        chosen_reel = rng.choice(reels_with_sw)
+        keep = rng.choice([h for h in hits if h["reel"] == chosen_reel])
+    for h in hits:
+        if h is keep:
+            continue
+        board[h["reel"]][h["row"]] = create_symbol("L2")
+    return [keep]
+
+
+def pick_sticky_sw_column(num_reels: int, mult_weights: dict, rng: random.Random | None = None) -> tuple[int, int]:
+    """Choose sticky SW reel + multiplier for Super Bonus (any of the 5 columns)."""
+    rng = rng or random
+    reel = rng.randrange(int(num_reels))  # 0..num_reels-1 — любая колонка
+    mult = int(get_random_outcome(mult_weights))
+    return reel, max(1, mult)
 
 
 def pick_fs_targets(config, rng: random.Random | None = None) -> tuple[list[int], int, int]:
