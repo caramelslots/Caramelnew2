@@ -42,6 +42,10 @@
 	import bonusBooks from '../stories/data/bonus_books';
 	import bonusBoostBooks from '../stories/data/books_bonus_boost';
 	import bonusSuperBooks from '../stories/data/books_bonus_super';
+	import {
+		SW_DEMO_VISIBLE_BOARD,
+		superWildExpandDemo,
+	} from '../stories/data/catmafia_events';
 	import type { WinLevel } from '../game/winLevelMap';
 	import type { BookEvent } from '../game/typesBookEvent';
 	import type { GameType, RawSymbol } from '../game/types';
@@ -411,6 +415,106 @@
 			});
 		});
 
+	/** Base SW two-beat: board + BIG → curtain expand → SUPER on re-eval. */
+	const playSwDoubleBigWin = () =>
+		guard(async () => {
+			stateGame.gameType = 'basegame';
+			stateGame.stickySwByReel = {};
+			stateGame.stickySwOpened = false;
+			stateGame.bonusMode = null;
+			stateBet.winBookEventAmount = 0;
+
+			const phase1Amount = 30 * x;
+			const phase2Amount = 75 * x;
+			const swBoard = [...SW_DEMO_VISIBLE_BOARD].map((r) => r.map((s) => ({ ...s }))) as {
+				name: string;
+			}[][];
+
+			const phase1Win = {
+				type: 'winInfo' as const,
+				totalWin: phase1Amount,
+				wins: [
+					{
+						symbol: 'H2',
+						kind: 5,
+						win: phase1Amount,
+						positions: [
+							{ reel: 0, row: 1 },
+							{ reel: 1, row: 1 },
+							{ reel: 2, row: 1 },
+							{ reel: 3, row: 1 },
+							{ reel: 4, row: 1 },
+						],
+						meta: {
+							lineIndex: 1,
+							multiplier: 1,
+							winWithoutMult: phase1Amount,
+							globalMult: 1,
+							lineMultiplier: 1.0,
+						},
+					},
+				],
+			};
+
+			const phase2Win = {
+				type: 'winInfo' as const,
+				totalWin: phase2Amount,
+				wins: [
+					{
+						symbol: 'H2',
+						kind: 5,
+						win: Math.floor(phase2Amount * 0.55),
+						positions: [
+							{ reel: 0, row: 1 },
+							{ reel: 1, row: 1 },
+							{ reel: 2, row: 1 },
+							{ reel: 3, row: 1 },
+							{ reel: 4, row: 1 },
+						],
+						meta: {
+							lineIndex: 1,
+							multiplier: 4,
+							winWithoutMult: Math.floor(phase2Amount * 0.55) / 4,
+							globalMult: 1,
+							lineMultiplier: 4.0,
+						},
+					},
+					{
+						symbol: 'H2',
+						kind: 5,
+						win: Math.floor(phase2Amount * 0.45),
+						positions: [
+							{ reel: 0, row: 1 },
+							{ reel: 1, row: 2 },
+							{ reel: 2, row: 2 },
+							{ reel: 3, row: 2 },
+							{ reel: 4, row: 1 },
+						],
+						meta: {
+							lineIndex: 5,
+							multiplier: 4,
+							winWithoutMult: Math.floor(phase2Amount * 0.45) / 4,
+							globalMult: 1,
+							lineMultiplier: 4.0,
+						},
+					},
+				],
+			};
+
+			// eslint-disable-next-line no-console
+			console.log('[DEV] SW double big: BIG → curtain → SUPER');
+			await playBookEvents([
+				reveal(swBoard),
+				asEvent(phase1Win),
+				asEvent({ type: 'setWin', amount: phase1Amount, winLevel: 6 }),
+				asEvent({ type: 'setTotalWin', amount: phase1Amount }),
+				asEvent(superWildExpandDemo),
+				asEvent(phase2Win),
+				asEvent({ type: 'setWin', amount: phase2Amount, winLevel: 7 }),
+				asEvent({ type: 'setTotalWin', amount: phase2Amount }),
+			]);
+		});
+
 	// === FS UI previews (not full books) ===
 	const playFsEnd = (winLevel: WinLevel, amount: number) =>
 		guard(() =>
@@ -756,6 +860,14 @@
 						onclick={() => playBoardWithCoins(9, 1000 * x)}
 					>
 						Board + Coin Rain
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="Доска с SW×4: BIG WIN → штора → SUPER WIN (re-eval)"
+						onclick={playSwDoubleBigWin}
+					>
+						SW ×2 Big Wins
 					</button>
 				</div>
 			</section>

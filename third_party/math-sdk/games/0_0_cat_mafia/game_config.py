@@ -165,6 +165,23 @@ class GameConfig(Config):
             "force_freegame": False,
         }
 
+        # Dedicated feature fences — equal quotas; strips have no P/SW.
+        # ~3% each → paw coins and SW expand appear at the same rate (XOR).
+        paw_condition = {
+            "reel_weights": {self.basegame_type: {"BR0": 1}},
+            "mult_values": {self.basegame_type: {1: 1}},
+            "force_wincap": False,
+            "force_freegame": False,
+            "force_paw": True,
+        }
+        sw_expand_condition = {
+            "reel_weights": {self.basegame_type: {"BR0": 1}},
+            "mult_values": {self.basegame_type: {1: 1}},
+            "force_wincap": False,
+            "force_freegame": False,
+            "force_sw_expand": True,
+        }
+
         zerowin_condition = {
             "reel_weights": {self.basegame_type: {"BR0_ZW": 1}},
             "mult_values": {
@@ -186,21 +203,6 @@ class GameConfig(Config):
             "cluster_board": True,
         }
 
-        bonus_boost_zerowin_condition = {
-            "reel_weights": {self.basegame_type: {"BR1_ZW": 1}},
-            "mult_values": {self.basegame_type: {1: 1}},
-            "force_wincap": False,
-            "force_freegame": False,
-        }
-
-        bonus_boost_zerowin_cluster_condition = {
-            "reel_weights": {self.basegame_type: {"BR1_ZW": 1}},
-            "mult_values": {self.basegame_type: {1: 1}},
-            "force_wincap": False,
-            "force_freegame": False,
-            "cluster_board": True,
-        }
-
         wincap_condition = {
             "reel_weights": {
                 self.basegame_type: {"BR0": 1},
@@ -212,26 +214,6 @@ class GameConfig(Config):
             },
             "scatter_triggers": {3: 1, 4: 1},
             "force_wincap": True,
-            "force_freegame": True,
-        }
-
-        bonus_boost_basegame_condition = {
-            "reel_weights": {self.basegame_type: {"BR1": 1}},
-            "mult_values": {self.basegame_type: {1: 1}},
-            "force_wincap": False,
-            "force_freegame": False,
-        }
-        bonus_boost_freegame_condition = {
-            "reel_weights": {
-                self.basegame_type: {"BR1": 1},
-                self.freegame_type: {"FR0": 1},
-            },
-            "scatter_triggers": {3: 65, 4: 35},
-            "mult_values": {
-                self.basegame_type: {1: 1},
-                self.freegame_type: dict(self.sw_mult_weights),
-            },
-            "force_wincap": False,
             "force_freegame": True,
         }
 
@@ -272,10 +254,14 @@ class GameConfig(Config):
             "bonus_super": self.wincap,
         }
 
-        base_dead_cluster = 0.10
-        base_dead_plain = round(0.529 - base_dead_cluster, 4)
-        bonus_dead_cluster = 0.10
-        bonus_dead_plain = round(0.449 - bonus_dead_cluster, 4)
+        # Dead + basegame + paw + sw_expand + freegame + wincap = 1.0
+        # Equal feature rates: paw == sw_expand (~1/33 each).
+        # bonus_boost = same BR0 mechanics as base; freegame quota ~2× (20% vs 10%).
+        feature_quota = 0.03
+        dead_cluster = 0.10
+        dead_plain = round(0.469 - dead_cluster, 4)
+        boost_freegame_quota = 0.20
+        boost_basegame_quota = 0.27  # base keeps 0.37; difference → freegame
 
         self.bet_modes = [
             BetMode(
@@ -294,12 +280,18 @@ class GameConfig(Config):
                         conditions=wincap_condition,
                     ),
                     Distribution(criteria="freegame", quota=0.10, conditions=freegame_condition),
-                    Distribution(criteria="0", quota=base_dead_plain, win_criteria=0.0, conditions=zerowin_condition),
+                    Distribution(criteria="0", quota=dead_plain, win_criteria=0.0, conditions=zerowin_condition),
                     Distribution(
                         criteria="0_cluster",
-                        quota=base_dead_cluster,
+                        quota=dead_cluster,
                         win_criteria=0.0,
                         conditions=zerowin_cluster_condition,
+                    ),
+                    Distribution(criteria="paw", quota=feature_quota, conditions=paw_condition),
+                    Distribution(
+                        criteria="sw_expand",
+                        quota=feature_quota,
+                        conditions=sw_expand_condition,
                     ),
                     Distribution(criteria="basegame", quota=0.37, conditions=basegame_condition),
                 ],
@@ -312,6 +304,7 @@ class GameConfig(Config):
                 auto_close_disabled=False,
                 is_feature=True,
                 is_buybonus=False,
+                # Same BR0 / paw / SW / dead as base — only freegame vs basegame mix differs.
                 distributions=[
                     Distribution(
                         criteria="wincap",
@@ -319,20 +312,29 @@ class GameConfig(Config):
                         win_criteria=mode_maxwins["bonus_boost"],
                         conditions=wincap_condition,
                     ),
-                    Distribution(criteria="freegame", quota=0.18, conditions=bonus_boost_freegame_condition),
                     Distribution(
-                        criteria="0",
-                        quota=bonus_dead_plain,
-                        win_criteria=0.0,
-                        conditions=bonus_boost_zerowin_condition,
+                        criteria="freegame",
+                        quota=boost_freegame_quota,
+                        conditions=freegame_condition,
                     ),
+                    Distribution(criteria="0", quota=dead_plain, win_criteria=0.0, conditions=zerowin_condition),
                     Distribution(
                         criteria="0_cluster",
-                        quota=bonus_dead_cluster,
+                        quota=dead_cluster,
                         win_criteria=0.0,
-                        conditions=bonus_boost_zerowin_cluster_condition,
+                        conditions=zerowin_cluster_condition,
                     ),
-                    Distribution(criteria="basegame", quota=0.37, conditions=bonus_boost_basegame_condition),
+                    Distribution(criteria="paw", quota=feature_quota, conditions=paw_condition),
+                    Distribution(
+                        criteria="sw_expand",
+                        quota=feature_quota,
+                        conditions=sw_expand_condition,
+                    ),
+                    Distribution(
+                        criteria="basegame",
+                        quota=boost_basegame_quota,
+                        conditions=basegame_condition,
+                    ),
                 ],
             ),
             BetMode(
@@ -394,7 +396,6 @@ class GameConfig(Config):
     def get_cluster_symbol_weights(self, gametype: str, betmode: str) -> dict[str, int]:
         from game_cluster import (
             CLUSTER_SYMBOL_WEIGHTS_BR0,
-            CLUSTER_SYMBOL_WEIGHTS_BR1,
             CLUSTER_SYMBOL_WEIGHTS_FR0,
             CLUSTER_SYMBOL_WEIGHTS_FR1,
         )
@@ -404,6 +405,5 @@ class GameConfig(Config):
                 return CLUSTER_SYMBOL_WEIGHTS_FR1
             return CLUSTER_SYMBOL_WEIGHTS_FR0
 
-        if betmode == "bonus_boost":
-            return CLUSTER_SYMBOL_WEIGHTS_BR1
+        # bonus_boost shares BR0 feel with base (no separate BR1 cluster mix).
         return CLUSTER_SYMBOL_WEIGHTS_BR0

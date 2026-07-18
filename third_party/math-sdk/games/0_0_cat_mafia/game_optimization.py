@@ -14,11 +14,12 @@ from optimization_program.optimization_config import (
 
 
 def _common_parameters():
+    # Low-vol base: mean/median closer to 1.5–3 (was 4–8 → high-vol LUT).
     return ConstructParameters(
         num_show=5000,
         num_per_fence=10000,
-        min_m2m=4,
-        max_m2m=8,
+        min_m2m=1.5,
+        max_m2m=3.0,
         pmb_rtp=1.0,
         sim_trials=5000,
         test_spins=[50, 100, 200],
@@ -43,16 +44,26 @@ def _bonus_parameters():
 
 
 def _basegame_scaling():
-    # LOW-VOL tuning: boost micro-wins (0.1–1×), penalize base tails >1.5×.
-    # With basegame quota=0.37 and HR=3.2: ~18500 winning books for optimizer.
+    # LOW-VOL: lift micro/small base hits; crush mid/high tails + big FS.
+    # With basegame quota≈0.55 and HR≈2.8: more frequent smaller pays.
     return ConstructScaling(
         [
-            {"criteria": "basegame", "scale_factor": 1.5, "win_range": (0.1, 0.5), "probability": 1.0},
-            {"criteria": "basegame", "scale_factor": 1.3, "win_range": (0.5, 1.0), "probability": 1.0},
-            {"criteria": "basegame", "scale_factor": 0.7, "win_range": (1.5, 5), "probability": 1.0},
-            {"criteria": "basegame", "scale_factor": 0.4, "win_range": (5, 50), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 0.5, "win_range": (1, 100), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 2.0, "win_range": (500, 2500), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 1.8, "win_range": (0.1, 0.5), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 1.5, "win_range": (0.5, 1.0), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 1.2, "win_range": (1.0, 2.0), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 0.55, "win_range": (2.0, 5), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 0.3, "win_range": (5, 20), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 0.15, "win_range": (20, 50), "probability": 1.0},
+            {"criteria": "paw", "scale_factor": 1.4, "win_range": (1, 8), "probability": 1.0},
+            {"criteria": "paw", "scale_factor": 1.1, "win_range": (8, 20), "probability": 1.0},
+            {"criteria": "paw", "scale_factor": 0.5, "win_range": (20, 50), "probability": 1.0},
+            {"criteria": "sw_expand", "scale_factor": 1.3, "win_range": (1, 10), "probability": 1.0},
+            {"criteria": "sw_expand", "scale_factor": 1.0, "win_range": (10, 30), "probability": 1.0},
+            {"criteria": "sw_expand", "scale_factor": 0.45, "win_range": (30, 100), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 1.4, "win_range": (1, 40), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 1.1, "win_range": (40, 100), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.55, "win_range": (100, 300), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.25, "win_range": (300, 2500), "probability": 1.0},
         ]
     ).return_dict()
 
@@ -85,6 +96,12 @@ def _bonus_boost_scaling():
             {"criteria": "basegame", "scale_factor": 1.2, "win_range": (1.0, 2.0), "probability": 1.0},
             {"criteria": "basegame", "scale_factor": 0.65, "win_range": (2.0, 5), "probability": 1.0},
             {"criteria": "basegame", "scale_factor": 0.35, "win_range": (5, 50), "probability": 1.0},
+            {"criteria": "paw", "scale_factor": 1.4, "win_range": (1, 8), "probability": 1.0},
+            {"criteria": "paw", "scale_factor": 1.1, "win_range": (8, 20), "probability": 1.0},
+            {"criteria": "paw", "scale_factor": 0.5, "win_range": (20, 50), "probability": 1.0},
+            {"criteria": "sw_expand", "scale_factor": 1.3, "win_range": (1, 10), "probability": 1.0},
+            {"criteria": "sw_expand", "scale_factor": 1.0, "win_range": (10, 30), "probability": 1.0},
+            {"criteria": "sw_expand", "scale_factor": 0.45, "win_range": (30, 100), "probability": 1.0},
             # FS: 40× cost = 80× bet — prefer sessions below that band.
             {"criteria": "freegame", "scale_factor": 1.5, "win_range": (1, 40), "probability": 1.0},
             {"criteria": "freegame", "scale_factor": 1.25, "win_range": (40, 80), "probability": 1.0},
@@ -136,17 +153,21 @@ class OptimizationSetup:
                     ).return_dict(),
                     # 0_cluster shares optimizer fence with 0 (both rtp=0, win=0).
                     "0": ConstructConditions(rtp=0, av_win=0, search_conditions=0).return_dict(),
+                    # More RTP from base lines/paw; rarer / smaller natural FS.
                     "freegame": ConstructConditions(
-                        rtp=0.55, hr=200, search_conditions={"symbol": "scatter"}
+                        rtp=0.35, hr=280, search_conditions={"symbol": "scatter"}
                     ).return_dict(),
-                    "basegame": ConstructConditions(hr=3.2, rtp=0.40).return_dict(),
+                    "paw": ConstructConditions(hr=33, rtp=0.07).return_dict(),
+                    "sw_expand": ConstructConditions(hr=33, rtp=0.07).return_dict(),
+                    "basegame": ConstructConditions(hr=2.9, rtp=0.46).return_dict(),
                 },
                 "scaling": _basegame_scaling(),
                 "parameters": _common_parameters(),
+                # Soft bias toward modest FS (not wincap / 500×+ sessions).
                 "distribution_bias": ConstructFenceBias(
                     applied_criteria=["freegame"],
-                    bias_ranges=[(500.0, 2500.0)],
-                    bias_weights=[0.6],
+                    bias_ranges=[(20.0, 120.0)],
+                    bias_weights=[0.55],
                 ).return_dict(),
             },
             "bonus_boost": {
@@ -155,15 +176,17 @@ class OptimizationSetup:
                         rtp=0.01, av_win=wincaps["bonus_boost"], search_conditions=wincaps["bonus_boost"]
                     ).return_dict(),
                     "0": ConstructConditions(rtp=0, av_win=0, search_conditions=0).return_dict(),
-                    # Less FS RTP share + slightly rarer FS → lower ETL40.
+                    # Same features as base; ~2× FS vs base (hr 140 vs 280), more FS RTP.
                     "freegame": ConstructConditions(
-                        rtp=0.55, hr=140, search_conditions={"symbol": "scatter"}
+                        rtp=0.52, hr=140, search_conditions={"symbol": "scatter"}
                     ).return_dict(),
-                    "basegame": ConstructConditions(hr=2.9, rtp=0.40).return_dict(),
+                    "paw": ConstructConditions(hr=33, rtp=0.06).return_dict(),
+                    "sw_expand": ConstructConditions(hr=33, rtp=0.06).return_dict(),
+                    "basegame": ConstructConditions(hr=3.0, rtp=0.31).return_dict(),
                 },
                 "scaling": _bonus_boost_scaling(),
                 "parameters": _bonus_boost_parameters(),
-                # Bias modest FS (under ~40× cost), not wincap band.
+                # Bias modest FS (under ~40× cost), not wincap band — ETL40.
                 "distribution_bias": ConstructFenceBias(
                     applied_criteria=["freegame"],
                     bias_ranges=[(15.0, 70.0)],

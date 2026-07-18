@@ -68,10 +68,19 @@ def sw_positions_in_wins(sw_hits: list[dict], win_data: dict) -> set[tuple[int, 
     return {(h["reel"], h["row"]) for h in sw_hits if (h["reel"], h["row"]) in winning_pos}
 
 
-def resolve_xor(has_paw: bool, expand_sw: bool) -> tuple[bool, bool]:
-    """One spin: either paw or SW expand — never both."""
+def resolve_xor(
+    has_paw: bool,
+    expand_sw: bool,
+    rng: random.Random | None = None,
+) -> tuple[bool, bool]:
+    """One spin: either paw or SW expand — never both.
+
+    When both qualify, coin-flip 50/50 so feature rates stay balanced.
+    """
     if has_paw and expand_sw:
-        # Prefer SW expand when both would fire.
+        pick = rng.random() if rng is not None else random.random()
+        if pick < 0.5:
+            return True, False
         return False, True
     return has_paw, expand_sw
 

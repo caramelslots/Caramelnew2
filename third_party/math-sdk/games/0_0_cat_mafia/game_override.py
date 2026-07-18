@@ -71,6 +71,12 @@ class GameStateOverride(GameExecutables):
             if win_criteria is None and self.final_win == 0:
                 self.repeat = True
                 return
+            # Feature fences: required event must fire (not lost to XOR).
+            if self.criteria in {"paw", "sw_expand"}:
+                types = {e.get("type") for e in self.book.events if isinstance(e, dict)}
+                need = "pawCoinResolve" if self.criteria == "paw" else "superWildExpand"
+                if need not in types:
+                    self.repeat = True
 
     def draw_board(self, emit_event: bool = True, trigger_symbol: str = "scatter") -> None:
         conditions = self.get_current_distribution_conditions()
@@ -82,8 +88,66 @@ class GameStateOverride(GameExecutables):
         self.enforce_bonus_symbol_rules()
         self.enforce_feature_symbol_rules()
         self.apply_fs_sw_board_rules()
+        self.force_paw_on_board()
+        self.force_sw_expand_on_board()
         if emit_event:
             reveal_event(self)
+
+    def _replace_symbol_name(self, from_names: set[str], to_name: str) -> None:
+        for reel, col in enumerate(self.board):
+            for row, cell in enumerate(col):
+                if getattr(cell, "name", None) in from_names:
+                    self.board[reel][row] = self.create_symbol(to_name)
+
+    def force_paw_on_board(self) -> None:
+        """Plant a visible P when criteria/conditions request force_paw."""
+        if self.gametype != self.config.basegame_type:
+            return
+        conditions = self.get_current_distribution_conditions()
+        if not (conditions.get("force_paw") or self.criteria == "paw"):
+            return
+
+        # Keep XOR clean for this fence — no competing SW expand.
+        self._replace_symbol_name({"SW"}, "L2")
+
+        if not find_paws(self.board):
+            # Prefer replacing a low symbol so coin tier stays modest / low-vol.
+            candidates = []
+            for reel, col in enumerate(self.board):
+                for row, cell in enumerate(col):
+                    name = getattr(cell, "name", None)
+                    if name in {"L1", "L2", "L3", "L4", "H4", "H3"}:
+                        candidates.append((reel, row))
+            if not candidates:
+                reel = random.randrange(self.config.num_reels)
+                row = random.randrange(self.config.num_rows[reel])
+                candidates = [(reel, row)]
+            reel, row = random.choice(candidates)
+            self.board[reel][row] = self.create_symbol("P")
+        self.get_special_symbols_on_board()
+
+    def force_sw_expand_on_board(self) -> None:
+        """Plant SW on a winning line so base SW expand fires (equal rate vs paw)."""
+        if self.gametype != self.config.basegame_type:
+            return
+        conditions = self.get_current_distribution_conditions()
+        if not (conditions.get("force_sw_expand") or self.criteria == "sw_expand"):
+            return
+
+        # Keep XOR clean for this fence — no competing paw.
+        self._replace_symbol_name({"P"}, "L2")
+
+        # Top row payline: H2 ×5 with SW on a middle reel (wild in win → expand).
+        sw_reel = random.choice([1, 2, 3])
+        line_row = 0
+        for reel in range(self.config.num_reels):
+            if reel == sw_reel:
+                sw = self.create_symbol("SW")
+                self.assign_sw_mult_property(sw)
+                self.board[reel][line_row] = sw
+            else:
+                self.board[reel][line_row] = self.create_symbol("H2")
+        self.get_special_symbols_on_board()
 
     def draw_cluster_board(self, emit_event: bool = True) -> bool:
         betmode = self.get_current_betmode().get_name()

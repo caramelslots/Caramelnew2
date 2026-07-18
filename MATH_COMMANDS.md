@@ -43,6 +43,16 @@ PY=/tmp/csmath_venv/bin/python
 `paytable` / `reelstrips`. Перепишет `library/publish_files/` для demo +
 RGS publish.
 
+**Base low-vol + equal paw/SW (2026-07):** criteria `paw` и `sw_expand`
+(quota **по 3%**), с лент BR0 убраны P и SW; XOR 50/50 если оба.
+**bonus_boost** = тот же BR0/фичи, `freegame` quota **20%** (base 10%).
+После правок:
+
+```bash
+$PY run_base_lowvol.py 2>&1 | tee /tmp/base_lowvol_m5.log
+# затем sync §4
+```
+
 **Bonus medium-vol (2026-07):** после смены FR / `sw_mult_weights` /
 `game_optimization.py` (bonus scaling + m2m) обязателен M5 хотя бы для
 `bonus_normal` + `bonus_super`, иначе LUT останется старой high-vol.
