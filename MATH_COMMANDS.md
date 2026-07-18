@@ -43,6 +43,10 @@ PY=/tmp/csmath_venv/bin/python
 `paytable` / `reelstrips`. Перепишет `library/publish_files/` для demo +
 RGS publish.
 
+**Bonus medium-vol (2026-07):** после смены FR / `sw_mult_weights` /
+`game_optimization.py` (bonus scaling + m2m) обязателен M5 хотя бы для
+`bonus_normal` + `bonus_super`, иначе LUT останется старой high-vol.
+
 В `0_0_cat_mafia/run.py` должно быть `num_sim_args = 1e5` на режим и
 `run_optimization: True`. Если видишь «Batch 1 of 5» и финиш за ~15 с —
 это **не** M5 (остались dev `1e4` / optimization off).

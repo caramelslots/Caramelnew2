@@ -255,11 +255,11 @@
 </div>
 
 <style lang="scss">
+	@use './buyBonusPanelDimensions.scss' as *;
 	@import url('https://fonts.googleapis.com/css2?family=Philosopher:wght@700&family=Reggae+One&display=swap');
-	@import './buyBonusPanelDimensions.scss';
 
 	.buy-bonus-panel {
-		@include buy-bonus-panel-dimensions();
+		// Declarations before mixin: mixin ends with @media nests (mixed-decls).
 		--bb-card-price-fs: calc(var(--panel-width) * 0.024);
 		--bb-buy-btn-fs: calc(var(--panel-width) * 0.02);
 		font-family: v-bind(HUD_BALANCE_BET_FONT_FAMILY);
@@ -267,6 +267,7 @@
 		z-index: 10;
 		pointer-events: auto;
 		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
+		@include buy-bonus-panel-dimensions();
 	}
 
 	.panel-bg {

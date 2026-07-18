@@ -28,11 +28,12 @@ def _common_parameters():
 
 
 def _bonus_parameters():
+    # Medium vol: mean/median ≈ 1.4–2.2 (was 4–8 → forced high-vol LUT).
     return ConstructParameters(
         num_show=5000,
         num_per_fence=10000,
-        min_m2m=4,
-        max_m2m=8,
+        min_m2m=1.4,
+        max_m2m=2.2,
         pmb_rtp=1.0,
         sim_trials=5000,
         test_spins=[10, 20, 50],
@@ -56,13 +57,28 @@ def _basegame_scaling():
     ).return_dict()
 
 
-def _bonus_scaling():
+def _bonus_normal_scaling():
+    """Buy Normal (cost 100×): lift mid body, soften extreme tail."""
     return ConstructScaling(
         [
-            {"criteria": "freegame", "scale_factor": 0.3, "win_range": (1, 50), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 0.5, "win_range": (50, 200), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 2.0, "win_range": (500, 1500), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 2.5, "win_range": (1500, 2500), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 1.35, "win_range": (1, 35), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 1.55, "win_range": (35, 100), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 1.25, "win_range": (100, 220), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.75, "win_range": (220, 700), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.4, "win_range": (700, 2500), "probability": 1.0},
+        ]
+    ).return_dict()
+
+
+def _bonus_super_scaling():
+    """Buy Super (cost 200×): same shape, shifted up vs Normal."""
+    return ConstructScaling(
+        [
+            {"criteria": "freegame", "scale_factor": 1.3, "win_range": (1, 70), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 1.5, "win_range": (70, 200), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 1.2, "win_range": (200, 400), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.75, "win_range": (400, 1000), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.4, "win_range": (1000, 2500), "probability": 1.0},
         ]
     ).return_dict()
 
@@ -121,12 +137,13 @@ class OptimizationSetup:
                     ).return_dict(),
                     "freegame": ConstructConditions(rtp=0.95, hr="x").return_dict(),
                 },
-                "scaling": _bonus_scaling(),
+                "scaling": _bonus_normal_scaling(),
                 "parameters": _bonus_parameters(),
+                # Bias toward mid band around ~0.5–1.2× buy price (not wincap).
                 "distribution_bias": ConstructFenceBias(
                     applied_criteria=["freegame"],
-                    bias_ranges=[(1000.0, 2500.0)],
-                    bias_weights=[0.5],
+                    bias_ranges=[(45.0, 130.0)],
+                    bias_weights=[0.35],
                 ).return_dict(),
             },
             "bonus_super": {
@@ -136,12 +153,12 @@ class OptimizationSetup:
                     ).return_dict(),
                     "freegame": ConstructConditions(rtp=0.94, hr="x").return_dict(),
                 },
-                "scaling": _bonus_scaling(),
+                "scaling": _bonus_super_scaling(),
                 "parameters": _bonus_parameters(),
                 "distribution_bias": ConstructFenceBias(
                     applied_criteria=["freegame"],
-                    bias_ranges=[(1500.0, 2500.0)],
-                    bias_weights=[0.5],
+                    bias_ranges=[(90.0, 260.0)],
+                    bias_weights=[0.35],
                 ).return_dict(),
             },
         }

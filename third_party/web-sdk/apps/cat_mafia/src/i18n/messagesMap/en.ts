@@ -50,7 +50,8 @@ export default {
 	LOADER_CARD_1_LINE_3: 'BUY NORMAL ×100 OR SUPER ×200',
 	LOADER_CARD_1_LINE_4: 'SAME TARGET PICK SCENE',
 	LOADER_CARD_2_TITLE: 'PAW & SUPER WILD',
-	LOADER_CARD_2_BODY: 'PAW TURNS A ROW INTO COINS. SUPER WILD EXPANDS A COLUMN WITH ×2 / ×4 / ×6 / ×8. NEVER BOTH ON ONE SPIN.',
+	LOADER_CARD_2_BODY:
+		'PAW TURNS A ROW INTO COINS. SUPER WILD EXPANDS A COLUMN WITH ×2 / ×4 / ×6 / ×8. NEVER BOTH ON ONE SPIN.',
 	LOADER_CARD_3_TITLE: 'BULLETS & REVOLVER',
 	LOADER_CARD_3_LINE_1: 'COLLECT BULLETS IN FREE SPINS (MAX 6). AFTER THE MAIN SPINS',
 	LOADER_CARD_3_LINE_2: 'THE CAT SHOOTS TARGETS FOR +1 / +2 / +3 EXTRA FS',
@@ -65,34 +66,46 @@ export default {
 	TARGET_SHOOT_HINT_NONE: 'No extra spins',
 	GAME_INFO_TITLE: 'GAME INFORMATION',
 	GAME_INFO_ABOUT_TITLE: 'ABOUT THE GAME',
-	GAME_INFO_ABOUT_BODY: 'Cat Mafia is a 5-reel, 4-row slot with paylines paid left to right. Special features include the Paw (row → coins), Super Wild (expanding column multipliers), and a Free Spins bonus with revolver bullets and a final target shoot for extra spins.',
+	GAME_INFO_ABOUT_BODY:
+		'Cat Mafia is a 5-reel, 4-row slot with paylines paid left to right. Special features include the Paw (row → coins), Super Wild (expanding column multipliers), and a Free Spins bonus with revolver bullets and a final target shoot for extra spins.',
 	GAME_INFO_PAYLINES_TITLE: 'PAYLINES',
-	GAME_INFO_PAYLINES_NOTE: 'Paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel. A minimum of 3 matching symbols on adjacent reels is required to create a valid winning line.',
+	GAME_INFO_PAYLINES_NOTE:
+		'Paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel. A minimum of 3 matching symbols on adjacent reels is required to create a valid winning line.',
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'WILD / SUPER WILD',
-	GAME_INFO_WILD_BODY: 'Wild substitutes for paying symbols except Scatter. Super Wild expands its column and applies ×2 / ×4 / ×6 / ×8. Multiple Super Wild multipliers multiply together. Paw and Super Wild never resolve on the same spin.',
+	GAME_INFO_WILD_BODY:
+		'Wild substitutes for paying symbols except Scatter. Super Wild expands its column and applies ×2 / ×4 / ×6 / ×8. Multiple Super Wild multipliers multiply together. Paw and Super Wild never resolve on the same spin.',
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'SCATTER / BULLET',
 	GAME_INFO_FS_TITLE: 'FREE SPINS',
-	GAME_INFO_FS_BODY: 'Land 3+ Scatters (or Buy Bonus) to open the target pick: 6 targets hiding 8 / 10 / 12 free spins. During the main free spins, collect Bullets into the revolver (max 6). After the main spins, an automatic shoot round may award +1 / +2 / +3 extra free spins. Extra spins do not collect bullets and have no second shoot. Normal Bonus: Super Wild expands when it should. Super Bonus: Super Wild columns start open.',
+	GAME_INFO_FS_BODY:
+		'Land 3+ Scatters (or Buy Bonus) to open the target pick: 6 targets hiding 8 / 10 / 12 free spins. During the main free spins, collect Bullets into the revolver (max 6). After the main spins, an automatic shoot round may award +1 / +2 / +3 extra free spins. Extra spins do not collect bullets and have no second shoot. Normal Bonus: Super Wild expands when it should. Super Bonus: Super Wild columns start open.',
 	GAME_INFO_MYSTERY_TITLE: 'PAW SYMBOL',
-	GAME_INFO_MYSTERY_BODY: 'In the base game, a Paw converts its entire row into coins: Low ×1, High ×2, Wild ×3, Scatter ×3, Paw itself ×0 (bet × tier). The coin bag merges into the total win.',
+	GAME_INFO_MYSTERY_BODY:
+		'In the base game, a Paw converts its entire row into coins: Low ×1, High ×2, Wild ×3, Scatter ×3, Paw itself ×0 (bet × tier). The coin bag merges into the total win.',
 	GAME_INFO_PROGRESS_LADDER_TITLE: 'REVOLVER DRUM',
-	GAME_INFO_PROGRESS_LADDER_BODY: 'During main free spins, Bullets fill the revolver drum (maximum 6). The drum starts empty. After the main free spins end, each bullet is a guaranteed hit on a target that may reveal empty or +1 / +2 / +3 free spins.',
+	GAME_INFO_PROGRESS_LADDER_BODY:
+		'During main free spins, Bullets fill the revolver drum (maximum 6). The drum starts empty. After the main free spins end, each bullet is a guaranteed hit on a target that may reveal empty or +1 / +2 / +3 free spins.',
 	GAME_INFO_BET_MODES_TITLE: 'BET MODES',
-	GAME_INFO_BET_MODES_BODY: 'Base (1×): Default play. Land 3+ Scatters for the target-pick free spins scene.\nBonus Boost (2×): Higher chance of bonus; Boost is available in Autoplay and Buy Bonus (not on the main panel).\nBuy Normal Bonus (100×): Start free spins immediately with Normal Super Wild rules.\nBuy Super Bonus (200×): Start free spins immediately with Super Wild columns pre-opened.\nAll wins are multiples of your base bet. Prototype RTP values are placeholders until math-sdk (Stage G).',
+	GAME_INFO_BET_MODES_BODY:
+		'Base (1×): Default play. Land 3+ Scatters for the target-pick free spins scene.\nBonus Boost (2×): Higher chance of bonus; Boost is available in Autoplay and Buy Bonus (not on the main panel).\nBuy Normal Bonus (100×): Start free spins immediately with Normal Super Wild rules.\nBuy Super Bonus (200×): Start free spins immediately with Super Wild columns pre-opened.\nAll wins are multiples of your base bet. Prototype RTP values are placeholders until math-sdk (Stage G).',
 	GAME_INFO_PAYTABLE_TITLE: 'PAYTABLE (× BET)',
 	GAME_INFO_PAYTABLE_NOTE: 'All payout values are multiples of the base bet.',
-	GAME_INFO_PAYTABLE_BODY: 'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
+	GAME_INFO_PAYTABLE_BODY:
+		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
 	GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
-	GAME_INFO_CONTROLS_BODY: 'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nBet amount (−): Use the minus button to decrease your bet amount. Bet changes are only available while the game is idle.\nBet amount (+): Use the plus button to increase your bet amount. Bet changes are only available while the game is idle.\nBuy Bonus: Open Buy Bonus to purchase Normal Bonus or Super Bonus. Confirm a purchase to start the selected feature immediately.\nBonus Boost: Enable Bonus Boost to play at 2× your base bet with more Bonus symbols and a higher chance of triggering free spins. You can turn it on or off from the Buy Bonus panel or the Autoplay panel.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance: Shows your current balance. This is informational and is not a button.\nBet: Shows your selected bet amount. This is informational and is not a button.',
+	GAME_INFO_CONTROLS_BODY:
+		'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nBet amount (−): Use the minus button to decrease your bet amount. Bet changes are only available while the game is idle.\nBet amount (+): Use the plus button to increase your bet amount. Bet changes are only available while the game is idle.\nBuy Bonus: Open Buy Bonus to purchase Normal Bonus or Super Bonus. Confirm a purchase to start the selected feature immediately.\nBonus Boost: Enable Bonus Boost to play at 2× your base bet with more Bonus symbols and a higher chance of triggering free spins. You can turn it on or off from the Buy Bonus panel or the Autoplay panel.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance: Shows your current balance. This is informational and is not a button.\nBet: Shows your selected bet amount. This is informational and is not a button.',
 	GAME_INFO_LEGAL_TITLE: 'GENERAL GAME DISCLAIMER',
-	GAME_INFO_LEGAL_BODY: 'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Stake Engine.',
+	GAME_INFO_LEGAL_BODY:
+		'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Stake Engine.',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Insufficient funds',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Top up your balance or decrease the bet to continue the game.',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY:
+		'Top up your balance or decrease the bet to continue the game.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Loss limit reached',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'Auto play has stopped because the loss limit was reached.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'Single win limit reached',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'Auto play has stopped because the single win limit was reached.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY:
+		'Auto play has stopped because the single win limit was reached.',
 	AUTOPLAY_MSG_OK: 'OK',
 	REPLAY_BADGE: 'REPLAY',
 	REPLAY_TITLE: 'Bet Replay',
@@ -119,21 +132,29 @@ export default {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: 'Play bonus',
 	AUTO_BET_SOCIAL: 'Autoplay',
 	MAX_WIN_SOCIAL: 'MAX PRIZE',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: 'Top up your balance or lower the spin amount to continue the game.',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
+		'Top up your balance or lower the spin amount to continue the game.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'Stop limit reached',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'Autoplay has stopped because the stop limit was reached.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Single prize limit reached',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: 'Autoplay has stopped because the single prize limit was reached.',
-	GAME_INFO_ABOUT_BODY_SOCIAL: 'Cat Mafia is a 5-reel, 4-row slot. Prizes are awarded left to right. Features include Paw (row → coins), Super Wild (column multipliers), and Free Spins with revolver bullets and a final target shoot for extra spins.',
-	GAME_INFO_PAYLINES_NOTE_SOCIAL: 'Paylines are always active. Prizes are awarded from left to right on adjacent reels, starting from the leftmost reel. A minimum of 3 matching symbols on adjacent reels is required.',
-	GAME_INFO_WILD_BODY_SOCIAL: 'Wild substitutes for paying symbols except Scatter. Super Wild expands its column with ×2 / ×4 / ×6 / ×8. Paw and Super Wild never resolve on the same spin.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
+		'Autoplay has stopped because the single prize limit was reached.',
+	GAME_INFO_ABOUT_BODY_SOCIAL:
+		'Cat Mafia is a 5-reel, 4-row slot. Prizes are awarded left to right. Features include Paw (row → coins), Super Wild (column multipliers), and Free Spins with revolver bullets and a final target shoot for extra spins.',
+	GAME_INFO_PAYLINES_NOTE_SOCIAL:
+		'Paylines are always active. Prizes are awarded from left to right on adjacent reels, starting from the leftmost reel. A minimum of 3 matching symbols on adjacent reels is required.',
+	GAME_INFO_WILD_BODY_SOCIAL:
+		'Wild substitutes for paying symbols except Scatter. Super Wild expands its column with ×2 / ×4 / ×6 / ×8. Paw and Super Wild never resolve on the same spin.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'PLAY MODES',
-	GAME_INFO_BET_MODES_BODY_SOCIAL: 'Base (1×): Default play. Land 3+ Scatters for the target-pick free spins scene.\nBonus Boost (2×): Higher chance of bonus; available in Autoplay and Play Bonus.\nPlay Normal Bonus (100×) / Super Bonus (200×): Start free spins immediately. Super opens Super Wild columns from the start.\nPrototype RTP values are placeholders until math-sdk.',
+	GAME_INFO_BET_MODES_BODY_SOCIAL:
+		'Base (1×): Default play. Land 3+ Scatters for the target-pick free spins scene.\nBonus Boost (2×): Higher chance of bonus; available in Autoplay and Play Bonus.\nPlay Normal Bonus (100×) / Super Bonus (200×): Start free spins immediately. Super opens Super Wild columns from the start.\nPrototype RTP values are placeholders until math-sdk.',
 	GAME_INFO_CONTROLS_TITLE_SOCIAL: 'USER INTERACTION GUIDE',
-	GAME_INFO_CONTROLS_BODY_SOCIAL: 'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nSpin amount (−): Use the minus button to decrease your spin amount. Amount changes are only available while the game is idle.\nSpin amount (+): Use the plus button to increase your spin amount. Amount changes are only available while the game is idle.\nPlay Bonus: Open Play Bonus to play Normal Bonus or Super Bonus. Confirm to start the selected feature immediately.\nBonus Boost: Enable Bonus Boost to play at 2× your base spin with more Bonus symbols and a higher chance of triggering free spins. You can turn it on or off from the Play Bonus panel or the Autoplay panel.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance: Shows your current balance. This is informational and is not a button.\nSpin: Shows your selected spin amount. This is informational and is not a button.',
+	GAME_INFO_CONTROLS_BODY_SOCIAL:
+		'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nSpin amount (−): Use the minus button to decrease your spin amount. Amount changes are only available while the game is idle.\nSpin amount (+): Use the plus button to increase your spin amount. Amount changes are only available while the game is idle.\nPlay Bonus: Open Play Bonus to play Normal Bonus or Super Bonus. Confirm to start the selected feature immediately.\nBonus Boost: Enable Bonus Boost to play at 2× your base spin with more Bonus symbols and a higher chance of triggering free spins. You can turn it on or off from the Play Bonus panel or the Autoplay panel.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance: Shows your current balance. This is informational and is not a button.\nSpin: Shows your selected spin amount. This is informational and is not a button.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'PAYTABLE (× SPIN)',
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All payout values are multiples of the base spin.',
-	GAME_INFO_LEGAL_BODY_SOCIAL: 'Malfunction voids all prizes and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Rewards are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Stake Engine.',
+	GAME_INFO_LEGAL_BODY_SOCIAL:
+		'Malfunction voids all prizes and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Rewards are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Stake Engine.',
 	REPLAY_TITLE_SOCIAL: 'Play Replay',
 	REPLAY_BASE_BET_SOCIAL: 'Base Play',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Feature Multiplier',

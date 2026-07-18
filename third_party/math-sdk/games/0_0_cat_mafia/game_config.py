@@ -110,8 +110,9 @@ class GameConfig(Config):
         self.target_pick_values = [8, 10, 12]
         self.target_pick_count = 6
         self.drum_max = 6
-        # Prefer lower SW mults — product of 2 sticky columns grows fast.
-        self.sw_mult_weights = {2: 55, 4: 25, 6: 15, 8: 5}
+        # Medium-vol bonus: mostly ×2/×4; ×6/×8 stay rare spice.
+        # (Product of 2 sticky columns still capped by max_sticky_sw.)
+        self.sw_mult_weights = {2: 42, 4: 40, 6: 13, 8: 5}
         # Cap sticky SW columns in bonus (product of mults grows very fast).
         self.max_sticky_sw = 2
         # Shoot rewards: empty / +1 / +2 / +3 FS (weights)
@@ -256,7 +257,8 @@ class GameConfig(Config):
             "scatter_triggers": {4: 1},
             "mult_values": {
                 self.basegame_type: {1: 1},
-                self.freegame_type: {2: 20, 4: 30, 6: 30, 8: 20},
+                # Medium-vol Super: still richer than Normal, but not ×6/×8-heavy.
+                self.freegame_type: {2: 35, 4: 40, 6: 18, 8: 7},
             },
             "force_wincap": False,
             "force_freegame": True,
