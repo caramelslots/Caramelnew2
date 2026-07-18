@@ -44,8 +44,9 @@ PY=/tmp/csmath_venv/bin/python
 RGS publish.
 
 **Base low-vol + equal paw/SW (2026-07):** criteria `paw` и `sw_expand`
-(quota **по 3%**), с лент BR0 убраны P и SW; XOR 50/50 если оба.
-**bonus_boost** = тот же BR0/фичи, `freegame` quota **20%** (base 10%).
+(quota **по 3%**) **только в `base` и `bonus_boost`** (в buy/FS лапы нет).
+С лент BR0 убраны P и SW; XOR 50/50. Boost = тот же BR0, FS quota **20%**.
+После opt: `tools/resample_books.py` (floors paw/sw для base+boost).
 После правок:
 
 ```bash

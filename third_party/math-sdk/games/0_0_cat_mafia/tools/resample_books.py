@@ -66,6 +66,15 @@ SEED = 42
 TARGET_RTP = 0.9601
 SEED_SEARCH_RANGE = 256
 
+# Optimizer often starves feature fences (paw weight share ~0.1%). Floor them
+# so uniform publish books match game_config quotas (~3% each).
+# Paw exists ONLY in base + bonus_boost (never buy Normal/Super, never FS).
+FEATURE_FLOORS = {
+    "base": {"paw": 0.03, "sw_expand": 0.03},
+    "bonus_boost": {"paw": 0.03, "sw_expand": 0.03},
+    # bonus_normal / bonus_super: no paw floor
+}
+
 
 def read_lut(mode: str) -> list[tuple[int, int, int]]:
     rows: list[tuple[int, int, int]] = []
@@ -94,12 +103,53 @@ def read_books(mode: str) -> dict[int, dict]:
     return books
 
 
+def _sample_with_feature_floors(
+    sim_ids: list[int],
+    weights: list[int],
+    books: dict[int, dict],
+    target_n: int,
+    floors: dict[str, float],
+    rng: random.Random,
+) -> list[int]:
+    """Weighted sample with exact counts for protected criteria."""
+    by_crit: dict[str, list[tuple[int, int]]] = {}
+    for sid, w in zip(sim_ids, weights):
+        crit = str(books[sid].get("criteria") or "")
+        by_crit.setdefault(crit, []).append((sid, w))
+
+    out: list[int] = []
+    protected = set(floors)
+    for crit, frac in floors.items():
+        pool = by_crit.get(crit) or []
+        if not pool:
+            print(f"  WARNING: no books for floor criteria={crit!r}")
+            continue
+        k = int(round(target_n * frac))
+        ids = [sid for sid, _ in pool]
+        ws = [w for _, w in pool]
+        out.extend(rng.choices(ids, weights=ws, k=k))
+
+    rest_n = target_n - len(out)
+    if rest_n > 0:
+        rest = [(sid, w) for sid, w in zip(sim_ids, weights) if str(books[sid].get("criteria") or "") not in protected]
+        if not rest:
+            rest = list(zip(sim_ids, weights))
+        ids = [sid for sid, _ in rest]
+        ws = [w for _, w in rest]
+        out.extend(rng.choices(ids, weights=ws, k=rest_n))
+
+    rng.shuffle(out)
+    return out[:target_n]
+
+
 def choose_seed(
     sim_ids: list[int],
     weights: list[int],
     payouts_by_id: dict[int, int],
     target_n: int,
     cost: float,
+    books: dict[int, dict] | None = None,
+    floors: dict[str, float] | None = None,
 ) -> tuple[int, list[int], float]:
     """Pick seed whose empirical RTP is nearest TARGET_RTP (avoids forced wincap)."""
     best_seed = SEED
@@ -107,7 +157,11 @@ def choose_seed(
     best_rtp = 0.0
     best_gap = float("inf")
     for seed in range(SEED_SEARCH_RANGE):
-        sample = random.Random(seed).choices(sim_ids, weights=weights, k=target_n)
+        rng = random.Random(seed)
+        if floors and books:
+            sample = _sample_with_feature_floors(sim_ids, weights, books, target_n, floors, rng)
+        else:
+            sample = rng.choices(sim_ids, weights=weights, k=target_n)
         rtp = sum(payouts_by_id[sid] for sid in sample) / target_n / 100 / cost
         gap = abs(rtp - TARGET_RTP)
         if gap < best_gap:
@@ -150,14 +204,30 @@ def resample(mode: str, target_n: int, rng: random.Random) -> dict:
 
     wincap_ids = {sid for sid, p in payouts_by_id.items() if p == max_payout}
     cost = COST_MAP[mode]
+    floors = FEATURE_FLOORS.get(mode) or {}
+    if floors:
+        print(f"  Feature floors   : {floors}")
     seed_used, sampled_ids, pre_rtp = choose_seed(
-        sim_ids, weights, payouts_by_id, target_n, cost
+        sim_ids,
+        weights,
+        payouts_by_id,
+        target_n,
+        cost,
+        books=books,
+        floors=floors or None,
     )
     wincap_in_sample = sum(1 for sid in sampled_ids if sid in wincap_ids)
     if seed_used != SEED:
         print(f"  Chosen seed {seed_used} (default {SEED}) | pre-write RTP {pre_rtp:.6f}")
     else:
         print(f"  Chosen seed {seed_used} | pre-write RTP {pre_rtp:.6f}")
+
+    from collections import Counter
+
+    crit_counts = Counter(str(books[sid].get("criteria") or "") for sid in sampled_ids)
+    for crit, frac in floors.items():
+        got = crit_counts.get(crit, 0)
+        print(f"  Floor {crit:<10}: {got:,} ({100 * got / target_n:.2f}%, target {100 * frac:.1f}%)")
 
     fs_ids = {
         sid for sid in sim_ids
