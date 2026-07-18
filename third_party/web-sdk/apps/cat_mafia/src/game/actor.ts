@@ -6,7 +6,6 @@ import { createPrimaryMachines, createIntermediateMachines, createGameActor } fr
 
 import type { Bet } from './typesBookEvent';
 import { playBet, convertTorResumableBet } from './utils';
-import { sanitizeBetForCatMafia } from './sanitizeBetForCatMafia';
 import { stateGameDerived } from './stateGame.svelte';
 import { eventEmitter } from './eventEmitter';
 import { clearWinSpotlight } from './bookEventHandlerMap';
@@ -35,7 +34,7 @@ const primaryMachines = createPrimaryMachines<Bet>({
 	},
 	onNewGameError: () => stateGameDerived.enhancedBoard.settle(),
 	onPlayGame: async (bet) => {
-		await playBet(sanitizeBetForCatMafia(bet));
+		await playBet(bet);
 		// End of replay sequence — offer Replay Again (checklist requirement).
 		if (stateUrlDerived.replay()) {
 			stateModal.modal = { name: 'replayComplete' };
