@@ -148,6 +148,16 @@
 			const getPromises = () =>
 				symbolPositions.map(async (position) => {
 					const reelSymbol = context.stateGame.board[position.reel].reelState.symbols[position.row];
+					// SW expand (and sticky paint) may leave cells in `win` / `postWinStatic`.
+					// Re-assigning `win` without a state edge does not re-fire ReelSymbol's
+					// $effect, so oncomplete never runs and the book pipeline hangs.
+					if (
+						reelSymbol.symbolState === 'win' ||
+						reelSymbol.symbolState === 'postWinStatic'
+					) {
+						reelSymbol.symbolState = 'static';
+						await Promise.resolve();
+					}
 					reelSymbol.symbolState = 'win';
 					await waitForResolve((resolve) => (reelSymbol.oncomplete = resolve));
 					reelSymbol.symbolState = 'postWinStatic';

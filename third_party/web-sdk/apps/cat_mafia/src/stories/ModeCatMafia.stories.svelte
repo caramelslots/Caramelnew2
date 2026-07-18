@@ -49,10 +49,7 @@
 		});
 	};
 
-	const reveal = (
-		visibleBoard: { name: string }[][],
-		gameType: GameType = 'basegame',
-	) =>
+	const reveal = (visibleBoard: { name: string }[][], gameType: GameType = 'basegame') =>
 		asEvent({
 			type: 'reveal',
 			board: padBoard(visibleBoard, gameType),
@@ -172,7 +169,10 @@
 			stateGame.drumCount = 0;
 			stateGame.gameType = 'freegame';
 			await playBookEvents([
-				reveal([...FS_BULLET_VISIBLE_BOARD].map((r) => [...r]), 'freegame'),
+				reveal(
+					[...FS_BULLET_VISIBLE_BOARD].map((r) => [...r]),
+					'freegame',
+				),
 				asEvent(bulletCollectDemo(1)),
 			]);
 		},

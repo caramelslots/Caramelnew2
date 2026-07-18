@@ -47,6 +47,9 @@ RGS publish.
 `game_optimization.py` (bonus scaling + m2m) обязателен M5 хотя бы для
 `bonus_normal` + `bonus_super`, иначе LUT останется старой high-vol.
 
+**ETL40 `bonus_boost`:** если Stake ругается на ETL 40× (>0.800), переоптимизируй:
+`$PY run_bonus_boost_etl.py` (нужен свежий `math_config` через `generate_configs`).
+
 В `0_0_cat_mafia/run.py` должно быть `num_sim_args = 1e5` на режим и
 `run_optimization: True`. Если видишь «Batch 1 of 5» и финиш за ~15 с —
 это **не** M5 (остались dev `1e4` / optimization off).

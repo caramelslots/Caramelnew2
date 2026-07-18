@@ -339,7 +339,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>, { bookEvents }: BookEventContext) => {
 		stateGame.idleBounceAllowed = false;
 
-		const eventIndex = bookEvents.indexOf(bookEvent);
+		let eventIndex = bookEvents.indexOf(bookEvent);
+		if (eventIndex < 0 && 'index' in bookEvent) {
+			eventIndex = bookEvents.findIndex(
+				(e) => e.type === 'winInfo' && 'index' in e && e.index === bookEvent.index,
+			);
+		}
 		const expandIndex = bookEvents.findIndex((e) => e.type === 'superWildExpand');
 		// True two-beat: expand is followed by another winInfo (base + bonus new SW).
 		// Sticky-only FS spins emit expand without a second winInfo — don't hold paylines.
@@ -347,9 +352,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			expandIndex >= 0 &&
 			bookEvents.slice(expandIndex + 1).some((e) => e.type === 'winInfo');
 		// Phase 2: winInfo after SW curtain — clear phase-1 lines, longer beat.
-		const isPostSwExpand = expandIndex >= 0 && eventIndex > expandIndex;
+		const isPostSwExpand = eventIndex >= 0 && expandIndex >= 0 && eventIndex > expandIndex;
 		// Phase 1 when a curtain + second winInfo follows — expand handler clears after hold.
-		const swExpandFollows = expandIndex > eventIndex && hasWinInfoAfterExpand;
+		const swExpandFollows =
+			eventIndex >= 0 && expandIndex > eventIndex && hasWinInfoAfterExpand;
 
 		if (isPostSwExpand) {
 			clearWinSpotlight();
@@ -668,9 +674,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				await waitForGameSpeed(450, stateGame.gameSpeed);
 			}
 			expandSuperWildColumn(expand.reel, expand.mult);
+			// Keep column lit without entering awaiting `win` anim — phase-2 winInfo
+			// (or the next spin) will drive real win celebrations. Leaving `win` here
+			// hung the book when animateSymbols re-set the same state (no oncomplete).
 			for (let paddedRow = 1; paddedRow <= BOARD_DIMENSIONS.y; paddedRow++) {
 				const cell = stateGame.board[expand.reel]?.reelState.symbols[paddedRow];
-				if (cell) cell.symbolState = 'win';
+				if (cell) cell.symbolState = 'postWinStatic';
 			}
 			stateGame.stickySwByReel[expand.reel] = expand.mult;
 			stateGame.stickySwOpened = true;
