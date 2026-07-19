@@ -1,6 +1,6 @@
 """Post-optimizer LUT fix (weighted publish / pre-resample LUT).
 
-1) Floor `paw` weight share (default ≥1%) — move weight from dead.
+1) Floor `paw` weight share (default ≥3%) — move weight from dead.
 2) Match RTP to ~96.01%:
    - if low:  dead → basegame / freegame / sw_expand
    - if high: basegame / freegame / sw_expand → dead
@@ -214,7 +214,7 @@ def process_file(
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode", default="base")
-    ap.add_argument("--paw", type=float, default=0.01)
+    ap.add_argument("--paw", type=float, default=0.03)
     ap.add_argument("--rtp", type=float, default=0.9601, help="target RTP (return / cost)")
     ap.add_argument(
         "--cost",

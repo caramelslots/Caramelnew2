@@ -49,18 +49,18 @@ RGS publish.
 После правок:
 
 ```bash
-# Полный пайплайн: run.py после opt сам делает paw≥1% + RTP≈96% на publish.
+# Полный пайплайн: run.py после opt сам делает paw≥3% + RTP≈96% на publish.
 $PY run.py 2>&1 | tee /tmp/m5.log
 # Затем resample (сам копирует weighted publish → backup, потом пишет equal-weight books):
 $PY tools/resample_books.py
-# SUMMARY base/boost должны быть ~0.960. Затем sync §4.
+# SUMMARY base/boost должны быть ~0.960, paw ~3%. Затем sync §4.
 ```
 
 Если `run.py` уже прошёл **без** пост-фикса — почини publish и пересэмплируй:
 
 ```bash
-$PY tools/enforce_paw_hit_rate.py --mode base --lut-dir library/publish_files --paw 0.01 --rtp 0.9601
-$PY tools/enforce_paw_hit_rate.py --mode bonus_boost --lut-dir library/publish_files --paw 0.01 --rtp 0.9601
+$PY tools/enforce_paw_hit_rate.py --mode base --lut-dir library/publish_files --paw 0.03 --rtp 0.9601
+$PY tools/enforce_paw_hit_rate.py --mode bonus_boost --lut-dir library/publish_files --paw 0.03 --rtp 0.9601
 $PY tools/resample_books.py
 ```
 

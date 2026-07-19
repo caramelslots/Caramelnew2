@@ -1,8 +1,8 @@
-"""Base-only M5 after low-vol + paw fence changes.
+"""M5 for base + bonus_boost only (buy bonuses unchanged).
 
   cd third_party/math-sdk/games/0_0_cat_mafia
   export PYTHONPATH=../..:.
-  /tmp/csmath_venv/bin/python run_base_lowvol.py
+  /tmp/csmath_venv/bin/python run_base_boost.py
 """
 
 from gamestate import GameState
@@ -21,12 +21,15 @@ if __name__ == "__main__":
     compression = True
     profiling = False
 
-    num_sim_args = {"base": int(1e5)}
-    target_modes = ["base"]
+    num_sim_args = {
+        "base": int(1e5),
+        "bonus_boost": int(1e5),
+    }
+    target_modes = list(num_sim_args.keys())
 
     config = GameConfig()
     gamestate = GameState(config)
-    optimization_setup_class = OptimizationSetup(config)
+    OptimizationSetup(config)
 
     create_books(
         gamestate,
@@ -41,22 +44,23 @@ if __name__ == "__main__":
     OptimizationExecution().run_all_modes(config, target_modes, rust_threads)
     generate_configs(gamestate)
 
-    # Floor paw ≥3% and match RTP ~96.01% on weighted publish LUT (before resample).
     from tools.enforce_paw_hit_rate import main as enforce_paw_main
     import sys
 
-    sys.argv = [
-        "enforce_paw_hit_rate.py",
-        "--mode",
-        "base",
-        "--paw",
-        "0.03",
-        "--rtp",
-        "0.9601",
-        "--lut-dir",
-        "library/publish_files",
-    ]
-    enforce_paw_main()
+    for mode in target_modes:
+        print(f"\n=== Post-opt LUT fix: {mode} (paw≥3%, RTP≈96.01%) ===")
+        sys.argv = [
+            "enforce_paw_hit_rate.py",
+            "--mode",
+            mode,
+            "--paw",
+            "0.03",
+            "--rtp",
+            "0.9601",
+            "--lut-dir",
+            "library/publish_files",
+        ]
+        enforce_paw_main()
 
     custom_keys = [
         {"symbol": "scatter"},
@@ -65,6 +69,6 @@ if __name__ == "__main__":
     ]
     try:
         create_stat_sheet(gamestate, custom_keys=custom_keys)
-    except Exception as exc:  # noqa: BLE001 — analytics is optional
+    except Exception as exc:  # noqa: BLE001
         print("create_stat_sheet skipped:", exc)
-    print("base low-vol M5 done")
+    print("base+boost M5 done")

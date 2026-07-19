@@ -72,13 +72,13 @@ if __name__ == "__main__":
         for mode in ("base", "bonus_boost"):
             if mode not in target_modes:
                 continue
-            print(f"\n=== Post-opt LUT fix: {mode} (paw≥1%, RTP≈96.01%) ===")
+            print(f"\n=== Post-opt LUT fix: {mode} (paw≥3%, RTP≈96.01%) ===")
             sys.argv = [
                 "enforce_paw_hit_rate.py",
                 "--mode",
                 mode,
                 "--paw",
-                "0.01",
+                "0.03",
                 "--rtp",
                 "0.9601",
                 "--lut-dir",
