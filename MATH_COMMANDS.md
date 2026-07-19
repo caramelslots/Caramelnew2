@@ -44,14 +44,24 @@ PY=/tmp/csmath_venv/bin/python
 RGS publish.
 
 **Base low-vol + equal paw/SW (2026-07):** criteria `paw` и `sw_expand`
-(quota **по 3%**) **только в `base` и `bonus_boost`** (в buy/FS лапы нет).
-С лент BR0 убраны P и SW; XOR 50/50. Boost = тот же BR0, FS quota **20%**.
-После opt: `tools/resample_books.py` (floors paw/sw для base+boost).
+(quota **по 3%**), с лент BR0 убраны P и SW; XOR 50/50 если оба.
+**bonus_boost** = тот же BR0/фичи, `freegame` quota **20%** (base 10%).
 После правок:
 
 ```bash
-$PY run_base_lowvol.py 2>&1 | tee /tmp/base_lowvol_m5.log
-# затем sync §4
+# Полный пайплайн: run.py после opt сам делает paw≥1% + RTP≈96% на publish.
+$PY run.py 2>&1 | tee /tmp/m5.log
+# Затем resample (сам копирует weighted publish → backup, потом пишет equal-weight books):
+$PY tools/resample_books.py
+# SUMMARY base/boost должны быть ~0.960. Затем sync §4.
+```
+
+Если `run.py` уже прошёл **без** пост-фикса — почини publish и пересэмплируй:
+
+```bash
+$PY tools/enforce_paw_hit_rate.py --mode base --lut-dir library/publish_files --paw 0.01 --rtp 0.9601
+$PY tools/enforce_paw_hit_rate.py --mode bonus_boost --lut-dir library/publish_files --paw 0.01 --rtp 0.9601
+$PY tools/resample_books.py
 ```
 
 **Bonus medium-vol (2026-07):** после смены FR / `sw_mult_weights` /

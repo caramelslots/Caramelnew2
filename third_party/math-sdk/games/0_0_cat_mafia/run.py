@@ -64,13 +64,43 @@ if __name__ == "__main__":
         OptimizationExecution().run_all_modes(config, target_modes, rust_threads)
         generate_configs(gamestate)
 
+        # Optimizer under-hits RTP / starves paw on base & boost — floor paw and
+        # match ~96.01% RTP on the weighted publish LUT (before resample).
+        from tools.enforce_paw_hit_rate import main as enforce_lut_main
+        import sys
+
+        for mode in ("base", "bonus_boost"):
+            if mode not in target_modes:
+                continue
+            print(f"\n=== Post-opt LUT fix: {mode} (paw≥1%, RTP≈96.01%) ===")
+            sys.argv = [
+                "enforce_paw_hit_rate.py",
+                "--mode",
+                mode,
+                "--paw",
+                "0.01",
+                "--rtp",
+                "0.9601",
+                "--lut-dir",
+                "library/publish_files",
+            ]
+            enforce_lut_main()
+
     if run_conditions["run_analysis"]:
         custom_keys = [
             {"symbol": "scatter"},
             {"kind": 5, "symbol": "W"},
             {"kind": 5, "symbol": "H1"},
         ]
-        create_stat_sheet(gamestate, custom_keys=custom_keys)
+        try:
+            create_stat_sheet(gamestate, custom_keys=custom_keys)
+        except Exception as exc:  # noqa: BLE001
+            print("create_stat_sheet skipped:", exc)
 
     if run_conditions["run_format_checks"]:
         execute_all_tests(config)
+
+    print(
+        "\nNext: refresh resample from publish (tools/resample_books.py now "
+        "auto-copies publish → backup_pre_resample)."
+    )

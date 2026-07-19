@@ -100,7 +100,11 @@ class GameStateOverride(GameExecutables):
                     self.board[reel][row] = self.create_symbol(to_name)
 
     def force_paw_on_board(self) -> None:
-        """Plant a visible P when criteria/conditions request force_paw."""
+        """Plant a visible P when criteria/conditions request force_paw.
+
+        Cheap coin row (L only + P): keeps avg paw win ~4× so optimizer / LUT
+        floor can reach ≥1% hit-rate without huge RTP cost.
+        """
         if self.gametype != self.config.basegame_type:
             return
         conditions = self.get_current_distribution_conditions()
@@ -110,20 +114,14 @@ class GameStateOverride(GameExecutables):
         # Keep XOR clean for this fence — no competing SW expand.
         self._replace_symbol_name({"SW"}, "L2")
 
-        if not find_paws(self.board):
-            # Prefer replacing a low symbol so coin tier stays modest / low-vol.
-            candidates = []
-            for reel, col in enumerate(self.board):
-                for row, cell in enumerate(col):
-                    name = getattr(cell, "name", None)
-                    if name in {"L1", "L2", "L3", "L4", "H4", "H3"}:
-                        candidates.append((reel, row))
-            if not candidates:
-                reel = random.randrange(self.config.num_reels)
-                row = random.randrange(self.config.num_rows[reel])
-                candidates = [(reel, row)]
-            reel, row = random.choice(candidates)
-            self.board[reel][row] = self.create_symbol("P")
+        row = random.randrange(self.config.num_rows[0])
+        paw_reel = random.randrange(self.config.num_reels)
+        lows = ["L1", "L2", "L3", "L4"]
+        for reel in range(self.config.num_reels):
+            if reel == paw_reel:
+                self.board[reel][row] = self.create_symbol("P")
+            else:
+                self.board[reel][row] = self.create_symbol(random.choice(lows))
         self.get_special_symbols_on_board()
 
     def force_sw_expand_on_board(self) -> None:

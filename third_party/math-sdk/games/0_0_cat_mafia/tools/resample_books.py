@@ -38,6 +38,7 @@ import hashlib
 import io
 import json
 import random
+import shutil
 from pathlib import Path
 
 import zstandard as zstd
@@ -65,15 +66,6 @@ COST_MAP = {
 SEED = 42
 TARGET_RTP = 0.9601
 SEED_SEARCH_RANGE = 256
-
-# Optimizer often starves feature fences (paw weight share ~0.1%). Floor them
-# so uniform publish books match game_config quotas (~3% each).
-# Paw exists ONLY in base + bonus_boost (never buy Normal/Super, never FS).
-FEATURE_FLOORS = {
-    "base": {"paw": 0.03, "sw_expand": 0.03},
-    "bonus_boost": {"paw": 0.03, "sw_expand": 0.03},
-    # bonus_normal / bonus_super: no paw floor
-}
 
 
 def read_lut(mode: str) -> list[tuple[int, int, int]]:
@@ -103,53 +95,12 @@ def read_books(mode: str) -> dict[int, dict]:
     return books
 
 
-def _sample_with_feature_floors(
-    sim_ids: list[int],
-    weights: list[int],
-    books: dict[int, dict],
-    target_n: int,
-    floors: dict[str, float],
-    rng: random.Random,
-) -> list[int]:
-    """Weighted sample with exact counts for protected criteria."""
-    by_crit: dict[str, list[tuple[int, int]]] = {}
-    for sid, w in zip(sim_ids, weights):
-        crit = str(books[sid].get("criteria") or "")
-        by_crit.setdefault(crit, []).append((sid, w))
-
-    out: list[int] = []
-    protected = set(floors)
-    for crit, frac in floors.items():
-        pool = by_crit.get(crit) or []
-        if not pool:
-            print(f"  WARNING: no books for floor criteria={crit!r}")
-            continue
-        k = int(round(target_n * frac))
-        ids = [sid for sid, _ in pool]
-        ws = [w for _, w in pool]
-        out.extend(rng.choices(ids, weights=ws, k=k))
-
-    rest_n = target_n - len(out)
-    if rest_n > 0:
-        rest = [(sid, w) for sid, w in zip(sim_ids, weights) if str(books[sid].get("criteria") or "") not in protected]
-        if not rest:
-            rest = list(zip(sim_ids, weights))
-        ids = [sid for sid, _ in rest]
-        ws = [w for _, w in rest]
-        out.extend(rng.choices(ids, weights=ws, k=rest_n))
-
-    rng.shuffle(out)
-    return out[:target_n]
-
-
 def choose_seed(
     sim_ids: list[int],
     weights: list[int],
     payouts_by_id: dict[int, int],
     target_n: int,
     cost: float,
-    books: dict[int, dict] | None = None,
-    floors: dict[str, float] | None = None,
 ) -> tuple[int, list[int], float]:
     """Pick seed whose empirical RTP is nearest TARGET_RTP (avoids forced wincap)."""
     best_seed = SEED
@@ -157,11 +108,7 @@ def choose_seed(
     best_rtp = 0.0
     best_gap = float("inf")
     for seed in range(SEED_SEARCH_RANGE):
-        rng = random.Random(seed)
-        if floors and books:
-            sample = _sample_with_feature_floors(sim_ids, weights, books, target_n, floors, rng)
-        else:
-            sample = rng.choices(sim_ids, weights=weights, k=target_n)
+        sample = random.Random(seed).choices(sim_ids, weights=weights, k=target_n)
         rtp = sum(payouts_by_id[sid] for sid in sample) / target_n / 100 / cost
         gap = abs(rtp - TARGET_RTP)
         if gap < best_gap:
@@ -204,30 +151,14 @@ def resample(mode: str, target_n: int, rng: random.Random) -> dict:
 
     wincap_ids = {sid for sid, p in payouts_by_id.items() if p == max_payout}
     cost = COST_MAP[mode]
-    floors = FEATURE_FLOORS.get(mode) or {}
-    if floors:
-        print(f"  Feature floors   : {floors}")
     seed_used, sampled_ids, pre_rtp = choose_seed(
-        sim_ids,
-        weights,
-        payouts_by_id,
-        target_n,
-        cost,
-        books=books,
-        floors=floors or None,
+        sim_ids, weights, payouts_by_id, target_n, cost
     )
     wincap_in_sample = sum(1 for sid in sampled_ids if sid in wincap_ids)
     if seed_used != SEED:
         print(f"  Chosen seed {seed_used} (default {SEED}) | pre-write RTP {pre_rtp:.6f}")
     else:
         print(f"  Chosen seed {seed_used} | pre-write RTP {pre_rtp:.6f}")
-
-    from collections import Counter
-
-    crit_counts = Counter(str(books[sid].get("criteria") or "") for sid in sampled_ids)
-    for crit, frac in floors.items():
-        got = crit_counts.get(crit, 0)
-        print(f"  Floor {crit:<10}: {got:,} ({100 * got / target_n:.2f}%, target {100 * frac:.1f}%)")
 
     fs_ids = {
         sid for sid in sim_ids
@@ -296,11 +227,54 @@ def resample(mode: str, target_n: int, rng: random.Random) -> dict:
     }
 
 
+def _lut_is_equal_weight(path: Path) -> bool:
+    weights: set[int] = set()
+    with path.open() as f:
+        for i, line in enumerate(f):
+            parts = line.strip().split(",")
+            if len(parts) < 2:
+                continue
+            weights.add(int(float(parts[1])))
+            if i > 5000:
+                break
+    return weights == {1} or (weights and max(weights) <= 2)
+
+
+def refresh_backup_from_publish() -> None:
+    """Copy weighted publish LUT+books → backup so resample uses latest opt/fix.
+
+    Skips modes whose publish LUT is already equal-weight (already resampled),
+    so we do not clobber a good weighted backup with a flat LUT.
+    """
+    SOURCE.mkdir(parents=True, exist_ok=True)
+    copied = 0
+    for mode in TARGET_COUNTS:
+        lut = PUBLISH / f"lookUpTable_{mode}_0.csv"
+        books = PUBLISH / f"books_{mode}.jsonl.zst"
+        if not lut.exists() or not books.exists():
+            print(f"  skip {mode}: missing publish lut/books")
+            continue
+        if _lut_is_equal_weight(lut):
+            print(f"  skip {mode}: publish LUT looks equal-weight (use existing backup)")
+            continue
+        shutil.copy2(lut, SOURCE / lut.name)
+        shutil.copy2(books, SOURCE / books.name)
+        idx = PUBLISH / "index.json"
+        if idx.exists():
+            shutil.copy2(idx, SOURCE / "index.json")
+        copied += 1
+        print(f"  copied {mode} publish → backup_pre_resample")
+    if copied == 0:
+        print("  (no weighted publish LUTs copied — resampling from existing backup)")
+
+
 def main():
+    print("Refreshing backup_pre_resample from publish_files (weighted only)...")
+    refresh_backup_from_publish()
     if not SOURCE.is_dir():
         raise SystemExit(
             f"Missing source directory: {SOURCE}\n"
-            "Copy pre-optimizer publish_files there before resampling."
+            "Run optimization so library/publish_files has weighted LUTs first."
         )
     rng = random.Random(SEED)
     results = []
