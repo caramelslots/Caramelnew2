@@ -45,7 +45,7 @@ const makeMeta = (
 		tickerIdle: '',
 		tickerSpin: '',
 	},
-	maxWin: 50000,
+	maxWin: 25000,
 });
 
 stateMeta.betModeMeta = {

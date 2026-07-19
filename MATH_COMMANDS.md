@@ -64,6 +64,12 @@ $PY tools/enforce_paw_hit_rate.py --mode bonus_boost --lut-dir library/publish_f
 $PY tools/resample_books.py
 ```
 
+**Bonus max ×25000 (2026-07):** buy modes `bonus_normal` / `bonus_super`
+имеют hard max **×25000** (Stake `max_win`), плюс soft jackpot **×2500**
+(`criteria=wincap`) и ультра-редкий `wincap_max`. Base/boost остаются ×2500.
+После смены обязателен M5 хотя бы для buy-режимов, затем `resample_books.py`
+(force-include ровно 1 книгу ×25000, RTP seed-search дожимает ~0.9601).
+
 **Bonus medium-vol (2026-07):** после смены FR / `sw_mult_weights` /
 `game_optimization.py` (bonus scaling + m2m) обязателен M5 хотя бы для
 `bonus_normal` + `bonus_super`, иначе LUT останется старой high-vol.

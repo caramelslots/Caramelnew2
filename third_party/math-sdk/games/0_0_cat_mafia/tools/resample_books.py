@@ -67,6 +67,13 @@ SEED = 42
 TARGET_RTP = 0.9601
 SEED_SEARCH_RANGE = 256
 
+# Buy modes: force exactly one official max-win book into equal-weight output.
+# RTP impact ≈ 25000 / N / cost (normal ~0.25%, super ~0.125%); seed search
+# cools the other N-1 books so SUMMARY RTP stays ~0.9601.
+FORCE_MAX_WIN_MODES = {"bonus_normal", "bonus_super"}
+MAX_WIN_BET_MULT = 25_000
+MAX_WIN_PAYOUT_CENTS = MAX_WIN_BET_MULT * 100  # payoutMultiplier units
+
 
 def read_lut(mode: str) -> list[tuple[int, int, int]]:
     rows: list[tuple[int, int, int]] = []
@@ -101,14 +108,24 @@ def choose_seed(
     payouts_by_id: dict[int, int],
     target_n: int,
     cost: float,
+    forced_ids: list[int] | None = None,
 ) -> tuple[int, list[int], float]:
-    """Pick seed whose empirical RTP is nearest TARGET_RTP (avoids forced wincap)."""
+    """Pick seed whose empirical RTP is nearest TARGET_RTP.
+
+    Optional forced_ids are always prepended (for official max-win presence).
+    """
+    forced_ids = list(forced_ids or [])
+    n_draw = target_n - len(forced_ids)
+    if n_draw < 0:
+        raise SystemExit(f"forced_ids ({len(forced_ids)}) exceed target_n ({target_n})")
+
     best_seed = SEED
     best_sample: list[int] | None = None
     best_rtp = 0.0
     best_gap = float("inf")
     for seed in range(SEED_SEARCH_RANGE):
-        sample = random.Random(seed).choices(sim_ids, weights=weights, k=target_n)
+        drawn = random.Random(seed).choices(sim_ids, weights=weights, k=n_draw) if n_draw else []
+        sample = forced_ids + drawn
         rtp = sum(payouts_by_id[sid] for sid in sample) / target_n / 100 / cost
         gap = abs(rtp - TARGET_RTP)
         if gap < best_gap:
@@ -151,10 +168,37 @@ def resample(mode: str, target_n: int, rng: random.Random) -> dict:
 
     wincap_ids = {sid for sid, p in payouts_by_id.items() if p == max_payout}
     cost = COST_MAP[mode]
+
+    forced_ids: list[int] = []
+    if mode in FORCE_MAX_WIN_MODES:
+        max_ids = [
+            sid
+            for sid, p in payouts_by_id.items()
+            if p == MAX_WIN_PAYOUT_CENTS and books.get(sid, {}).get("criteria") == "wincap_max"
+        ]
+        if not max_ids:
+            # Fallback: any book that already pays official max.
+            max_ids = [sid for sid, p in payouts_by_id.items() if p == MAX_WIN_PAYOUT_CENTS]
+        if not max_ids:
+            raise SystemExit(
+                f"  ERROR: {mode} has no ×{MAX_WIN_BET_MULT} book "
+                f"(payoutMultiplier={MAX_WIN_PAYOUT_CENTS}). Re-run sims/opt for buy modes."
+            )
+        # Prefer lowest weight among max books (rarest in weighted LUT).
+        max_ids.sort(key=lambda sid: next(w for s, w, _ in lut if s == sid))
+        forced_ids = [max_ids[0]]
+        print(
+            f"  Force-include max : id={forced_ids[0]} "
+            f"(×{MAX_WIN_BET_MULT}, criteria={books[forced_ids[0]].get('criteria')})"
+        )
+
     seed_used, sampled_ids, pre_rtp = choose_seed(
-        sim_ids, weights, payouts_by_id, target_n, cost
+        sim_ids, weights, payouts_by_id, target_n, cost, forced_ids=forced_ids
     )
     wincap_in_sample = sum(1 for sid in sampled_ids if sid in wincap_ids)
+    max_win_in_sample = sum(
+        1 for sid in sampled_ids if payouts_by_id[sid] == MAX_WIN_PAYOUT_CENTS
+    )
     if seed_used != SEED:
         print(f"  Chosen seed {seed_used} (default {SEED}) | pre-write RTP {pre_rtp:.6f}")
     else:
@@ -175,6 +219,8 @@ def resample(mode: str, target_n: int, rng: random.Random) -> dict:
     print(f"  Avg payout per spin: ×{avg_payout_in_units:.4f} bet")
     print(f"  FS books in output : {fs_in_sample:,} ({fs_in_sample / target_n * 100:.4f}%)")
     print(f"  Wincap books       : {wincap_in_sample:,}")
+    if mode in FORCE_MAX_WIN_MODES:
+        print(f"  Official ×{MAX_WIN_BET_MULT}   : {max_win_in_sample:,} book(s) in output")
 
     out_books_path = PUBLISH / f"books_{mode}.jsonl.zst"
     cctx = zstd.ZstdCompressor()
@@ -222,6 +268,7 @@ def resample(mode: str, target_n: int, rng: random.Random) -> dict:
         "target_n": target_n,
         "fs_pct": fs_in_sample / target_n * 100,
         "wincap_count": wincap_in_sample,
+        "max_win_count": max_win_in_sample if mode in FORCE_MAX_WIN_MODES else 0,
         "empirical_rtp": rtp_normalized,
         "size_mb": new_size / 1024 / 1024,
     }

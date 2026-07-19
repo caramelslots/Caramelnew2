@@ -1,6 +1,7 @@
 """Cat Mafia — game configuration.
 
-5×4 board, ~20 paylines, RTP ~96%, max win ×2500.
+5×4 board, ~20 paylines, RTP ~96%.
+Base/boost max ×2500; buy bonus max ×25000 (ultra-rare), soft jackpot ×2500.
 Forked from 0_0_daloniil_test; Wok Fury ladder/mystery removed.
 """
 
@@ -24,7 +25,9 @@ class GameConfig(Config):
         self.game_id = "0_0_cat_mafia"
         self.provider_number = 0
         self.working_name = "Cat Mafia"
-        self.wincap = 2_500.0
+        # Soft jackpot (common force-wincap fence). Buy modes also allow ultra-rare ×25000.
+        self.soft_wincap = 2_500.0
+        self.wincap = self.soft_wincap  # default; bet-mode max_win overrides during sims
         self.win_type = "lines"
         self.rtp = 0.96
         self.construct_paths()
@@ -247,12 +250,17 @@ class GameConfig(Config):
             "super_bonus": True,
         }
 
+        # Buy bonuses: advertised/hard max ×25000; soft force-wincap fence stays ×2500.
         mode_maxwins = {
-            "base": self.wincap,
-            "bonus_boost": self.wincap,
-            "bonus_normal": self.wincap,
-            "bonus_super": self.wincap,
+            "base": self.soft_wincap,
+            "bonus_boost": self.soft_wincap,
+            "bonus_normal": 25_000.0,
+            "bonus_super": 25_000.0,
         }
+        buy_soft = self.soft_wincap
+        buy_hard = 25_000.0
+        # ~10 forced max books per 1e5 sims; opt keeps their LUT weight tiny.
+        buy_wincap_max_quota = 0.0001
 
         # Dead + basegame + paw + sw_expand + freegame + wincap = 1.0
         # Equal feature rates: paw == sw_expand (~1/33 each).
@@ -346,13 +354,25 @@ class GameConfig(Config):
                 is_feature=False,
                 is_buybonus=True,
                 distributions=[
+                    # Classic big hit ×2500 (same feel as before).
                     Distribution(
                         criteria="wincap",
                         quota=0.001,
-                        win_criteria=mode_maxwins["bonus_normal"],
+                        win_criteria=buy_soft,
                         conditions=wincap_condition,
                     ),
-                    Distribution(criteria="freegame", quota=0.999, conditions=buy_normal_condition),
+                    # Ultra-rare official max ×25000.
+                    Distribution(
+                        criteria="wincap_max",
+                        quota=buy_wincap_max_quota,
+                        win_criteria=buy_hard,
+                        conditions=wincap_condition,
+                    ),
+                    Distribution(
+                        criteria="freegame",
+                        quota=round(0.999 - 0.001 - buy_wincap_max_quota, 6),
+                        conditions=buy_normal_condition,
+                    ),
                 ],
             ),
             BetMode(
@@ -367,10 +387,20 @@ class GameConfig(Config):
                     Distribution(
                         criteria="wincap",
                         quota=0.002,
-                        win_criteria=mode_maxwins["bonus_super"],
+                        win_criteria=buy_soft,
                         conditions=wincap_condition,
                     ),
-                    Distribution(criteria="freegame", quota=0.998, conditions=buy_super_condition),
+                    Distribution(
+                        criteria="wincap_max",
+                        quota=buy_wincap_max_quota,
+                        win_criteria=buy_hard,
+                        conditions=wincap_condition,
+                    ),
+                    Distribution(
+                        criteria="freegame",
+                        quota=round(0.998 - buy_wincap_max_quota, 6),
+                        conditions=buy_super_condition,
+                    ),
                 ],
             ),
         ]
@@ -385,8 +415,9 @@ class GameConfig(Config):
             6: (10.0, 50.0),
             7: (50.0, 100.0),
             8: (100.0, 250.0),
-            9: (250.0, self.wincap),
-            10: (self.wincap, float("inf")),
+            # Sensational from soft jackpot band; true ×25000 still level 10.
+            9: (250.0, self.soft_wincap),
+            10: (self.soft_wincap, float("inf")),
         }
         for idx, (lo, hi) in levels.items():
             if win_amount >= lo and win_amount < hi:

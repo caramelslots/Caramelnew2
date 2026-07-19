@@ -114,7 +114,7 @@ def _bonus_boost_scaling():
 
 
 def _bonus_normal_scaling():
-    """Buy Normal (cost 100×): lift mid body, soften extreme tail."""
+    """Buy Normal (cost 100×): lift mid body, soften extreme tail; crush >2500 except max fence."""
     return ConstructScaling(
         [
             {"criteria": "freegame", "scale_factor": 1.35, "win_range": (1, 35), "probability": 1.0},
@@ -122,6 +122,9 @@ def _bonus_normal_scaling():
             {"criteria": "freegame", "scale_factor": 1.25, "win_range": (100, 220), "probability": 1.0},
             {"criteria": "freegame", "scale_factor": 0.75, "win_range": (220, 700), "probability": 1.0},
             {"criteria": "freegame", "scale_factor": 0.4, "win_range": (700, 2500), "probability": 1.0},
+            # Natural FS must not fill 2500–25000; that band is wincap_max only.
+            {"criteria": "freegame", "scale_factor": 0.05, "win_range": (2500, 25000), "probability": 1.0},
+            {"criteria": "wincap_max", "scale_factor": 1.0, "win_range": (25000, 25000), "probability": 1.0},
         ]
     ).return_dict()
 
@@ -135,6 +138,8 @@ def _bonus_super_scaling():
             {"criteria": "freegame", "scale_factor": 1.2, "win_range": (200, 400), "probability": 1.0},
             {"criteria": "freegame", "scale_factor": 0.75, "win_range": (400, 1000), "probability": 1.0},
             {"criteria": "freegame", "scale_factor": 0.4, "win_range": (1000, 2500), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.05, "win_range": (2500, 25000), "probability": 1.0},
+            {"criteria": "wincap_max", "scale_factor": 1.0, "win_range": (25000, 25000), "probability": 1.0},
         ]
     ).return_dict()
 
@@ -196,10 +201,15 @@ class OptimizationSetup:
             },
             "bonus_normal": {
                 "conditions": {
+                    # Soft jackpot ×2500 — same RTP slice as before.
                     "wincap": ConstructConditions(
-                        rtp=0.01, av_win=wincaps["bonus_normal"], search_conditions=wincaps["bonus_normal"]
+                        rtp=0.01, av_win=2500.0, search_conditions=2500.0
                     ).return_dict(),
-                    "freegame": ConstructConditions(rtp=0.95, hr="x").return_dict(),
+                    # Ultra-rare ×25000: ~0.05% RTP ⇒ hit ~1 / 50M at full payout.
+                    "wincap_max": ConstructConditions(
+                        rtp=0.0005, av_win=wincaps["bonus_normal"], search_conditions=wincaps["bonus_normal"]
+                    ).return_dict(),
+                    "freegame": ConstructConditions(rtp=0.9495, hr="x").return_dict(),
                 },
                 "scaling": _bonus_normal_scaling(),
                 "parameters": _bonus_parameters(),
@@ -213,7 +223,10 @@ class OptimizationSetup:
             "bonus_super": {
                 "conditions": {
                     "wincap": ConstructConditions(
-                        rtp=0.02, av_win=wincaps["bonus_super"], search_conditions=wincaps["bonus_super"]
+                        rtp=0.0195, av_win=2500.0, search_conditions=2500.0
+                    ).return_dict(),
+                    "wincap_max": ConstructConditions(
+                        rtp=0.0005, av_win=wincaps["bonus_super"], search_conditions=wincaps["bonus_super"]
                     ).return_dict(),
                     "freegame": ConstructConditions(rtp=0.94, hr="x").return_dict(),
                 },

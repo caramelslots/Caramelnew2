@@ -46,6 +46,60 @@ class GameStateOverride(GameExecutables):
         self.sticky_sw: dict[int, int] = {}
         self.max_sticky_sw = int(getattr(self.config, "max_sticky_sw", 2))
 
+    def _fence_win_cap(self) -> float:
+        """Stop/clamp at distribution win_criteria when force_wincap (soft ×2500 vs hard ×25000)."""
+        try:
+            dist = self.get_current_betmode_distributions()
+            wc = dist.get_win_criteria() if dist is not None else None
+            cond = self.get_current_distribution_conditions() or {}
+        except Exception:  # noqa: BLE001
+            return float(self.config.wincap)
+        if cond.get("force_wincap") and wc is not None and float(wc) > 0:
+            return float(wc)
+        return float(self.config.wincap)
+
+    def evaluate_wincap(self) -> bool:
+        """Trigger wincap at the active fence cap (soft or hard), not only mode max."""
+        from src.events.event_constants import EventConstants
+
+        cap = self._fence_win_cap()
+        if self.win_manager.running_bet_win >= cap and not self.wincap_triggered:
+            self.wincap_triggered = True
+            self.book.add_event(
+                {
+                    "index": len(self.book.events),
+                    "type": EventConstants.WINCAP.value,
+                    "amount": int(round(cap * 100, 0)),
+                }
+            )
+            return True
+        return False
+
+    def update_final_win(self) -> None:
+        """Clamp payout to active fence cap so win_criteria (2500 / 25000) can match exactly."""
+        cap = self._fence_win_cap()
+        final = round(min(self.win_manager.running_bet_win, cap), 2)
+        basewin = round(min(self.win_manager.basegame_wins, cap), 2)
+        freewin = round(min(self.win_manager.freegame_wins, cap), 2)
+
+        self.final_win = final
+        self.book.payout_multiplier = self.final_win
+        self.book.basegame_wins = basewin
+        self.book.freegame_wins = freewin
+
+        assert min(
+            round(self.win_manager.basegame_wins + self.win_manager.freegame_wins, 2),
+            cap,
+        ) == round(
+            min(self.win_manager.running_bet_win, cap), 2
+        ), "Base + Free game payout mismatch!"
+        assert min(
+            round(self.book.basegame_wins + self.book.freegame_wins, 2),
+            cap,
+        ) == min(
+            round(self.book.payout_multiplier, 2), round(cap, 2)
+        ), "Base + Free game payout mismatch!"
+
     def assign_special_sym_function(self):
         self.special_symbol_functions = {
             "SW": [self.assign_sw_mult_property],
