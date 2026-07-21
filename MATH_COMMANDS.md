@@ -2,7 +2,7 @@
 
 Шпаргалка по основным командам разработки.
 
-- **Cat Mafia (активная):** `games/0_0_cat_mafia`  
+- **Cat Mafia (активная):** `games/0_0_cat_mafia`
 - **Wok Fury (donor):** `games/0_0_daloniil_test`
 
 Все команды запускаются из директории игры и предполагают, что venv
@@ -22,8 +22,6 @@
 
 ---
 
-
-
 ## Общие переменные окружения
 
 ```bash
@@ -38,8 +36,6 @@ PY=/tmp/csmath_venv/bin/python
 > блок (или склей с командой ниже через `&&`).
 
 ---
-
-
 
 ## 1. M5 — intermediate sim (1e5 per mode, ~10-20 мин)
 
@@ -100,8 +96,6 @@ grep -E "AssertionError|Error|Traceback" /tmp/m5.log # на всякий
 
 ---
 
-
-
 ## 2. M6 — production sim (1e6 per mode, ~2-4 часа)
 
 Когда: финальная итерация перед публикацией на Stake RGS.
@@ -123,8 +117,6 @@ grep -E "AssertionError|Error|Traceback" /tmp/m6.log
 
 ---
 
-
-
 ## 3. Создание свежего resample (обновление backup'а)
 
 Когда: перед публикацией в Stake RGS, чтобы их dashboard показывал
@@ -139,8 +131,6 @@ cp -r library/publish_files library/publish_files_backup_pre_resample
 ```
 
 ---
-
-
 
 ## 4. Применение resample (генерация unbiased books)
 
@@ -159,8 +149,6 @@ $PY tools/resample_books.py
 
 ---
 
-
-
 ## 5. Sync math → web (storybook fixtures для демки)
 
 Когда: после M5/M6/resample, чтобы Storybook stories показывали
@@ -173,15 +161,13 @@ $PY run_storybook.py && $PY sync_to_web_sdk.py
 Что делает:
 
 - `run_storybook.py` — генерит ~30-100 books на режим в `library/books/*.json`
-(использует текущий `game_config.py` / `game_override.py`).
-⚠️ **Защищён**: не трогает `publish_files/` (snapshot+restore внутри).
+  (использует текущий `game_config.py` / `game_override.py`).
+  ⚠️ **Защищён**: не трогает `publish_files/` (snapshot+restore внутри).
 - `sync_to_web_sdk.py` — копирует `.json` → `apps/daloniil_test/src/stories/data/*.ts`.
 
 После — Vite HMR подхватит. Если демка открыта, обнови вкладку (Cmd-Shift-R).
 
 ---
-
-
 
 ## Полный workflow перед публикацией
 
@@ -210,8 +196,6 @@ $PY run_storybook.py && $PY sync_to_web_sdk.py
 
 ---
 
-
-
 ## Workflow для итеративной разработки (без RGS publish)
 
 Только M5 + sync, без resample (демка не зависит от bias).
@@ -222,8 +206,6 @@ $PY run_storybook.py && $PY sync_to_web_sdk.py
 ```
 
 ---
-
-
 
 ## Очистка `library/` (если нужно начать с чистого листа)
 
@@ -240,8 +222,6 @@ rm -rf library/books library/configs library/forces library/lookup_tables \
 
 ---
 
-
-
 ## Assert: доп. FS без пуль
 
 После shoot на +FS не должно быть `BT` / `bulletCollect` (включая padding):
@@ -254,12 +234,9 @@ $PY tools/assert_no_bullets_on_extra_fs.py
 
 ---
 
-
-
 ## Связанные документы
 
 - `third_party/math-sdk/games/0_0_daloniil_test/REDESIGN_PLAN.md` — план математических правок
 - `third_party/math-sdk/games/0_0_daloniil_test/DEMO_ISSUES.md` — лог багов и фиксов в демке
 - `third_party/math-sdk/games/0_0_daloniil_test/run.py` — main M5/M6 entrypoint (поменяй `num_sim_args` для M6)
 - `third_party/math-sdk/games/0_0_daloniil_test/tools/resample_books.py` — resample logic + docstring
-

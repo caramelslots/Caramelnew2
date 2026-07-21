@@ -4,8 +4,7 @@
   cd third_party/math-sdk/games/0_0_daloniil_test
   python3 run.py
 
-Sim counts уменьшены до 1e3 для быстрой проверки. Для production-симуляции
-поднять до 1e6+ в каждом режиме.
+Sim counts: M6 production = 1e6 per mode (~2–4 h). For quick check use 1e5 (M5).
 """
 
 from gamestate import GameState
@@ -26,12 +25,12 @@ if __name__ == "__main__":
     compression = True
     profiling = False
 
-    # M5 recovery: only bonus_super (base/boost/normal already OK). Restore all 1e5 after.
+    # M6 — production sim (1e6 per mode).
     num_sim_args = {
-        "base": 0,
-        "bonus_boost": 0,
-        "bonus_normal": 0,
-        "bonus_super": int(1e5),
+        "base": int(1e6),
+        "bonus_boost": int(1e6),
+        "bonus_normal": int(1e6),
+        "bonus_super": int(1e6),
     }
 
     run_conditions = {
@@ -40,8 +39,7 @@ if __name__ == "__main__":
         "run_analysis": True,
         "run_format_checks": True,
     }
-    # Optimize all modes (raw LUTs for others already from this M5).
-    target_modes = ["base", "bonus_boost", "bonus_normal", "bonus_super"]
+    target_modes = list(num_sim_args.keys())
 
     config = GameConfig()
     gamestate = GameState(config)

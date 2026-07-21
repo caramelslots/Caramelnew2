@@ -144,6 +144,8 @@
 		width: min(640px, 90vw);
 		height: 100vh;
 		overflow: visible;
+		/* Slightly above vertical center. */
+		transform: translateY(-6vh);
 	}
 
 	.player :global(.spine-player) {
