@@ -48,10 +48,10 @@ SOURCE = ROOT / "library" / "publish_files_backup_pre_resample"
 CONFIGS = ROOT / "library" / "configs"
 
 TARGET_COUNTS = {
-    "base":          100_000,
-    "bonus_boost":   100_000,
-    "bonus_normal":  100_000,
-    "bonus_super":   100_000,
+    "base":          1_000_000,
+    "bonus_boost":   1_000_000,
+    "bonus_normal":  1_000_000,
+    "bonus_super":   1_000_000,
 }
 
 COST_MAP = {
