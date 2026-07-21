@@ -28,7 +28,9 @@
 	import { playBet, playBookEvent, playBookEvents } from '../game/utils';
 	import { eventEmitter } from '../game/eventEmitter';
 	import { devPreview } from '../game/devPreview.svelte';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { stateLayout } from '../game/stateLayout';
 	import {
 		getRawUrlLang,
 		INVALID_LANG_LABELS,
@@ -685,6 +687,54 @@
 			await playBet({ ...book, state: book.events } as Parameters<typeof playBet>[0]);
 		});
 
+	let loaderProgressTimer: ReturnType<typeof setInterval> | null = null;
+
+	const stopLoaderProgressTimer = () => {
+		if (loaderProgressTimer) {
+			clearInterval(loaderProgressTimer);
+			loaderProgressTimer = null;
+		}
+	};
+
+	/** Stage A: spine logo-loader + progress bar under the animation. */
+	const showLoaderProgressPreview = () => {
+		stopLoaderProgressTimer();
+		stateLayout.showLoadingScreen = false;
+		gameEntrance.loadingCardsVisible = false;
+		gameEntrance.preloadContent = true;
+		gameEntrance.showContent = false;
+		devPreview.loaderProgress = true;
+		devPreview.loaderProgressValue = 0;
+		loaderProgressTimer = setInterval(() => {
+			if (devPreview.loaderProgressValue >= 100) {
+				stopLoaderProgressTimer();
+				return;
+			}
+			devPreview.loaderProgressValue = Math.min(100, devPreview.loaderProgressValue + 2);
+		}, 40);
+	};
+
+	/** Stage B: info cards + Press to Continue. */
+	const showLoadingCardsPreview = () => {
+		stopLoaderProgressTimer();
+		devPreview.loaderProgress = false;
+		devPreview.loaderProgressValue = 0;
+		gameEntrance.showContent = false;
+		gameEntrance.loadingCardsVisible = true;
+		gameEntrance.preloadContent = true;
+		stateLayout.showLoadingScreen = true;
+	};
+
+	const hideLoadingScreenPreview = () => {
+		stopLoaderProgressTimer();
+		devPreview.loaderProgress = false;
+		devPreview.loaderProgressValue = 0;
+		gameEntrance.preloadContent = true;
+		gameEntrance.showContent = true;
+		gameEntrance.loadingCardsVisible = false;
+		stateLayout.showLoadingScreen = false;
+	};
+
 	onMount(() => {
 		const onKeyDown = (e: KeyboardEvent) => {
 			// Shift+D — раскладко-независимо через e.code.
@@ -751,7 +801,26 @@
 	{/if}
 
 	{#if open}
-		<div class="dev-body">
+		<div class="dev-body" onwheel={(e) => e.stopPropagation()}>
+			<section>
+				<h4>Loading</h4>
+				<div class="grid">
+					<button
+						type="button"
+						class:active={devPreview.loaderProgress}
+						onclick={showLoaderProgressPreview}
+					>
+						Show Progress
+					</button>
+					<button type="button" onclick={showLoadingCardsPreview}>
+						Show Cards
+					</button>
+					<button type="button" onclick={hideLoadingScreenPreview}>
+						Hide Loading
+					</button>
+				</div>
+			</section>
+
 			<section>
 				<h4>Reel Speed</h4>
 				<div class="grid">

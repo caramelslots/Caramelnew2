@@ -7,12 +7,15 @@
 	import { setContext } from '../game/context';
 	import { startEarlyAssetPreload, startBatch2EarlyPreload, startBatch3EarlyPreload } from '../game/earlyAssetPreload';
 	import { setLoaderStage } from '../game/loaderAssetPipeline.svelte';
+	import { devPreview } from '../game/devPreview.svelte';
 
 	import messagesMap from '../i18n/messagesMap';
 
 	type Props = { children: Snippet };
 
 	const props: Props = $props();
+
+	let showYourLoader = $state(true);
 
 	setContext();
 
@@ -31,6 +34,17 @@
 	</Authenticate>
 </GlobalStyle>
 
-<BootstrapLoader oncomplete={() => setLoaderStage('cards')} />
+{#if showYourLoader}
+	<BootstrapLoader
+		oncomplete={() => setLoaderStage('cards')}
+		ondismissed={() => {
+			showYourLoader = false;
+		}}
+	/>
+{/if}
+
+{#if devPreview.loaderProgress && !showYourLoader}
+	<BootstrapLoader preview />
+{/if}
 
 {@render props.children()}
