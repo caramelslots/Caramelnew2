@@ -26,12 +26,12 @@ if __name__ == "__main__":
     compression = True
     profiling = False
 
-    # M6 production (1e6 sims per mode) — ~2-4 часа. Для dev/M5 верни 1e5.
+    # M5 recovery: only bonus_super (base/boost/normal already OK). Restore all 1e5 after.
     num_sim_args = {
-        "base": int(1e6),
-        "bonus_boost": int(1e6),
-        "bonus_normal": int(1e6),
-        "bonus_super": int(1e6),
+        "base": 0,
+        "bonus_boost": 0,
+        "bonus_normal": 0,
+        "bonus_super": int(1e5),
     }
 
     run_conditions = {
@@ -40,7 +40,8 @@ if __name__ == "__main__":
         "run_analysis": True,
         "run_format_checks": True,
     }
-    target_modes = list(num_sim_args.keys())
+    # Optimize all modes (raw LUTs for others already from this M5).
+    target_modes = ["base", "bonus_boost", "bonus_normal", "bonus_super"]
 
     config = GameConfig()
     gamestate = GameState(config)

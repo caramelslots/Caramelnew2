@@ -22,6 +22,8 @@
 
 ---
 
+
+
 ## Общие переменные окружения
 
 ```bash
@@ -36,6 +38,8 @@ PY=/tmp/csmath_venv/bin/python
 > блок (или склей с командой ниже через `&&`).
 
 ---
+
+
 
 ## 1. M5 — intermediate sim (1e5 per mode, ~10-20 мин)
 
@@ -74,7 +78,7 @@ $PY tools/resample_books.py
 `game_optimization.py` (bonus scaling + m2m) обязателен M5 хотя бы для
 `bonus_normal` + `bonus_super`, иначе LUT останется старой high-vol.
 
-**ETL40 `bonus_boost`:** если Stake ругается на ETL 40× (>0.800), переоптимизируй:
+**ETL40** `bonus_boost`**:** если Stake ругается на ETL 40× (>0.800), переоптимизируй:
 `$PY run_bonus_boost_etl.py` (нужен свежий `math_config` через `generate_configs`).
 
 В `0_0_cat_mafia/run.py` должно быть `num_sim_args = 1e5` на режим и
@@ -95,6 +99,8 @@ grep -E "AssertionError|Error|Traceback" /tmp/m5.log # на всякий
 После M5 → выполни **§4 Sync** для storybook fixtures.
 
 ---
+
+
 
 ## 2. M6 — production sim (1e6 per mode, ~2-4 часа)
 
@@ -117,6 +123,8 @@ grep -E "AssertionError|Error|Traceback" /tmp/m6.log
 
 ---
 
+
+
 ## 3. Создание свежего resample (обновление backup'а)
 
 Когда: перед публикацией в Stake RGS, чтобы их dashboard показывал
@@ -131,6 +139,8 @@ cp -r library/publish_files library/publish_files_backup_pre_resample
 ```
 
 ---
+
+
 
 ## 4. Применение resample (генерация unbiased books)
 
@@ -148,6 +158,8 @@ $PY tools/resample_books.py
 свежие `publish_files` resample'ом из старого snapshot'а.
 
 ---
+
+
 
 ## 5. Sync math → web (storybook fixtures для демки)
 
@@ -168,6 +180,8 @@ $PY run_storybook.py && $PY sync_to_web_sdk.py
 После — Vite HMR подхватит. Если демка открыта, обнови вкладку (Cmd-Shift-R).
 
 ---
+
+
 
 ## Полный workflow перед публикацией
 
@@ -196,6 +210,8 @@ $PY run_storybook.py && $PY sync_to_web_sdk.py
 
 ---
 
+
+
 ## Workflow для итеративной разработки (без RGS publish)
 
 Только M5 + sync, без resample (демка не зависит от bias).
@@ -206,6 +222,8 @@ $PY run_storybook.py && $PY sync_to_web_sdk.py
 ```
 
 ---
+
+
 
 ## Очистка `library/` (если нужно начать с чистого листа)
 
@@ -222,6 +240,8 @@ rm -rf library/books library/configs library/forces library/lookup_tables \
 
 ---
 
+
+
 ## Assert: доп. FS без пуль
 
 После shoot на +FS не должно быть `BT` / `bulletCollect` (включая padding):
@@ -233,6 +253,8 @@ $PY tools/assert_no_bullets_on_extra_fs.py
 Запускай после `run_storybook.py` / M5 / resample.
 
 ---
+
+
 
 ## Связанные документы
 
