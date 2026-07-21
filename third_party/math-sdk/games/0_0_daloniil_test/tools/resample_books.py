@@ -50,7 +50,6 @@ CONFIGS = ROOT / "library" / "configs"
 TARGET_COUNTS = {
     "base":          100_000,
     "bonus_boost":   100_000,
-    "special_spins": 100_000,
     "bonus_normal":  100_000,
     "bonus_super":   100_000,
 }
@@ -58,7 +57,6 @@ TARGET_COUNTS = {
 COST_MAP = {
     "base":          1,
     "bonus_boost":   2,
-    "special_spins": 30,
     "bonus_normal":  100,
     "bonus_super":   200,
 }

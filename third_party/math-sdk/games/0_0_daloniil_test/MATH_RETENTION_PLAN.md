@@ -255,7 +255,6 @@ Micro-wins (levels 1–2, total < 1× bet): **только ticker**, без fanf
 #### Не трогаем
 
 - **FR0, FR1, FRWCAP** — FS ленты
-- **BR2** — special_spins
 
 При реализации: `python3 generate_reels.py` → sim → optimization rerun.
 
@@ -447,7 +446,7 @@ Combined player feel (base): 19% hit + 10% FS + 25% cluster ≈ **~54%** спи�
 | W      | very rare    | **1**          | ~2%                       |
 
 > W включён **редко** — визуально сильный, но 5×W на экране может намекать на huge win.
-> При реализации: mirror weights per strip (BR1_ZW, BR2_ZW, FR0_ZW — свои веса от ленты).
+> При реализации: mirror weights per strip (BR1_ZW, FR0_ZW — свои веса от ленты).
 
 #### Почему это хорошо
 
@@ -494,7 +493,7 @@ Combined player feel (base): 19% hit + 10% FS + 25% cluster ≈ **~54%** спи�
 
 | FS strip   | Modes                                             |
 | ---------- | ------------------------------------------------- |
-| **FR0_ZW** | base, bonus_boost, special_spins, bonus_normal FS |
+| **FR0_ZW** | base, bonus_boost, bonus_normal FS |
 | **FR1_ZW** | bonus_super FS                                    |
 
 > FR0_ZW weights пересчитываются от FR0 symbol density; FR1_ZW — от FR1.
@@ -518,7 +517,6 @@ Combined player feel (base): 19% hit + 10% FS + 25% cluster ≈ **~54%** спи�
 | ------ | --------------------------- |
 | BR0_ZW | base / buy trigger zerowin  |
 | BR1_ZW | bonus_boost zerowin         |
-| BR2_ZW | special_spins zerowin       |
 | FR0_ZW | FS dead spins (default)     |
 | FR1_ZW | FS dead spins (bonus_super) |
 
@@ -549,11 +547,10 @@ Combined player feel (base): 19% hit + 10% FS + 25% cluster ≈ **~54%** спи�
 | --------------- | ------------------ | ---------------- |
 | `base`          | BR0_ZW             | FR0_ZW           |
 | `bonus_boost`   | BR1_ZW             | FR0_ZW           |
-| `special_spins` | BR2_ZW             | FR0_ZW           |
 | `bonus_normal`  | BR0_ZW             | FR0_ZW           |
 | `bonus_super`   | BR0_ZW             | FR1_ZW           |
 
-> Buy/special modes в основном FS — near-miss на **base trigger spin** и на **dead FS spins**
+> Buy modes в основном FS — near-miss на **base trigger spin** и на **dead FS spins**
 > (если Q7 = да). RTP по-прежнему не меняется.
 
 ---

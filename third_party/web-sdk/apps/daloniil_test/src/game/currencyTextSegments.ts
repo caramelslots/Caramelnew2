@@ -31,7 +31,7 @@ const pushSegment = (
 
 /**
  * Split a formatted win amount: symbol → bablo, digits/separators → krutoi.
- * Uses authenticate currency (including social XGC/XSC). Balance/Bet use numberToCurrencyString.
+ * Uses authenticate currency (including social XGC/XSC/XEC). Balance/Bet use numberToCurrencyString.
  * Win body keeps necessary precision only (e.g. $0.075), not float noise like $16.300023.
  */
 export const amountToCurrencySegments = (

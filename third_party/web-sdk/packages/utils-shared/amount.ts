@@ -47,6 +47,8 @@ const CURRENCY_META: Record<
 	BHD: { symbol: 'BD', decimals: 2 },
 	XGC: { symbol: 'GC', decimals: 0, symbolAfter: true },
 	XSC: { symbol: 'SC', decimals: 2, symbolAfter: true },
+	/** Stake EU Social Mode cash — display as SC (same label as XSC / Stake US). */
+	XEC: { symbol: 'SC', decimals: 2, symbolAfter: true },
 };
 
 /** API amounts are micro-units (1_000_000 = 1.00). Wins may need up to this many fraction digits. */

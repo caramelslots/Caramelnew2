@@ -52,7 +52,7 @@ export const i18nDerived = {
 	autoplayRounds: () => t('AUTOPLAY_ROUNDS'),
 	autoplayStart: () => t('AUTOPLAY_START'),
 	autoplayStartWithRounds: (rounds: string) => `${t('AUTOPLAY_START_LABEL')} (${rounds})`,
-	autoplayMessageInsufficientFundsTitle: () => t('AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE'),
+	autoplayMessageInsufficientFundsTitle: () => ts('AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE'),
 	autoplayMessageInsufficientFundsBody: () => ts('AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY'),
 	autoplayMessageLossLimitTitle: () => ts('AUTOPLAY_MSG_LOSS_LIMIT_TITLE'),
 	autoplayMessageLossLimitBody: () => ts('AUTOPLAY_MSG_LOSS_LIMIT_BODY'),
@@ -65,12 +65,12 @@ export const i18nDerived = {
 	/* Стоимость фичи: не используем плейсхолдеры `{cost}` (Lingui интерпретирует
 	   их как ICU-параметры и без values отдаёт пустую строку), а конструируем
 	   строку прямо здесь: "{сумма_валюты} {локализованный_суффикс}". */
-	bonusBoostCost: (cost: string) => `${cost} ${t('PER_SPIN_SUFFIX')}`,
+	bonusBoostCost: (cost: string) => `${cost} ${ts('PER_SPIN_SUFFIX')}`,
 	specialSpins: () => t('SPECIAL_SPINS'),
 	specialSpinsDesc: () => t('SPECIAL_SPINS_DESC'),
-	specialSpinsCost: (cost: string) => `${cost} ${t('PER_SPIN_SUFFIX')}`,
+	specialSpinsCost: (cost: string) => `${cost} ${ts('PER_SPIN_SUFFIX')}`,
 	/* Универсальная cost-строка для фич в авто-меню. */
-	featurePerSpinCost: (cost: string) => `${cost} ${t('PER_SPIN_SUFFIX')}`,
+	featurePerSpinCost: (cost: string) => `${cost} ${ts('PER_SPIN_SUFFIX')}`,
 	rtpLabel: () => t('RTP_LABEL'),
 	// Free Spins
 	fsCounterLabel: () => t('FS_COUNTER_LABEL'),
@@ -114,7 +114,7 @@ export const i18nDerived = {
 	gameInfoTitle: () => t('GAME_INFO_TITLE'),
 	gameInfoSections: () => getGameInfoSections(ts),
 	gameInfoSpecialSymbolsTitle: () => t('GAME_INFO_SPECIAL_SYMBOLS_TITLE'),
-	gameInfoPaylinesTitle: () => t('GAME_INFO_PAYLINES_TITLE'),
+	gameInfoPaylinesTitle: () => ts('GAME_INFO_PAYLINES_TITLE'),
 	gameInfoPaylinesNote: () => ts('GAME_INFO_PAYLINES_NOTE'),
 	gameInfoPaytableTitle: () => ts('GAME_INFO_PAYTABLE_TITLE'),
 	gameInfoPaytableNote: () => ts('GAME_INFO_PAYTABLE_NOTE'),
@@ -142,5 +142,5 @@ export const i18nDerived = {
 	replayStart: () => t('REPLAY_START'),
 	replayAgain: () => t('REPLAY_AGAIN'),
 	replayCompleteTitle: () => t('REPLAY_COMPLETE_TITLE'),
-	replayDisclaimer: () => t('REPLAY_DISCLAIMER'),
+	replayDisclaimer: () => ts('REPLAY_DISCLAIMER'),
 };

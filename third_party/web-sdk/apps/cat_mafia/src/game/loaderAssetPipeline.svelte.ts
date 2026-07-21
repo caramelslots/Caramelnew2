@@ -1,14 +1,13 @@
-export type LoaderStage = 'stake' | 'bootstrap' | 'cards' | 'done';
+export type LoaderStage = 'bootstrap' | 'cards' | 'done';
 
 const STAGE_ORDER: Record<LoaderStage, number> = {
-	stake: 0,
-	bootstrap: 1,
-	cards: 2,
-	done: 3,
+	bootstrap: 0,
+	cards: 1,
+	done: 2,
 };
 
 export const loaderAssetPipeline = $state({
-	stage: 'stake' as LoaderStage,
+	stage: 'bootstrap' as LoaderStage,
 });
 
 const waiters: Array<{ minStage: LoaderStage; resolve: () => void }> = [];

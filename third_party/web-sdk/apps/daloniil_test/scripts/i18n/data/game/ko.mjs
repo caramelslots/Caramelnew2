@@ -27,9 +27,6 @@ export default {
 	BONUS_BOOST_DESC: '플레이어는 ×2로 보너스 부스트를 활성화할 수 있습니다.',
 	BONUS_BOOST_COST: '{cost}/스핀',
 	PER_SPIN_SUFFIX: '/스핀',
-	SPECIAL_SPINS: '스페셜 스핀',
-	SPECIAL_SPINS_DESC: '플레이어는 ×30으로 스페셜 스핀을 활성화할 수 있습니다.',
-	SPECIAL_SPINS_COST: '{cost}/스핀',
 	RTP_LABEL: 'RTP',
 	FS_COUNTER_LABEL: '무료 스핀',
 	FS_COUNTER_OF: '/',
@@ -64,7 +61,7 @@ export default {
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'WILD 심볼',
 	GAME_INFO_WILD_BODY:
-		'Wild 심볼은 Bonus 심볼을 제외한 모든 유료 심볼을 대체합니다. Wild는 5개 일치 시 베팅의 225배를 지급합니다.',
+		'Wild 심볼은 Bonus 심볼을 제외한 모든 유료 심볼을 대체합니다. Wild는 5개 일치 시 베팅의 225배를 지급합니다. During Free Spins, each Wild receives a multiplier of ×2, ×5, ×10, ×20, or ×50. If more than one Wild lands on a winning payline, their multipliers are added together and applied to that line win.',
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: '무료 스핀',
 	GAME_INFO_FS_BODY:
@@ -77,11 +74,11 @@ export default {
 		'무료 스핀 중 나온 모든 Bonus 심볼은 Progress Ladder에 수집됩니다. Bonus 심볼 4개를 모을 때마다 한 단계 올라갑니다. 각 단계마다 추가 무료 스핀 3회와 Sticky Mystery Reel 1개가 해제되며, 최대 5단계(추가 무료 스핀 15회)입니다.',
 	GAME_INFO_BET_MODES_TITLE: '베팅 모드',
 	GAME_INFO_BET_MODES_BODY:
-		'Base (1×): The default mode. Each spin costs 1× your base bet. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All wins are calculated as multiples of your base bet. RTP 96.03%. Maximum win 2,500× your base bet.\nBonus Boost (2×): Enable this mode to play at 2× your base bet per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All wins are calculated as multiples of your base bet, not the 2× mode cost. RTP 96.04%. Maximum win 2,355.2× your base bet.\nSpecial Spins (30×): Enable this mode to play at 30× your base bet per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All wins are calculated as multiples of your base bet, not the 30× mode cost. RTP 96.01%. Maximum win 2,500× your base bet.\nBuy Normal Bonus (100×): Purchase Normal Bonus for 100× your base bet to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.\nBuy Super Bonus (200×): Purchase Super Bonus for 200× your base bet to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.',
+		'Base (1×): The default mode. Each spin costs 1× your base bet. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All wins are calculated as multiples of your base bet. RTP 96.03%. Maximum win 2,500× your base bet.\nBonus Boost (2×): Enable this mode to play at 2× your base bet per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All wins are calculated as multiples of your base bet, not the 2× mode cost. RTP 96.04%. Maximum win 2,355.2× your base bet.\nBuy Normal Bonus (100×): Purchase Normal Bonus for 100× your base bet to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.\nBuy Super Bonus (200×): Purchase Super Bonus for 200× your base bet to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.',
 	GAME_INFO_PAYTABLE_TITLE: '페이테이블 (× 베팅)',
 	GAME_INFO_PAYTABLE_NOTE: '모든 배당 값은 기본 베팅의 배수입니다.',
 	GAME_INFO_PAYTABLE_BODY:
-		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
+		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1\nW: 5 = 225',
 		GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
 	GAME_INFO_CONTROLS_BODY:
 		'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nBet amount (−): Use the minus button to decrease your bet amount. Bet changes are only available while the game is idle.\nBet amount (+): Use the plus button to increase your bet amount. Bet changes are only available while the game is idle.\nBuy Bonus: Open Buy Bonus to purchase Normal Bonus or Super Bonus. Confirm a purchase to start the selected feature immediately.\nBonus Boost: Enable Bonus Boost to play at 2× your base bet with more Bonus symbols and a higher chance of triggering free spins. You can turn it on or off from the Buy Bonus panel or the Autoplay panel.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance: Shows your current balance. This is informational and is not a button.\nBet: Shows your selected bet amount. This is informational and is not a button.',

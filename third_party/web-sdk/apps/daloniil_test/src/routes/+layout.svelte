@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, type Snippet } from 'svelte';
 	import { GlobalStyle } from 'components-ui-html';
-	import { Authenticate, LoaderStakeEngine, LoadI18n } from 'components-shared';
+	import { Authenticate, LoadI18n } from 'components-shared';
 	import BootstrapLoader from '../components/BootstrapLoader.svelte';
 	import Game from '../components/Game.svelte';
 	import { setContext } from '../game/context';
@@ -14,14 +14,12 @@
 
 	const props: Props = $props();
 
-	let showYourLoader = $state(false);
-
-	const loaderUrlStakeEngine = new URL('../../stake-engine-loader.gif', import.meta.url).href;
-
 	setContext();
 
 	onMount(() => {
 		startEarlyAssetPreload();
+		startBatch2EarlyPreload();
+		startBatch3EarlyPreload();
 	});
 </script>
 
@@ -33,18 +31,6 @@
 	</Authenticate>
 </GlobalStyle>
 
-<LoaderStakeEngine
-	src={loaderUrlStakeEngine}
-	oncomplete={() => {
-		showYourLoader = true;
-		setLoaderStage('bootstrap');
-		startBatch2EarlyPreload();
-		startBatch3EarlyPreload();
-	}}
-/>
-
-{#if showYourLoader}
-	<BootstrapLoader oncomplete={() => setLoaderStage('cards')} />
-{/if}
+<BootstrapLoader oncomplete={() => setLoaderStage('cards')} />
 
 {@render props.children()}

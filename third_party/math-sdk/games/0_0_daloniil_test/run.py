@@ -30,7 +30,6 @@ if __name__ == "__main__":
     num_sim_args = {
         "base": int(1e6),
         "bonus_boost": int(1e6),
-        "special_spins": int(1e6),
         "bonus_normal": int(1e6),
         "bonus_super": int(1e6),
     }

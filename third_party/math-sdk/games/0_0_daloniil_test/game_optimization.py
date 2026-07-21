@@ -114,21 +114,6 @@ class OptimizationSetup:
                     bias_weights=[0.6],
                 ).return_dict(),
             },
-            "special_spins": {
-                "conditions": {
-                    "wincap": ConstructConditions(
-                        rtp=0.02, av_win=wincaps["special_spins"], search_conditions=wincaps["special_spins"]
-                    ).return_dict(),
-                    "freegame": ConstructConditions(rtp=0.94, hr="x").return_dict(),
-                },
-                "scaling": _bonus_scaling(),
-                "parameters": _bonus_parameters(),
-                "distribution_bias": ConstructFenceBias(
-                    applied_criteria=["freegame"],
-                    bias_ranges=[(1000.0, 2500.0)],
-                    bias_weights=[0.5],
-                ).return_dict(),
-            },
             "bonus_normal": {
                 "conditions": {
                     "wincap": ConstructConditions(

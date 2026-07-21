@@ -54,7 +54,7 @@ mystery reels тоже инициализировались).
 ### Fix plan
 1. Запустить `sync_to_web_sdk.py` (или эквивалент `run_storybook.py`)
    чтобы регенерировать `books_bonus_super.ts`, `books_bonus_normal.ts`,
-   `books_special_spins.ts`, `books_bonus_boost.ts`, `base_books.ts`
+   `books_bonus_boost.ts`, `base_books.ts`
    из свежего `library/publish_files/`.
 2. Перезапустить демку (Vite HMR подхватит).
 3. Проверить вручную: 5–10 покупок `super_bonus` → ожидаем
@@ -80,7 +80,6 @@ PYTHONPATH=../..:. /tmp/csmath_venv/bin/python run_storybook.py
 - `base_books.ts`         (100 books, 344.9 KB)
 - `bonus_books.ts`        (30 books, 628.1 KB)
 - `books_bonus_boost.ts`  (60 books, 300.3 KB)
-- `books_special_spins.ts`(30 books, 612.0 KB)
 - `books_bonus_super.ts`  (30 books, 656.1 KB)
 
 ### Owner / ETA
