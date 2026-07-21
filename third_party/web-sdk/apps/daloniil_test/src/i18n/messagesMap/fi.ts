@@ -131,5 +131,5 @@ export default {
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Kokonaispelimäärä',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Loppukerroin',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Kokonaispalkinto',
-	REPLAY_DISCLAIMER_SOCIAL: 'This is a replay of a previous play round. No plays will be placed.',
+	REPLAY_DISCLAIMER_SOCIAL: 'Tämä on edellisen pelikierroksen toisto. Uusia pelejä ei aloiteta.',
 };

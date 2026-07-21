@@ -114,20 +114,18 @@ export const i18nDerived = {
 	gameInfoProgressLadderTitle: () => t('GAME_INFO_PROGRESS_LADDER_TITLE'),
 	gameInfoProgressLadderBody: () => t('GAME_INFO_PROGRESS_LADDER_BODY'),
 	gameInfoControlsTitle: () => ts('GAME_INFO_CONTROLS_TITLE'),
-	// Replay Mode — Stake Engine often launches Replay with social=false, but
-	// Stake.us jurisdiction still forbids bet/cost/pay/fund wording in this UI.
-	// Always use _SOCIAL copy for player-facing replay labels.
+	// Replay Mode — real-money vs social (`?social=true`) via KEY / KEY_SOCIAL.
 	replayBadge: () => t('REPLAY_BADGE'),
-	replayTitle: () => t('REPLAY_TITLE_SOCIAL'),
+	replayTitle: () => ts('REPLAY_TITLE'),
 	replayMode: () => t('REPLAY_MODE'),
 	replayModeBase: () => t('REPLAY_MODE_BASE'),
-	replayBaseBet: () => t('REPLAY_BASE_BET_SOCIAL'),
-	replayCostMultiplier: () => t('REPLAY_COST_MULTIPLIER_SOCIAL'),
-	replayTotalBetCost: () => t('REPLAY_TOTAL_BET_COST_SOCIAL'),
-	replayPayoutMultiplier: () => t('REPLAY_PAYOUT_MULTIPLIER_SOCIAL'),
-	replayTotalWin: () => t('REPLAY_TOTAL_WIN_SOCIAL'),
+	replayBaseBet: () => ts('REPLAY_BASE_BET'),
+	replayCostMultiplier: () => ts('REPLAY_COST_MULTIPLIER'),
+	replayTotalBetCost: () => ts('REPLAY_TOTAL_BET_COST'),
+	replayPayoutMultiplier: () => ts('REPLAY_PAYOUT_MULTIPLIER'),
+	replayTotalWin: () => ts('REPLAY_TOTAL_WIN'),
 	replayStart: () => t('REPLAY_START'),
 	replayAgain: () => t('REPLAY_AGAIN'),
 	replayCompleteTitle: () => t('REPLAY_COMPLETE_TITLE'),
-	replayDisclaimer: () => t('REPLAY_DISCLAIMER_SOCIAL'),
+	replayDisclaimer: () => ts('REPLAY_DISCLAIMER'),
 };

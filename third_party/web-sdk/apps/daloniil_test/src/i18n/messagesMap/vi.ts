@@ -131,5 +131,5 @@ export default {
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Tổng số tiền chơi',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Hệ số cuối',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Tổng thưởng',
-	REPLAY_DISCLAIMER_SOCIAL: 'This is a replay of a previous play round. No plays will be placed.',
+	REPLAY_DISCLAIMER_SOCIAL: 'Đây là phát lại lượt chơi trước. Không có lượt chơi mới nào được bắt đầu.',
 };

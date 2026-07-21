@@ -131,5 +131,5 @@ export default {
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Importe total de jugada',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Multiplicador final',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Premio total',
-	REPLAY_DISCLAIMER_SOCIAL: 'This is a replay of a previous play round. No plays will be placed.',
+	REPLAY_DISCLAIMER_SOCIAL: 'Esta es la repetición de una jugada anterior. No se iniciarán nuevas jugadas.',
 };

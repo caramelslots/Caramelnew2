@@ -87,6 +87,9 @@ const ru = {
 	REPLAY_TITLE_SOCIAL: 'Повтор игры',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Итоговая сумма игры',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Общий приз',
+	REPLAY_DISCLAIMER_SOCIAL:
+		'Это повтор предыдущего раунда игры. Новые игры не будут запущены.',
+
 };
 
 const de = {
@@ -125,6 +128,9 @@ const de = {
 	REPLAY_TITLE_SOCIAL: 'Spiel-Wiederholung',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Gesamter Play-Betrag',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Gesamtpreis',
+	REPLAY_DISCLAIMER_SOCIAL:
+		'Dies ist die Wiederholung einer vorherigen Spielrunde. Es werden keine neuen Spiele gestartet.',
+
 };
 
 const es = {
@@ -163,6 +169,9 @@ const es = {
 	REPLAY_TITLE_SOCIAL: 'Repetición de jugada',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Importe total de jugada',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Premio total',
+	REPLAY_DISCLAIMER_SOCIAL:
+		'Esta es la repetición de una jugada anterior. No se iniciarán nuevas jugadas.',
+
 };
 
 const fr = {
@@ -201,6 +210,9 @@ const fr = {
 	REPLAY_TITLE_SOCIAL: 'Replay de jeu',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Montant total de jeu',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Prix total',
+	REPLAY_DISCLAIMER_SOCIAL:
+		'Ceci est le replay d’une manche de jeu précédente. Aucune nouvelle partie ne sera lancée.',
+
 };
 
 const pl = {
@@ -239,6 +251,9 @@ const pl = {
 	REPLAY_TITLE_SOCIAL: 'Powtórka gry',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Całkowita kwota gry',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Całkowita nagroda',
+	REPLAY_DISCLAIMER_SOCIAL:
+		'To powtórka poprzedniej rundy gry. Żadne nowe gry nie zostaną rozpoczęte.',
+
 };
 
 const pt = {
@@ -277,6 +292,9 @@ const pt = {
 	REPLAY_TITLE_SOCIAL: 'Replay do jogo',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Valor total do jogo',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Prémio total',
+	REPLAY_DISCLAIMER_SOCIAL:
+		'Isto é um replay de uma jogada anterior. Nenhuma nova jogada será iniciada.',
+
 };
 
 const tr = {
@@ -313,8 +331,11 @@ const tr = {
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Özellik Çarpanı',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Son Çarpan',
 	REPLAY_TITLE_SOCIAL: 'Oyun Tekrarı',
-	REPLAY_TOTAL_BET_COST_SOCIAL: 'Toplam Play Amount',
+	REPLAY_TOTAL_BET_COST_SOCIAL: 'Toplam Oyun Tutarı',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Toplam Ödül',
+	REPLAY_DISCLAIMER_SOCIAL:
+		'Bu, önceki bir oyun turunun tekrarıdır. Yeni oyun başlatılmayacaktır.',
+
 };
 
 const vi = {
@@ -352,6 +373,9 @@ const vi = {
 	REPLAY_TITLE_SOCIAL: 'Phát lại lượt chơi',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Tổng số tiền chơi',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Tổng thưởng',
+	REPLAY_DISCLAIMER_SOCIAL:
+		'Đây là phát lại lượt chơi trước. Không có lượt chơi mới nào được bắt đầu.',
+
 };
 
 const id = {
@@ -390,6 +414,9 @@ const id = {
 	REPLAY_TITLE_SOCIAL: 'Ulang Main',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Total Jumlah Main',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Total Hadiah',
+	REPLAY_DISCLAIMER_SOCIAL:
+		'Ini adalah ulang dari putaran main sebelumnya. Tidak ada permainan baru yang akan dimulai.',
+
 };
 
 const fi = {
@@ -428,6 +455,9 @@ const fi = {
 	REPLAY_TITLE_SOCIAL: 'Pelin toisto',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Kokonaispelimäärä',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Kokonaispalkinto',
+	REPLAY_DISCLAIMER_SOCIAL:
+		'Tämä on edellisen pelikierroksen toisto. Uusia pelejä ei aloiteta.',
+
 };
 
 const ar = {
@@ -466,6 +496,9 @@ const ar = {
 	REPLAY_TITLE_SOCIAL: 'إعادة اللعب',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'إجمالي مبلغ اللعب',
 	REPLAY_TOTAL_WIN_SOCIAL: 'إجمالي الجائزة',
+	REPLAY_DISCLAIMER_SOCIAL:
+		'هذه إعادة لجولة لعب سابقة. لن يتم بدء أي لعب جديد.',
+
 };
 
 const hi = {
@@ -504,6 +537,9 @@ const hi = {
 	REPLAY_TITLE_SOCIAL: 'प्ले रीप्ले',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'कुल प्ले राशि',
 	REPLAY_TOTAL_WIN_SOCIAL: 'कुल पुरस्कार',
+	REPLAY_DISCLAIMER_SOCIAL:
+		'यह पिछले प्ले राउंड का रीप्ले है। कोई नया प्ले शुरू नहीं होगा।',
+
 };
 
 const ja = {
@@ -541,6 +577,9 @@ const ja = {
 	REPLAY_TITLE_SOCIAL: 'プレイリプレイ',
 	REPLAY_TOTAL_BET_COST_SOCIAL: '合計プレイ額',
 	REPLAY_TOTAL_WIN_SOCIAL: '合計賞',
+	REPLAY_DISCLAIMER_SOCIAL:
+		'これは過去のプレイラウンドのリプレイです。新しいプレイは行われません。',
+
 };
 
 const ko = {
@@ -579,6 +618,9 @@ const ko = {
 	REPLAY_TITLE_SOCIAL: '플레이 리플레이',
 	REPLAY_TOTAL_BET_COST_SOCIAL: '총 플레이 금액',
 	REPLAY_TOTAL_WIN_SOCIAL: '총 상금',
+	REPLAY_DISCLAIMER_SOCIAL:
+		'이전 플레이 라운드의 리플레이입니다. 새로운 플레이는 시작되지 않습니다.',
+
 };
 
 const zh = {
@@ -616,6 +658,9 @@ const zh = {
 	REPLAY_TITLE_SOCIAL: '游玩回放',
 	REPLAY_TOTAL_BET_COST_SOCIAL: '总游玩金额',
 	REPLAY_TOTAL_WIN_SOCIAL: '总奖励',
+	REPLAY_DISCLAIMER_SOCIAL:
+		'这是上一轮游玩的回放。不会开始任何新的游玩。',
+
 };
 
 export default {

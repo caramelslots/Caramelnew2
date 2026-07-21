@@ -131,5 +131,5 @@ export default {
 	REPLAY_TOTAL_BET_COST_SOCIAL: '合計プレイ額',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: '最終倍率',
 	REPLAY_TOTAL_WIN_SOCIAL: '合計賞',
-	REPLAY_DISCLAIMER_SOCIAL: 'This is a replay of a previous play round. No plays will be placed.',
+	REPLAY_DISCLAIMER_SOCIAL: 'これは過去のプレイラウンドのリプレイです。新しいプレイは行われません。',
 };

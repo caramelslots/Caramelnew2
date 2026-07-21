@@ -131,5 +131,5 @@ export default {
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Całkowita kwota gry',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Mnożnik końcowy',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Całkowita nagroda',
-	REPLAY_DISCLAIMER_SOCIAL: 'This is a replay of a previous play round. No plays will be placed.',
+	REPLAY_DISCLAIMER_SOCIAL: 'To powtórka poprzedniej rundy gry. Żadne nowe gry nie zostaną rozpoczęte.',
 };
