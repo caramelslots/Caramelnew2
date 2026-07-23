@@ -804,17 +804,20 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.pawCoinCells = cells;
 		stateGame.pawCoinTotal = bookEvent.totalCoinWin;
 		stateGame.pawCoinFlying = false;
-		// Bag sits above mascot from the start — coins land into it.
+		// Hat out to catch — coins fly into the brim, then hat goes back on.
 		stateGame.pawCoinBagVisible = true;
-		stateGame.mascotPose = 'clap';
+		stateGame.mascotPose = 'hatCatch';
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-		await waitForGameSpeed(650, stateGame.gameSpeed);
+		// idle3 ~2.17s — hat is out by ~1.45s; hold last frame while coins land.
+		await waitForGameSpeed(1500, stateGame.gameSpeed);
 
 		stateGame.pawCoinFlying = true;
-		await waitForGameSpeed(700, stateGame.gameSpeed);
+		await waitForGameSpeed(750, stateGame.gameSpeed);
 
 		stateBet.winBookEventAmount += bookEvent.totalCoinWin;
-		await waitForGameSpeed(500, stateGame.gameSpeed);
+		stateGame.mascotPose = 'hatOn';
+		// Reverse idle3 back onto the head (~full clip length).
+		await waitForGameSpeed(2200, stateGame.gameSpeed);
 
 		stateGame.pawCoinBagVisible = false;
 		stateGame.pawCoinFlying = false;

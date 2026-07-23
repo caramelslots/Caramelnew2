@@ -144,10 +144,7 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 				forcePlay: !stateBet.isTurbo,
 			});
 			if (stateGame.catSlowTriggerReel === reelIndex) {
-				stateGame.catSlowReels = catSlowReelsAfterTrigger(
-					reelIndex,
-					stateGame.board.length,
-				);
+				stateGame.catSlowReels = catSlowReelsAfterTrigger(reelIndex, stateGame.board.length);
 			}
 		},
 		onSymbolLand,
@@ -229,9 +226,9 @@ export const stateGame = $state({
 		win: number;
 	}[],
 	pawCoinTotal: 0,
-	/** Coin bag UI above mascot (right of board). */
+	/** Show catch UI near the mascot hat while paw coins resolve. */
 	pawCoinBagVisible: false,
-	/** Coins animate from board cells into the bag. */
+	/** Coins animate from board cells into the mascot hat. */
 	pawCoinFlying: false,
 	superWildCurtain: null as null | {
 		reel: number;
@@ -254,7 +251,16 @@ export const stateGame = $state({
 	/** Brief fly UX: bullet cell → drum. */
 	bulletFly: null as null | { reel: number; row: number; key: number },
 	/** Mascot pose → Spine clip map in `mascotHtmlSpine.ts`. */
-	mascotPose: 'idle' as 'idle' | 'load' | 'aim' | 'shoot' | 'react' | 'wow' | 'clap',
+	mascotPose: 'idle' as
+		| 'idle'
+		| 'load'
+		| 'aim'
+		| 'shoot'
+		| 'react'
+		| 'wow'
+		| 'clap'
+		| 'hatCatch'
+		| 'hatOn',
 });
 
 stateBetDerived.timeScale = () => gameSpeedMultFor(stateGame.gameSpeed);

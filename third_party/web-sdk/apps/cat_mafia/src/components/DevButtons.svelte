@@ -27,10 +27,7 @@
 	import { stateGame } from '../game/stateGame.svelte';
 	import { stateLayout } from '../game/stateLayout';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
-	import {
-		MASCOT_DEV_PREVIEW_ANIMATIONS,
-		type MascotSpineAnimation,
-	} from '../game/mascotHtmlSpine';
+	import { MASCOT_DEV_PREVIEW_ITEMS } from '../game/mascotHtmlSpine';
 	import {
 		getRawUrlLang,
 		INVALID_LANG_LABELS,
@@ -804,19 +801,19 @@
 				</div>
 			</section>
 
-			<section>
+				<section>
 				<h4>Mascot Anims</h4>
 				<div class="grid">
-					{#each MASCOT_DEV_PREVIEW_ANIMATIONS as anim (anim)}
+					{#each MASCOT_DEV_PREVIEW_ITEMS as item (item.id)}
 						<button
 							type="button"
-							class:active={devPreview.mascotAnimation === anim}
-							title={`Play mascot Spine clip "${anim}" (loop)`}
+							class:active={devPreview.mascotAnimation === item.id}
+							title={item.title}
 							onclick={() => {
-								devPreview.mascotAnimation = anim as MascotSpineAnimation;
+								devPreview.mascotAnimation = item.id;
 							}}
 						>
-							{anim}
+							{item.label}
 						</button>
 					{/each}
 					<button

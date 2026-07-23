@@ -30,6 +30,16 @@ export type MascotScreenBox = {
 };
 
 /**
+ * Where paw-coins land while the hat is held out (idle3 end pose).
+ * Hat sits in the left overscan, roughly at vest / waist height — not the
+ * top of the Spine viewport (that’s empty padding for the toss).
+ */
+export const getMascotHatCatchPoint = (box: MascotScreenBox) => ({
+	x: box.bodyLeft - box.bodyWidth * 0.12,
+	y: box.top + box.height * 0.52,
+});
+
+/**
  * Screen box for the mascot, anchored to the board so PC / laptop / popout
  * keep the same relative pose.
  */
@@ -97,7 +107,18 @@ export const MASCOT_SPINE_VIEWPORT = {
 } as const;
 
 /** Pose keys used by `stateGame.mascotPose` / bullet-fly. */
-export type MascotPose = 'idle' | 'load' | 'aim' | 'shoot' | 'react' | 'wow' | 'clap';
+export type MascotPose =
+	| 'idle'
+	| 'load'
+	| 'aim'
+	| 'shoot'
+	| 'react'
+	| 'wow'
+	| 'clap'
+	/** idle3 forward — hat held out to catch paw coins. */
+	| 'hatCatch'
+	/** idle3 reversed — puts hat back on after coins land. */
+	| 'hatOn';
 
 /** Spine animation names in `mascot_cat.json`. */
 export type MascotSpineAnimation =
@@ -122,7 +143,32 @@ export const MASCOT_SPINE_ANIMATIONS: readonly MascotSpineAnimation[] = [
 	'animation3',
 ] as const;
 
-/** DEV panel buttons — idle family only (action clips hidden). */
+/** DEV-only preview ids (map 1:1 to Spine clips, with idle3 = in-game hat sequence). */
+export type MascotDevPreview = MascotSpineAnimation;
+
+export type MascotDevPreviewItem = {
+	id: MascotDevPreview;
+	label: string;
+	title: string;
+};
+
+/**
+ * DEV panel buttons — idle family only.
+ * `idle3` = in-game hat sequence (forward → hold → reverse).
+ */
+export const MASCOT_DEV_PREVIEW_ITEMS: readonly MascotDevPreviewItem[] = [
+	{ id: 'idle', label: 'idle', title: 'Play Spine clip "idle" (loop)' },
+	{ id: 'idle2', label: 'idle2', title: 'Play Spine clip "idle2" (loop)' },
+	{
+		id: 'idle3',
+		label: 'idle3 (hat)',
+		title: 'In-game hat sequence: idle3 out → hold → reverse on (loops)',
+	},
+	{ id: 'idle3_ears', label: 'idle3_ears', title: 'Play Spine clip "idle3_ears" (loop)' },
+	{ id: 'idle_blink', label: 'idle_blink', title: 'Play Spine clip "idle_blink" (loop)' },
+] as const;
+
+/** @deprecated use MASCOT_DEV_PREVIEW_ITEMS */
 export const MASCOT_DEV_PREVIEW_ANIMATIONS: readonly MascotSpineAnimation[] = [
 	'idle',
 	'idle2',
@@ -136,12 +182,16 @@ type PosePlayback = {
 	loop: boolean;
 	/** After a one-shot finishes, fall back to this pose animation (loop). */
 	returnTo?: MascotSpineAnimation;
+	/** Play clip backwards (hat back onto head). */
+	reverse?: boolean;
+	/** Freeze on the last frame instead of returning (hat held out). */
+	holdEnd?: boolean;
 };
 
 /**
  * Temporary pose → Spine mapping (adjust freely):
  * - idle2 = clap hands
- * - idle3 = hat celebration (wow)
+ * - idle3 = hat out / catch (hatCatch) + reverse put-on (hatOn)
  * - idle3_ears = alert / aim
  * - animation / animation2 / animation3 = action beats
  */
@@ -153,10 +203,34 @@ export const MASCOT_POSE_PLAYBACK: Record<MascotPose, PosePlayback> = {
 	react: { animation: 'animation3', loop: false, returnTo: 'idle' },
 	wow: { animation: 'idle3', loop: true },
 	clap: { animation: 'idle2', loop: true },
+	hatCatch: { animation: 'idle3', loop: false, holdEnd: true },
+	hatOn: { animation: 'idle3', loop: false, reverse: true, returnTo: 'idle' },
 };
 
 /** Idle flavour clips randomly queued while pose stays `idle`. */
 export const MASCOT_IDLE_VARIANTS: readonly MascotSpineAnimation[] = ['idle_blink', 'idle3_ears'];
+
+/** Weighted idle flavour — blink often, ear twitch less often. */
+export const MASCOT_IDLE_VARIANT_WEIGHTS: ReadonlyArray<{
+	animation: MascotSpineAnimation;
+	weight: number;
+}> = [
+	{ animation: 'idle_blink', weight: 0.72 },
+	{ animation: 'idle3_ears', weight: 0.28 },
+] as const;
+
+export const pickMascotIdleVariant = (): MascotSpineAnimation => {
+	const total = MASCOT_IDLE_VARIANT_WEIGHTS.reduce((sum, item) => sum + item.weight, 0);
+	let roll = Math.random() * total;
+	for (const item of MASCOT_IDLE_VARIANT_WEIGHTS) {
+		roll -= item.weight;
+		if (roll <= 0) return item.animation;
+	}
+	return 'idle_blink';
+};
+
+/** Delay before the next idle flavour clip (ms). */
+export const nextMascotIdleVariantDelayMs = () => 2200 + Math.random() * 3200;
 
 /** static/ asset path relative to deployed index.html (Stake CDN subpath-safe). */
 export const resolveMascotSpineUrl = (file: string) =>
