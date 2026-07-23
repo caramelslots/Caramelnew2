@@ -131,8 +131,8 @@ export default {
 	REPLAY_TITLE_SOCIAL: 'Oyun Tekrarı',
 	REPLAY_BASE_BET_SOCIAL: 'Temel Oyun',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Özellik Çarpanı',
-	REPLAY_TOTAL_BET_COST_SOCIAL: 'Toplam Play Amount',
+	REPLAY_TOTAL_BET_COST_SOCIAL: 'Toplam Oyun Tutarı',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Son Çarpan',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Toplam Ödül',
-	REPLAY_DISCLAIMER_SOCIAL: 'This is a replay of a previous play round. No plays will be placed.',
+	REPLAY_DISCLAIMER_SOCIAL: 'Bu, önceki bir oyun turunun tekrarıdır. Yeni oyun başlatılmayacaktır.',
 };

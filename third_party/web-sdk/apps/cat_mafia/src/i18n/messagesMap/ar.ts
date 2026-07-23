@@ -134,5 +134,5 @@ export default {
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'إجمالي مبلغ اللعب',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'المضاعف النهائي',
 	REPLAY_TOTAL_WIN_SOCIAL: 'إجمالي الجائزة',
-	REPLAY_DISCLAIMER_SOCIAL: 'This is a replay of a previous play round. No plays will be placed.',
+	REPLAY_DISCLAIMER_SOCIAL: 'هذه إعادة لجولة لعب سابقة. لن يتم بدء أي لعب جديد.',
 };

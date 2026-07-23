@@ -134,5 +134,5 @@ export default {
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'कुल प्ले राशि',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'अंतिम गुणक',
 	REPLAY_TOTAL_WIN_SOCIAL: 'कुल पुरस्कार',
-	REPLAY_DISCLAIMER_SOCIAL: 'This is a replay of a previous play round. No plays will be placed.',
+	REPLAY_DISCLAIMER_SOCIAL: 'यह पिछले प्ले राउंड का रीप्ले है। कोई नया प्ले शुरू नहीं होगा।',
 };

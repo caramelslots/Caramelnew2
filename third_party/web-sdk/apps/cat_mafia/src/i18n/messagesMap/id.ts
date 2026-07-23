@@ -134,5 +134,5 @@ export default {
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Total Jumlah Main',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Pengali Akhir',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Total Hadiah',
-	REPLAY_DISCLAIMER_SOCIAL: 'This is a replay of a previous play round. No plays will be placed.',
+	REPLAY_DISCLAIMER_SOCIAL: 'Ini adalah ulang dari putaran main sebelumnya. Tidak ada permainan baru yang akan dimulai.',
 };

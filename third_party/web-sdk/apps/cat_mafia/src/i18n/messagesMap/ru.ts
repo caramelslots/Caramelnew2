@@ -134,5 +134,5 @@ export default {
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Итоговая сумма игры',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Итоговый множитель',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Общий приз',
-	REPLAY_DISCLAIMER_SOCIAL: 'This is a replay of a previous play round. No plays will be placed.',
+	REPLAY_DISCLAIMER_SOCIAL: 'Это повтор предыдущего раунда игры. Новые игры не будут запущены.',
 };

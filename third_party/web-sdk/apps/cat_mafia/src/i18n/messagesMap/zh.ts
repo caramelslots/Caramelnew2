@@ -134,5 +134,5 @@ export default {
 	REPLAY_TOTAL_BET_COST_SOCIAL: '总游玩金额',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: '最终倍数',
 	REPLAY_TOTAL_WIN_SOCIAL: '总奖励',
-	REPLAY_DISCLAIMER_SOCIAL: 'This is a replay of a previous play round. No plays will be placed.',
+	REPLAY_DISCLAIMER_SOCIAL: '这是上一轮游玩的回放。不会开始任何新的游玩。',
 };

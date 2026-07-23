@@ -134,5 +134,5 @@ export default {
 	REPLAY_TOTAL_BET_COST_SOCIAL: '총 플레이 금액',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: '최종 배율',
 	REPLAY_TOTAL_WIN_SOCIAL: '총 상금',
-	REPLAY_DISCLAIMER_SOCIAL: 'This is a replay of a previous play round. No plays will be placed.',
+	REPLAY_DISCLAIMER_SOCIAL: '이전 플레이 라운드의 리플레이입니다. 새로운 플레이는 시작되지 않습니다.',
 };
