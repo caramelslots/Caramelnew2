@@ -158,6 +158,8 @@
 		width: min(640px, 90vw);
 		height: 100vh;
 		overflow: visible;
+		/* Match daloniil_test logo-loader placement — slightly above center. */
+		transform: translateY(-6vh);
 	}
 
 	.player :global(.spine-player) {

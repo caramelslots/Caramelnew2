@@ -31,7 +31,7 @@ export type MascotScreenBox = {
 
 /**
  * Screen box for the mascot, anchored to the board so PC / laptop / popout
- * keep the same relative pose (phones excluded by the caller).
+ * keep the same relative pose.
  */
 export const getMascotScreenBox = (board: {
 	centerX: number;
@@ -48,6 +48,30 @@ export const getMascotScreenBox = (board: {
 	const left = bodyLeft - overscan;
 	const feetY = board.centerY + board.halfH * MASCOT_FEET_Y_FRAC;
 	const top = Math.round(feetY - height * MASCOT_FEET_IN_BOX);
+	return { left, top, width, height, bodyLeft, bodyWidth };
+};
+
+/**
+ * Phone portrait: under the board, to the right of the Buy Bonus button.
+ */
+export const getMascotPortraitScreenBox = (opts: {
+	canvasWidth: number;
+	boardCenterY: number;
+	halfH: number;
+	buyPanelTop: number;
+	buyPanelHeight: number;
+}): MascotScreenBox => {
+	const height = Math.round(
+		Math.min(opts.buyPanelHeight * 3.2, opts.halfH * 2.05, opts.canvasWidth * 0.62),
+	);
+	const width = Math.round(height * (MASCOT_BASE_SIZE.width / MASCOT_BASE_SIZE.height));
+	const overscan = Math.round(width * 0.22);
+	const bodyWidth = width - overscan;
+	// Buy Bonus panel is centered; with boost removed the button sits on the left half.
+	const bodyLeft = Math.round(opts.canvasWidth * 0.5 + 6);
+	const left = bodyLeft - overscan;
+	// Tuck up under the board (hat closer to reel frame).
+	const top = Math.round(opts.buyPanelTop - height * 0.32);
 	return { left, top, width, height, bodyLeft, bodyWidth };
 };
 

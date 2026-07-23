@@ -12,8 +12,13 @@
 		BOARD_LAYOUT_OFFSETS,
 		isPopoutViewport,
 	} from '../game/constants';
+	import {
+		portraitBuyPanelCanvasTop,
+		portraitBuyPanelHeightCanvas,
+	} from '../game/portraitHudLayout';
 	import { devPreview } from '../game/devPreview.svelte';
 	import {
+		getMascotPortraitScreenBox,
 		getMascotScreenBox,
 		MASCOT_IDLE_VARIANTS,
 		MASCOT_POSE_PLAYBACK,
@@ -29,9 +34,13 @@
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 	const isPopout = $derived(isPopoutViewport(canvasSizes));
-	/** Desktop / tablet / Stake popout — not phone portrait. */
+	const isPortrait = $derived(layoutType === 'portrait');
+	/** Desktop / tablet / Stake popout / phone portrait. */
 	const showMascotLayout = $derived(
-		layoutType === 'desktop' || layoutType === 'tablet' || isPopout,
+		layoutType === 'desktop' ||
+			layoutType === 'tablet' ||
+			isPopout ||
+			isPortrait,
 	);
 	const forceAnim = $derived(devPreview.mascotAnimation);
 	const visible = $derived(show && (showMascotLayout || forceAnim !== null));
@@ -43,12 +52,25 @@
 		const ml = context.stateLayoutDerived.mainLayout();
 		const off = BOARD_LAYOUT_OFFSETS[layoutType] ?? { x: 0, y: 0 };
 		const board = context.stateGameDerived.boardLayout();
-		const box = getMascotScreenBox({
-			centerX: ml.x + off.x * ml.scale,
-			centerY: ml.y + off.y * ml.scale,
-			halfW: (board.visualWidth / 2) * ml.scale,
-			halfH: (board.visualHeight / 2) * ml.scale,
-		});
+		const centerX = ml.x + off.x * ml.scale;
+		const centerY = ml.y + off.y * ml.scale;
+		const halfW = (board.visualWidth / 2) * ml.scale;
+		const halfH = (board.visualHeight / 2) * ml.scale;
+
+		const box = isPortrait
+			? getMascotPortraitScreenBox({
+					canvasWidth: canvasSizes.width,
+					boardCenterY: centerY,
+					halfH,
+					buyPanelTop: portraitBuyPanelCanvasTop(context.stateLayoutDerived),
+					buyPanelHeight: portraitBuyPanelHeightCanvas(context.stateLayoutDerived),
+				})
+			: getMascotScreenBox({
+					centerX,
+					centerY,
+					halfW,
+					halfH,
+				});
 
 		return `left:${box.left}px;top:${box.top}px;width:${box.width}px;height:${box.height}px;`;
 	});

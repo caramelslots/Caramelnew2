@@ -9,7 +9,15 @@
 		isPopoutViewport,
 		SYMBOL_SIZE,
 	} from '../game/constants';
-	import { getMascotScreenBox, MASCOT_BASE_SIZE } from '../game/mascotHtmlSpine';
+	import {
+		portraitBuyPanelCanvasTop,
+		portraitBuyPanelHeightCanvas,
+	} from '../game/portraitHudLayout';
+	import {
+		getMascotPortraitScreenBox,
+		getMascotScreenBox,
+		MASCOT_BASE_SIZE,
+	} from '../game/mascotHtmlSpine';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
 	const BAG_W_BASE = 118;
@@ -20,8 +28,12 @@
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 	const isPopout = $derived(isPopoutViewport(canvasSizes));
+	const isPortrait = $derived(layoutType === 'portrait');
 	const showMascotLayout = $derived(
-		layoutType === 'desktop' || layoutType === 'tablet' || isPopout,
+		layoutType === 'desktop' ||
+			layoutType === 'tablet' ||
+			isPopout ||
+			isPortrait,
 	);
 
 	const cells = $derived(context.stateGame.pawCoinCells);
@@ -39,12 +51,20 @@
 		const halfH = (board.visualHeight / 2) * ml.scale;
 		const cell = SYMBOL_SIZE * ml.scale * board.scale;
 
-		const mascot = getMascotScreenBox({
-			centerX,
-			centerY,
-			halfW,
-			halfH,
-		});
+		const mascot = isPortrait
+			? getMascotPortraitScreenBox({
+					canvasWidth: canvasSizes.width,
+					boardCenterY: centerY,
+					halfH,
+					buyPanelTop: portraitBuyPanelCanvasTop(context.stateLayoutDerived),
+					buyPanelHeight: portraitBuyPanelHeightCanvas(context.stateLayoutDerived),
+				})
+			: getMascotScreenBox({
+					centerX,
+					centerY,
+					halfW,
+					halfH,
+				});
 		const sizeScale = mascot.height / MASCOT_BASE_SIZE.height;
 		const bagW = Math.round(BAG_W_BASE * sizeScale);
 		const bagH = Math.round(BAG_H_BASE * sizeScale);
