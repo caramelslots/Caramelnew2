@@ -253,7 +253,7 @@ export const stateGame = $state({
 	fsExtraPhase: false,
 	/** Brief fly UX: bullet cell → drum. */
 	bulletFly: null as null | { reel: number; row: number; key: number },
-	/** Mascot pose for Stage D/E/F CSS stubs. */
+	/** Mascot pose → Spine clip map in `mascotHtmlSpine.ts`. */
 	mascotPose: 'idle' as 'idle' | 'load' | 'aim' | 'shoot' | 'react' | 'wow' | 'clap',
 });
 

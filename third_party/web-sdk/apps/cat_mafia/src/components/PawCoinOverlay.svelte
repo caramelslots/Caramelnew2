@@ -4,18 +4,25 @@
 	 */
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
-	import { BOARD_LAYOUT_OFFSETS, SYMBOL_SIZE } from '../game/constants';
+	import {
+		BOARD_LAYOUT_OFFSETS,
+		isPopoutViewport,
+		SYMBOL_SIZE,
+	} from '../game/constants';
+	import { getMascotScreenBox, MASCOT_BASE_SIZE } from '../game/mascotHtmlSpine';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
-	/** Keep in sync with MascotPlaceholder layout. */
-	const MASCOT_W = 260;
-	const MASCOT_H = 260;
-	const BAG_W = 118;
-	const BAG_H = 96;
+	const BAG_W_BASE = 118;
+	const BAG_H_BASE = 96;
 
 	const context = getContext();
 	const show = $derived(gameEntrance.showContent);
-	const isDesktop = $derived(context.stateLayoutDerived.layoutType() === 'desktop');
+	const layoutType = $derived(context.stateLayoutDerived.layoutType());
+	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
+	const isPopout = $derived(isPopoutViewport(canvasSizes));
+	const showMascotLayout = $derived(
+		layoutType === 'desktop' || layoutType === 'tablet' || isPopout,
+	);
 
 	const cells = $derived(context.stateGame.pawCoinCells);
 	const bagVisible = $derived(context.stateGame.pawCoinBagVisible);
@@ -24,7 +31,6 @@
 
 	const layout = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
-		const layoutType = context.stateLayoutDerived.layoutType();
 		const off = BOARD_LAYOUT_OFFSETS[layoutType] ?? { x: 0, y: 0 };
 		const board = context.stateGameDerived.boardLayout();
 		const centerX = ml.x + off.x * ml.scale;
@@ -33,13 +39,21 @@
 		const halfH = (board.visualHeight / 2) * ml.scale;
 		const cell = SYMBOL_SIZE * ml.scale * board.scale;
 
-		// Same anchor as MascotPlaceholder — bag sits directly above it.
-		const mascotLeft = centerX + halfW + 16;
-		const mascotTop = centerY + halfH * 0.15 - MASCOT_H * 0.35;
-		const bagLeft = mascotLeft + (MASCOT_W - BAG_W) / 2;
-		const bagTop = mascotTop - BAG_H - 6;
-		const bagCenterX = bagLeft + BAG_W / 2;
-		const bagCenterY = bagTop + BAG_H * 0.55;
+		const mascot = getMascotScreenBox({
+			centerX,
+			centerY,
+			halfW,
+			halfH,
+		});
+		const sizeScale = mascot.height / MASCOT_BASE_SIZE.height;
+		const bagW = Math.round(BAG_W_BASE * sizeScale);
+		const bagH = Math.round(BAG_H_BASE * sizeScale);
+
+		// Bag above the body column (ignore idle3 left overscan).
+		const bagLeft = mascot.bodyLeft + (mascot.bodyWidth - bagW) / 2;
+		const bagTop = mascot.top - bagH - 6;
+		const bagCenterX = bagLeft + bagW / 2;
+		const bagCenterY = bagTop + bagH * 0.55;
 
 		return {
 			left: centerX - halfW,
@@ -47,13 +61,15 @@
 			cell,
 			bagLeft,
 			bagTop,
+			bagW,
+			bagH,
 			bagCenterX,
 			bagCenterY,
 		};
 	});
 
 	const bagStyle = $derived(
-		`left:${layout.bagLeft}px;top:${layout.bagTop}px;width:${BAG_W}px;height:${BAG_H}px;`,
+		`left:${layout.bagLeft}px;top:${layout.bagTop}px;width:${layout.bagW}px;height:${layout.bagH}px;`,
 	);
 
 	const cellStyle = (reel: number, paddedRow: number, tier: number, index: number) => {
@@ -82,7 +98,7 @@
 	};
 </script>
 
-{#if show && isDesktop && bagVisible}
+{#if show && showMascotLayout && bagVisible}
 	<div class="coin-bag" class:catching={flying} style={bagStyle} aria-hidden="true">
 		<div class="bag-body">
 			<div class="bag-mouth"></div>
@@ -92,7 +108,7 @@
 	</div>
 {/if}
 
-{#if show && isDesktop && cells.length > 0}
+{#if show && showMascotLayout && cells.length > 0}
 	{#each cells as c, i (`${c.reel}:${c.row}`)}
 		{@const shouldFly = flying && c.tier > 0}
 		<div

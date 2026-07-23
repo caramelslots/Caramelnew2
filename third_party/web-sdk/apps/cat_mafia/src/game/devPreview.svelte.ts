@@ -1,3 +1,5 @@
+import type { MascotSpineAnimation } from './mascotHtmlSpine';
+
 /*
 	Dev-only preview toggles. Shared between DevButtons.svelte (controls) and
 	the components they preview (e.g. ProgressLadder.svelte). Not used in prod.
@@ -15,4 +17,6 @@ export const devPreview = $state({
 	loaderProgress: false,
 	/** fake 0–100 progress while `loaderProgress` is on */
 	loaderProgressValue: 0,
+	/** force a specific mascot Spine clip (null = normal pose-driven playback) */
+	mascotAnimation: null as MascotSpineAnimation | null,
 });

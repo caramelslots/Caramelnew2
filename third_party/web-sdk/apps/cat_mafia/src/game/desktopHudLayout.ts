@@ -56,25 +56,35 @@ export const computeDesktopHudLayout = (
 	config: DesktopHudLayoutConfig,
 ): DesktopHudPositions => {
 	const ml = layoutDerived.mainLayoutStandard();
+	const canvas = layoutDerived.canvasSizes();
 	const bar = utilBarOrigin(ml.width, ml.height);
 	const SPIN_CLUSTER = {
 		...config.spinCluster,
 		centerYOffset: Y_BUTTON - 96,
 	};
 
-	const spinHalf = (UI_BASE_SIZE * SPIN_CLUSTER.spinScale) / 2;
-	const smallHalf = (UI_BASE_SIZE * SPIN_CLUSTER.smallScale) / 2;
-	const betControlOffsetX = spinHalf + SPIN_CLUSTER.betControlsGap + smallHalf;
-	const autoplayHalfW = (AUTOPLAY_PILL_BASE.width * SPIN_CLUSTER.autoplayScale) / 2;
-	const autoplayHalfH = (AUTOPLAY_PILL_BASE.height * SPIN_CLUSTER.autoplayScale) / 2;
-	const turboHalf = (UI_BASE_SIZE * SPIN_CLUSTER.turboScale) / 2;
-	const autoplayOffsetY = spinHalf + SPIN_CLUSTER.autoplayGap + autoplayHalfH;
-	const turboOffsetX =
-		(SPIN_CLUSTER.shiftX ?? 0) + autoplayHalfW + SPIN_CLUSTER.turboGap + turboHalf;
-	const spinClusterCenterX =
-		ml.width - SPIN_CLUSTER.rightPad - betControlOffsetX - smallHalf;
-	const clusterY = ml.height - DESKTOP_BASE_SIZE - 10 + SPIN_CLUSTER.centerYOffset;
-	const shiftX = SPIN_CLUSTER.shiftX ?? 0;
+	const toCanvas = (lx: number, ly: number) => standardLocalToCanvas(lx, ly, layoutDerived);
+	const toSize = (s: number) => standardLayoutSizeToCanvas(s, layoutDerived);
+
+	const spinHalf = toSize((UI_BASE_SIZE * SPIN_CLUSTER.spinScale) / 2);
+	const smallHalf = toSize((UI_BASE_SIZE * SPIN_CLUSTER.smallScale) / 2);
+	const betControlOffsetX =
+		spinHalf + toSize(SPIN_CLUSTER.betControlsGap) + smallHalf;
+	const autoplayHalfW = toSize((AUTOPLAY_PILL_BASE.width * SPIN_CLUSTER.autoplayScale) / 2);
+	const autoplayHalfH = toSize((AUTOPLAY_PILL_BASE.height * SPIN_CLUSTER.autoplayScale) / 2);
+	const turboHalf = toSize((UI_BASE_SIZE * SPIN_CLUSTER.turboScale) / 2);
+	const autoplayOffsetY = spinHalf + toSize(SPIN_CLUSTER.autoplayGap) + autoplayHalfH;
+	const turboGap = toSize(SPIN_CLUSTER.turboGap);
+	const spinRaiseY = toSize(SPIN_CLUSTER.spinRaiseY ?? 0);
+
+	/*
+	 * Cluster X is a fraction of the real canvas width so PC and Stake popout
+	 * keep the same horizontal proportion (mainLayout vs mainLayoutStandard
+	 * diverge on popout and used to pull the cluster off the board).
+	 */
+	const clusterCenterX = canvas.width * SPIN_CLUSTER.clusterCenterXFrac;
+	const clusterY = toCanvas(0, ml.height - DESKTOP_BASE_SIZE - 10 + SPIN_CLUSTER.centerYOffset).y;
+	const turboX = clusterCenterX + autoplayHalfW + turboGap + turboHalf;
 
 	const iconLayoutSize = UI_BASE_SIZE * 0.72 * config.utilScale;
 	const spinLayoutSize = UI_BASE_SIZE * SPIN_CLUSTER.spinScale;
@@ -82,9 +92,6 @@ export const computeDesktopHudLayout = (
 	const turboLayoutSize = UI_BASE_SIZE * SPIN_CLUSTER.turboScale;
 	const autoplayW = AUTOPLAY_PILL_BASE.width * SPIN_CLUSTER.autoplayScale;
 	const autoplayH = AUTOPLAY_PILL_BASE.height * SPIN_CLUSTER.autoplayScale;
-
-	const toCanvas = (lx: number, ly: number) => standardLocalToCanvas(lx, ly, layoutDerived);
-	const toSize = (s: number) => standardLayoutSizeToCanvas(s, layoutDerived);
 
 	return {
 		info: { ...toCanvas(bar.x + config.utilX.info, bar.y + Y_BUTTON), size: toSize(iconLayoutSize) },
@@ -98,25 +105,30 @@ export const computeDesktopHudLayout = (
 			fontSize: toSize(24),
 		},
 		decrease: {
-			...toCanvas(spinClusterCenterX + shiftX - betControlOffsetX, clusterY),
+			x: clusterCenterX - betControlOffsetX,
+			y: clusterY,
 			size: toSize(smallLayoutSize),
 		},
 		spin: {
-			...toCanvas(spinClusterCenterX + shiftX, clusterY + (SPIN_CLUSTER.spinRaiseY ?? 0)),
+			x: clusterCenterX,
+			y: clusterY + spinRaiseY,
 			size: toSize(spinLayoutSize),
 		},
 		increase: {
-			...toCanvas(spinClusterCenterX + shiftX + betControlOffsetX, clusterY),
+			x: clusterCenterX + betControlOffsetX,
+			y: clusterY,
 			size: toSize(smallLayoutSize),
 		},
 		autoplay: {
-			...toCanvas(spinClusterCenterX + shiftX, clusterY + autoplayOffsetY),
+			x: clusterCenterX,
+			y: clusterY + autoplayOffsetY,
 			width: toSize(autoplayW),
 			height: toSize(autoplayH),
 			fontSize: toSize(autoplayH * 0.42),
 		},
 		turbo: {
-			...toCanvas(spinClusterCenterX + turboOffsetX, clusterY + autoplayOffsetY),
+			x: turboX,
+			y: clusterY + autoplayOffsetY,
 			size: toSize(turboLayoutSize),
 		},
 	};

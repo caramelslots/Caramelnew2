@@ -4,6 +4,10 @@ import {
 	SPIN_BUTTON_SPINE_WEBP_URL,
 	startSpinButtonSpinePreload,
 } from './spinButtonHtmlSpine';
+import {
+	MASCOT_SPINE_IMAGE_URL,
+	startMascotSpinePreload,
+} from './mascotHtmlSpine';
 
 const UI_ASSET_BASE = `${import.meta.env.BASE_URL}assets/sprites/ui`;
 
@@ -72,9 +76,9 @@ export const FEATURE_TOGGLE_ASSETS = {
 	menuCatIcon: `${import.meta.env.BASE_URL}assets/sprites/bonusBar/cat_static.png`,
 } as const;
 
-/** Full-body Cat Mafia mascot (board right). */
+/** Full-body Cat Mafia mascot (board right) — Spine atlas image. */
 export const MASCOT_ASSETS = {
-	body: `${import.meta.env.BASE_URL}assets/sprites/mascot/cat_mafia_gangster.webp`,
+	body: MASCOT_SPINE_IMAGE_URL,
 } as const;
 
 const dedupeUrls = (urls: readonly string[]) => [...new Set(urls)];
@@ -187,6 +191,7 @@ export const startLoadingIdleUiPreload = () => {
 	loadingIdleUiPreloadStarted = true;
 
 	startSpinButtonSpinePreload();
+	startMascotSpinePreload();
 
 	void preloadHtmlImages(LOADING_IDLE_UI_IMAGE_URLS, {
 		priority: LOADING_IDLE_UI_PRIORITY,

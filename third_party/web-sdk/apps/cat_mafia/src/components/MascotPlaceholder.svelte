@@ -1,45 +1,218 @@
 <script lang="ts">
 	/**
-	 * Cat Mafia mascot — right of board (above bag target for paw coins).
+	 * Cat Mafia mascot — Spine HTML player to the right of the board
+	 * (bag target for paw coins sits above this box).
 	 */
+	import '@esotericsoftware/spine-player/dist/spine-player.css';
+	import { SpinePlayer } from '@esotericsoftware/spine-player';
+
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
-	import { BOARD_LAYOUT_OFFSETS } from '../game/constants';
-	import { MASCOT_ASSETS } from '../game/uiHtmlAssetManifest';
+	import {
+		BOARD_LAYOUT_OFFSETS,
+		isPopoutViewport,
+	} from '../game/constants';
+	import { devPreview } from '../game/devPreview.svelte';
+	import {
+		getMascotScreenBox,
+		MASCOT_IDLE_VARIANTS,
+		MASCOT_POSE_PLAYBACK,
+		MASCOT_SPINE_ANIMATIONS,
+		MASCOT_SPINE_VIEWPORT,
+		type MascotPose,
+		type MascotSpineAnimation,
+		resolveMascotSpineUrl,
+	} from '../game/mascotHtmlSpine';
 
 	const context = getContext();
 	const show = $derived(gameEntrance.showContent);
-	const isDesktop = $derived(context.stateLayoutDerived.layoutType() === 'desktop');
+	const layoutType = $derived(context.stateLayoutDerived.layoutType());
+	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
+	const isPopout = $derived(isPopoutViewport(canvasSizes));
+	/** Desktop / tablet / Stake popout — not phone portrait. */
+	const showMascotLayout = $derived(
+		layoutType === 'desktop' || layoutType === 'tablet' || isPopout,
+	);
+	const forceAnim = $derived(devPreview.mascotAnimation);
+	const visible = $derived(show && (showMascotLayout || forceAnim !== null));
 	const pose = $derived(
-		context.stateGame.bulletFly ? 'load' : context.stateGame.mascotPose || 'idle',
+		(context.stateGame.bulletFly ? 'load' : context.stateGame.mascotPose || 'idle') as MascotPose,
 	);
 
 	const style = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
-		const layoutType = context.stateLayoutDerived.layoutType();
 		const off = BOARD_LAYOUT_OFFSETS[layoutType] ?? { x: 0, y: 0 };
-		const boardCenterX = ml.x + off.x * ml.scale;
-		const boardCenterY = ml.y + off.y * ml.scale;
 		const board = context.stateGameDerived.boardLayout();
-		const halfW = (board.visualWidth / 2) * ml.scale;
-		const halfH = (board.visualHeight / 2) * ml.scale;
+		const box = getMascotScreenBox({
+			centerX: ml.x + off.x * ml.scale,
+			centerY: ml.y + off.y * ml.scale,
+			halfW: (board.visualWidth / 2) * ml.scale,
+			halfH: (board.visualHeight / 2) * ml.scale,
+		});
 
-		const w = 260;
-		const h = 260;
-		// Fully to the right of the board (no overlap with symbols).
-		const left = boardCenterX + halfW + 16;
-		const top = boardCenterY + halfH * 0.15 - h * 0.35;
+		return `left:${box.left}px;top:${box.top}px;width:${box.width}px;height:${box.height}px;`;
+	});
 
-		return `left:${left}px;top:${top}px;width:${w}px;height:${h}px;`;
+	let container = $state<HTMLDivElement | undefined>();
+	let ready = $state(false);
+	let player: SpinePlayer | undefined;
+	let activePose: MascotPose | undefined;
+	let activeForceAnim: MascotSpineAnimation | null | undefined;
+	let idleVariantTimer: ReturnType<typeof setTimeout> | undefined;
+
+	const clearIdleVariantTimer = () => {
+		if (idleVariantTimer !== undefined) {
+			clearTimeout(idleVariantTimer);
+			idleVariantTimer = undefined;
+		}
+	};
+
+	/** Hard cut — clears leftover attachments/slots from the previous clip. */
+	const playClip = (animation: MascotSpineAnimation, loop: boolean) => {
+		if (!player || !ready) return;
+		const skeleton = player.skeleton;
+		const state = player.animationState;
+		if (!skeleton || !state) {
+			player.setAnimation(animation, loop);
+			return;
+		}
+
+		state.clearTracks();
+		skeleton.setToSetupPose();
+		state.setAnimation(0, animation, loop);
+	};
+
+	const scheduleIdleVariant = () => {
+		clearIdleVariantTimer();
+		if (activeForceAnim || activePose !== 'idle') return;
+
+		idleVariantTimer = setTimeout(
+			() => {
+				if (!player || !ready || activeForceAnim || activePose !== 'idle') return;
+				const variant =
+					MASCOT_IDLE_VARIANTS[Math.floor(Math.random() * MASCOT_IDLE_VARIANTS.length)];
+				playClip(variant, false);
+				player.animationState?.addAnimation(0, 'idle', true, 0);
+				scheduleIdleVariant();
+			},
+			4500 + Math.random() * 3500,
+		);
+	};
+
+	const applyForceAnimation = (animation: MascotSpineAnimation) => {
+		if (!player || !ready) return;
+		if (animation === activeForceAnim) return;
+
+		activeForceAnim = animation;
+		activePose = undefined;
+		clearIdleVariantTimer();
+		// Loop in DEV so clips stay visible while inspecting.
+		playClip(animation, true);
+	};
+
+	const applyPose = (next: MascotPose) => {
+		if (!player || !ready) return;
+		if (activeForceAnim) return;
+		if (next === activePose) return;
+
+		activePose = next;
+		clearIdleVariantTimer();
+
+		const playback = MASCOT_POSE_PLAYBACK[next];
+		playClip(playback.animation, playback.loop);
+
+		if (playback.loop && next === 'idle') {
+			scheduleIdleVariant();
+		}
+	};
+
+	$effect(() => {
+		const el = container;
+		if (!el || !visible) return;
+
+		// Prevent stacked SpinePlayer DOM if effect re-enters before cleanup.
+		player?.dispose();
+		player = undefined;
+		ready = false;
+		el.replaceChildren();
+
+		const viewportAnims = Object.fromEntries(
+			MASCOT_SPINE_ANIMATIONS.map((name) => [name, MASCOT_SPINE_VIEWPORT]),
+		);
+
+		const created = new SpinePlayer(el, {
+			jsonUrl: resolveMascotSpineUrl('mascot_cat.json'),
+			atlasUrl: resolveMascotSpineUrl('mascot_cat.atlas'),
+			showControls: false,
+			showLoading: false,
+			backgroundColor: '#00000000',
+			premultipliedAlpha: true,
+			preserveDrawingBuffer: false,
+			alpha: true,
+			defaultMix: 0,
+			viewport: {
+				...MASCOT_SPINE_VIEWPORT,
+				animations: viewportAnims,
+			},
+			success: (spinePlayer) => {
+				if (player !== created) return;
+				spinePlayer.skeleton!.scaleY = -1;
+				spinePlayer.animationState?.addListener({
+
+					complete: (entry) => {
+						if (activeForceAnim) return;
+						const name = entry.animation?.name as MascotSpineAnimation | undefined;
+						if (!name || !activePose) return;
+
+						const playback = MASCOT_POSE_PLAYBACK[activePose];
+						if (playback.loop || !playback.returnTo) return;
+						if (name !== playback.animation) return;
+
+						playClip(playback.returnTo, true);
+						if (playback.returnTo === 'idle') scheduleIdleVariant();
+					},
+				});
+				ready = true;
+				if (forceAnim) applyForceAnimation(forceAnim);
+				else applyPose(pose);
+			},
+			error: () => {
+				/* Keep empty — game still playable without mascot. */
+			},
+		});
+		player = created;
+
+		return () => {
+			clearIdleVariantTimer();
+			created.dispose();
+			if (player === created) player = undefined;
+			ready = false;
+			activePose = undefined;
+			activeForceAnim = undefined;
+			el.replaceChildren();
+		};
+	});
+
+	$effect(() => {
+		if (!visible || !ready) return;
+
+		const forced = forceAnim;
+		if (forced) {
+			applyForceAnimation(forced);
+			return;
+		}
+
+		if (activeForceAnim) {
+			activeForceAnim = null;
+			activePose = undefined;
+		}
+		applyPose(pose);
 	});
 </script>
 
-{#if show && isDesktop}
-	<div class="mascot {pose}" style={style} aria-hidden="true">
-		<img class="body" src={MASCOT_ASSETS.body} alt="" draggable="false" />
-		{#if pose === 'shoot'}
-			<span class="muzzle"></span>
-		{/if}
+{#if visible}
+	<div class="mascot" class:ready style={style} aria-hidden="true">
+		<div class="mascot-spine" bind:this={container}></div>
 	</div>
 {/if}
 
@@ -48,142 +221,42 @@
 		position: fixed;
 		z-index: 42;
 		pointer-events: none;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		transform-origin: 50% 90%;
+		filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.55));
+		opacity: 0;
+		transition: opacity 0.25s ease;
+
+		&.ready {
+			opacity: 1;
+		}
 	}
 
-	.mascot.idle {
-		animation: mascot-idle 2.4s ease-in-out infinite;
-	}
-
-	.mascot.load {
-		animation: mascot-load 0.38s ease-out;
-	}
-
-	.mascot.aim {
-		transform: rotate(-6deg) translateY(-4px);
-	}
-
-	.mascot.shoot {
-		animation: mascot-shoot 0.28s ease-out;
-	}
-
-	.mascot.clap {
-		animation: mascot-clap 0.55s ease-in-out infinite;
-	}
-
-	.mascot.react {
-		animation: mascot-react 0.5s ease-out;
-	}
-
-	.mascot.wow {
-		animation: mascot-wow 0.7s ease-in-out infinite;
-	}
-
-	.muzzle {
-		position: absolute;
-		top: 42%;
-		left: 62%;
-		width: 22px;
-		height: 7px;
-		border-radius: 3px;
-		background: linear-gradient(90deg, #f0d78c, transparent);
-		box-shadow: 0 0 12px rgba(240, 215, 140, 0.85);
-		z-index: 3;
-		animation: muzzle-flash 0.28s ease-out;
-	}
-
-	.body {
+	.mascot-spine {
+		position: relative;
 		width: 100%;
 		height: 100%;
-		object-fit: contain;
-		object-position: center bottom;
+		/* idle3 throws hat/arm outside the body bounds — don't clip */
+		overflow: visible;
+	}
+
+	.mascot-spine :global(.spine-player) {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		background: none !important;
+	}
+
+	.mascot-spine :global(.spine-player-canvas) {
 		display: block;
-		filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.55));
+		width: 100% !important;
+		height: 100% !important;
+		background: transparent !important;
+		border-radius: 0 !important;
 	}
 
-	@keyframes mascot-idle {
-		0%,
-		100% {
-			transform: translateY(0);
-		}
-		50% {
-			transform: translateY(-5px);
-		}
-	}
-
-	@keyframes mascot-load {
-		0% {
-			transform: scale(1) translateY(0);
-		}
-		40% {
-			transform: scale(1.08) translateY(-8px);
-		}
-		100% {
-			transform: scale(1) translateY(0);
-		}
-	}
-
-	@keyframes mascot-shoot {
-		0% {
-			transform: rotate(-6deg) translate(0, -4px);
-		}
-		35% {
-			transform: rotate(-10deg) translate(-6px, -2px);
-		}
-		100% {
-			transform: rotate(-6deg) translate(0, -4px);
-		}
-	}
-
-	@keyframes mascot-clap {
-		0%,
-		100% {
-			transform: rotate(0deg) scale(1);
-		}
-		25% {
-			transform: rotate(-8deg) scale(1.04);
-		}
-		75% {
-			transform: rotate(8deg) scale(1.04);
-		}
-	}
-
-	@keyframes mascot-react {
-		0% {
-			transform: scale(1) translateY(0);
-		}
-		30% {
-			transform: scale(1.12) translateY(-10px);
-		}
-		100% {
-			transform: scale(1) translateY(0);
-		}
-	}
-
-	@keyframes mascot-wow {
-		0%,
-		100% {
-			transform: scale(1) rotate(0deg);
-		}
-		25% {
-			transform: scale(1.1) rotate(-4deg) translateY(-6px);
-		}
-		75% {
-			transform: scale(1.1) rotate(4deg) translateY(-6px);
-		}
-	}
-
-	@keyframes muzzle-flash {
-		0% {
-			opacity: 1;
-			transform: scaleX(1);
-		}
-		100% {
-			opacity: 0;
-			transform: scaleX(1.6);
-		}
+	.mascot-spine :global(.spine-player-controls),
+	.mascot-spine :global(.spine-player-error),
+	.mascot-spine :global(.spine-player-loading) {
+		display: none !important;
 	}
 </style>

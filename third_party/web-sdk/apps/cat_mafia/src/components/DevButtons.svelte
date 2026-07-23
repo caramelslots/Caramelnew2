@@ -28,6 +28,10 @@
 	import { stateLayout } from '../game/stateLayout';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import {
+		MASCOT_DEV_PREVIEW_ANIMATIONS,
+		type MascotSpineAnimation,
+	} from '../game/mascotHtmlSpine';
+	import {
 		getRawUrlLang,
 		INVALID_LANG_LABELS,
 		INVALID_TEST_LOCALES,
@@ -796,6 +800,34 @@
 						onclick={() => (devPreview.slowReelScroll = !devPreview.slowReelScroll)}
 					>
 						{devPreview.slowReelScroll ? 'Slow Reels: ON' : 'Slow Reels'}
+					</button>
+				</div>
+			</section>
+
+			<section>
+				<h4>Mascot Anims</h4>
+				<div class="grid">
+					{#each MASCOT_DEV_PREVIEW_ANIMATIONS as anim (anim)}
+						<button
+							type="button"
+							class:active={devPreview.mascotAnimation === anim}
+							title={`Play mascot Spine clip "${anim}" (loop)`}
+							onclick={() => {
+								devPreview.mascotAnimation = anim as MascotSpineAnimation;
+							}}
+						>
+							{anim}
+						</button>
+					{/each}
+					<button
+						type="button"
+						class:active={devPreview.mascotAnimation === null}
+						title="Вернуть управление позами (idle/load/aim/…)"
+						onclick={() => {
+							devPreview.mascotAnimation = null;
+						}}
+					>
+						Reset Pose
 					</button>
 				</div>
 			</section>

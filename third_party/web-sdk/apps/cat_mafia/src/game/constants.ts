@@ -463,8 +463,9 @@ export const DESK_PARCHMENT_PADDING = { width: 1.04, height: 1.04 } as const;
  * Portrait (800×1422):             drawer ~144 px → game-area centre ≈ y 350 → offset -150
  */
 export const BOARD_LAYOUT_OFFSETS = {
-	desktop: { x: 0, y: -4 },
-	tablet: { x: 0, y: 7 },
+	/** Desktop / tablet — board raised; phone portrait/landscape unchanged. */
+	desktop: { x: 0, y: -96 },
+	tablet: { x: 0, y: -72 },
 	landscape: { x: 0, y: -35 },
 	portrait: { x: -14, y: -222 },
 } as const;
@@ -770,9 +771,12 @@ export const DESKTOP_UI_LAYOUT = {
 	utilScale: 0.68,
 	utilX: { info: 140, menu: 224, hudText: 272 },
 	spinCluster: {
-		rightPad: 200,
-		/** Сдвиг − | Spin | + | Autoplay вправо (px). Turbo следует за Autoplay. */
-		shiftX: 40,
+		/**
+		 * Spin-cluster center X as a fraction of **canvas width** (0–1).
+		 * Same % on PC and Stake popout; −/+ / Auto / Turbo stay relative to this point.
+		 */
+		/** PC / Laptop / Popout L */
+		clusterCenterXFrac: 0.56,
 		betControlsGap: 16,
 		spinScale: 1.05,
 		/** Только Spin выше −/+ (отрицательный Y). */
@@ -787,8 +791,8 @@ export const DESKTOP_UI_LAYOUT = {
 		utilScale: 0.58,
 		utilX: { info: 138, menu: 218, hudText: 256 },
 		spinCluster: {
-			rightPad: 188,
-			shiftX: 32,
+			/** Same canvas % as desktop — popout no longer drifts right of the board. */
+			clusterCenterXFrac: 0.56,
 			betControlsGap: 12,
 			spinScale: 0.92,
 			spinRaiseY: -14,
