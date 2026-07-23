@@ -120,7 +120,8 @@
 <style lang="scss">
 	.coin-cell {
 		position: fixed;
-		z-index: 46;
+		/* Above Buy Bonus (45) and mascot (47). */
+		z-index: 48;
 		pointer-events: none;
 		display: flex;
 		flex-direction: column;
@@ -135,7 +136,7 @@
 
 	.coin-cell.flying {
 		animation: coin-fly-to-hat 0.55s cubic-bezier(0.33, 0.1, 0.25, 1) var(--fly-delay, 0s) both;
-		z-index: 48;
+		z-index: 49;
 	}
 
 	.coin-cell.zero {

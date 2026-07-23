@@ -128,13 +128,13 @@
 	/**
 	 * Play a clip.
 	 * - Normal: hard cut via setup pose (clears leftover slots).
-	 * - Reverse (hat on): do NOT reset to setup — that snapped the hat onto the
-	 *   head for a frame. Use TrackEntry.reverse so we start from the held end pose.
+	 * - Soft / mix: keep current bones so idle → idle3 intro (hand/hat) animates in.
+	 * - Reverse (hat on): TrackEntry.reverse from held end — hand fade-out is in idle3 RGBA.
 	 */
 	const playClip = (
 		animation: MascotSpineAnimation,
 		loop: boolean,
-		opts?: { reverse?: boolean; holdEnd?: boolean; soft?: boolean },
+		opts?: { reverse?: boolean; holdEnd?: boolean; soft?: boolean; mix?: number },
 	) => {
 		if (!player || !ready) return;
 		const skeleton = player.skeleton;
@@ -152,12 +152,13 @@
 			entry.reverse = true;
 			entry.timeScale = 1;
 			entry.trackTime = 0;
+			if (opts.mix != null) entry.mixDuration = opts.mix;
 			state.apply(skeleton);
 			hideSmileSlot();
 			return;
 		}
 
-		// Soft = keep bones (e.g. idle3 end → idle) so the hat doesn't pop.
+		// Soft = keep bones (idle → hatCatch intro, or hatOn → idle).
 		if (!opts?.soft) {
 			state.clearTracks();
 			skeleton.setToSetupPose();
@@ -166,6 +167,7 @@
 		if (!entry) return;
 		entry.timeScale = 1;
 		entry.reverse = false;
+		if (opts?.mix != null) entry.mixDuration = opts.mix;
 
 		state.apply(skeleton);
 		hideSmileSlot();
@@ -236,7 +238,8 @@
 	/** Same beats as pawCoinResolve: hat out → hold → hat on (loops in DEV). */
 	const playForceIdle3Sequence = () => {
 		forceIdle3Phase = 'catch';
-		playClip('idle3', false, { holdEnd: true });
+		// Short mix — hand_palm fade-in in idle3 is ~0.45s and must stay visible.
+		playClip('idle3', false, { holdEnd: true, soft: true, mix: 0.08 });
 	};
 
 	const applyForceAnimation = (animation: MascotDevPreview) => {
@@ -267,11 +270,15 @@
 		resetIdleVariants();
 
 		const playback = MASCOT_POSE_PLAYBACK[next];
+		const fromIdleToHat = prev === 'idle' && next === 'hatCatch';
+		const fromHatToIdle = prev === 'hatOn' && next === 'idle';
 		playClip(playback.animation, playback.loop, {
 			reverse: playback.reverse,
 			holdEnd: playback.holdEnd,
-			// After hat-on, don't snap through setup pose into idle.
-			soft: prev === 'hatOn' && next === 'idle',
+			// Keep pose so idle3's hand/hat intro (and reverse outro) can play.
+			// Short mix on hatCatch — longer mix ate the hand fade-in (hand "popped" in).
+			soft: fromIdleToHat || fromHatToIdle,
+			mix: fromIdleToHat ? 0.08 : fromHatToIdle ? 0.18 : undefined,
 		});
 
 		if (playback.loop && next === 'idle') {
@@ -367,7 +374,10 @@
 							if (!playback.returnTo) return;
 							const back = playback.returnTo;
 							activePose = back === 'idle' ? 'idle' : activePose;
-							playClip(back, true, { soft: playback.reverse });
+							playClip(back, true, {
+								soft: playback.reverse,
+								mix: playback.reverse ? 0.18 : undefined,
+							});
 							if (back === 'idle') scheduleIdleVariant();
 						}
 					},
@@ -424,7 +434,8 @@
 <style lang="scss">
 	.mascot {
 		position: fixed;
-		z-index: 42;
+		/* Above CashStacksBuyBonusPanel (z-index 45) so hat/coins aren't clipped behind it. */
+		z-index: 47;
 		pointer-events: none;
 		filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.55));
 		opacity: 0;

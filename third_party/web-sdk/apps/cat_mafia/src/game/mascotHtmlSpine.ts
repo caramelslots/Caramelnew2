@@ -191,7 +191,8 @@ type PosePlayback = {
 /**
  * Temporary pose → Spine mapping (adjust freely):
  * - idle2 = clap hands
- * - idle3 = hat out / catch (hatCatch) + reverse put-on (hatOn)
+ * - idle3 = hat out / catch (hatCatch) + reverse put-on (hatOn);
+ *   intro ~0–1.2s moves the hand; hand_palm has RGBA fade in (fades out on reverse)
  * - idle3_ears = alert / aim
  * - animation / animation2 / animation3 = action beats
  */

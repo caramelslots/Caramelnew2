@@ -138,11 +138,14 @@
 <CashStacksMenuOverlay />
 <BuyBonusModalShell />
 <div class="html-underlays">
-	<MascotPlaceholder />
 	<RevolverDrumPlaceholder />
 	<BulletFlyOverlay />
-	<PawCoinOverlay />
 	<SuperWildCurtainOverlay />
+</div>
+<!-- Above Buy Bonus (z45): must be outside .html-underlays (z40 stacking context). -->
+<div class="html-mascot-layer">
+	<MascotPlaceholder />
+	<PawCoinOverlay />
 </div>
 <TargetPickOverlay />
 <TargetShootOverlay />
@@ -159,6 +162,13 @@
 	.html-underlays {
 		position: relative;
 		z-index: 40;
+	}
+
+	/* Mascot + paw coins above Buy Bonus panel (sibling z-index 45). */
+	.html-mascot-layer {
+		position: relative;
+		z-index: 47;
+		pointer-events: none;
 	}
 
 	.pixi-stage.above-html-ui {
