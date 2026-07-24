@@ -142,7 +142,7 @@
 	<BulletFlyOverlay />
 	<SuperWildCurtainOverlay />
 </div>
-<!-- Above Buy Bonus (z45): must be outside .html-underlays (z40 stacking context). -->
+<!-- Below HUD (z44) / Buy Bonus (z45); outside .html-underlays (z40). -->
 <div class="html-mascot-layer">
 	<MascotPlaceholder />
 	<PawCoinOverlay />
@@ -164,10 +164,10 @@
 		z-index: 40;
 	}
 
-	/* Mascot + paw coins above Buy Bonus panel (sibling z-index 45). */
+	/* Mascot + paw coins under HUD overlays (z44) and Buy Bonus (z45). */
 	.html-mascot-layer {
 		position: relative;
-		z-index: 47;
+		z-index: 42;
 		pointer-events: none;
 	}
 

@@ -41,9 +41,9 @@
 	const gameNameScale = $derived(isPopoutSmall ? POPOUT_S_SCALE : 1);
 	const spaceHoldDisabled = $derived(isAnyMenuOpen());
 
-	const WIN_BELOW_BOARD_GAP = 58;
-	/** Horizontal nudge right from screen center, as a fraction of main layout width. */
-	const WIN_HUD_X_OFFSET_RATIO = 0.012;
+	const WIN_BELOW_BOARD_GAP = 80;
+	/** Horizontal nudge from screen center, as a fraction of main layout width (+ = right). */
+	const WIN_HUD_X_OFFSET_RATIO = 0.0;
 	const ml = $derived(stateLayoutDerived.mainLayout());
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
 	const winHudPos = $derived({

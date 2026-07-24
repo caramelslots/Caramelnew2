@@ -8,10 +8,7 @@
 
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
-	import {
-		BOARD_LAYOUT_OFFSETS,
-		isPopoutViewport,
-	} from '../game/constants';
+	import { isPopoutViewport } from '../game/constants';
 	import {
 		portraitBuyPanelCanvasTop,
 		portraitBuyPanelHeightCanvas,
@@ -38,10 +35,11 @@
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 	const isPopout = $derived(isPopoutViewport(canvasSizes));
 	const isPortrait = $derived(layoutType === 'portrait');
-	/** Desktop / tablet / Stake popout / phone portrait. */
+	/** All layouts except when explicitly hidden — desktop/tablet/landscape/popout/portrait. */
 	const showMascotLayout = $derived(
 		layoutType === 'desktop' ||
 			layoutType === 'tablet' ||
+			layoutType === 'landscape' ||
 			isPopout ||
 			isPortrait,
 	);
@@ -53,10 +51,10 @@
 
 	const style = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
-		const off = BOARD_LAYOUT_OFFSETS[layoutType] ?? { x: 0, y: 0 };
 		const board = context.stateGameDerived.boardLayout();
-		const centerX = ml.x + off.x * ml.scale;
-		const centerY = ml.y + off.y * ml.scale;
+		/** visualWidth/Height already include board.scale (parchment on portrait). */
+		const centerX = ml.x + (board.x - ml.width * 0.5) * ml.scale;
+		const centerY = ml.y + (board.y - ml.height * 0.5) * ml.scale;
 		const halfW = (board.visualWidth / 2) * ml.scale;
 		const halfH = (board.visualHeight / 2) * ml.scale;
 
@@ -434,8 +432,8 @@
 <style lang="scss">
 	.mascot {
 		position: fixed;
-		/* Above CashStacksBuyBonusPanel (z-index 45) so hat/coins aren't clipped behind it. */
-		z-index: 47;
+		/* Stacking set by .html-mascot-layer (under HUD z44 / Buy Bonus z45). */
+		z-index: 0;
 		pointer-events: none;
 		filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.55));
 		opacity: 0;

@@ -1,6 +1,6 @@
 <!--
-	CashStacksDesktopHudOverlay.svelte — desktop + popout L/S HUD в HTML/CSS.
-	Util bar (i, ☰, balance, bet) + spin cluster (−, spin, +, autoplay, turbo).
+	CashStacksDesktopHudOverlay.svelte — desktop + tablet + landscape + popout HUD.
+	Single bottom row: [i][☰][BUY BONUS] [−][SPIN][+] [AUTO][⚡] BALANCE/BET
 -->
 <script lang="ts">
 	import {
@@ -14,7 +14,7 @@
 	} from 'state-shared';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
-	import { isPopoutViewport, isPopoutSmallViewport } from '../game/constants';
+	import { isPopoutSmallViewport } from '../game/constants';
 	import { computeDesktopHudLayout, resolveDesktopHudConfig } from '../game/desktopHudLayout';
 	import { getRoundsCounter } from '../game/autoplay';
 	import { canAffordSpin, canIncreaseBet } from '../game/buyBonusBalance';
@@ -26,6 +26,7 @@
 	import { getContextLayout } from 'utils-layout';
 	import { OnHotkey } from 'components-shared';
 	import { isAnyMenuOpen } from '../game/isAnyMenuOpen';
+	import { isFreeSpinsActive } from '../game/activeFeature';
 
 	import HudBalanceBetLine from './HudBalanceBetLine.svelte';
 	import SpinHudButton from './SpinHudButton.svelte';
@@ -37,7 +38,7 @@
 	const menuUrl = HUD_ASSETS.menu;
 	const minusUrl = HUD_ASSETS.betMinus;
 	const plusUrl = HUD_ASSETS.betPlus;
-	const autoplayUrl = HUD_ASSETS.autoplay;
+	const buyBonusBgUrl = HUD_ASSETS.buyBonusPanel;
 	const turboUrls = {
 		1: HUD_ASSETS.turbo1,
 		2: HUD_ASSETS.turbo2,
@@ -64,7 +65,6 @@
 	});
 
 	const layoutType = $derived(stateLayoutDerived.layoutType());
-	const isPopout = $derived(isPopoutViewport(stateLayoutDerived.canvasSizes()));
 	const isPopoutSmall = $derived(isPopoutSmallViewport(stateLayoutDerived.canvasSizes()));
 	const useDesktopHud = $derived(layoutType !== 'portrait');
 	const isFreeSpins = $derived(stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow);
@@ -77,6 +77,10 @@
 
 	const hudConfig = $derived(resolveDesktopHudConfig(isPopoutSmall));
 	const pos = $derived(computeDesktopHudLayout(stateLayoutDerived, hudConfig));
+
+	const buyBonusLabel = $derived(context.i18nDerived.buyBonusPanelButton());
+	const showBuyBonus = $derived(!isFreeSpins && !isReplay && !isFreeSpinsActive());
+	const buyDisabled = $derived(!context.stateXstateDerived.isIdle());
 
 	const isAutoSpinModalOpen = $derived(stateModal.modal?.name === 'autoSpin');
 	const menuBlocksSpaceSpin = $derived(isAnyMenuOpen());
@@ -141,6 +145,12 @@
 	const onMenuPress = () => {
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		stateUi.menuOpen = !stateUi.menuOpen;
+	};
+
+	const onBuyBonusPress = () => {
+		if (buyDisabled) return;
+		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+		stateModal.modal = { name: 'buyBonus' };
 	};
 
 	const onDecreasePress = () => {
@@ -241,9 +251,31 @@
 				onclick={onMenuPress}
 			></button>
 
+			{#if showBuyBonus}
+				<button
+					type="button"
+					class="hud-buy-bonus-btn"
+					class:dimmed={buyDisabled}
+					style:left="{pos.buyBonus.x}px"
+					style:top="{pos.buyBonus.y}px"
+					style:width="{pos.buyBonus.width}px"
+					style:height="{pos.buyBonus.height}px"
+					style:background-image="url('{buyBonusBgUrl}')"
+					style:font-size="{pos.buyBonus.fontSize}px"
+					disabled={buyDisabled}
+					aria-label={buyBonusLabel}
+					data-test="buy-bonus-panel-button"
+					onclick={onBuyBonusPress}
+				>
+					<span class="hud-buy-bonus-label" style:font-size="{pos.buyBonus.fontSize}px"
+						>{buyBonusLabel}</span
+					>
+				</button>
+			{/if}
+
 			{#if !isReplay}
 				<p
-					class="hud-balance-bet"
+					class="hud-balance-bet hud-balance-bet--right"
 					style:left="{pos.balance.x}px"
 					style:top="{pos.balance.y}px"
 					style:font-size="{pos.balance.fontSize}px"
@@ -255,7 +287,7 @@
 				</p>
 			{/if}
 			<p
-				class="hud-balance-bet"
+				class="hud-balance-bet hud-balance-bet--right"
 				style:left="{pos.bet.x}px"
 				style:top="{pos.bet.y}px"
 				style:font-size="{pos.bet.fontSize}px"
@@ -297,18 +329,19 @@
 
 				<button
 					type="button"
-					class="hud-pill-btn"
+					class="hud-buy-bonus-btn"
 					class:dimmed={autoplayDisabled && !isAutoSpinModalOpen}
 					style:left="{pos.autoplay.x}px"
 					style:top="{pos.autoplay.y}px"
 					style:width="{pos.autoplay.width}px"
 					style:height="{pos.autoplay.height}px"
-					style:background-image="url('{autoplayUrl}')"
+					style:background-image="url('{buyBonusBgUrl}')"
+					style:font-size="{pos.autoplay.fontSize}px"
 					disabled={autoplayDisabled}
 					aria-label={context.i18nDerived.autoplayTitle()}
 					onclick={onAutoplayPress}
 				>
-					<span class="hud-pill-label" style:font-size="{pos.autoplay.fontSize}px">
+					<span class="hud-buy-bonus-label" style:font-size="{pos.autoplay.fontSize}px">
 						{context.i18nDerived.autoplayTitle()}
 					</span>
 				</button>
@@ -364,7 +397,7 @@
 	}
 
 	.hud-icon-btn,
-	.hud-pill-btn {
+	.hud-buy-bonus-btn {
 		position: absolute;
 		transform: translate(-50%, -50%);
 		border: 0;
@@ -397,18 +430,27 @@
 		}
 	}
 
-	.hud-pill-btn {
+	.hud-buy-bonus-btn {
+		box-sizing: border-box;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		background-size: 100% 100%;
+		padding: 0;
 	}
 
-	.hud-pill-label {
+	.hud-buy-bonus-label {
 		color: #fff;
 		font-family: 'proxima-nova', Arial, sans-serif;
-		font-weight: 600;
-		line-height: 1;
+		font-weight: 800;
+		line-height: 1.1;
 		text-align: center;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		white-space: nowrap;
+		text-shadow:
+			0 0 10px rgba(255, 120, 220, 0.75),
+			0 2px 6px rgba(0, 0, 0, 0.85);
 		pointer-events: none;
 		user-select: none;
 	}
@@ -420,5 +462,10 @@
 		text-align: left;
 		pointer-events: none;
 		user-select: none;
+	}
+
+	.hud-balance-bet--right {
+		transform: translate(-100%, -50%);
+		text-align: right;
 	}
 </style>

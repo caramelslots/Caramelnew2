@@ -71,6 +71,7 @@ import {
 	SYMBOL_SIZE,
 	BOARD_SIZES,
 	BOARD_LAYOUT_OFFSETS,
+	BOARD_LAYOUT_SCALE,
 	getPortraitBoardScale,
 	getPortraitDeviceWidth,
 	getPortraitParchmentSize,
@@ -277,7 +278,14 @@ const boardLayout = () => {
 					stateLayoutDerived.canvasSizeType(),
 					getPortraitDeviceWidth(stateLayoutDerived.canvasSizes()),
 				)
-			: 1;
+			: (BOARD_LAYOUT_SCALE[layoutType as keyof typeof BOARD_LAYOUT_SCALE] ?? 1);
+
+	const visualWidth = parchment
+		? parchment.width * scale
+		: BOARD_SIZES.width * scale;
+	const visualHeight = parchment
+		? parchment.height * scale
+		: BOARD_SIZES.height * scale;
 
 	return {
 		x: ml.width * 0.5 + offset.x,
@@ -287,8 +295,8 @@ const boardLayout = () => {
 		width: BOARD_SIZES.width,
 		height: BOARD_SIZES.height,
 		scale,
-		visualWidth: parchment ? parchment.width * scale : BOARD_SIZES.width,
-		visualHeight: parchment ? parchment.height * scale : BOARD_SIZES.height,
+		visualWidth,
+		visualHeight,
 	};
 };
 

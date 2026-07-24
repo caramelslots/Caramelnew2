@@ -2,15 +2,15 @@
 export const MASCOT_BASE_SIZE = { width: 520, height: 440 } as const;
 
 /** Mascot height as a fraction of the board’s on-screen height. */
-export const MASCOT_BOARD_HEIGHT_FRAC = 1.28;
+export const MASCOT_BOARD_HEIGHT_FRAC = 1.25;
 /** Horizontal gap after board edge, as a fraction of board height. */
-export const MASCOT_GAP_FRAC = 0.25;
+export const MASCOT_GAP_FRAC = 0.07;
 /**
  * Feet Y relative to board center (+down), as a fraction of board half-height.
  * ~1.0 = board bottom; >1 sits on the street / HUD floor below the board.
  * Same on desktop / laptop / popout (phones excluded by caller).
  */
-export const MASCOT_FEET_Y_FRAC = 2.45;
+export const MASCOT_FEET_Y_FRAC = 1.3;
 /** Where the feet sit inside the mascot box (0 top → 1 bottom). */
 export const MASCOT_FEET_IN_BOX = 0.92;
 /**
@@ -62,6 +62,17 @@ export const getMascotScreenBox = (board: {
 };
 
 /**
+ * Phone portrait size caps (height = min of these).
+ * Bump any of these to enlarge the mascot next to Buy Bonus.
+ */
+export const MASCOT_PORTRAIT_HEIGHT_VS_BUY = 4.9;
+/** vs board half-height (`halfH`). Was 2.05. */
+export const MASCOT_PORTRAIT_HEIGHT_VS_HALFH = 3.15;
+export const MASCOT_PORTRAIT_HEIGHT_VS_CANVAS_W = 0.95;
+/** Body left edge vs canvas center (px). Negative = left. */
+export const MASCOT_PORTRAIT_BODY_LEFT_OFFSET = -30;
+
+/**
  * Phone portrait: under the board, to the right of the Buy Bonus button.
  */
 export const getMascotPortraitScreenBox = (opts: {
@@ -72,13 +83,17 @@ export const getMascotPortraitScreenBox = (opts: {
 	buyPanelHeight: number;
 }): MascotScreenBox => {
 	const height = Math.round(
-		Math.min(opts.buyPanelHeight * 3.2, opts.halfH * 2.05, opts.canvasWidth * 0.62),
+		Math.min(
+			opts.buyPanelHeight * MASCOT_PORTRAIT_HEIGHT_VS_BUY,
+			opts.halfH * MASCOT_PORTRAIT_HEIGHT_VS_HALFH,
+			opts.canvasWidth * MASCOT_PORTRAIT_HEIGHT_VS_CANVAS_W,
+		),
 	);
 	const width = Math.round(height * (MASCOT_BASE_SIZE.width / MASCOT_BASE_SIZE.height));
 	const overscan = Math.round(width * 0.22);
 	const bodyWidth = width - overscan;
-	// Buy Bonus panel is centered; with boost removed the button sits on the left half.
-	const bodyLeft = Math.round(opts.canvasWidth * 0.5 + 6);
+	// Buy Bonus sits on the left half; body starts near canvas center, nudged left.
+	const bodyLeft = Math.round(opts.canvasWidth * 0.5 + MASCOT_PORTRAIT_BODY_LEFT_OFFSET);
 	const left = bodyLeft - overscan;
 	// Tuck up under the board (hat closer to reel frame).
 	const top = Math.round(opts.buyPanelTop - height * 0.32);

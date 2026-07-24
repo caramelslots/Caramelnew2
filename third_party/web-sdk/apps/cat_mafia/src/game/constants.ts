@@ -143,46 +143,11 @@ export const REEL_PADDING = 0.53;
 // Cat Mafia: 5 reels × 4 rows, padded top and bottom (6 cells per column).
 // Order: [top_padding, row0..row3, bottom_padding]
 export const INITIAL_BOARD: RawSymbol[][] = [
-	[
-		{ name: 'L2' },
-		{ name: 'L1' },
-		{ name: 'L4' },
-		{ name: 'H2' },
-		{ name: 'L3' },
-		{ name: 'H4' },
-	],
-	[
-		{ name: 'H1' },
-		{ name: 'L4' },
-		{ name: 'L2' },
-		{ name: 'H3' },
-		{ name: 'L1' },
-		{ name: 'B' },
-	],
-	[
-		{ name: 'L3' },
-		{ name: 'L1' },
-		{ name: 'H4' },
-		{ name: 'L4' },
-		{ name: 'L2' },
-		{ name: 'H2' },
-	],
-	[
-		{ name: 'H4' },
-		{ name: 'H3' },
-		{ name: 'L4' },
-		{ name: 'L2' },
-		{ name: 'L3' },
-		{ name: 'H1' },
-	],
-	[
-		{ name: 'H3' },
-		{ name: 'L3' },
-		{ name: 'L4' },
-		{ name: 'H1' },
-		{ name: 'L2' },
-		{ name: 'L1' },
-	],
+	[{ name: 'L2' }, { name: 'L1' }, { name: 'L4' }, { name: 'H2' }, { name: 'L3' }, { name: 'H4' }],
+	[{ name: 'H1' }, { name: 'L4' }, { name: 'L2' }, { name: 'H3' }, { name: 'L1' }, { name: 'B' }],
+	[{ name: 'L3' }, { name: 'L1' }, { name: 'H4' }, { name: 'L4' }, { name: 'L2' }, { name: 'H2' }],
+	[{ name: 'H4' }, { name: 'H3' }, { name: 'L4' }, { name: 'L2' }, { name: 'L3' }, { name: 'H1' }],
+	[{ name: 'H3' }, { name: 'L3' }, { name: 'L4' }, { name: 'H1' }, { name: 'L2' }, { name: 'L1' }],
 ];
 
 export const BOARD_DIMENSIONS = { x: INITIAL_BOARD.length, y: INITIAL_BOARD[0].length - 2 };
@@ -464,10 +429,20 @@ export const DESK_PARCHMENT_PADDING = { width: 1.04, height: 1.04 } as const;
  */
 export const BOARD_LAYOUT_OFFSETS = {
 	/** Desktop / tablet — board raised; phone portrait/landscape unchanged. */
-	desktop: { x: 0, y: -96 },
-	tablet: { x: 0, y: -72 },
-	landscape: { x: 0, y: -35 },
+	desktop: { x: -20, y: -36 },
+	tablet: { x: -16, y: -26 },
+	landscape: { x: -12, y: -4 },
 	portrait: { x: -14, y: -222 },
+} as const;
+
+/**
+ * Extra board scale for non-phone layouts (portrait uses getPortraitBoardScale).
+ * Applied in stateGame boardLayout() on top of mainLayout.scale.
+ */
+export const BOARD_LAYOUT_SCALE = {
+	desktop: 1.22,
+	tablet: 1.14,
+	landscape: 1.16,
 } as const;
 /** Frame bezel + glow offset from board center (px): +x right, +y down. */
 export const BOARD_FRAME_OFFSET = { x: 6, y: 8 } as const;
@@ -764,43 +739,50 @@ export const getDesktopBonusBarVDims = (sizes: { width: number; height: number }
 };
 
 /**
- * Desktop / Popout HUD scales (ref. designer_assets/IMAGE 2026-06-02 13:12:00).
- * Popout S uses slightly smaller values so the cluster fits 400×225.
+ * Desktop / tablet / landscape / Popout HUD — single bottom row:
+ * [i][☰][BUY BONUS]   [−][SPIN][+]   BALANCE/BET [AUTO][⚡]
+ *
+ * Three packed groups with equal side margins (canvas %). Scales the same
+ * on every non-phone viewport. Portrait uses PORTRAIT_UI_LAYOUT.
  */
 export const DESKTOP_UI_LAYOUT = {
-	utilScale: 0.68,
-	utilX: { info: 140, menu: 224, hudText: 272 },
+	/** Util icon scale vs UI_BASE_SIZE. */
+	utilScale: 0.72,
+	/** Raise entire HUD row (layout px, + = up). */
+	barRaiseY: 16,
+	/** Outer margin from canvas left/right edges (fraction of canvas width). */
+	sideMarginFrac: 0.028,
+	/** Gap between adjacent controls inside a group (fraction of canvas width). */
+	itemGapFrac: 0.01,
+	/** Buy Bonus width as fraction of canvas width. */
+	buyBonusWidthFrac: 0.118,
+	/** Balance/Bet font size in layout px. */
+	balanceFontSize: 22,
+	/** Gap between stacked balance / bet lines (layout px). */
+	balanceLineGap: 15,
+	/** Estimated balance line width in “em” for right-group packing. */
+	balanceTextEm: 11.5,
+	/** Lower Balance/Bet + Auto + Turbo only (layout px, + = down). */
+	rightGroupDropY: 10,
+	/** Buy Bonus / Auto label size as fraction of button height (PC / Laptop / Popout L). */
+	panelLabelFontFrac: 0.22,
 	spinCluster: {
-		/**
-		 * Spin-cluster center X as a fraction of **canvas width** (0–1).
-		 * Same % on PC and Stake popout; −/+ / Auto / Turbo stay relative to this point.
-		 */
-		/** PC / Laptop / Popout L */
-		clusterCenterXFrac: 0.56,
-		betControlsGap: 16,
-		spinScale: 1.05,
-		/** Только Spin выше −/+ (отрицательный Y). */
-		spinRaiseY: -18,
-		smallScale: 0.62,
-		autoplayGap: 12,
-		autoplayScale: 0.9,
-		turboGap: 22,
+		/** Spin X as fraction of canvas width (0.5 = true center). */
+		clusterCenterXFrac: 0.495,
+		betControlsGap: 14,
+		spinScale: 1.08,
+		spinRaiseY: 0,
+		smallScale: 0.7,
+		/** Auto width vs Buy Bonus width (same panel art; L shows Auto narrower). */
+		autoplayScale: 0.72,
 		turboScale: 0.56,
 	},
+	/**
+	 * Popout S (400×225) only — label vs button height.
+	 * Only applied when canvas is ~400×225 (`isPopoutSmallViewport`).
+	 */
 	popoutSmall: {
-		utilScale: 0.58,
-		utilX: { info: 138, menu: 218, hudText: 256 },
-		spinCluster: {
-			/** Same canvas % as desktop — popout no longer drifts right of the board. */
-			clusterCenterXFrac: 0.56,
-			betControlsGap: 12,
-			spinScale: 0.92,
-			spinRaiseY: -14,
-			smallScale: 0.55,
-			autoplayScale: 0.8,
-			turboGap: 16,
-			turboScale: 0.48,
-		},
+		panelLabelFontFrac: 0.25,
 	},
 } as const;
 
