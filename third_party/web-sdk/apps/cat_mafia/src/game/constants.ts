@@ -180,8 +180,8 @@ export const BOARD_SIZE_TRIM = { right: 0, bottom: 0 } as const;
 
 /**
  * Per-symbol win animation — used when `win` shows a frozen idle spine
- * (H1..H4, L1..L4, M) with a container scale tween. W and B play dedicated
- * spine win clips (`Special_2/win`, `Special_1/wave`) and skip this bounce.
+ * (H1..H2, M) with a container scale tween. W, B, H3 (lighter), H4 (telephone)
+ * and letter lows (L1–L4) play dedicated spine win clips and skip this bounce.
  *
  * Flow (ReelSymbol.svelte): on `state === 'win'`
  *   1. UP: scale 1 → `scalePeak`, y-offset 0 → `−yOffsetPeakPx` over `upMs` (sineOut)
@@ -274,7 +274,29 @@ export const HIGH_SYMBOLS = ['H1', 'H2', 'H3', 'H4'];
 export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
 
 const HIGH_SYMBOL_SIZE = 0.9;
+/** Target on-cell fill for letter lows (matches prior low pay size). */
 const LOW_SYMBOL_SIZE = 0.9;
+/**
+ * Designer render spines have oversized skeletons vs the visible prop.
+ * Fit so the *dominant visual span* (not just one body part) lands near the
+ * same on-cell fill as letters / highs — otherwise wide props (telephone
+ * handset) overflow the cell and read larger than A/J/K/Q.
+ */
+const LETTER_SKELETON_HEIGHT = 2603.14;
+const LETTER_ART_HEIGHT = 1306;
+const LETTER_SYMBOL_SIZE = (LOW_SYMBOL_SIZE * LETTER_SKELETON_HEIGHT) / LETTER_ART_HEIGHT;
+/** Telephone — handset width is the widest idle silhouette (`handset` att). */
+const TELEPHONE_SKELETON_HEIGHT = 2603.14;
+const TELEPHONE_ART_SPAN = 1286;
+const TELEPHONE_SYMBOL_SIZE =
+	(HIGH_SYMBOL_SIZE * TELEPHONE_SKELETON_HEIGHT) / TELEPHONE_ART_SPAN;
+/**
+ * Lighter — case + closed lid / flame stack taller than `case` alone
+ * (~882); use the composite span so it matches letter cell fill.
+ */
+const LIGHTER_SKELETON_HEIGHT = 2104.8;
+const LIGHTER_ART_SPAN = 1000;
+const LIGHTER_SYMBOL_SIZE = (HIGH_SYMBOL_SIZE * LIGHTER_SKELETON_HEIGHT) / LIGHTER_ART_SPAN;
 const SPECIAL_SYMBOL_SIZE = 1;
 
 /**
@@ -850,7 +872,8 @@ export const PORTRAIT_TURBO_ICON_BASE = 108;
 
 // Per-symbol bounce on landing — slot-driven attachment matches the
 // asset key, so each spine animates only the H_/L_ image we want.
-const bounceSizeRatios = { width: 1, height: 1 };
+// H1/H2 share the same on-cell fill as letters / H3 / H4 (HIGH_SYMBOL_SIZE).
+const bounceSizeRatios = { width: HIGH_SYMBOL_SIZE, height: HIGH_SYMBOL_SIZE };
 
 const makePaySymbolIdle = (assetKey: string, clipPrefix: string) => ({
 	type: 'spine' as const,
@@ -872,12 +895,51 @@ const makePaySymbolSpinSprite = (imgKey: string) => ({
 
 const h1Static = makePaySymbolIdle('H1', 'High_1');
 const h2Static = makePaySymbolIdle('H2', 'High_2');
-const h3Static = makePaySymbolIdle('H3', 'High_3');
-const h4Static = makePaySymbolIdle('H4', 'High_4');
-const l1Static = makePaySymbolIdle('L1', 'Low_1');
-const l2Static = makePaySymbolIdle('L2', 'Low_2');
-const l3Static = makePaySymbolIdle('L3', 'Low_3');
-const l4Static = makePaySymbolIdle('L4', 'Low_4');
+
+const letterSizeRatios = { width: LETTER_SYMBOL_SIZE, height: LETTER_SYMBOL_SIZE };
+const telephoneSizeRatios = { width: TELEPHONE_SYMBOL_SIZE, height: TELEPHONE_SYMBOL_SIZE };
+const lighterSizeRatios = { width: LIGHTER_SYMBOL_SIZE, height: LIGHTER_SYMBOL_SIZE };
+
+/** Designer render clips — flat names idle / stop / win. */
+const makeRenderStatic = (assetKey: string, sizeRatios: { width: number; height: number }) => ({
+	type: 'spine' as const,
+	assetKey,
+	animationName: 'idle',
+	sizeRatios,
+});
+const makeRenderLand = (assetKey: string, sizeRatios: { width: number; height: number }) => ({
+	type: 'spine' as const,
+	assetKey,
+	animationName: 'stop',
+	sizeRatios,
+});
+const makeRenderWin = (assetKey: string, sizeRatios: { width: number; height: number }) => ({
+	type: 'spine' as const,
+	assetKey,
+	animationName: 'win',
+	sizeRatios,
+});
+
+const h3Static = makeRenderStatic('H3', lighterSizeRatios);
+const h3Land = makeRenderLand('H3', lighterSizeRatios);
+const h3Win = makeRenderWin('H3', lighterSizeRatios);
+
+const h4Static = makeRenderStatic('H4', telephoneSizeRatios);
+const h4Land = makeRenderLand('H4', telephoneSizeRatios);
+const h4Win = makeRenderWin('H4', telephoneSizeRatios);
+
+const l1Static = makeRenderStatic('L1', letterSizeRatios);
+const l2Static = makeRenderStatic('L2', letterSizeRatios);
+const l3Static = makeRenderStatic('L3', letterSizeRatios);
+const l4Static = makeRenderStatic('L4', letterSizeRatios);
+const l1Land = makeRenderLand('L1', letterSizeRatios);
+const l2Land = makeRenderLand('L2', letterSizeRatios);
+const l3Land = makeRenderLand('L3', letterSizeRatios);
+const l4Land = makeRenderLand('L4', letterSizeRatios);
+const l1Win = makeRenderWin('L1', letterSizeRatios);
+const l2Win = makeRenderWin('L2', letterSizeRatios);
+const l3Win = makeRenderWin('L3', letterSizeRatios);
+const l4Win = makeRenderWin('L4', letterSizeRatios);
 
 const h1Spin = makePaySymbolSpinSprite('H1Img');
 const h2Spin = makePaySymbolSpinSprite('H2Img');
@@ -897,42 +959,6 @@ const h2Bounce = {
 	type: 'spine',
 	assetKey: 'H2',
 	animationName: 'High_2/bounce',
-	sizeRatios: bounceSizeRatios,
-};
-const h3Bounce = {
-	type: 'spine',
-	assetKey: 'H3',
-	animationName: 'High_3/bounce',
-	sizeRatios: bounceSizeRatios,
-};
-const h4Bounce = {
-	type: 'spine',
-	assetKey: 'H4',
-	animationName: 'High_4/bounce',
-	sizeRatios: bounceSizeRatios,
-};
-const l1Bounce = {
-	type: 'spine',
-	assetKey: 'L1',
-	animationName: 'Low_1/bounce',
-	sizeRatios: bounceSizeRatios,
-};
-const l2Bounce = {
-	type: 'spine',
-	assetKey: 'L2',
-	animationName: 'Low_2/bounce',
-	sizeRatios: bounceSizeRatios,
-};
-const l3Bounce = {
-	type: 'spine',
-	assetKey: 'L3',
-	animationName: 'Low_3/bounce',
-	sizeRatios: bounceSizeRatios,
-};
-const l4Bounce = {
-	type: 'spine',
-	assetKey: 'L4',
-	animationName: 'Low_4/bounce',
 	sizeRatios: bounceSizeRatios,
 };
 
@@ -1184,8 +1210,8 @@ const bWin = {
 };
 
 export const SYMBOL_INFO_MAP = {
-	// H1..H4, L1..L4: `spin` uses WebP sprites (cheap swaps while scrolling).
-	// Rest/win stay on idle spine; `land` plays the designer bounce spine.
+	// H1..H2: `spin` WebP; rest/win idle spine; `land` bounce.
+	// H3 (lighter) / H4 (telephone) / L1..L4 (A/J/K/Q): idle / stop / win.
 	H1: {
 		win: h1Static,
 		postWinStatic: h1Static,
@@ -1201,46 +1227,47 @@ export const SYMBOL_INFO_MAP = {
 		land: h2Bounce,
 	},
 	H3: {
-		win: h3Static,
+		win: h3Win,
 		postWinStatic: h3Static,
 		static: h3Static,
 		spin: h3Spin,
-		land: h3Bounce,
+		land: h3Land,
 	},
 	H4: {
-		win: h4Static,
+		win: h4Win,
 		postWinStatic: h4Static,
 		static: h4Static,
 		spin: h4Spin,
-		land: h4Bounce,
+		land: h4Land,
 	},
+	// L1–L4 = A / J / K / Q letter spines: idle rest, stop on land, win celebrate.
 	L1: {
-		win: l1Static,
+		win: l1Win,
 		postWinStatic: l1Static,
 		static: l1Static,
 		spin: l1Spin,
-		land: l1Bounce,
+		land: l1Land,
 	},
 	L2: {
-		win: l2Static,
+		win: l2Win,
 		postWinStatic: l2Static,
 		static: l2Static,
 		spin: l2Spin,
-		land: l2Bounce,
+		land: l2Land,
 	},
 	L3: {
-		win: l3Static,
+		win: l3Win,
 		postWinStatic: l3Static,
 		static: l3Static,
 		spin: l3Spin,
-		land: l3Bounce,
+		land: l3Land,
 	},
 	L4: {
-		win: l4Static,
+		win: l4Win,
 		postWinStatic: l4Static,
 		static: l4Static,
 		spin: l4Spin,
-		land: l4Bounce,
+		land: l4Land,
 	},
 	// Wild — spine while scrolling (same skeleton as land/static; avoids sprite⇄spine pop).
 	W: {

@@ -33,12 +33,13 @@
 	);
 
 	// Per-symbol win bounce. Runs for symbols whose win state shows a frozen
-	// idle spine + container scale tween (H/L pay, M). W (`Special_2/win`) and
-	// B (`Special_1/wave`) drive their own spine celebration — skip the bounce
-	// so scale doesn't fight the designer animation.
+	// idle spine + container scale tween (H1–H2, M). W (`Special_2/win`),
+	// B (`Special_1/wave`), H3 lighter / H4 telephone / letter lows (`win`)
+	// drive their own spine celebration — skip the bounce.
 	const usesDedicatedSpineWin = $derived(
 		symbolInfo.animationName === 'Special_2/win' ||
-			symbolInfo.animationName === 'Special_1/wave',
+			symbolInfo.animationName === 'Special_1/wave' ||
+			symbolInfo.animationName === 'win',
 	);
 	const isIdleBouncing = $derived(props.reelSymbol.symbolState === 'idleBounce');
 	const winScale = new Tween(1);
@@ -256,7 +257,7 @@
 		     correctly — a spine-only assetKey key left Special_1 / Mystery posed wrong. -->
 		{#key symbolInfo.type === 'sprite'
 			? `sprite:${symbolInfo.assetKey}`
-			: `${symbolRenderState}:spine:${symbolInfo.assetKey}:${symbolInfo.animationName ?? ''}`}
+			: `${symbolRenderState}:spine:${symbolInfo.assetKey}:${symbolInfo.animationName ?? ''}:${'devNonce' in symbolInfo ? symbolInfo.devNonce : ''}`}
 			<Symbol
 				state={symbolRenderState}
 				rawSymbol={props.reelSymbol.rawSymbol}

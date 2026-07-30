@@ -78,51 +78,55 @@ export default {
 			scale: 1,
 		},
 	},
+	// H3 — lighter from `designer_assets/render_lighter` (idle / stop / win).
 	H3: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
-			skeleton: assetUrl('assets/spines/symbolsNew/High_3.json'),
+			atlas: assetUrl('assets/spines/lighter/lighter.atlas'),
+			skeleton: assetUrl('assets/spines/lighter/lighter.json'),
 			scale: 1,
 		},
 	},
+	// H4 — telephone from `designer_assets/render/telephone_render` (idle / stop / win).
 	H4: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
-			skeleton: assetUrl('assets/spines/symbolsNew/High_4.json'),
+			atlas: assetUrl('assets/spines/telephone/telephone.atlas'),
+			skeleton: assetUrl('assets/spines/telephone/telephone.json'),
 			scale: 1,
 		},
 	},
+	// Low pays — card letter spines from `designer_assets/render/{A,J,K,Q}`
+	// (idle / stop / win). Symbol ids stay L1–L4 for math compatibility.
 	L1: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
-			skeleton: assetUrl('assets/spines/symbolsNew/Low_1.json'),
+			atlas: assetUrl('assets/spines/letters/A/A.atlas'),
+			skeleton: assetUrl('assets/spines/letters/A/A.json'),
 			scale: 1,
 		},
 	},
 	L2: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
-			skeleton: assetUrl('assets/spines/symbolsNew/Low_2.json'),
+			atlas: assetUrl('assets/spines/letters/J/J.atlas'),
+			skeleton: assetUrl('assets/spines/letters/J/J.json'),
 			scale: 1,
 		},
 	},
 	L3: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
-			skeleton: assetUrl('assets/spines/symbolsNew/Low_3.json'),
+			atlas: assetUrl('assets/spines/letters/K/K.atlas'),
+			skeleton: assetUrl('assets/spines/letters/K/K.json'),
 			scale: 1,
 		},
 	},
 	L4: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
-			skeleton: assetUrl('assets/spines/symbolsNew/Low_4.json'),
+			atlas: assetUrl('assets/spines/letters/Q/Q.atlas'),
+			skeleton: assetUrl('assets/spines/letters/Q/Q.json'),
 			scale: 1,
 		},
 	},
@@ -186,27 +190,27 @@ export default {
 	},
 	H3Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/High_3.webp'),
+		src: assetUrl('assets/sprites/symbolsNew/Lighter.webp'),
 	},
 	H4Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/High_4.webp'),
+		src: assetUrl('assets/sprites/symbolsNew/Telephone.webp'),
 	},
 	L1Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Low_1.webp'),
+		src: assetUrl('assets/sprites/symbolsNew/A.webp'),
 	},
 	L2Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Low_2.webp'),
+		src: assetUrl('assets/sprites/symbolsNew/J.webp'),
 	},
 	L3Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Low_3.webp'),
+		src: assetUrl('assets/sprites/symbolsNew/K.webp'),
 	},
 	L4Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Low_4.webp'),
+		src: assetUrl('assets/sprites/symbolsNew/Q.webp'),
 	},
 	BImg: {
 		type: 'sprite',

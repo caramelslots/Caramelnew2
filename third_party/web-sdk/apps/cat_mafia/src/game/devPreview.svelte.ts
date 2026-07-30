@@ -1,4 +1,5 @@
 import type { MascotDevPreview } from './mascotHtmlSpine';
+import type { SymbolDevSelection } from './symbolDevPreview';
 
 /*
 	Dev-only preview toggles. Shared between DevButtons.svelte (controls) and
@@ -19,4 +20,9 @@ export const devPreview = $state({
 	loaderProgressValue: 0,
 	/** force a specific mascot Spine clip (null = normal pose-driven playback) */
 	mascotAnimation: null as MascotDevPreview | null,
+	/**
+	 * Force a spine clip onto matching board cells (null = normal SYMBOL_INFO_MAP).
+	 * DevButtons paints the board with the symbol, then getSymbolInfo reads this.
+	 */
+	symbolAnim: null as SymbolDevSelection | null,
 });

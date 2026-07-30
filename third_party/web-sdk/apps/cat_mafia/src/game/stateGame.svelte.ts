@@ -280,12 +280,8 @@ const boardLayout = () => {
 				)
 			: (BOARD_LAYOUT_SCALE[layoutType as keyof typeof BOARD_LAYOUT_SCALE] ?? 1);
 
-	const visualWidth = parchment
-		? parchment.width * scale
-		: BOARD_SIZES.width * scale;
-	const visualHeight = parchment
-		? parchment.height * scale
-		: BOARD_SIZES.height * scale;
+	const visualWidth = parchment ? parchment.width * scale : BOARD_SIZES.width * scale;
+	const visualHeight = parchment ? parchment.height * scale : BOARD_SIZES.height * scale;
 
 	return {
 		x: ml.width * 0.5 + offset.x,

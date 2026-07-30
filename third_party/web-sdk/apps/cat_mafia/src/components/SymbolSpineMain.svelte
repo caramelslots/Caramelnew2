@@ -15,12 +15,25 @@
 
 	const props: Props = $props();
 
-	// Idle clips (B `Special_1/idle`, M `Mystery/idle`) are zero-movement rest
-	// poses — they only need to be applied once. Freezing them (autoUpdate=false)
-	// stops the Pixi ticker from recomputing the skeleton every frame for every
-	// resting/scrolling B/M cell, which is pure waste. Animated clips
-	// (bounce/wave/win/explosion) keep autoUpdate=true.
-	const autoUpdate = $derived(!props.symbolInfo.animationName?.endsWith('/idle'));
+	// Namespaced rest poses (`High_1/idle`, `Special_1/idle`, `Mystery/idle`) are
+	// zero-movement frames — apply once, then freeze (autoUpdate=false) so every
+	// resting cell doesn't burn ticker. Flat designer `idle` (letters / telephone /
+	// lighter) is a living loop (breath, dial, flame) and must keep updating.
+	const animationName = $derived(props.symbolInfo.animationName);
+	const isLivingIdle = $derived(animationName === 'idle');
+	const autoUpdate = $derived.by(() => {
+		const name = animationName;
+		if (!name) return true;
+		if (name === 'idle') return true;
+		return !name.endsWith('/idle');
+	});
+	const loop = $derived.by(() => {
+		if (props.loop !== undefined) return props.loop;
+		if ('loop' in props.symbolInfo && typeof props.symbolInfo.loop === 'boolean') {
+			return props.symbolInfo.loop;
+		}
+		return isLivingIdle;
+	});
 
 	// `reverseAnimation` on the descriptor signals that this clip should play
 	// backward (e.g. Mystery collapse: explosion in reverse → back to ? box).
@@ -43,9 +56,9 @@
 	{autoUpdate}
 >
 	<SpineTrack
-		loop={props.loop}
+		{loop}
 		trackIndex={0}
-		animationName={props.symbolInfo.animationName}
+		animationName={animationName}
 		timeScale={stateBetDerived.timeScale()}
 		reverse={reverseAnimation}
 		animationEnd={animationEnd}

@@ -24,10 +24,12 @@
 	import { playBet, playBookEvent, playBookEvents } from '../game/utils';
 	import { eventEmitter } from '../game/eventEmitter';
 	import { devPreview } from '../game/devPreview.svelte';
-	import { stateGame } from '../game/stateGame.svelte';
+	import { stateGame, stateGameDerived } from '../game/stateGame.svelte';
 	import { stateLayout } from '../game/stateLayout';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { MASCOT_DEV_PREVIEW_ITEMS } from '../game/mascotHtmlSpine';
+	import { SYMBOL_DEV_PREVIEW_GROUPS } from '../game/symbolDevPreview';
+	import { BOARD_DIMENSIONS } from '../game/constants';
 	import {
 		getRawUrlLang,
 		INVALID_LANG_LABELS,
@@ -49,13 +51,47 @@
 	} from '../stories/data/catmafia_events';
 	import type { WinLevel } from '../game/winLevelMap';
 	import type { BookEvent } from '../game/typesBookEvent';
-	import type { GameType, RawSymbol } from '../game/types';
+	import type { GameType, RawSymbol, SymbolName } from '../game/types';
 	import config from '../game/config';
 
 	let open = $state(false);
 	let langOpen = $state(false);
 	let busy = $state(false);
 	let fsCounterPreview = $state(false);
+	/** Selected symbol in Symbol Anims section (clips shown below). */
+	let symbolAnimGroupId = $state<string | null>('L1');
+
+	const selectedSymbolGroup = $derived(
+		SYMBOL_DEV_PREVIEW_GROUPS.find((g) => g.id === symbolAnimGroupId) ?? null,
+	);
+
+	/** Fill the visible board with `symbolName` so clip preview plays in-place. */
+	const paintBoardWithSymbol = (symbolName: SymbolName) => {
+		const visible = Array.from({ length: BOARD_DIMENSIONS.x }, () =>
+			Array.from({ length: BOARD_DIMENSIONS.y }, () => ({ name: symbolName })),
+		);
+		stateGameDerived.enhancedBoard.settle(padBoard(visible, 'basegame'));
+		for (const reel of stateGame.board) {
+			for (const sym of reel.reelState.symbols) {
+				sym.symbolState = 'static';
+			}
+		}
+	};
+
+	const playSymbolClip = (groupId: string, clipId: string) => {
+		const current = devPreview.symbolAnim;
+		const same = current?.groupId === groupId && current?.clipId === clipId;
+		devPreview.symbolAnim = {
+			groupId,
+			clipId,
+			nonce: same ? current.nonce + 1 : 0,
+		};
+		paintBoardWithSymbol(groupId as SymbolName);
+	};
+
+	const closeSymbolAnimPreview = () => {
+		devPreview.symbolAnim = null;
+	};
 
 	type BetModeKey = 'BASE' | 'bonus_boost' | 'bonus_normal' | 'bonus_super';
 
@@ -830,6 +866,48 @@
 			</section>
 
 			<section>
+				<h4>Symbol Anims</h4>
+				<p class="subhint">Pick symbol → clip. Plays on the board. Re-click to replay.</p>
+				<div class="grid grid--3">
+					{#each SYMBOL_DEV_PREVIEW_GROUPS as group (group.id)}
+						<button
+							type="button"
+							class:active={symbolAnimGroupId === group.id}
+							title={group.title}
+							onclick={() => {
+								symbolAnimGroupId = group.id;
+							}}
+						>
+							{group.label}
+						</button>
+					{/each}
+				</div>
+				{#if selectedSymbolGroup}
+					<div class="grid" style="margin-top: 4px">
+						{#each selectedSymbolGroup.clips as clip (clip.id)}
+							<button
+								type="button"
+								class:active={devPreview.symbolAnim?.groupId === selectedSymbolGroup.id &&
+									devPreview.symbolAnim?.clipId === clip.id}
+								title={`${selectedSymbolGroup.label} · ${clip.animationName}${clip.loop ? ' (loop)' : ''}`}
+								onclick={() => playSymbolClip(selectedSymbolGroup.id, clip.id)}
+							>
+								{clip.label}
+							</button>
+						{/each}
+						<button
+							type="button"
+							class:active={devPreview.symbolAnim === null}
+							title="Stop forcing the clip (board stays as painted)"
+							onclick={closeSymbolAnimPreview}
+						>
+							Close
+						</button>
+					</div>
+				{/if}
+			</section>
+
+			<section>
 				<h4>Win Levels</h4>
 				<div class="grid">
 					<button type="button" disabled={busy} onclick={playSmallWin}>Small Win</button>
@@ -1106,6 +1184,10 @@
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 4px;
+	}
+
+	.grid--3 {
+		grid-template-columns: 1fr 1fr 1fr;
 	}
 
 	.dev-body button {

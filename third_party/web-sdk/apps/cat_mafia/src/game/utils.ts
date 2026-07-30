@@ -17,6 +17,8 @@ import { eventEmitter } from './eventEmitter';
 import type { Bet, BookEventOfType } from './typesBookEvent';
 import { bookEventHandlerMap } from './bookEventHandlerMap';
 import { stateGame } from './stateGame.svelte';
+import { devPreview } from './devPreview.svelte';
+import { resolveSymbolDevPreview } from './symbolDevPreview';
 import type { RawSymbol, SymbolName, SymbolState } from './types';
 
 // general utils
@@ -128,6 +130,22 @@ export const getSymbolInfo = ({
 	rawSymbol: RawSymbol;
 	state: SymbolState;
 }) => {
+	// DEV: force a spine clip onto matching board cells (Symbol Anims panel).
+	const preview = devPreview.symbolAnim;
+	if (preview && rawSymbol.name === preview.groupId) {
+		const resolved = resolveSymbolDevPreview(preview);
+		if (resolved) {
+			const base = SYMBOL_INFO_MAP[rawSymbol.name].static;
+			return {
+				type: 'spine' as const,
+				assetKey: resolved.assetKey,
+				animationName: resolved.animationName,
+				sizeRatios: base.sizeRatios,
+				loop: resolved.loop,
+				devNonce: preview.nonce,
+			};
+		}
+	}
 	if (rawSymbol.name === 'M' && state === 'mysteryReveal' && rawSymbol.mysteryRevealTo) {
 		return getMysteryRevealSymbolInfo(rawSymbol.mysteryRevealTo, {
 			syncAnimation: rawSymbol.mysteryRevealSync,
