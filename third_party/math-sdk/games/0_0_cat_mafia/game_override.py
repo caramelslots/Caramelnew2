@@ -7,6 +7,7 @@ from src.calculations.statistics import get_random_outcome
 from src.calculations.lines import Lines
 from src.events.events import reveal_event, fs_trigger_event
 from game_cluster import generate_cluster_board_names
+from game_visual_enrich import enrich_board_non_winning, enrich_padding_symbols
 from game_events import (
     paw_coin_resolve_event,
     super_wild_expand_event,
@@ -144,6 +145,7 @@ class GameStateOverride(GameExecutables):
         self.apply_fs_sw_board_rules()
         self.force_paw_on_board()
         self.force_sw_expand_on_board()
+        self.enrich_visual_non_winning_symbols()
         if emit_event:
             reveal_event(self)
 
@@ -230,7 +232,7 @@ class GameStateOverride(GameExecutables):
         self.padding_position = [0] * self.config.num_reels
         self.reelstrip_id = "CLUSTER"
         if self.config.include_padding:
-            pool = ["L1", "L2", "L3", "L4", "H4", "H3"]
+            pool = ["L1", "L2", "L3", "L4", "H4", "H3", "H2", "H1"]
             self.top_symbols = [
                 self.create_symbol(random.choice(pool)) for _ in range(self.config.num_reels)
             ]
@@ -239,9 +241,32 @@ class GameStateOverride(GameExecutables):
             ]
             # Re-apply sticky SW onto padding after regenerating it.
             self.apply_fs_sw_board_rules()
+        self.enrich_visual_non_winning_symbols()
         if emit_event:
             reveal_event(self)
         return True
+
+    def enrich_visual_non_winning_symbols(self) -> None:
+        """Raise high-symbol density in non-paying noise only (RTP/lines untouched)."""
+        def raw_create(name: str):
+            # Avoid SW mult rolls during safety clones (must not advance game RNG).
+            return self.symbol_storage.create_symbol(name)
+
+        enrich_board_non_winning(
+            self.board,
+            self.config,
+            self.create_symbol,
+            create_symbol_raw=raw_create,
+            global_multiplier=getattr(self, "global_multiplier", 1) or 1,
+        )
+        if getattr(self.config, "include_padding", False):
+            sticky = set(getattr(self, "sticky_sw", {}) or {})
+            enrich_padding_symbols(
+                getattr(self, "top_symbols", None),
+                getattr(self, "bottom_symbols", None),
+                self.create_symbol,
+                sticky_sw_reels=sticky,
+            )
 
     def enforce_bonus_symbol_rules(self) -> None:
         """Base: max 1 scatter (B) per reel in viewport (board + padding). FS: no B."""

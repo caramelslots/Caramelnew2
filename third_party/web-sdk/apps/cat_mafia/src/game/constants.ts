@@ -274,8 +274,8 @@ export const HIGH_SYMBOLS = ['H1', 'H2', 'H3', 'H4'];
 export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
 
 const HIGH_SYMBOL_SIZE = 0.9;
-/** Target on-cell fill for letter lows (matches prior low pay size). */
-const LOW_SYMBOL_SIZE = 0.9;
+/** Target on-cell fill for letter lows — slightly under highs so A/J/K/Q read lighter. */
+const LOW_SYMBOL_SIZE = 0.78;
 /**
  * Designer render spines have oversized skeletons vs the visible prop.
  * Fit so the *dominant visual span* (not just one body part) lands near the
@@ -297,6 +297,8 @@ const TELEPHONE_SYMBOL_SIZE =
 const LIGHTER_SKELETON_HEIGHT = 2104.8;
 const LIGHTER_ART_SPAN = 1000;
 const LIGHTER_SYMBOL_SIZE = (HIGH_SYMBOL_SIZE * LIGHTER_SKELETON_HEIGHT) / LIGHTER_ART_SPAN;
+/** Lift H3 (lighter) up in the cell — spine rest pose sits a bit low. */
+const LIGHTER_OFFSET_Y = -8;
 const SPECIAL_SYMBOL_SIZE = 1;
 
 /**
@@ -900,29 +902,58 @@ const letterSizeRatios = { width: LETTER_SYMBOL_SIZE, height: LETTER_SYMBOL_SIZE
 const telephoneSizeRatios = { width: TELEPHONE_SYMBOL_SIZE, height: TELEPHONE_SYMBOL_SIZE };
 const lighterSizeRatios = { width: LIGHTER_SYMBOL_SIZE, height: LIGHTER_SYMBOL_SIZE };
 
+type RenderSizeRatios = { width: number; height: number };
+
 /** Designer render clips — flat names idle / stop / win. */
-const makeRenderStatic = (assetKey: string, sizeRatios: { width: number; height: number }) => ({
+const makeRenderStatic = (
+	assetKey: string,
+	sizeRatios: RenderSizeRatios,
+	opts?: { offsetY?: number },
+) => ({
 	type: 'spine' as const,
 	assetKey,
 	animationName: 'idle',
 	sizeRatios,
+	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
 });
-const makeRenderLand = (assetKey: string, sizeRatios: { width: number; height: number }) => ({
+const makeRenderLand = (
+	assetKey: string,
+	sizeRatios: RenderSizeRatios,
+	opts?: { offsetY?: number },
+) => ({
 	type: 'spine' as const,
 	assetKey,
 	animationName: 'stop',
 	sizeRatios,
+	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
 });
-const makeRenderWin = (assetKey: string, sizeRatios: { width: number; height: number }) => ({
+const makeRenderWin = (
+	assetKey: string,
+	sizeRatios: RenderSizeRatios,
+	opts?: { offsetY?: number },
+) => ({
 	type: 'spine' as const,
 	assetKey,
 	animationName: 'win',
 	sizeRatios,
+	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
+});
+const makeRenderSpinSprite = (
+	imgKey: string,
+	sizeRatios: RenderSizeRatios,
+	opts?: { offsetY?: number },
+) => ({
+	type: 'sprite' as const,
+	assetKey: imgKey,
+	sizeRatios,
+	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
 });
 
-const h3Static = makeRenderStatic('H3', lighterSizeRatios);
-const h3Land = makeRenderLand('H3', lighterSizeRatios);
-const h3Win = makeRenderWin('H3', lighterSizeRatios);
+const lighterOpts = { offsetY: LIGHTER_OFFSET_Y };
+
+const h3Static = makeRenderStatic('H3', lighterSizeRatios, lighterOpts);
+const h3Land = makeRenderLand('H3', lighterSizeRatios, lighterOpts);
+const h3Win = makeRenderWin('H3', lighterSizeRatios, lighterOpts);
 
 const h4Static = makeRenderStatic('H4', telephoneSizeRatios);
 const h4Land = makeRenderLand('H4', telephoneSizeRatios);
@@ -943,12 +974,17 @@ const l4Win = makeRenderWin('L4', letterSizeRatios);
 
 const h1Spin = makePaySymbolSpinSprite('H1Img');
 const h2Spin = makePaySymbolSpinSprite('H2Img');
-const h3Spin = makePaySymbolSpinSprite('H3Img');
-const h4Spin = makePaySymbolSpinSprite('H4Img');
-const l1Spin = makePaySymbolSpinSprite('L1Img');
-const l2Spin = makePaySymbolSpinSprite('L2Img');
-const l3Spin = makePaySymbolSpinSprite('L3Img');
-const l4Spin = makePaySymbolSpinSprite('L4Img');
+// Spin WebPs already contain only the glyph/prop in a 196² canvas — use the
+// on-cell fill directly. Inflated spine sizeRatios (skeleton ≫ art) would make
+// the sprite much larger than the idle/land spine and pop on bounce.
+const letterSpinSizeRatios = { width: LOW_SYMBOL_SIZE, height: LOW_SYMBOL_SIZE };
+const propSpinSizeRatios = { width: HIGH_SYMBOL_SIZE, height: HIGH_SYMBOL_SIZE };
+const h3Spin = makeRenderSpinSprite('H3Img', propSpinSizeRatios, lighterOpts);
+const h4Spin = makeRenderSpinSprite('H4Img', propSpinSizeRatios);
+const l1Spin = makeRenderSpinSprite('L1Img', letterSpinSizeRatios);
+const l2Spin = makeRenderSpinSprite('L2Img', letterSpinSizeRatios);
+const l3Spin = makeRenderSpinSprite('L3Img', letterSpinSizeRatios);
+const l4Spin = makeRenderSpinSprite('L4Img', letterSpinSizeRatios);
 const h1Bounce = {
 	type: 'spine',
 	assetKey: 'H1',
@@ -964,14 +1000,8 @@ const h2Bounce = {
 
 /**
  * Затемнение невыигрышных символов во время win-анимации.
- * Пока проигрываются paylines / scatter highlight / bonus collect,
- * все символы вне состояния `win`/`postWinStatic` получают пониженный
- * alpha на уровне родительского Container — игроку проще считать,
- * какие позиции «сыграли».
- *
- * Управляется флагом `stateGame.winSpotlightActive` (см. stateGame.svelte.ts),
- * который поднимается хелпером `animateSymbols` в bookEventHandlerMap.ts
- * и сбрасывается при старте следующего спина (`reveal` handler).
+ * Пока проигрываются paylines, все символы вне `win`/`postWinStatic`
+ * получают пониженный alpha. Флаг `winSpotlightActive` также расширяет BoardMask.
  */
 export const DIM_NON_WINNING = {
 	alpha: 0.35,

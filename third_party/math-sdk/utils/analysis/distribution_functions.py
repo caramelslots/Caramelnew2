@@ -1,6 +1,5 @@
 from collections import defaultdict
 from math import sqrt
-import numpy as np
 
 
 def get_lookup_length(filepath: str) -> int:
@@ -52,7 +51,11 @@ def make_win_distribution_from_optimizer(filepath: str, normalize: bool = True) 
 
 def get_distribution_average(dist: dict) -> float:
     """Return weighted average from ordered win distribution."""
-    return np.average(list(dist.keys()), weights=list(dist.values()))
+    # Pure Python — avoids broken/partial numpy installs (namespace packages).
+    total_weight = sum(dist.values())
+    if total_weight <= 0:
+        return 0.0
+    return sum(float(pay) * float(weight) for pay, weight in dist.items()) / total_weight
 
 
 def get_distribution_moments(dist: dict, bet_cost: float) -> float:
@@ -135,7 +138,11 @@ def calculate_rtp(dist: dict, bet_cost: float, total_weight: float = None) -> fl
     """Get distribution RTP."""
     if total_weight is not None:
         total_weight = sum(list(dist.values()))
-    return float(np.dot(list(dist.keys()), list(dist.values()))) / total_weight / bet_cost
+    if not total_weight:
+        total_weight = sum(dist.values())
+    if total_weight <= 0 or bet_cost == 0:
+        return 0.0
+    return sum(float(pay) * float(weight) for pay, weight in dist.items()) / total_weight / bet_cost
 
 
 def min_dist_difference(dist: dict):

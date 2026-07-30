@@ -46,11 +46,16 @@
 	const animationEnd = $derived(
 		'animationEnd' in props.symbolInfo ? (props.symbolInfo.animationEnd as number) : undefined,
 	);
+	const offsetY = $derived(
+		'offsetY' in props.symbolInfo && typeof props.symbolInfo.offsetY === 'number'
+			? props.symbolInfo.offsetY
+			: 0,
+	);
 </script>
 
 <SpineProvider
 	x={props.x}
-	y={props.y}
+	y={(props.y ?? 0) + offsetY}
 	key={props.symbolInfo.assetKey}
 	height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height}
 	{autoUpdate}

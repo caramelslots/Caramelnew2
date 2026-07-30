@@ -12,54 +12,72 @@ from typing import Callable, Optional
 from src.calculations.lines import Lines
 
 
-# BR0 rarity weights — mirror MATH_RETENTION_PLAN §Stage 2 Q4.
+# BR0 rarity weights — bias cluster hero toward highs for denser premium look.
+# Still guaranteed zero line-win by construction in generate_cluster_board_names.
 CLUSTER_SYMBOL_WEIGHTS_BR0 = {
-    "L3": 6,
-    "L4": 6,
-    "L1": 5,
-    "L2": 5,
-    "H4": 4,
-    "H3": 3,
-    "H2": 2,
-    "H1": 1,
+    "L3": 3,
+    "L4": 3,
+    "L1": 3,
+    "L2": 3,
+    "H4": 5,
+    "H3": 5,
+    "H2": 4,
+    "H1": 4,
     "W": 1,
 }
 
 CLUSTER_SYMBOL_WEIGHTS_BR1 = dict(CLUSTER_SYMBOL_WEIGHTS_BR0)
 CLUSTER_SYMBOL_WEIGHTS_BR2 = dict(CLUSTER_SYMBOL_WEIGHTS_BR0)
 
-# FR0 / FR1 — slightly lower L weight vs base strips (more H on FS reels).
+# FR0 / FR1 — match ~1:1 premium noise target used in base enrich.
 CLUSTER_SYMBOL_WEIGHTS_FR0 = {
-    "L3": 5,
-    "L4": 5,
-    "L1": 4,
-    "L2": 4,
-    "H4": 4,
-    "H3": 3,
-    "H2": 3,
-    "H1": 2,
+    "L3": 3,
+    "L4": 3,
+    "L1": 3,
+    "L2": 3,
+    "H4": 5,
+    "H3": 5,
+    "H2": 4,
+    "H1": 4,
     "W": 2,
 }
 
 CLUSTER_SYMBOL_WEIGHTS_FR1 = {
-    "L3": 4,
-    "L4": 4,
-    "L1": 4,
-    "L2": 4,
+    "L3": 2,
+    "L4": 2,
+    "L1": 3,
+    "L2": 3,
     "H4": 5,
-    "H3": 4,
-    "H2": 3,
-    "H1": 2,
+    "H3": 5,
+    "H2": 4,
+    "H1": 4,
     "W": 3,
 }
 
 FILLER_SYMBOLS = ["L1", "L2", "L3", "L4", "H4", "H3", "H2", "H1"]
+# Weighted fillers ≈ 58% high among L+H (Hell Hot–like noise).
+FILLER_WEIGHTS = {
+    "L1": 2,
+    "L2": 2,
+    "L3": 2,
+    "L4": 2,
+    "H4": 4,
+    "H3": 4,
+    "H2": 3,
+    "H1": 3,
+}
 
 
 def pick_cluster_symbol(weights: dict[str, int], rng: random.Random) -> str:
     symbols = list(weights.keys())
     w = list(weights.values())
     return rng.choices(symbols, weights=w, k=1)[0]
+
+
+def pick_filler_symbol(exclude: str, rng: random.Random) -> str:
+    pool = [s for s in FILLER_SYMBOLS if s != exclude]
+    weights = [FILLER_WEIGHTS.get(s, 1) for s in pool]
+    return rng.choices(pool, weights=weights, k=1)[0]
 
 
 def _scatter_count(board_names: list[list[str]]) -> int:
@@ -143,8 +161,7 @@ def generate_cluster_board_names(
                 if (reel, row) in pos_set:
                     col.append(cluster_sym)
                 else:
-                    pool = [s for s in FILLER_SYMBOLS if s != cluster_sym]
-                    col.append(rng.choice(pool))
+                    col.append(pick_filler_symbol(cluster_sym, rng))
             board_names.append(col)
 
         if _scatter_count(board_names) > max_scatters:

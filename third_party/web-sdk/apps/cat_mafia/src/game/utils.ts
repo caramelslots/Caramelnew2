@@ -143,6 +143,9 @@ export const getSymbolInfo = ({
 				sizeRatios: base.sizeRatios,
 				loop: resolved.loop,
 				devNonce: preview.nonce,
+				...('offsetY' in base && typeof base.offsetY === 'number'
+					? { offsetY: base.offsetY }
+					: {}),
 			};
 		}
 	}
