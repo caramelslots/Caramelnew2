@@ -30,13 +30,30 @@ export type MascotScreenBox = {
 };
 
 /**
- * Where paw-coins land while the hat is held out (idle3 end pose).
- * Hat sits in the left overscan, roughly at vest / waist height — not the
- * top of the Spine viewport (that’s empty padding for the toss).
+ * idle3 timing (designer `hat` clip, truncated at brim-out):
+ * - hat out ~1.73s, shake ~1.90–2.57s, hold last frame for coins, reverse = put-on.
+ */
+export const MASCOT_HAT_CATCH_BEFORE_COINS_MS = 1950;
+/** CSS fly duration — keep in sync with `PawCoinOverlay` keyframes. */
+export const MASCOT_COIN_FLY_DURATION_MS = 550;
+/** Stagger between successive coins (ms). */
+export const MASCOT_COIN_FLY_STAGGER_MS = 60;
+/**
+ * Wall-clock wait after launching coins (fly + stagger for a full row + settle
+ * into the shake / hold pose before hat-on reverse).
+ */
+export const MASCOT_COIN_FLY_WAIT_MS = 800;
+/** Reverse idle3 put-on (~clip length 2.57s). */
+export const MASCOT_HAT_ON_MS = 2600;
+
+/**
+ * Where paw-coins land while the hat is held out (idle3 brim-out / shake pose).
+ * Fractions of the full mascot HTML box (includes left overscan). Aim at the
+ * open brim (left/lower than the hat bone center — coins were landing high-right).
  */
 export const getMascotHatCatchPoint = (box: MascotScreenBox) => ({
-	x: box.bodyLeft - box.bodyWidth * 0.12,
-	y: box.top + box.height * 0.52,
+	x: box.left + box.width * 0.12,
+	y: box.top + box.height * 0.68,
 });
 
 /**
@@ -108,7 +125,7 @@ export const getMascotBoxSize = (scale = 1) => ({
 
 /**
  * SpinePlayer viewport — expanded left/top for idle3 hat toss
- * (hat translate ~ -970 x / +1400 y beyond setup pose).
+ * (hat translate ~ -1225 x / +1575 y beyond setup pose).
  */
 export const MASCOT_SPINE_VIEWPORT = {
 	x: -1700,
@@ -206,8 +223,8 @@ type PosePlayback = {
 /**
  * Temporary pose → Spine mapping (adjust freely):
  * - idle2 = clap hands
- * - idle3 = hat out / catch (hatCatch) + reverse put-on (hatOn);
- *   intro ~0–1.2s moves the hand; hand_palm has RGBA fade in (fades out on reverse)
+ * - idle3 = designer hat collect (hatCatch hold at brim-out ~2.57s) + reverse put-on (hatOn);
+ *   hand/fingers + purple hat meshes; hat is out by ~1.73s
  * - idle3_ears = alert / aim
  * - animation / animation2 / animation3 = action beats
  */

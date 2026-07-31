@@ -17,6 +17,7 @@
 	import {
 		getMascotPortraitScreenBox,
 		getMascotScreenBox,
+		MASCOT_COIN_FLY_WAIT_MS,
 		MASCOT_IDLE_VARIANTS,
 		MASCOT_POSE_PLAYBACK,
 		MASCOT_SPINE_ANIMATIONS,
@@ -28,6 +29,7 @@
 		type MascotSpineAnimation,
 		resolveMascotSpineUrl,
 	} from '../game/mascotHtmlSpine';
+	import { gameSpeedMultFor } from '../game/gameSpeed';
 
 	const context = getContext();
 	const show = $derived(gameEntrance.showContent);
@@ -48,6 +50,8 @@
 	const pose = $derived(
 		(context.stateGame.bulletFly ? 'load' : context.stateGame.mascotPose || 'idle') as MascotPose,
 	);
+	const gameSpeed = $derived(context.stateGame.gameSpeed);
+	const spineTimeScale = $derived(gameSpeedMultFor(gameSpeed));
 
 	const style = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
@@ -142,6 +146,9 @@
 			hideSmileSlot();
 			return;
 		}
+
+		// Keep Spine in lockstep with waitForGameSpeed / coin CSS (turbo).
+		state.timeScale = spineTimeScale;
 
 		if (opts?.reverse) {
 			// Seamless hat-on: keep current pose, play idle3 backwards from the end.
@@ -304,7 +311,7 @@
 			showControls: false,
 			showLoading: false,
 			backgroundColor: '#00000000',
-			premultipliedAlpha: true,
+			premultipliedAlpha: false,
 			preserveDrawingBuffer: false,
 			alpha: true,
 			defaultMix: 0,
@@ -345,7 +352,7 @@
 									if (activeForceAnim !== 'idle3' || !player) return;
 									forceIdle3Phase = 'on';
 									playClip('idle3', false, { reverse: true });
-								}, 800);
+								}, MASCOT_COIN_FLY_WAIT_MS);
 								return;
 							}
 							if (forceIdle3Phase === 'on') {
@@ -419,6 +426,13 @@
 			activePose = undefined;
 		}
 		applyPose(pose);
+	});
+
+	/** Keep hat / idle clips aligned with turbo waits + coin CSS. */
+	$effect(() => {
+		const scale = spineTimeScale;
+		const state = player?.animationState;
+		if (state) state.timeScale = scale;
 	});
 
 </script>

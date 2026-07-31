@@ -17,7 +17,10 @@
 		getMascotHatCatchPoint,
 		getMascotPortraitScreenBox,
 		getMascotScreenBox,
+		MASCOT_COIN_FLY_DURATION_MS,
+		MASCOT_COIN_FLY_STAGGER_MS,
 	} from '../game/mascotHtmlSpine';
+	import { gameSpeedMultFor } from '../game/gameSpeed';
 
 	const context = getContext();
 	const show = $derived(gameEntrance.showContent);
@@ -34,6 +37,9 @@
 
 	const cells = $derived(context.stateGame.pawCoinCells);
 	const flying = $derived(context.stateGame.pawCoinFlying);
+	const speedMult = $derived(gameSpeedMultFor(context.stateGame.gameSpeed));
+	const flyDurationS = $derived(MASCOT_COIN_FLY_DURATION_MS / 1000 / speedMult);
+	const flyStaggerS = $derived(MASCOT_COIN_FLY_STAGGER_MS / 1000 / speedMult);
 
 	const layout = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
@@ -81,7 +87,10 @@
 		const startCy = top + size / 2;
 		const dx = o.hatX - startCx;
 		const dy = o.hatY - startCy;
-		const delay = index * 0.06;
+		// Arc peak: pull upward mid-flight so coins drop into the brim.
+		const arcX = dx * 0.55;
+		const arcY = dy * 0.4 - Math.min(72, Math.abs(dy) * 0.18);
+		const delay = index * flyStaggerS;
 		const tint =
 			tier === 3 ? '#e8c46a' : tier === 2 ? '#c0c4cc' : tier === 1 ? '#cd7f32' : '#666';
 		return [
@@ -92,7 +101,10 @@
 			`--coin:${tint}`,
 			`--dx:${dx}px`,
 			`--dy:${dy}px`,
+			`--arc-x:${arcX}px`,
+			`--arc-y:${arcY}px`,
 			`--fly-delay:${delay}s`,
+			`--fly-duration:${flyDurationS}s`,
 		].join(';');
 	};
 </script>
@@ -135,7 +147,8 @@
 	}
 
 	.coin-cell.flying {
-		animation: coin-fly-to-hat 0.55s cubic-bezier(0.33, 0.1, 0.25, 1) var(--fly-delay, 0s) both;
+		animation: coin-fly-to-hat var(--fly-duration, 0.55s) cubic-bezier(0.33, 0.1, 0.25, 1)
+			var(--fly-delay, 0s) both;
 		z-index: 49;
 	}
 
@@ -177,11 +190,15 @@
 			transform: translate(0, 0) scale(1) rotate(0deg);
 			opacity: 1;
 		}
-		70% {
+		55% {
+			transform: translate(var(--arc-x), var(--arc-y)) scale(0.62) rotate(120deg);
+			opacity: 1;
+		}
+		88% {
 			opacity: 1;
 		}
 		100% {
-			transform: translate(var(--dx), var(--dy)) scale(0.22) rotate(220deg);
+			transform: translate(var(--dx), var(--dy)) scale(0.14) rotate(240deg);
 			opacity: 0;
 		}
 	}

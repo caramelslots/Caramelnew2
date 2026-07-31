@@ -31,6 +31,11 @@ import {
 import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
 import { waitForTimeout } from 'utils-shared/wait';
 import { computeCatSlowTriggerReel, catSlowReelsAfterTrigger, CAT_SLOW_EXTRA_SYMBOL_ROWS } from './catAnticipation';
+import {
+	MASCOT_COIN_FLY_WAIT_MS,
+	MASCOT_HAT_CATCH_BEFORE_COINS_MS,
+	MASCOT_HAT_ON_MS,
+} from './mascotHtmlSpine';
 
 // Таймер фонового снятия затемнения/paylines. Хранится здесь, чтобы
 // `reveal` мог отменить его при старте нового спина раньше истечения задержки.
@@ -808,16 +813,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.pawCoinBagVisible = true;
 		stateGame.mascotPose = 'hatCatch';
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-		// idle3 ~2.17s — hat is out by ~1.45s; hold last frame while coins land.
-		await waitForGameSpeed(1500, stateGame.gameSpeed);
+		// Wait until brim-out shake (~1.90s+), then fly coins into the hat mid-shake.
+		await waitForGameSpeed(MASCOT_HAT_CATCH_BEFORE_COINS_MS, stateGame.gameSpeed);
 
 		stateGame.pawCoinFlying = true;
-		await waitForGameSpeed(750, stateGame.gameSpeed);
+		await waitForGameSpeed(MASCOT_COIN_FLY_WAIT_MS, stateGame.gameSpeed);
 
 		stateBet.winBookEventAmount += bookEvent.totalCoinWin;
 		stateGame.mascotPose = 'hatOn';
-		// Reverse idle3 back onto the head (~full clip length).
-		await waitForGameSpeed(2200, stateGame.gameSpeed);
+		// Reverse idle3 back onto the head (~truncated brim-out clip length).
+		await waitForGameSpeed(MASCOT_HAT_ON_MS, stateGame.gameSpeed);
 
 		stateGame.pawCoinBagVisible = false;
 		stateGame.pawCoinFlying = false;
