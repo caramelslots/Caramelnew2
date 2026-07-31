@@ -32,6 +32,7 @@ export type MascotScreenBox = {
 /**
  * idle3 timing (designer `hat` clip, truncated at brim-out):
  * - hat out ~1.73s, shake ~1.90–2.57s, hold last frame for coins, reverse = put-on.
+ * Natural 1× Spine playback — no extra speed-up or clip shortening.
  */
 export const MASCOT_HAT_CATCH_BEFORE_COINS_MS = 1950;
 /** CSS fly duration — keep in sync with `PawCoinOverlay` keyframes. */
