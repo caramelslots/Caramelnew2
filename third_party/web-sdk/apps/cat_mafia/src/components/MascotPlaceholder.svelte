@@ -20,6 +20,7 @@
 		MASCOT_COIN_FLY_WAIT_MS,
 		MASCOT_IDLE_VARIANTS,
 		MASCOT_POSE_PLAYBACK,
+		MASCOT_SSAA,
 		MASCOT_SPINE_ANIMATIONS,
 		MASCOT_SPINE_VIEWPORT,
 		nextMascotIdleVariantDelayMs,
@@ -312,6 +313,9 @@
 			showLoading: false,
 			backgroundColor: '#00000000',
 			premultipliedAlpha: false,
+			// Atlas page is padded to 2048² (POT) so mipmaps can kick in when
+			// the mascot is drawn smaller than the source art (phones).
+			mipmaps: true,
 			preserveDrawingBuffer: false,
 			alpha: true,
 			defaultMix: 0,
@@ -439,7 +443,15 @@
 
 {#if visible}
 	<div class="mascot" class:ready style={style} aria-hidden="true">
-		<div class="mascot-spine" bind:this={container}></div>
+		<!--
+			SSAA: Spine draws into a larger canvas, then we CSS-scale down so
+			eye/ear layer edges don't alias into hard seams on small phones.
+		-->
+		<div
+			class="mascot-spine"
+			bind:this={container}
+			style="width:{100 * MASCOT_SSAA}%;height:{100 * MASCOT_SSAA}%;transform:scale({1 / MASCOT_SSAA})"
+		></div>
 	</div>
 {/if}
 
@@ -452,6 +464,9 @@
 		filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.55));
 		opacity: 0;
 		transition: opacity 0.25s ease;
+		/* Clip layout overflow from the pre-scale SSAA box; hat still paints
+		   outside via transform (overflow:visible on the scaled child). */
+		overflow: visible;
 
 		&.ready {
 			opacity: 1;
@@ -459,9 +474,10 @@
 	}
 
 	.mascot-spine {
-		position: relative;
-		width: 100%;
-		height: 100%;
+		position: absolute;
+		left: 0;
+		top: 0;
+		transform-origin: top left;
 		/* idle3 throws hat/arm outside the body bounds — don't clip */
 		overflow: visible;
 	}

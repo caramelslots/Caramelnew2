@@ -1,6 +1,13 @@
 /** Aspect reference for the HTML mascot box (wide enough for idle3 hat toss). */
 export const MASCOT_BASE_SIZE = { width: 520, height: 440 } as const;
 
+/**
+ * Render the Spine canvas larger than the on-screen box, then CSS-scale down.
+ * Layer seams (eyes/ears) alias hard when the skeleton is drawn tiny on phones —
+ * supersampling averages those edges away.
+ */
+export const MASCOT_SSAA = 2;
+
 /** Mascot height as a fraction of the board’s on-screen height. */
 export const MASCOT_BOARD_HEIGHT_FRAC = 1.25;
 /** Horizontal gap after board edge, as a fraction of board height. */
