@@ -28,13 +28,17 @@ export type SymbolDevGroup = {
 const LETTER_PREVIEW_HEIGHT = 440;
 const TELEPHONE_PREVIEW_HEIGHT = 520;
 const LIGHTER_PREVIEW_HEIGHT = 480;
+const DIAMOND_PREVIEW_HEIGHT = 460;
 const STANDARD_PREVIEW_HEIGHT = 220;
 const MYSTERY_PREVIEW_HEIGHT = 260;
 
-const renderClips = (assetKey: string): readonly SymbolDevClip[] => [
+const renderClips = (
+	assetKey: string,
+	winAnimationName = 'win',
+): readonly SymbolDevClip[] => [
 	{ id: 'idle', label: 'idle', assetKey, animationName: 'idle', loop: true },
 	{ id: 'stop', label: 'stop', assetKey, animationName: 'stop', loop: false },
-	{ id: 'win', label: 'win', assetKey, animationName: 'win', loop: false },
+	{ id: 'win', label: 'win', assetKey, animationName: winAnimationName, loop: false },
 ];
 
 const highClips = (assetKey: string, prefix: string): readonly SymbolDevClip[] => [
@@ -57,10 +61,10 @@ const highClips = (assetKey: string, prefix: string): readonly SymbolDevClip[] =
 export const SYMBOL_DEV_PREVIEW_GROUPS: readonly SymbolDevGroup[] = [
 	{
 		id: 'H1',
-		label: 'H1',
-		title: 'High 1 — idle + bounce',
-		previewHeight: STANDARD_PREVIEW_HEIGHT,
-		clips: highClips('H1', 'High_1'),
+		label: 'H1 Dia',
+		title: 'High 1 — diamond (idle / stop / activation)',
+		previewHeight: DIAMOND_PREVIEW_HEIGHT,
+		clips: renderClips('H1', 'activation'),
 	},
 	{
 		id: 'H2',

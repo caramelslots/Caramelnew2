@@ -33,13 +33,15 @@
 	);
 
 	// Per-symbol win bounce. Runs for symbols whose win state shows a frozen
-	// idle spine + container scale tween (H1–H2, M). W (`Special_2/win`),
-	// B (`Special_1/wave`), H3 lighter / H4 telephone / letter lows (`win`)
-	// drive their own spine celebration — skip the bounce.
+	// idle spine + container scale tween (H2, M). W (`Special_2/win`),
+	// B (`Special_1/wave`), H1 diamond (`activation`), H3 lighter / H4
+	// telephone / letter lows (`win`) drive their own spine celebration —
+	// skip the bounce.
 	const usesDedicatedSpineWin = $derived(
 		symbolInfo.animationName === 'Special_2/win' ||
 			symbolInfo.animationName === 'Special_1/wave' ||
-			symbolInfo.animationName === 'win',
+			symbolInfo.animationName === 'win' ||
+			symbolInfo.animationName === 'activation',
 	);
 	const isIdleBouncing = $derived(props.reelSymbol.symbolState === 'idleBounce');
 	const winScale = new Tween(1);

@@ -31,11 +31,11 @@
 	// — historically those bonus tokens never had a payframe.
 	// W (wild) plays its own `Special_2/win` spine which provides the full
 	// celebration visual — the payframe glow would overlap the spine art.
-	// H3 lighter / H4 telephone / letter lows play a dedicated `win` spine —
-	// the payframe overlay would stack on top of that art.
+	// H1 diamond / H3 lighter / H4 telephone / letter lows play a dedicated
+	// celebrate spine — the payframe overlay would stack on top of that art.
 	const showWinFrame = $derived(
 		props.state === 'win' &&
-			!['B', 'M', 'W', 'SW', 'P', 'BT', 'H3', 'H4', 'L1', 'L2', 'L3', 'L4'].includes(
+			!['B', 'M', 'W', 'SW', 'P', 'BT', 'H1', 'H3', 'H4', 'L1', 'L2', 'L3', 'L4'].includes(
 				props.rawSymbol.name,
 			),
 	);

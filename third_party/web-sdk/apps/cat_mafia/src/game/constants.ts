@@ -180,8 +180,9 @@ export const BOARD_SIZE_TRIM = { right: 0, bottom: 0 } as const;
 
 /**
  * Per-symbol win animation — used when `win` shows a frozen idle spine
- * (H1..H2, M) with a container scale tween. W, B, H3 (lighter), H4 (telephone)
- * and letter lows (L1–L4) play dedicated spine win clips and skip this bounce.
+ * (H2, M) with a container scale tween. W, B, H1 (diamond activation),
+ * H3 (lighter), H4 (telephone) and letter lows (L1–L4) play dedicated
+ * spine win clips and skip this bounce.
  *
  * Flow (ReelSymbol.svelte): on `state === 'win'`
  *   1. UP: scale 1 → `scalePeak`, y-offset 0 → `−yOffsetPeakPx` over `upMs` (sineOut)
@@ -299,6 +300,13 @@ const LIGHTER_ART_SPAN = 1000;
 const LIGHTER_SYMBOL_SIZE = (HIGH_SYMBOL_SIZE * LIGHTER_SKELETON_HEIGHT) / LIGHTER_ART_SPAN;
 /** Lift H3 (lighter) up in the cell — spine rest pose sits a bit low. */
 const LIGHTER_OFFSET_Y = -8;
+/**
+ * Diamond (H1) — `diamond` att untrimmed ~706×635 at atlas scale 0.5
+ * → logical span ~1412; use that so the gem fills the cell like other highs.
+ */
+const DIAMOND_SKELETON_HEIGHT = 1915.07;
+const DIAMOND_ART_SPAN = 1412;
+const DIAMOND_SYMBOL_SIZE = (HIGH_SYMBOL_SIZE * DIAMOND_SKELETON_HEIGHT) / DIAMOND_ART_SPAN;
 const SPECIAL_SYMBOL_SIZE = 1;
 
 /**
@@ -874,7 +882,7 @@ export const PORTRAIT_TURBO_ICON_BASE = 108;
 
 // Per-symbol bounce on landing — slot-driven attachment matches the
 // asset key, so each spine animates only the H_/L_ image we want.
-// H1/H2 share the same on-cell fill as letters / H3 / H4 (HIGH_SYMBOL_SIZE).
+// H2 bounce / spin fill — same on-cell target as other highs (HIGH_SYMBOL_SIZE).
 const bounceSizeRatios = { width: HIGH_SYMBOL_SIZE, height: HIGH_SYMBOL_SIZE };
 
 const makePaySymbolIdle = (assetKey: string, clipPrefix: string) => ({
@@ -895,20 +903,21 @@ const makePaySymbolSpinSprite = (imgKey: string) => ({
 	sizeRatios: bounceSizeRatios,
 });
 
-const h1Static = makePaySymbolIdle('H1', 'High_1');
 const h2Static = makePaySymbolIdle('H2', 'High_2');
 
 const letterSizeRatios = { width: LETTER_SYMBOL_SIZE, height: LETTER_SYMBOL_SIZE };
 const telephoneSizeRatios = { width: TELEPHONE_SYMBOL_SIZE, height: TELEPHONE_SYMBOL_SIZE };
 const lighterSizeRatios = { width: LIGHTER_SYMBOL_SIZE, height: LIGHTER_SYMBOL_SIZE };
+const diamondSizeRatios = { width: DIAMOND_SYMBOL_SIZE, height: DIAMOND_SYMBOL_SIZE };
 
 type RenderSizeRatios = { width: number; height: number };
+type RenderOpts = { offsetY?: number; winAnimationName?: string };
 
-/** Designer render clips — flat names idle / stop / win. */
+/** Designer render clips — flat names idle / stop / win (or activation). */
 const makeRenderStatic = (
 	assetKey: string,
 	sizeRatios: RenderSizeRatios,
-	opts?: { offsetY?: number },
+	opts?: RenderOpts,
 ) => ({
 	type: 'spine' as const,
 	assetKey,
@@ -919,7 +928,7 @@ const makeRenderStatic = (
 const makeRenderLand = (
 	assetKey: string,
 	sizeRatios: RenderSizeRatios,
-	opts?: { offsetY?: number },
+	opts?: RenderOpts,
 ) => ({
 	type: 'spine' as const,
 	assetKey,
@@ -930,18 +939,18 @@ const makeRenderLand = (
 const makeRenderWin = (
 	assetKey: string,
 	sizeRatios: RenderSizeRatios,
-	opts?: { offsetY?: number },
+	opts?: RenderOpts,
 ) => ({
 	type: 'spine' as const,
 	assetKey,
-	animationName: 'win',
+	animationName: opts?.winAnimationName ?? 'win',
 	sizeRatios,
 	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
 });
 const makeRenderSpinSprite = (
 	imgKey: string,
 	sizeRatios: RenderSizeRatios,
-	opts?: { offsetY?: number },
+	opts?: RenderOpts,
 ) => ({
 	type: 'sprite' as const,
 	assetKey: imgKey,
@@ -950,6 +959,12 @@ const makeRenderSpinSprite = (
 });
 
 const lighterOpts = { offsetY: LIGHTER_OFFSET_Y };
+/** Diamond celebrate clip is named `activation` (no `win` track). */
+const diamondOpts = { winAnimationName: 'activation' };
+
+const h1Static = makeRenderStatic('H1', diamondSizeRatios);
+const h1Land = makeRenderLand('H1', diamondSizeRatios);
+const h1Win = makeRenderWin('H1', diamondSizeRatios, diamondOpts);
 
 const h3Static = makeRenderStatic('H3', lighterSizeRatios, lighterOpts);
 const h3Land = makeRenderLand('H3', lighterSizeRatios, lighterOpts);
@@ -972,25 +987,19 @@ const l2Win = makeRenderWin('L2', letterSizeRatios);
 const l3Win = makeRenderWin('L3', letterSizeRatios);
 const l4Win = makeRenderWin('L4', letterSizeRatios);
 
-const h1Spin = makePaySymbolSpinSprite('H1Img');
 const h2Spin = makePaySymbolSpinSprite('H2Img');
 // Spin WebPs already contain only the glyph/prop in a 196² canvas — use the
 // on-cell fill directly. Inflated spine sizeRatios (skeleton ≫ art) would make
 // the sprite much larger than the idle/land spine and pop on bounce.
 const letterSpinSizeRatios = { width: LOW_SYMBOL_SIZE, height: LOW_SYMBOL_SIZE };
 const propSpinSizeRatios = { width: HIGH_SYMBOL_SIZE, height: HIGH_SYMBOL_SIZE };
+const h1Spin = makeRenderSpinSprite('H1Img', propSpinSizeRatios);
 const h3Spin = makeRenderSpinSprite('H3Img', propSpinSizeRatios, lighterOpts);
 const h4Spin = makeRenderSpinSprite('H4Img', propSpinSizeRatios);
 const l1Spin = makeRenderSpinSprite('L1Img', letterSpinSizeRatios);
 const l2Spin = makeRenderSpinSprite('L2Img', letterSpinSizeRatios);
 const l3Spin = makeRenderSpinSprite('L3Img', letterSpinSizeRatios);
 const l4Spin = makeRenderSpinSprite('L4Img', letterSpinSizeRatios);
-const h1Bounce = {
-	type: 'spine',
-	assetKey: 'H1',
-	animationName: 'High_1/bounce',
-	sizeRatios: bounceSizeRatios,
-};
 const h2Bounce = {
 	type: 'spine',
 	assetKey: 'H2',
@@ -1240,14 +1249,14 @@ const bWin = {
 };
 
 export const SYMBOL_INFO_MAP = {
-	// H1..H2: `spin` WebP; rest/win idle spine; `land` bounce.
+	// H1 (diamond): idle / stop / activation. H2: idle spine + bounce land.
 	// H3 (lighter) / H4 (telephone) / L1..L4 (A/J/K/Q): idle / stop / win.
 	H1: {
-		win: h1Static,
+		win: h1Win,
 		postWinStatic: h1Static,
 		static: h1Static,
 		spin: h1Spin,
-		land: h1Bounce,
+		land: h1Land,
 	},
 	H2: {
 		win: h2Static,

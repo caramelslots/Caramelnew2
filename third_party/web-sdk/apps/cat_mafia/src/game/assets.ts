@@ -62,11 +62,12 @@ export default {
 	// per-symbol skeletons by `scripts/splitSymbolsSpine.py` so each ReelSymbol
 	// loads only the slots/animations it actually needs (avoids overlapping
 	// default-skin renders when a single-attachment animation track plays).
+	// H1 — diamond from `designer_assets/render_diamant` (idle / stop / activation).
 	H1: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
-			skeleton: assetUrl('assets/spines/symbolsNew/High_1.json'),
+			atlas: assetUrl('assets/spines/diamond/diamond.atlas'),
+			skeleton: assetUrl('assets/spines/diamond/diamond.json'),
 			scale: 1,
 		},
 	},
@@ -182,7 +183,7 @@ export default {
 	// because the per-symbol sizes differ (H/L 196², Mystery 256², W/B masked).
 	H1Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/High_1.webp'),
+		src: assetUrl('assets/sprites/symbolsNew/Diamond.webp'),
 	},
 	H2Img: {
 		type: 'sprite',
