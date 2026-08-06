@@ -249,8 +249,8 @@ export const stateGame = $state({
 	fsMainTotal: 0,
 	/** True after main FS end shooting awards extra spins (Stage E). */
 	fsExtraPhase: false,
-	/** Brief fly UX: bullet cell → drum. */
-	bulletFly: null as null | { reel: number; row: number; key: number },
+	/** Brief fly UX: bullet cell → specific drum chamber (0..5). */
+	bulletFly: null as null | { reel: number; row: number; chamber: number; key: number },
 	/** Mascot pose → Spine clip map in `mascotHtmlSpine.ts`. */
 	mascotPose: 'idle' as
 		| 'idle'

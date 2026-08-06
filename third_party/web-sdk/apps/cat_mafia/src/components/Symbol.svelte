@@ -82,17 +82,6 @@
 			fontSize: 28 * BITMAP_FONT_SCALE,
 		}}
 	/>
-{:else if props.rawSymbol.name === 'BT'}
-	<BitmapText
-		anchor={0.5}
-		x={props.x}
-		y={(props.y ?? 0) + SYMBOL_SIZE * 0.28}
-		text="BT"
-		style={{
-			fontFamily: FONT_PROSTOI,
-			fontSize: 28 * BITMAP_FONT_SCALE,
-		}}
-	/>
 {:else if props.rawSymbol.multiplier && props.rawSymbol.name !== 'W'}
 	<BitmapText
 		anchor={0.5}

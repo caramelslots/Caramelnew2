@@ -116,6 +116,15 @@ export const SYMBOL_DEV_PREVIEW_GROUPS: readonly SymbolDevGroup[] = [
 		clips: renderClips('L4'),
 	},
 	{
+		id: 'BT',
+		label: 'BT Cart',
+		title: 'Bullet — cartridge (stop land)',
+		previewHeight: 520,
+		clips: [
+			{ id: 'stop', label: 'stop', assetKey: 'BT', animationName: 'stop', loop: false },
+		],
+	},
+	{
 		id: 'W',
 		label: 'W',
 		title: 'Wild — idle / bounce / win',

@@ -33,6 +33,7 @@
 	import MascotPlaceholder from './MascotPlaceholder.svelte';
 	import RevolverDrumPlaceholder from './RevolverDrumPlaceholder.svelte';
 	import BulletFlyOverlay from './BulletFlyOverlay.svelte';
+	import { devPreview } from '../game/devPreview.svelte';
 	import PawCoinOverlay from './PawCoinOverlay.svelte';
 	import SuperWildCurtainOverlay from './SuperWildCurtainOverlay.svelte';
 	import TargetPickOverlay from './TargetPickOverlay.svelte';
@@ -138,7 +139,7 @@
 <CashStacksMenuOverlay />
 <BuyBonusModalShell />
 <div class="html-underlays">
-	<RevolverDrumPlaceholder />
+	<RevolverDrumPlaceholder forceShow={devPreview.forceShowDrum} />
 	<BulletFlyOverlay />
 	<SuperWildCurtainOverlay />
 </div>

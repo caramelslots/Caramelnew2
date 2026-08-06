@@ -24,6 +24,8 @@ import {
 	SW_SECOND_WIN_PRE_DELAY_MS,
 	BONUS_WIN_PRE_DELAY_MS,
 	BONUS_WIN_POST_DELAY_MS,
+	BULLET_FLY_TOTAL_MS,
+	BULLET_FLY_GAP_MS,
 	MYSTERY_REVEAL_PRE_DELAY_MS,
 	MYSTERY_REVEAL_POST_DELAY_MS,
 	WIN_SPOTLIGHT_CLEAR_DELAY_MS,
@@ -748,14 +750,20 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (stateGame.fsExtraPhase) return;
 		for (const pos of bookEvent.bullets) {
 			if (stateGame.drumCount >= DRUM_MAX) break;
-			stateGame.bulletFly = { reel: pos.reel, row: pos.row, key: Date.now() + pos.reel };
+			stateGame.bulletFly = {
+				reel: pos.reel,
+				row: pos.row,
+				chamber: stateGame.drumCount,
+				key: Date.now() + pos.reel,
+			};
 			stateGame.mascotPose = 'load';
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-			await waitForGameSpeed(380, stateGame.gameSpeed);
+			// Handoff in one tick: sprite hits opacity 0 at TOTAL_MS, gold fills same frame.
+			await waitForGameSpeed(BULLET_FLY_TOTAL_MS, stateGame.gameSpeed);
 			stateGame.drumCount = Math.min(DRUM_MAX, stateGame.drumCount + 1);
 			stateGame.bulletFly = null;
 			stateGame.mascotPose = 'idle';
-			await waitForGameSpeed(120, stateGame.gameSpeed);
+			await waitForGameSpeed(BULLET_FLY_GAP_MS, stateGame.gameSpeed);
 		}
 		stateGame.drumCount = Math.min(DRUM_MAX, bookEvent.drumCount);
 	},

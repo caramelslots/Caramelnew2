@@ -25,4 +25,6 @@ export const devPreview = $state({
 	 * DevButtons paints the board with the symbol, then getSymbolInfo reads this.
 	 */
 	symbolAnim: null as SymbolDevSelection | null,
+	/** Keep revolver drum HTML overlay visible (FS-only UI) for bullet-fly QA. */
+	forceShowDrum: false,
 });

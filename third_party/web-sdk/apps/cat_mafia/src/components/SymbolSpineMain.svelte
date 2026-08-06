@@ -4,6 +4,8 @@
 
 	import { getSymbolInfo } from '../game/utils';
 	import { SYMBOL_SIZE } from '../game/constants';
+	import { usesSymbolSpineSsaa } from '../game/symbolSpineSsaa';
+	import SymbolSpineSsaa from './SymbolSpineSsaa.svelte';
 
 	type Props = {
 		symbolInfo: ReturnType<typeof getSymbolInfo>;
@@ -51,22 +53,34 @@
 			? props.symbolInfo.offsetY
 			: 0,
 	);
+
+	const useSsaa = $derived(usesSymbolSpineSsaa(props.symbolInfo.assetKey));
 </script>
 
-<SpineProvider
-	x={props.x}
-	y={(props.y ?? 0) + offsetY}
-	key={props.symbolInfo.assetKey}
-	height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height}
-	{autoUpdate}
->
-	<SpineTrack
-		{loop}
-		trackIndex={0}
-		animationName={animationName}
-		timeScale={stateBetDerived.timeScale()}
-		reverse={reverseAnimation}
-		animationEnd={animationEnd}
+{#if useSsaa}
+	<SymbolSpineSsaa
+		x={props.x}
+		y={props.y}
+		symbolInfo={props.symbolInfo}
 		listener={props.listener}
+		loop={props.loop}
 	/>
-</SpineProvider>
+{:else}
+	<SpineProvider
+		x={props.x}
+		y={(props.y ?? 0) + offsetY}
+		key={props.symbolInfo.assetKey}
+		height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height}
+		{autoUpdate}
+	>
+		<SpineTrack
+			{loop}
+			trackIndex={0}
+			animationName={animationName}
+			timeScale={stateBetDerived.timeScale()}
+			reverse={reverseAnimation}
+			animationEnd={animationEnd}
+			listener={props.listener}
+		/>
+	</SpineProvider>
+{/if}

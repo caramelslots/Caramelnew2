@@ -22,6 +22,7 @@ export const SYMBOL_TEXTURE_KEYS = [
 	'L3Img',
 	'L4Img',
 	'BImg',
+	'BTImg',
 	'WImg',
 	'MImg',
 	'MBgImg',

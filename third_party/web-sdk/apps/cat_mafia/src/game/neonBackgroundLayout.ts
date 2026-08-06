@@ -1,6 +1,7 @@
 import { NEON_OVERLAY_TUNING } from './neonBackgroundTuning';
 
-export const BG_NATIVE = { width: 1922, height: 1074 };
+/** Street day/night plates (`background/day.webp` / `night.webp`) — 1920×941. */
+export const BG_NATIVE = { width: 1920, height: 941 };
 export const SPINE_NATIVE = { width: 1934.26, height: 1171.28 };
 export const BG_RATIO = BG_NATIVE.width / BG_NATIVE.height;
 export const BG_Y_OFFSET = 0;

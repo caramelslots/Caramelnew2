@@ -4,7 +4,13 @@
 	 */
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
-	import { BOARD_LAYOUT_OFFSETS } from '../game/constants';
+	import {
+		DRUM_CHAMBER_ATTR,
+		DRUM_HUB_ATTR,
+		DRUM_MAX,
+		getDrumBoxScreenPos,
+		getDrumChamberAngleDeg,
+	} from '../game/revolverDrumLayout';
 
 	type Props = {
 		/** Force-show for layout QA. */
@@ -15,9 +21,8 @@
 	const props: Props = $props();
 	const context = getContext();
 
-	const MAX = 6;
 	const filled = $derived(
-		Math.max(0, Math.min(MAX, props.filled ?? context.stateGame.drumCount)),
+		Math.max(0, Math.min(DRUM_MAX, props.filled ?? context.stateGame.drumCount)),
 	);
 
 	const show = $derived.by(() => {
@@ -30,25 +35,22 @@
 	const spinKey = $derived(filled);
 
 	const style = $derived.by(() => {
-		const ml = context.stateLayoutDerived.mainLayout();
-		const layoutType = context.stateLayoutDerived.layoutType();
-		const off = BOARD_LAYOUT_OFFSETS[layoutType] ?? { x: 0, y: 0 };
-		const boardCenterX = ml.x + off.x * ml.scale;
-		const boardCenterY = ml.y + off.y * ml.scale;
-		const board = context.stateGameDerived.boardLayout();
-		const halfW = (board.visualWidth / 2) * ml.scale;
-		const halfH = (board.visualHeight / 2) * ml.scale;
-		const size = isDesktop ? 88 : 72;
-		const left = boardCenterX + halfW + 12;
-		const top = boardCenterY - halfH - size * 0.35;
-		return `left:${left}px;top:${top}px;width:${size}px;height:${size}px;`;
+		const box = getDrumBoxScreenPos({
+			mainLayout: context.stateLayoutDerived.mainLayout(),
+			layoutType: context.stateLayoutDerived.layoutType(),
+			board: context.stateGameDerived.boardLayout(),
+			isDesktop,
+		});
+		// Only width — height comes from square cylinder + label (see `.drum`).
+		return `left:${box.left}px;top:${box.top}px;width:${box.size}px;`;
 	});
 
 	const chambers = $derived(
-		Array.from({ length: MAX }, (_, i) => {
-			const angle = -90 + i * (360 / MAX);
-			return { i, angle, filled: i < filled };
-		}),
+		Array.from({ length: DRUM_MAX }, (_, i) => ({
+			i,
+			angle: getDrumChamberAngleDeg(i),
+			filled: i < filled,
+		})),
 	);
 </script>
 
@@ -60,10 +62,11 @@
 					<span
 						class="chamber"
 						class:filled={c.filled}
+						{...{ [DRUM_CHAMBER_ATTR]: String(c.i) }}
 						style:transform="rotate({c.angle}deg) translateY(-28px)"
 					></span>
 				{/each}
-				<span class="hub"></span>
+				<span class="hub" {...{ [DRUM_HUB_ATTR]: '' }}></span>
 			</div>
 		{/key}
 		<span class="label">×{filled}</span>
@@ -79,12 +82,16 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 0.2rem;
+		/* Width from inline style; height grows with label so the cylinder
+		   keeps a true square (fly targets used to miss when label stole height). */
+		height: auto;
 	}
 
 	.cylinder {
 		position: relative;
 		width: 100%;
-		height: 100%;
+		aspect-ratio: 1;
+		flex: 0 0 auto;
 		border-radius: 50%;
 		background: radial-gradient(circle at 35% 30%, #8a8f98, #3a3d44 55%, #1c1e22 100%);
 		border: 2px solid #c9a24a;

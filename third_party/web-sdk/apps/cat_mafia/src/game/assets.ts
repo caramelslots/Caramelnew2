@@ -161,6 +161,15 @@ export default {
 			scale: 1,
 		},
 	},
+	// Bullet / cartridge — `designer_assets/render_cartridge` (land `stop` only).
+	BT: {
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/cartridge/cartridge.atlas'),
+			skeleton: assetUrl('assets/spines/cartridge/cartridge.json'),
+			scale: 1,
+		},
+	},
 	// BONUS-letter skeleton — `Special_1/win` plays on reel landing.
 	BWin: {
 		type: 'spine',
@@ -216,6 +225,10 @@ export default {
 	BImg: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/symbolsNew/Special_1.webp'),
+	},
+	BTImg: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/symbolsNew/Cartridge.webp'),
 	},
 	WImg: {
 		type: 'sprite',

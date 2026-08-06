@@ -307,6 +307,14 @@ const LIGHTER_OFFSET_Y = -8;
 const DIAMOND_SKELETON_HEIGHT = 1915.07;
 const DIAMOND_ART_SPAN = 1412;
 const DIAMOND_SYMBOL_SIZE = (HIGH_SYMBOL_SIZE * DIAMOND_SKELETON_HEIGHT) / DIAMOND_ART_SPAN;
+/**
+ * Cartridge (BT) — designer spine ~3157 tall; body/glow ~1220–1450 logical.
+ * Only ships a `stop` land clip (no idle/win) — rest/spin use WebP.
+ */
+const CARTRIDGE_SKELETON_HEIGHT = 3157.2;
+const CARTRIDGE_ART_SPAN = 1450;
+const CARTRIDGE_SYMBOL_SIZE =
+	(HIGH_SYMBOL_SIZE * CARTRIDGE_SKELETON_HEIGHT) / CARTRIDGE_ART_SPAN;
 const SPECIAL_SYMBOL_SIZE = 1;
 
 /**
@@ -909,6 +917,7 @@ const letterSizeRatios = { width: LETTER_SYMBOL_SIZE, height: LETTER_SYMBOL_SIZE
 const telephoneSizeRatios = { width: TELEPHONE_SYMBOL_SIZE, height: TELEPHONE_SYMBOL_SIZE };
 const lighterSizeRatios = { width: LIGHTER_SYMBOL_SIZE, height: LIGHTER_SYMBOL_SIZE };
 const diamondSizeRatios = { width: DIAMOND_SYMBOL_SIZE, height: DIAMOND_SYMBOL_SIZE };
+const cartridgeSizeRatios = { width: CARTRIDGE_SYMBOL_SIZE, height: CARTRIDGE_SYMBOL_SIZE };
 
 type RenderSizeRatios = { width: number; height: number };
 type RenderOpts = { offsetY?: number; winAnimationName?: string };
@@ -1000,6 +1009,9 @@ const l1Spin = makeRenderSpinSprite('L1Img', letterSpinSizeRatios);
 const l2Spin = makeRenderSpinSprite('L2Img', letterSpinSizeRatios);
 const l3Spin = makeRenderSpinSprite('L3Img', letterSpinSizeRatios);
 const l4Spin = makeRenderSpinSprite('L4Img', letterSpinSizeRatios);
+/** Cartridge has no `idle` — sprite for rest/spin; spine `stop` on land. */
+const btSprite = makeRenderSpinSprite('BTImg', propSpinSizeRatios);
+const btLand = makeRenderLand('BT', cartridgeSizeRatios);
 const h2Bounce = {
 	type: 'spine',
 	assetKey: 'H2',
@@ -1148,6 +1160,15 @@ export const getFsOutroPopupVisualCenter = (mainLayout: { width: number; height:
  * land clip finish before scatter/collect highlight starts.
  */
 export const BONUS_WIN_PRE_DELAY_MS = 400;
+
+/** Cartridge approach along arc to chamber mouth (`BulletFlyOverlay`). */
+export const BULLET_FLY_MS = 700;
+/** Quick sink into chamber after arrival — keep short so it doesn’t hang in the hole. */
+export const BULLET_INSERT_MS = 180;
+/** Full overlay lifetime — keep `bulletFly` until insert finishes. */
+export const BULLET_FLY_TOTAL_MS = BULLET_FLY_MS + BULLET_INSERT_MS;
+/** Short beat after a chamber fills before the next bullet flies. */
+export const BULLET_FLY_GAP_MS = 160;
 
 /** Pause after bonus paw-wave animation, before the next spin/reveal. */
 export const BONUS_WIN_POST_DELAY_MS = 400;
@@ -1332,13 +1353,13 @@ export const SYMBOL_INFO_MAP = {
 		win: bStatic,
 		land: bStatic,
 	},
-	// Bullet — alias Bonus art + BULLET badge (Stage D).
+	// Bullet / cartridge — WebP rest/spin; land plays designer `stop`.
 	BT: {
-		postWinStatic: bStatic,
-		static: bStatic,
-		spin: bStatic,
-		win: bStatic,
-		land: bStatic,
+		postWinStatic: btSprite,
+		static: btSprite,
+		spin: btSprite,
+		win: btSprite,
+		land: btLand,
 	},
 	// Bonus — keep spine for spin/static so paw bone stays aligned (sprite ⇄ spine jumps).
 	B: {

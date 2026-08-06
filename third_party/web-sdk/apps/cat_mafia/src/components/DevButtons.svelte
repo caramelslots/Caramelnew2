@@ -29,7 +29,7 @@
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { MASCOT_DEV_PREVIEW_ITEMS } from '../game/mascotHtmlSpine';
 	import { SYMBOL_DEV_PREVIEW_GROUPS } from '../game/symbolDevPreview';
-	import { BOARD_DIMENSIONS } from '../game/constants';
+	import { BOARD_DIMENSIONS, BULLET_FLY_TOTAL_MS } from '../game/constants';
 	import {
 		getRawUrlLang,
 		INVALID_LANG_LABELS,
@@ -91,6 +91,55 @@
 
 	const closeSymbolAnimPreview = () => {
 		devPreview.symbolAnim = null;
+	};
+
+	/** Desktop HTML fly: cartridge cell → revolver drum (same path as bulletCollect). */
+	const DRUM_MAX_PREVIEW = 6;
+	let bulletFlyBusy = $state(false);
+
+	const previewBulletFly = async () => {
+		if (bulletFlyBusy) return;
+		bulletFlyBusy = true;
+		devPreview.forceShowDrum = true;
+		devPreview.symbolAnim = null;
+
+		// Mark the launch cell with BT so the origin is obvious.
+		const launchReel = 2;
+		const launchRow = 2; // 1-based visible row (BulletFlyOverlay uses row - 1)
+		const visible = Array.from({ length: BOARD_DIMENSIONS.x }, (_, reel) =>
+			Array.from({ length: BOARD_DIMENSIONS.y }, (_, row) =>
+				reel === launchReel && row === launchRow - 1
+					? ({ name: 'BT' } as RawSymbol)
+					: ({ name: 'L2' } as RawSymbol),
+			),
+		);
+		stateGameDerived.enhancedBoard.settle(padBoard(visible, 'basegame'));
+		for (const reel of stateGame.board) {
+			for (const sym of reel.reelState.symbols) {
+				sym.symbolState = 'static';
+			}
+		}
+
+		stateGame.bulletFly = {
+			reel: launchReel,
+			row: launchRow,
+			chamber: stateGame.drumCount % DRUM_MAX_PREVIEW,
+			key: Date.now(),
+		};
+		stateGame.mascotPose = 'load';
+		await new Promise((r) => setTimeout(r, BULLET_FLY_TOTAL_MS));
+		stateGame.drumCount = Math.min(DRUM_MAX_PREVIEW, stateGame.drumCount + 1);
+		stateGame.bulletFly = null;
+		stateGame.mascotPose = 'idle';
+		bulletFlyBusy = false;
+	};
+
+	const resetBulletFlyPreview = () => {
+		stateGame.bulletFly = null;
+		stateGame.drumCount = 0;
+		stateGame.mascotPose = 'idle';
+		devPreview.forceShowDrum = false;
+		bulletFlyBusy = false;
 	};
 
 	type BetModeKey = 'BASE' | 'bonus_boost' | 'bonus_normal' | 'bonus_super';
@@ -905,6 +954,29 @@
 						</button>
 					</div>
 				{/if}
+			</section>
+
+			<section>
+				<h4>Bullet Fly</h4>
+				<p class="subhint">Desktop: cartridge flies from board cell into revolver drum.</p>
+				<div class="grid">
+					<button
+						type="button"
+						disabled={bulletFlyBusy}
+						class:active={!!stateGame.bulletFly || devPreview.forceShowDrum}
+						title="Preview BT → drum fly (same overlay as bulletCollect)"
+						onclick={previewBulletFly}
+					>
+						{bulletFlyBusy ? 'Flying…' : 'Fly → Drum'}
+					</button>
+					<button
+						type="button"
+						title="Clear drum fill and hide drum overlay"
+						onclick={resetBulletFlyPreview}
+					>
+						Reset Drum
+					</button>
+				</div>
 			</section>
 
 			<section>
