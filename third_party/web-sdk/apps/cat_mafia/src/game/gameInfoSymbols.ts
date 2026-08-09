@@ -10,7 +10,7 @@ export const GAME_INFO_MYSTERY_SIGN_IMAGE = symbolAssetUrl('Mystery_sign.webp');
 
 export const GAME_INFO_SYMBOL_IMAGES: Record<GameInfoSymbolId, string> = {
 	H1: symbolAssetUrl('Diamond.webp'),
-	H2: symbolAssetUrl('High_2.webp'),
+	H2: symbolAssetUrl('Revolver.webp'),
 	H3: symbolAssetUrl('Lighter.webp'),
 	H4: symbolAssetUrl('Telephone.webp'),
 	L1: symbolAssetUrl('A.webp'),

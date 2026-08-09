@@ -180,9 +180,9 @@ export const BOARD_SIZE_TRIM = { right: 0, bottom: 0 } as const;
 
 /**
  * Per-symbol win animation — used when `win` shows a frozen idle spine
- * (H2, M) with a container scale tween. W, B, H1 (diamond activation),
- * H3 (lighter), H4 (telephone) and letter lows (L1–L4) play dedicated
- * spine win clips and skip this bounce.
+ * (M) with a container scale tween. W, B, H1 (diamond activation),
+ * H2 (revolver), H3 (lighter), H4 (telephone) and letter lows (L1–L4)
+ * play dedicated spine win clips and skip this bounce.
  *
  * Flow (ReelSymbol.svelte): on `state === 'win'`
  *   1. UP: scale 1 → `scalePeak`, y-offset 0 → `−yOffsetPeakPx` over `upMs` (sineOut)
@@ -274,47 +274,55 @@ export const HIGH_SYMBOLS = ['H1', 'H2', 'H3', 'H4'];
 
 export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
 
-const HIGH_SYMBOL_SIZE = 0.9;
-/** Target on-cell fill for letter lows — slightly under highs so A/J/K/Q read lighter. */
-const LOW_SYMBOL_SIZE = 0.78;
 /**
- * Designer render spines have oversized skeletons vs the visible prop.
- * Fit so the *dominant visual span* (not just one body part) lands near the
- * same on-cell fill as letters / highs — otherwise wide props (telephone
- * handset) overflow the cell and read larger than A/J/K/Q.
+ * Shared on-cell fill for all paying render symbols (H1–H4, L1–L4, BT).
+ * Designer spines are much taller than the visible glyph/prop — sizeRatios
+ * inflate by skeleton/art so every symbol's *silhouette* lands near this
+ * fraction of the 100px cell (keeps the board reading as one size).
+ */
+const CELL_SYMBOL_SIZE = 0.85;
+/** Aliases — spin / bounce paths still use the old names. */
+const HIGH_SYMBOL_SIZE = CELL_SYMBOL_SIZE;
+const LOW_SYMBOL_SIZE = CELL_SYMBOL_SIZE;
+/**
+ * Art spans = dominant idle silhouette in skeleton units (atlas offsets /
+ * atlas scale). Exclude full-bleed `Layer 1` / ray discs — those are FX
+ * pads, not the symbol body.
  */
 const LETTER_SKELETON_HEIGHT = 2603.14;
-const LETTER_ART_HEIGHT = 1306;
-const LETTER_SYMBOL_SIZE = (LOW_SYMBOL_SIZE * LETTER_SKELETON_HEIGHT) / LETTER_ART_HEIGHT;
-/** Telephone — handset width is the widest idle silhouette (`handset` att). */
+const LETTER_ART_HEIGHT = 1306; // A/J/K/Q glyph (~522 @ scale 0.4)
+const LETTER_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * LETTER_SKELETON_HEIGHT) / LETTER_ART_HEIGHT;
+/** Telephone — handset width is the widest idle silhouette. */
 const TELEPHONE_SKELETON_HEIGHT = 2603.14;
-const TELEPHONE_ART_SPAN = 1286;
-const TELEPHONE_SYMBOL_SIZE =
-	(HIGH_SYMBOL_SIZE * TELEPHONE_SKELETON_HEIGHT) / TELEPHONE_ART_SPAN;
+const TELEPHONE_ART_SPAN = 1286; // handset ~514 @ 0.4
+const TELEPHONE_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * TELEPHONE_SKELETON_HEIGHT) / TELEPHONE_ART_SPAN;
 /**
  * Lighter — case + closed lid / flame stack taller than `case` alone
- * (~882); use the composite span so it matches letter cell fill.
+ * (~882); composite span so height matches other symbols.
  */
 const LIGHTER_SKELETON_HEIGHT = 2104.8;
 const LIGHTER_ART_SPAN = 1000;
-const LIGHTER_SYMBOL_SIZE = (HIGH_SYMBOL_SIZE * LIGHTER_SKELETON_HEIGHT) / LIGHTER_ART_SPAN;
-/** Lift H3 (lighter) up in the cell — spine rest pose sits a bit low. */
-const LIGHTER_OFFSET_Y = -8;
+const LIGHTER_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * LIGHTER_SKELETON_HEIGHT) / LIGHTER_ART_SPAN;
+/** No Y nudge — shared cell fill already centers props with letters. */
+const LIGHTER_OFFSET_Y = 0;
 /**
- * Diamond (H1) — `diamond` att untrimmed ~706×635 at atlas scale 0.5
- * → logical span ~1412; use that so the gem fills the cell like other highs.
+ * Diamond (H1) — fit by outer glow (~752 @ 0.5 → 1504), not body-only;
+ * body-only made the gem read larger than letters on the board.
  */
 const DIAMOND_SKELETON_HEIGHT = 1915.07;
-const DIAMOND_ART_SPAN = 1412;
-const DIAMOND_SYMBOL_SIZE = (HIGH_SYMBOL_SIZE * DIAMOND_SKELETON_HEIGHT) / DIAMOND_ART_SPAN;
+const DIAMOND_ART_SPAN = 1504;
+const DIAMOND_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * DIAMOND_SKELETON_HEIGHT) / DIAMOND_ART_SPAN;
+/** Revolver (H2) — paired guns `1` att ~634 @ 0.5 → 1268. */
+const REVOLVER_SKELETON_HEIGHT = 2050.44;
+const REVOLVER_ART_SPAN = 1267;
+const REVOLVER_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * REVOLVER_SKELETON_HEIGHT) / REVOLVER_ART_SPAN;
 /**
  * Cartridge (BT) — designer spine ~3157 tall; body/glow ~1220–1450 logical.
  * Only ships a `stop` land clip (no idle/win) — rest/spin use WebP.
  */
 const CARTRIDGE_SKELETON_HEIGHT = 3157.2;
 const CARTRIDGE_ART_SPAN = 1450;
-const CARTRIDGE_SYMBOL_SIZE =
-	(HIGH_SYMBOL_SIZE * CARTRIDGE_SKELETON_HEIGHT) / CARTRIDGE_ART_SPAN;
+const CARTRIDGE_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * CARTRIDGE_SKELETON_HEIGHT) / CARTRIDGE_ART_SPAN;
 const SPECIAL_SYMBOL_SIZE = 1;
 
 /**
@@ -425,37 +433,31 @@ export const zIndexes = {
 export const REELHOUSE_GLOW_SCALE = { width: 0.58, height: 0.62 } as const;
 
 /**
- * Geometry of the parchment playfield inside the desk artwork
- * (`boardDayBase` / `boardNightBase`, 1920×940). Measured from the day variant —
- * night uses the same composition. Values are fractions of the source image.
+ * Geometry of the playfield grid inside the desk artwork
+ * (`boardDayBase` / `boardNightBase` from `designer_assets/2026-08-09 23.04.26.jpg`,
+ * cropped 951×630). Measured from the dark 5×4 cell region inside the wood
+ * frame. Values are fractions of the source image.
  *
- *   PARCH_*_FRAC     — parchment bbox size as a fraction of image size.
- *   PARCH_OFFSET_*   — parchment-center offset from image-center
+ *   width/heightFrac — playfield bbox size as a fraction of image size.
+ *   offset*Frac      — playfield-center offset from image-center
  *                      (positive = right / down).
  *
- * Used by `BoardFrame.svelte` to scale the desk image so the parchment
- * wraps the 5×5 board, and to position it so the parchment center coincides
- * with the board-frame center.
- *
- * NOTE: Re-measured after decomposing the old combined desk artwork into
- * separate layers (base / sign / contour). The old combined image baked in
- * a sky background that shifted the parchment ~40 px lower; the new base
- * layer has no sky, so offsetYFrac is roughly halved.
+ * Used by `BoardFrame.svelte` to scale the desk so the cell grid wraps the
+ * reel board, and to position it so the grid center coincides with the
+ * board-frame center.
  */
 export const DESK_PARCHMENT = {
-	widthFrac: 0.3042,
-	heightFrac: 0.5277,
-	offsetXFrac: 0.0083,
-	offsetYFrac: 0.0372,
+	widthFrac: 0.7624,
+	heightFrac: 0.8127,
+	offsetXFrac: -0.0032,
+	offsetYFrac: -0.019,
 } as const;
 
 /**
- * Padding around the 5×5 board for the parchment area (the playable cream
- * region inside the neon border). 1.0 = parchment exactly matches the board;
- * >1.0 leaves a margin around the symbols. Independent X/Y so the parchment
- * (which is wider than tall) can grow asymmetrically.
+ * Padding around the 5×4 board for the playfield grid inside the wood frame.
+ * 1.0 = grid exactly matches the board; >1.0 leaves a margin inside the cells.
  */
-export const DESK_PARCHMENT_PADDING = { width: 1.04, height: 1.04 } as const;
+export const DESK_PARCHMENT_PADDING = { width: 1.0, height: 1.0 } as const;
 /**
  * Per-layout board center offsets (game design-space px, +x right, −y up).
  * Each value shifts the reel block so it is visually centred inside the
@@ -488,7 +490,7 @@ export const BOARD_LAYOUT_SCALE = {
 export const BOARD_FRAME_OFFSET = { x: 6, y: 8 } as const;
 /** Vertical nudge (game px, +y = down) applied to all desk artwork layers (base / contour)
  *  without moving the reel grid or UI buttons. */
-export const DESK_VISUAL_OFFSET_Y = 2.5;
+export const DESK_VISUAL_OFFSET_Y = -7.5;
 
 /**
  * ProgressLadder `.bar-h` rendered width (px). Portrait desk parchment width
@@ -888,79 +890,47 @@ export const PORTRAIT_TURBO_ICON_BASE = 108;
 // the same atlas textures. `land` plays the per-symbol bounce spine; dedicated
 // `*/win` / `wave` clips drive W/B celebration.
 
-// Per-symbol bounce on landing — slot-driven attachment matches the
-// asset key, so each spine animates only the H_/L_ image we want.
-// H2 bounce / spin fill — same on-cell target as other highs (HIGH_SYMBOL_SIZE).
+// Legacy bounce size for W/B land clips still on the combined symbolsNew atlas.
 const bounceSizeRatios = { width: HIGH_SYMBOL_SIZE, height: HIGH_SYMBOL_SIZE };
-
-const makePaySymbolIdle = (assetKey: string, clipPrefix: string) => ({
-	type: 'spine' as const,
-	assetKey,
-	animationName: `${clipPrefix}/idle`,
-	sizeRatios: bounceSizeRatios,
-});
 
 /**
  * Perf: scrolling cells use WebP sprites (H1Img…), not frozen spines.
  * Spine recreate on every padding swap was hitching phones mid-spin.
  * Land/win stay on spine for bounce/celebration.
  */
-const makePaySymbolSpinSprite = (imgKey: string) => ({
-	type: 'sprite' as const,
-	assetKey: imgKey,
-	sizeRatios: bounceSizeRatios,
-});
-
-const h2Static = makePaySymbolIdle('H2', 'High_2');
-
 const letterSizeRatios = { width: LETTER_SYMBOL_SIZE, height: LETTER_SYMBOL_SIZE };
 const telephoneSizeRatios = { width: TELEPHONE_SYMBOL_SIZE, height: TELEPHONE_SYMBOL_SIZE };
 const lighterSizeRatios = { width: LIGHTER_SYMBOL_SIZE, height: LIGHTER_SYMBOL_SIZE };
 const diamondSizeRatios = { width: DIAMOND_SYMBOL_SIZE, height: DIAMOND_SYMBOL_SIZE };
+const revolverSizeRatios = { width: REVOLVER_SYMBOL_SIZE, height: REVOLVER_SYMBOL_SIZE };
 const cartridgeSizeRatios = { width: CARTRIDGE_SYMBOL_SIZE, height: CARTRIDGE_SYMBOL_SIZE };
 
 type RenderSizeRatios = { width: number; height: number };
 type RenderOpts = { offsetY?: number; winAnimationName?: string };
 
 /** Designer render clips — flat names idle / stop / win (or activation). */
-const makeRenderStatic = (
-	assetKey: string,
-	sizeRatios: RenderSizeRatios,
-	opts?: RenderOpts,
-) => ({
+const makeRenderStatic = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) => ({
 	type: 'spine' as const,
 	assetKey,
 	animationName: 'idle',
 	sizeRatios,
 	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
 });
-const makeRenderLand = (
-	assetKey: string,
-	sizeRatios: RenderSizeRatios,
-	opts?: RenderOpts,
-) => ({
+const makeRenderLand = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) => ({
 	type: 'spine' as const,
 	assetKey,
 	animationName: 'stop',
 	sizeRatios,
 	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
 });
-const makeRenderWin = (
-	assetKey: string,
-	sizeRatios: RenderSizeRatios,
-	opts?: RenderOpts,
-) => ({
+const makeRenderWin = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) => ({
 	type: 'spine' as const,
 	assetKey,
 	animationName: opts?.winAnimationName ?? 'win',
 	sizeRatios,
 	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
 });
-const makeRenderSpinSprite = (
-	imgKey: string,
-	sizeRatios: RenderSizeRatios,
-	opts?: RenderOpts,
-) => ({
+const makeRenderSpinSprite = (imgKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) => ({
 	type: 'sprite' as const,
 	assetKey: imgKey,
 	sizeRatios,
@@ -974,6 +944,10 @@ const diamondOpts = { winAnimationName: 'activation' };
 const h1Static = makeRenderStatic('H1', diamondSizeRatios);
 const h1Land = makeRenderLand('H1', diamondSizeRatios);
 const h1Win = makeRenderWin('H1', diamondSizeRatios, diamondOpts);
+
+const h2Static = makeRenderStatic('H2', revolverSizeRatios);
+const h2Land = makeRenderLand('H2', revolverSizeRatios);
+const h2Win = makeRenderWin('H2', revolverSizeRatios);
 
 const h3Static = makeRenderStatic('H3', lighterSizeRatios, lighterOpts);
 const h3Land = makeRenderLand('H3', lighterSizeRatios, lighterOpts);
@@ -996,13 +970,13 @@ const l2Win = makeRenderWin('L2', letterSizeRatios);
 const l3Win = makeRenderWin('L3', letterSizeRatios);
 const l4Win = makeRenderWin('L4', letterSizeRatios);
 
-const h2Spin = makePaySymbolSpinSprite('H2Img');
 // Spin WebPs already contain only the glyph/prop in a 196² canvas — use the
 // on-cell fill directly. Inflated spine sizeRatios (skeleton ≫ art) would make
 // the sprite much larger than the idle/land spine and pop on bounce.
-const letterSpinSizeRatios = { width: LOW_SYMBOL_SIZE, height: LOW_SYMBOL_SIZE };
-const propSpinSizeRatios = { width: HIGH_SYMBOL_SIZE, height: HIGH_SYMBOL_SIZE };
+const letterSpinSizeRatios = { width: CELL_SYMBOL_SIZE, height: CELL_SYMBOL_SIZE };
+const propSpinSizeRatios = { width: CELL_SYMBOL_SIZE, height: CELL_SYMBOL_SIZE };
 const h1Spin = makeRenderSpinSprite('H1Img', propSpinSizeRatios);
+const h2Spin = makeRenderSpinSprite('H2Img', propSpinSizeRatios);
 const h3Spin = makeRenderSpinSprite('H3Img', propSpinSizeRatios, lighterOpts);
 const h4Spin = makeRenderSpinSprite('H4Img', propSpinSizeRatios);
 const l1Spin = makeRenderSpinSprite('L1Img', letterSpinSizeRatios);
@@ -1012,12 +986,6 @@ const l4Spin = makeRenderSpinSprite('L4Img', letterSpinSizeRatios);
 /** Cartridge has no `idle` — sprite for rest/spin; spine `stop` on land. */
 const btSprite = makeRenderSpinSprite('BTImg', propSpinSizeRatios);
 const btLand = makeRenderLand('BT', cartridgeSizeRatios);
-const h2Bounce = {
-	type: 'spine',
-	assetKey: 'H2',
-	animationName: 'High_2/bounce',
-	sizeRatios: bounceSizeRatios,
-};
 
 /**
  * Затемнение невыигрышных символов во время win-анимации.
@@ -1270,8 +1238,8 @@ const bWin = {
 };
 
 export const SYMBOL_INFO_MAP = {
-	// H1 (diamond): idle / stop / activation. H2: idle spine + bounce land.
-	// H3 (lighter) / H4 (telephone) / L1..L4 (A/J/K/Q): idle / stop / win.
+	// H1 (diamond): idle / stop / activation.
+	// H2 (revolver) / H3 (lighter) / H4 (telephone) / L1..L4 (A/J/K/Q): idle / stop / win.
 	H1: {
 		win: h1Win,
 		postWinStatic: h1Static,
@@ -1280,11 +1248,11 @@ export const SYMBOL_INFO_MAP = {
 		land: h1Land,
 	},
 	H2: {
-		win: h2Static,
+		win: h2Win,
 		postWinStatic: h2Static,
 		static: h2Static,
 		spin: h2Spin,
-		land: h2Bounce,
+		land: h2Land,
 	},
 	H3: {
 		win: h3Win,

@@ -29,6 +29,7 @@ const LETTER_PREVIEW_HEIGHT = 440;
 const TELEPHONE_PREVIEW_HEIGHT = 520;
 const LIGHTER_PREVIEW_HEIGHT = 480;
 const DIAMOND_PREVIEW_HEIGHT = 460;
+const REVOLVER_PREVIEW_HEIGHT = 480;
 const STANDARD_PREVIEW_HEIGHT = 220;
 const MYSTERY_PREVIEW_HEIGHT = 260;
 
@@ -41,23 +42,6 @@ const renderClips = (
 	{ id: 'win', label: 'win', assetKey, animationName: winAnimationName, loop: false },
 ];
 
-const highClips = (assetKey: string, prefix: string): readonly SymbolDevClip[] => [
-	{
-		id: 'idle',
-		label: 'idle',
-		assetKey,
-		animationName: `${prefix}/idle`,
-		loop: true,
-	},
-	{
-		id: 'bounce',
-		label: 'bounce',
-		assetKey,
-		animationName: `${prefix}/bounce`,
-		loop: false,
-	},
-];
-
 export const SYMBOL_DEV_PREVIEW_GROUPS: readonly SymbolDevGroup[] = [
 	{
 		id: 'H1',
@@ -68,10 +52,10 @@ export const SYMBOL_DEV_PREVIEW_GROUPS: readonly SymbolDevGroup[] = [
 	},
 	{
 		id: 'H2',
-		label: 'H2',
-		title: 'High 2 — idle + bounce',
-		previewHeight: STANDARD_PREVIEW_HEIGHT,
-		clips: highClips('H2', 'High_2'),
+		label: 'H2 Rev',
+		title: 'High 2 — revolver (idle / stop / win)',
+		previewHeight: REVOLVER_PREVIEW_HEIGHT,
+		clips: renderClips('H2'),
 	},
 	{
 		id: 'H3',

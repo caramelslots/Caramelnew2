@@ -71,11 +71,12 @@ export default {
 			scale: 1,
 		},
 	},
+	// H2 — revolver from `designer_assets/revolvers_render` (idle / stop / win).
 	H2: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
-			skeleton: assetUrl('assets/spines/symbolsNew/High_2.json'),
+			atlas: assetUrl('assets/spines/revolver/revolver.atlas'),
+			skeleton: assetUrl('assets/spines/revolver/revolver.json'),
 			scale: 1,
 		},
 	},
@@ -196,7 +197,7 @@ export default {
 	},
 	H2Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/High_2.webp'),
+		src: assetUrl('assets/sprites/symbolsNew/Revolver.webp'),
 	},
 	H3Img: {
 		type: 'sprite',
