@@ -303,7 +303,8 @@ const LIGHTER_SKELETON_HEIGHT = 2104.8;
 const LIGHTER_ART_SPAN = 1000;
 const LIGHTER_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * LIGHTER_SKELETON_HEIGHT) / LIGHTER_ART_SPAN;
 /** No Y nudge — shared cell fill already centers props with letters. */
-const LIGHTER_OFFSET_Y = 0;
+/** Lift H3 (lighter) a few px in the cell — rest pose sits slightly low. */
+const LIGHTER_OFFSET_Y = -6;
 /**
  * Diamond (H1) — fit by outer glow (~752 @ 0.5 → 1504), not body-only;
  * body-only made the gem read larger than letters on the board.
@@ -454,9 +455,10 @@ export const DESK_PARCHMENT = {
 
 /**
  * Padding around the 5×4 board for the playfield inside the wood frame.
- * 1.0 = playfield exactly matches the board; >1.0 leaves a margin inside.
+ * 1.0 = playfield exactly matches the board; >1.0 grows the desk so symbols
+ * sit inset from the dark-cell edges. Keep tiny (~2% ≈ a few px per side).
  */
-export const DESK_PARCHMENT_PADDING = { width: 1.0, height: 1.0 } as const;
+export const DESK_PARCHMENT_PADDING = { width: 1.02, height: 1.02 } as const;
 /**
  * Per-layout board center offsets (game design-space px, +x right, −y up).
  * Each value shifts the reel block so it is visually centred inside the
@@ -485,10 +487,12 @@ export const BOARD_LAYOUT_SCALE = {
 	tablet: 1.14,
 	landscape: 1.16,
 } as const;
-/** Frame bezel + glow offset from board center (px): +x right, +y down. */
-export const BOARD_FRAME_OFFSET = { x: 0, y: 0 } as const;
+/** Frame bezel + glow offset from board center (px): +x right, +y down.
+ *  Slight left shift so the rightmost reel isn't hard against the rail. */
+export const BOARD_FRAME_OFFSET = { x: -3, y: 0 } as const;
 /** Vertical nudge (game px, +y = down) applied to all desk artwork layers (base / contour)
- *  without moving the reel grid or UI buttons. */
+ *  without moving the reel grid or UI buttons. Raises the desk so top/bottom
+ *  cell margins match (top was tight, bottom was empty). */
 export const DESK_VISUAL_OFFSET_Y = -5;
 
 /**
