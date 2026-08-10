@@ -103,11 +103,16 @@
 
 			<FadeContainer show={gameEntrance.showContent} duration={GAME_ENTRANCE_MS} persistent>
 				<MainContainer>
-					<BoardFrame />
+					<BoardFrame layer="base" />
 				</MainContainer>
 
 				<MainContainer>
 					<Board />
+				</MainContainer>
+
+				<!-- Wood rails above symbols so spin/land never paints over the frame. -->
+				<MainContainer>
+					<BoardFrame layer="overlay" />
 				</MainContainer>
 
 				<UiCashStacksLayout>

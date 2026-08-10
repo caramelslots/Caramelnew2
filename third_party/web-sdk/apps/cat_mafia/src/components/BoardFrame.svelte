@@ -20,6 +20,18 @@
 	import { getContext } from '../game/context';
 	import { catBoardZoom } from '../game/catAnticipationBoardZoom.svelte';
 
+	type Props = {
+		/**
+		 * `base` — desk fill under the reels (default).
+		 * `overlay` — wood frame with transparent playfield, drawn above symbols
+		 * so spin/land never paints over the rails.
+		 */
+		layer?: 'base' | 'overlay';
+	};
+
+	const props: Props = $props();
+	const layer = $derived(props.layer ?? 'base');
+
 	const context = getContext();
 
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
@@ -65,10 +77,12 @@
 
 	context.eventEmitter.subscribeOnMount({
 		boardFrameGlowShow: () => {
+			if (layer !== 'base') return;
 			animationName = 'reelhouse_glow_start';
 			loop = false;
 		},
 		boardFrameGlowHide: () => {
+			if (layer !== 'base') return;
 			if (animationName) animationName = 'reelhouse_glow_exit';
 		},
 	});
@@ -76,54 +90,54 @@
 
 <Container x={boardLayout.x} y={boardLayout.y} scale={boardScale}>
 	<Container x={-boardLayout.pivot.x} y={-boardLayout.pivot.y} sortableChildren={true}>
-		{#if animationName}
-			<SpineProvider
-				zIndex={-1}
-				key="reelhouse"
-				x={frameX}
-				y={frameY}
-				width={GLOW_SIZE.width}
-				height={GLOW_SIZE.height}
-			>
-				<SpineTrack
-					trackIndex={0}
-					{animationName}
-					{loop}
-					listener={{
-						complete: (entry) => {
-							if (entry.animation) {
-								if (entry.animation.name === 'reelhouse_glow_start') {
-									animationName = 'reelhouse_glow_idle';
-									loop = true;
-								}
+		{#if layer === 'base'}
+			{#if animationName}
+				<SpineProvider
+					zIndex={-1}
+					key="reelhouse"
+					x={frameX}
+					y={frameY}
+					width={GLOW_SIZE.width}
+					height={GLOW_SIZE.height}
+				>
+					<SpineTrack
+						trackIndex={0}
+						{animationName}
+						{loop}
+						listener={{
+							complete: (entry) => {
+								if (entry.animation) {
+									if (entry.animation.name === 'reelhouse_glow_start') {
+										animationName = 'reelhouse_glow_idle';
+										loop = true;
+									}
 
-								if (entry.animation.name === 'reelhouse_glow_exit') {
-									animationName = undefined;
-									loop = false;
+									if (entry.animation.name === 'reelhouse_glow_exit') {
+										animationName = undefined;
+										loop = false;
+									}
 								}
-							}
-						},
-					}}
-				/>
-			</SpineProvider>
+							},
+						}}
+					/>
+				</SpineProvider>
+			{/if}
+
+			{#if alphaDay.current > 0}
+				<Container alpha={alphaDay.current} zIndex={0}>
+					<Sprite key="boardDayBase" {...deskProps} />
+				</Container>
+			{/if}
+
+			{#if alphaNight.current > 0}
+				<Container alpha={alphaNight.current} zIndex={0}>
+					<Sprite key="boardNightBase" {...deskProps} />
+				</Container>
+			{/if}
+		{:else if alphaDay.current > 0 || alphaNight.current > 0}
+			<Container zIndex={2}>
+				<Sprite key="boardContour" {...deskProps} />
+			</Container>
 		{/if}
-
-	{#if alphaDay.current > 0}
-		<Container alpha={alphaDay.current} zIndex={0}>
-			<Sprite key="boardDayBase" {...deskProps} />
-		</Container>
-	{/if}
-
-	{#if alphaNight.current > 0}
-		<Container alpha={alphaNight.current} zIndex={0}>
-			<Sprite key="boardNightBase" {...deskProps} />
-		</Container>
-	{/if}
-
-	{#if alphaDay.current > 0 || alphaNight.current > 0}
-		<Container zIndex={2}>
-			<Sprite key="boardContour" {...deskProps} />
-		</Container>
-	{/if}
 	</Container>
 </Container>

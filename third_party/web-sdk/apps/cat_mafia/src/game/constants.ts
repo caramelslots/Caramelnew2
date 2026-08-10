@@ -138,7 +138,8 @@ export const HUD_BALANCE_BET_LABEL_COLOR = '#ffd54a';
 /** Amount color for HUD balance/bet lines. */
 export const HUD_BALANCE_BET_VALUE_COLOR = '#fff8ec';
 
-export const REEL_PADDING = 0.53;
+/** Half-cell inset so reel centers sit at 50, 150, … — equal columns in the desk art. */
+export const REEL_PADDING = 0.5;
 
 // Cat Mafia: 5 reels × 4 rows, padded top and bottom (6 cells per column).
 // Order: [top_padding, row0..row3, bottom_padding]
@@ -165,9 +166,10 @@ export const isVisibleBoardSymbolIndex = (
 	return symbolIndex >= 0 && symbolIndex < visibleRows;
 };
 
+/** Full 5×4 cell grid (no -10 trim) so reel spacing matches equal desk columns. */
 export const BOARD_SIZES = {
-	width: SYMBOL_SIZE * BOARD_DIMENSIONS.x - 10,
-	height: SYMBOL_SIZE * BOARD_DIMENSIONS.y - 10,
+	width: SYMBOL_SIZE * BOARD_DIMENSIONS.x,
+	height: SYMBOL_SIZE * BOARD_DIMENSIONS.y,
 };
 
 /**
@@ -233,23 +235,20 @@ export const BOARD_MASK_IDLE_BOUNCE_TOP =
 	IDLE_BOUNCE.yOffsetPeakPx + Math.ceil(((IDLE_BOUNCE.scalePeak - 1) * SYMBOL_SIZE) / 2) + 6;
 
 /**
- * Extra mask coverage (px) beyond the visible board grid so spinning symbols
- * slide *behind* the board edge instead of vanishing over the parchment
- * ("in the air"). top/bottom are measured from the grid edges outward.
- *
- * Matches BOARD_MASK_FEATHER so the soft fade sits outside the visible grid,
- * not inside it. Parked off-grid padding is culled in ReelSymbol / SymbolWrap.
+ * Extra mask coverage (px) beyond the visible board grid.
+ * Wood rails are composited above symbols (`BoardFrame` overlay), so a short
+ * runway is fine — symbols slide under the frame instead of vanishing mid-cell.
+ * top/bottom are measured from the grid edges outward.
  */
-export const BOARD_MASK_OVERFLOW = { top: 48, bottom: 48 } as const;
+export const BOARD_MASK_OVERFLOW = { top: 24, bottom: 24 } as const;
 
 /**
  * Mask runway while reels scroll — see BoardMask.svelte (`boardReelsActive`).
- * Same values as BOARD_MASK_OVERFLOW (top mirrors bottom).
  */
-export const BOARD_MASK_SPIN_OVERFLOW = { top: 12, bottom: 48 } as const;
+export const BOARD_MASK_SPIN_OVERFLOW = { top: 24, bottom: 24 } as const;
 
 /** Soft vertical fade at the visible grid edges (symbols + reel VFX). */
-export const BOARD_MASK_FEATHER = 44;
+export const BOARD_MASK_FEATHER = 20;
 
 export const BACKGROUND_RATIO = 2039 / 1000;
 export const PORTRAIT_BACKGROUND_RATIO = 1242 / 2208;
@@ -433,29 +432,29 @@ export const zIndexes = {
 export const REELHOUSE_GLOW_SCALE = { width: 0.58, height: 0.62 } as const;
 
 /**
- * Geometry of the playfield grid inside the desk artwork
- * (`boardDayBase` / `boardNightBase` from `designer_assets/2026-08-09 23.04.26.jpg`,
- * cropped 951×630). Measured from the dark 5×4 cell region inside the wood
+ * Geometry of the playfield inside the desk artwork
+ * (`boardDayBase` / `boardNightBase` from `designer_assets/дане доска.png`,
+ * cropped 1471×1185). Measured from the dark 5-column region inside the wood
  * frame. Values are fractions of the source image.
  *
  *   width/heightFrac — playfield bbox size as a fraction of image size.
  *   offset*Frac      — playfield-center offset from image-center
  *                      (positive = right / down).
  *
- * Used by `BoardFrame.svelte` to scale the desk so the cell grid wraps the
- * reel board, and to position it so the grid center coincides with the
+ * Used by `BoardFrame.svelte` to scale the desk so the playfield wraps the
+ * reel board, and to position it so the playfield center coincides with the
  * board-frame center.
  */
 export const DESK_PARCHMENT = {
-	widthFrac: 0.7624,
-	heightFrac: 0.8127,
-	offsetXFrac: -0.0032,
-	offsetYFrac: -0.019,
+	widthFrac: 0.8831,
+	heightFrac: 0.8439,
+	offsetXFrac: -0.0014,
+	offsetYFrac: -0.003,
 } as const;
 
 /**
- * Padding around the 5×4 board for the playfield grid inside the wood frame.
- * 1.0 = grid exactly matches the board; >1.0 leaves a margin inside the cells.
+ * Padding around the 5×4 board for the playfield inside the wood frame.
+ * 1.0 = playfield exactly matches the board; >1.0 leaves a margin inside.
  */
 export const DESK_PARCHMENT_PADDING = { width: 1.0, height: 1.0 } as const;
 /**
@@ -487,10 +486,10 @@ export const BOARD_LAYOUT_SCALE = {
 	landscape: 1.16,
 } as const;
 /** Frame bezel + glow offset from board center (px): +x right, +y down. */
-export const BOARD_FRAME_OFFSET = { x: 6, y: 8 } as const;
+export const BOARD_FRAME_OFFSET = { x: 0, y: 0 } as const;
 /** Vertical nudge (game px, +y = down) applied to all desk artwork layers (base / contour)
  *  without moving the reel grid or UI buttons. */
-export const DESK_VISUAL_OFFSET_Y = -7.5;
+export const DESK_VISUAL_OFFSET_Y = -5;
 
 /**
  * ProgressLadder `.bar-h` rendered width (px). Portrait desk parchment width
