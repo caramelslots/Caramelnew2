@@ -4,7 +4,7 @@ import assets from './assets';
 import { isCjkLocale } from './constants';
 import { LOADER_SCREEN_IMAGE_URLS } from './loaderCardAssets';
 
-/** Stake GIF screen — day backgrounds, audio manifest, transition, press font, high symbols. */
+/** Stake GIF screen — animated day/night spine, audio manifest, transition, press font, high symbols. */
 export const LOADER_BATCH_1_KEYS = [
 	'mainBackground',
 	// Kept in the plan for key-count parity with assets.ts (not rendered — Wok neon retired).
@@ -25,9 +25,8 @@ export const LOADER_BATCH_1_KEYS = [
 	'H4Img',
 ] as const satisfies readonly (keyof typeof assets)[];
 
-/** Bootstrap splash — night theme, low/wild/bonus/mystery symbols, core game fonts. */
+/** Bootstrap splash — night board, low/wild/bonus/mystery symbols, core game fonts. */
 export const LOADER_BATCH_2_KEYS = [
-	'featureBackground',
 	'lanternNight',
 	'boardNightBase',
 	'L1',

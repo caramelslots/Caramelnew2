@@ -4,7 +4,6 @@
 	import { SpinePlayer } from '@esotericsoftware/spine-player';
 	import { waitForTimeout } from 'utils-shared/wait';
 
-	import { LOADER_NEXT_SCREEN_BG_URL } from '../game/earlyLoaderPreload';
 	import { stateApp } from '../game/stateApp';
 	import { devPreview } from '../game/devPreview.svelte';
 
@@ -39,7 +38,6 @@
 
 	let loading = $state(true);
 	let playerContainer = $state<HTMLDivElement>();
-	const bgUrl = LOADER_NEXT_SCREEN_BG_URL;
 	let player: SpinePlayer | undefined;
 
 	const progress = $derived(
@@ -52,9 +50,7 @@
 		),
 	);
 
-	const show = $derived(
-		props.preview ? devPreview.loaderProgress : loading,
-	);
+	const show = $derived(props.preview ? devPreview.loaderProgress : loading);
 
 	onMount(() => {
 		if (!playerContainer) return;
@@ -112,7 +108,6 @@
 
 {#if show}
 	<div class="wrap" transition:fade>
-		<div class="bg" style:background-image="url('{bgUrl}')" aria-hidden="true"></div>
 		<div class="player" bind:this={playerContainer}></div>
 		<div
 			class="progress-wrap"
@@ -143,22 +138,13 @@
 		overflow: hidden;
 	}
 
-	.bg {
-		position: absolute;
-		inset: 0;
-		background-color: #000;
-		background-position: center;
-		background-size: cover;
-		background-repeat: no-repeat;
-	}
-
 	.player {
 		position: relative;
 		z-index: 1;
 		width: min(640px, 90vw);
 		height: 100vh;
 		overflow: visible;
-		/* Match daloniil_test logo-loader placement — slightly above center. */
+		/* Slightly above vertical center. */
 		transform: translateY(-6vh);
 	}
 

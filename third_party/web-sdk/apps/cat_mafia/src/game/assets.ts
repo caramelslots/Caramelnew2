@@ -3,13 +3,13 @@ const assetUrl = (path: string) =>
 	new URL(path.replace(/^\//, ''), typeof window !== 'undefined' ? window.location.href : import.meta.url).href;
 
 export default {
+	/** Animated street scene — skins: day (basegame) / night (freegame). */
 	mainBackground: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/background/day.webp'),
-	},
-	featureBackground: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/background/night.webp'),
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/background/skeleton.atlas'),
+			skeleton: assetUrl('assets/spines/background/skeleton.json'),
+		},
 	},
 	lanternDay: {
 		type: 'sprite',
