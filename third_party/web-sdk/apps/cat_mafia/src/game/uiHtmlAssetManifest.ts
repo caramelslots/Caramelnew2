@@ -8,6 +8,7 @@ import {
 	MASCOT_SPINE_IMAGE_URL,
 	startMascotSpinePreload,
 } from './mascotHtmlSpine';
+import { COIN_PAW_SHEET_URL, startCoinPawSheetPreload } from './coinSpriteSheet';
 
 const UI_ASSET_BASE = `${import.meta.env.BASE_URL}assets/sprites/ui`;
 
@@ -120,6 +121,7 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	FEATURE_TOGGLE_ASSETS.bonusSwitchBg,
 	FEATURE_TOGGLE_ASSETS.menuCatIcon,
 	MASCOT_ASSETS.body,
+	COIN_PAW_SHEET_URL,
 	BUY_BONUS_ASSETS.menuBg,
 	BUY_BONUS_ASSETS.confirmBg,
 	BUY_BONUS_ASSETS.normalCard,
@@ -192,6 +194,7 @@ export const startLoadingIdleUiPreload = () => {
 
 	startSpinButtonSpinePreload();
 	startMascotSpinePreload();
+	startCoinPawSheetPreload();
 
 	void preloadHtmlImages(LOADING_IDLE_UI_IMAGE_URLS, {
 		priority: LOADING_IDLE_UI_PRIORITY,

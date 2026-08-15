@@ -347,9 +347,10 @@ export default {
 			scale: 2,
 		},
 	},
+	// Designer Spine `coins_3x3` — gold `main_coin_fast` baked for win particles.
 	coins: {
 		type: 'spriteSheet',
-		src: assetUrl('assets/sprites/coin/SD2_Coin.json'),
+		src: assetUrl('assets/sprites/coin/coins.json'),
 	},
 	sound: {
 		type: 'audio',

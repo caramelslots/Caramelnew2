@@ -222,9 +222,27 @@
 		return matches[Math.floor(Math.random() * matches.length)];
 	};
 
+	const playPawCoinPreview = (tiers: Array<1 | 2 | 3>) => {
+		const current = devPreview.pawCoins;
+		const same =
+			current !== null &&
+			current.tiers.length === tiers.length &&
+			current.tiers.every((tier, i) => tier === tiers[i]);
+		devPreview.pawCoins = {
+			tiers,
+			nonce: same ? current.nonce + 1 : 0,
+		};
+		stateGame.pawCoinFlying = false;
+	};
+
+	const closePawCoinPreview = () => {
+		devPreview.pawCoins = null;
+	};
+
 	const playMathBook = (book: MathBook | null, label: string, modeKey?: BetModeKey) =>
 		guard(async () => {
 			if (!book) return;
+			devPreview.pawCoins = null;
 			const mode = modeKey ?? modeForBook(book);
 			applyBetMode(mode);
 			// eslint-disable-next-line no-console
@@ -868,6 +886,56 @@
 						onclick={playRandomBonusBook}
 					>
 						Random Bonus
+					</button>
+				</div>
+			</section>
+
+			<section>
+				<h4>Paw Coins</h4>
+				<p class="subhint">Designer coins on the board — x1 bronze, x2 silver, x3 gold. Re-click to replay.</p>
+				<div class="grid">
+					<button
+						type="button"
+						class:active={devPreview.pawCoins?.tiers.length === 1 &&
+							devPreview.pawCoins.tiers[0] === 1}
+						title="Bronze coin · x1"
+						onclick={() => playPawCoinPreview([1])}
+					>
+						x1
+					</button>
+					<button
+						type="button"
+						class:active={devPreview.pawCoins?.tiers.length === 1 &&
+							devPreview.pawCoins.tiers[0] === 2}
+						title="Silver coin · x2"
+						onclick={() => playPawCoinPreview([2])}
+					>
+						x2
+					</button>
+					<button
+						type="button"
+						class:active={devPreview.pawCoins?.tiers.length === 1 &&
+							devPreview.pawCoins.tiers[0] === 3}
+						title="Gold coin · x3"
+						onclick={() => playPawCoinPreview([3])}
+					>
+						x3
+					</button>
+					<button
+						type="button"
+						class:active={devPreview.pawCoins?.tiers.length === 3}
+						title="All three tiers on one row"
+						onclick={() => playPawCoinPreview([1, 2, 3])}
+					>
+						All
+					</button>
+					<button
+						type="button"
+						class:active={devPreview.pawCoins === null}
+						title="Hide pinned paw coins"
+						onclick={closePawCoinPreview}
+					>
+						Close
 					</button>
 				</div>
 			</section>

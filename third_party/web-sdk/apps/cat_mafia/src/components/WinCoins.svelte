@@ -24,7 +24,12 @@
 	const extraConfig = $derived(
 		props?.levelAlias ? LEVEL_PARTICLE_COIN_MAP[props.levelAlias] : null,
 	);
-	const config = $derived({ ...baseConfig, ...extraConfig });
+	/** Designer coin frames are ~110px (old SD2 sheet was ~487px). */
+	const config = $derived({
+		...baseConfig,
+		...extraConfig,
+		scale: { start: 1.15, end: 1.35, minimumScaleMultiplier: 0.85 },
+	});
 	const coinContainer = $derived({
 		x: props.x ?? boardLayout.x,
 		y: props.y ?? boardLayout.y,

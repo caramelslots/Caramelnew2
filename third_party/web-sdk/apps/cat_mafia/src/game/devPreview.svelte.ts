@@ -27,4 +27,9 @@ export const devPreview = $state({
 	symbolAnim: null as SymbolDevSelection | null,
 	/** Keep revolver drum HTML overlay visible (FS-only UI) for bullet-fly QA. */
 	forceShowDrum: false,
+	/**
+	 * Pin designer paw coins on the board (x1 bronze / x2 silver / x3 gold).
+	 * `nonce` remounts the sprites so appear can replay.
+	 */
+	pawCoins: null as null | { tiers: Array<1 | 2 | 3>; nonce: number },
 });
