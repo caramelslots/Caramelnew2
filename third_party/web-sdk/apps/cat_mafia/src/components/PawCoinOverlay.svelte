@@ -58,6 +58,7 @@
 	);
 	const flying = $derived(previewCells.length > 0 ? false : context.stateGame.pawCoinFlying);
 	const previewNonce = $derived(devPreview.pawCoins?.nonce ?? 0);
+	const playId = $derived(context.stateGame.pawCoinPlayId);
 	const speedMult = $derived(gameSpeedMultFor(context.stateGame.gameSpeed));
 	const flyDurationMs = $derived(MASCOT_COIN_FLY_DURATION_MS / speedMult);
 	const flyStaggerMs = $derived(MASCOT_COIN_FLY_STAGGER_MS / speedMult);
@@ -167,7 +168,7 @@
 </script>
 
 {#if show && showMascotLayout && cells.length > 0}
-	{#each cells as c, i (`${c.reel}:${c.row}:${c.tier}:${previewNonce}`)}
+	{#each cells as c, i (`${c.reel}:${c.row}:${c.tier}:${previewNonce}:${playId}`)}
 		<div class="coin-cell" style={cellStyle(c.reel, c.row, i)}>
 			<CoinPawSprite tier={c.tier > 0 ? c.tier : 1} speed={speedMult} />
 		</div>

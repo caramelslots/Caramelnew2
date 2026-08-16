@@ -110,7 +110,7 @@
 					<Board />
 				</MainContainer>
 
-				<!-- Wood rails above symbols so spin/land never paints over the frame. -->
+				<!-- Gold rails above symbols so spin/land never paints over the frame. -->
 				<MainContainer>
 					<BoardFrame layer="overlay" />
 				</MainContainer>

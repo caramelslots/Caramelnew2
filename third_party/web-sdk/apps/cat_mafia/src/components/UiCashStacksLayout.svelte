@@ -20,6 +20,7 @@
 	import {
 		BITMAP_FONT_SCALE,
 		isPopoutSmallViewport,
+		isPopoutViewport,
 		POPOUT_S_SCALE,
 		WIN_HUD_FONT_SIZE,
 	} from '../game/constants';
@@ -36,19 +37,33 @@
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 	const layoutType = $derived(stateLayoutDerived.layoutType());
-	const isPopoutSmall = $derived(isPopoutSmallViewport(stateLayoutDerived.canvasSizes()));
+	const canvasSizes = $derived(stateLayoutDerived.canvasSizes());
+	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
+	const isPopout = $derived(isPopoutViewport(canvasSizes));
 	const useDesktopHud = $derived(layoutType !== 'portrait');
 	const gameNameScale = $derived(isPopoutSmall ? POPOUT_S_SCALE : 1);
 	const spaceHoldDisabled = $derived(isAnyMenuOpen());
 
 	const WIN_BELOW_BOARD_GAP = 80;
-	/** Horizontal nudge from screen center, as a fraction of main layout width (+ = right). */
-	const WIN_HUD_X_OFFSET_RATIO = 0.0;
+	/** PC / laptop only — sit below the gold nameplate, slightly left of screen center. */
+	const WIN_HUD_DESKTOP_NUDGE = { x: -28, y: 10 } as const;
+	/** Popout L / S — raise WIN off the nameplate (S uses a larger game-px lift: scale is half of L). */
+	const WIN_HUD_POPOUT_L_NUDGE = { x: 0, y: -5 } as const;
+	const WIN_HUD_POPOUT_S_NUDGE = { x: 0, y: -5 } as const;
 	const ml = $derived(stateLayoutDerived.mainLayout());
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
+	const winHudNudge = $derived(
+		isPopoutSmall
+			? WIN_HUD_POPOUT_S_NUDGE
+			: isPopout
+				? WIN_HUD_POPOUT_L_NUDGE
+				: layoutType === 'desktop'
+					? WIN_HUD_DESKTOP_NUDGE
+					: { x: 0, y: 0 },
+	);
 	const winHudPos = $derived({
-		x: ml.width * (0.5 + WIN_HUD_X_OFFSET_RATIO),
-		y: boardLayout.y + boardLayout.height * 0.5 + WIN_BELOW_BOARD_GAP,
+		x: ml.width * 0.5 + winHudNudge.x,
+		y: boardLayout.y + boardLayout.height * 0.5 + WIN_BELOW_BOARD_GAP + winHudNudge.y,
 	});
 	const showWin = $derived(stateBet.winBookEventAmount > 0);
 

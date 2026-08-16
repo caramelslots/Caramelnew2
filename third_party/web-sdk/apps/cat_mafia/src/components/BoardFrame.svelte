@@ -23,7 +23,7 @@
 	type Props = {
 		/**
 		 * `base` — desk fill under the reels (default).
-		 * `overlay` — wood frame with transparent playfield, drawn above symbols
+		 * `overlay` — gold frame with transparent playfield, drawn above symbols
 		 * so spin/land never paints over the rails.
 		 */
 		layer?: 'base' | 'overlay';

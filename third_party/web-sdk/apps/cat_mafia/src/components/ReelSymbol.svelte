@@ -56,6 +56,11 @@
 	const isWinningState = $derived(
 		props.reelSymbol.symbolState === 'win' || props.reelSymbol.symbolState === 'postWinStatic',
 	);
+	const isPawCovered = $derived(
+		stateGame.pawCoinCells.some(
+			(cell) => cell.reel === props.reelIndex && cell.row === props.reelSymbol.symbolIndex,
+		),
+	);
 	const isSpinningSymbol = $derived(props.reelSymbol.symbolState === 'spin');
 	const applyWinPresentation = $derived(isWinningState && !isSpinningSymbol);
 	const applyIdleBouncePresentation = $derived(isIdleBouncing);
@@ -106,7 +111,10 @@
 	});
 
 	$effect(() => {
-		const target = stateGame.winSpotlightActive && !isWinningState ? DIM_NON_WINNING.alpha : 1;
+		const target =
+			isPawCovered || (stateGame.winSpotlightActive && !isWinningState)
+				? DIM_NON_WINNING.alpha
+				: 1;
 		const duration = target < 1 ? DIM_NON_WINNING.fadeInMs : DIM_NON_WINNING.fadeOutMs;
 		untrack(() => {
 			void dimAlphaTween.set(target, { duration, easing: sineInOut });

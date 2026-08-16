@@ -1,0 +1,313 @@
+{
+	"frames": {
+		"silver_loop_01.png": {
+			"frame": {
+				"x": 112,
+				"y": 434,
+				"w": 110,
+				"h": 111
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 78,
+				"y": 70,
+				"w": 110,
+				"h": 111
+			},
+			"sourceSize": {
+				"w": 256,
+				"h": 256
+			}
+		},
+		"silver_loop_02.png": {
+			"frame": {
+				"x": 224,
+				"y": 434,
+				"w": 118,
+				"h": 102
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 74,
+				"y": 72,
+				"w": 118,
+				"h": 102
+			},
+			"sourceSize": {
+				"w": 256,
+				"h": 256
+			}
+		},
+		"silver_loop_03.png": {
+			"frame": {
+				"x": 344,
+				"y": 434,
+				"w": 114,
+				"h": 105
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 76,
+				"y": 78,
+				"w": 114,
+				"h": 105
+			},
+			"sourceSize": {
+				"w": 256,
+				"h": 256
+			}
+		},
+		"silver_loop_04.png": {
+			"frame": {
+				"x": 460,
+				"y": 434,
+				"w": 103,
+				"h": 111
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 81,
+				"y": 88,
+				"w": 103,
+				"h": 111
+			},
+			"sourceSize": {
+				"w": 256,
+				"h": 256
+			}
+		},
+		"silver_loop_05.png": {
+			"frame": {
+				"x": 565,
+				"y": 434,
+				"w": 74,
+				"h": 113
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 93,
+				"y": 97,
+				"w": 74,
+				"h": 113
+			},
+			"sourceSize": {
+				"w": 256,
+				"h": 256
+			}
+		},
+		"silver_loop_06.png": {
+			"frame": {
+				"x": 641,
+				"y": 434,
+				"w": 42,
+				"h": 117
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 106,
+				"y": 98,
+				"w": 42,
+				"h": 117
+			},
+			"sourceSize": {
+				"w": 256,
+				"h": 256
+			}
+		},
+		"silver_loop_07.png": {
+			"frame": {
+				"x": 685,
+				"y": 434,
+				"w": 36,
+				"h": 116
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 110,
+				"y": 99,
+				"w": 36,
+				"h": 116
+			},
+			"sourceSize": {
+				"w": 256,
+				"h": 256
+			}
+		},
+		"silver_loop_08.png": {
+			"frame": {
+				"x": 723,
+				"y": 434,
+				"w": 45,
+				"h": 113
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 105,
+				"y": 98,
+				"w": 45,
+				"h": 113
+			},
+			"sourceSize": {
+				"w": 256,
+				"h": 256
+			}
+		},
+		"silver_loop_09.png": {
+			"frame": {
+				"x": 770,
+				"y": 434,
+				"w": 70,
+				"h": 111
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 93,
+				"y": 91,
+				"w": 70,
+				"h": 111
+			},
+			"sourceSize": {
+				"w": 256,
+				"h": 256
+			}
+		},
+		"silver_loop_10.png": {
+			"frame": {
+				"x": 842,
+				"y": 434,
+				"w": 100,
+				"h": 111
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 82,
+				"y": 77,
+				"w": 100,
+				"h": 111
+			},
+			"sourceSize": {
+				"w": 256,
+				"h": 256
+			}
+		},
+		"silver_loop_11.png": {
+			"frame": {
+				"x": 944,
+				"y": 434,
+				"w": 101,
+				"h": 110
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 84,
+				"y": 72,
+				"w": 101,
+				"h": 110
+			},
+			"sourceSize": {
+				"w": 256,
+				"h": 256
+			}
+		},
+		"silver_loop_12.png": {
+			"frame": {
+				"x": 1047,
+				"y": 434,
+				"w": 99,
+				"h": 110
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 86,
+				"y": 72,
+				"w": 99,
+				"h": 110
+			},
+			"sourceSize": {
+				"w": 256,
+				"h": 256
+			}
+		},
+		"silver_loop_13.png": {
+			"frame": {
+				"x": 1148,
+				"y": 434,
+				"w": 106,
+				"h": 112
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 80,
+				"y": 71,
+				"w": 106,
+				"h": 112
+			},
+			"sourceSize": {
+				"w": 256,
+				"h": 256
+			}
+		},
+		"silver_loop_14.png": {
+			"frame": {
+				"x": 1256,
+				"y": 434,
+				"w": 108,
+				"h": 114
+			},
+			"rotated": false,
+			"trimmed": true,
+			"spriteSourceSize": {
+				"x": 79,
+				"y": 70,
+				"w": 108,
+				"h": 114
+			},
+			"sourceSize": {
+				"w": 256,
+				"h": 256
+			}
+		}
+	},
+	"animations": {
+		"coin": [
+			"silver_loop_01.png",
+			"silver_loop_02.png",
+			"silver_loop_03.png",
+			"silver_loop_04.png",
+			"silver_loop_05.png",
+			"silver_loop_06.png",
+			"silver_loop_07.png",
+			"silver_loop_08.png",
+			"silver_loop_09.png",
+			"silver_loop_10.png",
+			"silver_loop_11.png",
+			"silver_loop_12.png",
+			"silver_loop_13.png",
+			"silver_loop_14.png"
+		]
+	},
+	"meta": {
+		"app": "cat_mafia/coins_paw split",
+		"version": "1.0",
+		"image": "coins_paw.webp",
+		"format": "RGBA8888",
+		"size": {
+			"w": 1973,
+			"h": 774
+		},
+		"scale": "1"
+	}
+}

@@ -817,6 +817,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.pawCoinCells = cells;
 		stateGame.pawCoinTotal = bookEvent.totalCoinWin;
 		stateGame.pawCoinFlying = false;
+		stateGame.pawCoinPlayId += 1;
+		for (const cell of cells) {
+			const symbol = stateGame.board[cell.reel]?.reelState.symbols[cell.row];
+			if (symbol) symbol.symbolState = 'postWinStatic';
+		}
 		// Hat out to catch — coins fly into the brim, then hat goes back on.
 		stateGame.pawCoinBagVisible = true;
 		stateGame.mascotPose = 'hatCatch';

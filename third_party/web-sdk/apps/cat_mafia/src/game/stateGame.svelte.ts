@@ -231,6 +231,8 @@ export const stateGame = $state({
 	pawCoinBagVisible: false,
 	/** Coins animate from board cells into the mascot hat. */
 	pawCoinFlying: false,
+	/** Bumps each paw resolve so appear_flash remounts from the start. */
+	pawCoinPlayId: 0,
 	superWildCurtain: null as null | {
 		reel: number;
 		mult: number;

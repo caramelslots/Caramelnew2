@@ -25,8 +25,8 @@ export const COIN_PAW_LOOP_FPS = 18;
 export const COIN_PAW_CONTENT = { x: 76, y: 66, w: 116, h: 122 } as const;
 /** Same on-cell fill as paying symbols (`CELL_SYMBOL_SIZE` in constants). */
 export const COIN_PAW_SYMBOL_FILL = 0.85;
-/** Overlay box vs cell — appear squash can overshoot the rest disc. */
-export const COIN_PAW_BOX_SCALE = 1.28;
+/** Overlay box vs cell — appear squash + appear_flash glow need room. */
+export const COIN_PAW_BOX_SCALE = 1.9;
 /** Rest disc as a fraction of the overlay box (= 0.85 of the symbol cell). */
 export const COIN_PAW_DRAW_FILL = COIN_PAW_SYMBOL_FILL / COIN_PAW_BOX_SCALE;
 
@@ -90,6 +90,27 @@ export const startCoinPawSheetPreload = () => {
 	void loadCoinPawSheet();
 };
 
+const beginCoinPawDraw = (
+	ctx: CanvasRenderingContext2D,
+	destW: number,
+	destH: number,
+	alpha: number,
+) => {
+	const innerW = destW * COIN_PAW_DRAW_FILL;
+	const innerH = destH * COIN_PAW_DRAW_FILL;
+	const padX = (destW - innerW) / 2;
+	const padY = (destH - innerH) / 2;
+	const scaleX = innerW / COIN_PAW_CONTENT.w;
+	const scaleY = innerH / COIN_PAW_CONTENT.h;
+	if (alpha >= 1) ctx.clearRect(0, 0, destW, destH);
+	ctx.save();
+	ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
+	// Bake / live capture uses SpinePlayer scaleY = -1 (canvas Y-down).
+	ctx.translate(0, destH);
+	ctx.scale(1, -1);
+	return { padX, padY, scaleX, scaleY };
+};
+
 export const drawCoinPawFrame = (
 	ctx: CanvasRenderingContext2D,
 	sheet: CoinPawSheet,
@@ -100,18 +121,7 @@ export const drawCoinPawFrame = (
 ) => {
 	const frame = sheet.frames[frameName];
 	if (!frame) return;
-	const innerW = destW * COIN_PAW_DRAW_FILL;
-	const innerH = destH * COIN_PAW_DRAW_FILL;
-	const padX = (destW - innerW) / 2;
-	const padY = (destH - innerH) / 2;
-	const scaleX = innerW / COIN_PAW_CONTENT.w;
-	const scaleY = innerH / COIN_PAW_CONTENT.h;
-	if (alpha >= 1) ctx.clearRect(0, 0, destW, destH);
-	// Bake used SpinePlayer scaleY = -1 (canvas Y-down). Flip back so paw / x read upright.
-	ctx.save();
-	ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-	ctx.translate(0, destH);
-	ctx.scale(1, -1);
+	const { padX, padY, scaleX, scaleY } = beginCoinPawDraw(ctx, destW, destH, alpha);
 	ctx.drawImage(
 		sheet.image,
 		frame.frame.x,
@@ -124,4 +134,41 @@ export const drawCoinPawFrame = (
 		frame.frame.h * scaleY,
 	);
 	ctx.restore();
+};
+
+/** Blit a live Spine viewport (same framing as the 256 bake canvas) into a cell. */
+export const drawCoinPawLive = (
+	ctx: CanvasRenderingContext2D,
+	source: CanvasImageSource,
+	sourceW: number,
+	sourceH: number,
+	destW: number,
+	destH: number,
+	fit: 'disc' | 'full' = 'disc',
+) => {
+	if (sourceW < 1 || sourceH < 1) return;
+	ctx.clearRect(0, 0, destW, destH);
+	if (fit === 'full') {
+		ctx.drawImage(source, 0, 0, sourceW, sourceH, 0, 0, destW, destH);
+		return;
+	}
+	const innerW = destW * COIN_PAW_DRAW_FILL;
+	const innerH = destH * COIN_PAW_DRAW_FILL;
+	const padX = (destW - innerW) / 2;
+	const padY = (destH - innerH) / 2;
+	const scaleX = innerW / COIN_PAW_CONTENT.w;
+	const scaleY = innerH / COIN_PAW_CONTENT.h;
+	// Live WebGL already matches the on-screen Spine pose — do not flip again
+	// (the bake-sheet path still flips because those frames were stored upside-down).
+	ctx.drawImage(
+		source,
+		0,
+		0,
+		sourceW,
+		sourceH,
+		padX - COIN_PAW_CONTENT.x * scaleX,
+		padY - COIN_PAW_CONTENT.y * scaleY,
+		COIN_PAW_SOURCE_SIZE * scaleX,
+		COIN_PAW_SOURCE_SIZE * scaleY,
+	);
 };

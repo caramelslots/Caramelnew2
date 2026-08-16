@@ -29,6 +29,17 @@
 		...baseConfig,
 		...extraConfig,
 		scale: { start: 1.15, end: 1.35, minimumScaleMultiplier: 0.85 },
+		frequency: 0.18,
+	});
+	const bronzeConfig = $derived({
+		...config,
+		frequency: 0.12,
+		startRotation: { min: 240, max: 270 },
+	});
+	const silverConfig = $derived({
+		...config,
+		frequency: 0.12,
+		startRotation: { min: 270, max: 300 },
 	});
 	const coinContainer = $derived({
 		x: props.x ?? boardLayout.x,
@@ -40,11 +51,15 @@
 	{#if props.canvasSpace}
 		<Container x={coinContainer.x} y={coinContainer.y}>
 			<CoinParticleEmitter {config} key="coins" emit={shouldEmit} />
+			<CoinParticleEmitter config={bronzeConfig} key="coinsBronze" emit={shouldEmit} />
+			<CoinParticleEmitter config={silverConfig} key="coinsSilver" emit={shouldEmit} />
 		</Container>
 	{:else}
 		<MainContainer>
 			<Container x={coinContainer.x} y={coinContainer.y}>
 				<CoinParticleEmitter {config} key="coins" emit={shouldEmit} />
+				<CoinParticleEmitter config={bronzeConfig} key="coinsBronze" emit={shouldEmit} />
+				<CoinParticleEmitter config={silverConfig} key="coinsSilver" emit={shouldEmit} />
 			</Container>
 		</MainContainer>
 	{/if}

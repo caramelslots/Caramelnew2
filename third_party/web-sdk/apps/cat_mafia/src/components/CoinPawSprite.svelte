@@ -1,124 +1,40 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
-
 	import {
-		COIN_PAW_APPEAR_FPS,
-		COIN_PAW_SOURCE_SIZE,
 		coinPawSkinForTier,
-		drawCoinPawFrame,
-		loadCoinPawSheet,
-		type CoinPawSheet,
-	} from '../game/coinSpriteSheet';
+		subscribeCoinPawSpine,
+		type CoinPawSpineMode,
+	} from '../game/coinHtmlSpine';
+	import { COIN_PAW_SOURCE_SIZE } from '../game/coinSpriteSheet';
 
 	type Props = {
 		tier: number;
 		speed?: number;
+		mode?: CoinPawSpineMode;
 	};
 
 	const props: Props = $props();
 	const skin = $derived(coinPawSkinForTier(props.tier));
 	const speed = $derived(Math.max(0.25, props.speed ?? 1));
+	const mode = $derived(props.mode ?? 'row');
 
 	let canvas = $state<HTMLCanvasElement | undefined>();
-	let raf = 0;
-
-	const fitCanvas = (el: HTMLCanvasElement) => {
-		const dpr = Math.min(2, window.devicePixelRatio || 1);
-		const cssW = Math.max(1, el.clientWidth);
-		const cssH = Math.max(1, el.clientHeight);
-		const w = Math.round(cssW * dpr);
-		const h = Math.round(cssH * dpr);
-		if (el.width !== w) el.width = w;
-		if (el.height !== h) el.height = h;
-		return { w, h };
-	};
+	let speedNow = speed;
+	$effect(() => {
+		speedNow = speed;
+	});
 
 	$effect(() => {
 		const el = canvas;
 		const skinName = skin;
-		const playback = speed;
+		const playMode = mode;
 		if (!el) return;
-
-		let cancelled = false;
-		let sheet: CoinPawSheet | undefined;
-		let mode: 'appear' | 'hold' = 'appear';
-		let index = 0;
-		let acc = 0;
-		let last = performance.now();
-
-		const frameNames = (current: 'appear' | 'hold') => {
-			if (!sheet) return [];
-			if (current === 'hold') {
-				// Last appear frame is the designer reverse (x1 / x2 / x3).
-				const appear = sheet.animations[`${skinName}_appear`] ?? [];
-				return appear.slice(-1);
-			}
-			return sheet.animations[`${skinName}_appear`] ?? [];
-		};
-
-		const paint = (fromName: string, toName?: string, mix = 0) => {
-			if (!sheet) return;
-			const { w, h } = fitCanvas(el);
-			const ctx = el.getContext('2d');
-			if (!ctx) return;
-			ctx.clearRect(0, 0, w, h);
-			if (!toName || mix <= 0) {
-				drawCoinPawFrame(ctx, sheet, fromName, w, h);
-				return;
-			}
-			drawCoinPawFrame(ctx, sheet, fromName, w, h, 1 - mix);
-			drawCoinPawFrame(ctx, sheet, toName, w, h, mix);
-		};
-
-		const tick = (now: number) => {
-			if (cancelled) return;
-			const dt = (now - last) * playback;
-			last = now;
-			if (mode === 'hold') {
-				const hold = frameNames('hold')[0];
-				if (hold) paint(hold);
-				raf = requestAnimationFrame(tick);
-				return;
-			}
-			acc += dt;
-			const step = 1000 / COIN_PAW_APPEAR_FPS;
-			const names = frameNames('appear');
-			while (acc >= step && names.length > 0) {
-				acc -= step;
-				index += 1;
-				if (index >= names.length - 1) {
-					mode = 'hold';
-					index = 0;
-					break;
-				}
-			}
-			if (mode === 'hold') {
-				const hold = frameNames('hold')[0];
-				if (hold) paint(hold);
-			} else if (names.length > 0) {
-				const from = names[index] ?? names[0];
-				const to = names[index + 1] ?? from;
-				paint(from, to, Math.min(1, acc / step));
-			}
-			raf = requestAnimationFrame(tick);
-		};
-
-		void loadCoinPawSheet().then((loaded) => {
-			if (cancelled) return;
-			sheet = loaded;
-			last = performance.now();
-			const first = frameNames('appear')[0] ?? frameNames('hold')[0];
-			if (first) paint(first);
-			raf = requestAnimationFrame(tick);
+		return subscribeCoinPawSpine({
+			canvas: el,
+			skin: skinName,
+			mode: playMode,
+			getSpeed: () => speedNow,
 		});
-
-		return () => {
-			cancelled = true;
-			cancelAnimationFrame(raf);
-		};
 	});
-
-	onDestroy(() => cancelAnimationFrame(raf));
 </script>
 
 <canvas

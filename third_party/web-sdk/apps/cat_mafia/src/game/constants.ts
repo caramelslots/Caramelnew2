@@ -236,7 +236,7 @@ export const BOARD_MASK_IDLE_BOUNCE_TOP =
 
 /**
  * Extra mask coverage (px) beyond the visible board grid.
- * Wood rails are composited above symbols (`BoardFrame` overlay), so a short
+ * Gold rails are composited above symbols (`BoardFrame` overlay), so a short
  * runway is fine — symbols slide under the frame instead of vanishing mid-cell.
  * top/bottom are measured from the grid edges outward.
  */
@@ -434,9 +434,9 @@ export const REELHOUSE_GLOW_SCALE = { width: 0.58, height: 0.62 } as const;
 
 /**
  * Geometry of the playfield inside the desk artwork
- * (`boardDayBase` / `boardNightBase` from `designer_assets/дане доска.png`,
- * cropped 1471×1185). Measured from the dark 5-column region inside the wood
- * frame. Values are fractions of the source image.
+ * (`boardDayBase` / `boardNightBase` from `designer_assets/board копия.png`,
+ * 2048×2048). Measured from the dark 5-column region inside the inner gold
+ * rails. Values are fractions of the source image.
  *
  *   width/heightFrac — playfield bbox size as a fraction of image size.
  *   offset*Frac      — playfield-center offset from image-center
@@ -447,14 +447,14 @@ export const REELHOUSE_GLOW_SCALE = { width: 0.58, height: 0.62 } as const;
  * board-frame center.
  */
 export const DESK_PARCHMENT = {
-	widthFrac: 0.8831,
-	heightFrac: 0.8439,
-	offsetXFrac: -0.0014,
-	offsetYFrac: -0.003,
+	widthFrac: 0.8662,
+	heightFrac: 0.6904,
+	offsetXFrac: -0.0005,
+	offsetYFrac: -0.0117,
 } as const;
 
 /**
- * Padding around the 5×4 board for the playfield inside the wood frame.
+ * Padding around the 5×4 board for the playfield inside the gold frame.
  * 1.0 = playfield exactly matches the board; >1.0 grows the desk so symbols
  * sit inset from the dark-cell edges. Keep tiny (~2% ≈ a few px per side).
  */
@@ -487,13 +487,11 @@ export const BOARD_LAYOUT_SCALE = {
 	tablet: 1.14,
 	landscape: 1.16,
 } as const;
-/** Frame bezel + glow offset from board center (px): +x right, +y down.
- *  Slight left shift so the rightmost reel isn't hard against the rail. */
-export const BOARD_FRAME_OFFSET = { x: -3, y: 0 } as const;
+/** Frame bezel + glow offset from board center (px): +x right, +y down. */
+export const BOARD_FRAME_OFFSET = { x: 0, y: 0 } as const;
 /** Vertical nudge (game px, +y = down) applied to all desk artwork layers (base / contour)
- *  without moving the reel grid or UI buttons. Raises the desk so top/bottom
- *  cell margins match (top was tight, bottom was empty). */
-export const DESK_VISUAL_OFFSET_Y = -5;
+ *  without moving the reel grid or UI buttons. */
+export const DESK_VISUAL_OFFSET_Y = 0;
 
 /**
  * ProgressLadder `.bar-h` rendered width (px). Portrait desk parchment width
@@ -842,8 +840,8 @@ export const PORTRAIT_UI_LAYOUT = {
 	winBelowBoardGap: 62,
 	/** Buy/boost row top offset from board bottom (ref px, independent of WIN). */
 	buyPanelBelowBoard: 112,
-	/** Extra WIN nudge down on portrait (ref px, + = down). */
-	winNudgeDown: 12.5,
+	/** Extra WIN nudge on portrait (ref px, + = down). Negative raises toward the nameplate. */
+	winNudgeDown: -17,
 	/** Spin stack anchor below board when buy/boost hidden (free spins). */
 	freeSpinsSpinBelowBoard: 48,
 	/** Util-row center offset from screen bottom (ref px; ≈ iconRadius + 12px margin). */

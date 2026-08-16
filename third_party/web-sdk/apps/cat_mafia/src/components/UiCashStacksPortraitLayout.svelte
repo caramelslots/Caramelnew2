@@ -31,7 +31,8 @@
 	const W = $derived(ml.width);
 	const H = $derived(ml.height);
 
-	const WIN_HUD_X_OFFSET_RATIO = 0.012;
+	/** Left of screen center so WIN sits with the gold nameplate. */
+	const WIN_HUD_X_OFFSET_RATIO = -0.022;
 
 	const winHudPos = $derived({
 		x: W * (0.5 + WIN_HUD_X_OFFSET_RATIO),
