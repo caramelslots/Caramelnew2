@@ -14,6 +14,7 @@ from src.calculations.lines import Lines
 
 # BR0 rarity weights — bias cluster hero toward highs for denser premium look.
 # Still guaranteed zero line-win by construction in generate_cluster_board_names.
+# No W (rework): natural wild drops removed; W only exists via SW curtains.
 CLUSTER_SYMBOL_WEIGHTS_BR0 = {
     "L3": 3,
     "L4": 3,
@@ -23,7 +24,6 @@ CLUSTER_SYMBOL_WEIGHTS_BR0 = {
     "H3": 5,
     "H2": 4,
     "H1": 4,
-    "W": 1,
 }
 
 CLUSTER_SYMBOL_WEIGHTS_BR1 = dict(CLUSTER_SYMBOL_WEIGHTS_BR0)
@@ -39,7 +39,6 @@ CLUSTER_SYMBOL_WEIGHTS_FR0 = {
     "H3": 5,
     "H2": 4,
     "H1": 4,
-    "W": 2,
 }
 
 CLUSTER_SYMBOL_WEIGHTS_FR1 = {
@@ -51,7 +50,6 @@ CLUSTER_SYMBOL_WEIGHTS_FR1 = {
     "H3": 5,
     "H2": 4,
     "H1": 4,
-    "W": 3,
 }
 
 FILLER_SYMBOLS = ["L1", "L2", "L3", "L4", "H4", "H3", "H2", "H1"]

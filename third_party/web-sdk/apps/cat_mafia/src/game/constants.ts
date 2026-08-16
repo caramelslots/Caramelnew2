@@ -1183,6 +1183,31 @@ const bStatic = {
 	animationName: 'Special_1/idle',
 	sizeRatios: { width: 1, height: 1 },
 };
+
+/**
+ * Paw-coin board symbols — rendered by SymbolCoinPaw.svelte from the LIVE
+ * coins spine (`assets/spines/coins/coins.*`, skins coin_bronze/silver/gold),
+ * same 60fps source as the HTML paw overlay. `clip: 'loop'` is the frozen
+ * rest face (main_coin_slow frame 0 — no constant motion on the board),
+ * `clip: 'appear'` is the one-shot pop-in flip with flash (appear_flash)
+ * played on land/bounce.
+ * The coin disc occupies ≈272×295 of the 472×485 skeleton (bake viewport
+ * 600×620, disc 116×122 of the 256px canvas), so the box is inflated to
+ * land the disc at the shared on-cell fill (0.85 × 100px).
+ */
+const PAW_COIN_SIZE_RATIOS = { width: 0.85 * (472 / 272), height: 0.85 * (485 / 295) };
+const makePawCoinRender = (skin: 'bronze' | 'silver' | 'gold', clip: 'loop' | 'appear') => ({
+	type: 'coinPaw' as const,
+	skin,
+	clip,
+	sizeRatios: PAW_COIN_SIZE_RATIOS,
+});
+const pawCoinBronze = makePawCoinRender('bronze', 'loop');
+const pawCoinSilver = makePawCoinRender('silver', 'loop');
+const pawCoinGold = makePawCoinRender('gold', 'loop');
+const pawCoinBronzeLand = makePawCoinRender('bronze', 'appear');
+const pawCoinSilverLand = makePawCoinRender('silver', 'appear');
+const pawCoinGoldLand = makePawCoinRender('gold', 'appear');
 // Mystery rest pose — render via the same Mystery spine (idle clip pins
 // `Mystery_bg` + `Mystery_sign` attachments visible). The legacy static
 // PNG was just `Mystery_sign.png` (the `?` glyph alone), so the dark
@@ -1314,13 +1339,29 @@ export const SYMBOL_INFO_MAP = {
 		win: wWin,
 		land: wBounce,
 	},
-	// Paw — alias Bonus cat art for Stage B (PAW badge in Symbol.svelte).
-	P: {
-		postWinStatic: bStatic,
-		static: bStatic,
-		spin: bStatic,
-		win: bStatic,
-		land: bStatic,
+	// Paw coins (rework) — rendered as the designer coin-paw spritesheet
+	// (bronze / silver / gold), see SymbolCoinPaw.svelte. The coin itself
+	// never pays (coinTier 0) and never flies into the mascot hat.
+	PB: {
+		postWinStatic: pawCoinBronze,
+		static: pawCoinBronze,
+		spin: pawCoinBronze,
+		win: pawCoinBronze,
+		land: pawCoinBronzeLand,
+	},
+	PS: {
+		postWinStatic: pawCoinSilver,
+		static: pawCoinSilver,
+		spin: pawCoinSilver,
+		win: pawCoinSilver,
+		land: pawCoinSilverLand,
+	},
+	PG: {
+		postWinStatic: pawCoinGold,
+		static: pawCoinGold,
+		spin: pawCoinGold,
+		win: pawCoinGold,
+		land: pawCoinGoldLand,
 	},
 	// Bullet / cartridge — WebP rest/spin; land plays designer `stop`.
 	BT: {

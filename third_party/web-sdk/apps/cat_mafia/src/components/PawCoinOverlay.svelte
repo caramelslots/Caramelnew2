@@ -1,6 +1,8 @@
 <script lang="ts">
 	/**
 	 * Paw → coins: designer clip on the row, then one continuous fly into the hat.
+	 * The paw symbol itself (PB/PS/PG) is a board symbol and never pays / never
+	 * flies — its cells are filtered out upstream in the pawCoinResolve handler.
 	 */
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';

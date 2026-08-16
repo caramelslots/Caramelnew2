@@ -10,13 +10,13 @@ import type {
 	BookEventTargetShootRound,
 } from '../../game/typesBookEvent';
 
-/** Visible board: L1, P, H1, L2, W on row 0 (bet× = 10 → 70 coin win). */
+/** Visible board: L1, PB, H1, L2, H2 on row 0 (bet× = 10 → 80 coin win). */
 export const PAW_DEMO_VISIBLE_BOARD = [
 	[{ name: 'L1' }, { name: 'L3' }, { name: 'L4' }, { name: 'H2' }],
-	[{ name: 'P' }, { name: 'L4' }, { name: 'L2' }, { name: 'H3' }],
+	[{ name: 'PB' }, { name: 'L4' }, { name: 'L2' }, { name: 'H3' }],
 	[{ name: 'H1' }, { name: 'L1' }, { name: 'L3' }, { name: 'H4' }],
 	[{ name: 'L2' }, { name: 'H3' }, { name: 'L4' }, { name: 'L2' }],
-	[{ name: 'W' }, { name: 'L3' }, { name: 'L4' }, { name: 'H1' }],
+	[{ name: 'H2' }, { name: 'L3' }, { name: 'L4' }, { name: 'H1' }],
 ] as const;
 
 /** Visible board with SW×4 on reel 2 that participates in a top-line win. */
@@ -28,19 +28,19 @@ export const SW_DEMO_VISIBLE_BOARD = [
 	[{ name: 'H2' }, { name: 'L1' }, { name: 'L2' }, { name: 'H3' }],
 ] as const;
 
-/** betAmount=10 → Low×1 + Paw×1 + High×2 + Low×1 + Wild×3 = 80 */
+/** betAmount=10 → Low×1 + Paw 0 + H1×3 + Low×1 + H2×3 = 80 */
 export const pawCoinResolveDemo = {
 	type: 'pawCoinResolve',
-	paws: [{ reel: 1, row: 1 }],
+	paws: [{ reel: 1, row: 1, kind: 'bronze' as const }],
 	rows: [
 		{
 			row: 1,
 			cells: [
 				{ reel: 0, from: 'L1', coinTier: 1, win: 10 },
-				{ reel: 1, from: 'P', coinTier: 1, win: 10 },
-				{ reel: 2, from: 'H1', coinTier: 2, win: 20 },
+				{ reel: 1, from: 'PB', coinTier: 0, win: 0 },
+				{ reel: 2, from: 'H1', coinTier: 3, win: 30 },
 				{ reel: 3, from: 'L2', coinTier: 1, win: 10 },
-				{ reel: 4, from: 'W', coinTier: 3, win: 30 },
+				{ reel: 4, from: 'H2', coinTier: 3, win: 30 },
 			],
 		},
 	],

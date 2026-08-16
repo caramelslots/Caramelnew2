@@ -60,7 +60,6 @@ if __name__ == "__main__":
 
     custom_keys = [
         {"symbol": "scatter"},
-        {"kind": 5, "symbol": "W"},
         {"kind": 5, "symbol": "H1"},
     ]
     try:

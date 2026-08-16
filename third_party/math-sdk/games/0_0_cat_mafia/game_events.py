@@ -31,10 +31,14 @@ def paw_coin_resolve_event(gamestate, paws: list[dict], rows: list[dict], total_
                 ],
             }
         )
+    pad = 1 if gamestate.config.include_padding else 0
     event = {
         "index": len(gamestate.book.events),
         "type": PAW_COIN_RESOLVE,
-        "paws": _pad_positions(gamestate, paws),
+        "paws": [
+            {"reel": p["reel"], "row": p["row"] + pad, "kind": p.get("kind", "bronze")}
+            for p in paws
+        ],
         "rows": padded_rows,
         "totalCoinWin": int(round(total_coin_win * 100)),
     }

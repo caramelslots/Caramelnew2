@@ -89,7 +89,6 @@ if __name__ == "__main__":
     if run_conditions["run_analysis"]:
         custom_keys = [
             {"symbol": "scatter"},
-            {"kind": 5, "symbol": "W"},
             {"kind": 5, "symbol": "H1"},
         ]
         try:

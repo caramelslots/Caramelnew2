@@ -452,8 +452,16 @@ export default {
 			paytable: null,
 			special_properties: ['wild', 'super_wild'],
 		},
-		// Paw — converts its row into coins (Stage B prototype; base only)
-		P: {
+		// Paw coins (rework): bronze converts 1 row, silver 2, gold 3 (base only).
+		PB: {
+			paytable: null,
+			special_properties: ['paw_trigger'],
+		},
+		PS: {
+			paytable: null,
+			special_properties: ['paw_trigger'],
+		},
+		PG: {
 			paytable: null,
 			special_properties: ['paw_trigger'],
 		},

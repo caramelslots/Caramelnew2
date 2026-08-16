@@ -351,6 +351,18 @@ export default {
 		type: 'spriteSheet',
 		src: assetUrl('assets/sprites/coin/SD2_Coin.json'),
 	},
+	// Baked paw-coin animations (bronze/silver/gold × appear/loop) — board
+	// symbols PB/PS/PG render from this sheet (SymbolCoinPaw.svelte).
+	// Live coin spine (60fps, skins coin_bronze/coin_silver/coin_gold) — board
+	// symbols PB/PS/PG render this natively in Pixi instead of the baked sheet.
+	coinsPaw: {
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/coins/coins.atlas'),
+			skeleton: assetUrl('assets/spines/coins/coins.json'),
+			scale: 1,
+		},
+	},
 	sound: {
 		type: 'audio',
 		src: assetUrl('assets/audio/sounds.json'),

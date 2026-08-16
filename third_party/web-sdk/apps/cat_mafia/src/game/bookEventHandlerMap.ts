@@ -32,12 +32,19 @@ import {
 } from './constants';
 import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
 import { waitForTimeout } from 'utils-shared/wait';
-import { computeCatSlowTriggerReel, catSlowReelsAfterTrigger, CAT_SLOW_EXTRA_SYMBOL_ROWS } from './catAnticipation';
+import {
+	computeCatSlowTriggerReel,
+	catSlowReelsAfterTrigger,
+	CAT_SLOW_EXTRA_SYMBOL_ROWS,
+} from './catAnticipation';
 import {
 	MASCOT_COIN_FLY_WAIT_MS,
 	MASCOT_HAT_CATCH_BEFORE_COINS_MS,
 	MASCOT_HAT_ON_MS,
 } from './mascotHtmlSpine';
+
+/** Beat between the paw landing (appear_flash flip) and the row→coin conversion. */
+const PAW_COIN_CONVERT_DELAY_MS = 250;
 
 // Таймер фонового снятия затемнения/paylines. Хранится здесь, чтобы
 // `reveal` мог отменить его при старте нового спина раньше истечения задержки.
@@ -106,7 +113,9 @@ const prepareStickySwFrozenReels = (revealBoard: { name: string; multiplier?: nu
 
 		const reel = stateGame.board[reelIndex] as {
 			stopPreSpin?: () => void;
-			setSymbolsWithRawSymbols?: (symbols: { name: string; wild?: boolean; multiplier?: number }[]) => void;
+			setSymbolsWithRawSymbols?: (
+				symbols: { name: string; wild?: boolean; multiplier?: number }[],
+			) => void;
 		};
 		reel?.stopPreSpin?.();
 		const stickyColumn = (revealBoard[reelIndex] || []).map((cell) =>
@@ -318,14 +327,15 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				? {
 						...bookEvent,
 						board: bookEvent.board.map((reel) =>
-							reel.map((cell) =>
-								cell.name === 'BT' ? { ...cell, name: 'L2' as const } : cell,
-							),
+							reel.map((cell) => (cell.name === 'BT' ? { ...cell, name: 'L2' as const } : cell)),
 						),
 					}
 				: bookEvent;
 
-		stateGame.catSlowTriggerReel = computeCatSlowTriggerReel(revealEvent.board, revealEvent.gameType);
+		stateGame.catSlowTriggerReel = computeCatSlowTriggerReel(
+			revealEvent.board,
+			revealEvent.gameType,
+		);
 		stateGame.catSlowReels = [];
 		const catSlowReelIndices = catSlowReelsAfterTrigger(
 			stateGame.catSlowTriggerReel,
@@ -333,9 +343,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		);
 		// Sticky SW columns stay put — paint them and exclude from spin (like frozen mystery).
 		const stickyFrozenReels =
-			revealEvent.gameType === 'freegame'
-				? prepareStickySwFrozenReels(revealEvent.board)
-				: [];
+			revealEvent.gameType === 'freegame' ? prepareStickySwFrozenReels(revealEvent.board) : [];
 		try {
 			await stateGameDerived.enhancedBoard.spin({
 				revealEvent,
@@ -372,13 +380,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// True two-beat: expand is followed by another winInfo (base + bonus new SW).
 		// Sticky-only FS spins emit expand without a second winInfo — don't hold paylines.
 		const hasWinInfoAfterExpand =
-			expandIndex >= 0 &&
-			bookEvents.slice(expandIndex + 1).some((e) => e.type === 'winInfo');
+			expandIndex >= 0 && bookEvents.slice(expandIndex + 1).some((e) => e.type === 'winInfo');
 		// Phase 2: winInfo after SW curtain — clear phase-1 lines, longer beat.
 		const isPostSwExpand = eventIndex >= 0 && expandIndex >= 0 && eventIndex > expandIndex;
 		// Phase 1 when a curtain + second winInfo follows — expand handler clears after hold.
-		const swExpandFollows =
-			eventIndex >= 0 && expandIndex > eventIndex && hasWinInfoAfterExpand;
+		const swExpandFollows = eventIndex >= 0 && expandIndex > eventIndex && hasWinInfoAfterExpand;
 
 		if (isPostSwExpand) {
 			clearWinSpotlight();
@@ -425,11 +431,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 			// SW spins: do not += spin totals — pre/post expand + product would
 			// flash HUD (e.g. 290 → 250 → 290). setTotalWin is the source of truth.
-			if (
-				isSmallWinFlow &&
-				!isPostSwExpand &&
-				!spinHasSuperWildExpand(bookEvents)
-			) {
+			if (isSmallWinFlow && !isPostSwExpand && !spinHasSuperWildExpand(bookEvents)) {
 				stateBet.winBookEventAmount = stateBet.winBookEventAmount + bookEvent.totalWin;
 			}
 		}
@@ -466,10 +468,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	) => {
 		// Intermediate totals before SW product / phase-2 — skip so HUD only
 		// jumps once to the final cumulative (avoids up→down→up flicker).
-		if (
-			spinHasSuperWildExpand(bookEvents) &&
-			findNextSetTotalWin(bookEvents, bookEvent)
-		) {
+		if (spinHasSuperWildExpand(bookEvents) && findNextSetTotalWin(bookEvents, bookEvent)) {
 			return;
 		}
 		stateBet.winBookEventAmount = bookEvent.amount;
@@ -511,8 +510,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const eventIdx = bookEvents.indexOf(bookEvent);
 		const prevEvent = eventIdx > 0 ? bookEvents[eventIdx - 1] : undefined;
 		const prevPrev = eventIdx > 1 ? bookEvents[eventIdx - 2] : undefined;
-		const hadBonusCollect =
-			prevEvent?.type === 'bonusCollect' || prevPrev?.type === 'bonusCollect';
+		const hadBonusCollect = prevEvent?.type === 'bonusCollect' || prevPrev?.type === 'bonusCollect';
 		if (!hadTargetPick && !hadBonusCollect && bookEvent.positions?.length) {
 			await animateBonusSymbols({ positions: bookEvent.positions });
 		}
@@ -805,14 +803,23 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			console.warn('[Cat Mafia] XOR violated: pawCoinResolve with superWildExpand');
 		}
 
+		// Paw-coin cells (coinTier 0) are excluded from the overlay — the PB/PS/PG
+		// board symbols already render as coins and never pay / never fly.
+		const pawCells = new Set(bookEvent.paws.map((p) => `${p.reel}:${p.row}`));
 		const cells = bookEvent.rows.flatMap((row) =>
-			row.cells.map((cell) => ({
-				reel: cell.reel,
-				row: row.row,
-				tier: cell.coinTier,
-				win: cell.win,
-			})),
+			row.cells
+				.filter((cell) => cell.coinTier > 0 && !pawCells.has(`${cell.reel}:${row.row}`))
+				.map((cell) => ({
+					reel: cell.reel,
+					row: row.row,
+					tier: cell.coinTier as 1 | 2 | 3,
+					win: cell.win,
+				})),
 		);
+
+		// Let the paw landing (appear_flash flip) read first — coins convert
+		// the row(s) only after a short beat.
+		await waitForGameSpeed(PAW_COIN_CONVERT_DELAY_MS, stateGame.gameSpeed);
 
 		stateGame.pawCoinCells = cells;
 		stateGame.pawCoinTotal = bookEvent.totalCoinWin;

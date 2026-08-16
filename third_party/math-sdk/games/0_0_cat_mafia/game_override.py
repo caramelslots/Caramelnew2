@@ -156,10 +156,10 @@ class GameStateOverride(GameExecutables):
                     self.board[reel][row] = self.create_symbol(to_name)
 
     def force_paw_on_board(self) -> None:
-        """Plant a visible P when criteria/conditions request force_paw.
+        """Plant one paw coin (PB/PS/PG) when criteria/conditions request force_paw.
 
-        Cheap coin row (L only + P): keeps avg paw win ~4× so optimizer / LUT
-        floor can reach ≥1% hit-rate without huge RTP cost.
+        Rows stay natural — coin multipliers depend on the symbols underneath,
+        so the old forced all-low row is gone. RTP re-tunes via optimization.
         """
         if self.gametype != self.config.basegame_type:
             return
@@ -172,12 +172,11 @@ class GameStateOverride(GameExecutables):
 
         row = random.randrange(self.config.num_rows[0])
         paw_reel = random.randrange(self.config.num_reels)
-        lows = ["L1", "L2", "L3", "L4"]
-        for reel in range(self.config.num_reels):
-            if reel == paw_reel:
-                self.board[reel][row] = self.create_symbol("P")
-            else:
-                self.board[reel][row] = self.create_symbol(random.choice(lows))
+        tier_weights = self.config.paw_tier_weights
+        paw_name = random.choices(
+            list(tier_weights.keys()), weights=list(tier_weights.values()), k=1
+        )[0]
+        self.board[paw_reel][row] = self.create_symbol(paw_name)
         self.get_special_symbols_on_board()
 
     def force_sw_expand_on_board(self) -> None:
@@ -189,7 +188,7 @@ class GameStateOverride(GameExecutables):
             return
 
         # Keep XOR clean for this fence — no competing paw.
-        self._replace_symbol_name({"P"}, "L2")
+        self._replace_symbol_name({"PB", "PS", "PG"}, "L2")
 
         # Top row payline: H2 ×5 with SW on a middle reel (wild in win → expand).
         sw_reel = random.choice([1, 2, 3])
@@ -335,7 +334,7 @@ class GameStateOverride(GameExecutables):
         return self.create_symbol(repl) if repl else cell
 
     def enforce_feature_symbol_rules(self) -> None:
-        """Base: no BT. Main FS: no P (P→BT). Extra FS after shoot: no BT / no P.
+        """Base: no BT. Main FS: no paw coins (PB/PS/PG→BT). Extra FS: no BT / paws.
 
         Also strips padding top/bottom — reveal_event includes them in the board.
         """
@@ -343,10 +342,10 @@ class GameStateOverride(GameExecutables):
             repl = {"BT": "L2"}
         elif self.fs_extra_phase:
             # Extra FS after shoot: no bullets anywhere (visible + padding).
-            repl = {"BT": "L2", "P": "L2"}
+            repl = {"BT": "L2", "PB": "L2", "PS": "L2", "PG": "L2"}
         else:
-            # Main FS: convert leftover P → BT; keep BT from FR strips.
-            repl = {"P": "BT"}
+            # Main FS: convert leftover paw coins → BT; keep BT from FR strips.
+            repl = {"PB": "BT", "PS": "BT", "PG": "BT"}
 
         for reel, col in enumerate(self.board):
             for row, cell in enumerate(col):

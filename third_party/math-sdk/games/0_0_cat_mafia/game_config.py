@@ -94,7 +94,7 @@ class GameConfig(Config):
             "wild": ["W", "SW"],
             "scatter": ["B"],
             "multiplier": ["SW"],
-            "paw": ["P"],
+            "paw": ["PB", "PS", "PG"],
             "bullet": ["BT"],
         }
 
@@ -116,6 +116,9 @@ class GameConfig(Config):
         # Medium-vol bonus: mostly ×2/×4; ×6/×8 stay rare spice.
         # (Product of 2 sticky columns still capped by max_sticky_sw.)
         self.sw_mult_weights = {2: 42, 4: 40, 6: 13, 8: 5}
+        # Paw-coin type split inside the (unchanged) ~3% paw fence quota.
+        # Bronze 1 row / silver 2 rows / gold 3 rows — gold is rarest.
+        self.paw_tier_weights = {"PB": 60, "PS": 30, "PG": 10}
         # Cap sticky SW columns in bonus (product of mults grows very fast).
         self.max_sticky_sw = 2
         # Shoot rewards: empty / +1 / +2 / +3 FS (weights)

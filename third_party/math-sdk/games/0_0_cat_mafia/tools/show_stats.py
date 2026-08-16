@@ -14,7 +14,6 @@ STATS = ROOT / "library" / "statistics_summary.json"
 
 # Targets from M4_REELSTRIP_TUNING.md
 TARGETS_BASE = {
-    "{'kind': '5', 'symbol': 'W'}": ("5×W", 10000),
     "{'kind': '5', 'symbol': 'H1'}": ("5×H1", 1000),
     "{'kind': '5', 'symbol': 'H2'}": ("5×H2", 1500),
     "{'kind': '5', 'symbol': 'H3'}": ("5×H3", 2000),
@@ -75,9 +74,8 @@ def main():
         m = custom.get(mode, {})
         scatter_hr = m.get("{'symbol': 'scatter'}", "?")
         print(f"  [{mode}] scatter HR = 1 in {scatter_hr}")
-        # 5xW custom
-        w_hr = m.get("{'kind': 5, 'symbol': 'W'}", "?")
-        print(f"  [{mode}] 5×W custom HR = 1 in {w_hr}")
+        h1_hr = m.get("{'kind': 5, 'symbol': 'H1'}", "?")
+        print(f"  [{mode}] 5×H1 custom HR = 1 in {h1_hr}")
 
     print()
     print("=" * 90)

@@ -41,8 +41,8 @@ TARGETS = {
     "5xL4_base": 80,
 }
 
-# Wild substitutes for non-W non-B non-M
-WILDS = {"W"}
+# Wilds substitute for non-W non-B non-M. Natural W removed (rework) — only SW remains.
+WILDS = {"W", "SW"}
 NON_WILD_TARGETS = {"H1", "H2", "H3", "H4", "L1", "L2", "L3", "L4"}
 
 
@@ -88,8 +88,8 @@ def predict_5kind_hr(
     p_per_payline = 1.0
     for c in counts:
         k = c.get(target_symbol, 0)
-        if include_wild_sub and target_symbol not in {"W", "B", "M"}:
-            k += c.get("W", 0)
+        if include_wild_sub and target_symbol not in {"W", "SW", "B", "M"}:
+            k += c.get("W", 0) + c.get("SW", 0)
         p_per_payline *= k / reel_len
 
     if p_per_payline == 0:

@@ -4,7 +4,7 @@ Hard invariants:
 - Winning paylines (symbol / kind / positions / amounts) stay identical
 - Paw coin totals stay identical
 - Post-SW-expand line wins stay identical
-- Special symbols (W/SW/P/B/BT/M) are never rewritten
+- Special symbols (W/SW/PB/PS/PG/B/BT/M) are never rewritten
 
 Only L1–L4 cells outside locked positions may become H1–H4.
 """
@@ -25,7 +25,7 @@ from game_features import (
 
 LOW_SYMBOLS = ("L1", "L2", "L3", "L4")
 HIGH_SYMBOLS = ("H1", "H2", "H3", "H4")
-PROTECTED_SYMBOLS = frozenset({"W", "SW", "P", "B", "BT", "M"})
+PROTECTED_SYMBOLS = frozenset({"W", "SW", "PB", "PS", "PG", "B", "BT", "M"})
 
 # Target share of highs among L+H on the visible board (Hell Hot ref ≈ 48%).
 TARGET_HIGH_SHARE = 0.48
@@ -146,7 +146,10 @@ def _paw_locked_positions(board) -> set[tuple[int, int]]:
     paws = find_paws(board)
     if not paws:
         return set()
-    rows = {int(p["row"]) for p in paws}
+    # Lock every row the paw coin(s) will convert (1/2/3 rows by type),
+    # not just the row the paw sits on.
+    _p, rows_payload, _t = build_paw_resolve(board, bet=1.0)
+    rows = {int(r["row"]) for r in rows_payload}
     locked: set[tuple[int, int]] = set()
     for reel, col in enumerate(board):
         for row in rows:

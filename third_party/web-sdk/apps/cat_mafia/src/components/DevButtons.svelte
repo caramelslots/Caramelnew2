@@ -46,9 +46,7 @@
 	import bonusBoostBooks from '../stories/data/books_bonus_boost';
 	import bonusSuperBooks from '../stories/data/books_bonus_super';
 	import {
-		PAW_DEMO_VISIBLE_BOARD,
 		SW_DEMO_VISIBLE_BOARD,
-		pawCoinResolveDemo,
 		superWildExpandDemo,
 	} from '../stories/data/catmafia_events';
 	import type { WinLevel } from '../game/winLevelMap';
@@ -261,31 +259,35 @@
 		).length,
 	};
 
-	// Feature demos — full real books (same path as Storybook / live playBet)
-	const playPawBook = () =>
-		playMathBook(
-			pickBook(basePool, (b) => bookHas(b, 'pawCoinResolve'), 'Paw'),
-			'Paw book',
-			'BASE',
-		);
-
-	/** Forced row of one coin tier — same playBet path as Paw (spin → resolve → fly). */
-	const PAW_TIER_ROW: Record<1 | 2 | 3, SymbolName[]> = {
-		1: ['L1', 'P', 'L2', 'L3', 'L4'],
-		2: ['H1', 'P', 'H2', 'H3', 'H4'],
-		3: ['W', 'P', 'W', 'W', 'W'],
+	/**
+	 * Paw demos mirror real drops: random board, paw at a random cell, rows
+	 * converted per paw kind (PB 1 / PS 2 / PG 3, clamped to the board). The
+	 * paw cell itself pays nothing (coinTier 0); other cells take the tier of
+	 * the symbol underneath (lows x1, H3/H4 x2, H1/H2 x3).
+	 */
+	const PAW_DEMO_POOL: SymbolName[] = ['L1', 'L2', 'L3', 'L4', 'H1', 'H2', 'H3', 'H4'];
+	const PAW_DEMO_KIND = {
+		PB: { kind: 'bronze' as const, rowCount: 1 },
+		PS: { kind: 'silver' as const, rowCount: 2 },
+		PG: { kind: 'gold' as const, rowCount: 3 },
 	};
 
-	const pawCellSymbol = (name: SymbolName) =>
-		name === 'W' ? { name: 'W', wild: true, multiplier: 1 } : { name };
+	const pawDemoCoinTier = (name: SymbolName): 1 | 2 | 3 => {
+		if (name === 'H1' || name === 'H2') return 3;
+		if (name === 'H3' || name === 'H4') return 2;
+		return 1;
+	};
 
-	const buildPawTierBoard = (tier: 1 | 2 | 3) => {
-		const row0 = PAW_TIER_ROW[tier];
-		return Array.from({ length: BOARD_DIMENSIONS.x }, (_, reel) =>
-			Array.from({ length: BOARD_DIMENSIONS.y }, (_, row) =>
-				row === 0 ? pawCellSymbol(row0[reel]) : { name: 'L3' },
-			),
-		);
+	const pawDemoRows = (pawRow: number, rowCount: number): number[] => {
+		const maxRow = BOARD_DIMENSIONS.y - 1;
+		if (rowCount === 1) return [pawRow];
+		if (rowCount === 2) {
+			if (pawRow === 0) return [0, 1];
+			if (pawRow === maxRow) return [maxRow - 1, maxRow];
+			return Math.random() < 0.5 ? [pawRow - 1, pawRow] : [pawRow, pawRow + 1];
+		}
+		const start = Math.max(0, Math.min(pawRow - 1, BOARD_DIMENSIONS.y - 3));
+		return [start, start + 1, start + 2];
 	};
 
 	const playSyntheticPawBook = (label: string, visibleBoard: { name: string }[][], resolve: unknown) =>
@@ -315,30 +317,45 @@
 			} as Parameters<typeof playBet>[0]);
 		});
 
-	const playPawTierDrop = (tier: 1 | 2 | 3) => {
+	const playPawKindDrop = (paw: keyof typeof PAW_DEMO_KIND) => {
 		const unit = 100;
-		const win = tier * unit;
-		const names = PAW_TIER_ROW[tier];
-		const cells = names.map((from, reel) => ({
-			reel,
-			from,
-			coinTier: tier,
-			win,
+		const spec = PAW_DEMO_KIND[paw];
+		const pawReel = Math.floor(Math.random() * BOARD_DIMENSIONS.x);
+		const pawRow = Math.floor(Math.random() * BOARD_DIMENSIONS.y);
+		const rows = pawDemoRows(pawRow, spec.rowCount);
+
+		const randomCell = () => ({
+			name: PAW_DEMO_POOL[Math.floor(Math.random() * PAW_DEMO_POOL.length)],
+		});
+		const board = Array.from({ length: BOARD_DIMENSIONS.x }, (_, reel) =>
+			Array.from({ length: BOARD_DIMENSIONS.y }, (_, row) =>
+				reel === pawReel && row === pawRow ? { name: paw as SymbolName } : randomCell(),
+			),
+		);
+
+		// pawCoinResolve events carry PADDED rows (visible + 1), like the math
+		// emitter with include_padding — the overlay subtracts the pad back.
+		const ROW_PAD = 1;
+		const eventRows = rows.map((visibleRow) => ({
+			row: visibleRow + ROW_PAD,
+			cells: Array.from({ length: BOARD_DIMENSIONS.x }, (_, reel) => {
+				const isPaw = reel === pawReel && visibleRow === pawRow;
+				const from = board[reel][visibleRow].name;
+				const coinTier = (isPaw ? 0 : pawDemoCoinTier(from)) as 0 | 1 | 2 | 3;
+				return { reel, from, coinTier, win: isPaw ? 0 : coinTier * unit };
+			}),
 		}));
-		return playSyntheticPawBook(`Paw x${tier}`, buildPawTierBoard(tier), {
+		const total = eventRows.reduce(
+			(sum, r) => sum + r.cells.reduce((s, cell) => s + cell.win, 0),
+			0,
+		);
+		return playSyntheticPawBook(`Paw ${paw}`, board, {
 			type: 'pawCoinResolve',
-			paws: [{ reel: 1, row: 1 }],
-			rows: [{ row: 1, cells }],
-			totalCoinWin: win * cells.length,
+			paws: [{ reel: pawReel, row: pawRow + ROW_PAD, kind: spec.kind }],
+			rows: eventRows,
+			totalCoinWin: total,
 		});
 	};
-
-	const playPawMixedDrop = () =>
-		playSyntheticPawBook(
-			'Paw mixed',
-			PAW_DEMO_VISIBLE_BOARD.map((reel) => reel.map((cell) => ({ ...cell }))),
-			pawCoinResolveDemo,
-		);
 
 	const playSwBaseBook = () =>
 		playMathBook(
@@ -849,38 +866,6 @@
 				<div class="grid">
 					<button
 						type="button"
-						disabled={busy || counts.paw === 0}
-						title={`Full book with pawCoinResolve (${counts.paw})`}
-						onclick={playPawBook}
-					>
-						Paw ({counts.paw})
-					</button>
-					<button
-						type="button"
-						disabled={busy}
-						title="Full spin: whole row bronze x1, then fly to hat"
-						onclick={() => playPawTierDrop(1)}
-					>
-						Paw x1
-					</button>
-					<button
-						type="button"
-						disabled={busy}
-						title="Full spin: whole row silver x2, then fly to hat"
-						onclick={() => playPawTierDrop(2)}
-					>
-						Paw x2
-					</button>
-					<button
-						type="button"
-						disabled={busy}
-						title="Full spin: whole row gold x3, then fly to hat"
-						onclick={() => playPawTierDrop(3)}
-					>
-						Paw x3
-					</button>
-					<button
-						type="button"
 						disabled={busy || counts.swBase === 0}
 						title={`Base SW expand, no FS (${counts.swBase})`}
 						onclick={playSwBaseBook}
@@ -972,39 +957,31 @@
 
 			<section>
 				<h4>Paw Coins</h4>
-				<p class="subhint">Same path as Paw — spin, land the row, fly to hat. x1 bronze / x2 silver / x3 gold.</p>
+				<p class="subhint">Random board each click — paw lands on a random cell, converts its rows (PB 1 / PS 2 / PG 3), coins fly to the hat. Tier per symbol: lows x1, H3/H4 x2, H1/H2 x3.</p>
 				<div class="grid">
 					<button
 						type="button"
 						disabled={busy}
-						title="Full spin: all five coins bronze x1"
-						onclick={() => playPawTierDrop(1)}
+						title="Bronze paw: random drop, converts 1 row"
+						onclick={() => playPawKindDrop('PB')}
 					>
-						x1
+						PB · 1 row
 					</button>
 					<button
 						type="button"
 						disabled={busy}
-						title="Full spin: all five coins silver x2"
-						onclick={() => playPawTierDrop(2)}
+						title="Silver paw: random drop, converts 2 rows"
+						onclick={() => playPawKindDrop('PS')}
 					>
-						x2
+						PS · 2 rows
 					</button>
 					<button
 						type="button"
 						disabled={busy}
-						title="Full spin: all five coins gold x3"
-						onclick={() => playPawTierDrop(3)}
+						title="Gold paw: random drop, converts 3 rows"
+						onclick={() => playPawKindDrop('PG')}
 					>
-						x3
-					</button>
-					<button
-						type="button"
-						disabled={busy}
-						title="Full spin: mixed row x1 + x2 + x3"
-						onclick={playPawMixedDrop}
-					>
-						All
+						PG · 3 rows
 					</button>
 				</div>
 			</section>

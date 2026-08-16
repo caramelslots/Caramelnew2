@@ -9,6 +9,9 @@ from src.calculations.statistics import get_random_outcome
 
 LOW = {"L1", "L2", "L3", "L4"}
 HIGH = {"H1", "H2", "H3", "H4"}
+# Paw coins (rework): single P replaced by three tiered paw-coin symbols.
+PAW_SYMBOLS = {"PB", "PS", "PG"}
+PAW_KIND = {"PB": "bronze", "PS": "silver", "PG": "gold"}
 
 
 def _sym_name(cell) -> str:
@@ -36,7 +39,7 @@ def find_symbols(board, names: set[str]) -> list[dict]:
 
 
 def find_paws(board) -> list[dict]:
-    return find_symbols(board, {"P"})
+    return find_symbols(board, PAW_SYMBOLS)
 
 
 def find_super_wilds(board) -> list[dict]:
@@ -48,13 +51,46 @@ def find_bullets(board) -> list[dict]:
 
 
 def coin_tier_for(symbol_name: str) -> int:
-    if symbol_name in LOW or symbol_name == "P":
+    """Coin multiplier for the symbol under a coin. Paw coins themselves pay 0."""
+    if symbol_name in PAW_SYMBOLS:
+        return 0
+    if symbol_name in LOW:
         return 1
-    if symbol_name in HIGH:
+    if symbol_name in {"H4", "H3"}:
         return 2
-    if symbol_name in {"W", "SW", "B"}:
+    if symbol_name in {"H2", "H1", "B", "W", "SW"}:
         return 3
     return 1
+
+
+def paw_target_rows(paw: dict, num_rows: int) -> list[int]:
+    """Rows converted by one paw coin.
+
+    PB: paw row only. PS: paw row + one valid neighbour (edge → the only
+    option; both available → deterministic per position so visual-enrich
+    fingerprints stay reproducible). PG: paw row + above + below, shifted
+    inward at edges (row 0 → 0,1,2; last row → n-3..n-1).
+    """
+    row = int(paw["row"])
+    if paw.get("name") == "PS":
+        above, below = row - 1, row + 1
+        if above < 0:
+            nxt = below
+        elif below >= num_rows:
+            nxt = above
+        else:
+            nxt = above if (int(paw["reel"]) * 31 + row * 7) % 2 == 0 else below
+        return sorted({row, nxt})
+    if paw.get("name") == "PG":
+        rows = sorted({row - 1, row, row + 1} & set(range(num_rows)))
+        target = min(3, num_rows)
+        while len(rows) < target:
+            if rows[0] > 0:
+                rows.insert(0, rows[0] - 1)
+            else:
+                rows.append(rows[-1] + 1)
+        return rows
+    return [row]
 
 
 def sw_positions_in_wins(sw_hits: list[dict], win_data: dict) -> set[tuple[int, int]]:
@@ -84,24 +120,37 @@ def resolve_xor(
 
 
 def build_paw_resolve(board, bet: float = 1.0) -> tuple[list[dict], list[dict], float]:
-    """Build pawCoinResolve payload from board. Returns (paws, rows, total_win)."""
+    """Build pawCoinResolve payload from board. Returns (paws, rows, total_win).
+
+    Rows come from paw types (PB 1 / PS 2 / PG 3, union across paws). The paw
+    cell itself is emitted with coinTier 0 / win 0 — the paw coin never pays.
+    """
     paws = find_paws(board)
     if not paws:
         return [], [], 0.0
 
-    rows_to_convert = sorted({p["row"] for p in paws})
+    num_rows = len(board[0]) if board else 0
+    paw_positions = {(p["reel"], p["row"]) for p in paws}
+    rows_to_convert = sorted({r for p in paws for r in paw_target_rows(p, num_rows)})
     rows_payload = []
     total = 0.0
     for row in rows_to_convert:
         cells = []
         for reel in range(len(board)):
             name = _sym_name(board[reel][row])
+            if (reel, row) in paw_positions:
+                cells.append({"reel": reel, "from": name, "coinTier": 0, "win": 0.0})
+                continue
             tier = coin_tier_for(name)
             win = float(tier) * bet
             total += win
             cells.append({"reel": reel, "from": name, "coinTier": tier, "win": win})
         rows_payload.append({"row": row, "cells": cells})
-    return [{"reel": p["reel"], "row": p["row"]} for p in paws], rows_payload, total
+    paws_payload = [
+        {"reel": p["reel"], "row": p["row"], "kind": PAW_KIND.get(p["name"], "bronze")}
+        for p in paws
+    ]
+    return paws_payload, rows_payload, total
 
 
 def expand_sw_columns(board, create_symbol, sw_hits: list[dict]) -> tuple[list[dict], int]:

@@ -3,6 +3,7 @@
 
 	import SymbolSpine from './SymbolSpine.svelte';
 	import SymbolSprite from './SymbolSprite.svelte';
+	import SymbolCoinPaw from './SymbolCoinPaw.svelte';
 	import SymbolMysterySprite from './SymbolMysterySprite.svelte';
 	import SymbolPlaceholder from './SymbolPlaceholder.svelte';
 	import { getSymbolInfo } from '../game/utils';
@@ -23,6 +24,7 @@
 	const context = getContext();
 	const symbolInfo = $derived(getSymbolInfo({ rawSymbol: props.rawSymbol, state: props.state }));
 	const isSprite = $derived(symbolInfo.type === 'sprite');
+	const isCoinPaw = $derived(symbolInfo.type === 'coinPaw');
 	const isMysterySprite = $derived(symbolInfo.type === 'mysterySprite');
 	const isPlaceholder = $derived(symbolInfo.type === 'placeholder');
 	// Payframe glow overlay rendered around win symbols. Lives at the
@@ -35,7 +37,7 @@
 	// celebrate spine — the payframe overlay would stack on top of that art.
 	const showWinFrame = $derived(
 		props.state === 'win' &&
-			!['B', 'M', 'W', 'SW', 'P', 'BT', 'H1', 'H3', 'H4', 'L1', 'L2', 'L3', 'L4'].includes(
+			!['B', 'M', 'W', 'SW', 'PB', 'PS', 'PG', 'BT', 'H1', 'H3', 'H4', 'L1', 'L2', 'L3', 'L4'].includes(
 				props.rawSymbol.name,
 			),
 	);
@@ -45,6 +47,15 @@
 	<SymbolPlaceholder {symbolInfo} x={props.x} y={props.y} oncomplete={props.oncomplete} />
 {:else if isMysterySprite}
 	<SymbolMysterySprite {symbolInfo} x={props.x} y={props.y} oncomplete={props.oncomplete} />
+{:else if isCoinPaw && 'skin' in symbolInfo}
+	<SymbolCoinPaw
+		x={props.x}
+		y={props.y}
+		skin={symbolInfo.skin}
+		clip={symbolInfo.clip}
+		sizeRatio={symbolInfo.sizeRatios.width}
+		oncomplete={props.oncomplete}
+	/>
 {:else if isSprite}
 	<SymbolSprite {symbolInfo} x={props.x} y={props.y} oncomplete={props.oncomplete} />
 {:else}
@@ -71,18 +82,7 @@
 	</SpineProvider>
 {/if}
 
-{#if props.rawSymbol.name === 'P'}
-	<BitmapText
-		anchor={0.5}
-		x={props.x}
-		y={(props.y ?? 0) + SYMBOL_SIZE * 0.28}
-		text="PAW"
-		style={{
-			fontFamily: FONT_PROSTOI,
-			fontSize: 28 * BITMAP_FONT_SCALE,
-		}}
-	/>
-{:else if props.rawSymbol.multiplier && props.rawSymbol.name !== 'W'}
+{#if props.rawSymbol.multiplier && props.rawSymbol.name !== 'W'}
 	<BitmapText
 		anchor={0.5}
 		x={props.x}

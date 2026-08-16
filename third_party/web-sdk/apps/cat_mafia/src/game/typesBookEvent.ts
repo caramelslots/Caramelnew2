@@ -126,11 +126,13 @@ type BookEventMysteryReveal = {
 	positions: Position[];
 };
 
-/** Cat Mafia: Paw converts its row into coins (XOR with superWildExpand). */
+/** Cat Mafia: Paw coin converts its row(s) into coins (XOR with superWildExpand).
+ *  PB (bronze) → 1 row, PS (silver) → 2 rows, PG (gold) → 3 rows.
+ *  The paw cell itself is emitted with coinTier 0 / win 0 — it never pays. */
 export type BookEventPawCoinResolve = {
 	index: number;
 	type: 'pawCoinResolve';
-	paws: Position[];
+	paws: (Position & { kind?: 'bronze' | 'silver' | 'gold' })[];
 	rows: {
 		row: number;
 		cells: {
