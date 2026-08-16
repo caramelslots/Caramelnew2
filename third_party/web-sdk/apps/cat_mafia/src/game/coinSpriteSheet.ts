@@ -96,6 +96,7 @@ export const drawCoinPawFrame = (
 	frameName: string,
 	destW: number,
 	destH: number,
+	alpha = 1,
 ) => {
 	const frame = sheet.frames[frameName];
 	if (!frame) return;
@@ -105,9 +106,10 @@ export const drawCoinPawFrame = (
 	const padY = (destH - innerH) / 2;
 	const scaleX = innerW / COIN_PAW_CONTENT.w;
 	const scaleY = innerH / COIN_PAW_CONTENT.h;
-	ctx.clearRect(0, 0, destW, destH);
+	if (alpha >= 1) ctx.clearRect(0, 0, destW, destH);
 	// Bake used SpinePlayer scaleY = -1 (canvas Y-down). Flip back so paw / x read upright.
 	ctx.save();
+	ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
 	ctx.translate(0, destH);
 	ctx.scale(1, -1);
 	ctx.drawImage(

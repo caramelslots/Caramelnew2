@@ -46,7 +46,9 @@
 	import bonusBoostBooks from '../stories/data/books_bonus_boost';
 	import bonusSuperBooks from '../stories/data/books_bonus_super';
 	import {
+		PAW_DEMO_VISIBLE_BOARD,
 		SW_DEMO_VISIBLE_BOARD,
+		pawCoinResolveDemo,
 		superWildExpandDemo,
 	} from '../stories/data/catmafia_events';
 	import type { WinLevel } from '../game/winLevelMap';
@@ -222,23 +224,6 @@
 		return matches[Math.floor(Math.random() * matches.length)];
 	};
 
-	const playPawCoinPreview = (tiers: Array<1 | 2 | 3>) => {
-		const current = devPreview.pawCoins;
-		const same =
-			current !== null &&
-			current.tiers.length === tiers.length &&
-			current.tiers.every((tier, i) => tier === tiers[i]);
-		devPreview.pawCoins = {
-			tiers,
-			nonce: same ? current.nonce + 1 : 0,
-		};
-		stateGame.pawCoinFlying = false;
-	};
-
-	const closePawCoinPreview = () => {
-		devPreview.pawCoins = null;
-	};
-
 	const playMathBook = (book: MathBook | null, label: string, modeKey?: BetModeKey) =>
 		guard(async () => {
 			if (!book) return;
@@ -282,6 +267,77 @@
 			pickBook(basePool, (b) => bookHas(b, 'pawCoinResolve'), 'Paw'),
 			'Paw book',
 			'BASE',
+		);
+
+	/** Forced row of one coin tier — same playBet path as Paw (spin → resolve → fly). */
+	const PAW_TIER_ROW: Record<1 | 2 | 3, SymbolName[]> = {
+		1: ['L1', 'P', 'L2', 'L3', 'L4'],
+		2: ['H1', 'P', 'H2', 'H3', 'H4'],
+		3: ['W', 'P', 'W', 'W', 'W'],
+	};
+
+	const pawCellSymbol = (name: SymbolName) =>
+		name === 'W' ? { name: 'W', wild: true, multiplier: 1 } : { name };
+
+	const buildPawTierBoard = (tier: 1 | 2 | 3) => {
+		const row0 = PAW_TIER_ROW[tier];
+		return Array.from({ length: BOARD_DIMENSIONS.x }, (_, reel) =>
+			Array.from({ length: BOARD_DIMENSIONS.y }, (_, row) =>
+				row === 0 ? pawCellSymbol(row0[reel]) : { name: 'L3' },
+			),
+		);
+	};
+
+	const playSyntheticPawBook = (label: string, visibleBoard: { name: string }[][], resolve: unknown) =>
+		guard(async () => {
+			devPreview.pawCoins = null;
+			applyBetMode('BASE');
+			stateGame.gameType = 'basegame';
+			stateGame.stickySwByReel = {};
+			stateGame.stickySwOpened = false;
+			stateGame.bonusMode = null;
+			const resolveEvent = asEvent(resolve);
+			const total =
+				resolveEvent.type === 'pawCoinResolve' ? resolveEvent.totalCoinWin : 0;
+			const events = [
+				reveal(visibleBoard),
+				resolveEvent,
+				asEvent({ type: 'setTotalWin', amount: total }),
+				asEvent({ type: 'finalWin', amount: total }),
+			];
+			// eslint-disable-next-line no-console
+			console.log(`[DEV] ${label} totalCoinWin=${total}`);
+			await playBet({
+				id: -1,
+				payoutMultiplier: total,
+				events,
+				state: events,
+			} as Parameters<typeof playBet>[0]);
+		});
+
+	const playPawTierDrop = (tier: 1 | 2 | 3) => {
+		const unit = 100;
+		const win = tier * unit;
+		const names = PAW_TIER_ROW[tier];
+		const cells = names.map((from, reel) => ({
+			reel,
+			from,
+			coinTier: tier,
+			win,
+		}));
+		return playSyntheticPawBook(`Paw x${tier}`, buildPawTierBoard(tier), {
+			type: 'pawCoinResolve',
+			paws: [{ reel: 1, row: 1 }],
+			rows: [{ row: 1, cells }],
+			totalCoinWin: win * cells.length,
+		});
+	};
+
+	const playPawMixedDrop = () =>
+		playSyntheticPawBook(
+			'Paw mixed',
+			PAW_DEMO_VISIBLE_BOARD.map((reel) => reel.map((cell) => ({ ...cell }))),
+			pawCoinResolveDemo,
 		);
 
 	const playSwBaseBook = () =>
@@ -801,6 +857,30 @@
 					</button>
 					<button
 						type="button"
+						disabled={busy}
+						title="Full spin: whole row bronze x1, then fly to hat"
+						onclick={() => playPawTierDrop(1)}
+					>
+						Paw x1
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="Full spin: whole row silver x2, then fly to hat"
+						onclick={() => playPawTierDrop(2)}
+					>
+						Paw x2
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="Full spin: whole row gold x3, then fly to hat"
+						onclick={() => playPawTierDrop(3)}
+					>
+						Paw x3
+					</button>
+					<button
+						type="button"
 						disabled={busy || counts.swBase === 0}
 						title={`Base SW expand, no FS (${counts.swBase})`}
 						onclick={playSwBaseBook}
@@ -892,50 +972,39 @@
 
 			<section>
 				<h4>Paw Coins</h4>
-				<p class="subhint">Designer coins on the board — x1 bronze, x2 silver, x3 gold. Re-click to replay.</p>
+				<p class="subhint">Same path as Paw — spin, land the row, fly to hat. x1 bronze / x2 silver / x3 gold.</p>
 				<div class="grid">
 					<button
 						type="button"
-						class:active={devPreview.pawCoins?.tiers.length === 1 &&
-							devPreview.pawCoins.tiers[0] === 1}
-						title="Bronze coin · x1"
-						onclick={() => playPawCoinPreview([1])}
+						disabled={busy}
+						title="Full spin: all five coins bronze x1"
+						onclick={() => playPawTierDrop(1)}
 					>
 						x1
 					</button>
 					<button
 						type="button"
-						class:active={devPreview.pawCoins?.tiers.length === 1 &&
-							devPreview.pawCoins.tiers[0] === 2}
-						title="Silver coin · x2"
-						onclick={() => playPawCoinPreview([2])}
+						disabled={busy}
+						title="Full spin: all five coins silver x2"
+						onclick={() => playPawTierDrop(2)}
 					>
 						x2
 					</button>
 					<button
 						type="button"
-						class:active={devPreview.pawCoins?.tiers.length === 1 &&
-							devPreview.pawCoins.tiers[0] === 3}
-						title="Gold coin · x3"
-						onclick={() => playPawCoinPreview([3])}
+						disabled={busy}
+						title="Full spin: all five coins gold x3"
+						onclick={() => playPawTierDrop(3)}
 					>
 						x3
 					</button>
 					<button
 						type="button"
-						class:active={devPreview.pawCoins?.tiers.length === 3}
-						title="All three tiers on one row"
-						onclick={() => playPawCoinPreview([1, 2, 3])}
+						disabled={busy}
+						title="Full spin: mixed row x1 + x2 + x3"
+						onclick={playPawMixedDrop}
 					>
 						All
-					</button>
-					<button
-						type="button"
-						class:active={devPreview.pawCoins === null}
-						title="Hide pinned paw coins"
-						onclick={closePawCoinPreview}
-					>
-						Close
 					</button>
 				</div>
 			</section>

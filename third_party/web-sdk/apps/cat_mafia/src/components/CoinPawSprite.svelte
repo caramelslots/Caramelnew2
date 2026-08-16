@@ -56,14 +56,18 @@
 			return sheet.animations[`${skinName}_appear`] ?? [];
 		};
 
-		const paint = () => {
-			const names = frameNames(mode);
-			const frameName = names[index] ?? names[0];
-			if (!frameName || !sheet) return;
+		const paint = (fromName: string, toName?: string, mix = 0) => {
+			if (!sheet) return;
 			const { w, h } = fitCanvas(el);
 			const ctx = el.getContext('2d');
 			if (!ctx) return;
-			drawCoinPawFrame(ctx, sheet, frameName, w, h);
+			ctx.clearRect(0, 0, w, h);
+			if (!toName || mix <= 0) {
+				drawCoinPawFrame(ctx, sheet, fromName, w, h);
+				return;
+			}
+			drawCoinPawFrame(ctx, sheet, fromName, w, h, 1 - mix);
+			drawCoinPawFrame(ctx, sheet, toName, w, h, mix);
 		};
 
 		const tick = (now: number) => {
@@ -71,7 +75,8 @@
 			const dt = (now - last) * playback;
 			last = now;
 			if (mode === 'hold') {
-				paint();
+				const hold = frameNames('hold')[0];
+				if (hold) paint(hold);
 				raf = requestAnimationFrame(tick);
 				return;
 			}
@@ -81,13 +86,20 @@
 			while (acc >= step && names.length > 0) {
 				acc -= step;
 				index += 1;
-				if (index >= names.length) {
+				if (index >= names.length - 1) {
 					mode = 'hold';
 					index = 0;
 					break;
 				}
 			}
-			paint();
+			if (mode === 'hold') {
+				const hold = frameNames('hold')[0];
+				if (hold) paint(hold);
+			} else if (names.length > 0) {
+				const from = names[index] ?? names[0];
+				const to = names[index + 1] ?? from;
+				paint(from, to, Math.min(1, acc / step));
+			}
 			raf = requestAnimationFrame(tick);
 		};
 
@@ -95,7 +107,8 @@
 			if (cancelled) return;
 			sheet = loaded;
 			last = performance.now();
-			paint();
+			const first = frameNames('appear')[0] ?? frameNames('hold')[0];
+			if (first) paint(first);
 			raf = requestAnimationFrame(tick);
 		});
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	/**
-	 * Paw → coins: designer Spine clip (baked) on the row, then fly into the hat.
+	 * Paw → coins: designer clip on the row, then one continuous fly into the hat.
 	 */
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
@@ -59,8 +59,28 @@
 	const flying = $derived(previewCells.length > 0 ? false : context.stateGame.pawCoinFlying);
 	const previewNonce = $derived(devPreview.pawCoins?.nonce ?? 0);
 	const speedMult = $derived(gameSpeedMultFor(context.stateGame.gameSpeed));
-	const flyDurationS = $derived(MASCOT_COIN_FLY_DURATION_MS / 1000 / speedMult);
-	const flyStaggerS = $derived(MASCOT_COIN_FLY_STAGGER_MS / 1000 / speedMult);
+	const flyDurationMs = $derived(MASCOT_COIN_FLY_DURATION_MS / speedMult);
+	const flyStaggerMs = $derived(MASCOT_COIN_FLY_STAGGER_MS / speedMult);
+
+	let flyNow = $state(0);
+	let flyOrigin = $state<number | null>(null);
+
+	$effect(() => {
+		if (!flying) {
+			flyOrigin = null;
+			return;
+		}
+		const origin = performance.now();
+		flyOrigin = origin;
+		flyNow = origin;
+		let raf = 0;
+		const tick = (now: number) => {
+			flyNow = now;
+			raf = requestAnimationFrame(tick);
+		};
+		raf = requestAnimationFrame(tick);
+		return () => cancelAnimationFrame(raf);
+	});
 
 	const layout = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
@@ -98,6 +118,15 @@
 		};
 	});
 
+	const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
+	const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2);
+	const easeIn = (t: number) => t * t;
+
+	const flyProgress = (index: number) => {
+		if (flyOrigin === null) return 0;
+		return clamp01((flyNow - flyOrigin - index * flyStaggerMs) / flyDurationMs);
+	};
+
 	const cellStyle = (reel: number, paddedRow: number, index: number) => {
 		const o = layout;
 		const visibleRow = paddedRow - 1;
@@ -110,31 +139,36 @@
 		const dy = o.hatY - startCy;
 		const arcX = dx * 0.55;
 		const arcY = dy * 0.4 - Math.min(72, Math.abs(dy) * 0.18);
-		const delay = index * flyStaggerS;
-		return [
+
+		const parts = [
 			`left:${left}px`,
 			`top:${top}px`,
 			`width:${size}px`,
 			`height:${size}px`,
-			`--dx:${dx}px`,
-			`--dy:${dy}px`,
-			`--arc-x:${arcX}px`,
-			`--arc-y:${arcY}px`,
-			`--fly-delay:${delay}s`,
-			`--fly-duration:${flyDurationS}s`,
-		].join(';');
+		];
+
+		if (!flying) return parts.join(';');
+
+		const t = flyProgress(index);
+		const p = easeInOut(t);
+		const u = 1 - p;
+		const x = 2 * u * p * arcX + p * p * dx;
+		const y = 2 * u * p * arcY + p * p * dy;
+		const scale = 1 - easeIn(t) * 0.88;
+		const rotate = t * 360;
+		const opacity = t < 0.82 ? 1 : 1 - (t - 0.82) / 0.18;
+		parts.push(
+			`z-index:49`,
+			`opacity:${opacity}`,
+			`transform:translate(${x}px,${y}px) scale(${scale}) rotate(${rotate}deg)`,
+		);
+		return parts.join(';');
 	};
 </script>
 
 {#if show && showMascotLayout && cells.length > 0}
 	{#each cells as c, i (`${c.reel}:${c.row}:${c.tier}:${previewNonce}`)}
-		{@const shouldFly = flying && c.tier > 0}
-		<div
-			class="coin-cell"
-			class:flying={shouldFly}
-			class:fade-out={flying && c.tier === 0}
-			style={cellStyle(c.reel, c.row, i)}
-		>
+		<div class="coin-cell" style={cellStyle(c.reel, c.row, i)}>
 			<CoinPawSprite tier={c.tier > 0 ? c.tier : 1} speed={speedMult} />
 		</div>
 	{/each}
@@ -147,40 +181,7 @@
 		z-index: 48;
 		pointer-events: none;
 		overflow: visible;
-	}
-
-	.coin-cell.flying {
-		animation: coin-fly-to-hat var(--fly-duration, 0.55s) cubic-bezier(0.33, 0.1, 0.25, 1)
-			var(--fly-delay, 0s) both;
-		z-index: 49;
-	}
-
-	.coin-cell.fade-out {
-		animation: coin-fade 0.35s ease-out forwards;
-	}
-
-	@keyframes coin-fly-to-hat {
-		0% {
-			transform: translate(0, 0) scale(1) rotate(0deg);
-			opacity: 1;
-		}
-		55% {
-			transform: translate(var(--arc-x), var(--arc-y)) scale(0.62) rotate(120deg);
-			opacity: 1;
-		}
-		88% {
-			opacity: 1;
-		}
-		100% {
-			transform: translate(var(--dx), var(--dy)) scale(0.14) rotate(240deg);
-			opacity: 0;
-		}
-	}
-
-	@keyframes coin-fade {
-		to {
-			opacity: 0;
-			transform: scale(0.6);
-		}
+		transform-origin: center center;
+		will-change: transform, opacity;
 	}
 </style>

@@ -6,7 +6,7 @@ Modes: base (1×), bonus_boost (2×), bonus_normal (100× buy), bonus_super (200
 
 Features
 --------
-- Paw (P): base only — converts row to coins (Low×1 / High×2 / W|B×3 / P=0)
+- Paw (P): base only — converts row to coins (Low×1 / High×2 / W|B×3 / P×1)
 - Super Wild (SW): ×2/×4/×6/×8 column expand; XOR with Paw
 - FS target pick: 6 targets → 8/10/12 FS (predetermined)
 - Bullets (BT): main FS only → drum max 6 → targetShootRound → optional +FS

@@ -48,14 +48,12 @@ def find_bullets(board) -> list[dict]:
 
 
 def coin_tier_for(symbol_name: str) -> int:
-    if symbol_name in LOW:
+    if symbol_name in LOW or symbol_name == "P":
         return 1
     if symbol_name in HIGH:
         return 2
     if symbol_name in {"W", "SW", "B"}:
         return 3
-    if symbol_name == "P":
-        return 0
     return 1
 
 

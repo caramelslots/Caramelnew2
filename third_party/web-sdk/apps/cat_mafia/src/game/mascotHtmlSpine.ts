@@ -42,15 +42,15 @@ export type MascotScreenBox = {
  * Natural 1× Spine playback — no extra speed-up or clip shortening.
  */
 export const MASCOT_HAT_CATCH_BEFORE_COINS_MS = 1950;
-/** CSS fly duration — keep in sync with `PawCoinOverlay` keyframes. */
-export const MASCOT_COIN_FLY_DURATION_MS = 550;
+/** CSS fly duration — keep in sync with `PawCoinOverlay` (one full turn). */
+export const MASCOT_COIN_FLY_DURATION_MS = 780;
 /** Stagger between successive coins (ms). */
-export const MASCOT_COIN_FLY_STAGGER_MS = 60;
+export const MASCOT_COIN_FLY_STAGGER_MS = 70;
 /**
  * Wall-clock wait after launching coins (fly + stagger for a full row + settle
  * into the shake / hold pose before hat-on reverse).
  */
-export const MASCOT_COIN_FLY_WAIT_MS = 800;
+export const MASCOT_COIN_FLY_WAIT_MS = 1150;
 /** Reverse idle3 put-on (~clip length 2.57s). */
 export const MASCOT_HAT_ON_MS = 2600;
 

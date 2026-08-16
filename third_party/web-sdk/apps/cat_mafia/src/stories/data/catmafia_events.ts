@@ -28,7 +28,7 @@ export const SW_DEMO_VISIBLE_BOARD = [
 	[{ name: 'H2' }, { name: 'L1' }, { name: 'L2' }, { name: 'H3' }],
 ] as const;
 
-/** betAmount=10 → Low×1 + Paw×0 + High×2 + Low×1 + Wild×3 = 70 */
+/** betAmount=10 → Low×1 + Paw×1 + High×2 + Low×1 + Wild×3 = 80 */
 export const pawCoinResolveDemo = {
 	type: 'pawCoinResolve',
 	paws: [{ reel: 1, row: 1 }],
@@ -37,14 +37,14 @@ export const pawCoinResolveDemo = {
 			row: 1,
 			cells: [
 				{ reel: 0, from: 'L1', coinTier: 1, win: 10 },
-				{ reel: 1, from: 'P', coinTier: 0, win: 0 },
+				{ reel: 1, from: 'P', coinTier: 1, win: 10 },
 				{ reel: 2, from: 'H1', coinTier: 2, win: 20 },
 				{ reel: 3, from: 'L2', coinTier: 1, win: 10 },
 				{ reel: 4, from: 'W', coinTier: 3, win: 30 },
 			],
 		},
 	],
-	totalCoinWin: 70,
+	totalCoinWin: 80,
 } satisfies Omit<BookEventPawCoinResolve, 'index'>;
 
 export const superWildExpandDemo = {
