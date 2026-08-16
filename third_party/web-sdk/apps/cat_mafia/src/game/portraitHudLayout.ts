@@ -38,11 +38,22 @@ export const portraitBuyPanelHeightCanvas = (layoutDerived: LayoutDerived) => {
 	return panelWCanvas * PORTRAIT_UI_LAYOUT.buyPanelAspect;
 };
 
-/** Board bottom in game-layout local Y (same space as UiCashStacksPortraitLayout). */
-export const portraitBoardBottomLocal = (layoutDerived: LayoutDerived) => {
+/**
+ * Board offset the portrait HUD is anchored to — frozen at the pre-lift value
+ * so raising the board via BOARD_LAYOUT_OFFSETS.portrait.y lifts only the
+ * board assembly; Buy Bonus / WIN / spin cluster / mascot keep their places.
+ */
+export const PORTRAIT_HUD_BOARD_OFFSET_Y = -222;
+
+/**
+ * Board-bottom local Y used as the portrait HUD anchor (same space as
+ * UiCashStacksPortraitLayout). NOT the live board bottom — see above.
+ */
+export const portraitHudBoardBottomLocal = (layoutDerived: LayoutDerived) => {
 	const layoutType = layoutDerived.layoutType();
 	const ml = layoutDerived.mainLayout();
 	const off = BOARD_LAYOUT_OFFSETS[layoutType] ?? { x: 0, y: 0 };
+	const offsetY = layoutType === 'portrait' ? PORTRAIT_HUD_BOARD_OFFSET_Y : off.y;
 	const halfH =
 		layoutType === 'portrait'
 			? (getPortraitParchmentSize().height / 2) *
@@ -52,13 +63,13 @@ export const portraitBoardBottomLocal = (layoutDerived: LayoutDerived) => {
 						getPortraitDeviceWidth(layoutDerived.canvasSizes()),
 					)
 			: BOARD_SIZES.height / 2;
-	return ml.height * 0.5 + off.y + halfH;
+	return ml.height * 0.5 + offsetY + halfH;
 };
 
-/** WIN label Y — vertically centred between board bottom and buy/boost panel top. */
+/** WIN label Y — centred between the HUD board anchor and buy/boost panel top. */
 export const portraitWinHudLocalY = (layoutDerived: LayoutDerived) => {
 	const H = layoutDerived.mainLayout().height;
-	const boardBottom = portraitBoardBottomLocal(layoutDerived);
+	const boardBottom = portraitHudBoardBottomLocal(layoutDerived);
 	const buyPanelGap = portraitScaleY(PORTRAIT_UI_LAYOUT.buyPanelBelowBoard, H);
 	const winNudge = portraitScaleY(PORTRAIT_UI_LAYOUT.winNudgeDown, H);
 	return boardBottom + buyPanelGap / 2 + winNudge;
@@ -207,7 +218,7 @@ export const portraitRefXToLocal = (refPx: number, layoutDerived: LayoutDerived)
 export const portraitBuyPanelCanvasTop = (layoutDerived: LayoutDerived) => {
 	const ml = layoutDerived.mainLayout();
 	const H = ml.height;
-	const boardBottomLocal = portraitBoardBottomLocal(layoutDerived);
+	const boardBottomLocal = portraitHudBoardBottomLocal(layoutDerived);
 	const buyPanelTopLocal =
 		boardBottomLocal + portraitScaleY(PORTRAIT_UI_LAYOUT.buyPanelBelowBoard, H);
 	return portraitLocalToCanvasY(buyPanelTopLocal, layoutDerived);

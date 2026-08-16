@@ -223,6 +223,9 @@ export const IDLE_BOUNCE = {
 	fallMs: 480,
 } as const;
 
+/** Soft vertical fade at the visible grid edges (symbols + reel VFX). */
+export const BOARD_MASK_FEATHER = 20;
+
 /**
  * Extra mask coverage above the grid while win symbols bounce — see
  * BoardMask.svelte (`winSpotlightActive`).
@@ -230,9 +233,19 @@ export const IDLE_BOUNCE = {
 export const BOARD_MASK_WIN_BOUNCE_TOP =
 	WIN_BOUNCE.yOffsetPeakPx + Math.ceil(((WIN_BOUNCE.scalePeak - 1) * SYMBOL_SIZE) / 2);
 
-/** Extra mask above the grid while idle-tease symbols pop — see BoardMask.svelte. */
+/**
+ * Extra mask above the grid while idle-tease symbols pop — see BoardMask.svelte.
+ * The rise tween uses backOut easing, which overshoots its target by ~10%
+ * (svelte/easing backOut, s = 1.70158) — the peak lift/scale both include it.
+ * BOARD_MASK_FEATHER is added so the symbol at peak still sits inside the
+ * mask's full-alpha zone (the fade occupies the outermost feather px).
+ */
+const BACKOUT_OVERSHOOT = 1.1;
 export const BOARD_MASK_IDLE_BOUNCE_TOP =
-	IDLE_BOUNCE.yOffsetPeakPx + Math.ceil(((IDLE_BOUNCE.scalePeak - 1) * SYMBOL_SIZE) / 2) + 6;
+	BOARD_MASK_FEATHER +
+	Math.ceil(IDLE_BOUNCE.yOffsetPeakPx * BACKOUT_OVERSHOOT) +
+	Math.ceil(((IDLE_BOUNCE.scalePeak - 1) * BACKOUT_OVERSHOOT * SYMBOL_SIZE) / 2) +
+	2;
 
 /**
  * Extra mask coverage (px) beyond the visible board grid.
@@ -246,9 +259,6 @@ export const BOARD_MASK_OVERFLOW = { top: 24, bottom: 24 } as const;
  * Mask runway while reels scroll — see BoardMask.svelte (`boardReelsActive`).
  */
 export const BOARD_MASK_SPIN_OVERFLOW = { top: 24, bottom: 24 } as const;
-
-/** Soft vertical fade at the visible grid edges (symbols + reel VFX). */
-export const BOARD_MASK_FEATHER = 20;
 
 export const BACKGROUND_RATIO = 2039 / 1000;
 export const PORTRAIT_BACKGROUND_RATIO = 1242 / 2208;
@@ -475,7 +485,15 @@ export const BOARD_LAYOUT_OFFSETS = {
 	desktop: { x: -20, y: -36 },
 	tablet: { x: -16, y: -26 },
 	landscape: { x: -12, y: -4 },
-	portrait: { x: -14, y: -222 },
+	/**
+	 * Portrait x = 0: board is near full-width on phones, any shift reads as
+	 * uneven side margins. y is lifted 60 design px (~28 px on screen) above the
+	 * HUD anchor — portraitHudLayout freezes Buy Bonus / WIN / spin / mascot at
+	 * the pre-lift offset (-222), so only the board assembly (desk, frame,
+	 * reels, overlays) rises. Short height-limited phone viewports already run
+	 * the desk close to the top edge — test before lifting further.
+	 */
+	portrait: { x: 0, y: -282 },
 } as const;
 
 /**
@@ -528,19 +546,14 @@ export const STAKE_EMBED_VIEWPORTS = {
 } as const;
 
 /**
- * Portrait phone board scale (uniform — board + bonus bar scale together).
- * Tiers by short edge: S ≤374 (320) · M 375–424 (375) · L ≥425 (425).
+ * Phone portrait only: parchment board width as a fraction of the screen's
+ * short edge (uniform — board + bonus bar scale together). Continuous, so
+ * every phone width gets the same relative board size (no S/M/L tier jumps).
+ * The full desk artwork is ~1.154× wider than the parchment
+ * (DESK_PARCHMENT.widthFrac), so keep this ≤ ~0.866 to avoid bleeding off
+ * the screen edges; 0.87 lands the desk at ~100% edge-to-edge.
  */
-export const PORTRAIT_PHONE_BOARD_SCALE = {
-	small: 0.72,
-	medium: 0.88,
-	large: 0.99,
-} as const;
-
-/** @deprecated use PORTRAIT_PHONE_BOARD_SCALE */
-export const PORTRAIT_SMALL_MOBILE_SCALE = PORTRAIT_PHONE_BOARD_SCALE.small;
-/** @deprecated use PORTRAIT_PHONE_BOARD_SCALE */
-export const PORTRAIT_MOBILE_SCALE = PORTRAIT_PHONE_BOARD_SCALE.medium;
+export const PORTRAIT_PHONE_BOARD_WIDTH_FRAC = 0.87;
 
 export type PortraitCanvasSizeType =
 	| 'smallMobile'
@@ -557,8 +570,12 @@ export const getPortraitPhoneScaleFactor = (
 	deviceWidth: number,
 ) => {
 	if (canvasSizeType !== 'smallMobile' && canvasSizeType !== 'mobile') return 1;
-	const tier = getPortraitMobileTier(canvasSizeType, deviceWidth);
-	return PORTRAIT_PHONE_BOARD_SCALE[tier];
+	// factor 1 ⟺ parchment width = bonus-bar width − trim (the original design
+	// reference); scaling the factor scales board + bar uniformly.
+	return (
+		(deviceWidth * PORTRAIT_PHONE_BOARD_WIDTH_FRAC) /
+		(PORTRAIT_BONUS_BAR_WIDTH_PX - PORTRAIT_BOARD_WIDTH_TRIM_PX)
+	);
 };
 
 /** @deprecated use getPortraitPhoneScaleFactor */
@@ -841,7 +858,7 @@ export const PORTRAIT_UI_LAYOUT = {
 	/** Buy/boost row top offset from board bottom (ref px, independent of WIN). */
 	buyPanelBelowBoard: 112,
 	/** Extra WIN nudge on portrait (ref px, + = down). Negative raises toward the nameplate. */
-	winNudgeDown: -17,
+	winNudgeDown: -70,
 	/** Spin stack anchor below board when buy/boost hidden (free spins). */
 	freeSpinsSpinBelowBoard: 48,
 	/** Util-row center offset from screen bottom (ref px; ≈ iconRadius + 12px margin). */

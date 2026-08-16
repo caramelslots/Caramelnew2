@@ -32,7 +32,7 @@
 	const H = $derived(ml.height);
 
 	/** Left of screen center so WIN sits with the gold nameplate. */
-	const WIN_HUD_X_OFFSET_RATIO = -0.022;
+	const WIN_HUD_X_OFFSET_RATIO = -0.012;
 
 	const winHudPos = $derived({
 		x: W * (0.5 + WIN_HUD_X_OFFSET_RATIO),
@@ -41,9 +41,7 @@
 
 	const showWin = $derived(stateBet.winBookEventAmount > 0);
 
-	const winHudFontSize = $derived(
-		portraitScaleY(WIN_HUD_FONT_SIZE, H) * BITMAP_FONT_SCALE,
-	);
+	const winHudFontSize = $derived(portraitScaleY(WIN_HUD_FONT_SIZE, H) * BITMAP_FONT_SCALE);
 
 	const WIN_TEXT_STYLE = $derived({
 		fontSize: winHudFontSize,

@@ -9,6 +9,7 @@
 
 	import { UiGameName } from 'components-ui-pixi';
 	import { GameVersion } from 'components-ui-html';
+	import { Container } from 'pixi-svelte';
 	import UiCashStacksLayout from './UiCashStacksLayout.svelte';
 	import CashStacksModals from './CashStacksModals.svelte';
 
@@ -53,6 +54,11 @@
 	import { FadeContainer } from 'components-pixi';
 
 	const context = getContext();
+
+	// While idle-tease pops run, the gold frame drops under the board so bouncing
+	// symbols render over the rails instead of clipping against them (the rails
+	// stay on top whenever reels spin/land — idle bounce never runs then).
+	const idlePopping = $derived(context.stateGameDerived.boardIdleBouncing());
 
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
 
@@ -101,19 +107,26 @@
 				<Sound />
 			{/if}
 
-			<FadeContainer show={gameEntrance.showContent} duration={GAME_ENTRANCE_MS} persistent>
-				<MainContainer>
-					<BoardFrame layer="base" />
-				</MainContainer>
+			<FadeContainer show={gameEntrance.showContent} duration={GAME_ENTRANCE_MS} persistent sortableChildren>
+				<Container zIndex={-3}>
+					<MainContainer>
+						<BoardFrame layer="base" />
+					</MainContainer>
+				</Container>
 
-				<MainContainer>
-					<Board />
-				</MainContainer>
+				<Container zIndex={-2}>
+					<MainContainer>
+						<Board />
+					</MainContainer>
+				</Container>
 
-				<!-- Gold rails above symbols so spin/land never paints over the frame. -->
-				<MainContainer>
-					<BoardFrame layer="overlay" />
-				</MainContainer>
+				<!-- Gold rails above symbols so spin/land never paints over the frame;
+				     drops under the board during idle-tease pops (idlePopping). -->
+				<Container zIndex={idlePopping ? -2.5 : -1}>
+					<MainContainer>
+						<BoardFrame layer="overlay" />
+					</MainContainer>
+				</Container>
 
 				<UiCashStacksLayout>
 					{#snippet gameName()}
