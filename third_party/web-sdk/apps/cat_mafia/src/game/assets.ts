@@ -347,18 +347,9 @@ export default {
 			scale: 2,
 		},
 	},
-	// Designer Spine `coins_3x3` — gold `main_coin_fast` + bronze/silver slow loops.
 	coins: {
 		type: 'spriteSheet',
-		src: assetUrl('assets/sprites/coin/coins.json'),
-	},
-	coinsBronze: {
-		type: 'spriteSheet',
-		src: assetUrl('assets/sprites/coin/coins_bronze.json'),
-	},
-	coinsSilver: {
-		type: 'spriteSheet',
-		src: assetUrl('assets/sprites/coin/coins_silver.json'),
+		src: assetUrl('assets/sprites/coin/SD2_Coin.json'),
 	},
 	sound: {
 		type: 'audio',

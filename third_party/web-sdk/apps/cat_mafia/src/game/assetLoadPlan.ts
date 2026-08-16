@@ -96,8 +96,6 @@ export const LOADER_BATCH_3_KEYS = [
 	'outlineReel',
 	...LOCALE_FONT_KEYS,
 	'coins',
-	'coinsBronze',
-	'coinsSilver',
 	'betPlus',
 	'betMinus',
 	'autoplayButton',
