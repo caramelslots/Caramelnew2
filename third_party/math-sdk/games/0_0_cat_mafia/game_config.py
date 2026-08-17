@@ -116,6 +116,13 @@ class GameConfig(Config):
         # Medium-vol bonus: mostly ×2/×4; ×6/×8 stay rare spice.
         # (Product of 2 sticky columns still capped by max_sticky_sw.)
         self.sw_mult_weights = {2: 42, 4: 40, 6: 13, 8: 5}
+        # Base/boost curtain mults: ×1 stays the common case, ×8 rare spice.
+        # Curtain rate is floored at 3% by the post-opt LUT fix; RTP/HIT are
+        # held by the same pipeline — the mults are paid for by reshaping
+        # non-feature weights, not by RTP/HIT drift. A lying SW (not on a
+        # winning line) never applies its mult: any line through the SW cell
+        # fires the curtain gate first.
+        self.base_sw_mult_weights = {1: 55, 2: 24, 4: 13, 6: 5, 8: 3}
         # Paw-coin type split inside the (unchanged) ~3% paw fence quota.
         # Bronze 1 row / silver 2 rows / gold 3 rows — gold is rarest.
         self.paw_tier_weights = {"PB": 60, "PS": 30, "PG": 10}
@@ -157,7 +164,7 @@ class GameConfig(Config):
             },
             "scatter_triggers": {3: 70, 4: 30},
             "mult_values": {
-                self.basegame_type: {1: 1},
+                self.basegame_type: dict(self.base_sw_mult_weights),
                 self.freegame_type: dict(self.sw_mult_weights),
             },
             "force_wincap": False,
@@ -166,7 +173,7 @@ class GameConfig(Config):
 
         basegame_condition = {
             "reel_weights": {self.basegame_type: {"BR0": 1}},
-            "mult_values": {self.basegame_type: {1: 1}},
+            "mult_values": {self.basegame_type: dict(self.base_sw_mult_weights)},
             "force_wincap": False,
             "force_freegame": False,
         }
@@ -175,7 +182,7 @@ class GameConfig(Config):
         # ~3% each → paw coins and SW expand appear at the same rate (XOR).
         paw_condition = {
             "reel_weights": {self.basegame_type: {"BR0": 1}},
-            "mult_values": {self.basegame_type: {1: 1}},
+            "mult_values": {self.basegame_type: dict(self.base_sw_mult_weights)},
             "force_wincap": False,
             "force_freegame": False,
             "force_paw": True,
@@ -185,7 +192,7 @@ class GameConfig(Config):
         # (required superWildExpand event must fire).
         sw_expand_condition = {
             "reel_weights": {self.basegame_type: {"BR0": 1}},
-            "mult_values": {self.basegame_type: {1: 1}},
+            "mult_values": {self.basegame_type: dict(self.base_sw_mult_weights)},
             "force_wincap": False,
             "force_freegame": False,
         }
@@ -193,7 +200,7 @@ class GameConfig(Config):
         zerowin_condition = {
             "reel_weights": {self.basegame_type: {"BR0_ZW": 1}},
             "mult_values": {
-                self.basegame_type: {1: 1},
+                self.basegame_type: dict(self.base_sw_mult_weights),
                 self.freegame_type: dict(self.sw_mult_weights),
             },
             "force_wincap": False,
@@ -203,7 +210,7 @@ class GameConfig(Config):
         zerowin_cluster_condition = {
             "reel_weights": {self.basegame_type: {"BR0_ZW": 1}},
             "mult_values": {
-                self.basegame_type: {1: 1},
+                self.basegame_type: dict(self.base_sw_mult_weights),
                 self.freegame_type: dict(self.sw_mult_weights),
             },
             "force_wincap": False,
@@ -217,7 +224,7 @@ class GameConfig(Config):
                 self.freegame_type: {"FR0": 1, "WCAP": 5},
             },
             "mult_values": {
-                self.basegame_type: {1: 1},
+                self.basegame_type: dict(self.base_sw_mult_weights),
                 self.freegame_type: {2: 10, 4: 30, 6: 40, 8: 50},
             },
             "scatter_triggers": {3: 1, 4: 1},
@@ -232,7 +239,7 @@ class GameConfig(Config):
             },
             "scatter_triggers": {3: 1},
             "mult_values": {
-                self.basegame_type: {1: 1},
+                self.basegame_type: dict(self.base_sw_mult_weights),
                 self.freegame_type: dict(self.sw_mult_weights),
             },
             "force_wincap": False,
@@ -246,7 +253,7 @@ class GameConfig(Config):
             },
             "scatter_triggers": {4: 1},
             "mult_values": {
-                self.basegame_type: {1: 1},
+                self.basegame_type: dict(self.base_sw_mult_weights),
                 # Medium-vol Super: still richer than Normal, but not ×6/×8-heavy.
                 self.freegame_type: {2: 35, 4: 40, 6: 18, 8: 7},
             },

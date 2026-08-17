@@ -12,6 +12,7 @@
 		isPopoutViewport,
 		GAME_ENTRANCE_MS,
 		MASCOT_ENTRANCE_DELAY_MS,
+		MASCOT_TRANSITION_FADE_MS,
 	} from '../game/constants';
 	import {
 		portraitBuyPanelCanvasTop,
@@ -112,11 +113,24 @@
 	 * не успела к входу — дофейживается по готовности тем же длинным фейдом.
 	 */
 	const revealed = $derived(ready && (show || entranceDone));
-	/** Первый вход — длинный фейд как у доски; пересоздание плеера — быстрое. */
+	/**
+	 * FS cloud transition (оба направления): маскот растворяется за
+	 * MASCOT_TRANSITION_FADE_MS под набегающим облаком — z-флип pixi-stage
+	 * отложен на то же время в Game.svelte, поэтому поп-кадра за непрозрачной
+	 * доской нет. Обратно проявляется фейдом: в момент снятия флага opacity 0.
+	 */
+	const hiding = $derived(context.stateGame.transitionActive);
+	const shown = $derived(revealed && !hiding);
+	/**
+	 * Fade-out (переход) — 300мс ease-in; fade-in — GAME_ENTRANCE_MS cubicOut
+	 * (задержка MASCOT_ENTRANCE_DELAY_MS только на самом первом входе).
+	 */
 	const transitionStyle = $derived(
-		entranceDone
-			? 'transition:opacity 150ms ease;'
-			: `transition:opacity ${GAME_ENTRANCE_MS}ms cubic-bezier(0.215, 0.61, 0.355, 1) ${MASCOT_ENTRANCE_DELAY_MS}ms;`,
+		hiding
+			? `transition:opacity ${MASCOT_TRANSITION_FADE_MS}ms ease-in;`
+			: entranceDone
+				? `transition:opacity ${GAME_ENTRANCE_MS}ms cubic-bezier(0.215, 0.61, 0.355, 1);`
+				: `transition:opacity ${GAME_ENTRANCE_MS}ms cubic-bezier(0.215, 0.61, 0.355, 1) ${MASCOT_ENTRANCE_DELAY_MS}ms;`,
 	);
 
 	$effect(() => {
@@ -470,7 +484,7 @@
 </script>
 
 {#if mounted}
-	<div class="mascot" class:ready={revealed} style="{style}{transitionStyle}" aria-hidden="true">
+	<div class="mascot" class:ready={shown} style="{style}{transitionStyle}" aria-hidden="true">
 		<!--
 			SSAA: Spine draws into a larger canvas, then we CSS-scale down so
 			eye/ear layer edges don't alias into hard seams on small phones.
@@ -491,8 +505,9 @@
 		pointer-events: none;
 		filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.55));
 		opacity: 0;
-		/* transition приезжает inline из скрипта: первый вход — GAME_ENTRANCE_MS
-		   (как FadeContainer доски) + MASCOT_ENTRANCE_DELAY_MS, дальше — быстрый. */
+		/* transition приезжает inline из скрипта: fade-in — GAME_ENTRANCE_MS
+		   (как FadeContainer доски, +MASCOT_ENTRANCE_DELAY_MS на первом входе),
+		   fade-out на FS-переход — MASCOT_TRANSITION_FADE_MS ease-in. */
 		/* Clip layout overflow from the pre-scale SSAA box; hat still paints
 		   outside via transform (overflow:visible on the scaled child). */
 		overflow: visible;

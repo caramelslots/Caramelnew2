@@ -1174,6 +1174,14 @@ export const GAME_ENTRANCE_MS = 400;
 /** Mascot fades in on the same frame as the board, slightly behind it. */
 export const MASCOT_ENTRANCE_DELAY_MS = 100;
 
+/**
+ * Mascot fade-out when the FS cloud transition starts (both directions). Must
+ * finish before the cloud closes over the screen (~TRANSITION_THEME_SWITCH_DELAY_MS
+ * + margin); Game.svelte delays the pixi-stage z-flip by the same amount so the
+ * fade is visible instead of a one-frame pop behind the opaque board.
+ */
+export const MASCOT_TRANSITION_FADE_MS = 300;
+
 /** When the cloud transition starts becoming opaque (~0.3s in the 1.5s spine). */
 export const TRANSITION_THEME_SWITCH_DELAY_MS = 193;
 

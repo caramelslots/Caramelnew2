@@ -13,6 +13,7 @@ Checks (base / bonus_boost):
   - SW curtain event rate (base part) == 3% ±0.3pp
   - XOR: 0 books with both pawCoinResolve and superWildExpand
   - max 1 SW on the base reveal board (visible rows); no SW in padding
+  - base curtain mult histogram ≈ base_sw_mult_weights (55/24/13/5/3 for ×1/×2/×4/×6/×8)
 Checks (bonus_normal / bonus_super):
   - publish books byte-identical to library/publish_files_backup_baseline
     (FS logic untouched — M5 must not re-run buy modes)
@@ -24,6 +25,7 @@ import hashlib
 import io
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 
 import zstandard as zstd
@@ -45,6 +47,13 @@ RTP_TOL = 0.0005
 HIT_TOL = 0.005
 FEATURE_TOL = 0.003
 
+# Base curtain mult split (game_config.base_sw_mult_weights) — share of base
+# curtains. Tolerance ±3pp per bucket: the LUT fix pins the mix to ±0.5pp, but
+# the 100k-book resample adds binomial noise — ~3k curtain books ⇒ σ≈0.9pp per
+# bucket, so ±2pp (≈2.2σ) flakes at the edge; ±3pp ≈ 3.3σ is the honest gate.
+BASE_SW_MULT_TARGET = {1: 0.55, 2: 0.24, 4: 0.13, 6: 0.05, 8: 0.03}
+MULT_TOL = 0.03
+
 
 def scan_mode(mode: str) -> dict:
     path = PUBLISH / f"books_{mode}.jsonl.zst"
@@ -58,6 +67,7 @@ def scan_mode(mode: str) -> dict:
         multi_sw=0,
         sw_padding=0,
         fs=0,
+        sw_mults=Counter(),
     )
     dctx = zstd.ZstdDecompressor()
     with open(path, "rb") as fh, dctx.stream_reader(fh) as raw:
@@ -80,6 +90,15 @@ def scan_mode(mode: str) -> dict:
                 stats["fs"] += 1
             if sw_idx is not None and (fs_idx is None or sw_idx < fs_idx):
                 stats["sw"] += 1
+                # Mult histogram — base-part expands only (FS sticky-column
+                # expands live past the fs marker and keep their own weights).
+                for i, e in enumerate(events):
+                    if e.get("type") != "superWildExpand":
+                        continue
+                    if fs_idx is not None and i >= fs_idx:
+                        break
+                    for ex in e.get("expands") or []:
+                        stats["sw_mults"][int(ex.get("mult", 1))] += 1
             if paw_idx is not None and (fs_idx is None or paw_idx < fs_idx):
                 stats["paw"] += 1
             if sw_idx is not None and paw_idx is not None:
@@ -119,6 +138,14 @@ def main() -> int:
         print(f"  sw   {100 * sw:.2f}%  (target {100 * sw_t:.0f}%)")
         print(f"  FS trigger {s['fs'] / n:.4f}  |  xor {s['xor']}  |  multiSW {s['multi_sw']}  |  swPad {s['sw_padding']}")
 
+        n_mult = sum(s["sw_mults"].values())
+        if n_mult:
+            hist = "  ".join(
+                f"x{m} {100 * s['sw_mults'].get(m, 0) / n_mult:.1f}%/{100 * t:.0f}%"
+                for m, t in sorted(BASE_SW_MULT_TARGET.items())
+            )
+            print(f"  sw mults (share of base curtains, actual/target): {hist}")
+
         def check(ok: bool, label: str) -> None:
             nonlocal failures
             if not ok:
@@ -132,6 +159,14 @@ def main() -> int:
         check(s["xor"] == 0, "XOR violations (paw + curtain in one book)")
         check(s["multi_sw"] == 0, "multi-SW boards in base")
         check(s["sw_padding"] == 0, "SW in base padding")
+        n_mult = sum(s["sw_mults"].values())
+        check(n_mult > 0, "no base curtain expands found (mult histogram empty)")
+        for m, t in BASE_SW_MULT_TARGET.items():
+            share = s["sw_mults"].get(m, 0) / n_mult if n_mult else 0.0
+            check(
+                abs(share - t) <= MULT_TOL,
+                f"sw mult x{m} share {100 * share:.1f}% outside {100 * t:.0f}%±{100 * MULT_TOL:.0f}pp",
+            )
 
     for mode in BUY_MODES:
         cur = PUBLISH / f"books_{mode}.jsonl.zst"

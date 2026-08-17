@@ -16,7 +16,7 @@
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { startLoadingIdleUiPreload } from '../game/uiHtmlAssetManifest';
-	import { GAME_ENTRANCE_MS } from '../game/constants';
+	import { GAME_ENTRANCE_MS, MASCOT_TRANSITION_FADE_MS } from '../game/constants';
 	import EnableSound from './EnableSound.svelte';
 	import EnableSymbolTextureOptimization from './EnableSymbolTextureOptimization.svelte';
 	import EnableUiTextureOptimization from './EnableUiTextureOptimization.svelte';
@@ -60,6 +60,23 @@
 	// stay on top whenever reels spin/land — idle bounce never runs then).
 	const idlePopping = $derived(context.stateGameDerived.boardIdleBouncing());
 
+	// FS cloud transition: the pixi-stage z-flip above the HTML mascot layer is
+	// delayed by the mascot fade-out (MASCOT_TRANSITION_FADE_MS) so the mascot
+	// dissolves under the incoming cloud instead of popping behind the opaque
+	// board in one frame. Drops back instantly when the transition ends (the
+	// mascot is at opacity 0 then and fades back in on its own). winOverlayActive
+	// keeps the immediate flip — big-win behaviour unchanged.
+	let pixiAboveHtml = $state(false);
+
+	$effect(() => {
+		if (!context.stateGame.transitionActive) {
+			pixiAboveHtml = false;
+			return;
+		}
+		const timer = setTimeout(() => (pixiAboveHtml = true), MASCOT_TRANSITION_FADE_MS);
+		return () => clearTimeout(timer);
+	});
+
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
 
 	// Storybook / skipLoadingScreen: reveal game without the loading flow.
@@ -80,7 +97,7 @@
 
 <div
 	class="pixi-stage"
-	class:above-html-ui={context.stateGame.transitionActive || context.stateGame.winOverlayActive}
+	class:above-html-ui={pixiAboveHtml || context.stateGame.winOverlayActive}
 >
 	<GameApp maxResolution={3} tuneForMobilePortrait>
 		<EnableSound />

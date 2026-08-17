@@ -4,13 +4,13 @@
 Scope: `third_party/math-sdk/games/0_0_cat_mafia` (математика) + `third_party/web-sdk/apps/cat_mafia` (фронтенд).
 
 **Статус реализации (2026-08-17):**
-- 📋 Часть 5 (шторы ×2/×4/×6/×8 в base/boost): план ниже, шансы по иксам — таблица 5.1.
-- 📋 Часть 6 (маскот плавно уходит в FS-переход): план ниже.
+- ✅ Часть 5 (шторы ×2/×4/×6/×8 в base/boost): `base_sw_mult_weights = {1: 55, 2: 24, 4: 13, 6: 5, 8: 3}` в `game_config.py`, подключён во все 9 условий как `mult_values.basegame` (freegame-мапы не тронуты). Смоук 5000 спинов: XOR=0, двойного применения множителя нет. **M5 + пост-фикс + resample + storybook/sync + acceptance — пройдено (2026-08-17):** base RTP 0.9599 / HIT 37.13% / paw 2.96% / sw 2.95%, boost RTP 0.9600 / HIT 41.33% / paw 2.92% / sw 3.03%, мульт-гистограмма в допуске (±3п.п. — биномиальный шум ресэмпла), buy-режимы byte-identical baseline. Инцидент «RTP упал» (0.851/0.868): оптимизатор недобрал до 0.96 (0.773/0.794) + старый enforce упал с `cannot move weight` (донорский пул исчерпан, mean-split) и не записал LUT'ы. Фикс инструмента: sw pin двусторонний (floor+cap — оптимизатор раздувает шторы >3%), `match_sw_mult_mix` (микс множителей внутри sw-книг), `match_rtp` на терциях + fallback-доноры freegame/wincap, без падений.
+- ✅ Часть 6 (маскот плавно уходит в FS-переход): `MASCOT_TRANSITION_FADE_MS = 300` в `constants.ts`; `Game.svelte` — отложенный z-flip (`pixiAboveHtml`, +300мс на подъём `transitionActive`, мгновенно вниз; `winOverlayActive` без изменений); `MascotPlaceholder.svelte` — `hiding`/`shown`, fade-out 300мс ease-in, fade-in 400мс cubicOut (150-мс путь упразднён).
 - ✅ Часть 3 (фронт, линии → монетки): `winInfo` держит фазу-1 при идущем следом `pawCoinResolve`; `pawCoinResolve` — холд `PAW_PHASE1_HOLD_MS` (550мс) + `clearWinSpotlight()` перед конверсией; `stateGame.pawPending` + исключение PB/PS/PG из димминга в `ReelSymbol.svelte`.
 - ✅ Часть 4 (маскот): маунт/загрузка Spine на `preloadContent`, класс `ready` только при `showContent`, фейд `GAME_ENTRANCE_MS` (400мс, cubicOut) + задержка `MASCOT_ENTRANCE_DELAY_MS` (100мс); после первого входа — быстрый фейд 150мс.
 - ✅ Часть 1 (SW на лентах): `BR0_WEIGHTS` +`"SW": 2` (после нормализации 1 стоп/барабан — смоук 3000 спинов: SW на доске 8.1%, ровно 1 SW, padding чист, натуральная штора ~3.2%, XOR 0). `force_sw_expand_on_board` удалён, добавлен `enforce_single_sw_base` (base-only), флаг `force_sw_expand` зачищен из конфига.
 - ✅ Часть 2 (3% + инварианты): `tools/enforce_paw_hit_rate.py` обобщён — event-based флор SW (`--sw`), `match_hit_rate` (`--hit`, dead↔paying с протекцией paw/sw/FS/wincap), `match_rtp` переписан HIT-нейтрально (low-pay↔high-pay внутри paying). Подключено в `run.py` / `run_base_boost.py` / `run_base_lowvol.py` (только base+boost). Приёмка — `tools/acceptance_scan.py`.
-- ⏳ M5 (`run_base_boost.py`) → resample → storybook → sync → acceptance scan.
+- ✅ M5 → resample → storybook → sync → acceptance scan: **ACCEPTANCE PASSED**.
 
 ---
 

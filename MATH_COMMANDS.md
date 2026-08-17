@@ -52,20 +52,32 @@ RGS publish.
 ```bash
 # Только base+boost (buy-режимы НЕ пересоздаём — FS логика 1:1):
 $PY run_base_boost.py 2>&1 | tee /tmp/m5.log
-# run_base_boost после opt сам делает paw≥3% + sw≥3% (event-based) +
-# HIT baseline + RTP≈96% (hit-neutral) на weighted publish LUT.
+# run_base_boost после opt сам делает пост-фикс на weighted publish LUT:
+#   sw pin ровно 3% (event-based, двусторонний: floor И cap — оптимизатор
+#   раздувает шторы >3%, т.к. ×2-×8 шторы хорошо платят), микс множителей
+#   шторы → 55/24/13/5/3 (внутри sw-книг, HIT/sw-тотал не трогает),
+#   paw floor 3% из dead, HIT → baseline, RTP → 96% hit-neutral
+#   (терции по платёжности; fallback-доноры freegame/wincap при истощении пула).
 # Затем resample (сам копирует weighted publish → backup, потом пишет equal-weight books):
 $PY tools/resample_books.py
-# Приёмка: RTP/HIT/paw/sw/XOR/single-SW + byte-diff buy-режимов к baseline:
+# Приёмка: RTP/HIT/paw/sw/XOR/single-SW + мульт-гистограмма (±3pp — биномиальный
+# шум ресэмпла ~3k штор: σ≈0.9pp) + byte-diff buy-режимов к baseline:
 $PY tools/acceptance_scan.py
 ```
 
-Если прогон уже прошёл **без** пост-фикса — почини publish и пересэмплируй:
+Если прогон уже прошёл **без** пост-фикса (или enforce упал посреди run.py) —
+weighted LUT'ы оптимизатора лежат в `library/publish_files_backup_pre_resample`
+(в `publish_files` после resample они equal-weight, чинить нечего). Чиним
+бэкап и пересэмплируем — M5 заново гонять НЕ нужно:
 
 ```bash
-$PY tools/enforce_paw_hit_rate.py --mode base --lut-dir library/publish_files --paw 0.03 --sw 0.03 --hit 0.3708 --rtp 0.9601
-$PY tools/enforce_paw_hit_rate.py --mode bonus_boost --lut-dir library/publish_files --paw 0.03 --sw 0.03 --hit 0.4133 --rtp 0.9601
+$PY tools/enforce_paw_hit_rate.py --mode base --lut-dir library/publish_files_backup_pre_resample --paw 0.03 --sw 0.03 --hit 0.3708 --rtp 0.9601
+$PY tools/enforce_paw_hit_rate.py --mode bonus_boost --lut-dir library/publish_files_backup_pre_resample --paw 0.03 --sw 0.03 --hit 0.4133 --rtp 0.9601
 $PY tools/resample_books.py
+# buy-режимы после resample — из новых симов; вернуть byte-identical baseline:
+cp library/publish_files_backup_baseline/books_bonus_{normal,super}.jsonl.zst library/publish_files/
+cp library/publish_files_backup_baseline/lookUpTable_bonus_{normal,super}_0.csv library/publish_files/
+$PY tools/acceptance_scan.py
 ```
 
 **Bonus max ×25000 (2026-07):** buy modes `bonus_normal` / `bonus_super`
