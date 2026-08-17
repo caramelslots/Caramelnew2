@@ -206,6 +206,10 @@ export const stateGame = $state({
 	// затемняются (см. DIM_NON_WINNING + ReelSymbol.svelte). Поднимается
 	// хелпером animateSymbols в bookEventHandlerMap, сбрасывается в reveal.
 	winSpotlightActive: false,
+	// В книге текущего спина позже есть pawCoinResolve: лапа (PB/PS/PG) не
+	// тускнеет во время фазы-1 линий — конверсия в монетки идёт следом,
+	// после снятия spotlight (тот же two-beat, что у шторы SW).
+	pawPending: false,
 	// Idle symbol tease (matching symbols bounce while waiting). Disabled after
 	// any win on the current board; re-enabled when the next losing spin settles.
 	idleBounceAllowed: true,

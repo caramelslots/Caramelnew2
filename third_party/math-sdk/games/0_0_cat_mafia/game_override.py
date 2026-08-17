@@ -144,7 +144,7 @@ class GameStateOverride(GameExecutables):
         self.enforce_feature_symbol_rules()
         self.apply_fs_sw_board_rules()
         self.force_paw_on_board()
-        self.force_sw_expand_on_board()
+        self.enforce_single_sw_base()
         self.enrich_visual_non_winning_symbols()
         if emit_event:
             reveal_event(self)
@@ -179,28 +179,35 @@ class GameStateOverride(GameExecutables):
         self.board[paw_reel][row] = self.create_symbol(paw_name)
         self.get_special_symbols_on_board()
 
-    def force_sw_expand_on_board(self) -> None:
-        """Plant SW on a winning line so base SW expand fires (equal rate vs paw)."""
+    def enforce_single_sw_base(self) -> None:
+        """Base/boost: at most one SW per spin, and no SW peeking from padding.
+
+        SW now lands naturally from BR0 strips (the force_sw_expand fence is
+        gone). Curtain logic is unchanged: resolve_base_spin_features still
+        requires the SW to sit on a winning payline. Runs only for the
+        basegame gametype — FS rules (sticky columns) are untouched.
+        """
         if self.gametype != self.config.basegame_type:
             return
-        conditions = self.get_current_distribution_conditions()
-        if not (conditions.get("force_sw_expand") or self.criteria == "sw_expand"):
-            return
 
-        # Keep XOR clean for this fence — no competing paw.
-        self._replace_symbol_name({"PB", "PS", "PG"}, "L2")
+        hits = find_super_wilds(self.board)
+        if len(hits) > 1:
+            keep = random.choice(hits)
+            for h in hits:
+                if h is not keep:
+                    self.board[h["reel"]][h["row"]] = self.create_symbol("L2")
 
-        # Top row payline: H2 ×5 with SW on a middle reel (wild in win → expand).
-        sw_reel = random.choice([1, 2, 3])
-        line_row = 0
-        for reel in range(self.config.num_reels):
-            if reel == sw_reel:
-                sw = self.create_symbol("SW")
-                self.assign_sw_mult_property(sw)
-                self.board[reel][line_row] = sw
-            else:
-                self.board[reel][line_row] = self.create_symbol("H2")
-        self.get_special_symbols_on_board()
+        if getattr(self.config, "include_padding", False):
+            for attr in ("top_symbols", "bottom_symbols"):
+                pad = getattr(self, attr, None)
+                if not pad:
+                    continue
+                for reel in range(len(pad)):
+                    if getattr(pad[reel], "name", None) == "SW":
+                        pad[reel] = self.create_symbol("L2")
+
+        if hits:
+            self.get_special_symbols_on_board()
 
     def draw_cluster_board(self, emit_event: bool = True) -> bool:
         betmode = self.get_current_betmode().get_name()

@@ -1089,6 +1089,12 @@ export const SW_PHASE2_PRE_MS = 320;
 /** Extra pre-delay on the post-expand winInfo so the second interaction reads clearly. */
 export const SW_SECOND_WIN_PRE_DELAY_MS = 280;
 
+/**
+ * Paw two-beat: when line wins played, hold phase-1 paylines before clearing
+ * the win spotlight for the coin conversion (same handoff as the SW curtain).
+ */
+export const PAW_PHASE1_HOLD_MS = 550;
+
 /** Pause after win amount count-up finishes, before the celebration screen auto-dismisses. */
 export const WIN_SCREEN_POST_COUNT_UP_DELAY_MS = 1500;
 
@@ -1164,6 +1170,9 @@ export const TRANSITION_DURATION_MS = 1800;
 
 /** Fade-in for board + UI after the loading-screen cloud transition. */
 export const GAME_ENTRANCE_MS = 400;
+
+/** Mascot fades in on the same frame as the board, slightly behind it. */
+export const MASCOT_ENTRANCE_DELAY_MS = 100;
 
 /** When the cloud transition starts becoming opaque (~0.3s in the 1.5s spine). */
 export const TRANSITION_THEME_SWITCH_DELAY_MS = 193;

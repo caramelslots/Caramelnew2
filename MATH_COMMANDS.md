@@ -39,28 +39,32 @@ PY=/tmp/csmath_venv/bin/python
 
 ## 1. M5 — intermediate sim (1e5 per mode, ~10-20 мин)
 
-Когда: после правок `game_config.py` / `game_override.py` / `paylines` /
-`paytable` / `reelstrips`. Перепишет `library/publish_files/` для demo +
+Когда: после правок `game_config.py` / `game_override.py` / `paylines` / `paytable` / `reelstrips`. Перепишет `library/publish_files/` для demo +
 RGS publish.
 
-**Base low-vol + equal paw/SW (2026-07):** criteria `paw` и `sw_expand`
-(quota **по 3%**), с лент BR0 убраны P и SW; XOR 50/50 если оба.
+**SW на лентах (2026-08):** SW добавлен на BR0 (1 стоп/барабан после
+нормализации), форс-посадка `force_sw_expand_on_board` удалена — штора
+выпадает естественно, максимум 1 SW за спин держит `enforce_single_sw_base`.
+Лапа остаётся форс-посадкой (`force_paw_on_board`). FS-режимы не тронуты.
 **bonus_boost** = тот же BR0/фичи, `freegame` quota **20%** (base 10%).
 После правок:
 
 ```bash
-# Полный пайплайн: run.py после opt сам делает paw≥3% + RTP≈96% на publish.
-$PY run.py 2>&1 | tee /tmp/m5.log
+# Только base+boost (buy-режимы НЕ пересоздаём — FS логика 1:1):
+$PY run_base_boost.py 2>&1 | tee /tmp/m5.log
+# run_base_boost после opt сам делает paw≥3% + sw≥3% (event-based) +
+# HIT baseline + RTP≈96% (hit-neutral) на weighted publish LUT.
 # Затем resample (сам копирует weighted publish → backup, потом пишет equal-weight books):
 $PY tools/resample_books.py
-# SUMMARY base/boost должны быть ~0.960, paw ~3%. Затем sync §4.
+# Приёмка: RTP/HIT/paw/sw/XOR/single-SW + byte-diff buy-режимов к baseline:
+$PY tools/acceptance_scan.py
 ```
 
-Если `run.py` уже прошёл **без** пост-фикса — почини publish и пересэмплируй:
+Если прогон уже прошёл **без** пост-фикса — почини publish и пересэмплируй:
 
 ```bash
-$PY tools/enforce_paw_hit_rate.py --mode base --lut-dir library/publish_files --paw 0.03 --rtp 0.9601
-$PY tools/enforce_paw_hit_rate.py --mode bonus_boost --lut-dir library/publish_files --paw 0.03 --rtp 0.9601
+$PY tools/enforce_paw_hit_rate.py --mode base --lut-dir library/publish_files --paw 0.03 --sw 0.03 --hit 0.3708 --rtp 0.9601
+$PY tools/enforce_paw_hit_rate.py --mode bonus_boost --lut-dir library/publish_files --paw 0.03 --sw 0.03 --hit 0.4133 --rtp 0.9601
 $PY tools/resample_books.py
 ```
 

@@ -47,14 +47,19 @@ if __name__ == "__main__":
     from tools.enforce_paw_hit_rate import main as enforce_paw_main
     import sys
 
+    hit_baseline = {"base": "0.3708", "bonus_boost": "0.4133"}
     for mode in target_modes:
-        print(f"\n=== Post-opt LUT fix: {mode} (paw≥3%, RTP≈96.01%) ===")
+        print(f"\n=== Post-opt LUT fix: {mode} (paw≥3%, sw≥3%, HIT/RTP baseline) ===")
         sys.argv = [
             "enforce_paw_hit_rate.py",
             "--mode",
             mode,
             "--paw",
             "0.03",
+            "--sw",
+            "0.03",
+            "--hit",
+            hit_baseline[mode],
             "--rtp",
             "0.9601",
             "--lut-dir",

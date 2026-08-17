@@ -8,7 +8,11 @@
 
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
-	import { isPopoutViewport } from '../game/constants';
+	import {
+		isPopoutViewport,
+		GAME_ENTRANCE_MS,
+		MASCOT_ENTRANCE_DELAY_MS,
+	} from '../game/constants';
 	import {
 		portraitBuyPanelCanvasTop,
 		portraitBuyPanelHeightCanvas,
@@ -47,7 +51,12 @@
 			isPortrait,
 	);
 	const forceAnim = $derived(devPreview.mascotAnimation);
-	const visible = $derived(show && (showMascotLayout || forceAnim !== null));
+	// Маунт и загрузка Spine — уже на preloadContent (во время лоадера/cloud
+	// transition), чтобы к входу доски плеер был готов. До входа держим
+	// opacity: 0 — проявление синхронно с FadeContainer доски (showContent).
+	const mounted = $derived(
+		gameEntrance.preloadContent && (showMascotLayout || forceAnim !== null),
+	);
 	const pose = $derived(
 		(context.stateGame.bulletFly ? 'load' : context.stateGame.mascotPose || 'idle') as MascotPose,
 	);
@@ -83,6 +92,8 @@
 
 	let container = $state<HTMLDivElement | undefined>();
 	let ready = $state(false);
+	/** Latch после первого проявления — пересоздание плеера (ресайз) фейдит быстро. */
+	let entranceDone = $state(false);
 	let player: SpinePlayer | undefined;
 	let activePose: MascotPose | undefined;
 	let activeForceAnim: MascotDevPreview | null | undefined;
@@ -94,6 +105,23 @@
 	/** DEV idle3 = in-game hat catch sequence (forward → hold → reverse). */
 	let forceIdle3Phase: 'catch' | 'hold' | 'on' | null = null;
 	let forceIdle3HoldTimer: ReturnType<typeof setTimeout> | undefined;
+
+	/**
+	 * Проявление — в тот же кадр, что и фейд доски (showContent): класс ready
+	 * вешается только когда плеер загружен И вход начался. Если загрузка
+	 * не успела к входу — дофейживается по готовности тем же длинным фейдом.
+	 */
+	const revealed = $derived(ready && (show || entranceDone));
+	/** Первый вход — длинный фейд как у доски; пересоздание плеера — быстрое. */
+	const transitionStyle = $derived(
+		entranceDone
+			? 'transition:opacity 150ms ease;'
+			: `transition:opacity ${GAME_ENTRANCE_MS}ms cubic-bezier(0.215, 0.61, 0.355, 1) ${MASCOT_ENTRANCE_DELAY_MS}ms;`,
+	);
+
+	$effect(() => {
+		if (revealed) entranceDone = true;
+	});
 
 	const clearIdleVariantTimer = () => {
 		if (idleVariantTimer !== undefined) {
@@ -294,7 +322,7 @@
 
 	$effect(() => {
 		const el = container;
-		if (!el || !visible) return;
+		if (!el || !mounted) return;
 
 		// Prevent stacked SpinePlayer DOM if effect re-enters before cleanup.
 		player?.dispose();
@@ -415,7 +443,7 @@
 	});
 
 	$effect(() => {
-		if (!visible || !ready) return;
+		if (!mounted || !ready) return;
 
 		const forced = forceAnim;
 		if (forced) {
@@ -441,8 +469,8 @@
 
 </script>
 
-{#if visible}
-	<div class="mascot" class:ready style={style} aria-hidden="true">
+{#if mounted}
+	<div class="mascot" class:ready={revealed} style="{style}{transitionStyle}" aria-hidden="true">
 		<!--
 			SSAA: Spine draws into a larger canvas, then we CSS-scale down so
 			eye/ear layer edges don't alias into hard seams on small phones.
@@ -463,7 +491,8 @@
 		pointer-events: none;
 		filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.55));
 		opacity: 0;
-		transition: opacity 0.25s ease;
+		/* transition приезжает inline из скрипта: первый вход — GAME_ENTRANCE_MS
+		   (как FadeContainer доски) + MASCOT_ENTRANCE_DELAY_MS, дальше — быстрый. */
 		/* Clip layout overflow from the pre-scale SSAA box; hat still paints
 		   outside via transform (overflow:visible on the scaled child). */
 		overflow: visible;

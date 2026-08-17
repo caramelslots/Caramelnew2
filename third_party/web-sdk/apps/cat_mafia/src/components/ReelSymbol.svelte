@@ -61,6 +61,13 @@
 			(cell) => cell.reel === props.reelIndex && cell.row === props.reelSymbol.symbolIndex,
 		),
 	);
+	// Лапа, ожидающая конверсии в монетки (pawPending), не тускнеет во время
+	// фазы-1 линий — она «своим» событием отыграет следом, как SW в своей линии.
+	const isPawSymbol = $derived(
+		props.reelSymbol.rawSymbol.name === 'PB' ||
+			props.reelSymbol.rawSymbol.name === 'PS' ||
+			props.reelSymbol.rawSymbol.name === 'PG',
+	);
 	const isSpinningSymbol = $derived(props.reelSymbol.symbolState === 'spin');
 	const applyWinPresentation = $derived(isWinningState && !isSpinningSymbol);
 	const applyIdleBouncePresentation = $derived(isIdleBouncing);
@@ -112,7 +119,10 @@
 
 	$effect(() => {
 		const target =
-			isPawCovered || (stateGame.winSpotlightActive && !isWinningState)
+			isPawCovered ||
+			(stateGame.winSpotlightActive &&
+				!isWinningState &&
+				!(stateGame.pawPending && isPawSymbol))
 				? DIM_NON_WINNING.alpha
 				: 1;
 		const duration = target < 1 ? DIM_NON_WINNING.fadeInMs : DIM_NON_WINNING.fadeOutMs;

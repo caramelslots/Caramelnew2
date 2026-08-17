@@ -41,7 +41,8 @@ if __name__ == "__main__":
     OptimizationExecution().run_all_modes(config, target_modes, rust_threads)
     generate_configs(gamestate)
 
-    # Floor paw ≥3% and match RTP ~96.01% on weighted publish LUT (before resample).
+    # Floor paw ≥3% + sw ≥3%, hold HIT at baseline, match RTP ~96.01%
+    # hit-neutrally on the weighted publish LUT (before resample).
     from tools.enforce_paw_hit_rate import main as enforce_paw_main
     import sys
 
@@ -51,6 +52,10 @@ if __name__ == "__main__":
         "base",
         "--paw",
         "0.03",
+        "--sw",
+        "0.03",
+        "--hit",
+        "0.3708",
         "--rtp",
         "0.9601",
         "--lut-dir",

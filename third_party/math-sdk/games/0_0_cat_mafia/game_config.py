@@ -180,12 +180,14 @@ class GameConfig(Config):
             "force_freegame": False,
             "force_paw": True,
         }
+        # SW lands naturally from BR0 strips — no force flag. The sw_expand
+        # criteria segment is covered via check_repeat rejection sampling
+        # (required superWildExpand event must fire).
         sw_expand_condition = {
             "reel_weights": {self.basegame_type: {"BR0": 1}},
             "mult_values": {self.basegame_type: {1: 1}},
             "force_wincap": False,
             "force_freegame": False,
-            "force_sw_expand": True,
         }
 
         zerowin_condition = {

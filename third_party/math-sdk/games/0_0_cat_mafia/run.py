@@ -64,21 +64,29 @@ if __name__ == "__main__":
         OptimizationExecution().run_all_modes(config, target_modes, rust_threads)
         generate_configs(gamestate)
 
-        # Optimizer under-hits RTP / starves paw on base & boost — floor paw and
-        # match ~96.01% RTP on the weighted publish LUT (before resample).
+        # Optimizer under-hits RTP / starves paw & SW curtain on base & boost —
+        # floor paw≥3% + sw≥3% (event-based), hold HIT at the pre-SW baseline,
+        # then match ~96.01% RTP hit-neutrally on the weighted publish LUT
+        # (before resample). bonus_normal / bonus_super are never re-run here:
+        # their publish files stay byte-identical (FS logic 1:1).
         from tools.enforce_paw_hit_rate import main as enforce_lut_main
         import sys
 
+        hit_baseline = {"base": "0.3708", "bonus_boost": "0.4133"}
         for mode in ("base", "bonus_boost"):
             if mode not in target_modes:
                 continue
-            print(f"\n=== Post-opt LUT fix: {mode} (paw≥3%, RTP≈96.01%) ===")
+            print(f"\n=== Post-opt LUT fix: {mode} (paw≥3%, sw≥3%, HIT/RTP baseline) ===")
             sys.argv = [
                 "enforce_paw_hit_rate.py",
                 "--mode",
                 mode,
                 "--paw",
                 "0.03",
+                "--sw",
+                "0.03",
+                "--hit",
+                hit_baseline[mode],
                 "--rtp",
                 "0.9601",
                 "--lut-dir",

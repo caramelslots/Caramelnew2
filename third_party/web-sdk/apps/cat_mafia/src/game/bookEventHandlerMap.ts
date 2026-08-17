@@ -22,6 +22,7 @@ import {
 	SW_PHASE1_HOLD_MS,
 	SW_PHASE2_PRE_MS,
 	SW_SECOND_WIN_PRE_DELAY_MS,
+	PAW_PHASE1_HOLD_MS,
 	BONUS_WIN_PRE_DELAY_MS,
 	BONUS_WIN_POST_DELAY_MS,
 	BULLET_FLY_TOTAL_MS,
@@ -190,6 +191,29 @@ const revealHasWinBeforeNextReveal = (bookEvents: BookEvent[], revealEvent: Book
 	return false;
 };
 
+/** True when this spin's segment (until the next reveal) resolves paw coins. */
+const hasPawResolveBeforeNextReveal = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
+	const startIdx = bookEvents.indexOf(fromEvent);
+	if (startIdx < 0) return false;
+	for (let i = startIdx + 1; i < bookEvents.length; i++) {
+		const event = bookEvents[i];
+		if (event.type === 'reveal') break;
+		if (event.type === 'pawCoinResolve') return true;
+	}
+	return false;
+};
+
+/** True when line wins played in this spin's segment before the paw resolve. */
+const hasWinInfoSinceLastReveal = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
+	const startIdx = bookEvents.indexOf(fromEvent);
+	for (let i = startIdx - 1; i >= 0; i--) {
+		const event = bookEvents[i];
+		if (event.type === 'reveal') break;
+		if (event.type === 'winInfo') return true;
+	}
+	return false;
+};
+
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
 	// Wincap (level 10) hides UI — the count-up runs ~32s and a visible HUD
 	// would otherwise stay live during the celebration. After the 4-tier
@@ -281,6 +305,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.pawCoinBagVisible = false;
 		stateGame.pawCoinFlying = false;
 		stateGame.superWildCurtain = null;
+		// Лапа остаётся горящей во время фазы-1 линий, если следом идёт
+		// конверсия в монетки (исключение из димминга — см. ReelSymbol).
+		// Снимается в конце pawCoinResolve.
+		stateGame.pawPending = hasPawResolveBeforeNextReveal(bookEvents, bookEvent);
 
 		stateGame.gameType = bookEvent.gameType;
 
@@ -385,6 +413,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const isPostSwExpand = eventIndex >= 0 && expandIndex >= 0 && eventIndex > expandIndex;
 		// Phase 1 when a curtain + second winInfo follows — expand handler clears after hold.
 		const swExpandFollows = eventIndex >= 0 && expandIndex > eventIndex && hasWinInfoAfterExpand;
+		// Paw two-beat: линии играют первыми, затем pawCoinResolve держит фазу-1,
+		// снимает spotlight и конвертит ряды — тот же хендофф, что у шторы SW,
+		// поэтому фоновой таймер затемнения здесь не запускаем.
+		const pawResolveFollows =
+			eventIndex >= 0 && hasPawResolveBeforeNextReveal(bookEvents, bookEvent);
 
 		if (isPostSwExpand) {
 			clearWinSpotlight();
@@ -445,8 +478,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		);
 		await animateSymbols({ positions: allPositions });
 
-		// Phase-1 before SW curtain: keep paylines until expand handler clears them.
-		if (swExpandFollows) return;
+		// Phase-1 before SW curtain / paw resolve: keep paylines until the
+		// feature handler clears them.
+		if (swExpandFollows || pawResolveFollows) return;
 
 		// Запускаем фоновый таймер (не блокирует pipeline — игрок может делать
 		// ставку сразу). По истечении WIN_SPOTLIGHT_CLEAR_DELAY_MS снимаем
@@ -817,9 +851,17 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				})),
 		);
 
-		// Let the paw landing (appear_flash flip) read first — coins convert
-		// the row(s) only after a short beat.
-		await waitForGameSpeed(PAW_COIN_CONVERT_DELAY_MS, stateGame.gameSpeed);
+		// Линии → монетки (тот же two-beat, что у шторы SW): если линии уже
+		// отыграли, держим фазу-1 (paylines + spotlight) на холде, затем снимаем
+		// затемнение — конверсия читается как отдельное второе событие.
+		// На спинах только с лапой (без линий) остаётся короткий бит, чтобы
+		// прочитался флип выпадения лапы (appear_flash).
+		const linesPlayed = hasWinInfoSinceLastReveal(bookEvents, bookEvent);
+		await waitForGameSpeed(
+			linesPlayed ? PAW_PHASE1_HOLD_MS : PAW_COIN_CONVERT_DELAY_MS,
+			stateGame.gameSpeed,
+		);
+		clearWinSpotlight();
 
 		stateGame.pawCoinCells = cells;
 		stateGame.pawCoinTotal = bookEvent.totalCoinWin;
@@ -848,6 +890,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.pawCoinFlying = false;
 		stateGame.pawCoinCells = [];
 		stateGame.pawCoinTotal = 0;
+		stateGame.pawPending = false;
 		stateGame.mascotPose = 'idle';
 	},
 

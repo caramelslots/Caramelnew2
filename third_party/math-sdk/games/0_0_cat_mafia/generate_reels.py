@@ -76,15 +76,19 @@ def write_csv(path: str, rows: list[list[str]]) -> None:
 
 # Базовая конфигурация весов — варьируется по бараб./стрипу.
 
-# BR0 — basegame default. Lower vol; paw/SW features NOT on strips.
-#   criteria="paw" / "sw_expand" plant features at equal quotas (~3% each).
+# BR0 — basegame default. Lower vol.
+#   SW on strips (2026-08): 2 stops/reel, как на FR0 — штора выпадает
+#   естественно; форс-посадка force_sw_expand_on_board удалена. Максимум 1 SW
+#   за спин держит enforce_single_sw_base (game_override.py). Гейт шторы без
+#   изменений: SW должен стоять на выигрышной линии.
+#   Paw на лентах по-прежнему НЕТ — лапа садится фенсом force_paw_on_board.
 #   No W on strips (rework): W weight moved into L1-L4 to hold hit rate.
 BR0_WEIGHTS = [
-    {"L1": 44, "L2": 44, "L3": 45, "L4": 47, "H4": 6, "H3": 9, "H2": 11, "H1": 13, "B": 4},
-    {"L1": 43, "L2": 43, "L3": 44, "L4": 46, "H4": 6, "H3": 9, "H2": 11, "H1": 13, "B": 4},
-    {"L1": 44, "L2": 44, "L3": 45, "L4": 47, "H4": 6, "H3": 9, "H2": 11, "H1": 13, "B": 4},
-    {"L1": 43, "L2": 43, "L3": 44, "L4": 46, "H4": 6, "H3": 9, "H2": 11, "H1": 13, "B": 4},
-    {"L1": 43, "L2": 43, "L3": 44, "L4": 46, "H4": 6, "H3": 9, "H2": 11, "H1": 13, "B": 4},
+    {"L1": 44, "L2": 44, "L3": 45, "L4": 47, "H4": 6, "H3": 9, "H2": 11, "H1": 13, "B": 4, "SW": 2},
+    {"L1": 43, "L2": 43, "L3": 44, "L4": 46, "H4": 6, "H3": 9, "H2": 11, "H1": 13, "B": 4, "SW": 2},
+    {"L1": 44, "L2": 44, "L3": 45, "L4": 47, "H4": 6, "H3": 9, "H2": 11, "H1": 13, "B": 4, "SW": 2},
+    {"L1": 43, "L2": 43, "L3": 44, "L4": 46, "H4": 6, "H3": 9, "H2": 11, "H1": 13, "B": 4, "SW": 2},
+    {"L1": 43, "L2": 43, "L3": 44, "L4": 46, "H4": 6, "H3": 9, "H2": 11, "H1": 13, "B": 4, "SW": 2},
 ]
 
 # BR1 — bonus_boost basegame. Same; paw/SW via equal force criteria. No W.
