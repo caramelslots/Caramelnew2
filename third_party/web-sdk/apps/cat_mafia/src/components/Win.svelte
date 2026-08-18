@@ -19,6 +19,7 @@
 	import PressToContinue from './PressToContinue.svelte';
 	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
 	import {
+		BIG_WIN_DIM_ALPHA,
 		BITMAP_FONT_SCALE,
 		SYMBOL_SIZE,
 		WIN_SCREEN_POST_COUNT_UP_DELAY_MS,
@@ -137,12 +138,15 @@
 		winHide: () => {
 			show = false;
 			stateGame.winOverlayActive = false;
+			stateGame.overlayDimAlpha = 0;
 			clearTierTimers();
 		},
 		winUpdate: async (emitterEvent) => {
 			amount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
-			stateGame.winOverlayActive = emitterEvent.winLevelData.type === 'big';
+			const isBig = emitterEvent.winLevelData.type === 'big';
+			stateGame.winOverlayActive = isBig;
+			stateGame.overlayDimAlpha = isBig ? BIG_WIN_DIM_ALPHA : 0;
 			currentTierIndex = 0;
 			winUpdateCount++;
 			startTierAdvancement(computeWinLadder(emitterEvent.winLevelData));
@@ -158,7 +162,7 @@
 		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
 				{#if isBigWin}
-					<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.5} />
+					<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={BIG_WIN_DIM_ALPHA} />
 				{/if}
 
 				<OnMount

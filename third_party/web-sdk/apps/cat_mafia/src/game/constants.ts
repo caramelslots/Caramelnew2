@@ -1066,6 +1066,8 @@ export const PAW_COIN_WAVE_STEP_MS = 220;
 /** Pause after win amount count-up finishes, before the celebration screen auto-dismisses. */
 export const WIN_SCREEN_POST_COUNT_UP_DELAY_MS = 1500;
 
+/** Full-screen dim behind big-win celebration (Win.svelte). */
+export const BIG_WIN_DIM_ALPHA = 0.5;
 /** Full-screen dim behind FS end (FreeSpinOutro) count-up panel. */
 export const FS_OUTRO_DIM_ALPHA = 0.85;
 /** FS end fortune-cookie spine width as a fraction of board width (desktop/tablet). */

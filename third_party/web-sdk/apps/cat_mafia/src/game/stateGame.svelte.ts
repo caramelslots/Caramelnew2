@@ -219,6 +219,9 @@ export const stateGame = $state({
 	// renders on top while the dim layer keeps controls visible underneath.
 	// Small/medium wins leave this false so the HUD stays at normal stacking.
 	winOverlayActive: false,
+	// Matching CanvasSizeRectangle alpha (big win 0.5 / FS end 0.85). The HTML
+	// mascot sits outside Pixi, so it uses this to brightness-match the board.
+	overlayDimAlpha: 0,
 	// FS intro board is an HTML overlay.
 	freeSpinIntroActive: false,
 	// === Cat Mafia Stage B ===

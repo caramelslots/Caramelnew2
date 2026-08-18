@@ -99,6 +99,8 @@ type SkinRuntime = {
 
 const runtimes = new Map<RuntimeKey, SkinRuntime>();
 const clipStartedAt = new WeakMap<CoinPawSpineTarget, number>();
+/** Last `appear_flash` / `flash` frame already on the 2D canvas — skip GPU. */
+const frozenTargets = new WeakSet<CoinPawSpineTarget>();
 let hubRoot: HTMLDivElement | null = null;
 let hubCss = false;
 
@@ -130,19 +132,16 @@ const ensureHubRoot = () => {
 	return hubRoot;
 };
 
-const blitOne = (runtime: SkinRuntime, target: CoinPawSpineTarget) => {
+const blitOne = (runtime: SkinRuntime, target: CoinPawSpineTarget): boolean => {
 	const source = runtime.player.canvas;
-	if (!source || source.width < 1 || source.height < 1) return;
+	if (!source || source.width < 1 || source.height < 1) return false;
 	const el = target.canvas;
-	const dpr = Math.min(2, window.devicePixelRatio || 1);
-	const cssW = Math.max(1, el.clientWidth);
-	const cssH = Math.max(1, el.clientHeight);
-	const w = Math.round(cssW * dpr);
-	const h = Math.round(cssH * dpr);
+	const w = COIN_PAW_SOURCE_SIZE;
+	const h = COIN_PAW_SOURCE_SIZE;
 	if (el.width !== w) el.width = w;
 	if (el.height !== h) el.height = h;
 	const ctx = el.getContext('2d');
-	if (!ctx) return;
+	if (!ctx) return false;
 	drawCoinPawLive(
 		ctx,
 		source,
@@ -152,6 +151,14 @@ const blitOne = (runtime: SkinRuntime, target: CoinPawSpineTarget) => {
 		h,
 		runtime.mode === 'flash' ? 'full' : 'disc',
 	);
+	return true;
+};
+
+const hasUnfrozenTargets = (runtime: SkinRuntime) => {
+	for (const target of runtime.targets) {
+		if (!frozenTargets.has(target)) return true;
+	}
+	return false;
 };
 
 /** One WebGL player per skin. Each overlay coin seeks its own appear_flash time. */
@@ -171,19 +178,26 @@ const poseAndBlitAll = (runtime: SkinRuntime) => {
 	const end = entry.animationEnd;
 	const bg = player.bg;
 	const pma = false;
+	// Coin skeleton has no physics / IK — `none` skips the constraint pass.
+	const physics = Physics.none;
 
 	for (const target of runtime.targets) {
+		if (frozenTargets.has(target)) continue;
 		const started = clipStartedAt.get(target);
 		if (started == null) continue;
-		entry.trackTime = Math.min(end, Math.max(0, ((now - started) / 1000) * target.getSpeed()));
+		const trackTime = Math.min(end, Math.max(0, ((now - started) / 1000) * target.getSpeed()));
+		entry.trackTime = trackTime;
 		state.apply(skeleton);
-		skeleton.updateWorldTransform(Physics.update);
+		skeleton.updateWorldTransform(physics);
 		gl.clearColor(bg.r, bg.g, bg.b, bg.a);
 		gl.clear(gl.COLOR_BUFFER_BIT);
 		renderer.begin();
 		renderer.drawSkeleton(skeleton, pma);
 		renderer.end();
-		blitOne(runtime, target);
+		if (!blitOne(runtime, target)) continue;
+		// Last pose is the reverse face (x1 / x2 / x3). Hold it on the 2D
+		// canvas — fly is CSS from here, no more WebGL readback.
+		if (trackTime >= end) frozenTargets.add(target);
 	}
 };
 
@@ -266,7 +280,8 @@ const ensureRuntime = (skin: CoinPawSkin, mode: CoinPawSpineMode): SkinRuntime =
 		},
 		draw: () => {
 			if (isHtmlWebglPaused()) return;
-			if (runtime.targets.size > 0) poseAndBlitAll(runtime);
+			if (!hasUnfrozenTargets(runtime)) return;
+			poseAndBlitAll(runtime);
 		},
 	});
 
@@ -281,12 +296,14 @@ export const subscribeCoinPawSpine = (target: CoinPawSpineTarget) => {
 	const mode = target.mode ?? 'row';
 	const runtime = ensureRuntime(target.skin, mode);
 	runtime.targets.add(target);
+	frozenTargets.delete(target);
 	if (runtime.ready) {
 		ensureClip(runtime);
 		clipStartedAt.set(target, performance.now());
 	}
 	return () => {
 		runtime.targets.delete(target);
+		frozenTargets.delete(target);
 		if (runtime.targets.size === 0) {
 			runtime.player.paused = true;
 			runtime.clipReady = false;

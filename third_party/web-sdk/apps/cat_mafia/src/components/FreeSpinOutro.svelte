@@ -74,9 +74,11 @@
 		if (finishingOutro) return;
 		finishingOutro = true;
 		closing = true;
+		stateGame.overlayDimAlpha = 0;
 		await fsAnimation?.playDisappear();
 		show = false;
 		stateGame.winOverlayActive = false;
+		stateGame.overlayDimAlpha = 0;
 		oncomplete();
 	};
 
@@ -89,6 +91,7 @@
 			show = false;
 			closing = false;
 			stateGame.winOverlayActive = false;
+			stateGame.overlayDimAlpha = 0;
 		},
 		freeSpinOutroCountUp: async (emitterEvent) => {
 			finishingOutro = false;
@@ -103,6 +106,7 @@
 			winAmount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
 			stateGame.winOverlayActive = emitterEvent.winLevelData.type === 'big';
+			stateGame.overlayDimAlpha = FS_OUTRO_DIM_ALPHA;
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},
 	});
