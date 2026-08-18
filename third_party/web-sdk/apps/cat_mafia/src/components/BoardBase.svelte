@@ -25,8 +25,8 @@
 </script>
 
 {#each context.stateGame.board as reel, reelIndex (reelIndex)}
-	{#each reel.reelState.symbols as reelSymbol}
-		{#if matchesLayer(reelSymbol.symbolState)}
+	{#each reel.reelState.symbols as reelSymbol, slotIndex}
+		{#if slotIndex < reel.reelState.activeSymbolCount && matchesLayer(reelSymbol.symbolState)}
 			<ReelSymbol {reelIndex} {reelSymbol} />
 		{/if}
 	{/each}
