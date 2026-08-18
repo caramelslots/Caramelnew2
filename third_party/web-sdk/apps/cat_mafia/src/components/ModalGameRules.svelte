@@ -1,5 +1,5 @@
 <!--
-	Game Information modal: about, paylines, special symbols, Progress Ladder,
+	Game Information modal: about, paylines, special symbols,
 	paytable, bet modes, HUD controls (icons from HUD_ASSETS), and legal.
 -->
 <script lang="ts">
@@ -15,7 +15,6 @@
 	import { HUD_BALANCE_BET_FONT_FAMILY } from '../game/constants';
 	import { AUTOSPIN_ASSETS } from '../game/uiHtmlAssetManifest';
 	import {
-		GAME_INFO_MYSTERY_BG_IMAGE,
 		GAME_INFO_PAYING_SYMBOL_IDS,
 		GAME_INFO_SYMBOL_IMAGES,
 		getSymbolPayRows,
@@ -39,8 +38,6 @@
 	const paylinesNote = $derived(context.i18nDerived.gameInfoPaylinesNote());
 	const paytableTitle = $derived(context.i18nDerived.gameInfoPaytableTitle());
 	const paytableNote = $derived(context.i18nDerived.gameInfoPaytableNote());
-	const progressLadderTitle = $derived(context.i18nDerived.gameInfoProgressLadderTitle());
-	const progressLadderBody = $derived(context.i18nDerived.gameInfoProgressLadderBody());
 	const controlsTitle = $derived(context.i18nDerived.gameInfoControlsTitle());
 	const controlOverlayLabels = $derived({
 		buyBonus: context.i18nDerived.buyBonusPanelButton(),
@@ -73,7 +70,7 @@
 	const specialSymbols = $derived(
 		(['B', 'W', 'M'] as const).map((id) => ({
 			id,
-			image: GAME_INFO_SYMBOL_IMAGES[id],
+			image: id === 'M' ? null : GAME_INFO_SYMBOL_IMAGES[id],
 			title: specialSymbolCopy[id].title(),
 			body: specialSymbolCopy[id].body(),
 		})),
@@ -118,22 +115,9 @@
 										<article class="special-card">
 											{#if symbol.id === 'M'}
 												<div class="mystery-symbol" aria-hidden="true">
-													<img
-														class="symbol-image mystery-bg"
-														src={GAME_INFO_MYSTERY_BG_IMAGE}
-														alt=""
-														loading="lazy"
-														decoding="async"
-													/>
-													<img
-														class="symbol-image mystery-sign"
-														src={symbol.image}
-														alt={symbol.title}
-														loading="lazy"
-														decoding="async"
-													/>
+													<span class="mystery-mark">?</span>
 												</div>
-											{:else}
+											{:else if symbol.image}
 												<img
 													class="symbol-image"
 													src={symbol.image}
@@ -151,13 +135,6 @@
 										</article>
 									{/each}
 								</div>
-							</section>
-
-							<section class="section">
-								<h3>{progressLadderTitle}</h3>
-								{#each progressLadderBody.split('\n') as line, index ('progress-ladder' + index)}
-									<p>{line}</p>
-								{/each}
 							</section>
 
 							<section class="section">
@@ -478,21 +455,21 @@
 
 	.mystery-symbol {
 		position: relative;
+		display: grid;
+		place-items: center;
 		width: 72px;
 		height: 72px;
 		flex-shrink: 0;
+		background: #16101c;
+		clip-path: polygon(50% 6%, 90% 28%, 90% 72%, 50% 94%, 10% 72%, 10% 28%);
 	}
 
-	.mystery-bg,
-	.mystery-sign {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-	}
-
-	.mystery-sign {
-		z-index: 1;
+	.mystery-mark {
+		font-family: Georgia, 'Times New Roman', serif;
+		font-size: 2.35rem;
+		font-weight: 700;
+		line-height: 1;
+		color: #e4c36a;
 	}
 
 	.pay-symbol-image {

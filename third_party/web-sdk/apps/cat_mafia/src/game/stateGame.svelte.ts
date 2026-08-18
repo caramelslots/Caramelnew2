@@ -213,16 +213,14 @@ export const stateGame = $state({
 	// Idle symbol tease (matching symbols bounce while waiting). Disabled after
 	// any win on the current board; re-enabled when the next losing spin settles.
 	idleBounceAllowed: true,
-	// Cloud transition covers HTML overlays (e.g. ProgressLadder) while active.
+	// Cloud transition covers HTML overlays while active.
 	transitionActive: false,
 	// Big-win overlay only — raises Pixi canvas above HTML HUD so celebration
 	// renders on top while the dim layer keeps controls visible underneath.
 	// Small/medium wins leave this false so the HUD stays at normal stacking.
 	winOverlayActive: false,
-	// FS intro board is an HTML overlay — hide ProgressLadder while visible.
+	// FS intro board is an HTML overlay.
 	freeSpinIntroActive: false,
-	// Bonus bar during FS — decoupled from gameType so background can switch under smoke first.
-	ladderVisible: false,
 	// === Cat Mafia Stage B ===
 	pawCoinCells: [] as {
 		reel: number;

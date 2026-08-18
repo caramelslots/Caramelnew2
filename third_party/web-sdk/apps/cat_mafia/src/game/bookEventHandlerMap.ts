@@ -528,7 +528,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.bonusCollected = 0;
 		stateGame.ladderTier = 0;
 		stateGame.mysteryReels = [];
-		stateGame.ladderVisible = false;
 		resetMysteryReelSession();
 		// Stage D — drum + bonus mode
 		stateGame.drumCount = 0;
@@ -564,9 +563,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			totalFreeSpins: bookEvent.totalFs,
 		});
 		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
-		// Cat Mafia: no Progress Ladder — keep hidden.
-		stateGame.ladderVisible = false;
-		eventEmitter.broadcast({ type: 'boardFrameGlowShow' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 		stateUi.freeSpinCounterShow = true;
 		eventEmitter.broadcast({
@@ -609,7 +605,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.bonusCollected = 0;
 		stateGame.ladderTier = 0;
 		stateGame.mysteryReels = [];
-		stateGame.ladderVisible = false;
 		resetMysteryReelSession();
 		stateGame.bonusMode = null;
 		stateGame.drumCount = 0;
@@ -621,7 +616,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.mascotPose = 'idle';
 
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
-		eventEmitter.broadcast({ type: 'boardFrameGlowHide' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
 		winLevelSoundsPlay({ winLevelData });
 		await eventEmitter.broadcastAsync({

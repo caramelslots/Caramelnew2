@@ -22,7 +22,6 @@
 			transitioning = true;
 			stateGame.transitionActive = true;
 			pendingGameType = event.gameType;
-			stateGame.ladderVisible = false;
 
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},

@@ -5,10 +5,7 @@ Extract the per-symbol static sprites out of the packed Spine atlas
 standalone WebP files into `sprites/symbolsNew/`.
 
 These static sprites are the resting-state previews used by `assets.ts`
-(`H1Img`, `WImg`, `MBgImg`, ...) and the paytable overlay
-(`gameInfoSymbols.ts`). Whenever the designer re-packs the atlas the
-sprites drift out of sync, so this script re-cuts them straight from the
-atlas — single source of truth, one run per art update.
+(`WImg`, `BImg`, ...) and the paytable overlay (`gameInfoSymbols.ts`).
 
 Regions with a trimmed `offsets:` entry (e.g. `Special_1`) are re-expanded
 onto their original untrimmed canvas so every sprite stays 196x196.
@@ -29,16 +26,6 @@ ATLAS_FILE = ATLAS_DIR / "symbols.atlas"
 # regions listed here become standalone sprites; the rest live purely inside
 # the Spine skeletons.
 REGION_TO_SPRITE = {
-    "High_1": "High_1",
-    "High_2": "High_2",
-    "High_3": "High_3",
-    "High_4": "High_4",
-    "Low_1": "Low_1",
-    "Low_2": "Low_2",
-    "Low_3": "Low_3",
-    "Low_4": "Low_4",
-    "Mystery_bg": "Mystery_bg",
-    "Mystery_sign": "Mystery_sign",
     "Special_1": "Special_1",
     "Special_2": "Special_2",
 }

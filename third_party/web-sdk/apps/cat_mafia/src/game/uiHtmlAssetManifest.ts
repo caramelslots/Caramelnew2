@@ -1,5 +1,5 @@
 import { preloadHtmlImages } from './preloadHtmlImages';
-import { GAME_INFO_SYMBOL_IMAGE_URLS } from './gameInfoSymbols';
+import { GAME_INFO_SYMBOL_IMAGE_URLS, GAME_INFO_SYMBOL_IMAGES } from './gameInfoSymbols';
 import {
 	SPIN_BUTTON_SPINE_WEBP_URL,
 	startSpinButtonSpinePreload,
@@ -74,7 +74,7 @@ export const AUTOSPIN_ASSETS = {
 
 export const FEATURE_TOGGLE_ASSETS = {
 	bonusSwitchBg: uiHtmlAssetUrl('bonus_switch/bonus_switch.webp'),
-	menuCatIcon: `${import.meta.env.BASE_URL}assets/sprites/bonusBar/cat_static.png`,
+	menuCatIcon: GAME_INFO_SYMBOL_IMAGES.B,
 } as const;
 
 /** Full-body Cat Mafia mascot (board right) — Spine atlas image. */

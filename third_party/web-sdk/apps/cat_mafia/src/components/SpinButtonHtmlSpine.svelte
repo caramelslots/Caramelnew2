@@ -7,13 +7,14 @@
 		SPIN_BUTTON_SPINE_VIEWPORT,
 		resolveSpinButtonSpineUrl,
 	} from '../game/spinButtonHtmlSpine';
+	import { isHtmlWebglPaused } from '../game/htmlWebglPause';
 
 	let container = $state<HTMLDivElement>();
 	let ready = $state(false);
 	let player: SpinePlayer | undefined;
 
 	export function playPress() {
-		if (!player || !ready) return;
+		if (!player || !ready || isHtmlWebglPaused()) return;
 		player.setAnimation('animation', false);
 	}
 
@@ -45,6 +46,7 @@
 						}
 					},
 				});
+				spinePlayer.paused = isHtmlWebglPaused();
 				ready = true;
 			},
 		});
@@ -53,6 +55,11 @@
 			player?.dispose();
 			player = undefined;
 		};
+	});
+
+	$effect(() => {
+		if (!player || !ready) return;
+		player.paused = isHtmlWebglPaused();
 	});
 </script>
 

@@ -12,6 +12,8 @@
 		maxResolution?: number;
 		antialias?: boolean;
 		tuneForMobilePortrait?: boolean;
+		webglOnIosAndroid?: boolean;
+		preference?: 'webgl' | 'webgpu';
 	};
 
 	const props: Props = $props();
@@ -25,6 +27,8 @@
 	maxResolution={props.maxResolution}
 	antialias={props.antialias}
 	tuneForMobilePortrait={props.tuneForMobilePortrait}
+	webglOnIosAndroid={props.webglOnIosAndroid}
+	preference={props.preference}
 >
 	<InitialiseParent>
 		<GameAssetsLoader>

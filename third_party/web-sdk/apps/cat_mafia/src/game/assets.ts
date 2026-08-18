@@ -11,28 +11,9 @@ export default {
 			skeleton: assetUrl('assets/spines/background/skeleton.json'),
 		},
 	},
-	lanternDay: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/background/lantern_day.webp'),
-	},
-	lanternNight: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/background/lantern_night.webp'),
-	},
-	neonBackground: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('assets/spines/neonBackground/skeleton.atlas'),
-			skeleton: assetUrl('assets/spines/neonBackground/skeleton.json'),
-		},
-	},
 	boardDayBase: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/boardFrame/desk_day_base.webp'),
-	},
-	boardNightBase: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/boardFrame/desk_night_base.webp'),
 	},
 	boardContour: {
 		type: 'sprite',
@@ -44,18 +25,6 @@ export default {
 			atlas: assetUrl('assets/spines/outlineReel/skeleton.atlas'),
 			skeleton: assetUrl('assets/spines/outlineReel/skeleton.json'),
 		},
-	},
-	bonusBarV: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/bonusBar/bar_v.webp'),
-	},
-	bonusBarH: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/bonusBar/bar_h.webp'),
-	},
-	bonusBarCat: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/bonusBar/cat_static.png'),
 	},
 	// Designer-handoff `designer_assets/Symbols/export` — combined skeleton
 	// with all symbol slots + bounce/win/explosion animations. Split into
@@ -188,9 +157,8 @@ export default {
 			scale: 1,
 		},
 	},
-	// Static sprites for resting symbols. Each WebP is cut straight from the
-	// packed atlas by `scripts/extractSymbolSprites.py` — no spritesheet
-	// because the per-symbol sizes differ (H/L 196², Mystery 256², W/B masked).
+	// Static sprites for spinning / resting cells. H/L/BT are designer
+	// WebPs; W/B are cut from the packed symbolsNew atlas.
 	H1Img: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/symbolsNew/Diamond.webp'),
@@ -234,22 +202,6 @@ export default {
 	WImg: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/symbolsNew/Special_2.webp'),
-	},
-	MImg: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Mystery_sign.webp'),
-	},
-	MBgImg: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Mystery_bg.webp'),
-	},
-	anticipation: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('assets/spines/anticipation/anticipation.atlas'),
-			skeleton: assetUrl('assets/spines/anticipation/anticipation.json'),
-			scale: 2,
-		},
 	},
 	babloFont: {
 		type: 'font',
@@ -316,14 +268,6 @@ export default {
 		src: {
 			atlas: assetUrl('assets/spines/fsPopup/fs_popup.atlas'),
 			skeleton: assetUrl('assets/spines/fsPopup/fs_popup.json'),
-			scale: 2,
-		},
-	},
-	reelhouse: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('assets/spines/reelhouse/reelhouse_glow.atlas'),
-			skeleton: assetUrl('assets/spines/reelhouse/reelhouse_glow.json'),
 			scale: 2,
 		},
 	},

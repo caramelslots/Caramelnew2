@@ -76,8 +76,6 @@ export const i18nDerived = {
 	fsCounterLabel: () => t('FS_COUNTER_LABEL'),
 	fsCounterText: (current: number, total: number) => `${current} ${t('FS_COUNTER_OF')} ${total}`,
 	fsRemaining: () => t('FS_REMAINING'),
-	progressLadder: () => t('PROGRESS_LADDER'),
-	bonusCollected: () => t('BONUS_COLLECTED'),
 	// Mystery Reel Meter (top-right HUD во FS)
 	mysteryReelMeter: () => t('MYSTERY_REEL_METER'),
 	bonusToNextReel: () => t('BONUS_TO_NEXT_REEL'),
@@ -124,8 +122,6 @@ export const i18nDerived = {
 	gameInfoFsBody: () => t('GAME_INFO_FS_BODY'),
 	gameInfoMysteryTitle: () => t('GAME_INFO_MYSTERY_TITLE'),
 	gameInfoMysteryBody: () => ts('GAME_INFO_MYSTERY_BODY'),
-	gameInfoProgressLadderTitle: () => t('GAME_INFO_PROGRESS_LADDER_TITLE'),
-	gameInfoProgressLadderBody: () => t('GAME_INFO_PROGRESS_LADDER_BODY'),
 	gameInfoControlsTitle: () => ts('GAME_INFO_CONTROLS_TITLE'),
 	// Replay Mode — real-money vs social (`?social=true`) via KEY / KEY_SOCIAL.
 	replayBadge: () => t('REPLAY_BADGE'),

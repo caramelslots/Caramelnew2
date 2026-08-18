@@ -16,7 +16,7 @@ import { stateGame } from './stateGame.svelte';
 /** Uniform board zoom multiplier (Board + BoardFrame). */
 export const catBoardZoom = new Tween(1);
 
-/** Canvas-centered background zoom (sprite + neon behind + lanterns). */
+/** Canvas-centered background zoom (street spine + desk). */
 export const catBackgroundZoom = new Tween(1);
 
 let slowPhaseStartMs = 0;

@@ -11,6 +11,7 @@
 		getBackgroundCoverScale,
 	} from '../game/neonBackgroundLayout';
 	import BackgroundSkinController from './BackgroundSkinController.svelte';
+	import StreetOffscreenCull from './StreetOffscreenCull.svelte';
 
 	const context = getContext();
 
@@ -45,6 +46,7 @@
 		<Container x={-canvasCenter.x} y={-canvasCenter.y}>
 			<SpineProvider key="mainBackground" {...spineProps}>
 				<BackgroundSkinController skin="day" />
+				<StreetOffscreenCull />
 				<SpineTrack trackIndex={0} animationName={BG_IDLE_ANIMATION} loop />
 			</SpineProvider>
 		</Container>
@@ -56,6 +58,7 @@
 		<Container x={-canvasCenter.x} y={-canvasCenter.y}>
 			<SpineProvider key="mainBackground" {...spineProps}>
 				<BackgroundSkinController skin="night" />
+				<StreetOffscreenCull />
 				<SpineTrack trackIndex={0} animationName={BG_IDLE_ANIMATION} loop />
 			</SpineProvider>
 		</Container>

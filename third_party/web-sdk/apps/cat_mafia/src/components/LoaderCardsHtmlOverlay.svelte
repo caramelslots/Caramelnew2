@@ -144,7 +144,7 @@
 {#if show}
 	<div class="loader-cards-overlay" style={overlayStyle} aria-hidden={!show}>
 		<div class="loader-cards-stack">
-			<!-- Neon logo is rendered by NeonForegroundOverlay (Spine canvas) instead. -->
+			<!-- Loader logo slot (layout only). -->
 			<div class="loader-neon-logo-placeholder" style={logoStyle}></div>
 			{#if useCarousel}
 			<div

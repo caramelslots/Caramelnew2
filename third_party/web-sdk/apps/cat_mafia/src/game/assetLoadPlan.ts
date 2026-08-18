@@ -7,9 +7,6 @@ import { LOADER_SCREEN_IMAGE_URLS } from './loaderCardAssets';
 /** Stake GIF screen — animated day/night spine, audio manifest, transition, press font, high symbols. */
 export const LOADER_BATCH_1_KEYS = [
 	'mainBackground',
-	// Kept in the plan for key-count parity with assets.ts (not rendered — Wok neon retired).
-	'neonBackground',
-	'lanternDay',
 	'boardDayBase',
 	'boardContour',
 	'sound',
@@ -25,10 +22,8 @@ export const LOADER_BATCH_1_KEYS = [
 	'H4Img',
 ] as const satisfies readonly (keyof typeof assets)[];
 
-/** Bootstrap splash — night board, low/wild/bonus/mystery symbols, core game fonts. */
+/** Bootstrap splash — low/wild/bonus/mystery symbols, core game fonts. */
 export const LOADER_BATCH_2_KEYS = [
-	'lanternNight',
-	'boardNightBase',
 	'L1',
 	'L2',
 	'L3',
@@ -44,8 +39,6 @@ export const LOADER_BATCH_2_KEYS = [
 	'BImg',
 	'BTImg',
 	'WImg',
-	'MImg',
-	'MBgImg',
 	'prostoiFont',
 	'prostoiFontRu',
 	'prostoiWhiteFontRu',
@@ -56,7 +49,7 @@ export const LOADER_BATCH_2_KEYS = [
 
 /**
  * All six locale-specific font keys. Always declared in batch 3 so the
- * key-count check (LOADER_ASSET_KEY_COUNT === Object.keys(assets).length)
+ * key-count check (loaded batches === Object.keys(assets).length)
  * passes. Only the subset matching the active locale is actually loaded by
  * GameAssetsLoader — the rest are intentionally skipped.
  */
@@ -82,17 +75,13 @@ export const getLocaleSpecificFontKeys = (locale: string): readonly (keyof typeo
 };
 
 /**
- * Cards screen — bonus bar, win variants, anticipation overlay, locale fonts
+ * Cards screen — win variants, cat-slow outline, locale fonts
  * (all declared for count check), coins, HUD sprites. Must finish before
  * "Press to continue".
  */
 export const LOADER_BATCH_3_KEYS = [
-	'bonusBarV',
-	'bonusBarH',
-	'bonusBarCat',
 	'WWin',
 	'BWin',
-	'anticipation',
 	'outlineReel',
 	...LOCALE_FONT_KEYS,
 	'coins',
@@ -111,14 +100,13 @@ export const LOADER_BATCH_3_KEYS = [
 
 /**
  * Post-entry deferred batch — heavy Spine animations only needed for bonus
- * events (big win, free-spin intro/outro, reel-house glow). These assets
- * are never rendered until after the cloud transition completes, so they
- * load in the background while the player reads "Press to continue".
+ * events (big win, free-spin intro/outro). These assets are never rendered
+ * until after the cloud transition completes, so they load in the background
+ * while the player reads "Press to continue".
  */
 export const LOADER_BATCH_4_KEYS = [
 	'bigwin',
 	'fsPopup',
-	'reelhouse',
 	'fsCongBoard',
 	'fsCongNumber',
 	'fsLeftCounter',
@@ -138,7 +126,7 @@ export const LOADER_ASSET_KEY_COUNT = LOADER_ASSET_BATCHES.reduce(
 
 if (LOADER_ASSET_KEY_COUNT !== Object.keys(assets).length) {
 	throw new Error(
-		`assetLoadPlan: expected ${Object.keys(assets).length} keys, got ${LOADER_ASSET_KEY_COUNT}`,
+		`assetLoadPlan: expected ${Object.keys(assets).length} keys, got ${LOADER_ASSET_KEY_COUNT} loaded`,
 	);
 }
 

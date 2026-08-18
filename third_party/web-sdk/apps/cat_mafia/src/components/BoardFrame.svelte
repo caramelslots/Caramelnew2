@@ -1,30 +1,20 @@
-<script lang="ts" module>
-	export type EmitterEventBoardFrame =
-		| { type: 'boardFrameGlowShow' }
-		| { type: 'boardFrameGlowHide' };
-</script>
-
 <script lang="ts">
-	import { untrack } from 'svelte';
-	import { Sprite, SpineProvider, SpineTrack, Container } from 'pixi-svelte';
-	import { Tween } from 'svelte/motion';
-	import { SECOND } from 'constants-shared/time';
+	import { Sprite, Container } from 'pixi-svelte';
 
 	import {
 		BOARD_FRAME_OFFSET,
 		DESK_PARCHMENT,
 		DESK_PARCHMENT_PADDING,
 		DESK_VISUAL_OFFSET_Y,
-		REELHOUSE_GLOW_SCALE,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
 	import { catBoardZoom } from '../game/catAnticipationBoardZoom.svelte';
 
 	type Props = {
 		/**
-		 * `base` — desk fill under the reels (default).
-		 * `overlay` — gold frame with transparent playfield, drawn above symbols
-		 * so spin/land never paints over the rails.
+		 * `base` — desk fill under the reels.
+		 * `overlay` — gold rails with a transparent playfield, drawn above symbols
+		 * so spin/land never paints over the frame.
 		 */
 		layer?: 'base' | 'overlay';
 	};
@@ -51,93 +41,14 @@
 		width: DESK_SIZE.width,
 		height: DESK_SIZE.height,
 	});
-
-	const GLOW_SIZE = $derived({
-		width: boardLayout.width * REELHOUSE_GLOW_SCALE.width,
-		height: boardLayout.height * REELHOUSE_GLOW_SCALE.height,
-	});
-
-	const showBaseBoard = $derived(context.stateGame.gameType === 'basegame');
-	const showFeatureBoard = $derived(context.stateGame.gameType === 'freegame');
-
-	const alphaDay = new Tween(untrack(() => showBaseBoard) ? 1 : 0, { duration: SECOND });
-	const alphaNight = new Tween(untrack(() => showFeatureBoard) ? 1 : 0, { duration: SECOND });
-
-	$effect(() => {
-		alphaDay.set(showBaseBoard ? 1 : 0);
-	});
-	$effect(() => {
-		alphaNight.set(showFeatureBoard ? 1 : 0);
-	});
-
-	type AnimationName = 'reelhouse_glow_start' | 'reelhouse_glow_idle' | 'reelhouse_glow_exit';
-
-	let animationName = $state<AnimationName | undefined>(undefined);
-	let loop = $state(false);
-
-	context.eventEmitter.subscribeOnMount({
-		boardFrameGlowShow: () => {
-			if (layer !== 'base') return;
-			animationName = 'reelhouse_glow_start';
-			loop = false;
-		},
-		boardFrameGlowHide: () => {
-			if (layer !== 'base') return;
-			if (animationName) animationName = 'reelhouse_glow_exit';
-		},
-	});
 </script>
 
 <Container x={boardLayout.x} y={boardLayout.y} scale={boardScale}>
-	<Container x={-boardLayout.pivot.x} y={-boardLayout.pivot.y} sortableChildren={true}>
+	<Container x={-boardLayout.pivot.x} y={-boardLayout.pivot.y}>
 		{#if layer === 'base'}
-			{#if animationName}
-				<SpineProvider
-					zIndex={-1}
-					key="reelhouse"
-					x={frameX}
-					y={frameY}
-					width={GLOW_SIZE.width}
-					height={GLOW_SIZE.height}
-				>
-					<SpineTrack
-						trackIndex={0}
-						{animationName}
-						{loop}
-						listener={{
-							complete: (entry) => {
-								if (entry.animation) {
-									if (entry.animation.name === 'reelhouse_glow_start') {
-										animationName = 'reelhouse_glow_idle';
-										loop = true;
-									}
-
-									if (entry.animation.name === 'reelhouse_glow_exit') {
-										animationName = undefined;
-										loop = false;
-									}
-								}
-							},
-						}}
-					/>
-				</SpineProvider>
-			{/if}
-
-			{#if alphaDay.current > 0}
-				<Container alpha={alphaDay.current} zIndex={0}>
-					<Sprite key="boardDayBase" {...deskProps} />
-				</Container>
-			{/if}
-
-			{#if alphaNight.current > 0}
-				<Container alpha={alphaNight.current} zIndex={0}>
-					<Sprite key="boardNightBase" {...deskProps} />
-				</Container>
-			{/if}
-		{:else if alphaDay.current > 0 || alphaNight.current > 0}
-			<Container zIndex={2}>
-				<Sprite key="boardContour" {...deskProps} />
-			</Container>
+			<Sprite key="boardDayBase" {...deskProps} />
+		{:else}
+			<Sprite key="boardContour" {...deskProps} />
 		{/if}
 	</Container>
 </Container>

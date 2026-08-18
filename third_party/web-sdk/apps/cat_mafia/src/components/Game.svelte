@@ -29,7 +29,6 @@
 	import LoadingScreen from './LoadingScreen.svelte';
 	import BoardFrame from './BoardFrame.svelte';
 	import Board from './Board.svelte';
-	// Stage A: ProgressLadder / Mystery unlock UI hidden for Cat Mafia prototype.
 	import Win from './Win.svelte';
 	import MascotPlaceholder from './MascotPlaceholder.svelte';
 	import RevolverDrumPlaceholder from './RevolverDrumPlaceholder.svelte';
@@ -99,7 +98,7 @@
 	class="pixi-stage"
 	class:above-html-ui={pixiAboveHtml || context.stateGame.winOverlayActive}
 >
-	<GameApp maxResolution={3} tuneForMobilePortrait>
+	<GameApp maxResolution={3} tuneForMobilePortrait webglOnIosAndroid>
 		<EnableSound />
 		<EnableSymbolTextureOptimization />
 		<EnableUiTextureOptimization />
@@ -194,7 +193,7 @@
 		position: relative;
 	}
 
-	/* ProgressLadder / buy-bonus HUD (z-index 40–45); raise Pixi during cloud transition or win overlay. */
+	/* HUD (z-index 40–45); raise Pixi during cloud transition or win overlay. */
 	.html-underlays {
 		position: relative;
 		z-index: 40;

@@ -439,14 +439,11 @@ export const zIndexes = {
 	},
 };
 
-/** FS board pulse (`reelhouse_glow` in BoardFrame) — tint #db7ce0. */
-export const REELHOUSE_GLOW_SCALE = { width: 0.58, height: 0.62 } as const;
-
 /**
- * Geometry of the playfield inside the desk artwork
- * (`boardDayBase` / `boardNightBase` from `designer_assets/board копия.png`,
- * 2048×2048). Measured from the dark 5-column region inside the inner gold
- * rails. Values are fractions of the source image.
+ * Geometry of the playfield inside the desk frame
+ * (`boardDayBase` / `desk_day_base.webp`, 2048×2048). Measured from the dark
+ * 5-column region inside the inner gold rails. Values are fractions of the
+ * source image.
  *
  *   width/heightFrac — playfield bbox size as a fraction of image size.
  *   offset*Frac      — playfield-center offset from image-center
@@ -512,12 +509,10 @@ export const BOARD_FRAME_OFFSET = { x: 0, y: 0 } as const;
 export const DESK_VISUAL_OFFSET_Y = 0;
 
 /**
- * ProgressLadder `.bar-h` rendered width (px). Portrait desk parchment width
- * on screen is matched to this value (not the raw reel grid width).
+ * Reference width (px) for portrait board scaling. Parchment on-screen width
+ * is matched to this value minus PORTRAIT_BOARD_WIDTH_TRIM_PX.
  */
 export const PORTRAIT_BONUS_BAR_WIDTH_PX = 340;
-/** ProgressLadder `.bar-h` height (px), aspect ratio matches bar_h.png 657×217. */
-export const PORTRAIT_BONUS_BAR_HEIGHT_PX = 112.3;
 
 /** FS left counter width as a fraction of portrait board visual width. */
 export const PORTRAIT_FS_COUNTER_WIDTH_FRAC = 0.55;
@@ -627,12 +622,6 @@ export const POPOUT_L_PANEL_WIDTH = 124;
 export const POPOUT_S_PANEL_WIDTH = 70;
 export const POPOUT_S_SCALE = POPOUT_S_PANEL_WIDTH / POPOUT_L_PANEL_WIDTH;
 
-/** Desktop vertical FS bonus bar (bar_v.png 247×592). Popout scales down with the embed. */
-export const DESKTOP_BONUS_BAR_V_WIDTH_PX = 130;
-export const DESKTOP_BONUS_BAR_V_HEIGHT_PX = 311.6;
-export const POPOUT_L_BONUS_BAR_V_SCALE = 0.72;
-export const POPOUT_S_BONUS_BAR_V_SCALE = 0.4;
-
 export const scalePopoutPx = (px: number, min = 1) =>
 	Math.max(min, Math.round(px * POPOUT_S_SCALE));
 
@@ -730,22 +719,7 @@ export const resolveBuyPanelText = (options: {
 /** @deprecated use BUY_PANEL_TEXT_PX.portrait */
 export const PORTRAIT_BUY_PANEL_TEXT = BUY_PANEL_TEXT_PX.portrait;
 
-export const getPortraitBonusBarWidthPx = (
-	canvasSizeType: PortraitCanvasSizeType,
-	deviceWidth: number,
-) => PORTRAIT_BONUS_BAR_WIDTH_PX * getPortraitPhoneScaleFactor(canvasSizeType, deviceWidth);
-
-export const getPortraitBonusBarHeightPx = (
-	canvasSizeType: PortraitCanvasSizeType,
-	deviceWidth: number,
-) => PORTRAIT_BONUS_BAR_HEIGHT_PX * getPortraitPhoneScaleFactor(canvasSizeType, deviceWidth);
-
-/** ProgressLadder horizontal bar nudge from screen center (screen px, + = right). */
-export const BONUS_BAR_H_SHIFT_SCREEN_X = 6;
-/** ProgressLadder horizontal bar nudge downward on portrait phones (screen px, + = down). */
-export const BONUS_BAR_H_SHIFT_SCREEN_Y = 24;
-
-/** Portrait board parchment trim vs bonus bar (screen px) — neon frame reads slightly wider. */
+/** Portrait board parchment trim vs reference width (screen px). */
 export const PORTRAIT_BOARD_WIDTH_TRIM_PX = 14;
 
 /** Visible parchment + neon frame (game coords), not full desk texture asset size. */
@@ -782,20 +756,6 @@ export const isPopoutViewport = (sizes: { width: number; height: number }, toler
 export const isPopoutSmallViewport = (sizes: { width: number; height: number }, tolerance = 12) => {
 	const { width, height } = sizes;
 	return Math.abs(width - 400) <= tolerance && Math.abs(height - 225) <= tolerance;
-};
-
-export const getPopoutBonusBarVScale = (sizes: { width: number; height: number }) => {
-	if (isPopoutSmallViewport(sizes)) return POPOUT_S_BONUS_BAR_V_SCALE;
-	if (isPopoutViewport(sizes)) return POPOUT_L_BONUS_BAR_V_SCALE;
-	return 1;
-};
-
-export const getDesktopBonusBarVDims = (sizes: { width: number; height: number }) => {
-	const scale = getPopoutBonusBarVScale(sizes);
-	return {
-		w: DESKTOP_BONUS_BAR_V_WIDTH_PX * scale,
-		h: DESKTOP_BONUS_BAR_V_HEIGHT_PX * scale,
-	};
 };
 
 /**
@@ -1001,6 +961,8 @@ const l1Spin = makeRenderSpinSprite('L1Img', letterSpinSizeRatios);
 const l2Spin = makeRenderSpinSprite('L2Img', letterSpinSizeRatios);
 const l3Spin = makeRenderSpinSprite('L3Img', letterSpinSizeRatios);
 const l4Spin = makeRenderSpinSprite('L4Img', letterSpinSizeRatios);
+const wSpin = makeRenderSpinSprite('WImg', propSpinSizeRatios);
+const bSpin = makeRenderSpinSprite('BImg', propSpinSizeRatios);
 /** Cartridge has no `idle` — sprite for rest/spin; spine `stop` on land. */
 const btSprite = makeRenderSpinSprite('BTImg', propSpinSizeRatios);
 const btLand = makeRenderLand('BT', cartridgeSizeRatios);
@@ -1191,9 +1153,6 @@ export const MASCOT_TRANSITION_FADE_MS = 300;
 /** When the cloud transition starts becoming opaque (~0.3s in the 1.5s spine). */
 export const TRANSITION_THEME_SWITCH_DELAY_MS = 193;
 
-/** When the bonus bar mounts — 1s before smoke clears, under the cloud layer. */
-export const TRANSITION_LADDER_SHOW_DELAY_MS = TRANSITION_DURATION_MS - 1000;
-
 /**
  * Пауза после того, как выигрышные символы полностью отыграли анимацию,
  * перед снятием затемнения и скрытием paylines.
@@ -1363,11 +1322,11 @@ export const SYMBOL_INFO_MAP = {
 		spin: l4Spin,
 		land: l4Land,
 	},
-	// Wild — spine while scrolling (same skeleton as land/static; avoids sprite⇄spine pop).
+	// Wild — WebP while scrolling (same as H/L); land/static stay on spine.
 	W: {
 		postWinStatic: wStatic,
 		static: wStatic,
-		spin: wStatic,
+		spin: wSpin,
 		win: wWin,
 		land: wBounce,
 	},
@@ -1375,7 +1334,7 @@ export const SYMBOL_INFO_MAP = {
 	SW: {
 		postWinStatic: wStatic,
 		static: wStatic,
-		spin: wStatic,
+		spin: wSpin,
 		win: wWin,
 		land: wBounce,
 	},
@@ -1411,16 +1370,15 @@ export const SYMBOL_INFO_MAP = {
 		win: btSprite,
 		land: btLand,
 	},
-	// Bonus — keep spine for spin/static so paw bone stays aligned (sprite ⇄ spine jumps).
+	// Bonus — WebP while scrolling; land/static stay on spine (paw bone aligned).
 	B: {
 		postWinStatic: bStatic,
 		static: bStatic,
-		spin: bStatic,
+		spin: bSpin,
 		win: bWin,
 		land: bBounce,
 	},
-	// Mystery — always full idle spine (bg + ?). A spin-only MImg sprite at M_SIZE
-	// stretched the card on first land; explosion still via getMysteryRevealSymbolInfo.
+	// Mystery — same idle spine for rest/spin; land/reveal stay on Mystery.json.
 	M: {
 		postWinStatic: mStatic,
 		static: mStatic,

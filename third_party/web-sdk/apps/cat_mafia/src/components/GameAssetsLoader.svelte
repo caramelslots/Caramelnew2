@@ -96,7 +96,7 @@
 				context.stateApp.loadingProgress = 100;
 				context.stateApp.loaded = true;
 
-				// Batch 4 contains heavy bonus-event assets (bigwin, fsPopup, reelhouse, etc.)
+				// Batch 4 contains heavy bonus-event assets (bigwin, fsPopup, etc.)
 				// that are only rendered after the cloud transition completes. Load them in the
 				// background while the player reads "Press to continue" and watches the transition.
 				void loadAssetBatch(batch4).then((batch4Assets) => {

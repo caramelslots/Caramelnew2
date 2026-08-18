@@ -1,14 +1,12 @@
 import config from './config';
 
 export type GameInfoSymbolId = 'H1' | 'H2' | 'H3' | 'H4' | 'L1' | 'L2' | 'L3' | 'L4' | 'W' | 'B' | 'M';
+export type GameInfoImageSymbolId = Exclude<GameInfoSymbolId, 'M'>;
 
 const symbolAssetUrl = (file: string) =>
 	`${import.meta.env.BASE_URL}assets/sprites/symbolsNew/${file}`;
 
-export const GAME_INFO_MYSTERY_BG_IMAGE = symbolAssetUrl('Mystery_bg.webp');
-export const GAME_INFO_MYSTERY_SIGN_IMAGE = symbolAssetUrl('Mystery_sign.webp');
-
-export const GAME_INFO_SYMBOL_IMAGES: Record<GameInfoSymbolId, string> = {
+export const GAME_INFO_SYMBOL_IMAGES: Record<GameInfoImageSymbolId, string> = {
 	H1: symbolAssetUrl('Diamond.webp'),
 	H2: symbolAssetUrl('Revolver.webp'),
 	H3: symbolAssetUrl('Lighter.webp'),
@@ -19,7 +17,6 @@ export const GAME_INFO_SYMBOL_IMAGES: Record<GameInfoSymbolId, string> = {
 	L4: symbolAssetUrl('Q.webp'),
 	W: symbolAssetUrl('Special_2.webp'),
 	B: symbolAssetUrl('Special_1.webp'),
-	M: GAME_INFO_MYSTERY_SIGN_IMAGE,
 };
 
 export const GAME_INFO_SPECIAL_SYMBOL_ENTRIES = [
@@ -53,7 +50,4 @@ export const getSymbolPayRows = (id: GameInfoSymbolId): SymbolPayRow[] => {
 	});
 };
 
-export const GAME_INFO_SYMBOL_IMAGE_URLS = [
-	...Object.values(GAME_INFO_SYMBOL_IMAGES),
-	GAME_INFO_MYSTERY_BG_IMAGE,
-];
+export const GAME_INFO_SYMBOL_IMAGE_URLS = [...Object.values(GAME_INFO_SYMBOL_IMAGES)];

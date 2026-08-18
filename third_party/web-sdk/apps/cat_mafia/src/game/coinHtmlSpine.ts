@@ -8,6 +8,7 @@ import {
 	drawCoinPawLive,
 	type CoinPawSkin,
 } from './coinSpriteSheet';
+import { isHtmlWebglPaused } from './htmlWebglPause';
 
 export { coinPawSkinForTier };
 
@@ -162,6 +163,7 @@ const poseAndBlitAll = (runtime: SkinRuntime) => {
 	const gl = player.context?.gl;
 	const source = player.canvas;
 	if (!skeleton || !state || !renderer || !gl || !source || runtime.targets.size === 0) return;
+	if (isHtmlWebglPaused()) return;
 	const entry = state.getCurrent(0);
 	if (!entry) return;
 
@@ -263,6 +265,7 @@ const ensureRuntime = (skin: CoinPawSkin, mode: CoinPawSpineMode): SkinRuntime =
 			}
 		},
 		draw: () => {
+			if (isHtmlWebglPaused()) return;
 			if (runtime.targets.size > 0) poseAndBlitAll(runtime);
 		},
 	});

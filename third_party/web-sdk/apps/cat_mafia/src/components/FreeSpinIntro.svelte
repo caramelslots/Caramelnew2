@@ -38,11 +38,10 @@
 
 	const boardUrl = assets.fsCongBoard.src;
 
-	// поздравление фриспины.png — 1536×1024, same canvas as legacy fs_cong.
 	const BOARD_RATIO = 1536 / 1024;
 	const NUMBER_RATIO = 1276 / 595;
 	const BOARD_SCALE = 1.55;
-	// Layout tuned to legacy fs_cong art: congrats on wood (below roof),
+	// Layout tuned to fs_cong art: congrats on wood (below roof),
 	// YOU WON / number / FREE SPINS stacked in the wood panel centre.
 	const TEXT_BLOCK_Y_OFFSET = 0.045;
 	const CONGRATULATIONS_Y_RATIO = 0.31 + TEXT_BLOCK_Y_OFFSET;
