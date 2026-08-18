@@ -42,26 +42,34 @@ export type MascotScreenBox = {
  * Natural 1× Spine playback — no extra speed-up or clip shortening.
  */
 export const MASCOT_HAT_CATCH_BEFORE_COINS_MS = 1950;
+/** Squash press on the cell before the coin springs into its arc flight. */
+export const MASCOT_COIN_ANTICIPATE_MS = 130;
 /** CSS fly duration — keep in sync with `PawCoinOverlay` (one full turn). */
-export const MASCOT_COIN_FLY_DURATION_MS = 780;
+export const MASCOT_COIN_FLY_DURATION_MS = 820;
 /** Stagger between successive coins (ms). */
 export const MASCOT_COIN_FLY_STAGGER_MS = 70;
 /**
- * Wall-clock wait after launching coins (fly + stagger for a full row + settle
- * into the shake / hold pose before hat-on reverse).
+ * Wall-clock wait after launching coins (anticipation + fly + stagger for a
+ * full row + settle into the shake / hold pose before hat-on reverse). The
+ * handler extends it for multi-row resolves so the last coin lands first.
  */
-export const MASCOT_COIN_FLY_WAIT_MS = 1150;
+export const MASCOT_COIN_FLY_WAIT_MS = 1400;
 /** Reverse idle3 put-on (~clip length 2.57s). */
 export const MASCOT_HAT_ON_MS = 2600;
 
 /**
  * Where paw-coins land while the hat is held out (idle3 brim-out / shake pose).
- * Fractions of the full mascot HTML box (includes left overscan). Aim at the
- * open brim (left/lower than the hat bone center — coins were landing high-right).
+ * Fractions of the full mascot HTML box (includes left overscan). Measured by
+ * rendering the idle3 hold pose offline (spine-core) through the real
+ * SpinePlayer camera (viewport -1700/-200/3200/2900 + pads, fit-height zoom):
+ * the bowl's dark opening centers at ~(0.16, 0.72) of the box; its front rim
+ * (where the overlay starts clipping the coin) sits at ~0.755 box height.
  */
 export const getMascotHatCatchPoint = (box: MascotScreenBox) => ({
-	x: box.left + box.width * 0.12,
-	y: box.top + box.height * 0.68,
+	x: box.left + box.width * 0.16,
+	y: box.top + box.height * 0.72,
+	/** Front rim of the bowl opening (screen Y) — coins clip below it. */
+	brimY: box.top + box.height * 0.755,
 });
 
 /**

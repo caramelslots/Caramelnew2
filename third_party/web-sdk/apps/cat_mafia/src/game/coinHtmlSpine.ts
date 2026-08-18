@@ -1,6 +1,6 @@
 /** Designer coin Spine — live playback of every clip from `coins_3x3`. */
 
-import { SpinePlayer } from '@esotericsoftware/spine-player';
+import { Physics, SpinePlayer } from '@esotericsoftware/spine-player';
 
 import {
 	COIN_PAW_SOURCE_SIZE,
@@ -93,15 +93,15 @@ type SkinRuntime = {
 	ready: boolean;
 	mode: CoinPawSpineMode;
 	targets: Set<CoinPawSpineTarget>;
-	replayQueued: boolean;
+	clipReady: boolean;
 };
 
 const runtimes = new Map<RuntimeKey, SkinRuntime>();
+const clipStartedAt = new WeakMap<CoinPawSpineTarget, number>();
 let hubRoot: HTMLDivElement | null = null;
 let hubCss = false;
 
-const runtimeKey = (skin: CoinPawSkin, mode: CoinPawSpineMode): RuntimeKey =>
-	`${skin}:${mode}`;
+const runtimeKey = (skin: CoinPawSkin, mode: CoinPawSpineMode): RuntimeKey => `${skin}:${mode}`;
 
 const ensureHubCss = () => {
 	if (hubCss || typeof document === 'undefined') return;
@@ -129,101 +129,83 @@ const ensureHubRoot = () => {
 	return hubRoot;
 };
 
-const fitAndBlit = (runtime: SkinRuntime) => {
+const blitOne = (runtime: SkinRuntime, target: CoinPawSpineTarget) => {
 	const source = runtime.player.canvas;
 	if (!source || source.width < 1 || source.height < 1) return;
-	const fit = runtime.mode === 'flash' ? 'full' : 'disc';
+	const el = target.canvas;
+	const dpr = Math.min(2, window.devicePixelRatio || 1);
+	const cssW = Math.max(1, el.clientWidth);
+	const cssH = Math.max(1, el.clientHeight);
+	const w = Math.round(cssW * dpr);
+	const h = Math.round(cssH * dpr);
+	if (el.width !== w) el.width = w;
+	if (el.height !== h) el.height = h;
+	const ctx = el.getContext('2d');
+	if (!ctx) return;
+	drawCoinPawLive(
+		ctx,
+		source,
+		source.width,
+		source.height,
+		w,
+		h,
+		runtime.mode === 'flash' ? 'full' : 'disc',
+	);
+};
+
+/** One WebGL player per skin. Each overlay coin seeks its own appear_flash time. */
+const poseAndBlitAll = (runtime: SkinRuntime) => {
+	const player = runtime.player;
+	const skeleton = player.skeleton;
+	const state = player.animationState;
+	const renderer = player.sceneRenderer;
+	const gl = player.context?.gl;
+	const source = player.canvas;
+	if (!skeleton || !state || !renderer || !gl || !source || runtime.targets.size === 0) return;
+	const entry = state.getCurrent(0);
+	if (!entry) return;
+
+	const now = performance.now();
+	const end = entry.animationEnd;
+	const bg = player.bg;
+	const pma = false;
+
 	for (const target of runtime.targets) {
-		const el = target.canvas;
-		const dpr = Math.min(2, window.devicePixelRatio || 1);
-		const cssW = Math.max(1, el.clientWidth);
-		const cssH = Math.max(1, el.clientHeight);
-		const w = Math.round(cssW * dpr);
-		const h = Math.round(cssH * dpr);
-		if (el.width !== w) el.width = w;
-		if (el.height !== h) el.height = h;
-		const ctx = el.getContext('2d');
-		if (!ctx) continue;
-		drawCoinPawLive(ctx, source, source.width, source.height, w, h, fit);
+		const started = clipStartedAt.get(target);
+		if (started == null) continue;
+		entry.trackTime = Math.min(end, Math.max(0, ((now - started) / 1000) * target.getSpeed()));
+		state.apply(skeleton);
+		skeleton.updateWorldTransform(Physics.update);
+		gl.clearColor(bg.r, bg.g, bg.b, bg.a);
+		gl.clear(gl.COLOR_BUFFER_BIT);
+		renderer.begin();
+		renderer.drawSkeleton(skeleton, pma);
+		renderer.end();
+		blitOne(runtime, target);
 	}
 };
 
-const playClip = (
-	runtime: SkinRuntime,
-	clip: string,
-	loop: boolean,
-	resetPose: boolean,
-) => {
+const ensureClip = (runtime: SkinRuntime) => {
+	if (runtime.clipReady) return;
 	const { player } = runtime;
-	const speed = [...runtime.targets][0]?.getSpeed() ?? 1;
-	player.speed = speed;
-	player.paused = false;
+	const clip = runtime.mode === 'flash' ? COIN_PAW_FLASH_CLIP : COIN_PAW_APPEAR_CLIP;
+	player.paused = true;
 	const skeleton = player.skeleton;
 	const state = player.animationState;
 	if (skeleton && state) {
-		state.timeScale = 1;
-		if (resetPose) {
-			state.clearTracks();
-			skeleton.setToSetupPose();
-		}
-		const entry = state.setAnimation(0, clip, loop);
+		state.clearTracks();
+		skeleton.setToSetupPose();
+		const entry = state.setAnimation(0, clip, false);
 		if (entry) {
 			entry.trackTime = 0;
-			entry.timeScale = 1;
+			entry.timeScale = 0;
 			entry.mixDuration = 0;
 		}
 		state.apply(skeleton);
-		return;
+	} else {
+		player.setAnimation(clip, false);
 	}
-	player.setAnimation(clip, loop);
-};
-
-const holdCurrentEnd = (player: SpinePlayer) => {
-	const entry = player.animationState?.getCurrent(0);
-	if (!entry) {
-		player.paused = true;
-		return;
-	}
-	entry.trackTime = entry.animationEnd;
-	entry.timeScale = 0;
-	player.paused = true;
-};
-
-const replayRow = (runtime: SkinRuntime) => {
-	playClip(runtime, COIN_PAW_APPEAR_CLIP, false, true);
-};
-
-const replayFlash = (runtime: SkinRuntime) => {
-	playClip(runtime, COIN_PAW_FLASH_CLIP, false, true);
-};
-
-const waitForDrawReady = (runtime: SkinRuntime) =>
-	new Promise<void>((resolve) => {
-		let frames = 0;
-		const tick = () => {
-			const source = runtime.player.canvas;
-			const target = runtime.targets.values().next().value as CoinPawSpineTarget | undefined;
-			const sourceOk = !!source && source.width > 8 && source.height > 8;
-			const targetOk = !!target && target.canvas.clientWidth > 8 && target.canvas.clientHeight > 8;
-			if ((sourceOk && targetOk) || frames >= 45) {
-				resolve();
-				return;
-			}
-			frames += 1;
-			requestAnimationFrame(tick);
-		};
-		requestAnimationFrame(tick);
-	});
-
-const scheduleReplay = (runtime: SkinRuntime) => {
-	if (runtime.replayQueued) return;
-	runtime.replayQueued = true;
-	void waitForDrawReady(runtime).then(() => {
-		runtime.replayQueued = false;
-		if (!runtime.ready || runtime.targets.size === 0) return;
-		if (runtime.mode === 'flash') replayFlash(runtime);
-		else replayRow(runtime);
-	});
+	runtime.clipReady = true;
 };
 
 const ensureRuntime = (skin: CoinPawSkin, mode: CoinPawSpineMode): SkinRuntime => {
@@ -240,7 +222,7 @@ const ensureRuntime = (skin: CoinPawSkin, mode: CoinPawSpineMode): SkinRuntime =
 		ready: false,
 		mode,
 		targets: new Set(),
-		replayQueued: false,
+		clipReady: false,
 	};
 
 	const startClip = mode === 'flash' ? COIN_PAW_FLASH_CLIP : COIN_PAW_APPEAR_CLIP;
@@ -271,23 +253,17 @@ const ensureRuntime = (skin: CoinPawSkin, mode: CoinPawSpineMode): SkinRuntime =
 				state.clearTracks();
 				skeleton.setToSetupPose();
 			}
-			state?.addListener({
-				complete: (entry) => {
-					const name = entry.animation?.name;
-					if (mode === 'row' && name === COIN_PAW_APPEAR_CLIP) {
-						holdCurrentEnd(spinePlayer);
-					} else if (name === COIN_PAW_FLASH_CLIP) {
-						holdCurrentEnd(spinePlayer);
-					}
-				},
-			});
 			runtime.ready = true;
-			if (runtime.targets.size > 0) scheduleReplay(runtime);
+			if (runtime.targets.size > 0) {
+				ensureClip(runtime);
+				const now = performance.now();
+				for (const target of runtime.targets) {
+					if (!clipStartedAt.has(target)) clipStartedAt.set(target, now);
+				}
+			}
 		},
-		draw: (spinePlayer) => {
-			const first = runtime.targets.values().next().value as CoinPawSpineTarget | undefined;
-			if (first) spinePlayer.speed = first.getSpeed();
-			if (runtime.targets.size > 0) fitAndBlit(runtime);
+		draw: () => {
+			if (runtime.targets.size > 0) poseAndBlitAll(runtime);
 		},
 	});
 
@@ -296,17 +272,21 @@ const ensureRuntime = (skin: CoinPawSkin, mode: CoinPawSpineMode): SkinRuntime =
 	return runtime;
 };
 
-/** Play `appear_flash`, then hold the reverse (x1 / x2 / x3). */
+/** Play `appear_flash` per coin (own clock), then hold the reverse (x1 / x2 / x3). */
 export const subscribeCoinPawSpine = (target: CoinPawSpineTarget) => {
 	startCoinPawSpinePreload();
 	const mode = target.mode ?? 'row';
 	const runtime = ensureRuntime(target.skin, mode);
 	runtime.targets.add(target);
-	if (runtime.ready) scheduleReplay(runtime);
+	if (runtime.ready) {
+		ensureClip(runtime);
+		clipStartedAt.set(target, performance.now());
+	}
 	return () => {
 		runtime.targets.delete(target);
 		if (runtime.targets.size === 0) {
 			runtime.player.paused = true;
+			runtime.clipReady = false;
 		}
 	};
 };

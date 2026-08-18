@@ -55,9 +55,7 @@
 	// Маунт и загрузка Spine — уже на preloadContent (во время лоадера/cloud
 	// transition), чтобы к входу доски плеер был готов. До входа держим
 	// opacity: 0 — проявление синхронно с FadeContainer доски (showContent).
-	const mounted = $derived(
-		gameEntrance.preloadContent && (showMascotLayout || forceAnim !== null),
-	);
+	const mounted = $derived(gameEntrance.preloadContent && (showMascotLayout || forceAnim !== null));
 	const pose = $derived(
 		(context.stateGame.bulletFly ? 'load' : context.stateGame.mascotPose || 'idle') as MascotPose,
 	);
@@ -480,7 +478,6 @@
 		const state = player?.animationState;
 		if (state) state.timeScale = scale;
 	});
-
 </script>
 
 {#if mounted}
@@ -492,7 +489,8 @@
 		<div
 			class="mascot-spine"
 			bind:this={container}
-			style="width:{100 * MASCOT_SSAA}%;height:{100 * MASCOT_SSAA}%;transform:scale({1 / MASCOT_SSAA})"
+			style="width:{100 * MASCOT_SSAA}%;height:{100 * MASCOT_SSAA}%;transform:scale({1 /
+				MASCOT_SSAA})"
 		></div>
 	</div>
 {/if}

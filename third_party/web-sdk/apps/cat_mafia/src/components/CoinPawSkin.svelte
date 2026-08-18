@@ -8,25 +8,31 @@
 	const { skin }: Props = $props();
 	const spine = getContextSpine();
 
-	// The board paw symbol is just a paw coin — the x1/x2/x3 tier text must NOT
-	// render on it (only overlay coins show tiers). Every animation re-sets the
-	// text-slot attachment each frame, so hiding the slot once is not enough:
-	// strip the text attachments from the Pixi-parsed skins instead. The HTML
-	// overlay parses its own copy of coins.json via SpinePlayer, so its tier
-	// text is unaffected. Idempotent — safe to run on every paw mount.
-	const TEXT_SLOTS = ['x1_bronze', 'x2_silver', 'x3_gold'];
-	const stripTierTextAttachments = () => {
+	const TEXT_TO_PAW = {
+		x1_bronze: 'paw_bronze',
+		x2_silver: 'paw_silver',
+		x3_gold: 'paw_gold',
+	} as const;
+	// appear_flash shows paw, then the reverse (x1/x2/x3). The board paw is not
+	// a paying coin, so the reverse must still be a paw — not a blank disc.
+	// Copy the paw attachment onto the text slots (don't strip them: the clip
+	// still enables those slots at t≈0.53). Overlay SpinePlayer parses its own
+	// json, so paying overlay coins keep their tier text.
+	const mirrorPawOnReverse = () => {
 		const data = spine.skeleton.data;
-		for (const skinName of ['coin_bronze', 'coin_silver', 'coin_gold']) {
+		for (const skinName of ['coin_bronze', 'coin_silver', 'coin_gold'] as const) {
 			const skinData = data.findSkin(skinName);
 			if (!skinData) continue;
-			for (const slotName of TEXT_SLOTS) {
-				const slotData = data.findSlot(slotName);
-				if (slotData) skinData.removeAttachment(slotData.index, slotName);
+			for (const [textSlotName, pawSlotName] of Object.entries(TEXT_TO_PAW)) {
+				const textSlot = data.findSlot(textSlotName);
+				const pawSlot = data.findSlot(pawSlotName);
+				if (!textSlot || !pawSlot) continue;
+				const pawAtt = skinData.getAttachment(pawSlot.index, pawSlotName);
+				if (pawAtt) skinData.setAttachment(textSlot.index, textSlotName, pawAtt);
 			}
 		}
 	};
-	stripTierTextAttachments();
+	mirrorPawOnReverse();
 
 	const applySkin = (name: Props['skin']) => {
 		const skinData = spine.skeleton.data.findSkin(`coin_${name}`);

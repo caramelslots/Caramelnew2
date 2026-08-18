@@ -229,6 +229,10 @@ export const stateGame = $state({
 		row: number;
 		tier: 0 | 1 | 2 | 3;
 		win: number;
+		/** Wave pop-in delay from the nearest paw cell (base 1× speed ms). */
+		appearDelayMs: number;
+		/** Chebyshev ring from the nearest paw (0 = closest coin cells). */
+		appearRing: number;
 	}[],
 	pawCoinTotal: 0,
 	/** Show catch UI near the mascot hat while paw coins resolve. */

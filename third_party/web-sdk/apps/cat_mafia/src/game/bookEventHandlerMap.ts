@@ -23,6 +23,7 @@ import {
 	SW_PHASE2_PRE_MS,
 	SW_SECOND_WIN_PRE_DELAY_MS,
 	PAW_PHASE1_HOLD_MS,
+	PAW_COIN_WAVE_STEP_MS,
 	BONUS_WIN_PRE_DELAY_MS,
 	BONUS_WIN_POST_DELAY_MS,
 	BULLET_FLY_TOTAL_MS,
@@ -39,6 +40,9 @@ import {
 	CAT_SLOW_EXTRA_SYMBOL_ROWS,
 } from './catAnticipation';
 import {
+	MASCOT_COIN_ANTICIPATE_MS,
+	MASCOT_COIN_FLY_DURATION_MS,
+	MASCOT_COIN_FLY_STAGGER_MS,
 	MASCOT_COIN_FLY_WAIT_MS,
 	MASCOT_HAT_CATCH_BEFORE_COINS_MS,
 	MASCOT_HAT_ON_MS,
@@ -840,16 +844,37 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Paw-coin cells (coinTier 0) are excluded from the overlay — the PB/PS/PG
 		// board symbols already render as coins and never pay / never fly.
 		const pawCells = new Set(bookEvent.paws.map((p) => `${p.reel}:${p.row}`));
-		const cells = bookEvent.rows.flatMap((row) =>
-			row.cells
-				.filter((cell) => cell.coinTier > 0 && !pawCells.has(`${cell.reel}:${row.row}`))
-				.map((cell) => ({
-					reel: cell.reel,
-					row: row.row,
-					tier: cell.coinTier as 1 | 2 | 3,
-					win: cell.win,
-				})),
-		);
+		// Wave ring = Chebyshev distance from the nearest paw cell; the conversion
+		// pops in ring by ring so the coins spread outward from the paw.
+		const waveRing = (reel: number, row: number) =>
+			bookEvent.paws.reduce(
+				(best, p) => Math.min(best, Math.max(Math.abs(p.reel - reel), Math.abs(p.row - row))),
+				Infinity,
+			);
+		const cells = bookEvent.rows
+			.flatMap((row) =>
+				row.cells
+					.filter((cell) => cell.coinTier > 0 && !pawCells.has(`${cell.reel}:${row.row}`))
+					.map((cell) => ({
+						reel: cell.reel,
+						row: row.row,
+						tier: cell.coinTier as 1 | 2 | 3,
+						win: cell.win,
+						ring: waveRing(cell.reel, row.row),
+					})),
+			)
+			// Hat fly stagger is index-based: top row first, then left → right
+			// inside the row (the appear wave above stays ring-based).
+			.sort((a, b) => a.row - b.row || a.reel - b.reel);
+		const minRing = cells.length > 0 ? Math.min(...cells.map((c) => c.ring)) : 0;
+		const pawCoinCells = cells.map(({ ring, ...cell }) => {
+			const appearRing = ring - minRing;
+			return {
+				...cell,
+				appearRing,
+				appearDelayMs: appearRing * PAW_COIN_WAVE_STEP_MS,
+			};
+		});
 
 		// Линии → монетки (тот же two-beat, что у шторы SW): если линии уже
 		// отыграли, держим фазу-1 (paylines + spotlight) на холде, затем снимаем
@@ -863,11 +888,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		);
 		clearWinSpotlight();
 
-		stateGame.pawCoinCells = cells;
+		stateGame.pawCoinCells = pawCoinCells;
 		stateGame.pawCoinTotal = bookEvent.totalCoinWin;
 		stateGame.pawCoinFlying = false;
 		stateGame.pawCoinPlayId += 1;
-		for (const cell of cells) {
+		for (const cell of pawCoinCells) {
 			const symbol = stateGame.board[cell.reel]?.reelState.symbols[cell.row];
 			if (symbol) symbol.symbolState = 'postWinStatic';
 		}
@@ -879,7 +904,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		await waitForGameSpeed(MASCOT_HAT_CATCH_BEFORE_COINS_MS, stateGame.gameSpeed);
 
 		stateGame.pawCoinFlying = true;
-		await waitForGameSpeed(MASCOT_COIN_FLY_WAIT_MS, stateGame.gameSpeed);
+		// Keep the hat out until the last coin finishes anticipation + flight
+		// (multi-row resolves outlast the single-row floor wait).
+		const lastCoinLandMs =
+			Math.max(0, pawCoinCells.length - 1) * MASCOT_COIN_FLY_STAGGER_MS +
+			MASCOT_COIN_ANTICIPATE_MS +
+			MASCOT_COIN_FLY_DURATION_MS +
+			150;
+		await waitForGameSpeed(Math.max(MASCOT_COIN_FLY_WAIT_MS, lastCoinLandMs), stateGame.gameSpeed);
 
 		stateBet.winBookEventAmount += bookEvent.totalCoinWin;
 		stateGame.mascotPose = 'hatOn';

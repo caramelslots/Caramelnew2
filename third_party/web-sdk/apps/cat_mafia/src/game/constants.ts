@@ -1095,6 +1095,12 @@ export const SW_SECOND_WIN_PRE_DELAY_MS = 280;
  */
 export const PAW_PHASE1_HOLD_MS = 550;
 
+/**
+ * Paw coins pop in as a wave spreading from the paw cell(s): each board ring
+ * (Chebyshev distance from the nearest paw) appears one step later.
+ */
+export const PAW_COIN_WAVE_STEP_MS = 220;
+
 /** Pause after win amount count-up finishes, before the celebration screen auto-dismisses. */
 export const WIN_SCREEN_POST_COUNT_UP_DELAY_MS = 1500;
 
