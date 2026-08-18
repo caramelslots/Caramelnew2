@@ -47,7 +47,7 @@
 			<SpineProvider key="mainBackground" {...spineProps}>
 				<BackgroundSkinController skin="day" />
 				<StreetOffscreenCull />
-				<SpineTrack trackIndex={0} animationName={BG_IDLE_ANIMATION} loop />
+				<SpineTrack trackIndex={0} animationName={BG_IDLE_ANIMATION} loop timeScale={1} />
 			</SpineProvider>
 		</Container>
 	</Container>
@@ -59,7 +59,7 @@
 			<SpineProvider key="mainBackground" {...spineProps}>
 				<BackgroundSkinController skin="night" />
 				<StreetOffscreenCull />
-				<SpineTrack trackIndex={0} animationName={BG_IDLE_ANIMATION} loop />
+				<SpineTrack trackIndex={0} animationName={BG_IDLE_ANIMATION} loop timeScale={1} />
 			</SpineProvider>
 		</Container>
 	</Container>

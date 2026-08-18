@@ -22,6 +22,7 @@
 	import EnableUiTextureOptimization from './EnableUiTextureOptimization.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
 	import EnableBoardIdleBounce from './EnableBoardIdleBounce.svelte';
+	import EnableLivingIdle from './EnableLivingIdle.svelte';
 	import ResumeBet from './ResumeBet.svelte';
 	import Sound from './Sound.svelte';
 	import Background from './Background.svelte';
@@ -29,6 +30,8 @@
 	import LoadingScreen from './LoadingScreen.svelte';
 	import BoardFrame from './BoardFrame.svelte';
 	import Board from './Board.svelte';
+	import BoardIdleBounceLayer from './BoardIdleBounceLayer.svelte';
+	import PaylineLayer from './PaylineLayer.svelte';
 	import Win from './Win.svelte';
 	import MascotPlaceholder from './MascotPlaceholder.svelte';
 	import RevolverDrumPlaceholder from './RevolverDrumPlaceholder.svelte';
@@ -53,11 +56,6 @@
 	import { FadeContainer } from 'components-pixi';
 
 	const context = getContext();
-
-	// While idle-tease pops run, the gold frame drops under the board so bouncing
-	// symbols render over the rails instead of clipping against them (the rails
-	// stay on top whenever reels spin/land — idle bounce never runs then).
-	const idlePopping = $derived(context.stateGameDerived.boardIdleBouncing());
 
 	// FS cloud transition: the pixi-stage z-flip above the HTML mascot layer is
 	// delayed by the mascot fade-out (MASCOT_TRANSITION_FADE_MS) so the mascot
@@ -94,10 +92,7 @@
 	});
 </script>
 
-<div
-	class="pixi-stage"
-	class:above-html-ui={pixiAboveHtml || context.stateGame.winOverlayActive}
->
+<div class="pixi-stage" class:above-html-ui={pixiAboveHtml || context.stateGame.winOverlayActive}>
 	<GameApp maxResolution={3} tuneForMobilePortrait webglOnIosAndroid>
 		<EnableSound />
 		<EnableSymbolTextureOptimization />
@@ -105,6 +100,7 @@
 		<EnableHotkey />
 		<EnableGameActor />
 		<EnableBoardIdleBounce />
+		<EnableLivingIdle />
 		<EnablePixiExtension />
 
 		<Background />
@@ -123,7 +119,12 @@
 				<Sound />
 			{/if}
 
-			<FadeContainer show={gameEntrance.showContent} duration={GAME_ENTRANCE_MS} persistent sortableChildren>
+			<FadeContainer
+				show={gameEntrance.showContent}
+				duration={GAME_ENTRANCE_MS}
+				persistent
+				sortableChildren
+			>
 				<Container zIndex={-3}>
 					<MainContainer>
 						<BoardFrame layer="base" />
@@ -136,11 +137,24 @@
 					</MainContainer>
 				</Container>
 
-				<!-- Gold rails above symbols so spin/land never paints over the frame;
-				     drops under the board during idle-tease pops (idlePopping). -->
-				<Container zIndex={idlePopping ? -2.5 : -1}>
+				<!-- Gold rails above resting symbols. Idle-tease pops render in the
+				     next layer so they can overlap the frame without lifting the
+				     whole board (that let idle spines like the phone paint through). -->
+				<Container zIndex={-1}>
 					<MainContainer>
 						<BoardFrame layer="overlay" />
+					</MainContainer>
+				</Container>
+
+				<Container zIndex={-0.5}>
+					<MainContainer>
+						<BoardIdleBounceLayer />
+					</MainContainer>
+				</Container>
+
+				<Container zIndex={0}>
+					<MainContainer>
+						<PaylineLayer />
 					</MainContainer>
 				</Container>
 

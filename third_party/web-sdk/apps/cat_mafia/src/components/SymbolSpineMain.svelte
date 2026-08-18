@@ -4,27 +4,32 @@
 
 	import { getSymbolInfo } from '../game/utils';
 	import { SYMBOL_SIZE } from '../game/constants';
+	import { stateGame } from '../game/stateGame.svelte';
+	import type { SymbolName } from '../game/types';
 
 	type Props = {
 		symbolInfo: ReturnType<typeof getSymbolInfo>;
+		symbolName: SymbolName;
 		x?: number;
 		y?: number;
 		listener: SpineTrackProps['listener'];
 		loop?: boolean;
+		inViewport?: boolean;
 	};
 
 	const props: Props = $props();
 
-	// Namespaced rest poses (`High_1/idle`, `Special_1/idle`, `Mystery/idle`) are
-	// zero-movement frames — apply once, then freeze (autoUpdate=false) so every
-	// resting cell doesn't burn ticker. Flat designer `idle` (letters / telephone /
-	// lighter) is a living loop (breath, dial, flame) and must keep updating.
+	// Namespaced rest poses (`*/idle`) are frozen. Designer `idle` loops only for
+	// the active type (H1 → H2 → …) on playfield cells the player can see.
 	const animationName = $derived(props.symbolInfo.animationName);
 	const isLivingIdle = $derived(animationName === 'idle');
 	const autoUpdate = $derived.by(() => {
 		const name = animationName;
 		if (!name) return true;
-		if (name === 'idle') return true;
+		if (name === 'idle') {
+			if (props.inViewport === false) return false;
+			return stateGame.livingIdleSymbol === props.symbolName;
+		}
 		return !name.endsWith('/idle');
 	});
 	const loop = $derived.by(() => {

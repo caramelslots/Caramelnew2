@@ -17,6 +17,7 @@
 		rawSymbol: RawSymbol;
 		oncomplete?: () => void;
 		loop?: boolean;
+		inViewport?: boolean;
 	};
 
 	const props: Props = $props();
@@ -44,6 +45,8 @@
 	<SymbolSpine
 		loop={props.loop}
 		{symbolInfo}
+		symbolName={props.rawSymbol.name}
+		inViewport={props.inViewport}
 		x={props.x}
 		y={props.y}
 		listener={{

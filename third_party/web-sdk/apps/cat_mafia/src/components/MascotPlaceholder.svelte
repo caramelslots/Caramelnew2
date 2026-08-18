@@ -25,6 +25,7 @@
 		MASCOT_COIN_FLY_WAIT_MS,
 		MASCOT_IDLE_VARIANTS,
 		MASCOT_POSE_PLAYBACK,
+		MASCOT_PHONE_MAX_DPR,
 		MASCOT_SSAA,
 		MASCOT_SPINE_ANIMATIONS,
 		MASCOT_SPINE_VIEWPORT,
@@ -37,12 +38,38 @@
 	} from '../game/mascotHtmlSpine';
 	import { gameSpeedMultFor } from '../game/gameSpeed';
 
+	const capPlayerCanvasDpr = (spinePlayer: SpinePlayer, maxDpr: number) => {
+		const renderer = spinePlayer.sceneRenderer;
+		if (!renderer) return;
+		const original = renderer.resize.bind(renderer);
+		renderer.resize = (mode) => {
+			original(mode);
+			const nativeDpr = window.devicePixelRatio || 1;
+			if (nativeDpr <= maxDpr) return;
+			const canvas = renderer.canvas;
+			const w = Math.round(canvas.clientWidth * maxDpr);
+			const h = Math.round(canvas.clientHeight * maxDpr);
+			if (canvas.width === w && canvas.height === h) return;
+			canvas.width = w;
+			canvas.height = h;
+			renderer.context.gl.viewport(0, 0, w, h);
+			renderer.camera.setViewport(w, h);
+			renderer.camera.update();
+		};
+	};
+
 	const context = getContext();
 	const show = $derived(gameEntrance.showContent);
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 	const isPopout = $derived(isPopoutViewport(canvasSizes));
 	const isPortrait = $derived(layoutType === 'portrait');
+	const isPhonePortrait = $derived(
+		isPortrait &&
+			(context.stateLayoutDerived.canvasSizeType() === 'mobile' ||
+				context.stateLayoutDerived.canvasSizeType() === 'smallMobile'),
+	);
+	const mascotSsaa = $derived(isPhonePortrait ? 1 : MASCOT_SSAA);
 	/** All layouts except when explicitly hidden — desktop/tablet/landscape/popout/portrait. */
 	const showMascotLayout = $derived(
 		layoutType === 'desktop' ||
@@ -335,6 +362,7 @@
 	$effect(() => {
 		const el = container;
 		if (!el || !mounted) return;
+		const phoneDprCap = isPhonePortrait ? MASCOT_PHONE_MAX_DPR : null;
 
 		// Prevent stacked SpinePlayer DOM if effect re-enters before cleanup.
 		player?.dispose();
@@ -365,6 +393,7 @@
 			},
 			success: (spinePlayer) => {
 				if (player !== created) return;
+				if (phoneDprCap != null) capPlayerCanvasDpr(spinePlayer, phoneDprCap);
 				spinePlayer.skeleton!.scaleY = -1;
 
 				// Clear after every apply so smile can't flash back before render.
@@ -489,8 +518,8 @@
 		<div
 			class="mascot-spine"
 			bind:this={container}
-			style="width:{100 * MASCOT_SSAA}%;height:{100 * MASCOT_SSAA}%;transform:scale({1 /
-				MASCOT_SSAA})"
+			style="width:{100 * mascotSsaa}%;height:{100 * mascotSsaa}%;transform:scale({1 /
+				mascotSsaa})"
 		></div>
 	</div>
 {/if}

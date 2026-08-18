@@ -8,7 +8,6 @@
 		BOARD_MASK_OVERFLOW,
 		BOARD_MASK_SPIN_OVERFLOW,
 		BOARD_MASK_WIN_BOUNCE_TOP,
-		BOARD_MASK_IDLE_BOUNCE_TOP,
 		BOARD_MASK_MYSTERY_OVERFLOW,
 		BOARD_MASK_FEATHER,
 	} from '../game/constants';
@@ -25,18 +24,15 @@
 	const layout = $derived(context.stateGameDerived.boardLayout());
 	const reelsActive = $derived(context.stateGameDerived.boardReelsActive());
 	const mysteryAnimating = $derived(context.stateGameDerived.boardMysteryAnimating());
-	const idleBouncing = $derived(context.stateGameDerived.boardIdleBouncing());
 	const mysteryMaskActive = $derived(mysteryAnimating && !reelsActive);
 	const maskTopOverflow = $derived(
 		stateGame.winSpotlightActive
 			? BOARD_MASK_WIN_BOUNCE_TOP
-			: idleBouncing
-				? BOARD_MASK_IDLE_BOUNCE_TOP
-				: mysteryMaskActive
-					? BOARD_MASK_MYSTERY_OVERFLOW
-					: reelsActive
-						? BOARD_MASK_SPIN_OVERFLOW.top
-						: BOARD_MASK_OVERFLOW.top,
+			: mysteryMaskActive
+				? BOARD_MASK_MYSTERY_OVERFLOW
+				: reelsActive
+					? BOARD_MASK_SPIN_OVERFLOW.top
+					: BOARD_MASK_OVERFLOW.top,
 	);
 	const maskBottomOverflow = $derived(
 		mysteryMaskActive

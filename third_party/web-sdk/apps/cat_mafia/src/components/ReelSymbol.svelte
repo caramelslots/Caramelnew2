@@ -15,6 +15,8 @@
 		MYSTERY_BG_UNCOVER_MS,
 		SYMBOL_SIZE,
 		BOARD_DIMENSIONS,
+		isSymbolCenterInPlayfield,
+		isVisibleBoardSymbolIndex,
 	} from '../game/constants';
 	import { stateGame } from '../game/stateGame.svelte';
 	import type { ReelSymbol } from '../game/stateGame.svelte';
@@ -88,9 +90,16 @@
 			const bottom = SYMBOL_SIZE * (BOARD_DIMENSIONS.y + 1);
 			return y < top || y > bottom;
 		}
-		const gridBottom = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
-		return y - half < 0 || y + half > gridBottom;
+		return !isSymbolCenterInPlayfield(y);
 	});
+	const inViewport = $derived(
+		!hideOffGridSymbol &&
+			isVisibleBoardSymbolIndex(
+				props.reelSymbol.symbolIndex,
+				stateGame.board[props.reelIndex].reelState.activeSymbolCount,
+			) &&
+			isSymbolCenterInPlayfield(props.reelSymbol.symbolY()),
+	);
 	const dimAlphaTween = new Tween(1);
 
 	const wrapYOffset = $derived(
@@ -281,6 +290,7 @@
 			<Symbol
 				state={symbolRenderState}
 				rawSymbol={props.reelSymbol.rawSymbol}
+				inViewport={inViewport}
 				oncomplete={() => {
 					const state = props.reelSymbol.symbolState;
 					if (state === 'idleBounce') return;

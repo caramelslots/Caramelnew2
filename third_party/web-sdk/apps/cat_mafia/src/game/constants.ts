@@ -166,6 +166,16 @@ export const isVisibleBoardSymbolIndex = (
 	return symbolIndex >= 0 && symbolIndex < visibleRows;
 };
 
+/**
+ * Cell-center Y fully inside the 5×4 playfield.
+ * Same test as `ReelSymbol` hideOffGrid when reels are stopped.
+ */
+export const isSymbolCenterInPlayfield = (symbolY: number): boolean => {
+	const half = SYMBOL_SIZE / 2;
+	const gridBottom = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
+	return symbolY - half >= 0 && symbolY + half <= gridBottom;
+};
+
 /** Full 5×4 cell grid (no -10 trim) so reel spacing matches equal desk columns. */
 export const BOARD_SIZES = {
 	width: SYMBOL_SIZE * BOARD_DIMENSIONS.x,
@@ -209,6 +219,21 @@ export const IDLE_BOUNCE_INITIAL_DELAY_MS = 10000;
 export const IDLE_BOUNCE_CYCLE_DELAY_MS = 2000;
 /** Safety timeout while waiting for an idle-bounce tween to finish. */
 export const IDLE_BOUNCE_ANIMATION_TIMEOUT_MS = 800;
+
+/** Living spine idle plays one symbol type at a time (H1 → H2 → …). */
+export const LIVING_IDLE_SYMBOL_ORDER = [
+	'H1',
+	'H2',
+	'H3',
+	'H4',
+	'L1',
+	'L2',
+	'L3',
+	'L4',
+] as const;
+
+/** How long one type keeps looping before the next type. Matches idle clip ~3s. */
+export const LIVING_IDLE_TURN_MS = 3000;
 
 /**
  * Idle symbol tease — snappy pop up ("pew") then slower settle down.

@@ -61,14 +61,10 @@
 	const SPARKLE_RAY_COUNT = 10;
 	const SPARKLE_TWINKLE_COUNT = 5;
 
-	// От внешнего halo к яркому бело-жёлтому core.
+	// Soft orange bloom + hot core — two strokes that read like the old 6-pass stack.
 	const GLOW_LAYERS: { width: number; color: number; alpha: number }[] = [
-		{ width: 26, color: 0xff3300, alpha: 0.07 },
-		{ width: 19, color: 0xff5500, alpha: 0.13 },
-		{ width: 14, color: 0xff7700, alpha: 0.24 },
-		{ width: 9, color: 0xffaa00, alpha: 0.42 },
-		{ width: 5, color: 0xffdd44, alpha: 0.72 },
-		{ width: 2.5, color: 0xfff8e8, alpha: 1.0 },
+		{ width: 26, color: 0xff5500, alpha: 0.16 },
+		{ width: 5, color: 0xfff6cc, alpha: 1.0 },
 	];
 
 	let activeLines = $state<ActiveLine[]>([]);

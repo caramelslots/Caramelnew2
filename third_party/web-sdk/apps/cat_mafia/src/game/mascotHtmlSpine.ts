@@ -7,6 +7,8 @@ export const MASCOT_BASE_SIZE = { width: 520, height: 440 } as const;
  * supersampling averages those edges away.
  */
 export const MASCOT_SSAA = 2;
+/** Phone portrait: cap SpinePlayer backing store (SSAA off, native dpr often 3). */
+export const MASCOT_PHONE_MAX_DPR = 2;
 
 /** Mascot height as a fraction of the board’s on-screen height. */
 export const MASCOT_BOARD_HEIGHT_FRAC = 1.25;

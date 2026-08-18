@@ -47,8 +47,6 @@
 	import BoardBase from './BoardBase.svelte';
 	import CatAnticipationFrames from './CatAnticipationFrames.svelte';
 	import CatAnticipationSound from './CatAnticipationSound.svelte';
-	import PaylineOverlay from './PaylineOverlay.svelte';
-	import PaylineWinAmounts from './PaylineWinAmounts.svelte';
 
 	const context = getContext();
 
@@ -188,8 +186,6 @@
 		<Container>
 			<BoardMask />
 			<BoardBase />
-			<PaylineOverlay />
-			<PaylineWinAmounts />
 		</Container>
 		<!-- Mystery explosion uses screen-blend Aura slots — render outside the
 		     board mask so VFX composite over parchment instead of a transparent RT. -->
