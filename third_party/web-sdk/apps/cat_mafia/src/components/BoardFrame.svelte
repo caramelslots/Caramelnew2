@@ -10,6 +10,15 @@
 	import { getContext } from '../game/context';
 	import { catBoardZoom } from '../game/catAnticipationBoardZoom.svelte';
 
+	type BoardLayout = {
+		x: number;
+		y: number;
+		scale: number;
+		pivot: { x: number; y: number };
+		width: number;
+		height: number;
+	};
+
 	type Props = {
 		/**
 		 * `base` — desk fill under the reels.
@@ -17,6 +26,8 @@
 		 * so spin/land never paints over the frame.
 		 */
 		layer?: 'base' | 'overlay';
+		layout?: BoardLayout;
+		disableCatZoom?: boolean;
 	};
 
 	const props: Props = $props();
@@ -24,8 +35,10 @@
 
 	const context = getContext();
 
-	const boardLayout = $derived(context.stateGameDerived.boardLayout());
-	const boardScale = $derived(boardLayout.scale * catBoardZoom.current);
+	const boardLayout = $derived(props.layout ?? context.stateGameDerived.boardLayout());
+	const boardScale = $derived(
+		boardLayout.scale * (props.disableCatZoom ? 1 : catBoardZoom.current),
+	);
 	const frameX = $derived(boardLayout.pivot.x + BOARD_FRAME_OFFSET.x);
 	const frameY = $derived(boardLayout.pivot.y + BOARD_FRAME_OFFSET.y);
 

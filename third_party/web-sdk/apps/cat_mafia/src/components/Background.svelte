@@ -10,6 +10,7 @@
 		BG_IDLE_ANIMATION,
 		getBackgroundCoverScale,
 	} from '../game/neonBackgroundLayout';
+	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
 	import BackgroundSkinController from './BackgroundSkinController.svelte';
 	import StreetOffscreenCull from './StreetOffscreenCull.svelte';
 
@@ -30,6 +31,7 @@
 
 	const showBaseBackground = $derived(context.stateGame.gameType === 'basegame');
 	const showFeatureBackground = $derived(context.stateGame.gameType === 'freegame');
+	const isPhone = $derived(isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType()));
 
 	const canvasCenter = $derived.by(() => {
 		const canvas = context.stateLayoutDerived.canvasSizes();
@@ -47,7 +49,9 @@
 			<SpineProvider key="mainBackground" {...spineProps}>
 				<BackgroundSkinController skin="day" />
 				<StreetOffscreenCull />
-				<SpineTrack trackIndex={0} animationName={BG_IDLE_ANIMATION} loop timeScale={1} />
+				{#if !isPhone}
+					<SpineTrack trackIndex={0} animationName={BG_IDLE_ANIMATION} loop timeScale={1} />
+				{/if}
 			</SpineProvider>
 		</Container>
 	</Container>
@@ -59,7 +63,9 @@
 			<SpineProvider key="mainBackground" {...spineProps}>
 				<BackgroundSkinController skin="night" />
 				<StreetOffscreenCull />
-				<SpineTrack trackIndex={0} animationName={BG_IDLE_ANIMATION} loop timeScale={1} />
+				{#if !isPhone}
+					<SpineTrack trackIndex={0} animationName={BG_IDLE_ANIMATION} loop timeScale={1} />
+				{/if}
 			</SpineProvider>
 		</Container>
 	</Container>

@@ -19,6 +19,12 @@
 		portraitBuyPanelHeightCanvas,
 	} from '../game/portraitHudLayout';
 	import { devPreview } from '../game/devPreview.svelte';
+	import { stateDuel } from '../game/stateDuel.svelte';
+	import {
+		computeDuelScreenLayout,
+		getDuelCatMascotBox,
+		getDuelDogMascotBox,
+	} from '../game/duelLayout';
 	import {
 		getMascotPortraitScreenBox,
 		getMascotScreenBox,
@@ -37,6 +43,20 @@
 		resolveMascotSpineUrl,
 	} from '../game/mascotHtmlSpine';
 	import { gameSpeedMultFor } from '../game/gameSpeed';
+
+	type Props = {
+		/** `duelDog` — second instance on the left during Duel (same cat spine, mirrored). */
+		variant?: 'primary' | 'duelDog';
+	};
+
+	const props: Props = $props();
+	const variant = $derived(props.variant ?? 'primary');
+	const isDuelDog = $derived(variant === 'duelDog');
+	const isPlayerMascot = $derived(
+		stateDuel.active &&
+			((isDuelDog && stateDuel.playerSide === 'dog') ||
+				(!isDuelDog && stateDuel.playerSide === 'cat')),
+	);
 
 	const capPlayerCanvasDpr = (spinePlayer: SpinePlayer, maxDpr: number) => {
 		const renderer = spinePlayer.sceneRenderer;
@@ -70,19 +90,35 @@
 				context.stateLayoutDerived.canvasSizeType() === 'smallMobile'),
 	);
 	const mascotSsaa = $derived(isPhonePortrait ? 1 : MASCOT_SSAA);
-	/** All layouts except when explicitly hidden — desktop/tablet/landscape/popout/portrait. */
+	/** Primary: all layouts except duel-portrait. Dog twin: non-portrait duel. */
 	const showMascotLayout = $derived(
-		layoutType === 'desktop' ||
-			layoutType === 'tablet' ||
-			layoutType === 'landscape' ||
-			isPopout ||
-			isPortrait,
+		isDuelDog
+			? stateDuel.active &&
+					!isPortrait &&
+					(layoutType === 'desktop' ||
+						layoutType === 'tablet' ||
+						layoutType === 'landscape' ||
+						isPopout)
+			: (layoutType === 'desktop' ||
+					layoutType === 'tablet' ||
+					layoutType === 'landscape' ||
+					isPopout ||
+					isPortrait) &&
+					!(stateDuel.active && isPortrait),
 	);
-	const forceAnim = $derived(devPreview.mascotAnimation);
+	const forceAnim = $derived(isDuelDog ? null : devPreview.mascotAnimation);
 	// Маунт и загрузка Spine — уже на preloadContent (во время лоадера/cloud
 	// transition), чтобы к входу доски плеер был готов. До входа держим
 	// opacity: 0 — проявление синхронно с FadeContainer доски (showContent).
-	const mounted = $derived(gameEntrance.preloadContent && (showMascotLayout || forceAnim !== null));
+	const mounted = $derived(
+		gameEntrance.preloadContent &&
+			(isDuelDog
+				? layoutType === 'desktop' ||
+					layoutType === 'tablet' ||
+					layoutType === 'landscape' ||
+					isPopout
+				: showMascotLayout || forceAnim !== null),
+	);
 	const pose = $derived(
 		(context.stateGame.bulletFly ? 'load' : context.stateGame.mascotPose || 'idle') as MascotPose,
 	);
@@ -90,6 +126,26 @@
 	const spineTimeScale = $derived(gameSpeedMultFor(gameSpeed));
 
 	const style = $derived.by(() => {
+		const canvas = canvasSizes;
+		if (stateDuel.active && !isPortrait) {
+			const ml = context.stateLayoutDerived.mainLayout();
+			const board = context.stateGameDerived.baseBoardLayout();
+			const duel = computeDuelScreenLayout({
+				canvasWidth: canvas.width,
+				canvasHeight: canvas.height,
+				layoutType,
+				mainLayout: ml,
+				boardLayout: board,
+			});
+			const box = isDuelDog ? getDuelDogMascotBox(duel) : getDuelCatMascotBox(duel);
+			const mirror = isDuelDog ? 'transform:scaleX(-1);' : '';
+			return `left:${box.left}px;top:${box.top}px;width:${box.width}px;height:${box.height}px;${mirror}`;
+		}
+
+		if (isDuelDog) {
+			return 'left:0;top:0;width:0;height:0;opacity:0;';
+		}
+
 		const ml = context.stateLayoutDerived.mainLayout();
 		const board = context.stateGameDerived.boardLayout();
 		/** visualWidth/Height already include board.scale (parchment on portrait). */
@@ -100,7 +156,7 @@
 
 		const box = isPortrait
 			? getMascotPortraitScreenBox({
-					canvasWidth: canvasSizes.width,
+					canvasWidth: canvas.width,
 					boardCenterY: centerY,
 					halfH,
 					buyPanelTop: portraitBuyPanelCanvasTop(context.stateLayoutDerived),
@@ -137,7 +193,9 @@
 	 * вешается только когда плеер загружен И вход начался. Если загрузка
 	 * не успела к входу — дофейживается по готовности тем же длинным фейдом.
 	 */
-	const revealed = $derived(ready && (show || entranceDone));
+	const revealed = $derived(
+		ready && (show || entranceDone) && (!isDuelDog || showMascotLayout),
+	);
 	/**
 	 * FS cloud transition (оба направления): маскот растворяется за
 	 * MASCOT_TRANSITION_FADE_MS под набегающим облаком — z-флип pixi-stage
@@ -510,7 +568,13 @@
 </script>
 
 {#if mounted}
-	<div class="mascot" class:ready={shown} style="{style}{transitionStyle}" aria-hidden="true">
+	<div
+		class="mascot"
+		class:ready={shown}
+		class:player-side={isPlayerMascot}
+		style="{style}{transitionStyle}"
+		aria-hidden="true"
+	>
 		<!--
 			SSAA: Spine draws into a larger canvas, then we CSS-scale down so
 			eye/ear layer edges don't alias into hard seams on small phones.
@@ -541,6 +605,11 @@
 
 		&.ready {
 			opacity: 1;
+		}
+
+		&.player-side.ready {
+			filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.55))
+				drop-shadow(0 0 18px rgba(255, 200, 90, 0.55));
 		}
 	}
 

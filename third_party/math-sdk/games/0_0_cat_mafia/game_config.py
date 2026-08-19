@@ -262,12 +262,30 @@ class GameConfig(Config):
             "super_bonus": True,
         }
 
+        # Duel: 20 base-rule spins (cat→dog ×10). No FS / scatters / paw / bullets.
+        duel_condition = {
+            "reel_weights": {self.basegame_type: {"BR0": 1}},
+            "mult_values": {self.basegame_type: dict(self.base_sw_mult_weights)},
+            "force_wincap": False,
+            "force_freegame": False,
+            "duel_mode": True,
+        }
+        duel_wincap_condition = {
+            "reel_weights": {self.basegame_type: {"BR0": 1}},
+            "mult_values": {self.basegame_type: dict(self.base_sw_mult_weights)},
+            "force_wincap": True,
+            "force_freegame": False,
+            "duel_mode": True,
+        }
+
         # Buy bonuses: advertised/hard max ×25000; soft force-wincap fence stays ×2500.
         mode_maxwins = {
             "base": self.soft_wincap,
             "bonus_boost": self.soft_wincap,
             "bonus_normal": 25_000.0,
             "bonus_super": 25_000.0,
+            "bonus_duel_cat": 25_000.0,
+            "bonus_duel_dog": 25_000.0,
         }
         buy_soft = self.soft_wincap
         buy_hard = 25_000.0
@@ -412,6 +430,76 @@ class GameConfig(Config):
                         criteria="freegame",
                         quota=round(0.998 - buy_wincap_max_quota, 6),
                         conditions=buy_super_condition,
+                    ),
+                ],
+            ),
+            BetMode(
+                name="bonus_duel_cat",
+                cost=50.0,
+                rtp=self.rtp,
+                max_win=mode_maxwins["bonus_duel_cat"],
+                auto_close_disabled=False,
+                is_feature=False,
+                is_buybonus=True,
+                distributions=[
+                    Distribution(
+                        criteria="wincap",
+                        quota=0.001,
+                        win_criteria=buy_soft,
+                        conditions=duel_wincap_condition,
+                    ),
+                    Distribution(
+                        criteria="wincap_max",
+                        quota=buy_wincap_max_quota,
+                        win_criteria=buy_hard,
+                        conditions=duel_wincap_condition,
+                    ),
+                    # Player plays as CAT — ~50% session win rate.
+                    Distribution(
+                        criteria="duel_win",
+                        quota=0.49945,
+                        conditions=duel_condition,
+                    ),
+                    Distribution(
+                        criteria="duel_lose",
+                        quota=round(1.0 - 0.001 - buy_wincap_max_quota - 0.49945, 6),
+                        win_criteria=0.0,
+                        conditions=duel_condition,
+                    ),
+                ],
+            ),
+            BetMode(
+                name="bonus_duel_dog",
+                cost=50.0,
+                rtp=self.rtp,
+                max_win=mode_maxwins["bonus_duel_dog"],
+                auto_close_disabled=False,
+                is_feature=False,
+                is_buybonus=True,
+                distributions=[
+                    Distribution(
+                        criteria="wincap",
+                        quota=0.001,
+                        win_criteria=buy_soft,
+                        conditions=duel_wincap_condition,
+                    ),
+                    Distribution(
+                        criteria="wincap_max",
+                        quota=buy_wincap_max_quota,
+                        win_criteria=buy_hard,
+                        conditions=duel_wincap_condition,
+                    ),
+                    # Player plays as DOG — ~25% win rate, fatter wins when hit.
+                    Distribution(
+                        criteria="duel_win",
+                        quota=0.24945,
+                        conditions=duel_condition,
+                    ),
+                    Distribution(
+                        criteria="duel_lose",
+                        quota=round(1.0 - 0.001 - buy_wincap_max_quota - 0.24945, 6),
+                        win_criteria=0.0,
+                        conditions=duel_condition,
                     ),
                 ],
             ),

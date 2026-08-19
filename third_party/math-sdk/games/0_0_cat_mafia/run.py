@@ -31,6 +31,8 @@ if __name__ == "__main__":
         "bonus_boost": int(1e5),
         "bonus_normal": int(1e5),
         "bonus_super": int(1e5),
+        "bonus_duel_cat": int(1e5),
+        "bonus_duel_dog": int(1e5),
     }
 
     run_conditions = {

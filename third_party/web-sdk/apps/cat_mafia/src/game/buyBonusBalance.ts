@@ -9,6 +9,7 @@ import { stateGame } from './stateGame.svelte';
 /** Fallbacks used until authenticate overwrites betModes.costMultiplier. */
 export const BUY_NORMAL_COST_MULT = 100;
 export const BUY_SUPER_COST_MULT = 200;
+export const BUY_DUEL_COST_MULT = 50;
 
 const modeCostMultiplier = (modeKey: string, fallback: number) => {
 	const meta =
@@ -25,6 +26,8 @@ export const buyNormalCostMultiplier = () =>
 export const buySuperCostMultiplier = () =>
 	modeCostMultiplier('bonus_super', BUY_SUPER_COST_MULT);
 
+export const buyDuelCostMultiplier = () => modeCostMultiplier('bonus_duel', BUY_DUEL_COST_MULT);
+
 export const bonusBoostCostMultiplier = () =>
 	modeCostMultiplier('bonus_boost', BONUS_BOOST_COST_MULT);
 
@@ -40,6 +43,12 @@ export const canAffordBuyBonus = (costMultiplier: number) =>
 export const canAffordBuyBonusForModeKey = (modeKey: string) => {
 	if (modeKey === 'bonus_super') return canAffordBuyBonus(buySuperCostMultiplier());
 	if (modeKey === 'bonus_normal') return canAffordBuyBonus(buyNormalCostMultiplier());
+	if (
+		modeKey === 'bonus_duel' ||
+		modeKey === 'bonus_duel_cat' ||
+		modeKey === 'bonus_duel_dog'
+	)
+		return canAffordBuyBonus(buyDuelCostMultiplier());
 	return false;
 };
 

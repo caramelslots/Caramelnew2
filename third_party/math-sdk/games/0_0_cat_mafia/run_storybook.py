@@ -82,6 +82,8 @@ if __name__ == "__main__":
         "bonus_boost": 40,
         "bonus_normal": 30,
         "bonus_super": 30,
+        "bonus_duel_cat": 40,
+        "bonus_duel_dog": 40,
     }
 
     config = GameConfig()

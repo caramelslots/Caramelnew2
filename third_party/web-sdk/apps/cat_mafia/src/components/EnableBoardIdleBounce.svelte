@@ -15,11 +15,13 @@
 		resetIdleBounceSymbols,
 	} from '../game/boardIdleBounce';
 	import { stateGame, stateGameDerived } from '../game/stateGame.svelte';
+	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
 	import type { SymbolName } from '../game/types';
 
 	const context = getContext();
 
 	const canRunIdleBounce = () =>
+		!isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType()) &&
 		context.stateXstateDerived.isIdle() &&
 		stateGame.idleBounceAllowed &&
 		!stateGameDerived.boardReelsActive() &&

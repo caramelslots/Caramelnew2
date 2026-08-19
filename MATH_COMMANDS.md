@@ -39,63 +39,9 @@ PY=/tmp/csmath_venv/bin/python
 
 ## 1. M5 — intermediate sim (1e5 per mode, ~10-20 мин)
 
-Когда: после правок `game_config.py` / `game_override.py` / `paylines` / `paytable` / `reelstrips`. Перепишет `library/publish_files/` для demo +
-RGS publish.
-
-**SW на лентах (2026-08):** SW добавлен на BR0 (1 стоп/барабан после
-нормализации), форс-посадка `force_sw_expand_on_board` удалена — штора
-выпадает естественно, максимум 1 SW за спин держит `enforce_single_sw_base`.
-Лапа остаётся форс-посадкой (`force_paw_on_board`). FS-режимы не тронуты.
-**bonus_boost** = тот же BR0/фичи, `freegame` quota **20%** (base 10%).
-После правок:
-
 ```bash
-# Только base+boost (buy-режимы НЕ пересоздаём — FS логика 1:1):
-$PY run_base_boost.py 2>&1 | tee /tmp/m5.log
-# run_base_boost после opt сам делает пост-фикс на weighted publish LUT:
-#   sw pin ровно 3% (event-based, двусторонний: floor И cap — оптимизатор
-#   раздувает шторы >3%, т.к. ×2-×8 шторы хорошо платят), микс множителей
-#   шторы → 55/24/13/5/3 (внутри sw-книг, HIT/sw-тотал не трогает),
-#   paw floor 3% из dead, HIT → baseline, RTP → 96% hit-neutral
-#   (терции по платёжности; fallback-доноры freegame/wincap при истощении пула).
-# Затем resample (сам копирует weighted publish → backup, потом пишет equal-weight books):
-$PY tools/resample_books.py
-# Приёмка: RTP/HIT/paw/sw/XOR/single-SW + мульт-гистограмма (±3pp — биномиальный
-# шум ресэмпла ~3k штор: σ≈0.9pp) + byte-diff buy-режимов к baseline:
-$PY tools/acceptance_scan.py
+NUM_SIMS=200 $PY run_small.py
 ```
-
-Если прогон уже прошёл **без** пост-фикса (или enforce упал посреди run.py) —
-weighted LUT'ы оптимизатора лежат в `library/publish_files_backup_pre_resample`
-(в `publish_files` после resample они equal-weight, чинить нечего). Чиним
-бэкап и пересэмплируем — M5 заново гонять НЕ нужно:
-
-```bash
-$PY tools/enforce_paw_hit_rate.py --mode base --lut-dir library/publish_files_backup_pre_resample --paw 0.03 --sw 0.03 --hit 0.3708 --rtp 0.9601
-$PY tools/enforce_paw_hit_rate.py --mode bonus_boost --lut-dir library/publish_files_backup_pre_resample --paw 0.03 --sw 0.03 --hit 0.4133 --rtp 0.9601
-$PY tools/resample_books.py
-# buy-режимы после resample — из новых симов; вернуть byte-identical baseline:
-cp library/publish_files_backup_baseline/books_bonus_{normal,super}.jsonl.zst library/publish_files/
-cp library/publish_files_backup_baseline/lookUpTable_bonus_{normal,super}_0.csv library/publish_files/
-$PY tools/acceptance_scan.py
-```
-
-**Bonus max ×25000 (2026-07):** buy modes `bonus_normal` / `bonus_super`
-имеют hard max **×25000** (Stake `max_win`), плюс soft jackpot **×2500**
-(`criteria=wincap`) и ультра-редкий `wincap_max`. Base/boost остаются ×2500.
-После смены обязателен M5 хотя бы для buy-режимов, затем `resample_books.py`
-(force-include ровно 1 книгу ×25000, RTP seed-search дожимает ~0.9601).
-
-**Bonus medium-vol (2026-07):** после смены FR / `sw_mult_weights` /
-`game_optimization.py` (bonus scaling + m2m) обязателен M5 хотя бы для
-`bonus_normal` + `bonus_super`, иначе LUT останется старой high-vol.
-
-**ETL40** `bonus_boost`**:** если Stake ругается на ETL 40× (>0.800), переоптимизируй:
-`$PY run_bonus_boost_etl.py` (нужен свежий `math_config` через `generate_configs`).
-
-В `0_0_cat_mafia/run.py` должно быть `num_sim_args = 1e5` на режим и
-`run_optimization: True`. Если видишь «Batch 1 of 5» и финиш за ~15 с —
-это **не** M5 (остались dev `1e4` / optimization off).
 
 ```bash
 $PY run.py 2>&1 | tee /tmp/m5.log
@@ -109,6 +55,17 @@ grep -E "AssertionError|Error|Traceback" /tmp/m5.log # на всякий
 ```
 
 После M5 → выполни **§4 Sync** для storybook fixtures.
+
+---
+
+## 1b. Duel only (`bonus_duel_cat` ~50% / `bonus_duel_dog` ~25%)
+
+```bash
+NUM_SIMS=200 $PY run_bonus_duel.py 2>&1 | tee /tmp/m5_bonus_duel.log
+# one side: MODE=bonus_duel_dog NUM_SIMS=200 $PY run_bonus_duel.py
+$PY tools/assert_duel_invariants.py
+# fixtures: $PY run_storybook.py && $PY sync_to_web_sdk.py
+```
 
 ---
 
@@ -184,75 +141,3 @@ $PY run_storybook.py && $PY sync_to_web_sdk.py
 После — Vite HMR подхватит. Если демка открыта, обнови вкладку (Cmd-Shift-R).
 
 ---
-
-## Полный workflow перед публикацией
-
-```bash
-# 0. (один раз) переменные окружения
-cd /Users/danylolepetynskyi/Desktop/Caramelnew2/third_party/math-sdk/games/0_0_cat_mafia
-export PATH="$HOME/.cargo/bin:$PATH"
-export PYTHONPATH=../..:.
-PY=/tmp/csmath_venv/bin/python
-
-# 1. M5 (или M6 для prod)
-$PY run.py 2>&1 | tee /tmp/m5.log
-
-# 2. Snapshot для resample
-rm -rf library/publish_files_backup_pre_resample
-cp -r library/publish_files library/publish_files_backup_pre_resample
-
-# 3. Resample (unbias books для RGS dashboard)
-$PY tools/resample_books.py
-
-# 4. Sync для storybook
-$PY run_storybook.py && $PY sync_to_web_sdk.py
-
-# 5. Готово. publish_files/ — для Stake RGS, web-sdk fixtures — для демки/storybook.
-```
-
----
-
-## Workflow для итеративной разработки (без RGS publish)
-
-Только M5 + sync, без resample (демка не зависит от bias).
-
-```bash
-$PY run.py 2>&1 | tee /tmp/m5.log
-$PY run_storybook.py && $PY sync_to_web_sdk.py
-```
-
----
-
-## Очистка `library/` (если нужно начать с чистого листа)
-
-```bash
-rm -rf library/books library/configs library/forces library/lookup_tables \
-       library/optimization_files library/temp_multi_threaded_files \
-       library/publish_files \
-       library/0_0_daloniil_test_full_statistics.xlsx \
-       library/statistics_summary.json library/stats_summary.json
-# library/publish_files_backup_pre_resample/ — сохранится (нужен для §4)
-```
-
-После — повтори §1 (M5).
-
----
-
-## Assert: доп. FS без пуль
-
-После shoot на +FS не должно быть `BT` / `bulletCollect` (включая padding):
-
-```bash
-$PY tools/assert_no_bullets_on_extra_fs.py
-```
-
-Запускай после `run_storybook.py` / M5 / resample.
-
----
-
-## Связанные документы
-
-- `third_party/math-sdk/games/0_0_daloniil_test/REDESIGN_PLAN.md` — план математических правок
-- `third_party/math-sdk/games/0_0_daloniil_test/DEMO_ISSUES.md` — лог багов и фиксов в демке
-- `third_party/math-sdk/games/0_0_daloniil_test/run.py` — main M5/M6 entrypoint (поменяй `num_sim_args` для M6)
-- `third_party/math-sdk/games/0_0_daloniil_test/tools/resample_books.py` — resample logic + docstring

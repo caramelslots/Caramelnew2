@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { onDestroy, untrack } from 'svelte';
 	import { BaseSprite, Rectangle } from 'pixi-svelte';
+	import * as PIXI from 'pixi.js';
 
 	import { getContext } from '../game/context';
 	import {
@@ -17,16 +18,31 @@
 	} from '../game/boardFeatherMask';
 	import { stateGame } from '../game/stateGame.svelte';
 
-	type Props = { debug?: boolean };
+	type BoardLayoutLike = { width: number; height: number };
+	type ReelMotionLike = { reelState: { motion: string } };
+
+	type Props = {
+		debug?: boolean;
+		/** Override — Duel desks pass their layout (width/height in board-local px). */
+		layout?: BoardLayoutLike;
+		/** Override — Duel desks pass their reel board for spin overflow. */
+		board?: ReelMotionLike[];
+	};
 
 	const props: Props = $props();
 	const context = getContext();
-	const layout = $derived(context.stateGameDerived.boardLayout());
-	const reelsActive = $derived(context.stateGameDerived.boardReelsActive());
-	const mysteryAnimating = $derived(context.stateGameDerived.boardMysteryAnimating());
+	const layout = $derived(props.layout ?? context.stateGameDerived.boardLayout());
+	const reelsActive = $derived(
+		props.board
+			? props.board.some((reel) => reel.reelState.motion !== 'stopped')
+			: context.stateGameDerived.boardReelsActive(),
+	);
+	const mysteryAnimating = $derived(
+		props.board ? false : context.stateGameDerived.boardMysteryAnimating(),
+	);
 	const mysteryMaskActive = $derived(mysteryAnimating && !reelsActive);
 	const maskTopOverflow = $derived(
-		stateGame.winSpotlightActive
+		!props.board && stateGame.winSpotlightActive
 			? BOARD_MASK_WIN_BOUNCE_TOP
 			: mysteryMaskActive
 				? BOARD_MASK_MYSTERY_OVERFLOW
@@ -47,19 +63,26 @@
 	const maskWidth = $derived(layout.width + SYMBOL_SIZE * 2);
 	const maskHeight = $derived(layout.height + maskTopOverflow + maskBottomOverflow);
 
-	const maskTexture = $derived.by(() =>
-		createBoardFeatherMaskTexture({
+	// Own texture per BoardMask instance — dual Duel desks cannot share one
+	// Texture as Pixi masks (left desk otherwise clips to ~3 columns).
+	let maskTexture = $state<PIXI.Texture>(PIXI.Texture.WHITE);
+
+	$effect(() => {
+		const next = createBoardFeatherMaskTexture({
 			width: maskWidth,
 			height: maskHeight,
 			topOverflow: maskTopOverflow,
 			bottomOverflow: maskBottomOverflow,
 			gridHeight: layout.height,
 			feather: BOARD_MASK_FEATHER,
-		}),
-	);
+		});
+		const prev = untrack(() => maskTexture);
+		maskTexture = next;
+		if (prev !== next) destroyBoardFeatherMaskTexture(prev);
+	});
 
 	onDestroy(() => {
-		destroyBoardFeatherMaskTexture();
+		destroyBoardFeatherMaskTexture(maskTexture);
 	});
 </script>
 
@@ -77,11 +100,20 @@
 	texture={maskTexture}
 	x={maskX}
 	y={maskY}
+	width={maskWidth}
+	height={maskHeight}
 	oncreate={(sprite) => {
 		sprite.renderable = false;
 	}}
 />
 
 {#if props.debug}
-	<BaseSprite texture={maskTexture} x={maskX} y={maskY} alpha={0.35} />
+	<BaseSprite
+		texture={maskTexture}
+		x={maskX}
+		y={maskY}
+		width={maskWidth}
+		height={maskHeight}
+		alpha={0.35}
+	/>
 {/if}

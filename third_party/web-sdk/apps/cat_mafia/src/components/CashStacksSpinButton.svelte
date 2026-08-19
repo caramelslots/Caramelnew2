@@ -8,22 +8,20 @@
 	import { Container, Sprite, Text } from 'pixi-svelte';
 	import { Button, type ButtonProps } from 'components-pixi';
 	import { OnHotkey } from 'components-shared';
-	import { stateBet, stateBetDerived, stateUi } from 'state-shared';
+	import { stateBet, stateBetDerived } from 'state-shared';
 	import { stateSlots } from 'utils-slots';
 
 	import { canAffordSpin } from '../game/buyBonusBalance';
+	import { isLockedBonusHud } from '../game/activeFeature';
 	import { isAnyMenuOpen } from '../game/isAnyMenuOpen';
 	import CashStacksButtonBetProvider from './CashStacksButtonBetProvider.svelte';
 	import { UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
 	import { getContext } from '../game/context';
-	import { stateGame } from '../game/stateGame.svelte';
 	import { UI_SPRITE_RENDER, uiScaledSize, type UiSizeScaleProps } from '../game/uiButtonSize';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> & UiSizeScaleProps = $props();
 	const context = getContext();
-	const isFreeSpins = $derived(
-		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
-	);
+	const hudLocked = $derived(isLockedBonusHud());
 	const disabled = $derived(!canAffordSpin());
 	const spaceDisabled = $derived(disabled || isAnyMenuOpen());
 	const hasCounter = $derived(stateBetDerived.hasAutoBetCounter());
@@ -73,7 +71,7 @@
 	const counterOffsetY = $derived(sizes.height * 0.012);
 </script>
 
-{#if !isFreeSpins}
+{#if !hudLocked}
 	<CashStacksButtonBetProvider>
 		{#snippet children({ key, onpress })}
 			{@const handlePress = () => {

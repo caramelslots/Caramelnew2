@@ -11,8 +11,13 @@
 	};
 
 	export type EmitterEventPaylineWinAmount =
-		| { type: 'paylineWinAmountShow'; amount: number; anchor: PaylineWinAmountAnchor }
-		| { type: 'paylineWinAmountClear' };
+		| {
+				type: 'paylineWinAmountShow';
+				amount: number;
+				anchor: PaylineWinAmountAnchor;
+				side?: 'cat' | 'dog';
+		  }
+		| { type: 'paylineWinAmountClear'; side?: 'cat' | 'dog' };
 </script>
 
 <script lang="ts">
@@ -26,6 +31,11 @@
 	} from '../game/constants';
 	import { getContext } from '../game/context';
 
+	type Props = {
+		side?: 'cat' | 'dog';
+	};
+
+	const props: Props = $props();
 	const context = getContext();
 
 	let activeAmount = $state<number | null>(null);
@@ -54,15 +64,28 @@
 	});
 
 	context.eventEmitter.subscribeOnMount({
-		paylineWinAmountShow: ({ amount, anchor }) => {
-			activeAmount = amount;
-			activeAnchor = anchor;
+		paylineWinAmountShow: (event) => {
+			if (props.side) {
+				if (event.side !== props.side) return;
+			} else if (event.side) {
+				return;
+			}
+			activeAmount = event.amount;
+			activeAnchor = event.anchor;
 		},
-		paylineWinAmountClear: () => {
+		paylineWinAmountClear: (event) => {
+			const side = event && 'side' in event ? event.side : undefined;
+			if (side) {
+				if (props.side !== side) return;
+			}
 			activeAmount = null;
 			activeAnchor = null;
 		},
-		paylineClearAll: () => {
+		paylineClearAll: (event) => {
+			const side = event && 'side' in event ? event.side : undefined;
+			if (side) {
+				if (props.side !== side) return;
+			}
 			activeAmount = null;
 			activeAnchor = null;
 		},

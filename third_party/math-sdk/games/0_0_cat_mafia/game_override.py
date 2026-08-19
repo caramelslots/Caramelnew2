@@ -14,6 +14,10 @@ from game_events import (
     free_spin_target_pick_event,
     bullet_collect_event,
     target_shoot_round_event,
+    duel_start_event,
+    duel_spin_event,
+    duel_bank_update_event,
+    duel_end_event,
 )
 from game_features import (
     find_paws,
@@ -46,6 +50,26 @@ class GameStateOverride(GameExecutables):
         # FS sticky Super Wild columns: reel -> multiplier (capped).
         self.sticky_sw: dict[int, int] = {}
         self.max_sticky_sw = int(getattr(self.config, "max_sticky_sw", 2))
+        self.duel_dog_total = 0.0
+        self.duel_cat_total = 0.0
+        self.duel_winner = None
+        self.duel_payout = 0.0
+        self.duel_player_side = None
+        self.duel_player_won = False
+
+    DUEL_MODE_NAMES = frozenset({"bonus_duel", "bonus_duel_cat", "bonus_duel_dog"})
+
+    def is_duel_betmode(self) -> bool:
+        name = self.get_current_betmode().get_name()
+        return name in self.DUEL_MODE_NAMES
+
+    def resolve_duel_player_side(self) -> str:
+        """Which side the player is playing as for this book (from bet mode)."""
+        name = self.get_current_betmode().get_name()
+        if name == "bonus_duel_dog":
+            return "dog"
+        # bonus_duel_cat, legacy bonus_duel → cat
+        return "cat"
 
     def _fence_win_cap(self) -> float:
         """Stop/clamp at distribution win_criteria when force_wincap (soft ×2500 vs hard ×25000)."""
@@ -79,9 +103,11 @@ class GameStateOverride(GameExecutables):
     def update_final_win(self) -> None:
         """Clamp payout to active fence cap so win_criteria (2500 / 25000) can match exactly."""
         cap = self._fence_win_cap()
-        final = round(min(self.win_manager.running_bet_win, cap), 2)
-        basewin = round(min(self.win_manager.basegame_wins, cap), 2)
-        freewin = round(min(self.win_manager.freegame_wins, cap), 2)
+        # Duel LUT payouts must be multiples of 10 (0.1× bet); keep that quantization.
+        quant = 1 if self.is_duel_betmode() else 2
+        final = round(min(self.win_manager.running_bet_win, cap), quant)
+        basewin = round(min(self.win_manager.basegame_wins, cap), quant)
+        freewin = round(min(self.win_manager.freegame_wins, cap), quant)
 
         self.final_win = final
         self.book.payout_multiplier = self.final_win
@@ -89,16 +115,16 @@ class GameStateOverride(GameExecutables):
         self.book.freegame_wins = freewin
 
         assert min(
-            round(self.win_manager.basegame_wins + self.win_manager.freegame_wins, 2),
+            round(self.win_manager.basegame_wins + self.win_manager.freegame_wins, quant),
             cap,
         ) == round(
-            min(self.win_manager.running_bet_win, cap), 2
+            min(self.win_manager.running_bet_win, cap), quant
         ), "Base + Free game payout mismatch!"
         assert min(
-            round(self.book.basegame_wins + self.book.freegame_wins, 2),
+            round(self.book.basegame_wins + self.book.freegame_wins, quant),
             cap,
         ) == min(
-            round(self.book.payout_multiplier, 2), round(cap, 2)
+            round(self.book.payout_multiplier, quant), round(cap, quant)
         ), "Base + Free game payout mismatch!"
 
     def assign_special_sym_function(self):
@@ -132,6 +158,17 @@ class GameStateOverride(GameExecutables):
                 need = "pawCoinResolve" if self.criteria == "paw" else "superWildExpand"
                 if need not in types:
                     self.repeat = True
+                    return
+            # Duel outcome fences — duel_win/lose refer to the *player's* side.
+            if self.criteria == "duel_win" and not getattr(self, "duel_player_won", False):
+                self.repeat = True
+                return
+            if self.criteria == "duel_lose" and getattr(self, "duel_player_won", False):
+                self.repeat = True
+                return
+            if self.is_duel_betmode():
+                if getattr(self, "duel_cat_total", None) == getattr(self, "duel_dog_total", None):
+                    self.repeat = True
 
     def draw_board(self, emit_event: bool = True, trigger_symbol: str = "scatter") -> None:
         conditions = self.get_current_distribution_conditions()
@@ -142,12 +179,182 @@ class GameStateOverride(GameExecutables):
         super().draw_board(emit_event=False, trigger_symbol=trigger_symbol)
         self.enforce_bonus_symbol_rules()
         self.enforce_feature_symbol_rules()
+        self.enforce_duel_symbol_rules()
         self.apply_fs_sw_board_rules()
         self.force_paw_on_board()
         self.enforce_single_sw_base()
         self.enrich_visual_non_winning_symbols()
         if emit_event:
             reveal_event(self)
+
+    def enforce_duel_symbol_rules(self) -> None:
+        """Duel: never land scatter B, paw coins, or bullets."""
+        conditions = self.get_current_distribution_conditions() or {}
+        if not conditions.get("duel_mode") and not self.is_duel_betmode():
+            return
+        forbidden = {"B", "BT", "PB", "PS", "PG"}
+        self._replace_symbol_name(forbidden, "L2")
+        # Strip padding too.
+        if not getattr(self.config, "include_padding", False):
+            return
+        for attr in ("top_symbols", "bottom_symbols"):
+            pad = getattr(self, attr, None)
+            if not pad:
+                continue
+            for reel, cell in enumerate(pad):
+                if getattr(cell, "name", None) in forbidden:
+                    pad[reel] = self.create_symbol("L2")
+
+    def duel_visible_board(self) -> list:
+        """5×4 board payload for duelSpin (no padding rows)."""
+        from src.events.events import json_ready_sym
+
+        special_attributes = list(self.config.special_symbols.keys())
+        board_client = []
+        for reel, _ in enumerate(self.board):
+            board_client.append([])
+            for row in range(len(self.board[reel])):
+                board_client[reel].append(
+                    json_ready_sym(self.board[reel][row], special_attributes)
+                )
+        return board_client
+
+    def run_duel_side_spin(self, side: str, spin_index: int) -> float:
+        """One cat/dog spin under base SW curtain rules. Returns spin win in bet multiples.
+
+        Side banks accumulate wins; player wallet is only settled on duelEnd.
+        """
+        self.win_manager.reset_spin_win()
+        running_before = float(self.win_manager.running_bet_win)
+
+        self.draw_board(emit_event=False)
+
+        # Line eval (no book events — amounts live in duelSpin / duelBankUpdate).
+        saved = self._neutralize_board_sw_mults()
+        try:
+            self.win_data = Lines.get_lines(
+                self.board,
+                self.config,
+                global_multiplier=self.global_multiplier,
+            )
+            self.win_manager.update_spinwin(float(self.win_data.get("totalWin") or 0))
+        finally:
+            self._restore_board_sw_mults(saved)
+
+        # Base SW curtain only (paws already stripped by enforce_duel_symbol_rules).
+        sw_hits = find_super_wilds(self.board)
+        if sw_hits and sw_positions_in_wins(sw_hits, self.win_data):
+            expands, product = expand_sw_columns(self.board, self.create_symbol, sw_hits)
+            if expands:
+                super_wild_expand_event(self, expands, product)
+                saved = self._neutralize_board_sw_mults()
+                try:
+                    self.win_data = Lines.get_lines(
+                        self.board,
+                        self.config,
+                        global_multiplier=self.global_multiplier,
+                    )
+                finally:
+                    self._restore_board_sw_mults(saved)
+                raw_total = float(self.win_data.get("totalWin") or 0)
+                prod = max(1, int(product))
+                new_total = round(raw_total * prod, 2)
+                if prod > 1 and raw_total > 0:
+                    self.win_data["totalWin"] = new_total
+                    for win in self.win_data.get("wins") or []:
+                        win["win"] = round(float(win.get("win") or 0) * prod, 2)
+                self.win_manager.set_spin_win(new_total)
+
+        spin_win = round(float(self.win_manager.spin_win), 2)
+
+        # Roll back player running wallet — banks are side-local until duelEnd.
+        self.win_manager.running_bet_win = running_before
+        self.win_manager.spin_win = 0.0
+
+        wins_payload = list(self.win_data.get("wins") or []) if spin_win > 0 else []
+        total_win = float(self.win_data.get("totalWin") or spin_win) if spin_win > 0 else 0.0
+        duel_spin_event(
+            self,
+            side,
+            spin_index,
+            self.duel_visible_board(),
+            spin_win,
+            wins=wins_payload,
+            total_win=total_win,
+        )
+        return spin_win
+
+    def settle_duel_payout(self, dog_total: float, cat_total: float) -> tuple[str, float]:
+        """Apply payout vs playerSide; set win_manager to player-facing amount.
+
+        board winner = higher bank. Player wins only if board winner == playerSide
+        → payout = dog+cat; else 0.
+
+        RGS LUT payouts are multiplier×100 and must be multiples of 10, so all
+        settled bet-multipliers are quantized to 0.1 (not 0.01).
+        """
+        def q(value: float) -> float:
+            return round(float(value), 1)
+
+        dog_total = q(dog_total)
+        cat_total = q(cat_total)
+        player_side = self.resolve_duel_player_side()
+        self.duel_player_side = player_side
+
+        conditions = self.get_current_distribution_conditions() or {}
+        dist = self.get_current_betmode_distributions()
+        win_criteria = dist.get_win_criteria() if dist is not None else None
+
+        # Soft/hard jackpot fence: force a *player* win at the exact criteria amount.
+        if conditions.get("force_wincap") and win_criteria is not None and float(win_criteria) > 0:
+            target = q(win_criteria)
+            if player_side == "cat":
+                if cat_total <= dog_total:
+                    cat_total = q(dog_total + max(1.0, target * 0.01))
+            else:
+                if dog_total <= cat_total:
+                    dog_total = q(cat_total + max(1.0, target * 0.01))
+            total = q(dog_total + cat_total)
+            if total > 0:
+                scale = target / total
+                dog_total = q(dog_total * scale)
+                cat_total = q(target - dog_total)
+            else:
+                dog_total = 0.0
+                cat_total = target
+                if player_side == "dog":
+                    dog_total = target
+                    cat_total = 0.0
+            winner = player_side
+            payout = target
+            player_won = True
+        else:
+            if cat_total == dog_total:
+                # Tie impossible — nudge by one RGS payout step (0.1×).
+                cat_total = q(cat_total + 0.1)
+
+            if cat_total > dog_total:
+                winner = "cat"
+            else:
+                winner = "dog"
+
+            player_won = winner == player_side
+            payout = q(dog_total + cat_total) if player_won else 0.0
+
+            cap = self._fence_win_cap()
+            payout = q(min(payout, cap))
+
+        self.duel_dog_total = dog_total
+        self.duel_cat_total = cat_total
+        self.duel_winner = winner
+        self.duel_payout = payout
+        self.duel_player_won = player_won
+
+        self.win_manager.running_bet_win = payout
+        self.win_manager.basegame_wins = payout
+        self.win_manager.freegame_wins = 0.0
+        self.win_manager.spin_win = payout
+        return winner, payout
 
     def _replace_symbol_name(self, from_names: set[str], to_name: str) -> None:
         for reel, col in enumerate(self.board):

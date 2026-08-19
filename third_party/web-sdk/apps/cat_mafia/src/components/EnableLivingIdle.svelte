@@ -7,10 +7,12 @@
 	import { LIVING_IDLE_TURN_MS } from '../game/constants';
 	import { collectLivingIdleTypesOnBoard, nextLivingIdleSymbol } from '../game/boardLivingIdle';
 	import { stateGame, stateGameDerived } from '../game/stateGame.svelte';
+	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
 
 	const context = getContext();
 
 	const canRunLivingIdle = () =>
+		!isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType()) &&
 		context.stateXstateDerived.isIdle() &&
 		!stateGameDerived.boardReelsActive() &&
 		!stateGameDerived.boardMysteryAnimating() &&

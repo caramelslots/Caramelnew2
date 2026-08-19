@@ -12,6 +12,7 @@
 	import {
 		buyNormalCostMultiplier,
 		buySuperCostMultiplier,
+		buyDuelCostMultiplier,
 		canAffordBuyBonus,
 	} from '../game/buyBonusBalance';
 	import { isPopoutSmallViewport, isPopoutViewport, HUD_BALANCE_BET_FONT_FAMILY, isLatinScriptLocale } from '../game/constants';
@@ -57,14 +58,33 @@
 	const isPopout = $derived(isPopoutViewport(canvasSizes) && !isPopoutSmall);
 
 	const isSuper = $derived(stateBonus.selectedBetModeKey === 'bonus_super');
-	const multiplier = $derived(isSuper ? buySuperCostMultiplier() : buyNormalCostMultiplier());
+	const isDuel = $derived(stateBonus.selectedBetModeKey === 'bonus_duel');
+
+	// Start loading pick Spine while the player reads the confirm panel.
+	$effect(() => {
+		if (isOpen && isDuel) {
+			context.eventEmitter.broadcast({ type: 'duelPickWarm' });
+		}
+	});
+
+	const multiplier = $derived(
+		isDuel
+			? buyDuelCostMultiplier()
+			: isSuper
+				? buySuperCostMultiplier()
+				: buyNormalCostMultiplier(),
+	);
 	const cardUrl = $derived(isSuper ? superCardUrl : normalCardUrl);
 	const deskUrl = $derived(isSuper ? deskRUrl : deskLUrl);
 	const price = $derived(numberToCurrencyString(stateBet.betAmount * multiplier));
 	const canConfirm = $derived(canAffordBuyBonus(multiplier));
 
 	const cardTitle = $derived(
-		isSuper ? context.i18nDerived.superBonus() : context.i18nDerived.normalBonus(),
+		isDuel
+			? context.i18nDerived.duelBonus()
+			: isSuper
+				? context.i18nDerived.superBonus()
+				: context.i18nDerived.normalBonus(),
 	);
 
 	const goBack = () => {
@@ -80,9 +100,15 @@
 	const confirm = () => {
 		if (!canAffordBuyBonus(multiplier)) return;
 		clearActiveFeature();
-		stateBet.activeBetModeKey = stateBonus.selectedBetModeKey;
+		const modeKey = stateBonus.selectedBetModeKey;
 		stateModal.modal = null;
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+		// Duel: pick side first, then bet with bonus_duel_cat / bonus_duel_dog.
+		if (isDuel) {
+			context.eventEmitter.broadcast({ type: 'duelPickShow' });
+			return;
+		}
+		stateBet.activeBetModeKey = modeKey;
 		context.eventEmitter.broadcast({ type: 'bet' });
 	};
 </script>
@@ -125,7 +151,21 @@
 				<img class="card-bg" src={cardUrl} alt="" draggable="false" />
 				<div class="card-content">
 					<div class="card-title" class:card-label-knewave={showKnewaveLabels}>{cardTitle}</div>
-					{#if isSuper}
+					{#if isDuel}
+						<div class="card-desc card-desc-stacked">
+							<span class="desc-spin-count" class:card-count-knewave={knewaveFontReady}>{context.i18nDerived.buyDuelDescCount()}</span>
+							<FitCardText
+								variant="spin-label"
+								text={context.i18nDerived.buyDuelDescSpins()}
+								maxLines={2}
+							/>
+							<FitCardText
+								variant="trigger"
+								text={context.i18nDerived.buyDuelDescFeature()}
+								maxLines={2}
+							/>
+						</div>
+					{:else if isSuper}
 						<div class="card-desc card-desc-stacked">
 							<span class="desc-spin-count" class:card-count-knewave={knewaveFontReady}>{context.i18nDerived.buySuperDescCount()}</span>
 							<FitCardText

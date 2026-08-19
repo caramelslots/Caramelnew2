@@ -1,0 +1,176 @@
+<!--
+	One Duel desk layer. Game.svelte mounts base → board → overlay for both sides
+	so cat's desk never paints over dog's reels.
+-->
+<script lang="ts" module>
+	import type { Position } from '../game/types';
+
+	export type EmitterEventDuelBoard = {
+		type: 'duelBoardAnimateSymbols';
+		side: 'cat' | 'dog';
+		symbolPositions: Position[];
+	};
+
+	export type DuelPixiBoardLayer = 'base' | 'board' | 'overlay' | 'paylines' | 'win';
+</script>
+
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import { Container, Graphics } from 'pixi-svelte';
+	import type * as PIXI from 'pixi.js';
+	import { MainContainer } from 'components-layout';
+	import { waitForResolve } from 'utils-shared/wait';
+
+	import { BITMAP_FONT_SCALE, SYMBOL_SIZE, WIN_HUD_FONT_SIZE, isPopoutSmallViewport } from '../game/constants';
+	import { getContext } from '../game/context';
+	import { computeDuelScreenLayout, getDuelPixiBoardLayout } from '../game/duelLayout';
+	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
+	import { getDuelBoardStack } from '../game/stateDuelBoards.svelte';
+	import BoardContainer from './BoardContainer.svelte';
+	import BoardFrame from './BoardFrame.svelte';
+	import BoardBase from './BoardBase.svelte';
+	import PaylineOverlay from './PaylineOverlay.svelte';
+	import PaylineWinAmounts from './PaylineWinAmounts.svelte';
+	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
+
+	type Props = {
+		side: DuelSide;
+		layer: DuelPixiBoardLayer;
+	};
+
+	const props: Props = $props();
+	const context = getContext();
+	const stack = $derived(getDuelBoardStack(props.side));
+
+	const layout = $derived.by(() => {
+		const ml = context.stateLayoutDerived.mainLayout();
+		const canvas = context.stateLayoutDerived.canvasSizes();
+		const base = context.stateGameDerived.baseBoardLayout();
+		const duel = computeDuelScreenLayout({
+			canvasWidth: canvas.width,
+			canvasHeight: canvas.height,
+			layoutType: context.stateLayoutDerived.layoutType(),
+			mainLayout: ml,
+			boardLayout: base,
+		});
+		return getDuelPixiBoardLayout({
+			duel,
+			side: props.side,
+			mainLayout: ml,
+			base,
+		});
+	});
+
+	const reelsActive = $derived(stack.board.some((reel) => reel.reelState.motion !== 'stopped'));
+	// Hard stencil (no feather): keep overflow tiny. Base BoardMask can use +24px
+	// because the soft fade + gold rails hide it; here that runway dumps symbols
+	// into the transparent nameplate hole under the desk.
+	const maskTop = $derived(reelsActive ? 4 : 0);
+	const maskBottom = $derived(reelsActive ? 4 : 0);
+	// Stencil Graphics mask — dual Sprite/alpha BoardMasks corrupt the first desk
+	// (dog shows only ~3 columns). Graphics uses the stencil path and is dual-safe.
+	const drawDuelMask = $derived((g: PIXI.Graphics) => {
+		g.rect(
+			-SYMBOL_SIZE,
+			-maskTop,
+			layout.width + SYMBOL_SIZE * 2,
+			layout.height + maskTop + maskBottom,
+		);
+		g.fill(0xffffff);
+	});
+
+	const sideTotal = $derived(props.side === 'cat' ? stateDuel.catTotal : stateDuel.dogTotal);
+	// Persist side bank under the desk (WIN $…) for the whole duel — do not clear between spins.
+	const showWin = $derived(stateDuel.active);
+
+	/** Place WIN on the desk nameplate (same idea as base UiCashStacksLayout). */
+	const isPopoutSmall = $derived(isPopoutSmallViewport(context.stateLayoutDerived.canvasSizes()));
+	const winBelowBoardGap = $derived(
+		isPopoutSmall
+			? 18
+			: context.stateLayoutDerived.layoutType() === 'portrait'
+				? 37
+				: 35,
+	);
+	const winHudPos = $derived({
+		x: layout.x,
+		y: layout.y + layout.height * 0.5 * layout.scale + winBelowBoardGap * layout.scale,
+	});
+	const winFontScale = $derived(isPopoutSmall ? 0.45 : 0.75);
+	const WIN_TEXT_STYLE = $derived({
+		fontSize: WIN_HUD_FONT_SIZE * BITMAP_FONT_SCALE * winFontScale,
+		fontWeight: 'bold' as const,
+		letterSpacing: 1,
+	});
+	const winLabelGap = $derived(WIN_HUD_FONT_SIZE * BITMAP_FONT_SCALE * 0.78 * winFontScale);
+
+	onMount(() => {
+		if (props.layer !== 'board') return;
+		stack.enhancedBoard.readyToSpinEffect();
+	});
+
+	context.eventEmitter.subscribeOnMount({
+		duelBoardAnimateSymbols: async ({ side, symbolPositions }) => {
+			if (props.layer !== 'board' || side !== props.side) return;
+			await Promise.all(
+				symbolPositions.map(async (position) => {
+					const reelSymbol = stack.board[position.reel]?.reelState.symbols[position.row];
+					if (!reelSymbol) return;
+					if (reelSymbol.symbolState === 'win' || reelSymbol.symbolState === 'postWinStatic') {
+						reelSymbol.symbolState = 'static';
+						await Promise.resolve();
+					}
+					reelSymbol.symbolState = 'win';
+					await waitForResolve((resolve) => {
+						reelSymbol.oncomplete = resolve;
+					});
+					reelSymbol.symbolState = 'postWinStatic';
+				}),
+			);
+		},
+	});
+</script>
+
+{#if props.layer === 'base'}
+	<MainContainer>
+		<BoardFrame layer="base" {layout} disableCatZoom />
+	</MainContainer>
+{:else if props.layer === 'board'}
+	<MainContainer>
+		<BoardContainer {layout} disableCatZoom>
+			<Container>
+				<Graphics isMask draw={drawDuelMask} />
+				<BoardBase board={stack.board} />
+			</Container>
+		</BoardContainer>
+	</MainContainer>
+{:else if props.layer === 'overlay'}
+	<MainContainer>
+		<BoardFrame layer="overlay" {layout} disableCatZoom />
+	</MainContainer>
+{:else if props.layer === 'paylines'}
+	<!-- Same as base PaylineLayer: above gold rails, not under the contour. -->
+	<MainContainer>
+		<BoardContainer {layout} disableCatZoom>
+			<PaylineOverlay side={props.side} />
+			<PaylineWinAmounts side={props.side} />
+		</BoardContainer>
+	</MainContainer>
+{:else if props.layer === 'win' && showWin}
+	<MainContainer>
+		<Container x={winHudPos.x} y={winHudPos.y} zIndex={20}>
+			<ResponsiveCurrencyBitmapText
+				anchor={0.5}
+				bodyFontVariant="prostoi"
+				eventMode="none"
+				prefix={context.i18nDerived.win().toUpperCase()}
+				amount={sideTotal}
+				bookEvent
+				maxWidth={layout.width * layout.scale * 0.96}
+				minScale={0.5}
+				labelGap={winLabelGap}
+				style={WIN_TEXT_STYLE}
+			/>
+		</Container>
+	</MainContainer>
+{/if}

@@ -24,6 +24,10 @@
 	type Props = {
 		reelIndex: number;
 		reelSymbol: ReelSymbol;
+		/** Owning reel motion — required for Duel boards (do not read stateGame.board). */
+		reelMotion?: string;
+		/** Owning reel activeSymbolCount — defaults to main board. */
+		activeSymbolCount?: number;
 	};
 
 	const props: Props = $props();
@@ -73,8 +77,16 @@
 	const isSpinningSymbol = $derived(props.reelSymbol.symbolState === 'spin');
 	const applyWinPresentation = $derived(isWinningState && !isSpinningSymbol);
 	const applyIdleBouncePresentation = $derived(isIdleBouncing);
+	const reelMotion = $derived(
+		props.reelMotion ?? stateGame.board[props.reelIndex]?.reelState.motion ?? 'stopped',
+	);
+	const activeSymbolCount = $derived(
+		props.activeSymbolCount ??
+			stateGame.board[props.reelIndex]?.reelState.activeSymbolCount ??
+			BOARD_DIMENSIONS.y,
+	);
 	const maskRunwayActive = $derived(
-		stateGame.board[props.reelIndex].reelState.motion !== 'stopped' ||
+		reelMotion !== 'stopped' ||
 			isSpinningSymbol ||
 			applyWinPresentation ||
 			applyIdleBouncePresentation,
@@ -88,16 +100,13 @@
 		if (maskRunwayActive) {
 			const top = -SYMBOL_SIZE;
 			const bottom = SYMBOL_SIZE * (BOARD_DIMENSIONS.y + 1);
-			return y < top || y > bottom;
+			return y + half < top || y - half > bottom;
 		}
 		return !isSymbolCenterInPlayfield(y);
 	});
 	const inViewport = $derived(
 		!hideOffGridSymbol &&
-			isVisibleBoardSymbolIndex(
-				props.reelSymbol.symbolIndex,
-				stateGame.board[props.reelIndex].reelState.activeSymbolCount,
-			) &&
+			isVisibleBoardSymbolIndex(props.reelSymbol.symbolIndex, activeSymbolCount) &&
 			isSymbolCenterInPlayfield(props.reelSymbol.symbolY()),
 	);
 	const dimAlphaTween = new Tween(1);

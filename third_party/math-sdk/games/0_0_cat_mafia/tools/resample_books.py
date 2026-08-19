@@ -54,6 +54,8 @@ TARGET_COUNTS = {
     "bonus_boost":   100_000,
     "bonus_normal":  100_000,
     "bonus_super":   100_000,
+    "bonus_duel_cat":    100_000,
+    "bonus_duel_dog":    100_000,
 }
 
 COST_MAP = {
@@ -61,6 +63,8 @@ COST_MAP = {
     "bonus_boost":   2,
     "bonus_normal":  100,
     "bonus_super":   200,
+    "bonus_duel_cat":    50,
+    "bonus_duel_dog":    50,
 }
 
 SEED = 42
@@ -70,7 +74,7 @@ SEED_SEARCH_RANGE = 256
 # Buy modes: force exactly one official max-win book into equal-weight output.
 # RTP impact ≈ 25000 / N / cost (normal ~0.25%, super ~0.125%); seed search
 # cools the other N-1 books so SUMMARY RTP stays ~0.9601.
-FORCE_MAX_WIN_MODES = {"bonus_normal", "bonus_super"}
+FORCE_MAX_WIN_MODES = {"bonus_normal", "bonus_super", "bonus_duel_cat", "bonus_duel_dog"}
 MAX_WIN_BET_MULT = 25_000
 MAX_WIN_PAYOUT_CENTS = MAX_WIN_BET_MULT * 100  # payoutMultiplier units
 

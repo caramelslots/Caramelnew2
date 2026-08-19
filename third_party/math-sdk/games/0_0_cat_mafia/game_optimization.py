@@ -144,6 +144,38 @@ def _bonus_super_scaling():
     ).return_dict()
 
 
+def _bonus_duel_cat_scaling():
+    """Buy Duel as CAT (cost 50×): ~50% zero, ~50% wins with E[win|win]≈96 (~1.9× buy)."""
+    return ConstructScaling(
+        [
+            {"criteria": "duel_lose", "scale_factor": 1.0, "win_range": (0, 0), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 1.4, "win_range": (1, 40), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 1.55, "win_range": (40, 100), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 1.2, "win_range": (100, 220), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 0.7, "win_range": (220, 700), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 0.35, "win_range": (700, 2500), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 0.05, "win_range": (2500, 25000), "probability": 1.0},
+            {"criteria": "wincap_max", "scale_factor": 1.0, "win_range": (25000, 25000), "probability": 1.0},
+        ]
+    ).return_dict()
+
+
+def _bonus_duel_dog_scaling():
+    """Buy Duel as DOG (cost 50×): ~75% zero, ~25% wins with E[win|win]≈192 (~3.8× buy)."""
+    return ConstructScaling(
+        [
+            {"criteria": "duel_lose", "scale_factor": 1.0, "win_range": (0, 0), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 1.1, "win_range": (1, 60), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 1.45, "win_range": (60, 160), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 1.35, "win_range": (160, 350), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 0.95, "win_range": (350, 900), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 0.45, "win_range": (900, 3500), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 0.08, "win_range": (3500, 25000), "probability": 1.0},
+            {"criteria": "wincap_max", "scale_factor": 1.0, "win_range": (25000, 25000), "probability": 1.0},
+        ]
+    ).return_dict()
+
+
 class OptimizationSetup:
     """Build opt_params for Cat Mafia bet-modes (no special_spins)."""
 
@@ -236,6 +268,56 @@ class OptimizationSetup:
                     applied_criteria=["freegame"],
                     bias_ranges=[(90.0, 260.0)],
                     bias_weights=[0.35],
+                ).return_dict(),
+            },
+            "bonus_duel_cat": {
+                "conditions": {
+                    "wincap": ConstructConditions(
+                        rtp=0.01, av_win=2500.0, search_conditions=2500.0
+                    ).return_dict(),
+                    "wincap_max": ConstructConditions(
+                        rtp=0.0005,
+                        av_win=wincaps["bonus_duel_cat"],
+                        search_conditions=wincaps["bonus_duel_cat"],
+                    ).return_dict(),
+                    # Explicit hrs required: hr="x" on win + unset lose both became hr≈1
+                    # and the optimizer locked ~50% RTP (avg≈25 / cost 50).
+                    # hr=2 → 50% fence share; avg_win = hr*rtp*cost ≈ 95 when hit.
+                    "duel_lose": ConstructConditions(
+                        rtp=0.0, hr=2.0, av_win=0.0, search_conditions=0.0
+                    ).return_dict(),
+                    "duel_win": ConstructConditions(rtp=0.9495, hr=2.0).return_dict(),
+                },
+                "scaling": _bonus_duel_cat_scaling(),
+                "parameters": _bonus_parameters(),
+                "distribution_bias": ConstructFenceBias(
+                    applied_criteria=["duel_win"],
+                    bias_ranges=[(40.0, 120.0)],
+                    bias_weights=[0.40],
+                ).return_dict(),
+            },
+            "bonus_duel_dog": {
+                "conditions": {
+                    "wincap": ConstructConditions(
+                        rtp=0.01, av_win=2500.0, search_conditions=2500.0
+                    ).return_dict(),
+                    "wincap_max": ConstructConditions(
+                        rtp=0.0005,
+                        av_win=wincaps["bonus_duel_dog"],
+                        search_conditions=wincaps["bonus_duel_dog"],
+                    ).return_dict(),
+                    # ~25% wins (hr=4), ~75% lose (hr=4/3); E[win|win]≈190.
+                    "duel_lose": ConstructConditions(
+                        rtp=0.0, hr=4.0 / 3.0, av_win=0.0, search_conditions=0.0
+                    ).return_dict(),
+                    "duel_win": ConstructConditions(rtp=0.9495, hr=4.0).return_dict(),
+                },
+                "scaling": _bonus_duel_dog_scaling(),
+                "parameters": _bonus_parameters(),
+                "distribution_bias": ConstructFenceBias(
+                    applied_criteria=["duel_win"],
+                    bias_ranges=[(90.0, 280.0)],
+                    bias_weights=[0.40],
                 ).return_dict(),
             },
         }

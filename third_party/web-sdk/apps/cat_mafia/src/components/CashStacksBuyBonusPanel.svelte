@@ -6,7 +6,7 @@
 <script lang="ts">
 	import { stateModal, stateUi } from 'state-shared';
 
-	import { isFreeSpinsActive } from '../game/activeFeature';
+	import { isLockedBonusHud } from '../game/activeFeature';
 	import {
 		isPopoutViewport,
 		isPopoutSmallViewport,
@@ -38,7 +38,7 @@
 	const show = $derived(
 		isPortrait &&
 			gameEntrance.showContent &&
-			!isFreeSpinsActive() &&
+			!isLockedBonusHud() &&
 			stateUi.config.mode !== 'replay',
 	);
 

@@ -40,7 +40,9 @@ const primaryMachines = createPrimaryMachines<Bet>({
 			stateModal.modal = { name: 'replayComplete' };
 		}
 	},
-	checkIsBonusGame: (bet) => checkIsMultipleRevealEvents({ bookEvents: bet.state }),
+	checkIsBonusGame: (bet) =>
+		checkIsMultipleRevealEvents({ bookEvents: bet.state }) ||
+		bet.state.some((e) => e?.type === 'duelStart'),
 });
 
 const intermediateMachines = createIntermediateMachines(primaryMachines);

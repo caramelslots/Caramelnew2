@@ -17,6 +17,7 @@
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { startLoadingIdleUiPreload } from '../game/uiHtmlAssetManifest';
 	import { GAME_ENTRANCE_MS, MASCOT_TRANSITION_FADE_MS } from '../game/constants';
+	import { stateDuel } from '../game/stateDuel.svelte';
 	import EnableSound from './EnableSound.svelte';
 	import EnableSymbolTextureOptimization from './EnableSymbolTextureOptimization.svelte';
 	import EnableUiTextureOptimization from './EnableUiTextureOptimization.svelte';
@@ -45,6 +46,8 @@
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
+	import DuelModeOverlay from './DuelModeOverlay.svelte';
+	import DuelPixiBoard from './DuelPixiBoard.svelte';
 	import FeaturesAutoSpinOverlay from './FeaturesAutoSpinOverlay.svelte';
 	import CashStacksMenuOverlay from './CashStacksMenuOverlay.svelte';
 	import BuyBonusModalShell from './BuyBonusModalShell.svelte';
@@ -125,44 +128,59 @@
 				persistent
 				sortableChildren
 			>
-				<Container zIndex={-3}>
-					<MainContainer>
-						<BoardFrame layer="base" />
-					</MainContainer>
-				</Container>
+				{#if stateDuel.active}
+					<!-- Paint order matches base: bases → reels → gold rails → paylines → win. -->
+					<DuelPixiBoard side="dog" layer="base" />
+					<DuelPixiBoard side="cat" layer="base" />
+					<DuelPixiBoard side="dog" layer="board" />
+					<DuelPixiBoard side="cat" layer="board" />
+					<DuelPixiBoard side="dog" layer="overlay" />
+					<DuelPixiBoard side="cat" layer="overlay" />
+					<DuelPixiBoard side="dog" layer="paylines" />
+					<DuelPixiBoard side="cat" layer="paylines" />
+					<DuelPixiBoard side="dog" layer="win" />
+					<DuelPixiBoard side="cat" layer="win" />
+				{:else}
+					<Container zIndex={-3}>
+						<MainContainer>
+							<BoardFrame layer="base" />
+						</MainContainer>
+					</Container>
 
-				<Container zIndex={-2}>
-					<MainContainer>
-						<Board />
-					</MainContainer>
-				</Container>
+					<Container zIndex={-2}>
+						<MainContainer>
+							<Board />
+						</MainContainer>
+					</Container>
 
-				<!-- Gold rails above resting symbols. Idle-tease pops render in the
-				     next layer so they can overlap the frame without lifting the
-				     whole board (that let idle spines like the phone paint through). -->
-				<Container zIndex={-1}>
-					<MainContainer>
-						<BoardFrame layer="overlay" />
-					</MainContainer>
-				</Container>
+					<!-- Gold rails above resting symbols. Idle-tease pops render in the
+					     next layer so they can overlap the frame without lifting the
+					     whole board (that let idle spines like the phone paint through). -->
+					<Container zIndex={-1}>
+						<MainContainer>
+							<BoardFrame layer="overlay" />
+						</MainContainer>
+					</Container>
 
-				<Container zIndex={-0.5}>
-					<MainContainer>
-						<BoardIdleBounceLayer />
-					</MainContainer>
-				</Container>
+					<Container zIndex={-0.5}>
+						<MainContainer>
+							<BoardIdleBounceLayer />
+						</MainContainer>
+					</Container>
 
-				<Container zIndex={0}>
-					<MainContainer>
-						<PaylineLayer />
-					</MainContainer>
-				</Container>
+					<Container zIndex={0}>
+						<MainContainer>
+							<PaylineLayer />
+						</MainContainer>
+					</Container>
 
-				<UiCashStacksLayout>
-					{#snippet gameName()}
-						<UiGameName name="Cat Mafia" />
-					{/snippet}
-				</UiCashStacksLayout>
+					<UiCashStacksLayout>
+						{#snippet gameName()}
+							<UiGameName name="Cat Mafia" />
+						{/snippet}
+					</UiCashStacksLayout>
+				{/if}
+				<!-- Keep Win mounted during Duel so Big Win can play on Cat victory. -->
 				<Win />
 				<FreeSpinCounter />
 				<FreeSpinOutro />
@@ -191,10 +209,15 @@
 	<BulletFlyOverlay />
 	<SuperWildCurtainOverlay />
 </div>
+<!-- Duel desks (z41) / chrome (z43) before mascots so both cats paint on top. -->
+<DuelModeOverlay />
 <!-- Below HUD (z44) / Buy Bonus (z45); outside .html-underlays (z40). -->
-<div class="html-mascot-layer">
+<div class="html-mascot-layer" class:above-duel={stateDuel.active}>
 	<MascotPlaceholder />
-	<PawCoinOverlay />
+	<MascotPlaceholder variant="duelDog" />
+	{#if !stateDuel.active}
+		<PawCoinOverlay />
+	{/if}
 </div>
 <TargetPickOverlay />
 <TargetShootOverlay />
@@ -218,6 +241,11 @@
 		position: relative;
 		z-index: 42;
 		pointer-events: none;
+	}
+
+	/* Above duel desks (z41); under HUD (z44). */
+	.html-mascot-layer.above-duel {
+		z-index: 43;
 	}
 
 	.pixi-stage.above-html-ui {

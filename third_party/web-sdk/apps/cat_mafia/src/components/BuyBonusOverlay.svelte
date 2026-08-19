@@ -12,6 +12,7 @@
 	import {
 		buyNormalCostMultiplier,
 		buySuperCostMultiplier,
+		buyDuelCostMultiplier,
 		canAffordBuyBonus,
 	} from '../game/buyBonusBalance';
 	import {
@@ -64,7 +65,7 @@
 	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
 	const isPopout = $derived(isPopoutViewport(canvasSizes) && !isPopoutSmall);
 
-	type BonusVariant = 'normal' | 'super';
+	type BonusVariant = 'normal' | 'super' | 'duel';
 
 	const normalPrice = $derived(
 		numberToCurrencyString(stateBet.betAmount * buyNormalCostMultiplier()),
@@ -72,9 +73,11 @@
 	const superPrice = $derived(
 		numberToCurrencyString(stateBet.betAmount * buySuperCostMultiplier()),
 	);
+	const duelPrice = $derived(numberToCurrencyString(stateBet.betAmount * buyDuelCostMultiplier()));
 	const currentBet = $derived(numberToCurrencyString(stateBet.betAmount));
 	const canBuyNormal = $derived(canAffordBuyBonus(buyNormalCostMultiplier()));
 	const canBuySuper = $derived(canAffordBuyBonus(buySuperCostMultiplier()));
+	const canBuyDuel = $derived(canAffordBuyBonus(buyDuelCostMultiplier()));
 	const featureTogglesDisabled = $derived(!context.stateXstateDerived.isIdle());
 
 	const betOptions = $derived([...stateConfig.betAmountOptions].sort((a, b) => a - b));
@@ -105,10 +108,15 @@
 
 	const onBuy = (variant: BonusVariant) => {
 		const costMult =
-			variant === 'normal' ? buyNormalCostMultiplier() : buySuperCostMultiplier();
+			variant === 'normal'
+				? buyNormalCostMultiplier()
+				: variant === 'super'
+					? buySuperCostMultiplier()
+					: buyDuelCostMultiplier();
 		if (!canAffordBuyBonus(costMult)) return;
 		clearActiveFeature();
-		stateBonus.selectedBetModeKey = variant === 'normal' ? 'bonus_normal' : 'bonus_super';
+		stateBonus.selectedBetModeKey =
+			variant === 'normal' ? 'bonus_normal' : variant === 'super' ? 'bonus_super' : 'bonus_duel';
 		stateModal.modal = { name: 'buyBonusConfirm' };
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 	};
@@ -210,6 +218,42 @@
 					</div>
 					<div class="card-price-wrap" style:background-image="url('{deskRUrl}')">
 						<span class="card-price" data-test="bonus-price-super">{superPrice}</span>
+					</div>
+					<div class="buy-button" style:background-image="url('{buyButtonBgUrl}')">
+						{context.i18nDerived.buyConfirm()}
+					</div>
+				</div>
+			</button>
+
+			<button
+				type="button"
+				class="card card-duel"
+				data-test="bonus-card-duel"
+				disabled={!canBuyDuel}
+				onclick={() => onBuy('duel')}
+			>
+				<img class="card-bg" src={normalCardUrl} alt="" draggable="false" />
+				<div class="card-content">
+					<div class="card-title" class:card-label-knewave={showKnewaveLabels}>
+						{context.i18nDerived.duelBonus()}
+					</div>
+					<div class="card-desc card-desc-stacked">
+						<span class="desc-spin-count" class:card-count-knewave={knewaveFontReady}
+							>{context.i18nDerived.buyDuelDescCount()}</span
+						>
+						<FitCardText
+							variant="spin-label"
+							text={context.i18nDerived.buyDuelDescSpins()}
+							maxLines={2}
+						/>
+						<FitCardText
+							variant="trigger"
+							text={context.i18nDerived.buyDuelDescFeature()}
+							maxLines={2}
+						/>
+					</div>
+					<div class="card-price-wrap" style:background-image="url('{deskLUrl}')">
+						<span class="card-price" data-test="bonus-price-duel">{duelPrice}</span>
 					</div>
 					<div class="buy-button" style:background-image="url('{buyButtonBgUrl}')">
 						{context.i18nDerived.buyConfirm()}
@@ -391,13 +435,13 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		gap: calc(var(--panel-width) * 0.014);
+		gap: calc(var(--panel-width) * 0.01);
 		box-sizing: border-box;
 	}
 
 	.card {
 		position: relative;
-		height: 91%;
+		height: 88%;
 		width: auto;
 		flex: 0 1 auto;
 		min-width: 0;
@@ -428,7 +472,8 @@
 	}
 
 	.card-normal,
-	.card-super {
+	.card-super,
+	.card-duel {
 		aspect-ratio: 541 / 799;
 	}
 
@@ -482,6 +527,7 @@
 	}
 
 	.card-normal .card-title.card-label-knewave,
+	.card-duel .card-title.card-label-knewave,
 	.card-super .card-title.card-label-knewave {
 		-webkit-text-stroke: calc(var(--bb-card-title-fs) * 0.034) rgba(58, 32, 14, 0.92);
 		text-shadow: 0 calc(var(--bb-card-title-fs) * 0.045) calc(var(--bb-card-title-fs) * 0.055)
@@ -549,7 +595,8 @@
 		-webkit-font-smoothing: antialiased;
 	}
 
-	.card-normal .card-desc.card-desc-stacked .desc-spin-count {
+	.card-normal .card-desc.card-desc-stacked .desc-spin-count,
+	.card-duel .card-desc.card-desc-stacked .desc-spin-count {
 		-webkit-text-stroke: var(--bb-desc-count-stroke) rgba(255, 244, 225, 0.96);
 		text-shadow:
 			0 calc(var(--bb-desc-count-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
@@ -566,7 +613,8 @@
 			0 0 calc(var(--bb-desc-count-fs) * 0.12) rgba(255, 228, 185, 0.38);
 	}
 
-	.card-normal .card-desc.card-desc-stacked .desc-spin-count.card-count-knewave {
+	.card-normal .card-desc.card-desc-stacked .desc-spin-count.card-count-knewave,
+	.card-duel .card-desc.card-desc-stacked .desc-spin-count.card-count-knewave {
 		-webkit-text-stroke: calc(var(--bb-desc-count-fs) * var(--bb-knewave-count-stroke-weight))
 			rgba(255, 244, 225, 0.96);
 		text-shadow:
@@ -590,7 +638,8 @@
 		-webkit-font-smoothing: antialiased;
 	}
 
-	.card-normal .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-spin-label) {
+	.card-normal .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-spin-label),
+	.card-duel .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-spin-label) {
 		-webkit-text-stroke: var(--bb-desc-spin-label-stroke) rgba(255, 244, 225, 0.96);
 		text-shadow:
 			0 calc(var(--bb-desc-spin-label-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
@@ -599,7 +648,8 @@
 			0 0 calc(var(--bb-desc-spin-label-fs) * 0.12) rgba(255, 228, 185, 0.42);
 	}
 
-	.card-normal .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-trigger) {
+	.card-normal .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-trigger),
+	.card-duel .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-trigger) {
 		-webkit-text-stroke: var(--bb-desc-trigger-stroke) rgba(255, 244, 225, 0.96);
 		text-shadow:
 			0 calc(var(--bb-desc-trigger-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
@@ -628,6 +678,9 @@
 
 	.card-normal
 		.card-desc.card-desc-stacked
+		:global(.fit-card-text--knewave .fit-card-text__inner.desc-spin-label),
+	.card-duel
+		.card-desc.card-desc-stacked
 		:global(.fit-card-text--knewave .fit-card-text__inner.desc-spin-label) {
 		-webkit-text-stroke: calc(var(--bb-desc-spin-label-fs) * var(--bb-knewave-count-stroke-weight))
 			rgba(255, 244, 225, 0.96);
@@ -638,6 +691,9 @@
 	}
 
 	.card-normal
+		.card-desc.card-desc-stacked
+		:global(.fit-card-text--knewave .fit-card-text__inner.desc-trigger),
+	.card-duel
 		.card-desc.card-desc-stacked
 		:global(.fit-card-text--knewave .fit-card-text__inner.desc-trigger) {
 		-webkit-text-stroke: calc(var(--bb-desc-trigger-fs) * var(--bb-knewave-count-stroke-weight))
@@ -674,7 +730,8 @@
 		margin: 0 0 var(--bb-desc-gap-label-trigger);
 	}
 
-	.card-normal .card-desc {
+	.card-normal .card-desc,
+	.card-duel .card-desc {
 		color: #4a3020;
 		text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
 	}
@@ -708,7 +765,8 @@
 		line-height: 1;
 	}
 
-	.card-normal .card-price {
+	.card-normal .card-price,
+	.card-duel .card-price {
 		color: #f5e6c8;
 		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 	}
@@ -999,7 +1057,8 @@
 			--bb-desc-trigger-fs: calc(var(--panel-width) * 0.018);
 		}
 
-		.card-normal .card-desc.card-desc-stacked {
+		.card-normal .card-desc.card-desc-stacked,
+		.card-duel .card-desc.card-desc-stacked {
 			--bb-desc-count-fs: calc(var(--panel-width) * 0.072);
 			--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.028);
 			--bb-desc-trigger-fs: calc(var(--panel-width) * 0.018);
@@ -1561,7 +1620,8 @@
 				--bb-desc-trigger-fs: calc(var(--panel-width) * 0.017);
 			}
 
-			.card-normal .card-desc.card-desc-stacked {
+			.card-normal .card-desc.card-desc-stacked,
+			.card-duel .card-desc.card-desc-stacked {
 				--bb-desc-count-fs: calc(var(--panel-width) * 0.07);
 				--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.027);
 				--bb-desc-trigger-fs: calc(var(--panel-width) * 0.017);

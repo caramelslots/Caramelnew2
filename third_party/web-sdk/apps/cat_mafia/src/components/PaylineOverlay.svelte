@@ -20,9 +20,11 @@
 				positions: Position[];
 				color?: number;
 				paylineRows?: number[];
+				/** When set, only the matching Duel board PaylineOverlay handles it. */
+				side?: 'cat' | 'dog';
 		  }
-		| { type: 'paylineHide'; lineIndex: number }
-		| { type: 'paylineClearAll' };
+		| { type: 'paylineHide'; lineIndex: number; side?: 'cat' | 'dog' }
+		| { type: 'paylineClearAll'; side?: 'cat' | 'dog' };
 </script>
 
 <script lang="ts">
@@ -33,6 +35,12 @@
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
 
+	type Props = {
+		/** Duel desk filter — ignore payline events for the other side. */
+		side?: 'cat' | 'dog';
+	};
+
+	const props: Props = $props();
 	const context = getContext();
 
 	type Point = { x: number; y: number };
@@ -90,7 +98,13 @@
 	};
 
 	context.eventEmitter.subscribeOnMount({
-		paylineShow: ({ lineIndex, positions, color, paylineRows }) => {
+		paylineShow: (event) => {
+			if (props.side) {
+				if (event.side !== props.side) return;
+			} else if (event.side) {
+				return;
+			}
+			const { lineIndex, positions, color, paylineRows } = event;
 			const next = activeLines.filter((l) => l.lineIndex !== lineIndex);
 			next.push({
 				lineIndex,
@@ -103,10 +117,19 @@
 			activeLines = next;
 			ensureLoop();
 		},
-		paylineHide: ({ lineIndex }) => {
+		paylineHide: ({ lineIndex, side }) => {
+			if (props.side) {
+				if (side !== props.side) return;
+			} else if (side) {
+				return;
+			}
 			activeLines = activeLines.filter((l) => l.lineIndex !== lineIndex);
 		},
-		paylineClearAll: () => {
+		paylineClearAll: (event) => {
+			const side = event && 'side' in event ? event.side : undefined;
+			if (side) {
+				if (props.side !== side) return;
+			}
 			activeLines = [];
 		},
 	});

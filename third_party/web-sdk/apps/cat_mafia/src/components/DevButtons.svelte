@@ -45,6 +45,7 @@
 	import bonusBooks from '../stories/data/bonus_books';
 	import bonusBoostBooks from '../stories/data/books_bonus_boost';
 	import bonusSuperBooks from '../stories/data/books_bonus_super';
+	import bonusDuelBooks from '../stories/data/books_bonus_duel';
 	import {
 		SW_DEMO_VISIBLE_BOARD,
 		superWildExpandDemo,
@@ -142,7 +143,7 @@
 		bulletFlyBusy = false;
 	};
 
-	type BetModeKey = 'BASE' | 'bonus_boost' | 'bonus_normal' | 'bonus_super';
+	type BetModeKey = 'BASE' | 'bonus_boost' | 'bonus_normal' | 'bonus_super' | 'bonus_duel';
 
 	type MathBook = {
 		id: number;
@@ -201,6 +202,7 @@
 		if ((bonusSuperBooks as MathBook[]).includes(book)) return 'bonus_super';
 		if ((bonusBooks as MathBook[]).includes(book)) return 'bonus_normal';
 		if ((bonusBoostBooks as MathBook[]).includes(book)) return 'bonus_boost';
+		if ((bonusDuelBooks as MathBook[]).includes(book)) return 'bonus_duel';
 		return 'BASE';
 	};
 
@@ -209,7 +211,7 @@
 		stateGame.bonusMode =
 			modeKey === 'bonus_super' ? 'super' : modeKey === 'bonus_normal' ? 'normal' : null;
 		if (modeKey === 'bonus_boost') stateGame.activeFeature = 'bonus_boost';
-		else if (modeKey === 'BASE') stateGame.activeFeature = null;
+		else if (modeKey === 'BASE' || modeKey === 'bonus_duel') stateGame.activeFeature = null;
 	};
 
 	const pickBook = (pool: MathBook[], predicate: (b: MathBook) => boolean, label: string) => {
@@ -239,13 +241,17 @@
 	const boostPool = bonusBoostBooks as MathBook[];
 	const normalPool = bonusBooks as MathBook[];
 	const superPool = bonusSuperBooks as MathBook[];
-	const allBooks = [...basePool, ...boostPool, ...normalPool, ...superPool];
+	const duelPool = bonusDuelBooks as MathBook[];
+	const allBooks = [...basePool, ...boostPool, ...normalPool, ...superPool, ...duelPool];
 
 	const counts = {
 		base: basePool.length,
 		boost: boostPool.length,
 		normal: normalPool.length,
 		super: superPool.length,
+		duel: duelPool.length,
+		duelWin: duelPool.filter((b) => (b.payoutMultiplier ?? 0) > 0).length,
+		duelLose: duelPool.filter((b) => (b.payoutMultiplier ?? 0) === 0).length,
 		paw: basePool.filter((b) => bookHas(b, 'pawCoinResolve')).length,
 		swBase: basePool.filter(
 			(b) => bookHas(b, 'superWildExpand') && !bookHas(b, 'freeSpinTrigger'),
@@ -380,6 +386,18 @@
 
 	const playBuySuperBook = () =>
 		playMathBook(pickBook(superPool, () => true, 'Buy Super'), 'Buy Super book', 'bonus_super');
+
+	const playDuelBook = (outcome: 'cat' | 'dog' | 'any') => {
+		const label =
+			outcome === 'cat' ? 'Duel Cat Wins' : outcome === 'dog' ? 'Duel Dog Wins' : 'Duel random';
+		const pred =
+			outcome === 'cat'
+				? (b: MathBook) => (b.payoutMultiplier ?? 0) > 0
+				: outcome === 'dog'
+					? (b: MathBook) => (b.payoutMultiplier ?? 0) === 0
+					: () => true;
+		playMathBook(pickBook(duelPool, pred, label), label, 'bonus_duel');
+	};
 
 	const playBoostBook = () =>
 		playMathBook(pickBook(boostPool, () => true, 'Bonus Boost'), 'Bonus Boost book', 'bonus_boost');
@@ -895,6 +913,22 @@
 						onclick={playBuySuperBook}
 					>
 						Buy Super
+					</button>
+					<button
+						type="button"
+						disabled={busy || counts.duelWin === 0}
+						title={`Duel math book — Cat wins (${counts.duelWin})`}
+						onclick={() => playDuelBook('cat')}
+					>
+						Duel Cat Wins
+					</button>
+					<button
+						type="button"
+						disabled={busy || counts.duelLose === 0}
+						title={`Duel math book — Dog wins (${counts.duelLose})`}
+						onclick={() => playDuelBook('dog')}
+					>
+						Duel Dog Wins
 					</button>
 					<button
 						type="button"

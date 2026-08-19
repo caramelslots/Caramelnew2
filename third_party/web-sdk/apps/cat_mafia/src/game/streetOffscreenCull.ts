@@ -71,3 +71,7 @@ export const isStreetOffscreenCullActive = (
 ) =>
 	layoutType === 'portrait' &&
 	(canvasSizeType === 'mobile' || canvasSizeType === 'smallMobile');
+
+/** Phone canvas tiers — used for perf gates (static BG, no symbol idle). */
+export const isPhoneCanvasSizeType = (canvasSizeType: string) =>
+	canvasSizeType === 'mobile' || canvasSizeType === 'smallMobile';

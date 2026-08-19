@@ -3,18 +3,15 @@
 -->
 <script lang="ts">
 	import type { ButtonProps } from 'components-pixi';
-	import { stateUi } from 'state-shared';
 
-	import { stateGame } from '../game/stateGame.svelte';
+	import { isLockedBonusHud } from '../game/activeFeature';
 	import type { UiSizeScaleProps } from '../game/uiButtonSize';
 	import CashStacksSpinButton from './CashStacksSpinButton.svelte';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> & UiSizeScaleProps = $props();
-	const isFreeSpins = $derived(
-		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
-	);
+	const hudLocked = $derived(isLockedBonusHud());
 </script>
 
-{#if !isFreeSpins}
+{#if !hudLocked}
 	<CashStacksSpinButton {...props} />
 {/if}

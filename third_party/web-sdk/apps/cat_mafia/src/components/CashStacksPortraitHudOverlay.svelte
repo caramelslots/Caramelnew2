@@ -20,6 +20,7 @@
 	import { portraitHudAnchors } from '../game/portraitHudAnchors.svelte';
 	import { getRoundsCounter } from '../game/autoplay';
 	import { canAffordSpin, canIncreaseBet } from '../game/buyBonusBalance';
+	import { isLockedBonusHud } from '../game/activeFeature';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
@@ -64,23 +65,22 @@
 
 	const layoutType = $derived(stateLayoutDerived.layoutType());
 	const isPortrait = $derived(layoutType === 'portrait');
-	const isFreeSpins = $derived(stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow);
+	const hudLocked = $derived(isLockedBonusHud());
 	const isReplay = $derived(stateUi.config.mode === 'replay');
 	const show = $derived(isPortrait && gameEntrance.showContent && uiVisible);
 	const spinPrewarmActive = $derived(
-		isPortrait && gameEntrance.preloadContent && uiVisible && !isFreeSpins,
+		isPortrait && gameEntrance.preloadContent && uiVisible && !hudLocked,
 	);
 	const overlayMounted = $derived(show || spinPrewarmActive);
 
 	const hud = $derived.by(() => {
-		void stateGame.gameType;
-		void stateUi.freeSpinCounterShow;
+		void hudLocked;
 		void portraitHudAnchors.buyPanelBottom;
 		const buyPanelBottomCanvas =
 			portraitHudAnchors.buyPanelBottom > 0 ? portraitHudAnchors.buyPanelBottom : undefined;
 		return computePortraitHudCanvas(stateLayoutDerived, {
 			buyPanelBottomCanvas,
-			hideAutoplay: isFreeSpins || isReplay,
+			hideAutoplay: hudLocked || isReplay,
 		});
 	});
 
@@ -248,7 +248,7 @@
 		aria-hidden={!show}
 	>
 		{#if show}
-			{#if !isFreeSpins && !isReplay}
+			{#if !hudLocked && !isReplay}
 				<button
 					type="button"
 					class="hud-icon-btn"
@@ -322,7 +322,7 @@
 				/>
 			</div>
 
-			{#if !isFreeSpins && !isReplay}
+			{#if !hudLocked && !isReplay}
 				<button
 					type="button"
 					class="hud-icon-btn"
@@ -353,7 +353,7 @@
 			></button>
 		{/if}
 
-		{#if !isFreeSpins && !isReplay}
+		{#if !hudLocked && !isReplay}
 			<OnHotkey
 				hotkey="Space"
 				disabled={spinDisabled || !show || menuBlocksSpaceSpin}

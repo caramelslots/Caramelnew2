@@ -52,7 +52,7 @@ type BookEventFreeSpinEnd = {
 	winLevel: number;
 };
 
-type BookEventWinInfo = {
+export type BookEventWinInfo = {
 	index: number;
 	type: 'winInfo';
 	totalWin: number;
@@ -185,6 +185,52 @@ export type BookEventTargetShootRound = {
 	extraFs: number;
 };
 
+/** Duel Stage C — math book events. Amounts are book cents (×100 bet multiples). */
+export type BookEventDuelStart = {
+	index: number;
+	type: 'duelStart';
+	totalSpinsPerSide: number;
+	/** When set (resume / future math), skip pick UI and use this side. */
+	playerSide?: 'cat' | 'dog';
+};
+
+export type BookEventDuelSpin = {
+	index: number;
+	type: 'duelSpin';
+	side: 'cat' | 'dog';
+	spinIndex: number;
+	board: RawSymbol[][];
+	/** Book cents. */
+	spinWin: number;
+	/** Optional line wins (book cents, padded rows) — same shape as winInfo.wins. */
+	wins?: BookEventWinInfo['wins'];
+	totalWin?: number;
+};
+
+export type BookEventDuelBankUpdate = {
+	index: number;
+	type: 'duelBankUpdate';
+	side: 'cat' | 'dog';
+	/** Book cents. */
+	spinWin: number;
+	sideTotal: number;
+	dogTotal: number;
+	catTotal: number;
+};
+
+export type BookEventDuelEnd = {
+	index: number;
+	type: 'duelEnd';
+	dogTotal: number;
+	catTotal: number;
+	winner: 'cat' | 'dog';
+	/** Book cents. */
+	payout: number;
+	winLevel?: number;
+	playerSide?: 'cat' | 'dog';
+	playerWon?: boolean;
+};
+
 export type BookEvent =
 	| BookEventReveal
 	| BookEventWinInfo
@@ -206,7 +252,12 @@ export type BookEvent =
 	| BookEventSuperWildExpand
 	| BookEventFreeSpinTargetPick
 	| BookEventBulletCollect
-	| BookEventTargetShootRound;
+	| BookEventTargetShootRound
+	// Cat Mafia Duel Stage A
+	| BookEventDuelStart
+	| BookEventDuelSpin
+	| BookEventDuelBankUpdate
+	| BookEventDuelEnd;
 
 export type Bet = BetType<BookEvent>;
 export type BookEventOfType<T> = Extract<BookEvent, { type: T }>;

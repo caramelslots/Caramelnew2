@@ -31,9 +31,12 @@ import {
 	MYSTERY_REVEAL_PRE_DELAY_MS,
 	MYSTERY_REVEAL_POST_DELAY_MS,
 	WIN_SPOTLIGHT_CLEAR_DELAY_MS,
+	TRANSITION_THEME_SWITCH_DELAY_MS,
 } from './constants';
 import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
 import { waitForTimeout } from 'utils-shared/wait';
+import { resetDuelState, stateDuel, getDuelInitialVisibleBoard, resolveDuelPlayerPayout } from './stateDuel.svelte';
+import { getDuelBoardStack, getDuelPaddingBoard, padDuelBoardForPixi } from './stateDuelBoards.svelte';
 import {
 	computeCatSlowTriggerReel,
 	catSlowReelsAfterTrigger,
@@ -50,6 +53,10 @@ import {
 
 /** Beat between the paw landing (appear_flash flip) and the row→coin conversion. */
 const PAW_COIN_CONVERT_DELAY_MS = 250;
+
+const DUEL_POST_SPIN_MS = 280;
+const DUEL_BANK_FLOW_MS = 700;
+const DUEL_BETWEEN_SPINS_MS = 350;
 
 // Таймер фонового снятия затемнения/paylines. Хранится здесь, чтобы
 // `reveal` мог отменить его при старте нового спина раньше истечения задержки.
@@ -689,6 +696,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		bookEvent: BookEventOfType<'superWildExpand'>,
 		{ bookEvents }: BookEventContext,
 	) => {
+		// Duel HTML boards already include the expanded frame in duelSpin —
+		// skip Pixi curtain on the hidden main board.
+		if (stateDuel.active) return;
+
 		if (bookEvents.some((e) => e.type === 'pawCoinResolve')) {
 			console.warn('[Cat Mafia] XOR violated: superWildExpand with pawCoinResolve');
 		}
@@ -918,6 +929,234 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.pawCoinTotal = 0;
 		stateGame.pawPending = false;
 		stateGame.mascotPose = 'idle';
+	},
+
+	// === Duel Stage C (math books — amounts in book cents) ===
+	duelStart: async (bookEvent: BookEventOfType<'duelStart'>) => {
+		const preservedSide =
+			bookEvent.playerSide === 'cat' || bookEvent.playerSide === 'dog'
+				? bookEvent.playerSide
+				: stateDuel.playerSide;
+		resetDuelState();
+		// Keep active=false until the cloud cover — same reveal timing as FS.
+		stateDuel.phase = 'pick';
+		stateDuel.totalSpinsPerSide = bookEvent.totalSpinsPerSide;
+		stateBet.activeBetModeKey =
+			preservedSide === 'dog'
+				? 'bonus_duel_dog'
+				: preservedSide === 'cat'
+					? 'bonus_duel_cat'
+					: 'bonus_duel';
+		stateGame.activeFeature = null;
+
+		const pad = getDuelPaddingBoard(config.paddingReels.basegame);
+		const startVisible = getDuelInitialVisibleBoard();
+		stateDuel.dogBoard = startVisible;
+		stateDuel.catBoard = startVisible.map((reel) => reel.map((cell) => ({ ...cell })));
+		for (const side of ['dog', 'cat'] as const) {
+			const visible = side === 'dog' ? stateDuel.dogBoard : stateDuel.catBoard;
+			getDuelBoardStack(side).enhancedBoard.settle(padDuelBoardForPixi(visible, pad));
+			eventEmitter.broadcast({ type: 'paylineClearAll', side });
+		}
+
+		if (preservedSide === 'cat' || preservedSide === 'dog') {
+			stateDuel.playerSide = preservedSide;
+		} else {
+			eventEmitter.broadcast({ type: 'duelPickShow' });
+			await eventEmitter.broadcastAsync({ type: 'duelPickUpdate' });
+			eventEmitter.broadcast({ type: 'duelPickHide' });
+		}
+
+		// Cloud spine (`assets/spines/transition`) — same entry beat as Free Spins.
+		await eventEmitter.broadcastAsync({ type: 'uiHide' });
+		const transitionPromise = eventEmitter.broadcastAsync({ type: 'transition' });
+		await waitForTimeout(TRANSITION_THEME_SWITCH_DELAY_MS);
+		stateDuel.active = true;
+		stateDuel.phase = 'playing';
+		await transitionPromise;
+		await eventEmitter.broadcastAsync({ type: 'uiShow' });
+	},
+
+	duelSpin: async (bookEvent: BookEventOfType<'duelSpin'>) => {
+		const side = bookEvent.side;
+		const stack = getDuelBoardStack(side);
+		stateDuel.activeSide = side;
+		stateDuel.spinning = true;
+		stateDuel.flowAmount = 0;
+		stateDuel.flowSide = null;
+		if (side === 'cat') stateDuel.catSpinWin = 0;
+		else stateDuel.dogSpinWin = 0;
+
+		eventEmitter.broadcast({ type: 'paylineClearAll', side });
+
+		const paddingBoard = getDuelPaddingBoard(config.paddingReels.basegame);
+		const prevVisible = side === 'cat' ? stateDuel.catBoard : stateDuel.dogBoard;
+		stack.enhancedBoard.settle(padDuelBoardForPixi(prevVisible, paddingBoard));
+
+		const revealBoard = padDuelBoardForPixi(bookEvent.board, paddingBoard);
+		await stack.enhancedBoard.spin({
+			revealEvent: {
+				type: 'reveal',
+				index: bookEvent.index,
+				board: revealBoard,
+				paddingPositions: [10, 20, 5, 15, 8],
+				gameType: 'basegame',
+				anticipation: [0, 0, 0, 0, 0],
+			},
+			paddingBoard,
+		});
+
+		const board = bookEvent.board.map((reel) => reel.map((s) => ({ name: s.name })));
+		if (side === 'cat') {
+			stateDuel.catBoard = board;
+			stateDuel.catSpinIndex = bookEvent.spinIndex;
+		} else {
+			stateDuel.dogBoard = board;
+			stateDuel.dogSpinIndex = bookEvent.spinIndex;
+		}
+		stateDuel.spinning = false;
+		if (bookEvent.spinWin > 0) {
+			if (side === 'cat') stateDuel.catSpinWin = bookEvent.spinWin;
+			else stateDuel.dogSpinWin = bookEvent.spinWin;
+		}
+
+		const wins = bookEvent.wins ?? [];
+		const totalWin = bookEvent.totalWin ?? bookEvent.spinWin;
+		if (wins.length > 0 && totalWin > 0) {
+			await waitForGameSpeed(WIN_INFO_PRE_DELAY_MS, stateGame.gameSpeed);
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
+
+			for (const win of wins) {
+				const lineIndex = win.meta?.lineIndex ?? 0;
+				const paylineRows =
+					config.paylines[String(lineIndex) as keyof typeof config.paylines];
+				eventEmitter.broadcast({
+					type: 'paylineShow',
+					side,
+					lineIndex,
+					positions: win.positions,
+					paylineRows,
+				});
+			}
+
+			const anchorWin = wins[0];
+			eventEmitter.broadcast({
+				type: 'paylineWinAmountShow',
+				side,
+				amount: totalWin,
+				anchor: {
+					lineIndex: anchorWin.meta?.lineIndex ?? 0,
+					positions: anchorWin.positions,
+				},
+			});
+
+			const allPositions = _.uniqWith(
+				wins.flatMap((win) => win.positions),
+				(a, b) => a.reel === b.reel && a.row === b.row,
+			);
+			await eventEmitter.broadcastAsync({
+				type: 'duelBoardAnimateSymbols',
+				side,
+				symbolPositions: allPositions,
+			});
+
+			if (spotlightClearTimer !== null) clearTimeout(spotlightClearTimer);
+			spotlightClearTimer = setTimeout(
+				() => {
+					spotlightClearTimer = null;
+					eventEmitter.broadcast({ type: 'paylineClearAll', side });
+				},
+				scaleMsByGameSpeed(WIN_SPOTLIGHT_CLEAR_DELAY_MS, stateGame.gameSpeed),
+			);
+		}
+
+		await waitForGameSpeed(DUEL_POST_SPIN_MS, stateGame.gameSpeed);
+	},
+
+	duelBankUpdate: async (bookEvent: BookEventOfType<'duelBankUpdate'>) => {
+		// Book amounts are cents (×100); under-board WIN uses spinWin like base LabelWin.
+		if (bookEvent.side === 'cat') stateDuel.catSpinWin = bookEvent.spinWin;
+		else stateDuel.dogSpinWin = bookEvent.spinWin;
+
+		// Brief hold so WIN under the desk is readable, then bank totals update.
+		if (bookEvent.spinWin > 0) {
+			await waitForGameSpeed(DUEL_BANK_FLOW_MS, stateGame.gameSpeed);
+		}
+
+		stateDuel.dogTotal = bookEvent.dogTotal;
+		stateDuel.catTotal = bookEvent.catTotal;
+		await waitForGameSpeed(DUEL_BETWEEN_SPINS_MS, stateGame.gameSpeed);
+	},
+
+	duelEnd: async (bookEvent: BookEventOfType<'duelEnd'>) => {
+		stateDuel.phase = 'outro';
+		stateDuel.activeSide = null;
+		stateDuel.dogTotal = bookEvent.dogTotal;
+		stateDuel.catTotal = bookEvent.catTotal;
+		stateDuel.winner = bookEvent.winner;
+
+		const playerSide =
+			bookEvent.playerSide ?? stateDuel.playerSide ?? 'cat';
+		const resolved = resolveDuelPlayerPayout({
+			playerSide,
+			boardWinner: bookEvent.winner,
+			dogTotal: bookEvent.dogTotal,
+			catTotal: bookEvent.catTotal,
+		});
+		const playerWon = bookEvent.playerWon ?? resolved.playerWon;
+		// Prefer math payout when the book already encodes playerSide.
+		const payout =
+			bookEvent.playerSide != null ? bookEvent.payout : resolved.payout;
+		stateDuel.playerSide = playerSide;
+		stateDuel.payout = payout;
+		stateDuel.winLevel = playerWon ? (bookEvent.winLevel ?? 1) : 1;
+
+		// Same units as setTotalWin / LabelWin (book cents).
+		stateBet.winBookEventAmount = payout;
+
+		await eventEmitter.broadcastAsync({ type: 'uiHide' });
+		eventEmitter.broadcast({ type: 'duelOutroShow' });
+		await eventEmitter.broadcastAsync({
+			type: 'duelOutroUpdate',
+			dogTotal: bookEvent.dogTotal,
+			catTotal: bookEvent.catTotal,
+			winner: bookEvent.winner,
+			playerSide,
+			playerWon,
+			payout,
+		});
+		eventEmitter.broadcast({ type: 'duelOutroHide' });
+
+		// Big Win only when the player's chosen side won.
+		if (playerWon && payout > 0) {
+			const winLevelData = winLevelMap[(stateDuel.winLevel ?? 1) as WinLevel];
+			if (winLevelData?.type === 'big') {
+				const BIG_WIN_LEVEL = 6 as const;
+				const firstTierData =
+					winLevelData.level > BIG_WIN_LEVEL
+						? winLevelMap[BIG_WIN_LEVEL]
+						: winLevelData;
+				stateGame.mascotPose = 'wow';
+				eventEmitter.broadcast({ type: 'winShow' });
+				winLevelSoundsPlay({ winLevelData: firstTierData });
+				await eventEmitter.broadcastAsync({
+					type: 'winUpdate',
+					amount: payout,
+					winLevelData,
+				});
+				winLevelSoundsStop({ music: 'bgm_main' });
+				eventEmitter.broadcast({ type: 'winHide' });
+				stateGame.mascotPose = 'idle';
+			}
+		}
+
+		// Exit cloud spine → base board (same beat as freeSpinEnd → basegame).
+		const transitionPromise = eventEmitter.broadcastAsync({ type: 'transition' });
+		await waitForTimeout(TRANSITION_THEME_SWITCH_DELAY_MS);
+		resetDuelState();
+		stateBet.activeBetModeKey = 'BASE';
+		await transitionPromise;
+		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 	},
 
 	// customised

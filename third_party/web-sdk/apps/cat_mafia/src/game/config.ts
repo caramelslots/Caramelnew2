@@ -382,6 +382,27 @@ export default {
 			rtp: 0.9601,
 			max_win: 25000.0,
 		},
+		bonus_duel: {
+			cost: 50.0,
+			feature: false,
+			buyBonus: true,
+			rtp: 0.9601,
+			max_win: 25000.0,
+		},
+		bonus_duel_cat: {
+			cost: 50.0,
+			feature: false,
+			buyBonus: true,
+			rtp: 0.9601,
+			max_win: 25000.0,
+		},
+		bonus_duel_dog: {
+			cost: 50.0,
+			feature: false,
+			buyBonus: true,
+			rtp: 0.9601,
+			max_win: 25000.0,
+		},
 	},
 
 	// Temporary 20 paylines for 5×4 prototype (rows 0..3). Final set + math sync in Stage G.

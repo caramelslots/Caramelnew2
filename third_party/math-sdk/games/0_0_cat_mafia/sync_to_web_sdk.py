@@ -19,6 +19,8 @@ MAPPINGS = [
     ("books_bonus_normal.json", "bonus_books.ts", "MODE_BONUS_NORMAL freegame books (buy)"),
     ("books_bonus_boost.json", "books_bonus_boost.ts", "MODE_BONUS_BOOST basegame books (2x bet)"),
     ("books_bonus_super.json", "books_bonus_super.ts", "MODE_BONUS_SUPER freegame books"),
+    ("books_bonus_duel_cat.json", "books_bonus_duel_cat.ts", "MODE_BONUS_DUEL_CAT player=cat ~50%"),
+    ("books_bonus_duel_dog.json", "books_bonus_duel_dog.ts", "MODE_BONUS_DUEL_DOG player=dog ~25%"),
 ]
 
 HEADER_TEMPLATE = """\

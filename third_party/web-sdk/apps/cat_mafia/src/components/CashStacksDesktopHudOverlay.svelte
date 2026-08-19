@@ -26,7 +26,7 @@
 	import { getContextLayout } from 'utils-layout';
 	import { OnHotkey } from 'components-shared';
 	import { isAnyMenuOpen } from '../game/isAnyMenuOpen';
-	import { isFreeSpinsActive } from '../game/activeFeature';
+	import { isFreeSpinsActive, isLockedBonusHud } from '../game/activeFeature';
 
 	import HudBalanceBetLine from './HudBalanceBetLine.svelte';
 	import SpinHudButton from './SpinHudButton.svelte';
@@ -67,11 +67,11 @@
 	const layoutType = $derived(stateLayoutDerived.layoutType());
 	const isPopoutSmall = $derived(isPopoutSmallViewport(stateLayoutDerived.canvasSizes()));
 	const useDesktopHud = $derived(layoutType !== 'portrait');
-	const isFreeSpins = $derived(stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow);
+	const hudLocked = $derived(isLockedBonusHud());
 	const isReplay = $derived(stateUi.config.mode === 'replay');
 	const show = $derived(useDesktopHud && gameEntrance.showContent && uiVisible);
 	const spinPrewarmActive = $derived(
-		useDesktopHud && gameEntrance.preloadContent && uiVisible && !isFreeSpins,
+		useDesktopHud && gameEntrance.preloadContent && uiVisible && !hudLocked,
 	);
 	const overlayMounted = $derived(show || spinPrewarmActive);
 
@@ -79,7 +79,7 @@
 	const pos = $derived(computeDesktopHudLayout(stateLayoutDerived, hudConfig));
 
 	const buyBonusLabel = $derived(context.i18nDerived.buyBonusPanelButton());
-	const showBuyBonus = $derived(!isFreeSpins && !isReplay && !isFreeSpinsActive());
+	const showBuyBonus = $derived(!hudLocked && !isReplay && !isFreeSpinsActive());
 	const buyDisabled = $derived(!context.stateXstateDerived.isIdle());
 
 	const isAutoSpinModalOpen = $derived(stateModal.modal?.name === 'autoSpin');
@@ -298,7 +298,7 @@
 				/>
 			</p>
 
-			{#if !isFreeSpins && !isReplay}
+			{#if !hudLocked && !isReplay}
 				<button
 					type="button"
 					class="hud-icon-btn"
@@ -362,7 +362,7 @@
 			></button>
 		{/if}
 
-		{#if !isFreeSpins && !isReplay}
+		{#if !hudLocked && !isReplay}
 			<OnHotkey
 				hotkey="Space"
 				disabled={spinDisabled || !show || menuBlocksSpaceSpin}
