@@ -19,8 +19,8 @@
 
 	const props: Props = $props();
 
-	// Namespaced rest poses (`*/idle`) are frozen. Designer `idle` loops only for
-	// the active type (H1 → H2 → …) on playfield cells the player can see.
+	// Namespaced rest poses (`*/idle`) are frozen. Designer `idle` loops on
+	// every visible living symbol at once while the board is idle.
 	const animationName = $derived(props.symbolInfo.animationName);
 	const isLivingIdle = $derived(animationName === 'idle');
 	const autoUpdate = $derived.by(() => {
@@ -28,7 +28,7 @@
 		if (!name) return true;
 		if (name === 'idle') {
 			if (props.inViewport === false) return false;
-			return stateGame.livingIdleSymbol === props.symbolName;
+			return stateGame.livingIdleActive;
 		}
 		return !name.endsWith('/idle');
 	});

@@ -34,11 +34,11 @@
 	import BoardIdleBounceLayer from './BoardIdleBounceLayer.svelte';
 	import PaylineLayer from './PaylineLayer.svelte';
 	import Win from './Win.svelte';
-	import MascotPlaceholder from './MascotPlaceholder.svelte';
+	import MascotPixi from './MascotPixi.svelte';
+	import PawCoinPixiLayer from './PawCoinPixiLayer.svelte';
 	import RevolverDrumPlaceholder from './RevolverDrumPlaceholder.svelte';
 	import BulletFlyOverlay from './BulletFlyOverlay.svelte';
 	import { devPreview } from '../game/devPreview.svelte';
-	import PawCoinOverlay from './PawCoinOverlay.svelte';
 	import SuperWildCurtainOverlay from './SuperWildCurtainOverlay.svelte';
 	import TargetPickOverlay from './TargetPickOverlay.svelte';
 	import TargetShootOverlay from './TargetShootOverlay.svelte';
@@ -60,12 +60,9 @@
 
 	const context = getContext();
 
-	// FS cloud transition: the pixi-stage z-flip above the HTML mascot layer is
-	// delayed by the mascot fade-out (MASCOT_TRANSITION_FADE_MS) so the mascot
-	// dissolves under the incoming cloud instead of popping behind the opaque
-	// board in one frame. Drops back instantly when the transition ends (the
-	// mascot is at opacity 0 then and fades back in on its own). winOverlayActive
-	// keeps the immediate flip — big-win behaviour unchanged.
+	// FS cloud transition: raise Pixi above HTML chrome after the mascot
+	// fade-out (MASCOT_TRANSITION_FADE_MS). Mascot + paw coins are Pixi and
+	// fade / sit under Transition. winOverlayActive keeps the immediate flip.
 	let pixiAboveHtml = $state(false);
 
 	$effect(() => {
@@ -180,6 +177,11 @@
 						{/snippet}
 					</UiCashStacksLayout>
 				{/if}
+				<!-- Paw coins under mascot so the hat / hand occlude the fly. -->
+				<PawCoinPixiLayer zIndex={5} />
+				<!-- Pixi mascot above boards + coins; under Win / Transition. -->
+				<MascotPixi zIndex={6} />
+				<MascotPixi variant="duelDog" zIndex={6} />
 				<!-- Keep Win mounted during Duel so Big Win can play on Cat victory. -->
 				<Win />
 				<FreeSpinCounter />
@@ -209,16 +211,8 @@
 	<BulletFlyOverlay />
 	<SuperWildCurtainOverlay />
 </div>
-<!-- Duel desks (z41) / chrome (z43) before mascots so both cats paint on top. -->
+<!-- Duel HTML chrome (pick / counters / outro). Desks + mascots + paw coins are Pixi. -->
 <DuelModeOverlay />
-<!-- Below HUD (z44) / Buy Bonus (z45); outside .html-underlays (z40). -->
-<div class="html-mascot-layer" class:above-duel={stateDuel.active}>
-	<MascotPlaceholder />
-	<MascotPlaceholder variant="duelDog" />
-	{#if !stateDuel.active}
-		<PawCoinOverlay />
-	{/if}
-</div>
 <TargetPickOverlay />
 <TargetShootOverlay />
 <FreeSpinIntro />
@@ -234,18 +228,6 @@
 	.html-underlays {
 		position: relative;
 		z-index: 40;
-	}
-
-	/* Mascot + paw coins under HUD overlays (z44) and Buy Bonus (z45). */
-	.html-mascot-layer {
-		position: relative;
-		z-index: 42;
-		pointer-events: none;
-	}
-
-	/* Above duel desks (z41); under HUD (z44). */
-	.html-mascot-layer.above-duel {
-		z-index: 43;
 	}
 
 	.pixi-stage.above-html-ui {

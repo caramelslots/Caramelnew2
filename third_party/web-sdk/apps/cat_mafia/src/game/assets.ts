@@ -291,6 +291,15 @@ export default {
 			scale: 2,
 		},
 	},
+	/** Full-body cat — same files as the former HTML SpinePlayer mascot. */
+	mascotCat: {
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/mascot/mascot_cat.atlas'),
+			skeleton: assetUrl('assets/spines/mascot/mascot_cat.json'),
+			scale: 1,
+		},
+	},
 	coins: {
 		type: 'spriteSheet',
 		src: assetUrl('assets/sprites/coin/SD2_Coin.json'),

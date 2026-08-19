@@ -156,6 +156,37 @@ export const MASCOT_SPINE_VIEWPORT = {
 	padBottom: '4%',
 } as const;
 
+const parsePadPct = (pad: string) => Number.parseFloat(pad) / 100;
+
+/**
+ * Pixi transform that matches HTML SpinePlayer framing inside `box`
+ * (fit-height + viewport pads). Apply `mirror` as Container.scale.x = -1.
+ *
+ * spine-pixi maps skeleton Y-up → Pixi Y-down, so viewport center `(cx, cy)`
+ * in skeleton space lands at local `(-cx, -cy)` after the runtime flip —
+ * offset the spine by `(cx, cy) * scale` (not the HTML scaleY=-1 path).
+ */
+export const getMascotPixiTransform = (box: MascotScreenBox) => {
+	const vp = MASCOT_SPINE_VIEWPORT;
+	const padT = parsePadPct(vp.padTop);
+	const padB = parsePadPct(vp.padBottom);
+	const padL = parsePadPct(vp.padLeft);
+	const padR = parsePadPct(vp.padRight);
+	const worldH = vp.height * (1 + padT + padB);
+	const scale = box.height / worldH;
+	const cx = vp.x + vp.width * 0.5;
+	const cy = vp.y + vp.height * 0.5;
+	return {
+		x: box.left + box.width * 0.5,
+		y: box.top + box.height * 0.5,
+		spineX: -cx * scale,
+		spineY: cy * scale,
+		scale,
+		worldW: vp.width * (1 + padL + padR),
+		worldH,
+	};
+};
+
 /** Pose keys used by `stateGame.mascotPose` / bullet-fly. */
 export type MascotPose =
 	| 'idle'

@@ -1,71 +1,55 @@
+<!--
+	Toggles living spine idle for all visible symbols at once (every mode / device).
+	In Duel, both desks animate whenever their reels are stopped (book play is not xstate idle).
+-->
 <script lang="ts">
 	import { onMount } from 'svelte';
 
 	import { stateModal } from 'state-shared';
 
 	import { getContext } from '../game/context';
-	import { LIVING_IDLE_TURN_MS } from '../game/constants';
-	import { collectLivingIdleTypesOnBoard, nextLivingIdleSymbol } from '../game/boardLivingIdle';
+	import { stateDuel } from '../game/stateDuel.svelte';
 	import { stateGame, stateGameDerived } from '../game/stateGame.svelte';
-	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
 
 	const context = getContext();
 
-	const canRunLivingIdle = () =>
-		!isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType()) &&
-		context.stateXstateDerived.isIdle() &&
-		!stateGameDerived.boardReelsActive() &&
-		!stateGameDerived.boardMysteryAnimating() &&
-		!stateGame.winSpotlightActive &&
-		!stateGame.winOverlayActive &&
-		!stateGame.transitionActive &&
-		!stateGame.freeSpinIntroActive &&
-		stateModal.modal == null;
-
-	const sleep = (ms: number, cancelled: () => boolean) =>
-		new Promise<void>((resolve) => {
-			const started = performance.now();
-			const tick = () => {
-				if (cancelled()) {
-					resolve();
-					return;
-				}
-				if (performance.now() - started >= ms) {
-					resolve();
-					return;
-				}
-				requestAnimationFrame(tick);
-			};
-			requestAnimationFrame(tick);
-		});
+	const canRunLivingIdle = () => {
+		if (
+			stateGame.winSpotlightActive ||
+			stateGame.winOverlayActive ||
+			stateGame.transitionActive ||
+			stateGame.freeSpinIntroActive ||
+			stateModal.modal != null
+		) {
+			return false;
+		}
+		// Duel: keep living idle on both desks even while one side spins
+		// (spinning cells aren't on the idle clip anyway). Perf test for phone.
+		if (stateDuel.active) {
+			return true;
+		}
+		return (
+			context.stateXstateDerived.isIdle() &&
+			!stateGameDerived.boardReelsActive() &&
+			!stateGameDerived.boardMysteryAnimating()
+		);
+	};
 
 	onMount(() => {
 		let cancelled = false;
+		let raf = 0;
 
-		const run = async () => {
-			while (!cancelled) {
-				while (!cancelled && !canRunLivingIdle()) {
-					stateGame.livingIdleSymbol = null;
-					await sleep(200, () => cancelled);
-				}
-				if (cancelled) break;
-
-				const types = collectLivingIdleTypesOnBoard();
-				stateGame.livingIdleSymbol = nextLivingIdleSymbol(types, stateGame.livingIdleSymbol);
-				if (stateGame.livingIdleSymbol == null) {
-					await sleep(500, () => cancelled);
-					continue;
-				}
-
-				await sleep(LIVING_IDLE_TURN_MS, () => cancelled || !canRunLivingIdle());
-			}
+		const tick = () => {
+			if (cancelled) return;
+			stateGame.livingIdleActive = canRunLivingIdle();
+			raf = requestAnimationFrame(tick);
 		};
-
-		void run();
+		raf = requestAnimationFrame(tick);
 
 		return () => {
 			cancelled = true;
-			stateGame.livingIdleSymbol = null;
+			cancelAnimationFrame(raf);
+			stateGame.livingIdleActive = false;
 		};
 	});
 </script>

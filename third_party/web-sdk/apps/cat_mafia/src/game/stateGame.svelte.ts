@@ -220,7 +220,7 @@ export const stateGame = $state({
 	// any win on the current board; re-enabled when the next losing spin settles.
 	idleBounceAllowed: true,
 	/** Symbol type currently playing living idle. Null = all idle spines frozen. */
-	livingIdleSymbol: null as SymbolName | null,
+	livingIdleActive: false,
 	// Cloud transition covers HTML overlays while active.
 	transitionActive: false,
 	// Big-win overlay only — raises Pixi canvas above HTML HUD so celebration

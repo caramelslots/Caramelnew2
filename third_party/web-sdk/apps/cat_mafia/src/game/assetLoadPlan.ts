@@ -86,6 +86,7 @@ export const LOADER_BATCH_3_KEYS = [
 	...LOCALE_FONT_KEYS,
 	'coins',
 	'coinsPaw',
+	'mascotCat',
 	'betPlus',
 	'betMinus',
 	'autoplayButton',
