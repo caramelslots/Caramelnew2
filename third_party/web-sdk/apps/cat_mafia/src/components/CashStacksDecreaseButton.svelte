@@ -1,6 +1,6 @@
 <!--
 	CashStacksDecreaseButton.svelte — кастомная замена SDK ButtonDecrease.
-	Ref. designer_assets/minus.png
+	Ref. designer_assets/buttons/MINUS.png
 -->
 <script lang="ts">
 	import { Container, Sprite } from 'pixi-svelte';

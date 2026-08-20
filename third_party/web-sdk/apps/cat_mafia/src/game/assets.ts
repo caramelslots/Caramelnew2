@@ -340,6 +340,10 @@ export default {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/ui/spin/spin_1.webp'),
 	},
+	spin2: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/ui/spin/spin_2.webp'),
+	},
 	menuButton: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/ui/menu/menu.webp'),

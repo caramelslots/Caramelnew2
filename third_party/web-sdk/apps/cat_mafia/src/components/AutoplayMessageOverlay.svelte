@@ -1,7 +1,7 @@
 <!--
 	AutoplayMessageOverlay.svelte — сообщение об остановке автоигры (недостаток средств и др.).
 	bg_autoplay_message_panel (поздравление фриспины.png) + autoplay_message_ok_bg (b1.png).
-	Close — HUD_ASSETS.betPlus повёрнутый на 45°.
+	Close — AUTOSPIN_ASSETS.close (cross).
 -->
 <script lang="ts">
 	import { fade, scale } from 'svelte/transition';
@@ -11,14 +11,14 @@
 
 	import { getContext } from '../game/context';
 	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
-	import { AUTOSPIN_ASSETS, HUD_ASSETS } from '../game/uiHtmlAssetManifest';
+	import { AUTOSPIN_ASSETS } from '../game/uiHtmlAssetManifest';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 
 	const bgUrl = AUTOSPIN_ASSETS.messageBg;
 	const okButtonBgUrl = AUTOSPIN_ASSETS.messageOkBg;
-	const closeIconUrl = HUD_ASSETS.betPlus;
+	const closeIconUrl = AUTOSPIN_ASSETS.close;
 
 	type AutoSpinMessageKey = 'insufficientFunds' | 'lossLimitReached' | 'singleWinLimitReached';
 
@@ -230,12 +230,10 @@
 		}
 	}
 
-	/* betPlus icon rotated 45° → becomes an ✕ */
 	.close-icon {
 		width: 100%;
 		height: 100%;
 		object-fit: contain;
-		transform: rotate(45deg);
 		pointer-events: none;
 		user-select: none;
 		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));

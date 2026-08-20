@@ -1,6 +1,6 @@
 <!--
 	CashStacksIncreaseButton.svelte — кастомная замена SDK ButtonIncrease.
-	Ref. designer_assets/plus.png
+	Ref. designer_assets/buttons/PLUS.png
 -->
 <script lang="ts">
 	import { Container, Sprite } from 'pixi-svelte';

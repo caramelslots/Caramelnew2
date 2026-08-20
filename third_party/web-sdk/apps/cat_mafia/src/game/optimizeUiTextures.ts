@@ -25,6 +25,7 @@ export const UI_BUTTON_TEXTURE_KEYS = [
 	'betPlus',
 	'betMinus',
 	'spin1',
+	'spin2',
 	'menuButton',
 	'infoButton',
 	'turbo1',

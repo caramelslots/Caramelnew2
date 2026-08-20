@@ -1,8 +1,8 @@
 <!--
 	CashStacksSpinButton.svelte — кастомная замена SDK-шной ButtonBet.
-	spin_1 — спин; при автоигре поверх рисуется счётчик раундов.
+	spin_1 — обычный спин; spin_2 — автоигра (счётчик раундов поверх).
 
-	Ref. designer_assets/spin_1.png
+	Ref. designer_assets/spine_1.png / spine_2.png
 -->
 <script lang="ts">
 	import { Container, Sprite, Text } from 'pixi-svelte';
@@ -58,7 +58,7 @@
 	});
 	const { width, height } = $derived(uiScaledSize(UI_BASE_SIZE, props.sizeScale));
 	const sizes = $derived({ width, height });
-	const spriteKey = 'spin1' as const;
+	const spriteKey = $derived(hasCounter ? ('spin2' as const) : ('spin1' as const));
 
 	const counterFontSize = $derived.by(() => {
 		if (stateBet.autoSpinsCounter === Infinity) return sizes.width * 0.32;

@@ -4,7 +4,7 @@
 	модалка автоигры (stateModal.modal?.name === 'autoSpin').
 	Клик по ней запускает автоигру с текущими выбранными параметрами.
 
-	Ref. designer_assets/spin_1.png
+	Ref. designer_assets/spine_1.png
 -->
 <script lang="ts">
 	import { Container, Sprite } from 'pixi-svelte';

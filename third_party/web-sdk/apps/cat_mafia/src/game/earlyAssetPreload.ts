@@ -6,7 +6,6 @@ import {
 } from './assetLoadPlan';
 import { knewaveFontUrl } from './knewaveFont';
 import { LOADER_BG_SPINE_URLS, startEarlyLoaderBackgroundPreload } from './earlyLoaderPreload';
-import { SPIN_BUTTON_SPINE_ASSET_URLS } from './spinButtonHtmlSpine';
 import { resolveLanguage } from 'state-shared';
 
 const warmHttpCache = async (urls: readonly string[], concurrency: number) => {
@@ -76,5 +75,5 @@ export const startBatch3EarlyPreload = () => {
 		social: params.get('social') === 'true',
 	});
 	const batch3Keys = getBatch3KeysForLocale(locale);
-	void warmHttpCache([...collectBatchHttpUrls(batch3Keys), ...SPIN_BUTTON_SPINE_ASSET_URLS], 6);
+	void warmHttpCache(collectBatchHttpUrls(batch3Keys), 6);
 };

@@ -1,10 +1,6 @@
 import { preloadHtmlImages } from './preloadHtmlImages';
 import { GAME_INFO_SYMBOL_IMAGE_URLS, GAME_INFO_SYMBOL_IMAGES } from './gameInfoSymbols';
 import {
-	SPIN_BUTTON_SPINE_WEBP_URL,
-	startSpinButtonSpinePreload,
-} from './spinButtonHtmlSpine';
-import {
 	MASCOT_SPINE_IMAGE_URL,
 	startMascotSpinePreload,
 } from './mascotHtmlSpine';
@@ -21,6 +17,7 @@ export const HUD_ASSETS = {
 	betMinus: uiHtmlAssetUrl('bet/minus.webp'),
 	betPlus: uiHtmlAssetUrl('bet/plus.webp'),
 	spin1: uiHtmlAssetUrl('spin/spin_1.webp'),
+	spin2: uiHtmlAssetUrl('spin/spin_2.webp'),
 	autoplay: uiHtmlAssetUrl('autoplay/autoplay.webp'),
 	autoplayMobile: uiHtmlAssetUrl('autoplay/autoplay_mobile.webp'),
 	turbo1: uiHtmlAssetUrl('turbo/turbo_1.webp'),
@@ -91,7 +88,7 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	HUD_ASSETS.betMinus,
 	HUD_ASSETS.betPlus,
 	HUD_ASSETS.spin1,
-	SPIN_BUTTON_SPINE_WEBP_URL,
+	HUD_ASSETS.spin2,
 	HUD_ASSETS.autoplay,
 	HUD_ASSETS.autoplayMobile,
 	HUD_ASSETS.turbo1,
@@ -167,8 +164,8 @@ export const startBuyBonusFlowPreload = () => {
 };
 
 const LOADING_IDLE_UI_PRIORITY = [
-	SPIN_BUTTON_SPINE_WEBP_URL,
 	HUD_ASSETS.spin1,
+	HUD_ASSETS.spin2,
 	HUD_ASSETS.menu,
 	HUD_ASSETS.info,
 	HUD_ASSETS.buyBonusPanel,
@@ -192,7 +189,6 @@ export const startLoadingIdleUiPreload = () => {
 	if (loadingIdleUiPreloadStarted) return;
 	loadingIdleUiPreloadStarted = true;
 
-	startSpinButtonSpinePreload();
 	startMascotSpinePreload();
 	startCoinPawSpinePreload();
 

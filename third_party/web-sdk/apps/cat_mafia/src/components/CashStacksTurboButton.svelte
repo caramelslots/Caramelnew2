@@ -2,7 +2,7 @@
 	CashStacksTurboButton.svelte — кастомная замена SDK-шной ButtonTurbo.
 	Циклически переключает 3 режима скорости (1 → 2 → 3 → 1).
 
-	Ref. designer_assets/turbo_1.png … turbo_3.png — иконка по уровню скорости.
+	Ref. designer_assets/buttons/TURBO_1.png … TURBO_3.png — иконка по уровню скорости.
 -->
 <script lang="ts">
 	import { Container, Sprite } from 'pixi-svelte';

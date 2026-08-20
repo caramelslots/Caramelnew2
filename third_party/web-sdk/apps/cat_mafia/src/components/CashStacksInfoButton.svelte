@@ -1,6 +1,6 @@
 <!--
 	CashStacksInfoButton.svelte — круглая кнопка «i» (правила игры).
-	Ref. designer_assets/cash_stacks_sounds/info.png
+	Ref. designer_assets/buttons/info.png
 -->
 <script lang="ts">
 	import { Container, Sprite } from 'pixi-svelte';

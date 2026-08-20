@@ -1,6 +1,6 @@
 <!--
 	CashStacksMenuButton.svelte — квадратная кнопка-бургер (меню настроек).
-	Ref. designer_assets/cash_stacks_sounds/menu.png
+	Ref. designer_assets/buttons/burger.png
 -->
 <script lang="ts">
 	import { Container, Sprite } from 'pixi-svelte';

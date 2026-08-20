@@ -247,7 +247,6 @@
 		width: 100%;
 		height: 100%;
 		object-fit: contain;
-		transform: rotate(45deg);
 	}
 
 	.pick-stage {

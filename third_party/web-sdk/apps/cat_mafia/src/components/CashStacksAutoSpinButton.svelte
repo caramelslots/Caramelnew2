@@ -7,7 +7,7 @@
 	  3. Idle → открывает модалку выбора параметров автоигры.
 
 	Desktop: designer_assets/autoplay.png + текст «Autoplay».
-	Portrait/mobile: designer_assets/autoplay_mobile.png (квадратная иконка).
+	Portrait/mobile: designer_assets/buttons/autoplay_mob.png (квадратная иконка).
 -->
 <script lang="ts">
 	import { Container, Sprite, Text } from 'pixi-svelte';

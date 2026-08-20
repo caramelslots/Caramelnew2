@@ -1,5 +1,5 @@
 <script lang="ts">
-	import SpinButtonHtmlSpine from './SpinButtonHtmlSpine.svelte';
+	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
 
 	type Props = {
 		x: number;
@@ -27,10 +27,17 @@
 		counterFontSize = 16,
 	}: Props = $props();
 
-	let spine = $state<SpinButtonHtmlSpine | undefined>();
+	let pressed = $state(false);
+	let pressTimer: ReturnType<typeof setTimeout> | undefined;
+
+	const spinUrl = $derived(hasCounter ? HUD_ASSETS.spin2 : HUD_ASSETS.spin1);
 
 	export function playAnimation() {
-		spine?.playPress();
+		pressed = true;
+		clearTimeout(pressTimer);
+		pressTimer = setTimeout(() => {
+			pressed = false;
+		}, 150);
 	}
 </script>
 
@@ -38,6 +45,7 @@
 	type="button"
 	class="spin-hud-btn"
 	class:dimmed
+	class:pressed
 	style:left="{x}px"
 	style:top="{y}px"
 	style:width="{size}px"
@@ -46,7 +54,7 @@
 	aria-label={ariaLabel}
 	onclick={onpress}
 >
-	<SpinButtonHtmlSpine bind:this={spine} />
+	<img class="spin-hud-btn__icon" src={spinUrl} alt="" draggable="false" />
 
 	{#if hasCounter}
 		<span class="spin-hud-btn__counter" style:font-size="{counterFontSize}px">{counterText}</span>
@@ -70,7 +78,8 @@
 		touch-action: manipulation;
 		transition: transform 0.1s, filter 0.15s, opacity 0.15s;
 
-		&:active:not(:disabled) {
+		&:active:not(:disabled),
+		&.pressed {
 			transform: translate(-50%, -50%) scale(0.97);
 			filter: brightness(0.9);
 		}
@@ -85,9 +94,21 @@
 		}
 	}
 
+	.spin-hud-btn__icon {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		pointer-events: none;
+		user-select: none;
+	}
+
 	.spin-hud-btn__counter {
-		position: relative;
+		position: absolute;
+		inset: 0;
 		z-index: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		color: #fff;
 		font-family: 'proxima-nova', Arial, sans-serif;
 		font-weight: 700;
