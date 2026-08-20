@@ -946,7 +946,7 @@ class GameStateOverride(GameExecutables):
 
         if new_hits:
             # New lying SW (Normal/Super): same two-beat as base —
-            # phase-1 lines (SW as single wild) → curtain → phase-2 winInfo (delta only).
+            # phase-1 lines → curtain → phase-2 full re-eval (same lines may replay + new).
             phase1_wins = list(self.win_data.get("wins") or [])
             phase1_total = float(self.win_data.get("totalWin") or 0)
             expands_new, _ = expand_sw_columns(self.board, self.create_symbol, new_hits)
@@ -1063,32 +1063,20 @@ class GameStateOverride(GameExecutables):
         self._pending_sw_expands = []
         self._pending_sw_product = 1
 
-    def _sw_line_index(self, win: dict) -> int | None:
-        meta = win.get("meta") or {}
-        idx = meta.get("lineIndex")
-        return int(idx) if idx is not None else None
-
-    def _sw_delta_wins(self, phase1_wins: list, phase2_wins: list) -> list:
-        """Paylines that newly qualify after SW expand (exclude phase-1 lines)."""
-        p1_lines = {self._sw_line_index(w) for w in phase1_wins}
-        p1_lines.discard(None)
-        return [w for w in phase2_wins if self._sw_line_index(w) not in p1_lines]
-
     def _emit_sw_reeval_wins(
         self,
         product: int,
         phase1_wins: list | None = None,
         phase1_total: float | None = None,
     ) -> None:
-        """Re-eval after SW expand; emit winInfo only for NEW paylines (delta).
+        """Re-eval after SW expand; emit full winInfo (same lines may replay + new).
 
-        Final spin_win is always the full post-expand total × sticky product.
-        Phase-2 presentation shows only lines that were not in phase-1.
+        Final spin_win = full post-expand total × sticky product (once).
+        phase1_* kept for call-site compatibility / future UX; not used to filter lines.
         """
-        from src.events.events import set_total_event, set_win_event
+        from src.events.events import set_total_event
 
-        p1_wins = list(phase1_wins or [])
-        p1_total = float(phase1_total or 0)
+        _ = phase1_wins, phase1_total
 
         saved = self._neutralize_board_sw_mults()
         try:
@@ -1100,37 +1088,18 @@ class GameStateOverride(GameExecutables):
         finally:
             self._restore_board_sw_mults(saved)
 
-        phase2_wins = list(self.win_data.get("wins") or [])
         raw_total = float(self.win_data.get("totalWin") or 0)
         prod = max(1, int(product))
-        delta_wins = self._sw_delta_wins(p1_wins, phase2_wins)
         new_total = round(raw_total * prod, 2)
         if prod > 1 and raw_total > 0:
             self.win_data["totalWin"] = new_total
-            for win in phase2_wins:
+            for win in self.win_data.get("wins") or []:
                 win["win"] = round(float(win.get("win") or 0) * prod, 2)
 
         self.win_manager.set_spin_win(new_total)
-
-        if delta_wins:
-            delta_copy = []
-            for w in delta_wins:
-                wc = dict(w)
-                wc["win"] = round(float(w.get("win") or 0), 2)
-                wc["positions"] = list(w.get("positions") or [])
-                meta = dict(w.get("meta") or {})
-                wc["meta"] = meta
-                delta_copy.append(wc)
-            delta_total = round(sum(float(w["win"]) for w in delta_copy), 2)
-            saved_win_data = self.win_data
-            self.win_data = {"totalWin": delta_total, "wins": delta_copy}
+        if new_total > 0:
             Lines.record_lines_wins(self)
             Lines.emit_linewin_events(self)
-            self.win_data = saved_win_data
-        elif new_total > p1_total + 1e-9:
-            if self.win_manager.spin_win > 0:
-                set_win_event(self)
-            set_total_event(self)
         else:
             set_total_event(self)
 
@@ -1140,8 +1109,8 @@ class GameStateOverride(GameExecutables):
         phase1_wins: list | None = None,
         phase1_total: float | None = None,
     ) -> None:
-        """Re-eval after SW expand for duel — delta wins stored in win_data (no winInfo)."""
-        p1_wins = list(phase1_wins or [])
+        """Re-eval after SW expand for duel — full line set (same lines may replay + new)."""
+        _ = phase1_wins, phase1_total
 
         saved = self._neutralize_board_sw_mults()
         try:
@@ -1153,31 +1122,16 @@ class GameStateOverride(GameExecutables):
         finally:
             self._restore_board_sw_mults(saved)
 
-        phase2_wins = list(self.win_data.get("wins") or [])
         raw_total = float(self.win_data.get("totalWin") or 0)
         prod = max(1, int(product))
-        delta_wins = self._sw_delta_wins(p1_wins, phase2_wins)
         new_total = round(raw_total * prod, 2)
         if prod > 1 and raw_total > 0:
             self.win_data["totalWin"] = new_total
-            for win in phase2_wins:
+            for win in self.win_data.get("wins") or []:
                 win["win"] = round(float(win.get("win") or 0) * prod, 2)
 
         self.win_manager.set_spin_win(new_total)
-
-        if delta_wins:
-            delta_copy = []
-            for w in delta_wins:
-                wc = dict(w)
-                wc["win"] = round(float(w.get("win") or 0), 2)
-                wc["positions"] = list(w.get("positions") or [])
-                wc["meta"] = dict(w.get("meta") or {})
-                delta_copy.append(wc)
-            self.win_data = {
-                "totalWin": round(sum(float(w["win"]) for w in delta_copy), 2),
-                "wins": delta_copy,
-            }
-        else:
+        if new_total <= 0:
             self.win_data = {"totalWin": 0.0, "wins": []}
 
     def _apply_super_wild_expand(self, sw_hits, re_eval: bool = True) -> None:
