@@ -60,6 +60,8 @@ class GameStateOverride(GameExecutables):
         # Per-side sticky SW during a duel session (reel -> mult).
         self.duel_sticky_sw: dict[str, dict[int, int]] = {"cat": {}, "dog": {}}
         self._duel_active_side: str | None = None
+        # Lying SW real mults (cloaked to 1 on board until curtain / expand).
+        self._lying_sw_mult_by_pos: dict[tuple[int, int], int] = {}
 
     DUEL_MODE_NAMES = frozenset({"bonus_duel", "bonus_duel_cat", "bonus_duel_dog"})
 
@@ -188,8 +190,50 @@ class GameStateOverride(GameExecutables):
         self.force_paw_on_board()
         self.enforce_single_sw_base()
         self.enrich_visual_non_winning_symbols()
+        # Lying SW is a plain wild until the curtain — strip ×N from the board
+        # (and reveal payload) so Lines / client cannot apply symbol mult early.
+        self._capture_and_cloak_lying_sw_mults()
         if emit_event:
             reveal_event(self)
+
+    def _capture_and_cloak_lying_sw_mults(self) -> None:
+        """Save real lying-SW mults, then force multiplier=1 on those cells.
+
+        Sticky / already-open columns keep their ×N. Expand restores mult from
+        `_lying_sw_mult_by_pos` (or hit payload patched via `_patch_sw_hit_mults`).
+        """
+        self._lying_sw_mult_by_pos = {}
+        sticky_reels = set(self.sticky_sw.keys())
+        for h in find_super_wilds(self.board):
+            reel, row = int(h["reel"]), int(h["row"])
+            if reel in sticky_reels:
+                continue
+            mult = max(1, int(h.get("mult") or 1))
+            self._lying_sw_mult_by_pos[(reel, row)] = mult
+            self.board[reel][row].assign_attribute({"multiplier": 1})
+        if not getattr(self.config, "include_padding", False):
+            return
+        for attr in ("top_symbols", "bottom_symbols"):
+            pad = getattr(self, attr, None)
+            if not pad:
+                continue
+            for reel, cell in enumerate(pad):
+                if getattr(cell, "name", None) != "SW":
+                    continue
+                if reel in sticky_reels:
+                    continue
+                cell.assign_attribute({"multiplier": 1})
+
+    def _patch_sw_hit_mults(self, hits: list[dict]) -> list[dict]:
+        """Restore cloaked lying-SW multipliers onto expand hit payloads."""
+        for h in hits:
+            key = (int(h["reel"]), int(h["row"]))
+            if key in self._lying_sw_mult_by_pos:
+                h["mult"] = int(self._lying_sw_mult_by_pos[key])
+            else:
+                # Board cell may still hold sticky mult; prefer hit then cell.
+                h["mult"] = max(1, int(h.get("mult") or 1))
+        return hits
 
     def enforce_duel_symbol_rules(self) -> None:
         """Duel: never land scatter B, paw coins, or bullets."""
@@ -706,7 +750,7 @@ class GameStateOverride(GameExecutables):
     def resolve_base_spin_features(self) -> None:
         """After line eval: XOR paw OR superWildExpand."""
         paws = find_paws(self.board)
-        sw_hits = find_super_wilds(self.board)
+        sw_hits = self._patch_sw_hit_mults(find_super_wilds(self.board))
         sw_in_win = bool(sw_positions_in_wins(sw_hits, self.win_data))
         want_paw = bool(paws)
         want_sw = bool(sw_hits) and sw_in_win
@@ -734,7 +778,7 @@ class GameStateOverride(GameExecutables):
             if h["reel"] in sticky_reels:
                 continue
             new_by_reel.setdefault(int(h["reel"]), h)
-        new_hits = list(new_by_reel.values())
+        new_hits = self._patch_sw_hit_mults(list(new_by_reel.values()))
         if room <= 0:
             for h in new_hits:
                 self.board[h["reel"]][h["row"]] = self.create_symbol("L2")
@@ -756,7 +800,7 @@ class GameStateOverride(GameExecutables):
             if int(h["reel"]) in sticky_reels:
                 continue
             new_by_reel.setdefault(int(h["reel"]), h)
-        new_hits = list(new_by_reel.values())
+        new_hits = self._patch_sw_hit_mults(list(new_by_reel.values()))
         if room <= 0:
             return []
         if len(new_hits) > room:

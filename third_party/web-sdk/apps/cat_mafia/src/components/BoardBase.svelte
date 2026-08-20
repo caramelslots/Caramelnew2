@@ -2,6 +2,7 @@
 	import ReelSymbol from './ReelSymbol.svelte';
 	import { getContext } from '../game/context';
 	import type { SymbolState } from '../game/types';
+	import type { DuelSide } from '../game/stateDuel.svelte';
 
 	type ReelLike = {
 		reelState: {
@@ -18,6 +19,8 @@
 		idleBounce?: boolean;
 		/** Override reel board (Duel dual desks). Defaults to main stateGame.board. */
 		board?: ReelLike[];
+		/** Duel desk — SW × badge reads that side's sticky map. */
+		duelSide?: DuelSide;
 	};
 
 	const props: Props = $props();
@@ -43,6 +46,7 @@
 				{reelSymbol}
 				reelMotion={reel.reelState.motion}
 				activeSymbolCount={reel.reelState.activeSymbolCount}
+				duelSide={props.duelSide}
 			/>
 		{/if}
 	{/each}

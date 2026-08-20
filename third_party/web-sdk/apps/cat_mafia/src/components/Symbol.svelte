@@ -18,6 +18,11 @@
 		oncomplete?: () => void;
 		loop?: boolean;
 		inViewport?: boolean;
+		/**
+		 * SW ×N badge: only after curtain / sticky open. Lying SW is a plain wild —
+		 * do not show multiplier text even if rawSymbol.multiplier is set.
+		 */
+		showMultiplier?: boolean;
 	};
 
 	const props: Props = $props();
@@ -26,6 +31,9 @@
 	const isSprite = $derived(symbolInfo.type === 'sprite');
 	const isCoinPaw = $derived(symbolInfo.type === 'coinPaw');
 	const isPlaceholder = $derived(symbolInfo.type === 'placeholder');
+	const showMultBadge = $derived(
+		Boolean(props.showMultiplier && props.rawSymbol.multiplier && props.rawSymbol.name !== 'W'),
+	);
 </script>
 
 {#if isPlaceholder}
@@ -60,7 +68,7 @@
 	/>
 {/if}
 
-{#if props.rawSymbol.multiplier && props.rawSymbol.name !== 'W'}
+{#if showMultBadge}
 	<BitmapText
 		anchor={0.5}
 		x={props.x}

@@ -166,33 +166,25 @@ const stickySwProductFromState = (byReel: Record<number, number | undefined>) =>
 };
 
 /**
- * winInfo amounts are evaluated with SW mults neutralized; sticky / expand product
- * is applied later in math (setWin or post-expand winInfo).
- * Scale the on-line label so it matches ×2/×4 badges on SW the line passes through.
+ * winInfo amounts are evaluated with SW mults neutralized.
+ * Lying SW = plain wild → show raw totalWin on phase-1 (no upcoming product).
+ * Open sticky columns already carry × — scale by stickyProduct for sticky-only /
+ * phase-1 lines that pass through existing sticky.
+ * Phase-2 book totals already include full productMult.
  */
 const paylineAmountWithStickyProduct = ({
 	totalWin,
 	isPostSwExpand,
-	swExpandFollows,
-	hasWinInfoAfterExpand,
 	stickyProduct,
-	upcomingProductMult,
 }: {
 	totalWin: number;
 	isPostSwExpand: boolean;
-	swExpandFollows: boolean;
-	hasWinInfoAfterExpand: boolean;
 	stickyProduct: number;
-	upcomingProductMult: number;
 }) => {
 	if (totalWin <= 0) return totalWin;
 	// Phase-2 book totals already include productMult — do not double.
 	if (isPostSwExpand) return totalWin;
-	// Phase-1 before curtain: show × product so the label matches SW badges on the line.
-	if (swExpandFollows && hasWinInfoAfterExpand && upcomingProductMult > 1) {
-		return Math.round(totalWin * upcomingProductMult);
-	}
-	// Sticky-only (no second winInfo): product lands on setWin after this winInfo.
+	// Already-open sticky product (not the lying SW that will open this spin).
 	if (stickyProduct > 1) return Math.round(totalWin * stickyProduct);
 	return totalWin;
 };
@@ -466,6 +458,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.pawPending = hasPawResolveBeforeNextReveal(bookEvents, bookEvent);
 
 		stateGame.gameType = bookEvent.gameType;
+		// Base: SW expand is not sticky across spins — clear so × badges / product
+		// don't leak onto the next lying SW.
+		if (bookEvent.gameType === 'basegame') {
+			stateGame.stickySwByReel = {};
+			stateGame.stickySwOpened = false;
+		}
 
 		// Sync the reel engine with the visible board before every spin so that:
 		// – FS back-to-back reveals chain from the correct position (no stale pool
@@ -623,18 +621,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const anchorWin = bookEvent.wins[0];
 		if (anchorWin) {
 			const stickyProduct = stickySwProductFromState(stateGame.stickySwByReel);
-			const expandEvent =
-				expandIndex >= 0
-					? (bookEvents[expandIndex] as BookEventOfType<'superWildExpand'> | undefined)
-					: undefined;
-			const upcomingProductMult = expandEvent?.productMult ?? 1;
+			// Phase-1 before a new curtain: never bake upcoming product into the
+			// label — lying SW is a plain wild. Only already-open sticky scales.
 			const lineAmount = paylineAmountWithStickyProduct({
 				totalWin: bookEvent.totalWin,
 				isPostSwExpand,
-				swExpandFollows,
-				hasWinInfoAfterExpand,
-				stickyProduct,
-				upcomingProductMult,
+				stickyProduct: swExpandFollows ? 1 : stickyProduct,
 			});
 			eventEmitter.broadcast({
 				type: 'paylineWinAmountShow',
@@ -650,10 +642,15 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				nextSetWin != null ? winLevelMap[nextSetWin.winLevel as WinLevel] : undefined;
 			const isSmallWinFlow = !nextWinLevelData || nextWinLevelData.type !== 'big';
 
-			// SW spins: do not += spin totals — pre/post expand + product would
-			// flash HUD (e.g. 290 → 250 → 290). setTotalWin is the source of truth.
-			if (isSmallWinFlow && !isPostSwExpand && !spinHasSuperWildExpand(bookEvents)) {
-				stateBet.winBookEventAmount = stateBet.winBookEventAmount + lineAmount;
+			// SW / sticky product: setTotalWin is the only HUD source of truth —
+			// never += a UI-scaled lineAmount (that double-credited ×N before curtain).
+			if (
+				isSmallWinFlow &&
+				!isPostSwExpand &&
+				!spinHasSuperWildExpand(bookEvents) &&
+				stickyProduct <= 1
+			) {
+				stateBet.winBookEventAmount = stateBet.winBookEventAmount + bookEvent.totalWin;
 			}
 		}
 
@@ -1250,7 +1247,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 	},
 
-	duelSpin: async (bookEvent: BookEventOfType<'duelSpin'>, { bookEvents }: BookEventContext) => {
+	duelSpin: async (bookEvent: BookEventOfType<'duelSpin'>) => {
 		const side = bookEvent.side;
 		const stack = getDuelBoardStack(side);
 		const sticky = stateDuel.stickySwByReel[side];
@@ -1298,23 +1295,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateDuel.spinning = false;
 
 		if (twoBeat && bookEvent.phase1Wins && (bookEvent.phase1TotalWin ?? 0) > 0) {
-			const eventIndex = bookEvents.indexOf(bookEvent);
-			const expandAfter = bookEvents
-				.slice(eventIndex + 1)
-				.find((e) => e.type === 'superWildExpand') as
-				| BookEventOfType<'superWildExpand'>
-				| undefined;
-			const upcomingProductMult = expandAfter?.productMult ?? 1;
-			const stickyProduct = stickySwProductFromState(sticky);
-			const phase1Display = paylineAmountWithStickyProduct({
-				totalWin: bookEvent.phase1TotalWin ?? 0,
-				isPostSwExpand: false,
-				swExpandFollows: true,
-				hasWinInfoAfterExpand: true,
-				stickyProduct,
-				upcomingProductMult,
-			});
-			await playDuelWinLines(side, bookEvent.phase1Wins, phase1Display);
+			// Phase-1 through lying SW: plain wild amount — no upcoming product.
+			await playDuelWinLines(side, bookEvent.phase1Wins, bookEvent.phase1TotalWin ?? 0);
 			await waitForGameSpeed(DUEL_POST_SPIN_MS, stateGame.gameSpeed);
 			return;
 		}

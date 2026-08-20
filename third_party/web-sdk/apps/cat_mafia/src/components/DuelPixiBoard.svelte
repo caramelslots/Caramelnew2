@@ -144,7 +144,7 @@
 		<BoardContainer {layout} disableCatZoom>
 			<Container>
 				<Graphics isMask draw={drawDuelMask} />
-				<BoardBase board={stack.board} />
+				<BoardBase board={stack.board} duelSide={props.side} />
 			</Container>
 		</BoardContainer>
 	</MainContainer>

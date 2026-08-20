@@ -19,6 +19,7 @@
 		isVisibleBoardSymbolIndex,
 	} from '../game/constants';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
 	import type { ReelSymbol } from '../game/stateGame.svelte';
 
 	type Props = {
@@ -28,6 +29,8 @@
 		reelMotion?: string;
 		/** Owning reel activeSymbolCount — defaults to main board. */
 		activeSymbolCount?: number;
+		/** Duel desk side — SW × badge uses that side's sticky map. */
+		duelSide?: DuelSide;
 	};
 
 	const props: Props = $props();
@@ -37,6 +40,15 @@
 	const symbolInfo = $derived(
 		getSymbolInfo({ rawSymbol: props.reelSymbol.rawSymbol, state: props.reelSymbol.symbolState }),
 	);
+
+	/** ×N only on opened sticky / post-curtain SW columns — not on lying SW. */
+	const showMultiplier = $derived.by(() => {
+		if (props.reelSymbol.rawSymbol.name !== 'SW') return false;
+		if (props.duelSide) {
+			return stateDuel.stickySwByReel[props.duelSide][props.reelIndex] != null;
+		}
+		return stateGame.stickySwByReel[props.reelIndex] != null;
+	});
 
 	// Per-symbol win bounce. Runs for symbols whose win state shows a frozen
 	// idle spine + container scale tween (M). W (`Special_2/win`),
@@ -274,6 +286,7 @@
 		<Symbol
 			state={bgSymbolState}
 			rawSymbol={revealedRawSymbol}
+			showMultiplier={showMultiplier}
 			oncomplete={() => {
 				bgSymbolState = 'static';
 			}}
@@ -300,6 +313,7 @@
 				state={symbolRenderState}
 				rawSymbol={props.reelSymbol.rawSymbol}
 				inViewport={inViewport}
+				showMultiplier={showMultiplier}
 				oncomplete={() => {
 					const state = props.reelSymbol.symbolState;
 					if (state === 'idleBounce') return;
