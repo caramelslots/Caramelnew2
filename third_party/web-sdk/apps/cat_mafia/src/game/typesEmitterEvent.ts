@@ -11,6 +11,7 @@ import type { EmitterEventMysteryReelUnlockOverlay } from '../components/Mystery
 import type { EmitterEventFreeSpinTargetPick } from '../components/TargetPickOverlay.svelte';
 import type { EmitterEventTargetShootRound } from '../components/TargetShootOverlay.svelte';
 import type { EmitterEventDuel } from '../components/DuelModeOverlay.svelte';
+import type { EmitterEventDuelIntro } from '../components/DuelIntro.svelte';
 import type { EmitterEventDuelBoard } from '../components/DuelPixiBoard.svelte';
 
 export type EmitterEventGame =
@@ -27,4 +28,5 @@ export type EmitterEventGame =
 	| EmitterEventFreeSpinTargetPick
 	| EmitterEventTargetShootRound
 	| EmitterEventDuel
+	| EmitterEventDuelIntro
 	| EmitterEventDuelBoard;

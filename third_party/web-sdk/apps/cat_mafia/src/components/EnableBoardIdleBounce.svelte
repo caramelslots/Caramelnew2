@@ -29,6 +29,7 @@
 		!stateGame.winOverlayActive &&
 		!stateGame.transitionActive &&
 		!stateGame.freeSpinIntroActive &&
+		!stateGame.duelIntroActive &&
 		stateModal.modal == null;
 
 	const sleep = (ms: number, cancelled: () => boolean) =>

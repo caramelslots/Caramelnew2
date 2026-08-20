@@ -1,18 +1,51 @@
 <script lang="ts">
 	/**
-	 * Stage B: CSS curtain wipe for Super Wild column expand.
+	 * Stage B: CSS curtain wipe for Super Wild column expand (base + duel desks).
 	 */
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { BOARD_LAYOUT_OFFSETS, SYMBOL_SIZE } from '../game/constants';
+	import { computeDuelScreenLayout, getDuelPixiBoardLayout } from '../game/duelLayout';
+	import { stateDuel } from '../game/stateDuel.svelte';
 
 	const context = getContext();
 	const show = $derived(gameEntrance.showContent);
 	const isDesktop = $derived(context.stateLayoutDerived.layoutType() === 'desktop');
-	const curtain = $derived(context.stateGame.superWildCurtain);
+	const baseCurtain = $derived(context.stateGame.superWildCurtain);
+	const duelCurtain = $derived(stateDuel.superWildCurtain);
+	const curtain = $derived(duelCurtain ?? baseCurtain);
 
 	const style = $derived.by(() => {
 		if (!curtain) return '';
+
+		if (duelCurtain && stateDuel.active) {
+			const ml = context.stateLayoutDerived.mainLayout();
+			const canvas = context.stateLayoutDerived.canvasSizes();
+			const base = context.stateGameDerived.baseBoardLayout();
+			const duel = computeDuelScreenLayout({
+				canvasWidth: canvas.width,
+				canvasHeight: canvas.height,
+				layoutType: context.stateLayoutDerived.layoutType(),
+				mainLayout: ml,
+				boardLayout: base,
+			});
+			const layout = getDuelPixiBoardLayout({
+				duel,
+				side: duelCurtain.side,
+				mainLayout: ml,
+				base,
+			});
+			const centerX = ml.x + (layout.x - ml.width * 0.5) * ml.scale;
+			const centerY = ml.y + (layout.y - ml.height * 0.5) * ml.scale;
+			const halfW = (layout.visualWidth / 2) * ml.scale;
+			const halfH = (layout.visualHeight / 2) * ml.scale;
+			const cell = SYMBOL_SIZE * ml.scale * layout.scale;
+			const left = centerX - halfW + duelCurtain.reel * cell;
+			const top = centerY - halfH;
+			const height = layout.visualHeight * ml.scale;
+			return `left:${left}px;top:${top}px;width:${cell}px;height:${height}px;`;
+		}
+
 		const ml = context.stateLayoutDerived.mainLayout();
 		const layoutType = context.stateLayoutDerived.layoutType();
 		const off = BOARD_LAYOUT_OFFSETS[layoutType] ?? { x: 0, y: 0 };

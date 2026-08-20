@@ -63,8 +63,8 @@ COST_MAP = {
     "bonus_boost":   2,
     "bonus_normal":  100,
     "bonus_super":   200,
-    "bonus_duel_cat":    50,
-    "bonus_duel_dog":    50,
+    "bonus_duel_cat":    150,
+    "bonus_duel_dog":    150,
 }
 
 SEED = 42

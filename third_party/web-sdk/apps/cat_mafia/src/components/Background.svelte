@@ -11,6 +11,7 @@
 		getBackgroundCoverScale,
 	} from '../game/neonBackgroundLayout';
 	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
+	import { stateDuel } from '../game/stateDuel.svelte';
 	import BackgroundSkinController from './BackgroundSkinController.svelte';
 	import StreetOffscreenCull from './StreetOffscreenCull.svelte';
 
@@ -29,8 +30,14 @@
 		};
 	});
 
-	const showBaseBackground = $derived(context.stateGame.gameType === 'basegame');
-	const showFeatureBackground = $derived(context.stateGame.gameType === 'freegame');
+	/** Duel night street — same timing as FS (after cloud cover, not on pick screen). */
+	const showDuelBackground = $derived(stateDuel.active || stateDuel.phase === 'outro');
+	const showBaseBackground = $derived(
+		context.stateGame.gameType === 'basegame' && !showDuelBackground,
+	);
+	const showFeatureBackground = $derived(
+		context.stateGame.gameType === 'freegame' || showDuelBackground,
+	);
 	const isPhone = $derived(isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType()));
 
 	const canvasCenter = $derived.by(() => {

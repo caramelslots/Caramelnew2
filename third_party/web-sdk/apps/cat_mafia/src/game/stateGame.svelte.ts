@@ -61,12 +61,12 @@ stateMeta.betModeMeta = {
 	bonus_normal: makeMeta('bonus_normal', 'buy', 100, 'Normal Bonus'),
 	BONUS_SUPER: makeMeta('bonus_super', 'buy', 200, 'Super Bonus'),
 	bonus_super: makeMeta('bonus_super', 'buy', 200, 'Super Bonus'),
-	BONUS_DUEL: makeMeta('bonus_duel', 'buy', 50, 'Duel'),
-	bonus_duel: makeMeta('bonus_duel', 'buy', 50, 'Duel'),
-	BONUS_DUEL_CAT: makeMeta('bonus_duel_cat', 'buy', 50, 'Duel Cat'),
-	bonus_duel_cat: makeMeta('bonus_duel_cat', 'buy', 50, 'Duel Cat'),
-	BONUS_DUEL_DOG: makeMeta('bonus_duel_dog', 'buy', 50, 'Duel Dog'),
-	bonus_duel_dog: makeMeta('bonus_duel_dog', 'buy', 50, 'Duel Dog'),
+	BONUS_DUEL: makeMeta('bonus_duel', 'buy', 150, 'Duel'),
+	bonus_duel: makeMeta('bonus_duel', 'buy', 150, 'Duel'),
+	BONUS_DUEL_CAT: makeMeta('bonus_duel_cat', 'buy', 150, 'Duel Cat'),
+	bonus_duel_cat: makeMeta('bonus_duel_cat', 'buy', 150, 'Duel Cat'),
+	BONUS_DUEL_DOG: makeMeta('bonus_duel_dog', 'buy', 150, 'Duel Dog'),
+	bonus_duel_dog: makeMeta('bonus_duel_dog', 'buy', 150, 'Duel Dog'),
 };
 
 import type { GameType, RawSymbol, SymbolName, SymbolState } from './types';
@@ -232,6 +232,8 @@ export const stateGame = $state({
 	overlayDimAlpha: 0,
 	// FS intro board is an HTML overlay.
 	freeSpinIntroActive: false,
+	// Duel rules splash (Press to continue) before cloud transition.
+	duelIntroActive: false,
 	// === Cat Mafia Stage B ===
 	pawCoinCells: [] as {
 		reel: number;

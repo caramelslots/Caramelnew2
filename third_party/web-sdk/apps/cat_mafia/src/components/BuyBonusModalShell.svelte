@@ -8,15 +8,19 @@
 
 	import BuyBonusOverlay from './BuyBonusOverlay.svelte';
 	import BuyBonusConfirmOverlay from './BuyBonusConfirmOverlay.svelte';
+	import BuyDuelPickOverlay from './BuyDuelPickOverlay.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
 
 	const shellMounted = $derived(gameEntrance.showContent);
 	const isVisible = $derived(
-		stateModal.modal?.name === 'buyBonus' || stateModal.modal?.name === 'buyBonusConfirm',
+		stateModal.modal?.name === 'buyBonus' ||
+			stateModal.modal?.name === 'buyBonusConfirm' ||
+			stateModal.modal?.name === 'buyDuelPick',
 	);
 	const showBuyPanel = $derived(stateModal.modal?.name === 'buyBonus');
 	const showConfirmPanel = $derived(stateModal.modal?.name === 'buyBonusConfirm');
+	const showDuelPickPanel = $derived(stateModal.modal?.name === 'buyDuelPick');
 
 	$effect(() => {
 		if (shellMounted) startBuyBonusFlowPreload();
@@ -35,6 +39,9 @@
 		</div>
 		<div class="panel-slot" class:active={showConfirmPanel} aria-hidden={!showConfirmPanel}>
 			<BuyBonusConfirmOverlay />
+		</div>
+		<div class="panel-slot" class:active={showDuelPickPanel} aria-hidden={!showDuelPickPanel}>
+			<BuyDuelPickOverlay />
 		</div>
 	</div>
 {/if}

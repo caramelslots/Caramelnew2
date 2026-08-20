@@ -9,7 +9,7 @@ import { stateGame } from './stateGame.svelte';
 /** Fallbacks used until authenticate overwrites betModes.costMultiplier. */
 export const BUY_NORMAL_COST_MULT = 100;
 export const BUY_SUPER_COST_MULT = 200;
-export const BUY_DUEL_COST_MULT = 50;
+export const BUY_DUEL_COST_MULT = 150;
 
 const modeCostMultiplier = (modeKey: string, fallback: number) => {
 	const meta =

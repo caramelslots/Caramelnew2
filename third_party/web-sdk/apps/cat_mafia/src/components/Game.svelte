@@ -24,6 +24,7 @@
 	import EnableGameActor from './EnableGameActor.svelte';
 	import EnableBoardIdleBounce from './EnableBoardIdleBounce.svelte';
 	import EnableLivingIdle from './EnableLivingIdle.svelte';
+	import EnableDuelPhoneDpr from './EnableDuelPhoneDpr.svelte';
 	import ResumeBet from './ResumeBet.svelte';
 	import Sound from './Sound.svelte';
 	import Background from './Background.svelte';
@@ -47,6 +48,7 @@
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
 	import DuelModeOverlay from './DuelModeOverlay.svelte';
+	import DuelIntro from './DuelIntro.svelte';
 	import DuelPixiBoard from './DuelPixiBoard.svelte';
 	import FeaturesAutoSpinOverlay from './FeaturesAutoSpinOverlay.svelte';
 	import CashStacksMenuOverlay from './CashStacksMenuOverlay.svelte';
@@ -102,6 +104,7 @@
 		<EnableBoardIdleBounce />
 		<EnableLivingIdle />
 		<EnablePixiExtension />
+		<EnableDuelPhoneDpr />
 
 		<Background />
 
@@ -213,6 +216,7 @@
 </div>
 <!-- Duel HTML chrome (pick / counters / outro). Desks + mascots + paw coins are Pixi. -->
 <DuelModeOverlay />
+<DuelIntro />
 <TargetPickOverlay />
 <TargetShootOverlay />
 <FreeSpinIntro />

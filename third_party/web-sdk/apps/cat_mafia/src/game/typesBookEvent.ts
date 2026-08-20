@@ -151,6 +151,8 @@ export type BookEventSuperWildExpand = {
 	type: 'superWildExpand';
 	expands: { reel: number; row: number; mult: number }[];
 	productMult: number;
+	/** Duel: which desk the curtain targets. */
+	side?: 'cat' | 'dog';
 	/** Optional board after expand (padded). If omitted, handler mutates column to wild. */
 	boardAfter?: RawSymbol[][];
 };
@@ -202,7 +204,23 @@ export type BookEventDuelSpin = {
 	board: RawSymbol[][];
 	/** Book cents. */
 	spinWin: number;
+	/** Phase-1 line wins before SW curtain (book cents, padded rows). */
+	phase1Wins?: BookEventWinInfo['wins'];
+	phase1TotalWin?: number;
+	/** Followed by superWildExpand + duelSpinWin. */
+	swTwoBeat?: boolean;
 	/** Optional line wins (book cents, padded rows) — same shape as winInfo.wins. */
+	wins?: BookEventWinInfo['wins'];
+	totalWin?: number;
+};
+
+export type BookEventDuelSpinWin = {
+	index: number;
+	type: 'duelSpinWin';
+	side: 'cat' | 'dog';
+	spinIndex: number;
+	/** Book cents. */
+	spinWin: number;
 	wins?: BookEventWinInfo['wins'];
 	totalWin?: number;
 };
@@ -256,6 +274,7 @@ export type BookEvent =
 	// Cat Mafia Duel Stage A
 	| BookEventDuelStart
 	| BookEventDuelSpin
+	| BookEventDuelSpinWin
 	| BookEventDuelBankUpdate
 	| BookEventDuelEnd;
 

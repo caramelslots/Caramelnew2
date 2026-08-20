@@ -80,6 +80,12 @@ def check_book(book: dict) -> list[str]:
                 errors.append(f"forbidden symbols on duelSpin: {bad}")
         if e.get("type") in {"pawCoinResolve", "bulletCollect", "freeSpinTrigger", "freeSpinTargetPick"}:
             errors.append(f"forbidden event {e.get('type')}")
+        if e.get("type") == "superWildExpand" and "side" not in e:
+            errors.append("duel superWildExpand missing side")
+        if e.get("type") == "duelSpinWin":
+            sw = e.get("side")
+            if sw not in {"cat", "dog"}:
+                errors.append(f"bad duelSpinWin side {sw!r}")
 
     end = next((e for e in events if isinstance(e, dict) and e.get("type") == "duelEnd"), None)
     if end:

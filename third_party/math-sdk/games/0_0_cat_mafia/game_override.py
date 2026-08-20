@@ -16,6 +16,7 @@ from game_events import (
     target_shoot_round_event,
     duel_start_event,
     duel_spin_event,
+    duel_spin_win_event,
     duel_bank_update_event,
     duel_end_event,
 )
@@ -56,6 +57,9 @@ class GameStateOverride(GameExecutables):
         self.duel_payout = 0.0
         self.duel_player_side = None
         self.duel_player_won = False
+        # Per-side sticky SW during a duel session (reel -> mult).
+        self.duel_sticky_sw: dict[str, dict[int, int]] = {"cat": {}, "dog": {}}
+        self._duel_active_side: str | None = None
 
     DUEL_MODE_NAMES = frozenset({"bonus_duel", "bonus_duel_cat", "bonus_duel_dog"})
 
@@ -220,68 +224,98 @@ class GameStateOverride(GameExecutables):
         return board_client
 
     def run_duel_side_spin(self, side: str, spin_index: int) -> float:
-        """One cat/dog spin under base SW curtain rules. Returns spin win in bet multiples.
+        """One cat/dog spin under FS-style sticky SW rules (no bullets).
 
         Side banks accumulate wins; player wallet is only settled on duelEnd.
         """
         self.win_manager.reset_spin_win()
         running_before = float(self.win_manager.running_bet_win)
 
-        self.draw_board(emit_event=False)
+        self._duel_active_side = side
+        self.sticky_sw = self.duel_sticky_sw.setdefault(side, {})
+        self._pending_sw_expands = []
+        self._pending_sw_product = 1
 
-        # Line eval (no book events — amounts live in duelSpin / duelBankUpdate).
-        saved = self._neutralize_board_sw_mults()
         try:
-            self.win_data = Lines.get_lines(
-                self.board,
-                self.config,
-                global_multiplier=self.global_multiplier,
-            )
-            self.win_manager.update_spinwin(float(self.win_data.get("totalWin") or 0))
-        finally:
-            self._restore_board_sw_mults(saved)
+            self.draw_board(emit_event=False)
 
-        # Base SW curtain only (paws already stripped by enforce_duel_symbol_rules).
-        sw_hits = find_super_wilds(self.board)
-        if sw_hits and sw_positions_in_wins(sw_hits, self.win_data):
-            expands, product = expand_sw_columns(self.board, self.create_symbol, sw_hits)
-            if expands:
-                super_wild_expand_event(self, expands, product)
-                saved = self._neutralize_board_sw_mults()
-                try:
-                    self.win_data = Lines.get_lines(
-                        self.board,
-                        self.config,
-                        global_multiplier=self.global_multiplier,
+            saved = self._neutralize_board_sw_mults()
+            try:
+                self.win_data = Lines.get_lines(
+                    self.board,
+                    self.config,
+                    global_multiplier=self.global_multiplier,
+                )
+                self.win_manager.update_spinwin(float(self.win_data.get("totalWin") or 0))
+            finally:
+                self._restore_board_sw_mults(saved)
+
+            # Normal/Duel: strip lying SW that did not hit a win line before book board.
+            self._strip_non_qualifying_lying_sw()
+
+            pre_expand_board = self.duel_visible_board()
+            phase1_wins = list(self.win_data.get("wins") or [])
+            phase1_total = float(self.win_data.get("totalWin") or 0)
+
+            # Peek SW path before emitting book events (resolve emits superWildExpand).
+            sw_mode = self._peek_duel_sw_mode()
+            if sw_mode == "new_sw":
+                duel_spin_event(
+                    self,
+                    side,
+                    spin_index,
+                    pre_expand_board,
+                    spin_win=0,
+                    phase1_wins=phase1_wins if phase1_total > 0 else None,
+                    phase1_total_win=phase1_total if phase1_total > 0 else None,
+                    sw_two_beat=True,
+                )
+                self._resolve_duel_sw_features(
+                    side,
+                    phase1_wins=phase1_wins,
+                    phase1_total=phase1_total,
+                )
+            else:
+                self._resolve_duel_sw_features(side)
+
+            spin_win = round(float(self.win_manager.spin_win), 2)
+            wins_payload = list(self.win_data.get("wins") or []) if spin_win > 0 else []
+            total_win = float(self.win_data.get("totalWin") or spin_win) if spin_win > 0 else 0.0
+
+            if sw_mode == "new_sw":
+                if wins_payload and total_win > 0:
+                    duel_spin_win_event(
+                        self,
+                        side,
+                        spin_index,
+                        spin_win,
+                        wins=wins_payload,
+                        total_win=total_win,
                     )
-                finally:
-                    self._restore_board_sw_mults(saved)
-                raw_total = float(self.win_data.get("totalWin") or 0)
-                prod = max(1, int(product))
-                new_total = round(raw_total * prod, 2)
-                if prod > 1 and raw_total > 0:
-                    self.win_data["totalWin"] = new_total
-                    for win in self.win_data.get("wins") or []:
-                        win["win"] = round(float(win.get("win") or 0) * prod, 2)
-                self.win_manager.set_spin_win(new_total)
+                elif spin_win > phase1_total + 1e-9:
+                    duel_spin_win_event(
+                        self,
+                        side,
+                        spin_index,
+                        spin_win,
+                    )
+            else:
+                duel_spin_event(
+                    self,
+                    side,
+                    spin_index,
+                    self.duel_visible_board(),
+                    spin_win,
+                    wins=wins_payload if wins_payload else None,
+                    total_win=total_win if spin_win > 0 else None,
+                )
 
-        spin_win = round(float(self.win_manager.spin_win), 2)
+            self.duel_sticky_sw[side] = dict(self.sticky_sw)
+        finally:
+            self._duel_active_side = None
 
-        # Roll back player running wallet — banks are side-local until duelEnd.
         self.win_manager.running_bet_win = running_before
         self.win_manager.spin_win = 0.0
-
-        wins_payload = list(self.win_data.get("wins") or []) if spin_win > 0 else []
-        total_win = float(self.win_data.get("totalWin") or spin_win) if spin_win > 0 else 0.0
-        duel_spin_event(
-            self,
-            side,
-            spin_index,
-            self.duel_visible_board(),
-            spin_win,
-            wins=wins_payload,
-            total_win=total_win,
-        )
         return spin_win
 
     def settle_duel_payout(self, dog_total: float, cat_total: float) -> tuple[str, float]:
@@ -645,8 +679,12 @@ class GameStateOverride(GameExecutables):
         for reel, row, mult in saved:
             self.board[reel][row].assign_attribute({"multiplier": int(mult)})
 
-    def evaluate_lines_board(self):
-        """Lines eval with SW as wild only; SW product applied later in feature resolve."""
+    def evaluate_lines_board(self, emit: bool = True):
+        """Lines eval with SW as wild only; SW product applied later in feature resolve.
+
+        emit=False: compute win_data / spin_win only (Normal FS strips non-winning SW
+        before reveal, then emit_line_wins_after_reveal()).
+        """
         saved = self._neutralize_board_sw_mults()
         try:
             self.win_data = Lines.get_lines(
@@ -656,9 +694,14 @@ class GameStateOverride(GameExecutables):
             )
             Lines.record_lines_wins(self)
             self.win_manager.update_spinwin(self.win_data["totalWin"])
-            Lines.emit_linewin_events(self)
+            if emit:
+                Lines.emit_linewin_events(self)
         finally:
             self._restore_board_sw_mults(saved)
+
+    def emit_line_wins_after_reveal(self) -> None:
+        """Emit phase-1 winInfo/setWin after reveal (Normal FS book order)."""
+        Lines.emit_linewin_events(self)
 
     def resolve_base_spin_features(self) -> None:
         """After line eval: XOR paw OR superWildExpand."""
@@ -673,6 +716,77 @@ class GameStateOverride(GameExecutables):
             self._apply_super_wild_expand(sw_hits, re_eval=True)
         elif want_paw:
             self._apply_paw_resolve()
+
+    def _sw_sticky_requires_winning_line(self) -> bool:
+        """Normal FS + Duel: sticky opens only when SW sat on a winning payline. Super: no gate."""
+        if self.is_super_bonus():
+            return False
+        if self.is_duel_betmode() or self._duel_active_side:
+            return True
+        return self.gametype == self.config.freegame_type
+
+    def _collect_new_lying_sw_hits(self) -> list[dict]:
+        """Lying SW on non-sticky reels, capped by max_sticky_sw room (drops extras → L2)."""
+        sticky_reels = set(self.sticky_sw.keys())
+        room = max(0, self.max_sticky_sw - len(self.sticky_sw))
+        new_by_reel: dict[int, dict] = {}
+        for h in find_super_wilds(self.board):
+            if h["reel"] in sticky_reels:
+                continue
+            new_by_reel.setdefault(int(h["reel"]), h)
+        new_hits = list(new_by_reel.values())
+        if room <= 0:
+            for h in new_hits:
+                self.board[h["reel"]][h["row"]] = self.create_symbol("L2")
+            return []
+        if len(new_hits) > room:
+            random.shuffle(new_hits)
+            drop = new_hits[room:]
+            new_hits = new_hits[:room]
+            for h in drop:
+                self.board[h["reel"]][h["row"]] = self.create_symbol("L2")
+        return new_hits
+
+    def _peek_new_lying_sw_hits(self) -> list[dict]:
+        """Non-mutating cap preview for duel two-beat routing (board unchanged)."""
+        sticky_reels = set(self.sticky_sw.keys())
+        room = max(0, self.max_sticky_sw - len(self.sticky_sw))
+        new_by_reel: dict[int, dict] = {}
+        for h in find_super_wilds(self.board):
+            if int(h["reel"]) in sticky_reels:
+                continue
+            new_by_reel.setdefault(int(h["reel"]), h)
+        new_hits = list(new_by_reel.values())
+        if room <= 0:
+            return []
+        if len(new_hits) > room:
+            new_hits = new_hits[:room]
+        return new_hits
+
+    def _apply_sw_sticky_line_gate(self, new_hits: list[dict], *, strip: bool) -> list[dict]:
+        """Keep only SW cells that participated in a winning line (Normal / Duel)."""
+        if not self._sw_sticky_requires_winning_line() or not new_hits:
+            return new_hits
+        winning = sw_positions_in_wins(new_hits, self.win_data)
+        qualified = [h for h in new_hits if (int(h["reel"]), int(h["row"])) in winning]
+        if strip:
+            stripped = False
+            for h in new_hits:
+                if (int(h["reel"]), int(h["row"])) not in winning:
+                    self.board[h["reel"]][h["row"]] = self.create_symbol("L2")
+                    stripped = True
+            if stripped:
+                self._sync_sw_padding()
+                self.get_special_symbols_on_board()
+        return qualified
+
+    def _strip_non_qualifying_lying_sw(self) -> None:
+        """After line eval: remove non-sticky SW that did not play in a win (Normal / Duel)."""
+        if not self._sw_sticky_requires_winning_line():
+            return
+        sticky_reels = set(self.sticky_sw.keys())
+        hits = [h for h in find_super_wilds(self.board) if int(h["reel"]) not in sticky_reels]
+        self._apply_sw_sticky_line_gate(hits, strip=True)
 
     def init_fs_sticky_sw(self) -> None:
         """Start of FS: Super starts with one sticky open column; Normal starts empty.
@@ -737,7 +851,10 @@ class GameStateOverride(GameExecutables):
 
     def apply_fs_sw_board_rules(self) -> None:
         """After draw: stamp sticky SW columns; allow extra lying SW on other reels."""
-        if self.gametype != self.config.freegame_type:
+        conditions = self.get_current_distribution_conditions() or {}
+        is_fs = self.gametype == self.config.freegame_type
+        is_duel = bool(conditions.get("duel_mode")) or self.is_duel_betmode()
+        if not is_fs and not is_duel:
             return
 
         for reel, mult in self.sticky_sw.items():
@@ -776,39 +893,25 @@ class GameStateOverride(GameExecutables):
     def resolve_fs_spin_features(self) -> None:
         """FS: multi sticky SW; bullets on main FS only.
 
-        Bonus: SW expands whenever present (no payline gate). Newly opened columns
-        join sticky set for the rest of the bonus. Mults multiply.
+        Super: SW expands whenever present (no payline gate).
+        Normal: sticky only when SW participated in a winning line (base gate + sticky).
         """
-        sticky_reels = set(self.sticky_sw.keys())
-        room = max(0, self.max_sticky_sw - len(self.sticky_sw))
-        new_by_reel: dict[int, dict] = {}
-        for h in find_super_wilds(self.board):
-            if h["reel"] in sticky_reels:
-                continue
-            new_by_reel.setdefault(h["reel"], h)
-        new_hits = list(new_by_reel.values())
-        if room <= 0:
-            # Already at sticky cap — strip extra lying SW so they don't act as wilds.
-            for h in new_hits:
-                self.board[h["reel"]][h["row"]] = self.create_symbol("L2")
-            new_hits = []
-        elif len(new_hits) > room:
-            random.shuffle(new_hits)
-            drop = new_hits[room:]
-            new_hits = new_hits[:room]
-            for h in drop:
-                self.board[h["reel"]][h["row"]] = self.create_symbol("L2")
+        new_hits = self._collect_new_lying_sw_hits()
+        if self._sw_sticky_requires_winning_line():
+            new_hits = self._apply_sw_sticky_line_gate(new_hits, strip=False)
 
         if new_hits:
             # New lying SW (Normal/Super): same two-beat as base —
-            # phase-1 lines (SW as single wild) → curtain → phase-2 winInfo.
+            # phase-1 lines (SW as single wild) → curtain → phase-2 winInfo (delta only).
+            phase1_wins = list(self.win_data.get("wins") or [])
+            phase1_total = float(self.win_data.get("totalWin") or 0)
             expands_new, _ = expand_sw_columns(self.board, self.create_symbol, new_hits)
             for e in expands_new:
                 self.sticky_sw[int(e["reel"])] = int(e["mult"])
             self._sync_sw_padding()
             product = product_of_mults(self.sticky_sw.values())
             super_wild_expand_event(self, self._sticky_expands_payload(), product)
-            self._emit_sw_reeval_wins(product)
+            self._emit_sw_reeval_wins(product, phase1_wins, phase1_total)
             self._pending_sw_expands = []
             self._pending_sw_product = 1
         elif self.sticky_sw:
@@ -822,38 +925,126 @@ class GameStateOverride(GameExecutables):
                 self.drum_count = new_drum
                 bullet_collect_event(self, bullets, self.drum_count)
 
-    def _apply_super_product_after_preexpand(self) -> None:
-        """Sticky already open: paint expand event, then apply product to spin win.
+    def _peek_duel_sw_mode(self) -> str:
+        """Predict duel SW feature mode without mutating board (for book event order)."""
+        new_hits = self._peek_new_lying_sw_hits()
+        new_hits = self._apply_sw_sticky_line_gate(new_hits, strip=False)
+        if new_hits:
+            return "new_sw"
+        if self.sticky_sw:
+            return "sticky_product"
+        return "none"
 
-        No second winInfo — board was already full-column wild during line eval.
-        New lying SW opens use resolve_fs_spin_features → _emit_sw_reeval_wins (two-beat).
-        """
-        expands = getattr(self, "_pending_sw_expands", []) or []
-        product = int(getattr(self, "_pending_sw_product", 1) or 1)
-        if not expands and self.sticky_sw:
-            expands = self._sticky_expands_payload()
+    def _resolve_duel_sw_features(
+        self,
+        side: str,
+        phase1_wins: list | None = None,
+        phase1_total: float | None = None,
+    ) -> str:
+        """Duel: sticky SW with Normal-style payline gate (per side). Super untouched."""
+        new_hits = self._collect_new_lying_sw_hits()
+        new_hits = self._apply_sw_sticky_line_gate(new_hits, strip=False)
+
+        if new_hits:
+            expands_new, _ = expand_sw_columns(self.board, self.create_symbol, new_hits)
+            for e in expands_new:
+                self.sticky_sw[int(e["reel"])] = int(e["mult"])
+            self._sync_sw_padding()
             product = product_of_mults(self.sticky_sw.values())
-        if not expands:
+            super_wild_expand_event(
+                self,
+                self._sticky_expands_payload(),
+                product,
+                duel_side=side,
+            )
+            self._emit_duel_sw_reeval_wins(
+                product,
+                phase1_wins=phase1_wins,
+                phase1_total=phase1_total,
+            )
+            self._pending_sw_expands = []
+            self._pending_sw_product = 1
+            return "new_sw"
+
+        if self.sticky_sw:
+            self._apply_duel_super_product_after_preexpand(side)
+            return "sticky_product"
+
+        return "none"
+
+    def _apply_duel_super_product_after_preexpand(self, side: str) -> None:
+        """Sticky already open: apply product once — no expand event, no second line pass."""
+        _ = side  # duel books carry side on spin events, not on product scaling
+        product = int(getattr(self, "_pending_sw_product", 1) or 1)
+        if not self.sticky_sw:
+            self._pending_sw_expands = []
+            self._pending_sw_product = 1
             return
-        # Emit before product setWin so books stay consistent with new-SW opens
-        # (client early-returns when columns are already open).
-        super_wild_expand_event(self, expands, product)
-        if product > 1 and self.win_manager.spin_win > 0:
+        if product <= 1:
+            self._pending_sw_expands = []
+            self._pending_sw_product = 1
+            return
+        if self.win_manager.spin_win > 0:
+            scaled = round(self.win_manager.spin_win * product, 2)
+            self.win_manager.set_spin_win(scaled)
+            ratio = scaled / float(self.win_data.get("totalWin") or scaled) if scaled > 0 else 1
+            self.win_data["totalWin"] = scaled
+            for win in self.win_data.get("wins") or []:
+                win["win"] = round(float(win.get("win") or 0) * ratio, 2)
+        self._pending_sw_expands = []
+        self._pending_sw_product = 1
+
+    def _apply_super_product_after_preexpand(self) -> None:
+        """Sticky already open: apply product to spin win once — no second winInfo / expand."""
+        product = int(getattr(self, "_pending_sw_product", 1) or 1)
+        if not self.sticky_sw:
+            self._pending_sw_expands = []
+            self._pending_sw_product = 1
+            return
+        if product <= 1:
+            self._pending_sw_expands = []
+            self._pending_sw_product = 1
+            return
+        if self.win_manager.spin_win > 0:
             from src.events.events import set_win_event, set_total_event
 
-            self.win_manager.set_spin_win(round(self.win_manager.spin_win * product, 2))
+            scaled = round(self.win_manager.spin_win * product, 2)
+            ratio = scaled / float(self.win_data.get("totalWin") or scaled) if scaled > 0 else 1
+            self.win_manager.set_spin_win(scaled)
+            self.win_data["totalWin"] = scaled
+            for win in self.win_data.get("wins") or []:
+                win["win"] = round(float(win.get("win") or 0) * ratio, 2)
             set_win_event(self)
             set_total_event(self)
         self._pending_sw_expands = []
         self._pending_sw_product = 1
 
-    def _emit_sw_reeval_wins(self, product: int) -> None:
-        """Re-eval lines after SW expand; emit winInfo + wins (product applied once).
+    def _sw_line_index(self, win: dict) -> int | None:
+        meta = win.get("meta") or {}
+        idx = meta.get("lineIndex")
+        return int(idx) if idx is not None else None
 
-        Called *after* superWildExpand so the client can show phase-1 paylines,
-        play the curtain, then celebrate the post-expand line set.
+    def _sw_delta_wins(self, phase1_wins: list, phase2_wins: list) -> list:
+        """Paylines that newly qualify after SW expand (exclude phase-1 lines)."""
+        p1_lines = {self._sw_line_index(w) for w in phase1_wins}
+        p1_lines.discard(None)
+        return [w for w in phase2_wins if self._sw_line_index(w) not in p1_lines]
+
+    def _emit_sw_reeval_wins(
+        self,
+        product: int,
+        phase1_wins: list | None = None,
+        phase1_total: float | None = None,
+    ) -> None:
+        """Re-eval after SW expand; emit winInfo only for NEW paylines (delta).
+
+        Final spin_win is always the full post-expand total × sticky product.
+        Phase-2 presentation shows only lines that were not in phase-1.
         """
-        from src.events.events import set_total_event
+        from src.events.events import set_total_event, set_win_event
+
+        p1_wins = list(phase1_wins or [])
+        p1_total = float(phase1_total or 0)
 
         saved = self._neutralize_board_sw_mults()
         try:
@@ -865,31 +1056,98 @@ class GameStateOverride(GameExecutables):
         finally:
             self._restore_board_sw_mults(saved)
 
-        raw_total = float(self.win_data["totalWin"])
+        phase2_wins = list(self.win_data.get("wins") or [])
+        raw_total = float(self.win_data.get("totalWin") or 0)
         prod = max(1, int(product))
+        delta_wins = self._sw_delta_wins(p1_wins, phase2_wins)
         new_total = round(raw_total * prod, 2)
         if prod > 1 and raw_total > 0:
             self.win_data["totalWin"] = new_total
-            for win in self.win_data.get("wins") or []:
+            for win in phase2_wins:
                 win["win"] = round(float(win.get("win") or 0) * prod, 2)
 
         self.win_manager.set_spin_win(new_total)
-        if new_total > 0:
+
+        if delta_wins:
+            delta_copy = []
+            for w in delta_wins:
+                wc = dict(w)
+                wc["win"] = round(float(w.get("win") or 0), 2)
+                wc["positions"] = list(w.get("positions") or [])
+                meta = dict(w.get("meta") or {})
+                wc["meta"] = meta
+                delta_copy.append(wc)
+            delta_total = round(sum(float(w["win"]) for w in delta_copy), 2)
+            saved_win_data = self.win_data
+            self.win_data = {"totalWin": delta_total, "wins": delta_copy}
             Lines.record_lines_wins(self)
             Lines.emit_linewin_events(self)
+            self.win_data = saved_win_data
+        elif new_total > p1_total + 1e-9:
+            if self.win_manager.spin_win > 0:
+                set_win_event(self)
+            set_total_event(self)
         else:
             set_total_event(self)
+
+    def _emit_duel_sw_reeval_wins(
+        self,
+        product: int,
+        phase1_wins: list | None = None,
+        phase1_total: float | None = None,
+    ) -> None:
+        """Re-eval after SW expand for duel — delta wins stored in win_data (no winInfo)."""
+        p1_wins = list(phase1_wins or [])
+
+        saved = self._neutralize_board_sw_mults()
+        try:
+            self.win_data = Lines.get_lines(
+                self.board,
+                self.config,
+                global_multiplier=self.global_multiplier,
+            )
+        finally:
+            self._restore_board_sw_mults(saved)
+
+        phase2_wins = list(self.win_data.get("wins") or [])
+        raw_total = float(self.win_data.get("totalWin") or 0)
+        prod = max(1, int(product))
+        delta_wins = self._sw_delta_wins(p1_wins, phase2_wins)
+        new_total = round(raw_total * prod, 2)
+        if prod > 1 and raw_total > 0:
+            self.win_data["totalWin"] = new_total
+            for win in phase2_wins:
+                win["win"] = round(float(win.get("win") or 0) * prod, 2)
+
+        self.win_manager.set_spin_win(new_total)
+
+        if delta_wins:
+            delta_copy = []
+            for w in delta_wins:
+                wc = dict(w)
+                wc["win"] = round(float(w.get("win") or 0), 2)
+                wc["positions"] = list(w.get("positions") or [])
+                wc["meta"] = dict(w.get("meta") or {})
+                delta_copy.append(wc)
+            self.win_data = {
+                "totalWin": round(sum(float(w["win"]) for w in delta_copy), 2),
+                "wins": delta_copy,
+            }
+        else:
+            self.win_data = {"totalWin": 0.0, "wins": []}
 
     def _apply_super_wild_expand(self, sw_hits, re_eval: bool = True) -> None:
         expands, product = expand_sw_columns(self.board, self.create_symbol, sw_hits)
         self._last_sw_expands = expands
         if not expands:
             return
+        phase1_wins = list(self.win_data.get("wins") or [])
+        phase1_total = float(self.win_data.get("totalWin") or 0)
         # Curtain before post-expand winInfo so basegame can show two beats:
         # lying-SW lines → expand → re-eval lines (× product).
         super_wild_expand_event(self, expands, product)
         if re_eval:
-            self._emit_sw_reeval_wins(product)
+            self._emit_sw_reeval_wins(product, phase1_wins, phase1_total)
 
     def _apply_paw_resolve(self) -> None:
         paws, rows, total = build_paw_resolve(self.board, bet=1.0)

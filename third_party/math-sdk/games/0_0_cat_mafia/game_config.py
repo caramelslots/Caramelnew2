@@ -435,7 +435,7 @@ class GameConfig(Config):
             ),
             BetMode(
                 name="bonus_duel_cat",
-                cost=50.0,
+                cost=150.0,
                 rtp=self.rtp,
                 max_win=mode_maxwins["bonus_duel_cat"],
                 auto_close_disabled=False,
@@ -470,7 +470,7 @@ class GameConfig(Config):
             ),
             BetMode(
                 name="bonus_duel_dog",
-                cost=50.0,
+                cost=150.0,
                 rtp=self.rtp,
                 max_win=mode_maxwins["bonus_duel_dog"],
                 auto_close_disabled=False,

@@ -47,7 +47,7 @@
 	const baseBoardLayout = $derived(context.stateGameDerived.baseBoardLayout());
 	const isPortrait = $derived(layoutType === 'portrait');
 	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
-	const show = $derived(stateDuel.active);
+	const show = $derived(stateDuel.active && !stateGame.duelIntroActive);
 
 	const duelLayout = $derived(
 		computeDuelScreenLayout({
@@ -64,8 +64,6 @@
 	let pickShow = $state(false);
 	/** Keep pick Spine players warm so choose-side does not hitch on first open. */
 	let pickSpinesWarmed = $state(false);
-	/** Buy flow: keep the dimmer until the cloud transition covers the swap. */
-	let entryHold = $state(false);
 	let outroShow = $state(false);
 	let outroDog = $state(0);
 	let outroCat = $state(0);
@@ -80,13 +78,7 @@
 	/** Cloud spine sits in Pixi (z50) — hide HTML chrome/modals so they stay under it. */
 	const underCloud = $derived(stateGame.transitionActive);
 	const portraitAvatarSize = $derived(Math.round(Math.min(88, duelLayout.boardWidth * 0.28)));
-	const pickOpen = $derived((pickShow || entryHold) && !underCloud);
-
-	$effect(() => {
-		if (stateGame.transitionActive || stateDuel.active) {
-			entryHold = false;
-		}
-	});
+	const pickOpen = $derived(pickShow && !underCloud);
 
 	// Warm duel pick spines after the board is up (or immediately when pick opens).
 	$effect(() => {
@@ -107,17 +99,14 @@
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		pickShow = false;
 		onPickContinue();
-		// Buy flow: pick happens before the book — fire bet now.
-		// Book-driven pick (legacy books without playerSide) continues duelStart.
-		if (!stateDuel.active) {
-			entryHold = true;
-			context.eventEmitter.broadcast({ type: 'bet' });
-		}
 	};
 
 	context.eventEmitter.subscribeOnMount({
 		duelPickWarm: () => {
 			pickSpinesWarmed = true;
+		},
+		duelIntroShow: () => {
+			pickShow = false;
 		},
 		duelPickShow: () => {
 			pickSpinesWarmed = true;
@@ -244,16 +233,15 @@
 	<div
 		class="duel-modal pick-modal"
 		class:open={pickOpen}
-		class:hold-only={entryHold && !pickShow}
 		class:portrait={isPortrait}
 		class:popout-s={isPopoutSmall}
 		data-test="duel-pick"
 		role="dialog"
 		aria-modal="true"
 		aria-hidden={!pickOpen}
-		aria-label={pickShow ? 'Choose your side' : 'Entering duel'}
+		aria-label="Choose your side"
 	>
-		<div class="pick-stage" class:hold-only={entryHold && !pickShow}>
+		<div class="pick-stage">
 			<p class="eyebrow">DUEL</p>
 			<h2 class="pick-title">CHOOSE YOUR SIDE</h2>
 			<div class="pick-mascots">
@@ -296,7 +284,7 @@
 	</div>
 {/if}
 
-{#if outroShow && !underCloud}
+{#if outroShow}
 	<div
 		class="duel-modal"
 		transition:fade={{ duration: 200 }}
@@ -562,14 +550,6 @@
 		opacity: 1;
 		visibility: visible;
 		pointer-events: auto;
-	}
-
-	.pick-modal.hold-only {
-		background: rgba(6, 4, 12, 0.85);
-	}
-
-	.pick-modal.hold-only .pick-stage {
-		opacity: 0;
 	}
 
 	.pick-stage {

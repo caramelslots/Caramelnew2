@@ -115,8 +115,13 @@
 					: buyDuelCostMultiplier();
 		if (!canAffordBuyBonus(costMult)) return;
 		clearActiveFeature();
+		if (variant === 'duel') {
+			stateModal.modal = { name: 'buyDuelPick' };
+			context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+			return;
+		}
 		stateBonus.selectedBetModeKey =
-			variant === 'normal' ? 'bonus_normal' : variant === 'super' ? 'bonus_super' : 'bonus_duel';
+			variant === 'normal' ? 'bonus_normal' : 'bonus_super';
 		stateModal.modal = { name: 'buyBonusConfirm' };
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 	};

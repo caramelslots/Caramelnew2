@@ -41,6 +41,18 @@ export const stateDuel = $state({
 	winner: null as DuelSide | null,
 	payout: 0,
 	winLevel: 1,
+	/** Per-side sticky SW columns (reel → mult), like bonus_normal FS. */
+	stickySwByReel: {
+		cat: {} as Record<number, number>,
+		dog: {} as Record<number, number>,
+	},
+	stickySwOpened: { cat: false, dog: false },
+	superWildCurtain: null as {
+		side: DuelSide;
+		reel: number;
+		mult: number;
+		phase: 'expanding' | 'done';
+	} | null,
 });
 
 export const resetDuelState = () => {
@@ -64,6 +76,9 @@ export const resetDuelState = () => {
 	stateDuel.winner = null;
 	stateDuel.payout = 0;
 	stateDuel.winLevel = 1;
+	stateDuel.stickySwByReel = { cat: {}, dog: {} };
+	stateDuel.stickySwOpened = { cat: false, dog: false };
+	stateDuel.superWildCurtain = null;
 };
 
 export const isDuelActive = () => stateDuel.active;

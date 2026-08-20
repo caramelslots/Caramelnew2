@@ -145,7 +145,7 @@ def _bonus_super_scaling():
 
 
 def _bonus_duel_cat_scaling():
-    """Buy Duel as CAT (cost 50×): ~50% zero, ~50% wins with E[win|win]≈96 (~1.9× buy)."""
+    """Buy Duel as CAT (cost 150×): ~50% zero, ~50% wins with E[win|win]≈288 (~1.9× buy)."""
     return ConstructScaling(
         [
             {"criteria": "duel_lose", "scale_factor": 1.0, "win_range": (0, 0), "probability": 1.0},
@@ -161,7 +161,7 @@ def _bonus_duel_cat_scaling():
 
 
 def _bonus_duel_dog_scaling():
-    """Buy Duel as DOG (cost 50×): ~75% zero, ~25% wins with E[win|win]≈192 (~3.8× buy)."""
+    """Buy Duel as DOG (cost 150×): ~75% zero, ~25% wins with E[win|win]≈576 (~3.8× buy)."""
     return ConstructScaling(
         [
             {"criteria": "duel_lose", "scale_factor": 1.0, "win_range": (0, 0), "probability": 1.0},
@@ -281,8 +281,8 @@ class OptimizationSetup:
                         search_conditions=wincaps["bonus_duel_cat"],
                     ).return_dict(),
                     # Explicit hrs required: hr="x" on win + unset lose both became hr≈1
-                    # and the optimizer locked ~50% RTP (avg≈25 / cost 50).
-                    # hr=2 → 50% fence share; avg_win = hr*rtp*cost ≈ 95 when hit.
+                    # and the optimizer locked ~50% RTP (avg≈75 / cost 150).
+                    # hr=2 → 50% fence share; avg_win = hr*rtp*cost ≈ 285 when hit.
                     "duel_lose": ConstructConditions(
                         rtp=0.0, hr=2.0, av_win=0.0, search_conditions=0.0
                     ).return_dict(),

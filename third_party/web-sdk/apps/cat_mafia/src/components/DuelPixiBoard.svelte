@@ -21,7 +21,13 @@
 	import { MainContainer } from 'components-layout';
 	import { waitForResolve } from 'utils-shared/wait';
 
-	import { BITMAP_FONT_SCALE, SYMBOL_SIZE, WIN_HUD_FONT_SIZE, isPopoutSmallViewport } from '../game/constants';
+	import {
+		BITMAP_FONT_SCALE,
+		BOARD_MASK_SPIN_OVERFLOW,
+		SYMBOL_SIZE,
+		WIN_HUD_FONT_SIZE,
+		isPopoutSmallViewport,
+	} from '../game/constants';
 	import { getContext } from '../game/context';
 	import { computeDuelScreenLayout, getDuelPixiBoardLayout } from '../game/duelLayout';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
@@ -62,13 +68,11 @@
 	});
 
 	const reelsActive = $derived(stack.board.some((reel) => reel.reelState.motion !== 'stopped'));
-	// Hard stencil (no feather): keep overflow tiny. Base BoardMask can use +24px
-	// because the soft fade + gold rails hide it; here that runway dumps symbols
-	// into the transparent nameplate hole under the desk.
-	const maskTop = $derived(reelsActive ? 4 : 0);
-	const maskBottom = $derived(reelsActive ? 4 : 0);
-	// Stencil Graphics mask — dual Sprite/alpha BoardMasks corrupt the first desk
-	// (dog shows only ~3 columns). Graphics uses the stencil path and is dual-safe.
+	// Stencil Graphics — dual-safe (Sprite BoardMask corrupts dog desk to ~3 columns).
+	// Top spin runway like bonus_normal; keep bottom tight so symbols don't bleed into
+	// the transparent nameplate slot under the playfield.
+	const maskTop = $derived(reelsActive ? BOARD_MASK_SPIN_OVERFLOW.top : 0);
+	const maskBottom = $derived(reelsActive ? 6 : 0);
 	const drawDuelMask = $derived((g: PIXI.Graphics) => {
 		g.rect(
 			-SYMBOL_SIZE,

@@ -18,10 +18,13 @@
 		mirror?: boolean;
 		/** When false, pause the idle loop to save CPU while the pick UI is hidden. */
 		playing?: boolean;
+		/** Fill parent box (hero confirm) instead of fixed aspect-ratio tile. */
+		fill?: boolean;
 	};
 
 	const props: Props = $props();
 	const playing = $derived(props.playing !== false);
+	const fill = $derived(props.fill === true);
 
 	let container = $state<HTMLDivElement | undefined>();
 	let player: SpinePlayer | undefined;
@@ -31,6 +34,7 @@
 		const el = container;
 		if (!el) return;
 
+		let disposed = false;
 		player?.dispose();
 		player = undefined;
 		ready = false;
@@ -55,7 +59,8 @@
 				animations: viewportAnims,
 			},
 			success: (spinePlayer) => {
-				if (player !== created) return;
+				// success can run before `player = created` when assets are cached
+				if (disposed) return;
 				spinePlayer.skeleton!.scaleY = -1;
 				try {
 					spinePlayer.skeleton!.setAttachment('smile', null);
@@ -70,6 +75,7 @@
 		player = created;
 
 		return () => {
+			disposed = true;
 			created.dispose();
 			if (player === created) player = undefined;
 			ready = false;
@@ -88,7 +94,7 @@
 	});
 </script>
 
-<div class="pick-spine" class:mirror={props.mirror} class:ready aria-hidden="true">
+<div class="pick-spine" class:mirror={props.mirror} class:ready class:fill aria-hidden="true">
 	<div class="pick-spine-host" bind:this={container}></div>
 </div>
 
@@ -105,6 +111,14 @@
 
 	.pick-spine.ready {
 		opacity: 1;
+	}
+
+	.pick-spine.fill {
+		aspect-ratio: auto;
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
 	}
 
 	.pick-spine.mirror {

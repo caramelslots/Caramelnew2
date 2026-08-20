@@ -1,5 +1,7 @@
 """Cat Mafia game-state — base + free-spin + Duel loops."""
 
+from src.events.events import reveal_event
+
 from game_override import GameStateOverride
 from game_events import duel_start_event, duel_bank_update_event, duel_end_event
 
@@ -47,6 +49,7 @@ class GameState(GameStateOverride):
             self.duel_player_side = player_side
             self.duel_player_won = False
             self.wincap_triggered = False
+            self.duel_sticky_sw = {"cat": {}, "dog": {}}
 
             duel_start_event(
                 self,
@@ -125,10 +128,21 @@ class GameState(GameStateOverride):
 
         while self.fs < self.tot_fs and not self.wincap_triggered:
             self.update_freespin()
-            self.draw_board()
-
-            self.evaluate_lines_board()
-            self.resolve_fs_spin_features()
+            if self.is_super_bonus():
+                # Super: unchanged book order (reveal → lines → expand).
+                self.draw_board()
+                self.evaluate_lines_board()
+                self.resolve_fs_spin_features()
+            else:
+                # Normal: eval + strip non-winning SW before reveal, then
+                # reveal → phase-1 winInfo → expand (only if SW was in a line).
+                # Never emit winInfo before reveal (that caused phantom lines).
+                self.draw_board(emit_event=False)
+                self.evaluate_lines_board(emit=False)
+                self._strip_non_qualifying_lying_sw()
+                reveal_event(self)
+                self.emit_line_wins_after_reveal()
+                self.resolve_fs_spin_features()
             self.win_manager.update_gametype_wins(self.gametype)
 
             # After last main FS — auto shoot (may award extra FS).

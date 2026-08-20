@@ -65,6 +65,14 @@ export const STREET_OFFSCREEN_SLOT_NAMES = [
 	'way4',
 ] as const;
 
+/** Hidden for the whole duel session (car + ground shadow under the street). */
+export const DUEL_HIDDEN_BACKGROUND_SLOTS = [
+	'shadow',
+	'car_day',
+	'car_day_shadow',
+	'car_night',
+] as const;
+
 export const isStreetOffscreenCullActive = (
 	layoutType: string,
 	canvasSizeType: string,

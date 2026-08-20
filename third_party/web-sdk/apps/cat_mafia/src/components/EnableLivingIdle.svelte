@@ -19,6 +19,7 @@
 			stateGame.winOverlayActive ||
 			stateGame.transitionActive ||
 			stateGame.freeSpinIntroActive ||
+			stateGame.duelIntroActive ||
 			stateModal.modal != null
 		) {
 			return false;

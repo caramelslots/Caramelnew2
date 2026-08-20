@@ -45,7 +45,13 @@ def paw_coin_resolve_event(gamestate, paws: list[dict], rows: list[dict], total_
     gamestate.book.add_event(event)
 
 
-def super_wild_expand_event(gamestate, expands: list[dict], product_mult: int) -> None:
+def super_wild_expand_event(
+    gamestate,
+    expands: list[dict],
+    product_mult: int,
+    *,
+    duel_side: str | None = None,
+) -> None:
     padded = []
     for e in expands:
         padded.append(
@@ -61,6 +67,8 @@ def super_wild_expand_event(gamestate, expands: list[dict], product_mult: int) -
         "expands": padded,
         "productMult": int(product_mult),
     }
+    if duel_side in {"cat", "dog"}:
+        event["side"] = duel_side
     gamestate.book.add_event(event)
 
 
@@ -106,8 +114,26 @@ def target_shoot_round_event(gamestate, shots: list[dict], extra_fs: int) -> Non
 
 DUEL_START = "duelStart"
 DUEL_SPIN = "duelSpin"
+DUEL_SPIN_WIN = "duelSpinWin"
 DUEL_BANK_UPDATE = "duelBankUpdate"
 DUEL_END = "duelEnd"
+
+
+def _format_duel_wins(gamestate, wins: list, total_win: float) -> tuple[list, int]:
+    from copy import deepcopy
+
+    wins_out = deepcopy(wins)
+    for w in wins_out:
+        w["positions"] = [
+            {"reel": p["reel"], "row": p["row"] + 1} for p in w.get("positions") or []
+        ]
+        w["win"] = int(round(min(float(w.get("win") or 0), gamestate.config.wincap) * 100))
+        if "meta" in w and "winWithoutMult" in w["meta"]:
+            w["meta"]["winWithoutMult"] = int(
+                round(min(float(w["meta"]["winWithoutMult"]), gamestate.config.wincap) * 100)
+            )
+    tw = int(round(min(float(total_win), gamestate.config.wincap) * 100))
+    return wins_out, tw
 
 
 def duel_start_event(
@@ -133,10 +159,11 @@ def duel_spin_event(
     spin_win: float,
     wins: list | None = None,
     total_win: float | None = None,
+    phase1_wins: list | None = None,
+    phase1_total_win: float | None = None,
+    sw_two_beat: bool = False,
 ) -> None:
     """One side spin. board is visible 5×4 (no padding). Amounts in bet multiples → cents."""
-    from copy import deepcopy
-
     event = {
         "index": len(gamestate.book.events),
         "type": DUEL_SPIN,
@@ -145,21 +172,51 @@ def duel_spin_event(
         "board": board,
         "spinWin": int(round(spin_win * 100)),
     }
+    if sw_two_beat:
+        event["swTwoBeat"] = True
+    if phase1_wins:
+        p1_wins, p1_total = _format_duel_wins(
+            gamestate,
+            phase1_wins,
+            float(phase1_total_win if phase1_total_win is not None else 0),
+        )
+        event["phase1Wins"] = p1_wins
+        event["phase1TotalWin"] = p1_total
     if wins:
-        wins_out = deepcopy(wins)
-        for w in wins_out:
-            # Pixi reel pool uses padded rows (top pad → visible row 0 is index 1).
-            w["positions"] = [
-                {"reel": p["reel"], "row": p["row"] + 1} for p in w.get("positions") or []
-            ]
-            w["win"] = int(round(min(float(w.get("win") or 0), gamestate.config.wincap) * 100))
-            if "meta" in w and "winWithoutMult" in w["meta"]:
-                w["meta"]["winWithoutMult"] = int(
-                    round(min(float(w["meta"]["winWithoutMult"]), gamestate.config.wincap) * 100)
-                )
-        tw = float(total_win if total_win is not None else spin_win)
+        wins_out, tw = _format_duel_wins(
+            gamestate,
+            wins,
+            float(total_win if total_win is not None else spin_win),
+        )
         event["wins"] = wins_out
-        event["totalWin"] = int(round(min(tw, gamestate.config.wincap) * 100))
+        event["totalWin"] = tw
+    gamestate.book.add_event(event)
+
+
+def duel_spin_win_event(
+    gamestate,
+    side: str,
+    spin_index: int,
+    spin_win: float,
+    wins: list | None = None,
+    total_win: float | None = None,
+) -> None:
+    """Phase-2 / product win beat after duelSpin + superWildExpand."""
+    event = {
+        "index": len(gamestate.book.events),
+        "type": DUEL_SPIN_WIN,
+        "side": side,
+        "spinIndex": int(spin_index),
+        "spinWin": int(round(spin_win * 100)),
+    }
+    if wins:
+        wins_out, tw = _format_duel_wins(
+            gamestate,
+            wins,
+            float(total_win if total_win is not None else spin_win),
+        )
+        event["wins"] = wins_out
+        event["totalWin"] = tw
     gamestate.book.add_event(event)
 
 

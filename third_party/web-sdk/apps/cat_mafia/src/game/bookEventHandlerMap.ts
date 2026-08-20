@@ -36,7 +36,19 @@ import {
 import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
 import { waitForTimeout } from 'utils-shared/wait';
 import { resetDuelState, stateDuel, getDuelInitialVisibleBoard, resolveDuelPlayerPayout } from './stateDuel.svelte';
-import { getDuelBoardStack, getDuelPaddingBoard, padDuelBoardForPixi } from './stateDuelBoards.svelte';
+import {
+	getDuelBoardStack,
+	getDuelPaddingBoard,
+	getFreegamePaddingBoard,
+	padDuelBoardForPixi,
+} from './stateDuelBoards.svelte';
+import {
+	applyDuelStickySwPreExpanded,
+	expandDuelSuperWildColumn,
+	prepareDuelStickySwFrozenReels,
+	settleDuelBoardFromPixi,
+} from './duelStickySw';
+import type { DuelSide } from './stateDuel.svelte';
 import {
 	computeCatSlowTriggerReel,
 	catSlowReelsAfterTrigger,
@@ -55,8 +67,73 @@ import {
 const PAW_COIN_CONVERT_DELAY_MS = 250;
 
 const DUEL_POST_SPIN_MS = 280;
+const FS_POST_SPIN_MS = 280;
 const DUEL_BANK_FLOW_MS = 700;
 const DUEL_BETWEEN_SPINS_MS = 350;
+
+const duelSwRowsOnReel = (side: DuelSide, reelIndex: number) => {
+	const stack = getDuelBoardStack(side);
+	let swRows = 0;
+	for (let paddedRow = 1; paddedRow <= BOARD_DIMENSIONS.y; paddedRow++) {
+		if (stack.board[reelIndex]?.reelState.symbols[paddedRow]?.rawSymbol.name === 'SW') {
+			swRows += 1;
+		}
+	}
+	return swRows;
+};
+
+const playDuelWinLines = async (
+	side: DuelSide,
+	wins: NonNullable<BookEventOfType<'duelSpin'>['wins']>,
+	totalWin: number,
+) => {
+	if (!wins.length || totalWin <= 0) return;
+
+	await waitForGameSpeed(WIN_INFO_PRE_DELAY_MS, stateGame.gameSpeed);
+	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
+
+	for (const win of wins) {
+		const lineIndex = win.meta?.lineIndex ?? 0;
+		const paylineRows = config.paylines[String(lineIndex) as keyof typeof config.paylines];
+		eventEmitter.broadcast({
+			type: 'paylineShow',
+			side,
+			lineIndex,
+			positions: win.positions,
+			paylineRows,
+		});
+	}
+
+	const anchorWin = wins[0];
+	eventEmitter.broadcast({
+		type: 'paylineWinAmountShow',
+		side,
+		amount: totalWin,
+		anchor: {
+			lineIndex: anchorWin.meta?.lineIndex ?? 0,
+			positions: anchorWin.positions,
+		},
+	});
+
+	const allPositions = _.uniqWith(
+		wins.flatMap((win) => win.positions),
+		(a, b) => a.reel === b.reel && a.row === b.row,
+	);
+	await eventEmitter.broadcastAsync({
+		type: 'duelBoardAnimateSymbols',
+		side,
+		symbolPositions: allPositions,
+	});
+
+	if (spotlightClearTimer !== null) clearTimeout(spotlightClearTimer);
+	spotlightClearTimer = setTimeout(
+		() => {
+			spotlightClearTimer = null;
+			eventEmitter.broadcast({ type: 'paylineClearAll', side });
+		},
+		scaleMsByGameSpeed(WIN_SPOTLIGHT_CLEAR_DELAY_MS, stateGame.gameSpeed),
+	);
+};
 
 // Таймер фонового снятия затемнения/paylines. Хранится здесь, чтобы
 // `reveal` мог отменить его при старте нового спина раньше истечения задержки.
@@ -80,6 +157,45 @@ export const clearWinSpotlight = () => {
 };
 
 const DRUM_MAX = 6;
+
+/** Product of open sticky SW column multipliers (FS). Math applies this after winInfo. */
+const stickySwProductFromState = (byReel: Record<number, number | undefined>) => {
+	const mults = Object.values(byReel).filter((m): m is number => m != null && m > 0);
+	if (!mults.length) return 1;
+	return mults.reduce((acc, m) => acc * m, 1);
+};
+
+/**
+ * winInfo amounts are evaluated with SW mults neutralized; sticky / expand product
+ * is applied later in math (setWin or post-expand winInfo).
+ * Scale the on-line label so it matches ×2/×4 badges on SW the line passes through.
+ */
+const paylineAmountWithStickyProduct = ({
+	totalWin,
+	isPostSwExpand,
+	swExpandFollows,
+	hasWinInfoAfterExpand,
+	stickyProduct,
+	upcomingProductMult,
+}: {
+	totalWin: number;
+	isPostSwExpand: boolean;
+	swExpandFollows: boolean;
+	hasWinInfoAfterExpand: boolean;
+	stickyProduct: number;
+	upcomingProductMult: number;
+}) => {
+	if (totalWin <= 0) return totalWin;
+	// Phase-2 book totals already include productMult — do not double.
+	if (isPostSwExpand) return totalWin;
+	// Phase-1 before curtain: show × product so the label matches SW badges on the line.
+	if (swExpandFollows && hasWinInfoAfterExpand && upcomingProductMult > 1) {
+		return Math.round(totalWin * upcomingProductMult);
+	}
+	// Sticky-only (no second winInfo): product lands on setWin after this winInfo.
+	if (stickyProduct > 1) return Math.round(totalWin * stickyProduct);
+	return totalWin;
+};
 
 /** Fill a reel column with Super Wild (padded visible rows). */
 const expandSuperWildColumn = (reelIndex: number, mult: number) => {
@@ -117,7 +233,9 @@ const prepareStickySwFrozenReels = (revealBoard: { name: string; multiplier?: nu
 
 	for (let reelIndex = 0; reelIndex < revealBoard.length; reelIndex++) {
 		const fromState = stateGame.stickySwByReel[reelIndex];
-		const fromReveal = fullSwMultFromRevealColumn(revealBoard[reelIndex] || []);
+		// Normal: only lock reels already sticky in session state (not lying SW on reveal).
+		const fromReveal =
+			stateGame.bonusMode === 'super' ? fullSwMultFromRevealColumn(revealBoard[reelIndex] || []) : null;
 		const mult = fromState ?? fromReveal;
 		if (mult == null) continue;
 		stateGame.stickySwByReel[reelIndex] = mult;
@@ -214,6 +332,26 @@ const hasPawResolveBeforeNextReveal = (bookEvents: BookEvent[], fromEvent: BookE
 	return false;
 };
 
+/** True when FS entry (target pick / trigger / first FS reveal) follows this winInfo. */
+const fsEntryFollowsWinInfo = (bookEvents: BookEvent[], eventIndex: number) => {
+	if (eventIndex < 0) return false;
+	for (let i = eventIndex + 1; i < bookEvents.length; i++) {
+		const event = bookEvents[i];
+		if (event.type === 'freeSpinTargetPick' || event.type === 'freeSpinTrigger') return true;
+		if (event.type === 'reveal' && event.gameType === 'freegame') return true;
+		if (
+			event.type === 'winInfo' ||
+			event.type === 'superWildExpand' ||
+			event.type === 'setWin' ||
+			event.type === 'setTotalWin'
+		) {
+			continue;
+		}
+		break;
+	}
+	return false;
+};
+
 /** True when line wins played in this spin's segment before the paw resolve. */
 const hasWinInfoSinceLastReveal = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
 	const startIdx = bookEvents.indexOf(fromEvent);
@@ -242,15 +380,25 @@ const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) =>
 	}
 };
 
+const resumeLoopBgm = () => {
+	if (
+		stateBet.activeBetModeKey === 'SUPERSPIN' ||
+		stateGame.gameType === 'freegame' ||
+		stateDuel.active ||
+		stateDuel.phase === 'outro'
+	) {
+		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
+	} else {
+		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
+	}
+};
+
 const winLevelSoundsStop = (options?: { music?: 'bgm_main' | 'bgm_freespin' }) => {
 	eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_bigwin_coinloop' });
 	if (options?.music) {
 		eventEmitter.broadcast({ type: 'soundMusic', name: options.music });
-	} else if (stateBet.activeBetModeKey === 'SUPERSPIN' || stateGame.gameType === 'freegame') {
-		// check if SUPERSPIN, when finishing a bet.
-		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
 	} else {
-		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
+		resumeLoopBgm();
 	}
 	eventEmitter.broadcastAsync({ type: 'uiShow' });
 };
@@ -269,11 +417,7 @@ export const stopWinLevelCountUpSounds = () => {
 	}
 	// Win-level overlay BGM pauses loop tracks (bgm_freespin / bgm_main) — resume them
 	// so FS End (and other celebrations) stay audible after count-up finishes.
-	if (stateBet.activeBetModeKey === 'SUPERSPIN' || stateGame.gameType === 'freegame') {
-		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
-	} else {
-		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
-	}
+	resumeLoopBgm();
 };
 
 const animateSymbols = async ({ positions }: { positions: Position[] }) => {
@@ -380,13 +524,17 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			stateGame.catSlowTriggerReel,
 			revealEvent.board.length,
 		);
+		const paddingBoard =
+			revealEvent.gameType === 'freegame'
+				? getFreegamePaddingBoard(config.paddingReels.freegame)
+				: config.paddingReels[revealEvent.gameType];
 		// Sticky SW columns stay put — paint them and exclude from spin (like frozen mystery).
 		const stickyFrozenReels =
 			revealEvent.gameType === 'freegame' ? prepareStickySwFrozenReels(revealEvent.board) : [];
 		try {
 			await stateGameDerived.enhancedBoard.spin({
 				revealEvent,
-				paddingBoard: config.paddingReels[revealEvent.gameType],
+				paddingBoard,
 				frozenReelIndices: [
 					...stateGame.mysteryReelsFrozen,
 					...pendingCollapseReels,
@@ -403,11 +551,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (bookEvent.gameType === 'freegame') {
 			await applyStickySwPreExpanded();
 		}
+		if (bookEvent.gameType === 'freegame' && !revealHasWinBeforeNextReveal(bookEvents, bookEvent)) {
+			await waitForGameSpeed(FS_POST_SPIN_MS, stateGame.gameSpeed);
+		}
 		stateGame.idleBounceAllowed = !revealHasWinBeforeNextReveal(bookEvents, bookEvent);
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
 	},
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>, { bookEvents }: BookEventContext) => {
 		stateGame.idleBounceAllowed = false;
+
+		if (!bookEvent.wins?.length) return;
 
 		let eventIndex = bookEvents.indexOf(bookEvent);
 		if (eventIndex < 0 && 'index' in bookEvent) {
@@ -431,6 +584,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			eventIndex >= 0 && hasPawResolveBeforeNextReveal(bookEvents, bookEvent);
 
 		if (isPostSwExpand) {
+			// Normal FS: phase-2 lines only after a real phase-1 win (SW in a line).
+			// Stale books emit reveal→expand→winInfo — skip those phantom lines.
+			const isNormalFs =
+				stateGame.gameType === 'freegame' && stateGame.bonusMode !== 'super';
+			if (isNormalFs) {
+				const expandEvent = expandIndex >= 0 ? bookEvents[expandIndex] : undefined;
+				if (!expandEvent || !hasWinInfoSinceLastReveal(bookEvents, expandEvent)) {
+					return;
+				}
+			}
 			clearWinSpotlight();
 			await waitForGameSpeed(SW_SECOND_WIN_PRE_DELAY_MS, stateGame.gameSpeed);
 		} else {
@@ -459,9 +622,23 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		const anchorWin = bookEvent.wins[0];
 		if (anchorWin) {
+			const stickyProduct = stickySwProductFromState(stateGame.stickySwByReel);
+			const expandEvent =
+				expandIndex >= 0
+					? (bookEvents[expandIndex] as BookEventOfType<'superWildExpand'> | undefined)
+					: undefined;
+			const upcomingProductMult = expandEvent?.productMult ?? 1;
+			const lineAmount = paylineAmountWithStickyProduct({
+				totalWin: bookEvent.totalWin,
+				isPostSwExpand,
+				swExpandFollows,
+				hasWinInfoAfterExpand,
+				stickyProduct,
+				upcomingProductMult,
+			});
 			eventEmitter.broadcast({
 				type: 'paylineWinAmountShow',
-				amount: bookEvent.totalWin,
+				amount: lineAmount,
 				anchor: {
 					lineIndex: anchorWin.meta.lineIndex,
 					positions: anchorWin.positions,
@@ -476,7 +653,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			// SW spins: do not += spin totals — pre/post expand + product would
 			// flash HUD (e.g. 290 → 250 → 290). setTotalWin is the source of truth.
 			if (isSmallWinFlow && !isPostSwExpand && !spinHasSuperWildExpand(bookEvents)) {
-				stateBet.winBookEventAmount = stateBet.winBookEventAmount + bookEvent.totalWin;
+				stateBet.winBookEventAmount = stateBet.winBookEventAmount + lineAmount;
 			}
 		}
 
@@ -492,6 +669,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Phase-1 before SW curtain / paw resolve: keep paylines until the
 		// feature handler clears them.
 		if (swExpandFollows || pawResolveFollows) return;
+
+		// Trigger spin entering FS: hold paylines before target pick / transition.
+		if (fsEntryFollowsWinInfo(bookEvents, eventIndex)) {
+			await waitForGameSpeed(BONUS_WIN_POST_DELAY_MS, stateGame.gameSpeed);
+			clearWinSpotlight();
+			return;
+		}
 
 		// Запускаем фоновый таймер (не блокирует pipeline — игрок может делать
 		// ставку сразу). По истечении WIN_SPOTLIGHT_CLEAR_DELAY_MS снимаем
@@ -520,6 +704,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 	// Cat Mafia Stage C — target pick before FS intro (natural + buy).
 	freeSpinTargetPick: async (bookEvent: BookEventOfType<'freeSpinTargetPick'>) => {
+		clearWinSpotlight();
 		await eventEmitter.broadcastAsync({
 			type: 'freeSpinTargetPick',
 			targets: bookEvent.targets,
@@ -531,6 +716,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		bookEvent: BookEventOfType<'freeSpinTrigger'>,
 		{ bookEvents }: BookEventContext,
 	) => {
+		clearWinSpotlight();
 		// Сброс FS-state при входе в FS.
 		stateGame.bonusCollected = 0;
 		stateGame.ladderTier = 0;
@@ -696,9 +882,77 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		bookEvent: BookEventOfType<'superWildExpand'>,
 		{ bookEvents }: BookEventContext,
 	) => {
-		// Duel HTML boards already include the expanded frame in duelSpin —
-		// skip Pixi curtain on the hidden main board.
-		if (stateDuel.active) return;
+		if (stateDuel.active && bookEvent.side) {
+			const side = bookEvent.side;
+			const sticky = stateDuel.stickySwByReel[side];
+
+			const columnAlreadyOpen = bookEvent.expands.every(
+				(e) => duelSwRowsOnReel(side, e.reel) >= BOARD_DIMENSIONS.y,
+			);
+
+			if (columnAlreadyOpen) {
+				for (const expand of bookEvent.expands) {
+					sticky[expand.reel] = expand.mult;
+					stateDuel.stickySwOpened[side] = true;
+					expandDuelSuperWildColumn(getDuelBoardStack(side), expand.reel, expand.mult);
+				}
+				return;
+			}
+
+			const willShowCurtain = bookEvent.expands.some(
+				(expand) =>
+					!(
+						duelSwRowsOnReel(side, expand.reel) >= BOARD_DIMENSIONS.y ||
+						sticky[expand.reel] != null
+					),
+			);
+			if (willShowCurtain) {
+				await waitForGameSpeed(SW_PHASE1_HOLD_MS, stateGame.gameSpeed);
+				eventEmitter.broadcast({ type: 'paylineClearAll', side });
+			}
+
+			stateGame.mascotPose = 'react';
+			for (const expand of bookEvent.expands) {
+				const alreadyOpen =
+					duelSwRowsOnReel(side, expand.reel) >= BOARD_DIMENSIONS.y ||
+					sticky[expand.reel] != null;
+
+				if (!alreadyOpen) {
+					stateDuel.superWildCurtain = {
+						side,
+						reel: expand.reel,
+						mult: expand.mult,
+						phase: 'expanding',
+					};
+					await waitForGameSpeed(450, stateGame.gameSpeed);
+				}
+				expandDuelSuperWildColumn(getDuelBoardStack(side), expand.reel, expand.mult);
+				const stack = getDuelBoardStack(side);
+				for (let paddedRow = 1; paddedRow <= BOARD_DIMENSIONS.y; paddedRow++) {
+					const cell = stack.board[expand.reel]?.reelState.symbols[paddedRow];
+					if (cell) cell.symbolState = 'postWinStatic';
+				}
+				sticky[expand.reel] = expand.mult;
+				stateDuel.stickySwOpened[side] = true;
+				if (!alreadyOpen) {
+					stateDuel.superWildCurtain = {
+						side,
+						reel: expand.reel,
+						mult: expand.mult,
+						phase: 'done',
+					};
+				}
+			}
+
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
+			await waitForGameSpeed(400, stateGame.gameSpeed);
+			stateDuel.superWildCurtain = null;
+			stateGame.mascotPose = 'idle';
+			if (willShowCurtain) {
+				await waitForGameSpeed(SW_PHASE2_PRE_MS, stateGame.gameSpeed);
+			}
+			return;
+		}
 
 		if (bookEvents.some((e) => e.type === 'pawCoinResolve')) {
 			console.warn('[Cat Mafia] XOR violated: superWildExpand with pawCoinResolve');
@@ -720,6 +974,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				stateGame.stickySwOpened = true;
 				expandSuperWildColumn(expand.reel, expand.mult);
 			}
+			return;
+		}
+
+		// Normal FS gate (UI guard for stale books): new SW expands only after a
+		// phase-1 winInfo in this spin — SW must have played in a line.
+		const isNormalFs =
+			stateGame.gameType === 'freegame' && stateGame.bonusMode !== 'super';
+		if (isNormalFs && !hasWinInfoSinceLastReveal(bookEvents, bookEvent)) {
 			return;
 		}
 
@@ -967,19 +1229,32 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			eventEmitter.broadcast({ type: 'duelPickHide' });
 		}
 
-		// Cloud spine (`assets/spines/transition`) — same entry beat as Free Spins.
-		await eventEmitter.broadcastAsync({ type: 'uiHide' });
+		// Cloud first — HUD hides under the cover; night duel scene reveals like FS.
 		const transitionPromise = eventEmitter.broadcastAsync({ type: 'transition' });
+		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		await waitForTimeout(TRANSITION_THEME_SWITCH_DELAY_MS);
 		stateDuel.active = true;
 		stateDuel.phase = 'playing';
+		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin', withIntro: true });
 		await transitionPromise;
+
+		// Rules splash after transition (same beat as freeSpinIntro after cloud).
+		eventEmitter.broadcast({ type: 'duelIntroShow' });
+		await eventEmitter.broadcastAsync({
+			type: 'duelIntroUpdate',
+			totalSpinsPerSide: bookEvent.totalSpinsPerSide,
+			playerSide: stateDuel.playerSide ?? undefined,
+		});
+		eventEmitter.broadcast({ type: 'duelIntroHide' });
+
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 	},
 
-	duelSpin: async (bookEvent: BookEventOfType<'duelSpin'>) => {
+	duelSpin: async (bookEvent: BookEventOfType<'duelSpin'>, { bookEvents }: BookEventContext) => {
 		const side = bookEvent.side;
 		const stack = getDuelBoardStack(side);
+		const sticky = stateDuel.stickySwByReel[side];
+		const twoBeat = bookEvent.swTwoBeat === true;
 		stateDuel.activeSide = side;
 		stateDuel.spinning = true;
 		stateDuel.flowAmount = 0;
@@ -990,10 +1265,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'paylineClearAll', side });
 
 		const paddingBoard = getDuelPaddingBoard(config.paddingReels.basegame);
-		const prevVisible = side === 'cat' ? stateDuel.catBoard : stateDuel.dogBoard;
-		stack.enhancedBoard.settle(padDuelBoardForPixi(prevVisible, paddingBoard));
+		// Same as bonus_normal reveal: chain from Pixi state (keeps sticky SW painted
+		// after two-beat expand). HTML duelBoard snapshots can lag behind Pixi.
+		settleDuelBoardFromPixi(side);
 
 		const revealBoard = padDuelBoardForPixi(bookEvent.board, paddingBoard);
+		const stickyFrozenReels = prepareDuelStickySwFrozenReels(side, sticky, revealBoard);
 		await stack.enhancedBoard.spin({
 			revealEvent: {
 				type: 'reveal',
@@ -1004,7 +1281,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				anticipation: [0, 0, 0, 0, 0],
 			},
 			paddingBoard,
+			frozenReelIndices: stickyFrozenReels,
 		});
+		await applyDuelStickySwPreExpanded(side, sticky, (ms) =>
+			waitForGameSpeed(ms, stateGame.gameSpeed),
+		);
 
 		const board = bookEvent.board.map((reel) => reel.map((s) => ({ name: s.name })));
 		if (side === 'cat') {
@@ -1015,6 +1296,29 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			stateDuel.dogSpinIndex = bookEvent.spinIndex;
 		}
 		stateDuel.spinning = false;
+
+		if (twoBeat && bookEvent.phase1Wins && (bookEvent.phase1TotalWin ?? 0) > 0) {
+			const eventIndex = bookEvents.indexOf(bookEvent);
+			const expandAfter = bookEvents
+				.slice(eventIndex + 1)
+				.find((e) => e.type === 'superWildExpand') as
+				| BookEventOfType<'superWildExpand'>
+				| undefined;
+			const upcomingProductMult = expandAfter?.productMult ?? 1;
+			const stickyProduct = stickySwProductFromState(sticky);
+			const phase1Display = paylineAmountWithStickyProduct({
+				totalWin: bookEvent.phase1TotalWin ?? 0,
+				isPostSwExpand: false,
+				swExpandFollows: true,
+				hasWinInfoAfterExpand: true,
+				stickyProduct,
+				upcomingProductMult,
+			});
+			await playDuelWinLines(side, bookEvent.phase1Wins, phase1Display);
+			await waitForGameSpeed(DUEL_POST_SPIN_MS, stateGame.gameSpeed);
+			return;
+		}
+
 		if (bookEvent.spinWin > 0) {
 			if (side === 'cat') stateDuel.catSpinWin = bookEvent.spinWin;
 			else stateDuel.dogSpinWin = bookEvent.spinWin;
@@ -1023,51 +1327,33 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const wins = bookEvent.wins ?? [];
 		const totalWin = bookEvent.totalWin ?? bookEvent.spinWin;
 		if (wins.length > 0 && totalWin > 0) {
-			await waitForGameSpeed(WIN_INFO_PRE_DELAY_MS, stateGame.gameSpeed);
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
+			await playDuelWinLines(side, wins, totalWin);
+		}
 
-			for (const win of wins) {
-				const lineIndex = win.meta?.lineIndex ?? 0;
-				const paylineRows =
-					config.paylines[String(lineIndex) as keyof typeof config.paylines];
-				eventEmitter.broadcast({
-					type: 'paylineShow',
-					side,
-					lineIndex,
-					positions: win.positions,
-					paylineRows,
-				});
-			}
+		await waitForGameSpeed(DUEL_POST_SPIN_MS, stateGame.gameSpeed);
+	},
 
-			const anchorWin = wins[0];
-			eventEmitter.broadcast({
-				type: 'paylineWinAmountShow',
-				side,
-				amount: totalWin,
-				anchor: {
-					lineIndex: anchorWin.meta?.lineIndex ?? 0,
-					positions: anchorWin.positions,
-				},
-			});
+	duelSpinWin: async (bookEvent: BookEventOfType<'duelSpinWin'>) => {
+		const side = bookEvent.side;
+		const expandPending = stateDuel.superWildCurtain != null;
+		if (!expandPending) {
+			await waitForGameSpeed(SW_SECOND_WIN_PRE_DELAY_MS, stateGame.gameSpeed);
+		}
 
-			const allPositions = _.uniqWith(
-				wins.flatMap((win) => win.positions),
-				(a, b) => a.reel === b.reel && a.row === b.row,
-			);
-			await eventEmitter.broadcastAsync({
-				type: 'duelBoardAnimateSymbols',
-				side,
-				symbolPositions: allPositions,
-			});
+		if (bookEvent.spinWin > 0) {
+			if (side === 'cat') stateDuel.catSpinWin = bookEvent.spinWin;
+			else stateDuel.dogSpinWin = bookEvent.spinWin;
+		}
 
-			if (spotlightClearTimer !== null) clearTimeout(spotlightClearTimer);
-			spotlightClearTimer = setTimeout(
-				() => {
-					spotlightClearTimer = null;
-					eventEmitter.broadcast({ type: 'paylineClearAll', side });
-				},
-				scaleMsByGameSpeed(WIN_SPOTLIGHT_CLEAR_DELAY_MS, stateGame.gameSpeed),
-			);
+		const wins = bookEvent.wins ?? [];
+		const totalWin = bookEvent.totalWin ?? bookEvent.spinWin;
+		if (wins.length > 0 && totalWin > 0) {
+			eventEmitter.broadcast({ type: 'paylineClearAll', side });
+			await playDuelWinLines(side, wins, totalWin);
+		} else if (bookEvent.spinWin > 0) {
+			// Product-only beat (no new paylines) — skip duplicate line pass.
+			await waitForGameSpeed(DUEL_POST_SPIN_MS, stateGame.gameSpeed);
+			return;
 		}
 
 		await waitForGameSpeed(DUEL_POST_SPIN_MS, stateGame.gameSpeed);
@@ -1114,7 +1400,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Same units as setTotalWin / LabelWin (book cents).
 		stateBet.winBookEventAmount = payout;
 
-		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		eventEmitter.broadcast({ type: 'duelOutroShow' });
 		await eventEmitter.broadcastAsync({
 			type: 'duelOutroUpdate',
@@ -1125,8 +1410,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			playerWon,
 			payout,
 		});
-		eventEmitter.broadcast({ type: 'duelOutroHide' });
 
+		let bigWinShown = false;
 		// Big Win only when the player's chosen side won.
 		if (playerWon && payout > 0) {
 			const winLevelData = winLevelMap[(stateDuel.winLevel ?? 1) as WinLevel];
@@ -1136,6 +1421,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 					winLevelData.level > BIG_WIN_LEVEL
 						? winLevelMap[BIG_WIN_LEVEL]
 						: winLevelData;
+				eventEmitter.broadcast({ type: 'duelOutroHide' });
 				stateGame.mascotPose = 'wow';
 				eventEmitter.broadcast({ type: 'winShow' });
 				winLevelSoundsPlay({ winLevelData: firstTierData });
@@ -1144,15 +1430,21 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 					amount: payout,
 					winLevelData,
 				});
-				winLevelSoundsStop({ music: 'bgm_main' });
-				eventEmitter.broadcast({ type: 'winHide' });
+				winLevelSoundsStop({ music: 'bgm_freespin' });
+				bigWinShown = true;
 				stateGame.mascotPose = 'idle';
 			}
 		}
 
-		// Exit cloud spine → base board (same beat as freeSpinEnd → basegame).
+		// Cloud first — result modals stay up until the cover closes over them.
+		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
 		const transitionPromise = eventEmitter.broadcastAsync({ type: 'transition' });
+		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		await waitForTimeout(TRANSITION_THEME_SWITCH_DELAY_MS);
+		eventEmitter.broadcast({ type: 'duelOutroHide' });
+		if (bigWinShown) {
+			eventEmitter.broadcast({ type: 'winHide' });
+		}
 		resetDuelState();
 		stateBet.activeBetModeKey = 'BASE';
 		await transitionPromise;

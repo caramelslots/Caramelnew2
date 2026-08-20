@@ -98,11 +98,22 @@ export const getDuelBoardStack = (side: DuelSide) => stateDuelBoards[side];
 /** Symbols that never land in Duel — also strip from fake spin padding. */
 const DUEL_FORBIDDEN_PADDING = new Set(['B', 'BT', 'PB', 'PS', 'PG']);
 
+/** Bonus scatter never lands during Normal / Super FS — strip from scroll padding. */
+const FS_FORBIDDEN_PADDING = new Set(['B']);
+
 /** basegame padding reels with Bonus / Paw / Bullet replaced (same as math). */
 export const getDuelPaddingBoard = (paddingReels: { name: string }[][]) =>
 	paddingReels.map((reel) =>
 		reel.map((cell) =>
 			DUEL_FORBIDDEN_PADDING.has(cell.name) ? { name: 'L2' } : { ...cell },
+		),
+	);
+
+/** freegame padding reels with Bonus removed (B cannot land in FS). */
+export const getFreegamePaddingBoard = (paddingReels: { name: string }[][]) =>
+	paddingReels.map((reel) =>
+		reel.map((cell) =>
+			FS_FORBIDDEN_PADDING.has(cell.name) ? { name: 'L2' } : { ...cell },
 		),
 	);
 
