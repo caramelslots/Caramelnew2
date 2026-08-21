@@ -276,14 +276,17 @@ export const BOARD_MASK_IDLE_BOUNCE_TOP =
  * Extra mask coverage (px) beyond the visible board grid.
  * Gold rails are composited above symbols (`BoardFrame` overlay), so a short
  * runway is fine — symbols slide under the frame instead of vanishing mid-cell.
+ * Keep bottom tight: the contour leaves a translucent gap above the gold bar
+ * where a longer runway would let scrolling symbols bleed through.
  * top/bottom are measured from the grid edges outward.
  */
-export const BOARD_MASK_OVERFLOW = { top: 24, bottom: 24 } as const;
+export const BOARD_MASK_OVERFLOW = { top: 24, bottom: 6 } as const;
 
 /**
  * Mask runway while reels scroll — see BoardMask.svelte (`boardReelsActive`).
+ * Bottom matches the stopped overflow so spin symbols clip before the desk gap.
  */
-export const BOARD_MASK_SPIN_OVERFLOW = { top: 24, bottom: 24 } as const;
+export const BOARD_MASK_SPIN_OVERFLOW = { top: 24, bottom: 6 } as const;
 
 export const BACKGROUND_RATIO = 2039 / 1000;
 export const PORTRAIT_BACKGROUND_RATIO = 1242 / 2208;

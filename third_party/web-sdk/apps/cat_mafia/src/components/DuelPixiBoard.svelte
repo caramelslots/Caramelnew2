@@ -69,10 +69,10 @@
 
 	const reelsActive = $derived(stack.board.some((reel) => reel.reelState.motion !== 'stopped'));
 	// Stencil Graphics — dual-safe (Sprite BoardMask corrupts dog desk to ~3 columns).
-	// Top spin runway like bonus_normal; keep bottom tight so symbols don't bleed into
+	// Bottom stays tight via BOARD_MASK_SPIN_OVERFLOW so symbols don't bleed into
 	// the transparent nameplate slot under the playfield.
 	const maskTop = $derived(reelsActive ? BOARD_MASK_SPIN_OVERFLOW.top : 0);
-	const maskBottom = $derived(reelsActive ? 6 : 0);
+	const maskBottom = $derived(reelsActive ? BOARD_MASK_SPIN_OVERFLOW.bottom : 0);
 	const drawDuelMask = $derived((g: PIXI.Graphics) => {
 		g.rect(
 			-SYMBOL_SIZE,
