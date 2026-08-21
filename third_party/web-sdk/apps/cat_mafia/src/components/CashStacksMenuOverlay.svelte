@@ -49,9 +49,33 @@
 		};
 	});
 
-	const closeFromMenuButton = () => {
+	const closeMenu = () => {
+		if (!stateUi.menuOpen) return;
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		stateUi.menuOpen = false;
+	};
+
+	let panelEl: HTMLDivElement | undefined = $state(undefined);
+
+	/**
+	 * Opaque card bounds inside bg_settings_panel.webp (2000²):
+	 * bbox (334,265)–(1663,1520) → fractions below.
+	 */
+	const MENU_OPAQUE_INSET = {
+		left: 334 / 2000,
+		right: (2000 - 1 - 1663) / 2000,
+		top: 265 / 2000,
+		bottom: (2000 - 1 - 1520) / 2000,
+	} as const;
+
+	const isPointerInsideMenuCard = (clientX: number, clientY: number) => {
+		if (!panelEl) return false;
+		const rect = panelEl.getBoundingClientRect();
+		const left = rect.left + rect.width * MENU_OPAQUE_INSET.left;
+		const right = rect.right - rect.width * MENU_OPAQUE_INSET.right;
+		const top = rect.top + rect.height * MENU_OPAQUE_INSET.top;
+		const bottom = rect.bottom - rect.height * MENU_OPAQUE_INSET.bottom;
+		return clientX >= left && clientX <= right && clientY >= top && clientY <= bottom;
 	};
 
 	const bgUrl = SETTINGS_ASSETS.bg;
@@ -72,6 +96,25 @@
 	const PANEL_OUT_MS = 240;
 
 	const isOpen = $derived(stateUi.menuOpen);
+
+	$effect(() => {
+		if (!isOpen) return;
+
+		const onPointerDown = (event: PointerEvent) => {
+			if (event.target instanceof Element && event.target.closest('[data-test="menu-toggle-hit"]')) {
+				return;
+			}
+			if (isPointerInsideMenuCard(event.clientX, event.clientY)) return;
+
+			event.preventDefault();
+			event.stopPropagation();
+			closeMenu();
+		};
+
+		document.addEventListener('pointerdown', onPointerDown, true);
+		return () => document.removeEventListener('pointerdown', onPointerDown, true);
+	});
+
 	const volumeProgress = $derived(stateSound.volumeValueMaster / 100);
 	const musicProgress = $derived(stateSound.volumeValueMusic / 100);
 	const soundIconUrl = $derived.by(() => {
@@ -102,6 +145,8 @@
 				size,
 				url: turboUrls[stateGame.gameSpeed - 1],
 				label: 'Game speed',
+				test: 'menu-icon-turbo' as const,
+				action: 'turbo' as const,
 			},
 			volume: {
 				x: Math.round(w * MENU_ROW_ICON_CENTER_X),
@@ -109,6 +154,8 @@
 				size,
 				url: soundIconUrl,
 				label: 'Master volume',
+				test: 'menu-icon-volume' as const,
+				action: 'volume' as const,
 			},
 			music: {
 				x: Math.round(w * MENU_ROW_ICON_CENTER_X),
@@ -116,6 +163,8 @@
 				size,
 				url: musicIconUrl,
 				label: 'Music',
+				test: 'menu-icon-music' as const,
+				action: 'music' as const,
 			},
 		};
 	});
@@ -135,6 +184,23 @@
 		stateGame.gameSpeed = level;
 		stateBet.isTurbo = isSdkTurboSpin(level);
 		playClick();
+	};
+
+	const cycleTurbo = () => {
+		const next = (stateGame.gameSpeed === 3 ? 1 : stateGame.gameSpeed + 1) as 1 | 2 | 3;
+		stateGame.gameSpeed = next;
+		stateBet.isTurbo = isSdkTurboSpin(next);
+		playClick();
+	};
+
+	const toggleMasterVolume = () => {
+		if (stateSound.volumeValueMaster === 0) {
+			stateSound.volumeValueMaster = 50;
+			playClick();
+		} else {
+			playClick();
+			stateSound.volumeValueMaster = 0;
+		}
 	};
 
 	const setSliderValue = (
@@ -175,6 +241,22 @@
 	const setMusicVolume = (value: number) => {
 		stateSound.volumeValueMusic = value;
 		stateGame.musicEnabled = value > 0;
+	};
+
+	const toggleMusic = () => {
+		if (stateSound.volumeValueMusic === 0) {
+			setMusicVolume(50);
+			playClick();
+		} else {
+			playClick();
+			setMusicVolume(0);
+		}
+	};
+
+	const onRowIconPress = (action: 'turbo' | 'volume' | 'music') => {
+		if (action === 'turbo') cycleTurbo();
+		else if (action === 'volume') toggleMasterVolume();
+		else toggleMusic();
 	};
 
 	const onVolumePointerDown = (e: PointerEvent) => {
@@ -231,19 +313,11 @@
 		style:width="{menuButtonHit.size}px"
 		style:height="{menuButtonHit.size}px"
 		aria-label="close menu"
-		onclick={closeFromMenuButton}
+		onclick={closeMenu}
 		data-test="menu-toggle-hit"
 	></button>
 
 	<div class="menu-overlay anchored" data-test="menu-overlay" style:--panel-width="{panelWidth}px">
-		<button
-			type="button"
-			class="menu-backdrop"
-			aria-label="close menu"
-			onclick={closeFromMenuButton}
-			data-test="menu-backdrop"
-		></button>
-
 		<div
 			class="menu-panel-anchor"
 			style:left="{panelAnchor.left}px"
@@ -253,6 +327,7 @@
 				: undefined}
 		>
 			<div
+				bind:this={panelEl}
 				class="menu-panel"
 				class:portrait={isPortrait}
 				class:popout-l={isPopout}
@@ -268,16 +343,18 @@
 		<img class="panel-bg" src={bgUrl} alt="" draggable="false" />
 
 		{#each Object.values(rowIcons) as icon (icon.label)}
-			<div
+			<button
+				type="button"
 				class="menu-row-icon"
 				style:left="{icon.x}px"
 				style:top="{icon.y}px"
 				style:width="{icon.size}px"
 				style:height="{icon.size}px"
 				style:background-image="url('{icon.url}')"
-				role="img"
 				aria-label={icon.label}
-			></div>
+				data-test={icon.test}
+				onclick={() => onRowIconPress(icon.action)}
+			></button>
 		{/each}
 
 		<div class="panel-content">
@@ -372,19 +449,6 @@
 {/if}
 
 <style lang="scss">
-	.menu-backdrop {
-		position: absolute;
-		inset: 0;
-		z-index: 0;
-		border: 0;
-		padding: 0;
-		margin: 0;
-		background: transparent;
-		pointer-events: auto;
-		cursor: default;
-		-webkit-tap-highlight-color: transparent;
-	}
-
 	.menu-toggle-hit {
 		position: fixed;
 		z-index: 10001;
@@ -464,12 +528,21 @@
 		transform: translate(-50%, -50%);
 		border: 0;
 		padding: 0;
+		appearance: none;
+		-webkit-appearance: none;
 		background-color: transparent;
 		background-repeat: no-repeat;
 		background-position: center;
 		background-size: contain;
-		pointer-events: none;
+		pointer-events: auto;
+		cursor: pointer;
 		user-select: none;
+		-webkit-tap-highlight-color: transparent;
+		touch-action: manipulation;
+
+		&:active {
+			transform: translate(-50%, -50%) scale(0.94);
+		}
 	}
 
 	/* Header frame: y 13.2–27.7% on source PNG */

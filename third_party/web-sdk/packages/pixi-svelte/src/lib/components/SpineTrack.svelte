@@ -11,8 +11,6 @@
 </script>
 
 <script lang="ts">
-	import { onDestroy } from 'svelte';
-
 	import { propsSyncEffect } from '../utils.svelte';
 	import { getContextSpine } from '../context.svelte';
 
@@ -40,6 +38,9 @@
 				if (spine.autoUpdate === false) {
 					spine.update(0);
 				}
+				// Force a SpinePipe rebuild — clip swaps can introduce slots that
+				// were never batched, which 4.2.74 then crashes on `_batcher`.
+				spine.spineAttachmentsDirty = true;
 			} catch (error) {
 				console.error(error);
 				const animations = spine?.state?.data?.skeletonData?.animations;
@@ -54,8 +55,4 @@
 	});
 
 	propsSyncEffect({ props, target: () => track, ignore: ['trackIndex', 'animationName'] });
-
-	onDestroy(() => {
-		spine.state.setEmptyAnimation(props.trackIndex, 0);
-	});
 </script>
