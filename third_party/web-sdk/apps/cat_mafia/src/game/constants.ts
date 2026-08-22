@@ -1157,8 +1157,10 @@ export const BULLET_FLY_MS = 700;
 export const BULLET_INSERT_MS = 180;
 /** Full overlay lifetime — keep `bulletFly` until insert finishes. */
 export const BULLET_FLY_TOTAL_MS = BULLET_FLY_MS + BULLET_INSERT_MS;
-/** Short beat after a chamber fills before the next bullet flies. */
-export const BULLET_FLY_GAP_MS = 160;
+/** Beat after a chamber fills — covers cylinder rotate to next empty at top. */
+export const BULLET_FLY_GAP_MS = 400;
+/** Cylinder step rotation duration (keep in sync with `.rotor` transition). */
+export const DRUM_ROTATE_MS = 380;
 
 /** Pause after bonus paw-wave animation, before the next spin/reveal. */
 export const BONUS_WIN_POST_DELAY_MS = 400;

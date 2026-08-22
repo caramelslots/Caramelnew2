@@ -266,6 +266,12 @@ export const stateGame = $state({
 	stickySwOpened: false,
 	/** Bullets in revolver drum (0..6). */
 	drumCount: 0,
+	/** Per-chamber CARAMEL spin (deg) assigned on insert. */
+	drumBulletOrientDeg: {} as Record<number, number>,
+	/** Chamber index briefly showing the fired bullet art during Stage E. */
+	drumFiringChamber: null as number | null,
+	/** True while the Stage E shoot overlay is up (keeps drum above the dimmer). */
+	drumShootActive: false,
 	/** Main FS awarded at target pick — bullets only during these spins. */
 	fsMainTotal: 0,
 	/** True after main FS end shooting awards extra spins (Stage E). */

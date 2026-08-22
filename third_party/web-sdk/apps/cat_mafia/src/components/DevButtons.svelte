@@ -31,6 +31,10 @@
 	import { SYMBOL_DEV_PREVIEW_GROUPS } from '../game/symbolDevPreview';
 	import { BOARD_DIMENSIONS, BULLET_FLY_TOTAL_MS } from '../game/constants';
 	import {
+		getDrumLastFilledChamberIndex,
+		withDrumBulletOrient,
+	} from '../game/revolverDrumLayout';
+	import {
 		getRawUrlLang,
 		INVALID_LANG_LABELS,
 		INVALID_TEST_LOCALES,
@@ -130,14 +134,24 @@
 		stateGame.mascotPose = 'load';
 		await new Promise((r) => setTimeout(r, BULLET_FLY_TOTAL_MS));
 		stateGame.drumCount = Math.min(DRUM_MAX_PREVIEW, stateGame.drumCount + 1);
+		const seated = getDrumLastFilledChamberIndex(stateGame.drumCount);
+		if (seated !== null) {
+			stateGame.drumBulletOrientDeg = withDrumBulletOrient(
+				stateGame.drumBulletOrientDeg,
+				seated,
+			);
+		}
 		stateGame.bulletFly = null;
 		stateGame.mascotPose = 'idle';
+		await new Promise((r) => setTimeout(r, 400));
 		bulletFlyBusy = false;
 	};
 
 	const resetBulletFlyPreview = () => {
 		stateGame.bulletFly = null;
 		stateGame.drumCount = 0;
+		stateGame.drumBulletOrientDeg = {};
+		stateGame.drumFiringChamber = null;
 		stateGame.mascotPose = 'idle';
 		devPreview.forceShowDrum = false;
 		bulletFlyBusy = false;

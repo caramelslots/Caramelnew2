@@ -13,9 +13,12 @@
 		SYMBOL_SIZE,
 	} from '../game/constants';
 	import {
-		DRUM_MAX,
+		CHAMBER_HOLE_AT_DESKTOP,
 		getDrumChamberScreenPos,
-		queryDrumChamberScreenPos,
+		getDrumLoadChamberIndex,
+		getDrumRotationDeg,
+		getDrumSize,
+		queryDrumLoadScreenPos,
 	} from '../game/revolverDrumLayout';
 
 	const CARTRIDGE_IMG = `${import.meta.env.BASE_URL}assets/sprites/symbolsNew/Cartridge.webp`;
@@ -47,14 +50,18 @@
 		const startLeft = centerX - halfW + fly.reel * cell + cell * 0.5;
 		const startTop = centerY - halfH + visibleRow * cell + cell * 0.5;
 
-		const chamber = Math.max(0, Math.min(DRUM_MAX - 1, fly.chamber));
-		const live = queryDrumChamberScreenPos(chamber);
+		// Always seat into the top (12 o'clock) load port — drum rotates under it.
+		const drumCount = context.stateGame.drumCount;
+		const rotationDeg = getDrumRotationDeg(drumCount);
+		const loadChamber = getDrumLoadChamberIndex(drumCount) ?? 0;
+		const live = queryDrumLoadScreenPos();
 		const fallback = getDrumChamberScreenPos({
 			mainLayout: ml,
 			layoutType,
 			board,
 			isDesktop,
-			chamberIndex: chamber,
+			chamberIndex: loadChamber,
+			rotationDeg,
 		});
 		const hole = live ?? fallback;
 
@@ -71,7 +78,8 @@
 		const hubAngleDeg = (Math.atan2(toHubY, toHubX) * 180) / Math.PI;
 		const seatRot = TIP_LOCAL_ANGLE_DEG - hubAngleDeg;
 
-		const holePx = live?.holePx ?? 14 * (hole.box.size / 88);
+		const holePx =
+			live?.holePx ?? CHAMBER_HOLE_AT_DESKTOP * (hole.box.size / getDrumSize(true));
 		const endScale = Math.min(0.22, (holePx * 1.2) / size);
 		const arriveScale = Math.max(endScale * 2.2, 0.36);
 

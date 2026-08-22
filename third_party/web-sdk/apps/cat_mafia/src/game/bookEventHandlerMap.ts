@@ -35,6 +35,11 @@ import {
 } from './constants';
 import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
 import { waitForTimeout } from 'utils-shared/wait';
+import {
+	getDrumLastFilledChamberIndex,
+	syncDrumBulletOrients,
+	withDrumBulletOrient,
+} from './revolverDrumLayout';
 import { resetDuelState, stateDuel, getDuelInitialVisibleBoard, resolveDuelPlayerPayout } from './stateDuel.svelte';
 import {
 	getDuelBoardStack,
@@ -721,6 +726,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		resetMysteryReelSession();
 		// Stage D — drum + bonus mode
 		stateGame.drumCount = 0;
+		stateGame.drumBulletOrientDeg = {};
+		stateGame.drumFiringChamber = null;
+		stateGame.drumShootActive = false;
 		stateGame.fsMainTotal = bookEvent.totalFs;
 		stateGame.fsExtraPhase = false;
 		stateGame.bulletFly = null;
@@ -798,6 +806,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		resetMysteryReelSession();
 		stateGame.bonusMode = null;
 		stateGame.drumCount = 0;
+		stateGame.drumBulletOrientDeg = {};
+		stateGame.drumFiringChamber = null;
+		stateGame.drumShootActive = false;
 		stateGame.fsMainTotal = 0;
 		stateGame.fsExtraPhase = false;
 		stateGame.bulletFly = null;
@@ -1053,7 +1064,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			stateGame.bulletFly = {
 				reel: pos.reel,
 				row: pos.row,
-				chamber: stateGame.drumCount,
+				chamber: stateGame.drumCount, // fill slot; load port is always at top
 				key: Date.now() + pos.reel,
 			};
 			stateGame.mascotPose = 'load';
@@ -1061,11 +1072,22 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			// Handoff in one tick: sprite hits opacity 0 at TOTAL_MS, gold fills same frame.
 			await waitForGameSpeed(BULLET_FLY_TOTAL_MS, stateGame.gameSpeed);
 			stateGame.drumCount = Math.min(DRUM_MAX, stateGame.drumCount + 1);
+			const seated = getDrumLastFilledChamberIndex(stateGame.drumCount);
+			if (seated !== null) {
+				stateGame.drumBulletOrientDeg = withDrumBulletOrient(
+					stateGame.drumBulletOrientDeg,
+					seated,
+				);
+			}
 			stateGame.bulletFly = null;
 			stateGame.mascotPose = 'idle';
 			await waitForGameSpeed(BULLET_FLY_GAP_MS, stateGame.gameSpeed);
 		}
 		stateGame.drumCount = Math.min(DRUM_MAX, bookEvent.drumCount);
+		stateGame.drumBulletOrientDeg = syncDrumBulletOrients(
+			stateGame.drumBulletOrientDeg,
+			stateGame.drumCount,
+		);
 	},
 
 	/** Stage E — one auto shoot round after main FS; then optional extra FS. */
@@ -1081,6 +1103,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		stateGame.fsExtraPhase = true;
 		stateGame.drumCount = 0;
+		stateGame.drumBulletOrientDeg = {};
+		stateGame.drumFiringChamber = null;
+		stateGame.drumShootActive = false;
 		stateGame.mascotPose = 'idle';
 
 		if (bookEvent.extraFs > 0) {

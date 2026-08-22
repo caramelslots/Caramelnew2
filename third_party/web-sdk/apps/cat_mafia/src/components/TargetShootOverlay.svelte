@@ -14,6 +14,7 @@
 	import { fade } from 'svelte/transition';
 
 	import { getContext } from '../game/context';
+	import { getDrumLastFilledChamberIndex } from '../game/revolverDrumLayout';
 	import { stateGame } from '../game/stateGame.svelte';
 
 	const TARGET_COUNT = 9;
@@ -41,6 +42,7 @@
 			activeShot = null;
 			phase = 'intro';
 			show = true;
+			stateGame.drumShootActive = true;
 			stateGame.mascotPose = 'aim';
 
 			await new Promise((r) => setTimeout(r, 600));
@@ -51,8 +53,16 @@
 				activeShot = shot.targetIndex;
 				stateGame.mascotPose = 'shoot';
 				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-				stateGame.drumCount = Math.max(0, stateGame.drumCount - 1);
-				await new Promise((r) => setTimeout(r, 280));
+				// Fire the most recently loaded chamber, then spin CW back one step.
+				const chamber = getDrumLastFilledChamberIndex(stateGame.drumCount);
+				if (chamber !== null) {
+					stateGame.drumFiringChamber = chamber;
+					await new Promise((r) => setTimeout(r, 280));
+					stateGame.drumCount = Math.max(0, stateGame.drumCount - 1);
+					stateGame.drumFiringChamber = null;
+				} else {
+					await new Promise((r) => setTimeout(r, 280));
+				}
 
 				hitSet = new Set([...hitSet, shot.targetIndex]);
 				revealed = { ...revealed, [shot.targetIndex]: shot.reward };
@@ -64,8 +74,10 @@
 
 			phase = 'summary';
 			stateGame.mascotPose = 'idle';
+			stateGame.drumFiringChamber = null;
 			await new Promise((r) => setTimeout(r, extraFs > 0 ? 1400 : 900));
 			show = false;
+			stateGame.drumShootActive = false;
 		},
 	});
 </script>
