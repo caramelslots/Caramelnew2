@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
 	 * Revolver-drum progress (max 6 chambers). Visible during free spins.
-	 * Layers: bullets → barrel art (rotating rotor) → fixed shadow overlay.
+	 * Layers: barrel art → bullets on top → fixed shadow overlay.
 	 * Next empty chamber is always brought to the top via CW cylinder rotation.
 	 */
 	import { getContext } from '../game/context';
@@ -21,10 +21,10 @@
 	} from '../game/revolverDrumLayout';
 
 	const BASE = import.meta.env.BASE_URL;
-	const BARREL_IMG = `${BASE}assets/sprites/revolverDrum/barrel.png`;
-	const BULLET_1_IMG = `${BASE}assets/sprites/revolverDrum/bullet_1.png`;
-	const BULLET_2_IMG = `${BASE}assets/sprites/revolverDrum/bullet_2.png`;
-	const OVERLAY_IMG = `${BASE}assets/sprites/revolverDrum/overlay.png`;
+	const BARREL_IMG = `${BASE}assets/sprites/revolverDrum/barrel.webp`;
+	const BULLET_1_IMG = `${BASE}assets/sprites/revolverDrum/bullet_1.webp`;
+	const BULLET_2_IMG = `${BASE}assets/sprites/revolverDrum/bullet_2.webp`;
+	const OVERLAY_IMG = `${BASE}assets/sprites/revolverDrum/overlay.webp`;
 
 	type Props = {
 		/** Force-show for layout QA. */
@@ -39,7 +39,10 @@
 		Math.max(0, Math.min(DRUM_MAX, props.filled ?? context.stateGame.drumCount)),
 	);
 	const firingChamber = $derived(context.stateGame.drumFiringChamber);
+	const spentChambers = $derived(context.stateGame.drumSpentChambers);
 	const shootActive = $derived(context.stateGame.drumShootActive);
+	const shakeKey = $derived(context.stateGame.drumShakeKey);
+	// HTML only while Stage E shoot overlay covers the Pixi canvas.
 	const elevate = $derived(firingChamber !== null || shootActive);
 	const rotationDeg = $derived(getDrumRotationDeg(filled));
 	const loadChamber = $derived(getDrumLoadChamberIndex(filled));
@@ -47,6 +50,7 @@
 	const show = $derived.by(() => {
 		if (!gameEntrance.showContent) return false;
 		if (props.forceShow) return true;
+		if (!shootActive && firingChamber === null) return false;
 		return context.stateGame.gameType === 'freegame';
 	});
 
@@ -70,15 +74,18 @@
 		Array.from({ length: DRUM_MAX }, (_, i) => {
 			const pos = CHAMBER_POS_FRAC[i];
 			const orients = context.stateGame.drumBulletOrientDeg;
+			const firing = firingChamber === i;
+			const spent = !!spentChambers[i];
 			return {
 				i,
 				leftPct: pos.x * 100,
 				topPct: pos.y * 100,
 				orientDeg: orients[i] ?? 0,
 				filled: isDrumChamberFilled(i, filled),
-				firing: firingChamber === i,
+				firing,
 				isLoad: loadChamber === i,
-				useFiredArt: shootActive || firingChamber === i,
+				// Spent/firing keep the same orient — only the sprite swaps to bullet_2.
+				useFiredArt: spent || firing,
 			};
 		}),
 	);
@@ -86,39 +93,41 @@
 
 {#if show && isDesktop}
 	<div class="drum" style={style} aria-hidden="true" title="Revolver drum">
-		<div class="cylinder">
-			<div class="rotor" style:transform="rotate({rotationDeg}deg)">
-				{#each chambers as c (c.i)}
-					<span
-						class="chamber"
-						class:filled={c.filled}
-						class:firing={c.firing}
-						{...{
-							[DRUM_CHAMBER_ATTR]: String(c.i),
-							...(c.isLoad ? { [DRUM_LOAD_ATTR]: '' } : {}),
-						}}
-						style:left="{c.leftPct}%"
-						style:top="{c.topPct}%"
-						style:width="{holePx}px"
-						style:height="{holePx}px"
-						style:margin="{-holePx * 0.5}px 0 0 {-holePx * 0.5}px"
-					>
-						{#if c.filled}
-							<img
-								class="bullet"
-								src={c.useFiredArt ? BULLET_2_IMG : BULLET_1_IMG}
-								alt=""
-								draggable="false"
-								style:transform="rotate({c.orientDeg}deg)"
-							/>
-						{/if}
-					</span>
-				{/each}
-				<div class="barrel" style:background-image="url('{BARREL_IMG}')"></div>
+		{#key shakeKey}
+			<div class="cylinder" class:shake={shakeKey > 0}>
+				<div class="rotor" style:transform="rotate({rotationDeg}deg)">
+					<div class="barrel" style:background-image="url('{BARREL_IMG}')"></div>
+					{#each chambers as c (c.i)}
+						<span
+							class="chamber"
+							class:filled={c.filled}
+							class:firing={c.firing}
+							{...{
+								[DRUM_CHAMBER_ATTR]: String(c.i),
+								...(c.isLoad ? { [DRUM_LOAD_ATTR]: '' } : {}),
+							}}
+							style:left="{c.leftPct}%"
+							style:top="{c.topPct}%"
+							style:width="{holePx}px"
+							style:height="{holePx}px"
+							style:margin="{-holePx * 0.5}px 0 0 {-holePx * 0.5}px"
+						>
+							{#if c.filled}
+								<img
+									class="bullet"
+									src={c.useFiredArt ? BULLET_2_IMG : BULLET_1_IMG}
+									alt=""
+									draggable="false"
+									style:transform="rotate({c.orientDeg}deg)"
+								/>
+							{/if}
+						</span>
+					{/each}
+				</div>
+				<img class="shadow" src={OVERLAY_IMG} alt="" draggable="false" />
+				<span class="hub" {...{ [DRUM_HUB_ATTR]: '' }}></span>
 			</div>
-			<img class="shadow" src={OVERLAY_IMG} alt="" draggable="false" />
-			<span class="hub" {...{ [DRUM_HUB_ATTR]: '' }}></span>
-		</div>
+		{/key}
 	</div>
 {/if}
 
@@ -141,6 +150,10 @@
 		flex: 0 0 auto;
 	}
 
+	.cylinder.shake {
+		animation: drum-shake 0.28s ease-out;
+	}
+
 	.rotor {
 		position: absolute;
 		inset: 0;
@@ -149,7 +162,7 @@
 
 	.chamber {
 		position: absolute;
-		z-index: 1;
+		z-index: 2;
 		border-radius: 50%;
 		overflow: hidden;
 	}
@@ -170,7 +183,7 @@
 	.barrel {
 		position: absolute;
 		inset: 0;
-		z-index: 2;
+		z-index: 1;
 		background-size: 100% 100%;
 		background-position: center;
 		background-repeat: no-repeat;
@@ -197,6 +210,21 @@
 		height: 1px;
 		margin: -0.5px 0 0 -0.5px;
 		pointer-events: none;
+	}
+
+	@keyframes drum-shake {
+		0% {
+			transform: rotate(0deg);
+		}
+		35% {
+			transform: rotate(-9deg);
+		}
+		70% {
+			transform: rotate(9deg);
+		}
+		100% {
+			transform: rotate(0deg);
+		}
 	}
 
 	@keyframes bullet-fire {

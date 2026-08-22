@@ -16,7 +16,7 @@
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { startLoadingIdleUiPreload } from '../game/uiHtmlAssetManifest';
-	import { GAME_ENTRANCE_MS, MASCOT_TRANSITION_FADE_MS } from '../game/constants';
+	import { GAME_ENTRANCE_MS } from '../game/constants';
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import EnableSound from './EnableSound.svelte';
 	import EnableSymbolTextureOptimization from './EnableSymbolTextureOptimization.svelte';
@@ -38,6 +38,7 @@
 	import MascotPixi from './MascotPixi.svelte';
 	import PawCoinPixiLayer from './PawCoinPixiLayer.svelte';
 	import RevolverDrumPlaceholder from './RevolverDrumPlaceholder.svelte';
+	import RevolverDrumPixi from './RevolverDrumPixi.svelte';
 	import BulletFlyOverlay from './BulletFlyOverlay.svelte';
 	import { devPreview } from '../game/devPreview.svelte';
 	import SuperWildCurtainOverlay from './SuperWildCurtainOverlay.svelte';
@@ -62,20 +63,6 @@
 
 	const context = getContext();
 
-	// FS cloud transition: raise Pixi above HTML chrome after the mascot
-	// fade-out (MASCOT_TRANSITION_FADE_MS). Mascot + paw coins are Pixi and
-	// fade / sit under Transition. winOverlayActive keeps the immediate flip.
-	let pixiAboveHtml = $state(false);
-
-	$effect(() => {
-		if (!context.stateGame.transitionActive) {
-			pixiAboveHtml = false;
-			return;
-		}
-		const timer = setTimeout(() => (pixiAboveHtml = true), MASCOT_TRANSITION_FADE_MS);
-		return () => clearTimeout(timer);
-	});
-
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
 
 	// Storybook / skipLoadingScreen: reveal game without the loading flow.
@@ -94,7 +81,14 @@
 	});
 </script>
 
-<div class="pixi-stage" class:above-html-ui={pixiAboveHtml || context.stateGame.winOverlayActive}>
+<!--
+  Bind stacking directly to state (no $effect lag). A delayed drop of Pixi
+  after the cloud ends left the opaque canvas over the drum for a frame → pop-in.
+-->
+<div
+	class="pixi-stage"
+	class:above-html-ui={context.stateGame.transitionActive || context.stateGame.winOverlayActive}
+>
 	<GameApp maxResolution={3} tuneForMobilePortrait webglOnIosAndroid>
 		<EnableSound />
 		<EnableSymbolTextureOptimization />
@@ -185,6 +179,8 @@
 				<!-- Pixi mascot above boards + coins; under Win / Transition. -->
 				<MascotPixi zIndex={6} />
 				<MascotPixi variant="duelDog" zIndex={6} />
+				<!-- Under Transition (100) + FS outro / Win coins (10); above board. -->
+				<RevolverDrumPixi zIndex={8} forceShow={devPreview.forceShowDrum} />
 				<!-- Keep Win mounted during Duel so Big Win can play on Cat victory. -->
 				<Win />
 				<FreeSpinCounter />
@@ -210,7 +206,7 @@
 <CashStacksMenuOverlay />
 <BuyBonusModalShell />
 <div class="html-underlays">
-	<RevolverDrumPlaceholder forceShow={devPreview.forceShowDrum} />
+	<RevolverDrumPlaceholder />
 	<BulletFlyOverlay />
 	<SuperWildCurtainOverlay />
 </div>

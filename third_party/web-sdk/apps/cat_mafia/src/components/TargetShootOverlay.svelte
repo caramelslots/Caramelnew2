@@ -14,7 +14,7 @@
 	import { fade } from 'svelte/transition';
 
 	import { getContext } from '../game/context';
-	import { getDrumLastFilledChamberIndex } from '../game/revolverDrumLayout';
+	import { playDrumChamberShot } from '../game/drumShoot';
 	import { stateGame } from '../game/stateGame.svelte';
 
 	const TARGET_COUNT = 9;
@@ -53,16 +53,7 @@
 				activeShot = shot.targetIndex;
 				stateGame.mascotPose = 'shoot';
 				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-				// Fire the most recently loaded chamber, then spin CW back one step.
-				const chamber = getDrumLastFilledChamberIndex(stateGame.drumCount);
-				if (chamber !== null) {
-					stateGame.drumFiringChamber = chamber;
-					await new Promise((r) => setTimeout(r, 280));
-					stateGame.drumCount = Math.max(0, stateGame.drumCount - 1);
-					stateGame.drumFiringChamber = null;
-				} else {
-					await new Promise((r) => setTimeout(r, 280));
-				}
+				await playDrumChamberShot((ms) => new Promise((r) => setTimeout(r, ms)));
 
 				hitSet = new Set([...hitSet, shot.targetIndex]);
 				revealed = { ...revealed, [shot.targetIndex]: shot.reward };
@@ -75,6 +66,7 @@
 			phase = 'summary';
 			stateGame.mascotPose = 'idle';
 			stateGame.drumFiringChamber = null;
+			// Keep spent casings visible through extra FS.
 			await new Promise((r) => setTimeout(r, extraFs > 0 ? 1400 : 900));
 			show = false;
 			stateGame.drumShootActive = false;

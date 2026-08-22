@@ -4,7 +4,7 @@ export const DRUM_MAX = 6;
 export const DRUM_STEP_DEG = 360 / DRUM_MAX;
 
 /**
- * Art metrics from `static/assets/sprites/revolverDrum/barrel.png` (830²).
+ * Art metrics from `static/assets/sprites/revolverDrum/barrel.webp` (830²).
  * Centres from light pocket-rim fits — no extra angle/radial nudges.
  */
 const ART_SIZE = 830;
@@ -84,6 +84,19 @@ export const getDrumLoadChamberIndex = (filledCount: number) =>
 export const getDrumLastFilledChamberIndex = (filledCount: number) =>
 	filledCount <= 0 ? null : getDrumChamberIndexForFillSlot(filledCount - 1);
 
+/** Next chamber to fire: newest unspent filled slot (LIFO). */
+export const getNextDrumChamberToFire = (
+	filledCount: number,
+	spentChambers: Record<number, true | undefined>,
+) => {
+	const filled = Math.max(0, Math.min(DRUM_MAX, filledCount));
+	for (let slot = filled - 1; slot >= 0; slot--) {
+		const ch = getDrumChamberIndexForFillSlot(slot);
+		if (!spentChambers[ch]) return ch;
+	}
+	return null;
+};
+
 /** @deprecated polar helper — prefer `CHAMBER_POS_FRAC`. Kept for fly math fallback. */
 export const getDrumChamberAngleDeg = (chamberIndex: number) =>
 	(chamberIndex % DRUM_MAX) * DRUM_STEP_DEG;
@@ -111,7 +124,7 @@ export const getDrumBoxScreenPos = (args: {
 	const halfW = (args.board.visualWidth / 2) * args.mainLayout.scale;
 	const halfH = (args.board.visualHeight / 2) * args.mainLayout.scale;
 	const size = getDrumSize(args.isDesktop);
-	const left = boardCenterX + halfW + 12;
+	const left = boardCenterX + halfW + 16;
 	const top = boardCenterY - halfH - size * 0.35;
 	return { left, top, size, centerX: left + size * 0.5, centerY: top + size * 0.5 };
 };

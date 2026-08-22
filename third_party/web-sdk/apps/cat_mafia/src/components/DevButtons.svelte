@@ -34,6 +34,7 @@
 		getDrumLastFilledChamberIndex,
 		withDrumBulletOrient,
 	} from '../game/revolverDrumLayout';
+	import { fillDrumForPreview, isDrumFullySpent, playDrumChamberShot } from '../game/drumShoot';
 	import {
 		getRawUrlLang,
 		INVALID_LANG_LABELS,
@@ -151,9 +152,36 @@
 		stateGame.bulletFly = null;
 		stateGame.drumCount = 0;
 		stateGame.drumBulletOrientDeg = {};
+		stateGame.drumSpentChambers = {};
+		stateGame.drumShakeKey = 0;
 		stateGame.drumFiringChamber = null;
+		stateGame.drumShootActive = false;
 		stateGame.mascotPose = 'idle';
 		devPreview.forceShowDrum = false;
+		bulletFlyBusy = false;
+	};
+
+	const previewDrumShoot = async () => {
+		if (bulletFlyBusy) return;
+		bulletFlyBusy = true;
+		devPreview.forceShowDrum = true;
+		devPreview.symbolAnim = null;
+		stateGame.drumShootActive = true;
+
+		if (stateGame.drumCount <= 0 || isDrumFullySpent()) {
+			stateGame.drumSpentChambers = {};
+			if (stateGame.drumCount <= 0) fillDrumForPreview(DRUM_MAX_PREVIEW);
+		}
+
+		while (!isDrumFullySpent()) {
+			stateGame.mascotPose = 'shoot';
+			await playDrumChamberShot((ms) => new Promise((r) => setTimeout(r, ms)));
+			stateGame.mascotPose = 'aim';
+			await new Promise((r) => setTimeout(r, 160));
+		}
+
+		stateGame.mascotPose = 'idle';
+		stateGame.drumShootActive = false;
 		bulletFlyBusy = false;
 	};
 
@@ -1120,7 +1148,7 @@
 
 			<section>
 				<h4>Bullet Fly</h4>
-				<p class="subhint">Desktop: cartridge flies from board cell into revolver drum.</p>
+				<p class="subhint">Desktop: cartridge flies into drum; shoot swaps to spent art + shake.</p>
 				<div class="grid">
 					<button
 						type="button"
@@ -1130,6 +1158,14 @@
 						onclick={previewBulletFly}
 					>
 						{bulletFlyBusy ? 'Flying…' : 'Fly → Drum'}
+					</button>
+					<button
+						type="button"
+						disabled={bulletFlyBusy}
+						title="Fire drum chambers one by one (bullet_2 + shake)"
+						onclick={previewDrumShoot}
+					>
+						{bulletFlyBusy ? 'Shooting…' : 'Shoot Drum'}
 					</button>
 					<button
 						type="button"

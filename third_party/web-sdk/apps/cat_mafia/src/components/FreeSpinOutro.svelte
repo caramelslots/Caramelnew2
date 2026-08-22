@@ -105,7 +105,9 @@
 			});
 			winAmount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
-			stateGame.winOverlayActive = emitterEvent.winLevelData.type === 'big';
+			// Keep Pixi under HTML underlays so the revolver drum is not cut by
+			// the dim / coin layers. Outro has its own CanvasSizeRectangle dim.
+			stateGame.winOverlayActive = false;
 			stateGame.overlayDimAlpha = FS_OUTRO_DIM_ALPHA;
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},

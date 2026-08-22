@@ -98,6 +98,10 @@ export const LOADER_BATCH_3_KEYS = [
 	'turbo1',
 	'turbo2',
 	'turbo3',
+	'revolverBarrel',
+	'revolverBullet1',
+	'revolverBullet2',
+	'revolverOverlay',
 ] as const satisfies readonly (keyof typeof assets)[];
 
 /**

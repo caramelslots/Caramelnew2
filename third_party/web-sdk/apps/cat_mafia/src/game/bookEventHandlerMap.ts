@@ -727,6 +727,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Stage D — drum + bonus mode
 		stateGame.drumCount = 0;
 		stateGame.drumBulletOrientDeg = {};
+		stateGame.drumSpentChambers = {};
+		stateGame.drumShakeKey = 0;
 		stateGame.drumFiringChamber = null;
 		stateGame.drumShootActive = false;
 		stateGame.fsMainTotal = bookEvent.totalFs;
@@ -799,14 +801,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateBet.winBookEventAmount = outroAmount;
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
 
-		// Очистка FS state (drum kept until outro starts — Stage E may shoot first).
+		// Очистка FS state — drum kept through outro so casings stay visible.
 		stateGame.bonusCollected = 0;
 		stateGame.ladderTier = 0;
 		stateGame.mysteryReels = [];
 		resetMysteryReelSession();
 		stateGame.bonusMode = null;
-		stateGame.drumCount = 0;
-		stateGame.drumBulletOrientDeg = {};
 		stateGame.drumFiringChamber = null;
 		stateGame.drumShootActive = false;
 		stateGame.fsMainTotal = 0;
@@ -829,6 +829,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
 		stateUi.freeSpinCounterShow = false;
+		// Drop drum after outro so it can sit through the celebration.
+		stateGame.fsDrumWanted = false;
+		stateGame.drumCount = 0;
+		stateGame.drumBulletOrientDeg = {};
+		stateGame.drumSpentChambers = {};
+		stateGame.drumShakeKey = 0;
 		await eventEmitter.broadcastAsync({ type: 'transition', gameType: 'basegame' });
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 		await eventEmitter.broadcastAsync({ type: 'drawerUnfold' });
@@ -1102,10 +1108,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 
 		stateGame.fsExtraPhase = true;
-		stateGame.drumCount = 0;
-		stateGame.drumBulletOrientDeg = {};
+		// Keep spent casings in the drum through extra FS.
 		stateGame.drumFiringChamber = null;
 		stateGame.drumShootActive = false;
+		stateGame.drumShakeKey = 0;
 		stateGame.mascotPose = 'idle';
 
 		if (bookEvent.extraFs > 0) {

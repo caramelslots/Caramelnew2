@@ -21,6 +21,7 @@
 		transition: async (event) => {
 			transitioning = true;
 			stateGame.transitionActive = true;
+			stateGame.transitionGameType = event.gameType;
 			pendingGameType = event.gameType;
 
 			await waitForResolve((resolve) => (oncomplete = resolve));
@@ -33,6 +34,8 @@
 		onThemeSwitch={() => {
 			if (pendingGameType) {
 				stateGame.gameType = pendingGameType;
+				// Mount drum only once steam has closed over the screen.
+				if (pendingGameType === 'freegame') stateGame.fsDrumWanted = true;
 				pendingGameType = undefined;
 			}
 		}}
@@ -40,6 +43,7 @@
 			oncomplete();
 			transitioning = false;
 			stateGame.transitionActive = false;
+			stateGame.transitionGameType = undefined;
 			pendingGameType = undefined;
 		}}
 	/>

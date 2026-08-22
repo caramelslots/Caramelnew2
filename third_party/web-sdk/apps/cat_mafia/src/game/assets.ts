@@ -359,4 +359,20 @@ export default {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/ui/turbo/turbo_3.webp'),
 	},
+	revolverBarrel: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/revolverDrum/barrel.webp'),
+	},
+	revolverBullet1: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/revolverDrum/bullet_1.webp'),
+	},
+	revolverBullet2: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/revolverDrum/bullet_2.webp'),
+	},
+	revolverOverlay: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/revolverDrum/overlay.webp'),
+	},
 } as const;

@@ -223,6 +223,8 @@ export const stateGame = $state({
 	livingIdleActive: false,
 	// Cloud transition covers HTML overlays while active.
 	transitionActive: false,
+	/** Target mode for the in-flight cloud transition (set for the whole anim). */
+	transitionGameType: undefined as GameType | undefined,
 	// Big-win overlay only — raises Pixi canvas above HTML HUD so celebration
 	// renders on top while the dim layer keeps controls visible underneath.
 	// Small/medium wins leave this false so the HUD stays at normal stacking.
@@ -268,6 +270,10 @@ export const stateGame = $state({
 	drumCount: 0,
 	/** Per-chamber CARAMEL spin (deg) assigned on insert. */
 	drumBulletOrientDeg: {} as Record<number, number>,
+	/** Chambers currently showing spent (`bullet_2`) art — same orient as insert. */
+	drumSpentChambers: {} as Record<number, true>,
+	/** Bumped to replay the left/right drum shake animation. */
+	drumShakeKey: 0,
 	/** Chamber index briefly showing the fired bullet art during Stage E. */
 	drumFiringChamber: null as number | null,
 	/** True while the Stage E shoot overlay is up (keeps drum above the dimmer). */
@@ -276,6 +282,8 @@ export const stateGame = $state({
 	fsMainTotal: 0,
 	/** True after main FS end shooting awards extra spins (Stage E). */
 	fsExtraPhase: false,
+	/** Keep revolver drum mounted from pre-FS cloud through outro. */
+	fsDrumWanted: false,
 	/** Brief fly UX: bullet cell → specific drum chamber (0..5). */
 	bulletFly: null as null | { reel: number; row: number; chamber: number; key: number },
 	/** Mascot pose → Spine clip map in `mascotHtmlSpine.ts`. */
