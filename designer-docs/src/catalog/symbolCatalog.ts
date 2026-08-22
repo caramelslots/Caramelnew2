@@ -13,6 +13,8 @@ export const SYMBOL_CATALOG: CatalogSymbol[] = [
       skeleton: 'diamond.json',
       atlas: 'diamond.atlas',
       texture: 'diamond.webp',
+      /** Reel static sprite (196×196), separate from Spine atlas texture. */
+      staticSprite: 'H1.webp',
     },
   },
 ]

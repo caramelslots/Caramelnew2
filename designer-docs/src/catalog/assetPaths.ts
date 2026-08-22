@@ -7,12 +7,16 @@ export function catalogUrls(symbol: CatalogSymbol): {
   skeletonUrl: string
   atlasUrl: string
   textureUrl: string
+  staticSpriteUrl: string | null
 } {
   const base = `${ASSET_BASE}/${symbol.folder}`
   return {
     skeletonUrl: `${base}/${symbol.files.skeleton}`,
     atlasUrl: `${base}/${symbol.files.atlas}`,
     textureUrl: `${base}/${symbol.files.texture}`,
+    staticSpriteUrl: symbol.files.staticSprite
+      ? `${base}/${symbol.files.staticSprite}`
+      : null,
   }
 }
 

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { DesignerGuideAccordion } from '../docs/DesignerGuideAccordion'
 
 type AppShellProps = {
   left: ReactNode
@@ -18,6 +19,8 @@ export function AppShell({ left, center, right }: AppShellProps) {
           Pixi + Spine 4.2 preview for catalog symbols and local uploads
         </p>
       </header>
+
+      <DesignerGuideAccordion />
 
       <div className="workspace">
         <aside className="rail rail--left">{left}</aside>

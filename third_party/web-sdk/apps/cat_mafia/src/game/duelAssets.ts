@@ -7,14 +7,14 @@ const assetUrl = (path: string) =>
 	).href;
 
 const SPRITES: Record<string, string> = {
-	L1: assetUrl('assets/sprites/symbolsNew/A.webp'),
-	L2: assetUrl('assets/sprites/symbolsNew/K.webp'),
-	L3: assetUrl('assets/sprites/symbolsNew/Q.webp'),
-	L4: assetUrl('assets/sprites/symbolsNew/J.webp'),
-	H1: assetUrl('assets/sprites/symbolsNew/Diamond.webp'),
-	H2: assetUrl('assets/sprites/symbolsNew/Telephone.webp'),
-	H3: assetUrl('assets/sprites/symbolsNew/Lighter.webp'),
-	H4: assetUrl('assets/sprites/symbolsNew/Revolver.webp'),
+	L1: assetUrl('assets/sprites/symbolsNew/L1.webp'),
+	L2: assetUrl('assets/sprites/symbolsNew/L2.webp'),
+	L3: assetUrl('assets/sprites/symbolsNew/L3.webp'),
+	L4: assetUrl('assets/sprites/symbolsNew/L4.webp'),
+	H1: assetUrl('assets/sprites/symbolsNew/H1.webp'),
+	H2: assetUrl('assets/sprites/symbolsNew/H2.webp'),
+	H3: assetUrl('assets/sprites/symbolsNew/H3.webp'),
+	H4: assetUrl('assets/sprites/symbolsNew/H4.webp'),
 	W: assetUrl('assets/sprites/symbolsNew/Special_2.webp'),
 	SW: assetUrl('assets/sprites/symbolsNew/Special_2.webp'),
 };

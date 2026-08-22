@@ -8,6 +8,9 @@ type AnimationControlsProps = {
   loop: boolean
   speed: number
   disabled?: boolean
+  /** Skip outer panel chrome when nested inside another card. */
+  embedded?: boolean
+  titleId?: string
   onPlayRole: (role: AnimationRole) => void
   onSelectAnimation: (name: string) => void
   onLoopChange: (loop: boolean) => void
@@ -23,15 +26,20 @@ export function AnimationControls({
   loop,
   speed,
   disabled,
+  embedded = false,
+  titleId = 'anim-controls-title',
   onPlayRole,
   onSelectAnimation,
   onLoopChange,
   onSpeedChange,
 }: AnimationControlsProps) {
   return (
-    <section className="panel-block" aria-labelledby="anim-controls-title">
-      <div className="panel-block__head">
-        <h2 id="anim-controls-title">Animations</h2>
+    <section
+      className={embedded ? 'anim-controls anim-controls--embedded' : 'panel-block'}
+      aria-labelledby={titleId}
+    >
+      <div className={embedded ? 'anim-controls__head' : 'panel-block__head'}>
+        <h2 id={titleId}>Animations</h2>
         <p>Idle / Bounce / Win — click again to replay (useful with Loop off)</p>
       </div>
 

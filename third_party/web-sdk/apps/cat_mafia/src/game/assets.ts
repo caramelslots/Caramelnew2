@@ -31,73 +31,68 @@ export default {
 	// per-symbol skeletons by `scripts/splitSymbolsSpine.py` so each ReelSymbol
 	// loads only the slots/animations it actually needs (avoids overlapping
 	// default-skin renders when a single-attachment animation track plays).
-	// H1 — diamond from `designer_assets/render_diamant` (idle / stop / activation).
+	// H1–H4 / L1–L4 designer spines (idle / stop / win|activation).
 	H1: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/diamond/diamond.atlas'),
-			skeleton: assetUrl('assets/spines/diamond/diamond.json'),
+			atlas: assetUrl('assets/spines/H1/H1.atlas'),
+			skeleton: assetUrl('assets/spines/H1/H1.json'),
 			scale: 1,
 		},
 	},
-	// H2 — revolver from `designer_assets/revolvers_render` (idle / stop / win).
 	H2: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/revolver/revolver.atlas'),
-			skeleton: assetUrl('assets/spines/revolver/revolver.json'),
+			atlas: assetUrl('assets/spines/H2/H2.atlas'),
+			skeleton: assetUrl('assets/spines/H2/H2.json'),
 			scale: 1,
 		},
 	},
-	// H3 — lighter from `designer_assets/render_lighter` (idle / stop / win).
 	H3: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/lighter/lighter.atlas'),
-			skeleton: assetUrl('assets/spines/lighter/lighter.json'),
+			atlas: assetUrl('assets/spines/H3/H3.atlas'),
+			skeleton: assetUrl('assets/spines/H3/H3.json'),
 			scale: 1,
 		},
 	},
-	// H4 — telephone from `designer_assets/render/telephone_render` (idle / stop / win).
 	H4: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/telephone/telephone.atlas'),
-			skeleton: assetUrl('assets/spines/telephone/telephone.json'),
+			atlas: assetUrl('assets/spines/H4/H4.atlas'),
+			skeleton: assetUrl('assets/spines/H4/H4.json'),
 			scale: 1,
 		},
 	},
-	// Low pays — card letter spines from `designer_assets/render/{A,J,K,Q}`
-	// (idle / stop / win). Symbol ids stay L1–L4 for math compatibility.
 	L1: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/letters/A/A.atlas'),
-			skeleton: assetUrl('assets/spines/letters/A/A.json'),
+			atlas: assetUrl('assets/spines/L1/L1.atlas'),
+			skeleton: assetUrl('assets/spines/L1/L1.json'),
 			scale: 1,
 		},
 	},
 	L2: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/letters/J/J.atlas'),
-			skeleton: assetUrl('assets/spines/letters/J/J.json'),
+			atlas: assetUrl('assets/spines/L2/L2.atlas'),
+			skeleton: assetUrl('assets/spines/L2/L2.json'),
 			scale: 1,
 		},
 	},
 	L3: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/letters/K/K.atlas'),
-			skeleton: assetUrl('assets/spines/letters/K/K.json'),
+			atlas: assetUrl('assets/spines/L3/L3.atlas'),
+			skeleton: assetUrl('assets/spines/L3/L3.json'),
 			scale: 1,
 		},
 	},
 	L4: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/letters/Q/Q.atlas'),
-			skeleton: assetUrl('assets/spines/letters/Q/Q.json'),
+			atlas: assetUrl('assets/spines/L4/L4.atlas'),
+			skeleton: assetUrl('assets/spines/L4/L4.json'),
 			scale: 1,
 		},
 	},
@@ -161,35 +156,35 @@ export default {
 	// WebPs; W/B are cut from the packed symbolsNew atlas.
 	H1Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Diamond.webp'),
+		src: assetUrl('assets/sprites/symbolsNew/H1.webp'),
 	},
 	H2Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Revolver.webp'),
+		src: assetUrl('assets/sprites/symbolsNew/H2.webp'),
 	},
 	H3Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Lighter.webp'),
+		src: assetUrl('assets/sprites/symbolsNew/H3.webp'),
 	},
 	H4Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Telephone.webp'),
+		src: assetUrl('assets/sprites/symbolsNew/H4.webp'),
 	},
 	L1Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/A.webp'),
+		src: assetUrl('assets/sprites/symbolsNew/L1.webp'),
 	},
 	L2Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/J.webp'),
+		src: assetUrl('assets/sprites/symbolsNew/L2.webp'),
 	},
 	L3Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/K.webp'),
+		src: assetUrl('assets/sprites/symbolsNew/L3.webp'),
 	},
 	L4Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Q.webp'),
+		src: assetUrl('assets/sprites/symbolsNew/L4.webp'),
 	},
 	BImg: {
 		type: 'sprite',

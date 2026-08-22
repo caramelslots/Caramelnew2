@@ -7,14 +7,14 @@ const symbolAssetUrl = (file: string) =>
 	`${import.meta.env.BASE_URL}assets/sprites/symbolsNew/${file}`;
 
 export const GAME_INFO_SYMBOL_IMAGES: Record<GameInfoImageSymbolId, string> = {
-	H1: symbolAssetUrl('Diamond.webp'),
-	H2: symbolAssetUrl('Revolver.webp'),
-	H3: symbolAssetUrl('Lighter.webp'),
-	H4: symbolAssetUrl('Telephone.webp'),
-	L1: symbolAssetUrl('A.webp'),
-	L2: symbolAssetUrl('J.webp'),
-	L3: symbolAssetUrl('K.webp'),
-	L4: symbolAssetUrl('Q.webp'),
+	H1: symbolAssetUrl('H1.webp'),
+	H2: symbolAssetUrl('H2.webp'),
+	H3: symbolAssetUrl('H3.webp'),
+	H4: symbolAssetUrl('H4.webp'),
+	L1: symbolAssetUrl('L1.webp'),
+	L2: symbolAssetUrl('L2.webp'),
+	L3: symbolAssetUrl('L3.webp'),
+	L4: symbolAssetUrl('L4.webp'),
 	W: symbolAssetUrl('Special_2.webp'),
 	B: symbolAssetUrl('Special_1.webp'),
 };

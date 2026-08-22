@@ -4,6 +4,8 @@ export type SymbolFiles = {
   skeleton: string
   atlas: string
   texture: string
+  /** Optional reel static WebP (e.g. H1.webp), separate from Spine atlas. */
+  staticSprite?: string
 }
 
 export type CatalogSymbol = {
