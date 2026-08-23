@@ -49,6 +49,8 @@
 	});
 
 	const isDesktop = $derived(context.stateLayoutDerived.layoutType() === 'desktop');
+	const isPortrait = $derived(context.stateLayoutDerived.layoutType() === 'portrait');
+	const showOnLayout = $derived(isDesktop || isPortrait);
 
 	const box = $derived(
 		getDrumBoxScreenPos({
@@ -56,11 +58,11 @@
 			layoutType: context.stateLayoutDerived.layoutType(),
 			board: context.stateGameDerived.boardLayout(),
 			isDesktop,
+			layoutDerived: context.stateLayoutDerived,
 		}),
 	);
 
-	const drumSize = $derived(getDrumSize(isDesktop));
-	const holePx = $derived(CHAMBER_HOLE_AT_DESKTOP * (drumSize / getDrumSize(true)));
+	const holePx = $derived(CHAMBER_HOLE_AT_DESKTOP * (box.size / getDrumSize(true)));
 	const rotorAngle = $derived((rotationDeg * Math.PI) / 180);
 
 	const chambers = $derived(
@@ -105,7 +107,7 @@
 	});
 </script>
 
-{#if show && isDesktop}
+{#if show && showOnLayout}
 	<Container zIndex={props.zIndex ?? 8} x={box.centerX} y={box.centerY} angle={shakeAngle}>
 		<Container rotation={rotorAngle}>
 			<Sprite key="revolverBarrel" width={box.size} height={box.size} anchor={0.5} />

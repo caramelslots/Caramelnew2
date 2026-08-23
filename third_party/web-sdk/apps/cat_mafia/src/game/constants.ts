@@ -1186,6 +1186,12 @@ export const MASCOT_TRANSITION_FADE_MS = 300;
 export const TRANSITION_THEME_SWITCH_DELAY_MS = 193;
 
 /**
+ * Loader still → Pixi street swap under the opening cloud (later than theme
+ * switch so steam is fully covering before the handoff).
+ */
+export const LOADER_STREET_SWAP_DELAY_MS = 480;
+
+/**
  * Пауза после того, как выигрышные символы полностью отыграли анимацию,
  * перед снятием затемнения и скрытием paylines.
  * Даёт игроку момент полюбоваться результатом до следующего этапа.

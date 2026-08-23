@@ -32,12 +32,13 @@
 
 	// Spine.autoUpdate=true adds a Pixi ticker listener with no duplicate guard.
 	// Passing it as a SpineProvider prop would register a second listener (2× speed).
-	// Phones: keep the street static (no idle spine tick).
+	// Phones + loading screen: keep the street static (no idle spine tick).
 	$effect(() => {
 		const phone = isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType());
-		const next = !phone && !context.stateGame.winOverlayActive;
+		const loading = context.stateLayout.showLoadingScreen;
+		const next = !phone && !loading && !context.stateGame.winOverlayActive;
 		if (spine.autoUpdate !== next) spine.autoUpdate = next;
-		if (phone) {
+		if (phone || loading) {
 			// One pose refresh so StreetOffscreenCull / skin apply still settle.
 			spine.update(0);
 		}

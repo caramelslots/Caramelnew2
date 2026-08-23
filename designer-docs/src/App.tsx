@@ -1,36 +1,69 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import '@esotericsoftware/spine-pixi-v8'
-import { catalogSourceFromId } from './catalog/assetPaths'
-import { SYMBOL_CATALOG } from './catalog/symbolCatalog'
-import { AppShell } from './components/layout/AppShell'
+import { AppShell, type WorkspaceMode } from './components/layout/AppShell'
+import { SymbolLibraryPanel } from './components/library/SymbolLibraryPanel'
 import { MetricsPanel } from './components/metrics/MetricsPanel'
+import { ReelLabStage } from './components/reel/ReelLabStage'
 import { AnimationControls } from './components/symbols/AnimationControls'
 import { SymbolInfoCard } from './components/symbols/SymbolInfoCard'
-import { SymbolListPanel } from './components/symbols/SymbolListPanel'
 import { CustomUploadPanel } from './components/upload/CustomUploadPanel'
 import type { ValidatedUpload } from './components/upload/UploadValidation'
+import {
+  createCatalogLibrarySymbols,
+  createLibrarySymbolFromUpload,
+  librarySymbolToSpineSource,
+} from './library/createLibrarySymbol'
+import { computeLibraryStatus, type LibrarySymbol } from './library/types'
 import { SpinePreviewStage } from './pixi/SpinePreviewStage'
 import { defaultAnimationName } from './pixi/animationRoles'
+import {
+  DEFAULT_BOARD_COLS,
+  DEFAULT_BOARD_ROWS,
+  type BoardDimensions,
+} from './reel/constants'
+import type { DevicePresetId, QualityPresetId } from './stage/presets'
 import type {
   AnimationRole,
   AnimationRoleMap,
   PlaybackState,
-  SpineAssetSource,
   SpineMetrics,
-  SymbolListEntry,
-  UploadedSymbol,
 } from './types'
 
-const INITIAL_ID = SYMBOL_CATALOG[0]?.id ?? null
-
 export default function App() {
-  const [selectedId, setSelectedId] = useState<string | null>(INITIAL_ID)
-  const [source, setSource] = useState<SpineAssetSource | null>(() =>
-    INITIAL_ID ? catalogSourceFromId(INITIAL_ID) : null,
+  const [mode, setMode] = useState<WorkspaceMode>('symbol')
+  const [library, setLibrary] = useState<LibrarySymbol[]>(() => createCatalogLibrarySymbols())
+  const libraryRef = useRef(library)
+  libraryRef.current = library
+
+  const [selectedId, setSelectedId] = useState<string | null>(
+    () => library[0]?.id ?? null,
   )
-  const [uploads, setUploads] = useState<UploadedSymbol[]>([])
-  const uploadsRef = useRef(uploads)
-  uploadsRef.current = uploads
+
+  const selected = useMemo(
+    () => library.find((item) => item.id === selectedId) ?? null,
+    [library, selectedId],
+  )
+
+  const selectedSpineKey = selected
+    ? [
+        selected.id,
+        selected.kind,
+        selected.status.spineOk ? '1' : '0',
+        selected.spine.skeletonUrl,
+        selected.spine.atlasUrl,
+        selected.spine.textureUrl,
+        selected.spine.textureFileName,
+        selected.spine.atlasTextureName ?? '',
+        selected.label,
+      ].join('|')
+    : ''
+
+  const source = useMemo(() => {
+    if (!selected || !selected.status.spineOk) return null
+    return librarySymbolToSpineSource(selected)
+    // selectedSpineKey captures the spine identity without roles/status churn.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedSpineKey])
 
   const [animationNames, setAnimationNames] = useState<string[]>([])
   const [roles, setRoles] = useState<AnimationRoleMap>({
@@ -48,87 +81,92 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const [board, setBoard] = useState<BoardDimensions>({
+    cols: DEFAULT_BOARD_COLS,
+    rows: DEFAULT_BOARD_ROWS,
+  })
+  const [deviceId, setDeviceId] = useState<DevicePresetId>('desktop')
+  const [qualityId, setQualityId] = useState<QualityPresetId>('1080p')
+
   useEffect(
     () => () => {
-      for (const item of uploadsRef.current) {
-        item.revoke()
+      for (const item of libraryRef.current) {
+        if (item.kind === 'upload') item.revoke()
       }
     },
     [],
   )
 
-  const listEntries = useMemo<SymbolListEntry[]>(
-    () => [
-      ...SYMBOL_CATALOG.map((symbol) => ({
-        id: symbol.id,
-        label: symbol.label,
-        meta: symbol.folder,
-        kind: 'catalog' as const,
-      })),
-      ...uploads.map((item) => ({
-        id: item.id,
-        label: item.label,
-        meta: 'upload',
-        kind: 'upload' as const,
-      })),
-    ],
-    [uploads],
-  )
-
   const selectSymbol = (id: string) => {
-    const catalog = catalogSourceFromId(id)
-    if (catalog) {
-      setSelectedId(id)
-      setSource(catalog)
-      setPlayback((prev) => ({ ...prev, animationName: null, playNonce: prev.playNonce + 1 }))
-      setError(null)
-      return
-    }
-
-    const uploaded = uploads.find((item) => item.id === id)
-    if (!uploaded) return
-    setSelectedId(uploaded.id)
-    setSource(uploaded.source)
+    setSelectedId(id)
     setPlayback((prev) => ({ ...prev, animationName: null, playNonce: prev.playNonce + 1 }))
     setError(null)
+    setAnimationNames([])
+    setRoles({ idle: null, bounce: null, win: null })
+    setMetrics(null)
+  }
+
+  const addUploads = (payloads: ValidatedUpload[]) => {
+    const created = payloads.map((payload) => createLibrarySymbolFromUpload(payload))
+    setLibrary((prev) => [...prev, ...created])
+    const last = created[created.length - 1]
+    if (last) selectSymbol(last.id)
   }
 
   const handleUpload = (payload: ValidatedUpload) => {
-    const id = `upload-${Date.now()}`
-    const sourceUpload: Extract<SpineAssetSource, { kind: 'upload' }> = {
-      kind: 'upload',
-      id,
-      label: payload.label,
-      skeletonUrl: payload.skeletonUrl,
-      atlasUrl: payload.atlasUrl,
-      textureUrl: payload.textureUrl,
-      textureFileName: payload.textureFileName,
-      atlasTextureName: payload.atlasTextureName,
-    }
-
-    const entry: UploadedSymbol = {
-      id,
-      label: payload.label,
-      source: sourceUpload,
-      revoke: payload.revoke,
-    }
-
-    setUploads((prev) => [...prev, entry])
-    setSelectedId(id)
-    setSource(sourceUpload)
-    setPlayback((prev) => ({ ...prev, animationName: null, playNonce: prev.playNonce + 1 }))
-    setError(null)
+    addUploads([payload])
   }
 
-  const handleAnimationsChange = useCallback((names: string[], nextRoles: AnimationRoleMap) => {
-    setAnimationNames(names)
-    setRoles(nextRoles)
-    setPlayback((prev) => ({
-      ...prev,
-      animationName: defaultAnimationName(nextRoles, names),
-      playNonce: prev.playNonce + 1,
-    }))
-  }, [])
+  const handleRemove = (id: string) => {
+    setLibrary((prev) => {
+      const target = prev.find((item) => item.id === id)
+      if (target?.kind === 'upload') target.revoke()
+      return prev.filter((item) => item.id !== id)
+    })
+    setSelectedId((current) => {
+      if (current !== id) return current
+      const remaining = libraryRef.current.filter((item) => item.id !== id)
+      return remaining[0]?.id ?? null
+    })
+  }
+
+  const handleAnimationsChange = useCallback(
+    (names: string[], nextRoles: AnimationRoleMap) => {
+      setAnimationNames(names)
+      setRoles(nextRoles)
+      setPlayback((prev) => ({
+        ...prev,
+        animationName: defaultAnimationName(nextRoles, names),
+        playNonce: prev.playNonce + 1,
+      }))
+
+      setLibrary((prev) =>
+        prev.map((item) => {
+          if (item.id !== selectedId) return item
+          const sameNames =
+            item.animationNames.length === names.length &&
+            item.animationNames.every((name, index) => name === names[index])
+          const sameRoles =
+            item.roles?.idle === nextRoles.idle &&
+            item.roles?.bounce === nextRoles.bounce &&
+            item.roles?.win === nextRoles.win
+          if (sameNames && sameRoles) return item
+          const status = computeLibraryStatus({
+            hasSpine: item.status.spineOk,
+            staticSprite: item.staticSprite,
+            roles: nextRoles,
+          })
+          return {
+            ...item,
+            roles: nextRoles,
+            animationNames: names,
+            status,
+          }
+        }),
+      )
+    },
+    [selectedId],
+  )
 
   const playClip = (animationName: string) => {
     setPlayback((prev) => ({
@@ -138,57 +176,148 @@ export default function App() {
     }))
   }
 
-  const customActive = source?.kind === 'upload'
+  const customActive = selected?.kind === 'upload'
 
   return (
     <AppShell
+      mode={mode}
+      onModeChange={setMode}
       left={
         <>
-          <SymbolListPanel
-            entries={listEntries}
+          <SymbolLibraryPanel
             selectedId={selectedId}
+            symbols={library}
+            onRemove={handleRemove}
             onSelect={selectSymbol}
           />
-          <CustomUploadPanel onUpload={handleUpload} />
+          <CustomUploadPanel onUpload={handleUpload} onUploadMany={addUploads} />
         </>
       }
       center={
-        <div className="stage-frame">
-          <div className="stage-frame__bar">
-            <span>{loading ? 'Loading…' : source ? 'Live preview' : 'No symbol'}</span>
-            {customActive ? <span className="chip">Custom</span> : null}
-          </div>
-          <SpinePreviewStage
-            playback={playback}
-            source={source}
-            onAnimationsChange={handleAnimationsChange}
-            onError={setError}
-            onLoadingChange={setLoading}
-            onMetricsChange={setMetrics}
+        mode === 'reel' ? (
+          <ReelLabStage
+            board={board}
+            deviceId={deviceId}
+            qualityId={qualityId}
+            symbols={library}
+            onBoardChange={setBoard}
+            onDeviceChange={setDeviceId}
+            onQualityChange={setQualityId}
           />
-        </div>
+        ) : (
+          <div className="stage-frame">
+            <div className="stage-frame__bar">
+              <span>
+                {loading ? 'Loading…' : source ? 'Live preview' : 'No symbol / no spine'}
+              </span>
+              {customActive ? <span className="chip">Custom</span> : null}
+              {selected ? (
+                <span className={`chip chip--${selected.status.readiness}`}>
+                  {selected.status.readiness}
+                </span>
+              ) : null}
+            </div>
+            <SpinePreviewStage
+              playback={playback}
+              source={source}
+              onAnimationsChange={handleAnimationsChange}
+              onError={setError}
+              onLoadingChange={setLoading}
+              onMetricsChange={setMetrics}
+            />
+          </div>
+        )
       }
       right={
-        <>
-          <SymbolInfoCard error={error} source={source} />
-          <AnimationControls
-            activeAnimation={playback.animationName}
-            animationNames={animationNames}
-            disabled={loading || !source || Boolean(error)}
-            loop={playback.loop}
-            roles={roles}
-            speed={playback.speed}
-            onLoopChange={(loop) => setPlayback((prev) => ({ ...prev, loop }))}
-            onPlayRole={(role: AnimationRole) => {
-              const clip = roles[role]
-              if (!clip) return
-              playClip(clip)
-            }}
-            onSelectAnimation={playClip}
-            onSpeedChange={(speed) => setPlayback((prev) => ({ ...prev, speed }))}
-          />
-          <MetricsPanel loading={loading} metrics={metrics} />
-        </>
+        mode === 'reel' ? (
+          <section className="panel-block">
+            <div className="panel-block__head">
+              <h2>Reel Lab</h2>
+              <p>
+                Spin на static (как в игре при прокруте). Device и Quality уже влияют на
+                фрейм и плотность пикселей.
+              </p>
+            </div>
+            <ul className="inspect-list">
+              <li>
+                Board{' '}
+                <strong>
+                  {board.cols}×{board.rows}
+                </strong>
+              </li>
+              <li>
+                Device <strong>{deviceId}</strong>
+              </li>
+              <li>
+                Quality <strong>{qualityId}</strong>
+              </li>
+              <li>
+                Ready / partial static{' '}
+                <strong>
+                  {
+                    library.filter(
+                      (item) =>
+                        item.staticSprite &&
+                        (item.status.readiness === 'ready' ||
+                          item.status.readiness === 'partial'),
+                    ).length
+                  }
+                </strong>
+              </li>
+            </ul>
+            {selected?.staticSprite ? (
+              <div className="guide-static" style={{ marginTop: 12 }}>
+                <div className="guide-static__head">
+                  <p className="guide-static__label">Selected static</p>
+                  <p className="muted">{selected.label}</p>
+                </div>
+                <div className="guide-static__frame">
+                  <img
+                    alt=""
+                    className="guide-static__img"
+                    src={selected.staticSprite.url}
+                  />
+                </div>
+              </div>
+            ) : (
+              <p className="muted">Выберите символ со static в Library.</p>
+            )}
+          </section>
+        ) : (
+          <>
+            <SymbolInfoCard error={error} source={source} />
+            {selected?.status.warnings.length ? (
+              <section className="panel-block panel-block--alert">
+                <div className="panel-block__head">
+                  <h2>Warnings</h2>
+                  <p>Проверка static / клипов</p>
+                </div>
+                <ul className="library-warnings">
+                  {selected.status.warnings.map((warning) => (
+                    <li key={warning}>{warning}</li>
+                  ))}
+                </ul>
+              </section>
+            ) : null}
+            <AnimationControls
+              activeAnimation={playback.animationName}
+              animationNames={animationNames}
+              disabled={loading || !source || Boolean(error)}
+              loop={playback.loop}
+              roles={roles}
+              speed={playback.speed}
+              onLoopChange={(loop) => setPlayback((prev) => ({ ...prev, loop }))}
+              onPlayRole={(role: AnimationRole) => {
+                const clip = roles[role]
+                if (!clip) return
+                playClip(clip)
+              }}
+              onSelectAnimation={playClip}
+              onSpeedChange={(speed) => setPlayback((prev) => ({ ...prev, speed }))}
+            />
+            <MetricsPanel loading={loading} metrics={metrics} />
+          </>
+        )
       }
     />
   )

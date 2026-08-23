@@ -1,4 +1,8 @@
-import { BOARD_LAYOUT_OFFSETS } from './constants';
+import { BOARD_LAYOUT_OFFSETS, PORTRAIT_UI_LAYOUT } from './constants';
+import { portraitBuyPanelCanvasTop } from './portraitHudLayout';
+import type { createLayout } from 'utils-layout';
+
+type LayoutDerived = ReturnType<typeof createLayout>['stateLayoutDerived'];
 
 export const DRUM_MAX = 6;
 export const DRUM_STEP_DEG = 360 / DRUM_MAX;
@@ -109,12 +113,48 @@ export const DRUM_LOAD_ATTR = 'data-drum-load';
 export const getDrumSize = (isDesktop: boolean) =>
 	isDesktop ? DESKTOP_DRUM_SIZE : MOBILE_DRUM_SIZE;
 
+/** Portrait buy-bonus button footprint (left cell of the 2-col panel). */
+const getPortraitBuyBonusButtonBox = (layoutDerived: LayoutDerived) => {
+	const canvasW = layoutDerived.canvasSizes().width;
+	const panelW = Math.min(
+		canvasW * PORTRAIT_UI_LAYOUT.buyPanelWidthVw,
+		PORTRAIT_UI_LAYOUT.buyPanelMaxWidth,
+	);
+	const buyBtnW = panelW * 0.5;
+	const buyBtnH = buyBtnW * PORTRAIT_UI_LAYOUT.buyPanelAspect;
+	const panelLeft = canvasW * 0.5 - panelW * 0.5;
+	const top = portraitBuyPanelCanvasTop(layoutDerived);
+	return {
+		left: panelLeft,
+		top,
+		width: buyBtnW,
+		height: buyBtnH,
+		centerX: panelLeft + buyBtnW * 0.5,
+		centerY: top + buyBtnH * 0.5,
+	};
+};
+
 export const getDrumBoxScreenPos = (args: {
 	mainLayout: { x: number; y: number; scale: number };
 	layoutType: keyof typeof BOARD_LAYOUT_OFFSETS | string;
 	board: { visualWidth: number; visualHeight: number; scale: number };
 	isDesktop: boolean;
+	/** Required for portrait — drum sits on the Buy Bonus button. */
+	layoutDerived?: LayoutDerived;
 }) => {
+	// Phone portrait: replace Buy Bonus with the drum (same slot).
+	if (args.layoutType === 'portrait' && args.layoutDerived) {
+		const buy = getPortraitBuyBonusButtonBox(args.layoutDerived);
+		const size = Math.min(
+			Math.max(buy.height * 1.08, 72),
+			buy.width * 0.95,
+			MOBILE_DRUM_SIZE * 1.25,
+		);
+		const left = buy.centerX - size * 0.5;
+		const top = buy.centerY - size * 0.5;
+		return { left, top, size, centerX: buy.centerX, centerY: buy.centerY };
+	}
+
 	const off = BOARD_LAYOUT_OFFSETS[args.layoutType as keyof typeof BOARD_LAYOUT_OFFSETS] ?? {
 		x: 0,
 		y: 0,
@@ -137,6 +177,7 @@ export const getDrumChamberScreenPos = (args: {
 	isDesktop: boolean;
 	chamberIndex: number;
 	rotationDeg?: number;
+	layoutDerived?: LayoutDerived;
 }) => {
 	const box = getDrumBoxScreenPos(args);
 	const pos = CHAMBER_POS_FRAC[args.chamberIndex % DRUM_MAX];

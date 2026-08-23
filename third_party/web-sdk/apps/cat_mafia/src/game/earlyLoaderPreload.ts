@@ -3,7 +3,15 @@ export const resolveGameStaticUrl = (path: string) =>
 	new URL(path.replace(/^\//, ''), typeof window !== 'undefined' ? window.location.href : import.meta.url)
 		.href;
 
-/** Street background Spine used by BootstrapLoader (same as Pixi `mainBackground`). */
+/**
+ * Static street under the logo/cards loader.
+ * 1920×940 — same plate aspect as Spine `background_day` (cropped from day.webp).
+ */
+export const LOADER_STATIC_DAY_URL = resolveGameStaticUrl(
+	'assets/sprites/background/day_loader.webp',
+);
+
+/** Street background Spine for Pixi `mainBackground` (batch 1 + early HTTP warm). */
 export const LOADER_BG_SPINE_URLS = [
 	resolveGameStaticUrl('assets/spines/background/skeleton.json'),
 	resolveGameStaticUrl('assets/spines/background/skeleton.atlas'),
@@ -15,16 +23,15 @@ export const LOADER_BG_SPINE_URLS = [
 let backgroundPreloadStarted = false;
 
 /**
- * Warm BootstrapLoader background Spine during the Stake Engine GIF loader
- * so the splash does not flash black while atlas pages decode.
+ * Warm loader still + street Spine bytes during bootstrap.
  */
 export const startEarlyLoaderBackgroundPreload = () => {
 	if (backgroundPreloadStarted || typeof window === 'undefined') return;
 	backgroundPreloadStarted = true;
 
-	for (const url of LOADER_BG_SPINE_URLS) {
+	for (const url of [LOADER_STATIC_DAY_URL, ...LOADER_BG_SPINE_URLS]) {
 		void fetch(url).catch(() => {
-			/* Best-effort — SpinePlayer will retry. */
+			/* Best-effort — img / Pixi will retry. */
 		});
 	}
 };

@@ -55,20 +55,25 @@
 	});
 
 	const isDesktop = $derived(context.stateLayoutDerived.layoutType() === 'desktop');
+	const isPortrait = $derived(context.stateLayoutDerived.layoutType() === 'portrait');
+	const showOnLayout = $derived(isDesktop || isPortrait);
 
-	const style = $derived.by(() => {
-		const box = getDrumBoxScreenPos({
+	const box = $derived(
+		getDrumBoxScreenPos({
 			mainLayout: context.stateLayoutDerived.mainLayout(),
 			layoutType: context.stateLayoutDerived.layoutType(),
 			board: context.stateGameDerived.boardLayout(),
 			isDesktop,
-		});
+			layoutDerived: context.stateLayoutDerived,
+		}),
+	);
+
+	const style = $derived.by(() => {
 		const z = elevate ? 65 : 42;
 		return `left:${box.left}px;top:${box.top}px;width:${box.size}px;z-index:${z};`;
 	});
 
-	const drumSize = $derived(getDrumSize(isDesktop));
-	const holePx = $derived(CHAMBER_HOLE_AT_DESKTOP * (drumSize / getDrumSize(true)));
+	const holePx = $derived(CHAMBER_HOLE_AT_DESKTOP * (box.size / getDrumSize(true)));
 
 	const chambers = $derived(
 		Array.from({ length: DRUM_MAX }, (_, i) => {
@@ -91,7 +96,7 @@
 	);
 </script>
 
-{#if show && isDesktop}
+{#if show && showOnLayout}
 	<div class="drum" style={style} aria-hidden="true" title="Revolver drum">
 		{#key shakeKey}
 			<div class="cylinder" class:shake={shakeKey > 0}>

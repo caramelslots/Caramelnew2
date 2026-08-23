@@ -62,7 +62,8 @@
 			showControls: false,
 			showLoading: false,
 			backgroundColor: '#00000000',
-			premultipliedAlpha: true,
+			// Atlas is straight alpha (no pma:true).
+			premultipliedAlpha: false,
 			preserveDrawingBuffer: false,
 			alpha: true,
 			viewport: {
@@ -107,6 +108,7 @@
 </script>
 
 {#if show}
+	<!-- Transparent wrap: static street lives in LoaderStreetStill underneath. -->
 	<div class="wrap" transition:fade>
 		<div class="player" bind:this={playerContainer}></div>
 		<div
@@ -134,17 +136,18 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		background-color: #000;
+		background-color: transparent;
 		overflow: hidden;
+		pointer-events: none;
 	}
 
 	.player {
 		position: relative;
 		z-index: 1;
+		/* Clip logo WebGL so it cannot smear over the static street. */
 		width: min(640px, 90vw);
-		height: 100vh;
-		overflow: visible;
-		/* Slightly above vertical center. */
+		height: min(740px, 85vh);
+		overflow: hidden;
 		transform: translateY(-6vh);
 	}
 
@@ -173,7 +176,6 @@
 		z-index: 2;
 		left: 50%;
 		top: 50%;
-		/* Below the "Caramel Games" title in the spine logo cluster. */
 		transform: translate(-50%, calc(-50% + min(360px, 45vh)));
 		display: flex;
 		flex-direction: column;

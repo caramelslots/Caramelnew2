@@ -3,6 +3,7 @@
 	import { GlobalStyle } from 'components-ui-html';
 	import { Authenticate, LoadI18n } from 'components-shared';
 	import BootstrapLoader from '../components/BootstrapLoader.svelte';
+	import LoaderStreetStill from '../components/LoaderStreetStill.svelte';
 	import Game from '../components/Game.svelte';
 	import { setContext } from '../game/context';
 	import { startEarlyAssetPreload, startBatch2EarlyPreload, startBatch3EarlyPreload } from '../game/earlyAssetPreload';
@@ -33,6 +34,9 @@
 		</LoadI18n>
 	</Authenticate>
 </GlobalStyle>
+
+<!-- Static street under logo/cards — same cover box as Pixi Background. -->
+<LoaderStreetStill />
 
 {#if showYourLoader}
 	<BootstrapLoader

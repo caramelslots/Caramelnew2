@@ -28,6 +28,14 @@ export const BG_IDLE_ANIMATION = 'idle_final_delay2';
  */
 export const BG_VIEW_ZOOM = 0.95;
 
+/**
+ * day.webp loader still is framed slightly tighter than the Spine plate.
+ * Pixi cover is multiplied by this so the animated street matches the still
+ * (without changing the HTML still box).
+ * 1 = raw cover; >1 pulls Pixi closer. Keep small — 1.035 overshot (too close).
+ */
+export const BG_STILL_MATCH_SCALE = 1.012;
+
 type CanvasSize = { width: number; height: number };
 
 /**
@@ -38,6 +46,31 @@ export const getBackgroundCoverScale = (canvas: CanvasSize) => {
 	return {
 		x: cover * BG_VIEW_ZOOM,
 		y: canvas.height / BG_NATIVE.height,
+	};
+};
+
+/** Pixi Background scale — cover + still-match nudge. */
+export const getBackgroundPixiScale = (canvas: CanvasSize) => {
+	const scale = getBackgroundCoverScale(canvas);
+	return {
+		x: scale.x * BG_STILL_MATCH_SCALE,
+		y: scale.y * BG_STILL_MATCH_SCALE,
+	};
+};
+
+/**
+ * Screen rect for the street plate — same footprint as Pixi `Background`
+ * (centered, non-uniform cover). Loader still must use `object-fit: fill` here.
+ */
+export const getBackgroundCoverScreenBox = (canvas: CanvasSize) => {
+	const scale = getBackgroundCoverScale(canvas);
+	const width = BG_NATIVE.width * scale.x;
+	const height = BG_NATIVE.height * scale.y;
+	return {
+		width,
+		height,
+		left: (canvas.width - width) * 0.5,
+		top: (canvas.height - height) * 0.5,
 	};
 };
 

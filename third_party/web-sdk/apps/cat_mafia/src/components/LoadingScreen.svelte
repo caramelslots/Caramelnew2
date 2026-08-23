@@ -3,6 +3,7 @@
 
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { LOADER_STREET_SWAP_DELAY_MS } from '../game/constants';
 	import { startLoadingIdleUiPreload } from '../game/uiHtmlAssetManifest';
 	import TransitionAnimation from './TransitionAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
@@ -28,18 +29,34 @@
 		}
 	});
 
+	const onThemeSwitch = () => {
+		// Clouds are opaque — swap HTML still → Pixi under cover.
+		gameEntrance.hideLoaderStreet = true;
+	};
+
 	const onTransitionComplete = () => {
+		gameEntrance.loadingCloudActive = false;
 		gameEntrance.showContent = true;
 		props.onloaded();
+	};
+
+	const startLoadingTransition = () => {
+		// Lift Pixi so steam draws over the HTML still; still drops at onThemeSwitch.
+		gameEntrance.loadingCloudActive = true;
+		loadingType = 'transition';
 	};
 </script>
 
 <!-- press to continue -->
 <FadeContainer show={loadingType === 'start' && context.stateApp.loaded}>
-	<PressToContinue onpress={() => (loadingType = 'transition')} />
+	<PressToContinue onpress={startLoadingTransition} />
 </FadeContainer>
 
 <!-- transition between the loading screen and the game -->
 <FadeContainer show={loadingType === 'transition'}>
-	<TransitionAnimation oncomplete={onTransitionComplete} />
+	<TransitionAnimation
+		oncomplete={onTransitionComplete}
+		onThemeSwitch={onThemeSwitch}
+		themeSwitchDelayMs={LOADER_STREET_SWAP_DELAY_MS}
+	/>
 </FadeContainer>

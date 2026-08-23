@@ -2,39 +2,51 @@ import { useId, useRef, useState, type DragEvent, type FormEvent } from 'react'
 import type { ValidatedUpload } from './UploadValidation'
 import {
   buildValidatedUpload,
-  buildValidatedUploadFromFiles,
+  buildValidatedUploadsFromFiles,
   collectFilesFromDataTransfer,
+  staticSpecHint,
   validateUploadFiles,
   type UploadPick,
 } from './UploadValidation'
 
 type CustomUploadPanelProps = {
   onUpload: (payload: ValidatedUpload) => void
+  onUploadMany?: (payloads: ValidatedUpload[]) => void
 }
 
 const emptyPick = (): UploadPick => ({
   skeleton: null,
   atlas: null,
   texture: null,
+  staticSprite: null,
 })
 
-export function CustomUploadPanel({ onUpload }: CustomUploadPanelProps) {
+export function CustomUploadPanel({ onUpload, onUploadMany }: CustomUploadPanelProps) {
   const formId = useId()
   const folderInputRef = useRef<HTMLInputElement>(null)
   const [pick, setPick] = useState<UploadPick>(emptyPick)
   const [error, setError] = useState<string | null>(null)
+  const [notes, setNotes] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
   const [dragOver, setDragOver] = useState(false)
 
   const setFile = (key: keyof UploadPick, fileList: FileList | null) => {
     setPick((prev) => ({ ...prev, [key]: fileList?.[0] ?? null }))
     setError(null)
+    setNotes([])
   }
 
-  const commitUpload = async (validated: ValidatedUpload) => {
+  const commitOne = (validated: ValidatedUpload) => {
     onUpload(validated)
-    setPick(emptyPick)
-    setError(null)
+  }
+
+  const commitMany = (validated: ValidatedUpload[]) => {
+    if (validated.length === 1) {
+      commitOne(validated[0]!)
+      return
+    }
+    if (onUploadMany) onUploadMany(validated)
+    else validated.forEach(commitOne)
   }
 
   const handleSubmit = async (event: FormEvent) => {
@@ -47,9 +59,19 @@ export function CustomUploadPanel({ onUpload }: CustomUploadPanelProps) {
 
     setBusy(true)
     setError(null)
+    setNotes([])
     try {
       const validated = await buildValidatedUpload(pick)
-      await commitUpload(validated)
+      const hint = staticSpecHint(validated.staticSprite)
+      commitOne(validated)
+      setPick(emptyPick)
+      setNotes(
+        hint
+          ? [hint]
+          : validated.staticSprite
+            ? ['Символ добавлен в библиотеку.']
+            : ['Символ добавлен без static — статус Partial.'],
+      )
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
     } finally {
@@ -60,9 +82,24 @@ export function CustomUploadPanel({ onUpload }: CustomUploadPanelProps) {
   const ingestFiles = async (files: File[]) => {
     setBusy(true)
     setError(null)
+    setNotes([])
     try {
-      const validated = await buildValidatedUploadFromFiles(files)
-      await commitUpload(validated)
+      const { uploads, errors } = await buildValidatedUploadsFromFiles(files)
+      if (uploads.length > 0) commitMany(uploads)
+      const hints = uploads
+        .map((item) => {
+          const hint = staticSpecHint(item.staticSprite)
+          return hint ? `${item.label}: ${hint}` : null
+        })
+        .filter((line): line is string => Boolean(line))
+      setNotes([
+        uploads.length > 0 ? `Добавлено символов: ${uploads.length}.` : '',
+        ...hints,
+      ].filter(Boolean))
+      if (errors.length > 0) {
+        setError(errors.join('\n'))
+      }
+      setPick(emptyPick)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
     } finally {
@@ -90,8 +127,10 @@ export function CustomUploadPanel({ onUpload }: CustomUploadPanelProps) {
   return (
     <section className="panel-block" aria-labelledby={`${formId}-title`}>
       <div className="panel-block__head">
-        <h2 id={`${formId}-title`}>Upload own</h2>
-        <p>Drop a Spine folder, or pick JSON + atlas + texture.</p>
+        <h2 id={`${formId}-title`}>Upload</h2>
+        <p>
+          Spine + отдельный static WebP. Можно дропнуть несколько папок сразу.
+        </p>
       </div>
 
       <div
@@ -111,9 +150,12 @@ export function CustomUploadPanel({ onUpload }: CustomUploadPanelProps) {
         onDrop={handleDrop}
       >
         <p>
-          <strong>Drop folder here</strong>
+          <strong>Drop folder(s) here</strong>
         </p>
-        <p>Needs one .json, one .atlas, and a texture.</p>
+        <p>
+          На символ: <code>.json</code> + <code>.atlas</code> + текстура атласа + static
+          (<code>H1.webp</code> / <code>*_static.webp</code>).
+        </p>
         <button
           className="btn"
           disabled={busy}
@@ -136,7 +178,7 @@ export function CustomUploadPanel({ onUpload }: CustomUploadPanelProps) {
       </div>
 
       <form className="upload-form" onSubmit={handleSubmit}>
-        <p className="upload-or">or pick files</p>
+        <p className="upload-or">или выбрать файлы вручную</p>
 
         <label className="file-field">
           <span>Skeleton (.json)</span>
@@ -159,7 +201,7 @@ export function CustomUploadPanel({ onUpload }: CustomUploadPanelProps) {
         </label>
 
         <label className="file-field">
-          <span>Texture (.webp / .png)</span>
+          <span>Atlas texture</span>
           <input
             accept=".webp,.png,.jpg,.jpeg,image/*"
             type="file"
@@ -168,10 +210,29 @@ export function CustomUploadPanel({ onUpload }: CustomUploadPanelProps) {
           <em>{pick.texture?.name ?? 'Choose file'}</em>
         </label>
 
-        {error ? <p className="form-error">{error}</p> : null}
+        <label className="file-field">
+          <span>Static sprite (reel)</span>
+          <input
+            accept=".webp,.png,.jpg,.jpeg,image/*"
+            type="file"
+            onChange={(event) => setFile('staticSprite', event.target.files)}
+          />
+          <em>{pick.staticSprite?.name ?? 'H1.webp · 196×196'}</em>
+        </label>
+
+        {error ? (
+          <p className="form-error" style={{ whiteSpace: 'pre-wrap' }}>
+            {error}
+          </p>
+        ) : null}
+        {notes.map((note) => (
+          <p className="form-note" key={note}>
+            {note}
+          </p>
+        ))}
 
         <button className="btn btn--primary" disabled={busy} type="submit">
-          {busy ? 'Loading…' : 'Preview upload'}
+          {busy ? 'Loading…' : 'Add to library'}
         </button>
       </form>
     </section>

@@ -4,11 +4,12 @@
 	import { SECOND } from 'constants-shared/time';
 
 	import { getContext } from '../game/context';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { catBackgroundZoom } from '../game/catAnticipationBoardZoom.svelte';
 	import {
 		BG_Y_OFFSET,
 		BG_IDLE_ANIMATION,
-		getBackgroundCoverScale,
+		getBackgroundPixiScale,
 	} from '../game/neonBackgroundLayout';
 	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
 	import { stateDuel } from '../game/stateDuel.svelte';
@@ -26,19 +27,33 @@
 		return {
 			x: canvas.width / 2,
 			y: canvas.height * (0.5 - BG_Y_OFFSET),
-			scale: getBackgroundCoverScale(canvas),
+			scale: getBackgroundPixiScale(canvas),
 		};
 	});
+
+	/**
+	 * While the HTML loader still is up, keep Pixi street + black clear so
+	 * loading clouds can draw over the still on a transparent canvas.
+	 * Street mounts under cover when hideLoaderStreet flips at theme-switch.
+	 */
+	const hidePixiStreet = $derived(
+		context.stateLayout.showLoadingScreen && !gameEntrance.hideLoaderStreet,
+	);
 
 	/** Duel night street — same timing as FS (after cloud cover, not on pick screen). */
 	const showDuelBackground = $derived(stateDuel.active || stateDuel.phase === 'outro');
 	const showBaseBackground = $derived(
-		context.stateGame.gameType === 'basegame' && !showDuelBackground,
+		context.stateGame.gameType === 'basegame' && !showDuelBackground && !hidePixiStreet,
 	);
 	const showFeatureBackground = $derived(
-		context.stateGame.gameType === 'freegame' || showDuelBackground,
+		(context.stateGame.gameType === 'freegame' || showDuelBackground) && !hidePixiStreet,
 	);
 	const isPhone = $derived(isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType()));
+	/** Freeze street while bootstrap / cards / press-to-continue are up. */
+	const loaderActive = $derived(context.stateLayout.showLoadingScreen);
+	const playStreetIdle = $derived(!isPhone && !loaderActive);
+	/** Instant under loading clouds; normal fade for in-game day/night swaps. */
+	const bgFadeMs = $derived(loaderActive ? 0 : SECOND);
 
 	const canvasCenter = $derived.by(() => {
 		const canvas = context.stateLayoutDerived.canvasSizes();
@@ -48,15 +63,17 @@
 	const backgroundZoom = $derived(catBackgroundZoom.current);
 </script>
 
-<Rectangle {...context.stateLayoutDerived.canvasSizes()} backgroundColor={0x000000} zIndex={-3} />
+{#if !hidePixiStreet}
+	<Rectangle {...context.stateLayoutDerived.canvasSizes()} backgroundColor={0x000000} zIndex={-3} />
+{/if}
 
-<FadeContainer show={showBaseBackground} duration={SECOND} zIndex={-2}>
+<FadeContainer show={showBaseBackground} duration={bgFadeMs} zIndex={-2}>
 	<Container x={canvasCenter.x} y={canvasCenter.y} scale={backgroundZoom}>
 		<Container x={-canvasCenter.x} y={-canvasCenter.y}>
 			<SpineProvider key="mainBackground" {...spineProps}>
 				<BackgroundSkinController skin="day" />
 				<StreetOffscreenCull />
-				{#if !isPhone}
+				{#if playStreetIdle}
 					<SpineTrack trackIndex={0} animationName={BG_IDLE_ANIMATION} loop timeScale={1} />
 				{/if}
 			</SpineProvider>
@@ -64,13 +81,13 @@
 	</Container>
 </FadeContainer>
 
-<FadeContainer show={showFeatureBackground} duration={SECOND} zIndex={-1}>
+<FadeContainer show={showFeatureBackground} duration={bgFadeMs} zIndex={-1}>
 	<Container x={canvasCenter.x} y={canvasCenter.y} scale={backgroundZoom}>
 		<Container x={-canvasCenter.x} y={-canvasCenter.y}>
 			<SpineProvider key="mainBackground" {...spineProps}>
 				<BackgroundSkinController skin="night" />
 				<StreetOffscreenCull />
-				{#if !isPhone}
+				{#if playStreetIdle}
 					<SpineTrack trackIndex={0} animationName={BG_IDLE_ANIMATION} loop timeScale={1} />
 				{/if}
 			</SpineProvider>

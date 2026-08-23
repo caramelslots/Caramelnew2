@@ -802,6 +802,7 @@
 		devPreview.loaderProgressValue = 0;
 		gameEntrance.showContent = false;
 		gameEntrance.loadingCardsVisible = true;
+		gameEntrance.hideLoaderStreet = false;
 		gameEntrance.preloadContent = true;
 		stateLayout.showLoadingScreen = true;
 	};
