@@ -32,6 +32,8 @@
 	const context = getContext();
 	const show = $derived(gameEntrance.showContent);
 	const isDesktop = $derived(context.stateLayoutDerived.layoutType() === 'desktop');
+	const isPortrait = $derived(context.stateLayoutDerived.layoutType() === 'portrait');
+	const showOnLayout = $derived(isDesktop || isPortrait);
 	const fly = $derived(context.stateGame.bulletFly);
 
 	const style = $derived.by(() => {
@@ -62,6 +64,7 @@
 			isDesktop,
 			chamberIndex: loadChamber,
 			rotationDeg,
+			layoutDerived: context.stateLayoutDerived,
 		});
 		const hole = live ?? fallback;
 
@@ -105,7 +108,7 @@
 	});
 </script>
 
-{#if show && isDesktop && fly}
+{#if show && showOnLayout && fly}
 	{#key fly.key}
 		<div class="bullet-fly" style={style} aria-hidden="true">
 			<img class="bullet-fly__img" src={CARTRIDGE_IMG} alt="" draggable="false" />

@@ -4,6 +4,8 @@
 	canvas would cover it until the cloud ends, which looked like a late pop-in.
 -->
 <script lang="ts">
+	import { Tween } from 'svelte/motion';
+	import { cubicOut } from 'svelte/easing';
 	import { Container, Sprite } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
@@ -19,6 +21,9 @@
 		getDrumSize,
 		isDrumChamberFilled,
 	} from '../game/revolverDrumLayout';
+
+	/** Match HTML `.rotor` transition (0.38s). */
+	const DRUM_SPIN_MS = 380;
 
 	type Props = {
 		forceShow?: boolean;
@@ -63,7 +68,13 @@
 	);
 
 	const holePx = $derived(CHAMBER_HOLE_AT_DESKTOP * (box.size / getDrumSize(true)));
-	const rotorAngle = $derived((rotationDeg * Math.PI) / 180);
+
+	const rotorTween = new Tween(0);
+	$effect(() => {
+		const next = (rotationDeg * Math.PI) / 180;
+		void rotorTween.set(next, { duration: DRUM_SPIN_MS, easing: cubicOut });
+	});
+	const rotorAngle = $derived(rotorTween.current);
 
 	const chambers = $derived(
 		Array.from({ length: DRUM_MAX }, (_, i) => {
