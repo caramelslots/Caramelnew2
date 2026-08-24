@@ -14,7 +14,7 @@
 	import { fade } from 'svelte/transition';
 
 	import { getContext } from '../game/context';
-	import { playDrumChamberShot } from '../game/drumShoot';
+	import { playDrumChamberShot, syncDrumLoadRotation } from '../game/drumShoot';
 	import { stateGame } from '../game/stateGame.svelte';
 
 	const TARGET_COUNT = 9;
@@ -44,6 +44,8 @@
 			show = true;
 			stateGame.drumShootActive = true;
 			stateGame.mascotPose = 'aim';
+			// Start from the CW load pose so empties at position 1 are skipped CCW.
+			syncDrumLoadRotation();
 
 			await new Promise((r) => setTimeout(r, 600));
 			phase = 'shooting';

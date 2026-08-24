@@ -6,7 +6,11 @@
 
 	type ReelLike = {
 		reelState: {
-			symbols: { symbolState: SymbolState; [key: string]: unknown }[];
+			symbols: {
+				symbolState: SymbolState;
+				rawSymbol: { name: string };
+				[key: string]: unknown;
+			}[];
 			activeSymbolCount: number;
 			motion: string;
 		};
@@ -17,6 +21,8 @@
 		mysteryFx?: boolean;
 		/** When true, render only idle-tease pops (above the gold rails). */
 		idleBounce?: boolean;
+		/** When true, render landed PB/PS/PG above the gold rails (not while spinning). */
+		pawCoin?: boolean;
 		/** Override reel board (Duel dual desks). Defaults to main stateGame.board. */
 		board?: ReelLike[];
 		/** Duel desk — SW × badge reads that side's sticky map. */
@@ -30,17 +36,43 @@
 	const isMysteryFx = (state: SymbolState) =>
 		state === 'mysteryReveal' || state === 'mysteryCollapse';
 	const isIdleBounce = (state: SymbolState) => state === 'idleBounce';
+	const isPawName = (name: string) => name === 'PB' || name === 'PS' || name === 'PG';
+	/**
+	 * Resting / landing paw above the gold rails.
+	 * While the reel is spinning (`spin` / motion spinning) stay on the masked
+	 * board so the coin clips away at the playfield edges instead of floating
+	 * over the frame into the street.
+	 */
+	const isPawCoinAboveFrame = (
+		reelSymbol: ReelLike['reelState']['symbols'][number],
+		reelMotion: string,
+	) =>
+		isPawName(reelSymbol.rawSymbol.name) &&
+		reelSymbol.symbolState !== 'spin' &&
+		reelMotion !== 'spinning';
 
-	const matchesLayer = (state: SymbolState) => {
+	const matchesLayer = (
+		reelSymbol: ReelLike['reelState']['symbols'][number],
+		reelMotion: string,
+	) => {
+		const state = reelSymbol.symbolState;
 		if (props.mysteryFx) return isMysteryFx(state);
 		if (props.idleBounce) return isIdleBounce(state);
-		return !isMysteryFx(state) && !isIdleBounce(state);
+		if (props.pawCoin) return isPawCoinAboveFrame(reelSymbol, reelMotion);
+		return (
+			!isMysteryFx(state) &&
+			!isIdleBounce(state) &&
+			!isPawCoinAboveFrame(reelSymbol, reelMotion)
+		);
 	};
 </script>
 
 {#each board as reel, reelIndex (reelIndex)}
 	{#each reel.reelState.symbols as reelSymbol, slotIndex}
-		{#if slotIndex < reel.reelState.activeSymbolCount && matchesLayer(reelSymbol.symbolState)}
+		{#if
+			slotIndex < reel.reelState.activeSymbolCount &&
+			matchesLayer(reelSymbol, reel.reelState.motion)
+		}
 			<ReelSymbol
 				{reelIndex}
 				{reelSymbol}

@@ -268,8 +268,16 @@ export const stateGame = $state({
 	stickySwOpened: false,
 	/** Bullets in revolver drum (0..6). */
 	drumCount: 0,
+	/**
+	 * Absolute cylinder angle (CSS deg, + = CW).
+	 * Load advances CW so the next empty sits at 12 o'clock; Stage E shoots
+	 * from that port and steps CCW (decreasing deg).
+	 */
+	drumRotationDeg: 0,
 	/** Per-chamber CARAMEL spin (deg) assigned on insert. */
 	drumBulletOrientDeg: {} as Record<number, number>,
+	/** Bumped per chamber when a round seats — drives the fade/scale-in anim. */
+	drumSeatAnimKey: {} as Record<number, number>,
 	/** Chambers currently showing spent (`bullet_2`) art — same orient as insert. */
 	drumSpentChambers: {} as Record<number, true>,
 	/** Bumped to replay the left/right drum shake animation. */
@@ -299,7 +307,8 @@ export const stateGame = $state({
 		| 'hatOn',
 });
 
-stateBetDerived.timeScale = () => gameSpeedMultFor(stateGame.gameSpeed);
+/** Board symbol spines / land bounce stay at 1× — turbo only shortens waits + reel scroll. */
+stateBetDerived.timeScale = () => 1;
 
 const baseBoardLayout = () => {
 	const layoutType = stateLayoutDerived.layoutType();

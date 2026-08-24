@@ -1153,8 +1153,8 @@ export const BONUS_WIN_PRE_DELAY_MS = 400;
 
 /** Cartridge approach along arc to chamber mouth (`BulletFlyOverlay`). */
 export const BULLET_FLY_MS = 700;
-/** Quick sink into chamber after arrival — keep short so it doesn’t hang in the hole. */
-export const BULLET_INSERT_MS = 180;
+/** Sink into chamber + drum bullet fade/scale-in (crossfade handoff). */
+export const BULLET_INSERT_MS = 260;
 /** Full overlay lifetime — keep `bulletFly` until insert finishes. */
 export const BULLET_FLY_TOTAL_MS = BULLET_FLY_MS + BULLET_INSERT_MS;
 /** Beat after a chamber fills — covers cylinder rotate to next empty at top. */

@@ -10,20 +10,16 @@
 
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
-	import { DRUM_SHAKE_MS } from '../game/drumShoot';
+	import { BULLET_INSERT_MS } from '../game/constants';
+	import { DRUM_SHAKE_MS, DRUM_SPIN_MS } from '../game/drumShoot';
 	import {
 		CHAMBER_HOLE_AT_DESKTOP,
 		CHAMBER_POS_FRAC,
 		DRUM_MAX,
 		getDrumBoxScreenPos,
-		getDrumLoadChamberIndex,
-		getDrumRotationDeg,
 		getDrumSize,
 		isDrumChamberFilled,
 	} from '../game/revolverDrumLayout';
-
-	/** Match HTML `.rotor` transition (0.38s). */
-	const DRUM_SPIN_MS = 380;
 
 	type Props = {
 		forceShow?: boolean;
@@ -41,8 +37,7 @@
 	const spentChambers = $derived(context.stateGame.drumSpentChambers);
 	const shootActive = $derived(context.stateGame.drumShootActive);
 	const shakeKey = $derived(context.stateGame.drumShakeKey);
-	const rotationDeg = $derived(getDrumRotationDeg(filled));
-	const loadChamber = $derived(getDrumLoadChamberIndex(filled));
+	const rotationDeg = $derived(context.stateGame.drumRotationDeg);
 
 	const show = $derived.by(() => {
 		if (!gameEntrance.showContent) return false;
@@ -76,12 +71,45 @@
 	});
 	const rotorAngle = $derived(rotorTween.current);
 
+	/** Per-chamber seat fade/scale (0→1) when a round is loaded. */
+	const seatTweens = Array.from({ length: DRUM_MAX }, () => new Tween(1));
+	let prevFilledMask = 0;
+	let seatTrackingReady = false;
+
+	$effect(() => {
+		const count = filled;
+		let mask = 0;
+		for (let i = 0; i < DRUM_MAX; i++) {
+			if (isDrumChamberFilled(i, count)) mask |= 1 << i;
+		}
+		if (!seatTrackingReady) {
+			prevFilledMask = mask;
+			seatTrackingReady = true;
+			return;
+		}
+		const added = mask & ~prevFilledMask;
+		const removed = prevFilledMask & ~mask;
+		prevFilledMask = mask;
+
+		for (let i = 0; i < DRUM_MAX; i++) {
+			const bit = 1 << i;
+			if (added & bit) {
+				seatTweens[i].set(0, { duration: 0 });
+				void seatTweens[i].set(1, { duration: BULLET_INSERT_MS, easing: cubicOut });
+			} else if (removed & bit) {
+				seatTweens[i].set(1, { duration: 0 });
+			}
+		}
+	});
+
 	const chambers = $derived(
 		Array.from({ length: DRUM_MAX }, (_, i) => {
 			const pos = CHAMBER_POS_FRAC[i];
 			const orients = context.stateGame.drumBulletOrientDeg;
 			const firing = firingChamber === i;
 			const spent = !!spentChambers[i];
+			const seat = seatTweens[i].current;
+			const seatScale = 0.55 + 0.45 * seat;
 			return {
 				i,
 				x: (pos.x - 0.5) * box.size,
@@ -89,6 +117,8 @@
 				orientRad: ((orients[i] ?? 0) * Math.PI) / 180,
 				filled: isDrumChamberFilled(i, filled),
 				useFiredArt: spent || firing,
+				alpha: seat,
+				size: holePx * seatScale,
 			};
 		}),
 	);
@@ -128,10 +158,11 @@
 						key={c.useFiredArt ? 'revolverBullet2' : 'revolverBullet1'}
 						x={c.x}
 						y={c.y}
-						width={holePx}
-						height={holePx}
+						width={c.size}
+						height={c.size}
 						anchor={0.5}
 						rotation={c.orientRad}
+						alpha={c.alpha}
 					/>
 				{/if}
 			{/each}

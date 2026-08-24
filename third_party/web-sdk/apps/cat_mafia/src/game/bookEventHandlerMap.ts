@@ -26,7 +26,8 @@ import {
 	PAW_COIN_WAVE_STEP_MS,
 	BONUS_WIN_PRE_DELAY_MS,
 	BONUS_WIN_POST_DELAY_MS,
-	BULLET_FLY_TOTAL_MS,
+	BULLET_FLY_MS,
+	BULLET_INSERT_MS,
 	BULLET_FLY_GAP_MS,
 	MYSTERY_REVEAL_PRE_DELAY_MS,
 	MYSTERY_REVEAL_POST_DELAY_MS,
@@ -40,6 +41,7 @@ import {
 	syncDrumBulletOrients,
 	withDrumBulletOrient,
 } from './revolverDrumLayout';
+import { syncDrumLoadRotation } from './drumShoot';
 import { resetDuelState, stateDuel, getDuelInitialVisibleBoard, resolveDuelPlayerPayout } from './stateDuel.svelte';
 import {
 	getDuelBoardStack,
@@ -726,7 +728,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		resetMysteryReelSession();
 		// Stage D — drum + bonus mode
 		stateGame.drumCount = 0;
+		stateGame.drumRotationDeg = 0;
 		stateGame.drumBulletOrientDeg = {};
+		stateGame.drumSeatAnimKey = {};
 		stateGame.drumSpentChambers = {};
 		stateGame.drumShakeKey = 0;
 		stateGame.drumFiringChamber = null;
@@ -832,7 +836,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Drop drum after outro so it can sit through the celebration.
 		stateGame.fsDrumWanted = false;
 		stateGame.drumCount = 0;
+		stateGame.drumRotationDeg = 0;
 		stateGame.drumBulletOrientDeg = {};
+		stateGame.drumSeatAnimKey = {};
 		stateGame.drumSpentChambers = {};
 		stateGame.drumShakeKey = 0;
 		await eventEmitter.broadcastAsync({ type: 'transition', gameType: 'basegame' });
@@ -1075,8 +1081,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			};
 			stateGame.mascotPose = 'load';
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-			// Handoff in one tick: sprite hits opacity 0 at TOTAL_MS, gold fills same frame.
-			await waitForGameSpeed(BULLET_FLY_TOTAL_MS, stateGame.gameSpeed);
+			// Arrive at the hole, then crossfade: drum bullet seats while fly sinks.
+			// Keep CW load rotation until seat finishes so the chamber stays under the fly.
+			await waitForGameSpeed(BULLET_FLY_MS, stateGame.gameSpeed);
 			stateGame.drumCount = Math.min(DRUM_MAX, stateGame.drumCount + 1);
 			const seated = getDrumLastFilledChamberIndex(stateGame.drumCount);
 			if (seated !== null) {
@@ -1084,12 +1091,19 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 					stateGame.drumBulletOrientDeg,
 					seated,
 				);
+				stateGame.drumSeatAnimKey = {
+					...stateGame.drumSeatAnimKey,
+					[seated]: (stateGame.drumSeatAnimKey[seated] ?? 0) + 1,
+				};
 			}
+			await waitForGameSpeed(BULLET_INSERT_MS, stateGame.gameSpeed);
 			stateGame.bulletFly = null;
+			syncDrumLoadRotation();
 			stateGame.mascotPose = 'idle';
 			await waitForGameSpeed(BULLET_FLY_GAP_MS, stateGame.gameSpeed);
 		}
 		stateGame.drumCount = Math.min(DRUM_MAX, bookEvent.drumCount);
+		syncDrumLoadRotation();
 		stateGame.drumBulletOrientDeg = syncDrumBulletOrients(
 			stateGame.drumBulletOrientDeg,
 			stateGame.drumCount,
@@ -1192,15 +1206,17 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			if (symbol) symbol.symbolState = 'postWinStatic';
 		}
 		// Hat out to catch — coins fly into the brim, then hat goes back on.
+		// Mascot clips always play at 1× (not turbo-scaled); waits match wall-clock clip length.
 		stateGame.pawCoinBagVisible = true;
 		stateGame.mascotPose = 'hatCatch';
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 		// Wait until brim-out shake (~1.90s+), then fly coins into the hat mid-shake.
-		await waitForGameSpeed(MASCOT_HAT_CATCH_BEFORE_COINS_MS, stateGame.gameSpeed);
+		await waitForTimeout(MASCOT_HAT_CATCH_BEFORE_COINS_MS);
 
 		stateGame.pawCoinFlying = true;
 		// Keep the hat out until the last coin finishes anticipation + flight
-		// (multi-row resolves outlast the single-row floor wait).
+		// (multi-row resolves outlast the single-row floor wait). Coin CSS still
+		// follows turbo — scale this wait to match fly duration.
 		const lastCoinLandMs =
 			Math.max(0, pawCoinCells.length - 1) * MASCOT_COIN_FLY_STAGGER_MS +
 			MASCOT_COIN_ANTICIPATE_MS +
@@ -1211,7 +1227,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateBet.winBookEventAmount += bookEvent.totalCoinWin;
 		stateGame.mascotPose = 'hatOn';
 		// Reverse idle3 back onto the head (~truncated brim-out clip length).
-		await waitForGameSpeed(MASCOT_HAT_ON_MS, stateGame.gameSpeed);
+		await waitForTimeout(MASCOT_HAT_ON_MS);
 
 		stateGame.pawCoinBagVisible = false;
 		stateGame.pawCoinFlying = false;

@@ -29,12 +29,12 @@
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { MASCOT_DEV_PREVIEW_ITEMS, MASCOT_DOG_DEV_PREVIEW_ITEMS } from '../game/mascotHtmlSpine';
 	import { SYMBOL_DEV_PREVIEW_GROUPS } from '../game/symbolDevPreview';
-	import { BOARD_DIMENSIONS, BULLET_FLY_TOTAL_MS } from '../game/constants';
+	import { BOARD_DIMENSIONS, BULLET_FLY_MS, BULLET_INSERT_MS } from '../game/constants';
 	import {
 		getDrumLastFilledChamberIndex,
 		withDrumBulletOrient,
 	} from '../game/revolverDrumLayout';
-	import { fillDrumForPreview, isDrumFullySpent, playDrumChamberShot } from '../game/drumShoot';
+	import { fillDrumForPreview, isDrumFullySpent, playDrumChamberShot, syncDrumLoadRotation } from '../game/drumShoot';
 	import {
 		getRawUrlLang,
 		INVALID_LANG_LABELS,
@@ -133,7 +133,7 @@
 			key: Date.now(),
 		};
 		stateGame.mascotPose = 'load';
-		await new Promise((r) => setTimeout(r, BULLET_FLY_TOTAL_MS));
+		await new Promise((r) => setTimeout(r, BULLET_FLY_MS));
 		stateGame.drumCount = Math.min(DRUM_MAX_PREVIEW, stateGame.drumCount + 1);
 		const seated = getDrumLastFilledChamberIndex(stateGame.drumCount);
 		if (seated !== null) {
@@ -141,8 +141,14 @@
 				stateGame.drumBulletOrientDeg,
 				seated,
 			);
+			stateGame.drumSeatAnimKey = {
+				...stateGame.drumSeatAnimKey,
+				[seated]: (stateGame.drumSeatAnimKey[seated] ?? 0) + 1,
+			};
 		}
+		await new Promise((r) => setTimeout(r, BULLET_INSERT_MS));
 		stateGame.bulletFly = null;
+		syncDrumLoadRotation();
 		stateGame.mascotPose = 'idle';
 		await new Promise((r) => setTimeout(r, 400));
 		bulletFlyBusy = false;
@@ -151,7 +157,9 @@
 	const resetBulletFlyPreview = () => {
 		stateGame.bulletFly = null;
 		stateGame.drumCount = 0;
+		stateGame.drumRotationDeg = 0;
 		stateGame.drumBulletOrientDeg = {};
+		stateGame.drumSeatAnimKey = {};
 		stateGame.drumSpentChambers = {};
 		stateGame.drumShakeKey = 0;
 		stateGame.drumFiringChamber = null;
@@ -171,6 +179,9 @@
 		if (stateGame.drumCount <= 0 || isDrumFullySpent()) {
 			stateGame.drumSpentChambers = {};
 			if (stateGame.drumCount <= 0) fillDrumForPreview(DRUM_MAX_PREVIEW);
+			else syncDrumLoadRotation();
+		} else {
+			syncDrumLoadRotation();
 		}
 
 		while (!isDrumFullySpent()) {

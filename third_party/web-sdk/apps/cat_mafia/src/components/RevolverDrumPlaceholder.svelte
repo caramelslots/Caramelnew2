@@ -2,7 +2,8 @@
 	/**
 	 * Revolver-drum progress (max 6 chambers). Visible during free spins.
 	 * Layers: barrel art → bullets on top → fixed shadow overlay.
-	 * Next empty chamber is always brought to the top via CW cylinder rotation.
+	 * Load: CW so the next empty sits at position 1 (12 o'clock).
+	 * Shoot: CCW from that port — fire only at position 1, then step.
 	 */
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
@@ -13,9 +14,9 @@
 		DRUM_HUB_ATTR,
 		DRUM_LOAD_ATTR,
 		DRUM_MAX,
+		getChamberAtFirePosition,
 		getDrumBoxScreenPos,
 		getDrumLoadChamberIndex,
-		getDrumRotationDeg,
 		getDrumSize,
 		isDrumChamberFilled,
 	} from '../game/revolverDrumLayout';
@@ -44,8 +45,10 @@
 	const shakeKey = $derived(context.stateGame.drumShakeKey);
 	// HTML only while Stage E shoot overlay covers the Pixi canvas.
 	const elevate = $derived(firingChamber !== null || shootActive);
-	const rotationDeg = $derived(getDrumRotationDeg(filled));
-	const loadChamber = $derived(getDrumLoadChamberIndex(filled));
+	const rotationDeg = $derived(context.stateGame.drumRotationDeg);
+	const loadChamber = $derived(
+		shootActive ? getChamberAtFirePosition(rotationDeg) : getDrumLoadChamberIndex(filled),
+	);
 
 	const show = $derived.by(() => {
 		if (!gameEntrance.showContent) return false;
@@ -89,50 +92,64 @@
 				filled: isDrumChamberFilled(i, filled),
 				firing,
 				isLoad: loadChamber === i,
+				seatKey: context.stateGame.drumSeatAnimKey[i] ?? 0,
 				// Spent/firing keep the same orient — only the sprite swaps to bullet_2.
 				useFiredArt: spent || firing,
 			};
 		}),
 	);
+
+	let cylinderEl: HTMLDivElement | undefined = $state();
+
+	$effect(() => {
+		const key = shakeKey;
+		const el = cylinderEl;
+		if (key <= 0 || !el) return;
+		el.classList.remove('shake');
+		// Force reflow so the shake animation can replay without remounting bullets.
+		void el.offsetWidth;
+		el.classList.add('shake');
+	});
 </script>
 
 {#if show && showOnLayout}
 	<div class="drum" style={style} aria-hidden="true" title="Revolver drum">
-		{#key shakeKey}
-			<div class="cylinder" class:shake={shakeKey > 0}>
-				<div class="rotor" style:transform="rotate({rotationDeg}deg)">
-					<div class="barrel" style:background-image="url('{BARREL_IMG}')"></div>
-					{#each chambers as c (c.i)}
-						<span
-							class="chamber"
-							class:filled={c.filled}
-							class:firing={c.firing}
-							{...{
-								[DRUM_CHAMBER_ATTR]: String(c.i),
-								...(c.isLoad ? { [DRUM_LOAD_ATTR]: '' } : {}),
-							}}
-							style:left="{c.leftPct}%"
-							style:top="{c.topPct}%"
-							style:width="{holePx}px"
-							style:height="{holePx}px"
-							style:margin="{-holePx * 0.5}px 0 0 {-holePx * 0.5}px"
-						>
-							{#if c.filled}
-								<img
-									class="bullet"
-									src={c.useFiredArt ? BULLET_2_IMG : BULLET_1_IMG}
-									alt=""
-									draggable="false"
-									style:transform="rotate({c.orientDeg}deg)"
-								/>
-							{/if}
-						</span>
-					{/each}
-				</div>
-				<img class="shadow" src={OVERLAY_IMG} alt="" draggable="false" />
-				<span class="hub" {...{ [DRUM_HUB_ATTR]: '' }}></span>
+		<div class="cylinder" bind:this={cylinderEl}>
+			<div class="rotor" style:transform="rotate({rotationDeg}deg)">
+				<div class="barrel" style:background-image="url('{BARREL_IMG}')"></div>
+				{#each chambers as c (c.i)}
+					<span
+						class="chamber"
+						class:filled={c.filled}
+						{...{
+							[DRUM_CHAMBER_ATTR]: String(c.i),
+							...(c.isLoad ? { [DRUM_LOAD_ATTR]: '' } : {}),
+						}}
+						style:left="{c.leftPct}%"
+						style:top="{c.topPct}%"
+						style:width="{holePx}px"
+						style:height="{holePx}px"
+						style:margin="{-holePx * 0.5}px 0 0 {-holePx * 0.5}px"
+					>
+						{#if c.filled}
+							{#key c.seatKey}
+								<span class="bullet-seat" class:animate={c.seatKey > 0} style:--orient="{c.orientDeg}deg">
+									<img
+										class="bullet"
+										class:firing={c.firing}
+										src={c.useFiredArt ? BULLET_2_IMG : BULLET_1_IMG}
+										alt=""
+										draggable="false"
+									/>
+								</span>
+							{/key}
+						{/if}
+					</span>
+				{/each}
 			</div>
-		{/key}
+			<img class="shadow" src={OVERLAY_IMG} alt="" draggable="false" />
+			<span class="hub" {...{ [DRUM_HUB_ATTR]: '' }}></span>
+		</div>
 	</div>
 {/if}
 
@@ -172,6 +189,16 @@
 		overflow: hidden;
 	}
 
+	.bullet-seat {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	.bullet-seat.animate {
+		animation: bullet-seat 0.26s cubic-bezier(0.33, 0.1, 0.2, 1) both;
+	}
+
 	.bullet {
 		display: block;
 		width: 100%;
@@ -179,9 +206,10 @@
 		object-fit: cover;
 		pointer-events: none;
 		user-select: none;
+		transform: rotate(var(--orient, 0deg));
 	}
 
-	.chamber.firing .bullet {
+	.bullet.firing {
 		animation: bullet-fire 0.28s ease-out;
 	}
 
@@ -215,6 +243,17 @@
 		height: 1px;
 		margin: -0.5px 0 0 -0.5px;
 		pointer-events: none;
+	}
+
+	@keyframes bullet-seat {
+		from {
+			opacity: 0;
+			transform: scale(0.55);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1);
+		}
 	}
 
 	@keyframes drum-shake {

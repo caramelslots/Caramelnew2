@@ -41,6 +41,16 @@ export const getDrumRotationDeg = (filledCount: number) =>
 	Math.max(0, Math.min(DRUM_MAX, filledCount)) * DRUM_STEP_DEG;
 
 /**
+ * Chamber currently at the fire / load port (12 o'clock = position 1).
+ * Positive `rotationDeg` is CW (CSS); shoot advances by decreasing it (CCW).
+ */
+export const getChamberAtFirePosition = (rotationDeg: number) => {
+	const steps =
+		(((Math.round(rotationDeg / DRUM_STEP_DEG) % DRUM_MAX) + DRUM_MAX) % DRUM_MAX);
+	return (DRUM_MAX - steps) % DRUM_MAX;
+};
+
+/**
  * Fill order for CW rotation: slot 0→chamber 0, slot 1→5, slot 2→4, …
  * `(-slot) mod 6`.
  */
@@ -53,6 +63,12 @@ export const getDrumFillSlotForChamber = (chamberIndex: number) =>
 
 export const isDrumChamberFilled = (chamberIndex: number, filledCount: number) =>
 	getDrumFillSlotForChamber(chamberIndex) < filledCount;
+
+export const isDrumChamberLive = (
+	chamberIndex: number,
+	filledCount: number,
+	spentChambers: Record<number, true | undefined>,
+) => isDrumChamberFilled(chamberIndex, filledCount) && !spentChambers[chamberIndex];
 
 /** Random CARAMEL spin for a newly seated bullet. */
 export const randomDrumBulletOrientDeg = () => Math.random() * 360;
@@ -88,15 +104,21 @@ export const getDrumLoadChamberIndex = (filledCount: number) =>
 export const getDrumLastFilledChamberIndex = (filledCount: number) =>
 	filledCount <= 0 ? null : getDrumChamberIndexForFillSlot(filledCount - 1);
 
-/** Next chamber to fire: newest unspent filled slot (LIFO). */
+/**
+ * Next chamber to fire: walk CCW from the current fire position until a live
+ * round is found (skips empties left after a partial load).
+ */
 export const getNextDrumChamberToFire = (
 	filledCount: number,
 	spentChambers: Record<number, true | undefined>,
+	rotationDeg = getDrumRotationDeg(filledCount),
 ) => {
 	const filled = Math.max(0, Math.min(DRUM_MAX, filledCount));
-	for (let slot = filled - 1; slot >= 0; slot--) {
-		const ch = getDrumChamberIndexForFillSlot(slot);
-		if (!spentChambers[ch]) return ch;
+	if (filled <= 0) return null;
+	const start = getChamberAtFirePosition(rotationDeg);
+	for (let i = 0; i < DRUM_MAX; i++) {
+		const ch = (start + i) % DRUM_MAX;
+		if (isDrumChamberLive(ch, filled, spentChambers)) return ch;
 	}
 	return null;
 };

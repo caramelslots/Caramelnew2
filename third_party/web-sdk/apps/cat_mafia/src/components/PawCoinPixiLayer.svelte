@@ -281,9 +281,12 @@
 		{#each cells as c, i (`${c.reel}:${c.row}:${c.tier}:${previewNonce}:${playId}`)}
 			{#if coinAppeared(i)}
 				{@const s = flyState(c.reel, c.row, i)}
-				<!-- Outer: screen position + axis-aligned brim clip (must not rotate). -->
-				<Container x={s.x} y={s.y}>
-					<Graphics draw={drawBrimMask(s.size, s.visibleH)} isMask />
+				{@const clip = s.visibleH < s.size - 0.5}
+				<!-- Outer: position + brim clip only while sinking (HTML clip-path). -->
+				<Container x={s.x} y={s.y} mask={clip ? undefined : null}>
+					{#if clip}
+						<Graphics draw={drawBrimMask(s.size, s.visibleH)} isMask />
+					{/if}
 					<!-- Inner: squash / spin / fade — matches HTML .coin-spin. -->
 					<Container
 						scale={{ x: s.scaleX, y: s.scaleY }}

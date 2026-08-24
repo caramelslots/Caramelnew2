@@ -36,6 +36,7 @@
 		targetShootRoundDemo,
 		fsSuperWildExpandDemo,
 	} from './data/catmafia_events';
+	import { getDrumRotationDeg } from '../game/revolverDrumLayout';
 
 	setContext();
 
@@ -167,6 +168,7 @@
 			stateGame.bonusMode = 'normal';
 			stateGame.fsExtraPhase = false;
 			stateGame.drumCount = 0;
+			stateGame.drumRotationDeg = 0;
 			stateGame.gameType = 'freegame';
 			await playBookEvents([
 				reveal(
@@ -243,6 +245,7 @@
 		action: async () => {
 			stateGame.gameType = 'freegame';
 			stateGame.drumCount = 3;
+			stateGame.drumRotationDeg = getDrumRotationDeg(3);
 			stateGame.fsExtraPhase = false;
 			await playBookEvent(asEvent(targetShootRoundDemo), { bookEvents: [] });
 		},

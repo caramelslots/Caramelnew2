@@ -33,6 +33,7 @@
 	import BoardFrame from './BoardFrame.svelte';
 	import Board from './Board.svelte';
 	import BoardIdleBounceLayer from './BoardIdleBounceLayer.svelte';
+	import BoardPawCoinLayer from './BoardPawCoinLayer.svelte';
 	import PaylineLayer from './PaylineLayer.svelte';
 	import Win from './Win.svelte';
 	import MascotPixi from './MascotPixi.svelte';
@@ -150,9 +151,8 @@
 						</MainContainer>
 					</Container>
 
-					<!-- Gold rails above resting symbols. Idle-tease pops render in the
-					     next layer so they can overlap the frame without lifting the
-					     whole board (that let idle spines like the phone paint through). -->
+					<!-- Gold rails above resting symbols. Idle-tease pops + landed
+					     paw coins render above the frame so they can overhang it. -->
 					<Container zIndex={-1}>
 						<MainContainer>
 							<BoardFrame layer="overlay" />
@@ -162,6 +162,7 @@
 					<Container zIndex={-0.5}>
 						<MainContainer>
 							<BoardIdleBounceLayer />
+							<BoardPawCoinLayer />
 						</MainContainer>
 					</Container>
 

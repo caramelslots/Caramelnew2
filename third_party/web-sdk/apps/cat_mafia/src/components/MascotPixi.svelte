@@ -34,7 +34,6 @@
 		type MascotPose,
 		type MascotScreenBox,
 	} from '../game/mascotHtmlSpine';
-	import { gameSpeedMultFor } from '../game/gameSpeed';
 	import MascotDogSpineController from './MascotDogSpineController.svelte';
 	import MascotSpineController from './MascotSpineController.svelte';
 
@@ -94,7 +93,8 @@
 		}
 		return (context.stateGame.bulletFly ? 'load' : context.stateGame.mascotPose || 'idle') as MascotPose;
 	});
-	const spineTimeScale = $derived(gameSpeedMultFor(context.stateGame.gameSpeed));
+	/** Always 1× — turbo must not speed up mascot clips. */
+	const spineTimeScale = 1;
 
 	const box = $derived.by((): MascotScreenBox | null => {
 		if (!mounted || !showMascotLayout) {

@@ -2,6 +2,9 @@
 	/**
 	 * FS bullet collect: arc so the tip lands on the chamber centre, then a
 	 * short continuous sink (no stepped mid-keyframes — those felt jerky).
+	 *
+	 * Landing target is frozen when the fly starts — seating (`drumCount++`)
+	 * mid-flight must not retarget the path to the next empty chamber.
 	 */
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
@@ -16,7 +19,6 @@
 		CHAMBER_HOLE_AT_DESKTOP,
 		getDrumChamberScreenPos,
 		getDrumLoadChamberIndex,
-		getDrumRotationDeg,
 		getDrumSize,
 		queryDrumLoadScreenPos,
 	} from '../game/revolverDrumLayout';
@@ -36,8 +38,11 @@
 	const showOnLayout = $derived(isDesktop || isPortrait);
 	const fly = $derived(context.stateGame.bulletFly);
 
-	const style = $derived.by(() => {
-		if (!fly) return '';
+	/** Snapshot of CSS for the active fly — never rebuilt after launch. */
+	let frozenStyle = $state('');
+	let frozenFlyKey = $state<number | null>(null);
+
+	const buildFlyStyle = (active: NonNullable<typeof fly>) => {
 		const ml = context.stateLayoutDerived.mainLayout();
 		const layoutType = context.stateLayoutDerived.layoutType();
 		const off = BOARD_LAYOUT_OFFSETS[layoutType] ?? { x: 0, y: 0 };
@@ -47,21 +52,21 @@
 		const halfW = (board.visualWidth / 2) * ml.scale;
 		const halfH = (board.visualHeight / 2) * ml.scale;
 		const cell = SYMBOL_SIZE * ml.scale * board.scale;
-		const visibleRow = fly.row - 1;
+		const visibleRow = active.row - 1;
 
-		const startLeft = centerX - halfW + fly.reel * cell + cell * 0.5;
+		const startLeft = centerX - halfW + active.reel * cell + cell * 0.5;
 		const startTop = centerY - halfH + visibleRow * cell + cell * 0.5;
 
-		// Always seat into the top (12 o'clock) load port — drum rotates under it.
+		// Capture load port at launch (before seating bumps drumCount).
 		const drumCount = context.stateGame.drumCount;
-		const rotationDeg = getDrumRotationDeg(drumCount);
+		const rotationDeg = context.stateGame.drumRotationDeg;
 		const loadChamber = getDrumLoadChamberIndex(drumCount) ?? 0;
 		const live = queryDrumLoadScreenPos();
 		const fallback = getDrumChamberScreenPos({
 			mainLayout: ml,
 			layoutType,
 			board,
-			isDesktop,
+			isDesktop: context.stateLayoutDerived.layoutType() === 'desktop',
 			chamberIndex: loadChamber,
 			rotationDeg,
 			layoutDerived: context.stateLayoutDerived,
@@ -105,12 +110,24 @@
 			`--arrive-scale:${arriveScale.toFixed(3)}`,
 			`--end-scale:${endScale.toFixed(3)}`,
 		].join(';');
+	};
+
+	$effect(() => {
+		const active = fly;
+		if (!active) {
+			frozenFlyKey = null;
+			frozenStyle = '';
+			return;
+		}
+		if (frozenFlyKey === active.key && frozenStyle) return;
+		frozenFlyKey = active.key;
+		frozenStyle = buildFlyStyle(active);
 	});
 </script>
 
-{#if show && showOnLayout && fly}
+{#if show && showOnLayout && fly && frozenStyle}
 	{#key fly.key}
-		<div class="bullet-fly" style={style} aria-hidden="true">
+		<div class="bullet-fly" style={frozenStyle} aria-hidden="true">
 			<img class="bullet-fly__img" src={CARTRIDGE_IMG} alt="" draggable="false" />
 		</div>
 	{/key}
@@ -136,7 +153,7 @@
 		/* Two continuous segments — no mid-stop scale steps. */
 		animation:
 			fly-pose var(--approach-ms, 700ms) cubic-bezier(0.33, 0.1, 0.25, 1) forwards,
-			fly-sink var(--insert-ms, 180ms) var(--approach-ms, 700ms) cubic-bezier(0.4, 0, 0.7, 0.3)
+			fly-sink var(--insert-ms, 260ms) var(--approach-ms, 700ms) cubic-bezier(0.4, 0, 0.7, 0.3)
 				forwards;
 	}
 

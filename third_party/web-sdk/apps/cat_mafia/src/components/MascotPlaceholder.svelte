@@ -42,7 +42,6 @@
 		type MascotSpineAnimation,
 		resolveMascotSpineUrl,
 	} from '../game/mascotHtmlSpine';
-	import { gameSpeedMultFor } from '../game/gameSpeed';
 
 	type Props = {
 		/** `duelDog` — dog mascot on the left during Duel (mirrored to face boards). */
@@ -122,8 +121,8 @@
 	const pose = $derived(
 		(context.stateGame.bulletFly ? 'load' : context.stateGame.mascotPose || 'idle') as MascotPose,
 	);
-	const gameSpeed = $derived(context.stateGame.gameSpeed);
-	const spineTimeScale = $derived(gameSpeedMultFor(gameSpeed));
+	/** Always 1× — turbo must not speed up mascot clips. */
+	const spineTimeScale = 1;
 
 	const style = $derived.by(() => {
 		const canvas = canvasSizes;
@@ -273,7 +272,6 @@
 			return;
 		}
 
-		// Keep Spine in lockstep with waitForGameSpeed / coin CSS (turbo).
 		state.timeScale = spineTimeScale;
 
 		if (opts?.reverse) {
@@ -559,7 +557,6 @@
 		applyPose(pose);
 	});
 
-	/** Keep hat / idle clips aligned with turbo waits + coin CSS. */
 	$effect(() => {
 		const scale = spineTimeScale;
 		const state = player?.animationState;
