@@ -266,7 +266,7 @@ export const getDuelCatMascotBox = (layout: DuelScreenLayout) => {
 	};
 };
 
-/** Screen box for the dog-side mascot (same cat art, mirrored) left of the dog board. */
+/** Screen box for the dog mascot left of the dog board (desktop). */
 export const getDuelDogMascotBox = (layout: DuelScreenLayout) => {
 	const { w, h } = duelMascotSize(layout);
 	const gap = layout.boardWidth * DUEL_MASCOT_GAP_FRAC;

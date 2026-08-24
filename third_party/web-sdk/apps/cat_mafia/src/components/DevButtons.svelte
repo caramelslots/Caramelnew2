@@ -27,7 +27,7 @@
 	import { stateGame, stateGameDerived } from '../game/stateGame.svelte';
 	import { stateLayout } from '../game/stateLayout';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
-	import { MASCOT_DEV_PREVIEW_ITEMS } from '../game/mascotHtmlSpine';
+	import { MASCOT_DEV_PREVIEW_ITEMS, MASCOT_DOG_DEV_PREVIEW_ITEMS } from '../game/mascotHtmlSpine';
 	import { SYMBOL_DEV_PREVIEW_GROUPS } from '../game/symbolDevPreview';
 	import { BOARD_DIMENSIONS, BULLET_FLY_TOTAL_MS } from '../game/constants';
 	import {
@@ -1077,8 +1077,8 @@
 				</div>
 			</section>
 
-				<section>
-				<h4>Mascot Anims</h4>
+			<section>
+				<h4>Cat Mascot Anims</h4>
 				<div class="grid">
 					{#each MASCOT_DEV_PREVIEW_ITEMS as item (item.id)}
 						<button
@@ -1086,6 +1086,7 @@
 							class:active={devPreview.mascotAnimation === item.id}
 							title={item.title}
 							onclick={() => {
+								devPreview.mascotDogAnimation = null;
 								devPreview.mascotAnimation = item.id;
 							}}
 						>
@@ -1094,13 +1095,45 @@
 					{/each}
 					<button
 						type="button"
-						class:active={devPreview.mascotAnimation === null}
+						class:active={devPreview.mascotAnimation === null &&
+							devPreview.mascotDogAnimation === null}
 						title="Вернуть управление позами (idle/load/aim/…)"
 						onclick={() => {
 							devPreview.mascotAnimation = null;
+							devPreview.mascotDogAnimation = null;
 						}}
 					>
 						Reset Pose
+					</button>
+				</div>
+			</section>
+
+			<section>
+				<h4>Dog Mascot Anims</h4>
+				<p class="subhint">Replaces the cat on the primary slot.</p>
+				<div class="grid">
+					{#each MASCOT_DOG_DEV_PREVIEW_ITEMS as item (item.id)}
+						<button
+							type="button"
+							class:active={devPreview.mascotDogAnimation === item.id}
+							title={item.title}
+							onclick={() => {
+								devPreview.mascotAnimation = null;
+								devPreview.mascotDogAnimation = item.id;
+							}}
+						>
+							{item.label}
+						</button>
+					{/each}
+					<button
+						type="button"
+						class:active={devPreview.mascotDogAnimation === null}
+						title="Hide dog preview — restore cat pose control"
+						onclick={() => {
+							devPreview.mascotDogAnimation = null;
+						}}
+					>
+						Reset Dog
 					</button>
 				</div>
 			</section>

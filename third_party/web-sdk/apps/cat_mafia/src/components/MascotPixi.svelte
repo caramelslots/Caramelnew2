@@ -1,6 +1,7 @@
 <!--
 	Pixi mascot — same screen box / viewport framing as the former HTML SpinePlayer.
 	Hat-catch coin fly stays HTML (PawCoinOverlay) using the same box math.
+	`duelDog` uses the dog skeleton on the left desk (faces right toward the boards).
 -->
 <script lang="ts">
 	import { Container, SpineProvider } from 'pixi-svelte';
@@ -28,10 +29,13 @@
 		getMascotPortraitScreenBox,
 		getMascotScreenBox,
 		getMascotPixiTransform,
+		MASCOT_DOG_SPINE_VIEWPORT,
+		MASCOT_SPINE_VIEWPORT,
 		type MascotPose,
 		type MascotScreenBox,
 	} from '../game/mascotHtmlSpine';
 	import { gameSpeedMultFor } from '../game/gameSpeed';
+	import MascotDogSpineController from './MascotDogSpineController.svelte';
 	import MascotSpineController from './MascotSpineController.svelte';
 
 	type Props = {
@@ -66,7 +70,12 @@
 					!(stateDuel.active && isPortrait),
 	);
 
-	const forceAnim = $derived(isDuelDog ? null : devPreview.mascotAnimation);
+	const forceCatAnim = $derived(isDuelDog ? null : devPreview.mascotAnimation);
+	/** DEV: preview dog clips on the primary (cat) slot — replaces the cat. */
+	const forceDogAnim = $derived(isDuelDog ? null : devPreview.mascotDogAnimation);
+	const previewDogOnPrimary = $derived(!isDuelDog && forceDogAnim !== null);
+	const useDogSpine = $derived(isDuelDog || previewDogOnPrimary);
+	const forceAnim = $derived(forceCatAnim ?? forceDogAnim);
 	const mounted = $derived(
 		gameEntrance.preloadContent &&
 			(isDuelDog
@@ -77,9 +86,14 @@
 				: showMascotLayout || forceAnim !== null),
 	);
 
-	const pose = $derived(
-		(context.stateGame.bulletFly ? 'load' : context.stateGame.mascotPose || 'idle') as MascotPose,
-	);
+	const pose = $derived.by((): MascotPose => {
+		// Duel dog: idle flavour during play; angry_final when the dog board lost.
+		if (isDuelDog) {
+			if (stateDuel.winner === 'cat') return 'react';
+			return 'idle';
+		}
+		return (context.stateGame.bulletFly ? 'load' : context.stateGame.mascotPose || 'idle') as MascotPose;
+	});
 	const spineTimeScale = $derived(gameSpeedMultFor(context.stateGame.gameSpeed));
 
 	const box = $derived.by((): MascotScreenBox | null => {
@@ -121,7 +135,11 @@
 		return getMascotScreenBox({ centerX, centerY, halfW, halfH });
 	});
 
-	const transform = $derived(box ? getMascotPixiTransform(box) : null);
+	const transform = $derived(
+		box
+			? getMascotPixiTransform(box, useDogSpine ? MASCOT_DOG_SPINE_VIEWPORT : MASCOT_SPINE_VIEWPORT)
+			: null,
+	);
 
 	let entranceDone = $state(false);
 	let alpha = $state(0);
@@ -186,19 +204,26 @@
 	<Container
 		x={transform.x}
 		y={transform.y}
-		scale={{ x: isDuelDog ? -1 : 1, y: 1 }}
 		alpha={alpha}
 		zIndex={props.zIndex ?? 5}
 		sortableChildren
 	>
 		<SpineProvider
-			key="mascotCat"
+			key={useDogSpine ? 'mascotDog' : 'mascotCat'}
 			x={transform.spineX}
 			y={transform.spineY}
 			scale={transform.scale}
 			zIndex={0}
 		>
-			<MascotSpineController pose={pose} forceAnim={forceAnim} timeScale={spineTimeScale} />
+			{#if useDogSpine}
+				<MascotDogSpineController
+					pose={pose}
+					forceAnim={forceDogAnim}
+					timeScale={spineTimeScale}
+				/>
+			{:else}
+				<MascotSpineController pose={pose} forceAnim={forceCatAnim} timeScale={spineTimeScale} />
+			{/if}
 		</SpineProvider>
 	</Container>
 {/if}

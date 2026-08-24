@@ -87,6 +87,7 @@ export const LOADER_BATCH_3_KEYS = [
 	'coins',
 	'coinsPaw',
 	'mascotCat',
+	'mascotDog',
 	'betPlus',
 	'betMinus',
 	'autoplayButton',

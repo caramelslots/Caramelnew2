@@ -158,6 +158,32 @@ export const MASCOT_SPINE_VIEWPORT = {
 
 const parsePadPct = (pad: string) => Number.parseFloat(pad) / 100;
 
+export type MascotSpineViewport = {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	padLeft: string;
+	padRight: string;
+	padTop: string;
+	padBottom: string;
+};
+
+/**
+ * Dog skeleton AABB from `mascot_dog.json` (+ small margins for baton / glow).
+ * Same pad fractions as the cat so `getMascotPixiTransform` framing matches.
+ */
+export const MASCOT_DOG_SPINE_VIEWPORT = {
+	x: -760,
+	y: -1080,
+	width: 1560,
+	height: 2020,
+	padLeft: '8%',
+	padRight: '6%',
+	padTop: '10%',
+	padBottom: '4%',
+} as const satisfies MascotSpineViewport;
+
 /**
  * Pixi transform that matches HTML SpinePlayer framing inside `box`
  * (fit-height + viewport pads). Apply `mirror` as Container.scale.x = -1.
@@ -166,8 +192,11 @@ const parsePadPct = (pad: string) => Number.parseFloat(pad) / 100;
  * in skeleton space lands at local `(-cx, -cy)` after the runtime flip —
  * offset the spine by `(cx, cy) * scale` (not the HTML scaleY=-1 path).
  */
-export const getMascotPixiTransform = (box: MascotScreenBox) => {
-	const vp = MASCOT_SPINE_VIEWPORT;
+export const getMascotPixiTransform = (
+	box: MascotScreenBox,
+	viewport: MascotSpineViewport = MASCOT_SPINE_VIEWPORT,
+) => {
+	const vp = viewport;
 	const padT = parsePadPct(vp.padTop);
 	const padB = parsePadPct(vp.padBottom);
 	const padL = parsePadPct(vp.padLeft);
@@ -324,10 +353,99 @@ export const MASCOT_SPINE_FILES = [
 	'mascot_cat.png',
 ] as const;
 
+export const MASCOT_DOG_SPINE_FILES = [
+	'mascot_dog.json',
+	'mascot_dog.atlas',
+	'mascot_dog.png',
+	'mascot_dog_2.png',
+] as const;
+
 export const MASCOT_SPINE_ASSET_URLS = MASCOT_SPINE_FILES.map(resolveMascotSpineUrl);
+export const MASCOT_DOG_SPINE_ASSET_URLS = MASCOT_DOG_SPINE_FILES.map(resolveMascotSpineUrl);
 
 /** Atlas image — keep PNG (lossy WebP breaks PMA mesh edges). */
 export const MASCOT_SPINE_IMAGE_URL = resolveMascotSpineUrl('mascot_cat.png');
+
+/** Spine clip names in `mascot_dog.json`. */
+export type MascotDogSpineAnimation =
+	| 'idle'
+	| 'idle_glow'
+	| 'idle_mouth'
+	| 'blinking'
+	| 'angry_final'
+	| 'test';
+
+export const MASCOT_DOG_SPINE_ANIMATIONS: readonly MascotDogSpineAnimation[] = [
+	'idle',
+	'idle_glow',
+	'idle_mouth',
+	'blinking',
+	'angry_final',
+	'test',
+] as const;
+
+export type MascotDogDevPreviewItem = {
+	id: MascotDogSpineAnimation;
+	label: string;
+	title: string;
+};
+
+/** DEV panel — every dog Spine clip for QA. */
+export const MASCOT_DOG_DEV_PREVIEW_ITEMS: readonly MascotDogDevPreviewItem[] = [
+	{ id: 'idle', label: 'idle', title: 'Play dog Spine clip "idle" (loop)' },
+	{ id: 'blinking', label: 'blinking', title: 'Play dog Spine clip "blinking" (loop)' },
+	{ id: 'idle_mouth', label: 'idle_mouth', title: 'Play dog Spine clip "idle_mouth" (loop)' },
+	{ id: 'idle_glow', label: 'idle_glow', title: 'Play dog Spine clip "idle_glow" (loop)' },
+	{ id: 'angry_final', label: 'angry_final', title: 'Play dog Spine clip "angry_final" (loop)' },
+	{ id: 'test', label: 'test', title: 'Play dog Spine clip "test" (loop)' },
+] as const;
+
+/** Idle flavour clips randomly queued while the dog pose stays `idle`. */
+export const MASCOT_DOG_IDLE_VARIANTS: readonly MascotDogSpineAnimation[] = [
+	'blinking',
+	'idle_mouth',
+	'idle_glow',
+] as const;
+
+/** blinking often; idle_mouth / idle_glow equally less often. */
+export const MASCOT_DOG_IDLE_VARIANT_WEIGHTS: ReadonlyArray<{
+	animation: MascotDogSpineAnimation;
+	weight: number;
+}> = [
+	{ animation: 'blinking', weight: 0.5 },
+	{ animation: 'idle_mouth', weight: 0.25 },
+	{ animation: 'idle_glow', weight: 0.25 },
+] as const;
+
+export const pickMascotDogIdleVariant = (): MascotDogSpineAnimation => {
+	const total = MASCOT_DOG_IDLE_VARIANT_WEIGHTS.reduce((sum, item) => sum + item.weight, 0);
+	let roll = Math.random() * total;
+	for (const item of MASCOT_DOG_IDLE_VARIANT_WEIGHTS) {
+		roll -= item.weight;
+		if (roll <= 0) return item.animation;
+	}
+	return 'blinking';
+};
+
+/**
+ * Map shared `mascotPose` beats onto dog clips.
+ * Duel left mascot stays on idle flavour; `react` = dog lost (`angry_final`).
+ */
+export const MASCOT_DOG_POSE_PLAYBACK: Record<
+	MascotPose,
+	{ animation: MascotDogSpineAnimation; loop: boolean; returnTo?: MascotDogSpineAnimation }
+> = {
+	idle: { animation: 'idle', loop: true },
+	load: { animation: 'idle', loop: true },
+	aim: { animation: 'idle', loop: true },
+	shoot: { animation: 'idle', loop: true },
+	/** Dog lost the duel — hold angry until outro unmounts. */
+	react: { animation: 'angry_final', loop: true },
+	wow: { animation: 'idle_glow', loop: true },
+	clap: { animation: 'idle_mouth', loop: true },
+	hatCatch: { animation: 'idle', loop: true },
+	hatOn: { animation: 'idle', loop: true },
+};
 
 let mascotSpinePreloadStarted = false;
 
@@ -336,7 +454,7 @@ export const startMascotSpinePreload = () => {
 	if (mascotSpinePreloadStarted || typeof window === 'undefined') return;
 	mascotSpinePreloadStarted = true;
 
-	const queue = [...MASCOT_SPINE_ASSET_URLS];
+	const queue = [...MASCOT_SPINE_ASSET_URLS, ...MASCOT_DOG_SPINE_ASSET_URLS];
 	const workerCount = Math.min(3, queue.length);
 
 	void Promise.all(

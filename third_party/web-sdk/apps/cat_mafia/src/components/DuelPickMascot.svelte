@@ -8,13 +8,17 @@
 	import '@esotericsoftware/spine-player/dist/spine-player.css';
 
 	import {
+		MASCOT_DOG_SPINE_ANIMATIONS,
+		MASCOT_DOG_SPINE_VIEWPORT,
 		MASCOT_SPINE_ANIMATIONS,
 		MASCOT_SPINE_VIEWPORT,
 		resolveMascotSpineUrl,
 	} from '../game/mascotHtmlSpine';
 
 	type Props = {
-		/** Mirror for the dog-side pick. */
+		/** Dog side uses the dog skeleton; cat side uses the cat. */
+		species?: 'cat' | 'dog';
+		/** Mirror so the figure faces the opposite pedestal / board. */
 		mirror?: boolean;
 		/** When false, pause the idle loop to save CPU while the pick UI is hidden. */
 		playing?: boolean;
@@ -23,6 +27,7 @@
 	};
 
 	const props: Props = $props();
+	const species = $derived(props.species ?? 'cat');
 	const playing = $derived(props.playing !== false);
 	const fill = $derived(props.fill === true);
 
@@ -33,6 +38,7 @@
 	$effect(() => {
 		const el = container;
 		if (!el) return;
+		const isDog = species === 'dog';
 
 		let disposed = false;
 		player?.dispose();
@@ -40,13 +46,15 @@
 		ready = false;
 		el.replaceChildren();
 
-		const viewportAnims = Object.fromEntries(
-			MASCOT_SPINE_ANIMATIONS.map((name) => [name, MASCOT_SPINE_VIEWPORT]),
-		);
+		const viewport = isDog ? MASCOT_DOG_SPINE_VIEWPORT : MASCOT_SPINE_VIEWPORT;
+		const animNames = isDog ? MASCOT_DOG_SPINE_ANIMATIONS : MASCOT_SPINE_ANIMATIONS;
+		const viewportAnims = Object.fromEntries(animNames.map((name) => [name, viewport]));
+		const jsonFile = isDog ? 'mascot_dog.json' : 'mascot_cat.json';
+		const atlasFile = isDog ? 'mascot_dog.atlas' : 'mascot_cat.atlas';
 
 		const created = new SpinePlayer(el, {
-			jsonUrl: resolveMascotSpineUrl('mascot_cat.json'),
-			atlasUrl: resolveMascotSpineUrl('mascot_cat.atlas'),
+			jsonUrl: resolveMascotSpineUrl(jsonFile),
+			atlasUrl: resolveMascotSpineUrl(atlasFile),
 			animation: 'idle',
 			showControls: false,
 			showLoading: false,
@@ -55,17 +63,19 @@
 			alpha: true,
 			defaultMix: 0.15,
 			viewport: {
-				...MASCOT_SPINE_VIEWPORT,
+				...viewport,
 				animations: viewportAnims,
 			},
 			success: (spinePlayer) => {
 				// success can run before `player = created` when assets are cached
 				if (disposed) return;
 				spinePlayer.skeleton!.scaleY = -1;
-				try {
-					spinePlayer.skeleton!.setAttachment('smile', null);
-				} catch {
-					spinePlayer.skeleton!.findSlot('smile')?.setAttachment(null);
+				if (!isDog) {
+					try {
+						spinePlayer.skeleton!.setAttachment('smile', null);
+					} catch {
+						spinePlayer.skeleton!.findSlot('smile')?.setAttachment(null);
+					}
 				}
 				spinePlayer.animationState?.setAnimation(0, 'idle', true);
 				spinePlayer.animationState!.timeScale = playing ? 1 : 0;

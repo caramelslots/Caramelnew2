@@ -295,6 +295,15 @@ export default {
 			scale: 1,
 		},
 	},
+	/** Duel left-side dog mascot (`designer_assets/dog` → 4.2 runtime export). */
+	mascotDog: {
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/mascot/mascot_dog.atlas'),
+			skeleton: assetUrl('assets/spines/mascot/mascot_dog.json'),
+			scale: 1,
+		},
+	},
 	coins: {
 		type: 'spriteSheet',
 		src: assetUrl('assets/sprites/coin/SD2_Coin.json'),

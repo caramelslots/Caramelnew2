@@ -45,7 +45,7 @@
 	import { gameSpeedMultFor } from '../game/gameSpeed';
 
 	type Props = {
-		/** `duelDog` — second instance on the left during Duel (same cat spine, mirrored). */
+		/** `duelDog` — dog mascot on the left during Duel (mirrored to face boards). */
 		variant?: 'primary' | 'duelDog';
 	};
 

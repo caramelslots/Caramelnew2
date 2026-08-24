@@ -33,7 +33,7 @@
 	import { stateGame } from '../game/stateGame.svelte';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
 	import { computeDuelScreenLayout, getDuelSpinCounterPos } from '../game/duelLayout';
-	import { DUEL_CAT_FACE_AVATAR_SRC } from '../game/duelAssets';
+	import { DUEL_CAT_FACE_AVATAR_SRC, DUEL_DOG_FACE_AVATAR_SRC } from '../game/duelAssets';
 	import { isPopoutSmallViewport } from '../game/constants';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import PressToContinueHtml from './PressToContinueHtml.svelte';
@@ -197,7 +197,7 @@
 		{#if isPortrait}
 			<img
 				class="board-face top-right"
-				src={DUEL_CAT_FACE_AVATAR_SRC}
+				src={DUEL_DOG_FACE_AVATAR_SRC}
 				alt=""
 				draggable="false"
 				aria-hidden="true"
@@ -256,7 +256,7 @@
 					<span class="pick-pedestal" aria-hidden="true">
 						<span class="pick-pedestal-glow"></span>
 						<span class="pick-pedestal-card">
-							<DuelPickMascot mirror playing={pickShow} />
+							<DuelPickMascot species="dog" mirror playing={pickShow} />
 						</span>
 						<span class="pick-pedestal-base"></span>
 					</span>

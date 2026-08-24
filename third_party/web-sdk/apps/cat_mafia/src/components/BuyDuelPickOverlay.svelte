@@ -130,7 +130,11 @@
 							<span class="pick-pedestal-glow"></span>
 							<span class="pick-pedestal-card">
 								{#if spinesWarmed}
-									<DuelPickMascot mirror={side === 'dog'} playing={false} />
+									<DuelPickMascot
+										species={side === 'dog' ? 'dog' : 'cat'}
+										mirror={side === 'dog'}
+										playing={false}
+									/>
 								{/if}
 							</span>
 							<span class="pick-pedestal-base"></span>
@@ -172,7 +176,12 @@
 			<div class="confirm-card">
 				<div class="confirm-hero" aria-hidden="true">
 					{#if spinesWarmed}
-						<DuelPickMascot mirror={pendingSide === 'dog'} playing={false} fill />
+						<DuelPickMascot
+							species={pendingSide === 'dog' ? 'dog' : 'cat'}
+							mirror={pendingSide === 'dog'}
+							playing={false}
+							fill
+						/>
 					{/if}
 				</div>
 

@@ -1,4 +1,4 @@
-import type { MascotDevPreview } from './mascotHtmlSpine';
+import type { MascotDevPreview, MascotDogSpineAnimation } from './mascotHtmlSpine';
 import type { SymbolDevSelection } from './symbolDevPreview';
 
 /*
@@ -12,8 +12,13 @@ export const devPreview = $state({
 	loaderProgress: false,
 	/** fake 0–100 progress while `loaderProgress` is on */
 	loaderProgressValue: 0,
-	/** force a specific mascot Spine clip (null = normal pose-driven playback) */
+	/** force a specific cat mascot Spine clip (null = normal pose-driven playback) */
 	mascotAnimation: null as MascotDevPreview | null,
+	/**
+	 * Force a dog Spine clip on the primary mascot slot (replaces the cat).
+	 * Mutually exclusive with `mascotAnimation` in DevButtons.
+	 */
+	mascotDogAnimation: null as MascotDogSpineAnimation | null,
 	/**
 	 * Force a spine clip onto matching board cells (null = normal SYMBOL_INFO_MAP).
 	 * DevButtons paints the board with the symbol, then getSymbolInfo reads this.

@@ -85,7 +85,7 @@
 				<article class="rule">
 					<div class="visual pick-visual" aria-hidden="true">
 						<span class="mascot-wrap dog">
-							<DuelPickMascot mirror playing={show} />
+							<DuelPickMascot species="dog" mirror playing={show} />
 						</span>
 						<span class="vs-mini">VS</span>
 						<span class="mascot-wrap cat">
