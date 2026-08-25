@@ -9,10 +9,18 @@ export type BoardCell = {
 
 export type BoardGrid = BoardCell[][] // [col][row]
 
-export function readyStaticSymbols(library: LibrarySymbol[]): LibrarySymbol[] {
-  return library.filter(
-    (item) => item.staticSprite?.url && (item.status.readiness === 'ready' || item.status.readiness === 'partial'),
-  )
+export function readyStaticSymbols(
+  library: LibrarySymbol[],
+  allowedIds?: Set<string> | null,
+): LibrarySymbol[] {
+  return library.filter((item) => {
+    if (!item.staticSprite?.url) return false
+    if (item.status.readiness !== 'ready' && item.status.readiness !== 'partial') {
+      return false
+    }
+    if (allowedIds && !allowedIds.has(item.id)) return false
+    return true
+  })
 }
 
 /** Build [cols][rows] from library statics (cycles if fewer symbols than cells). */
@@ -20,8 +28,9 @@ export function fillBoardFromLibrary(
   library: LibrarySymbol[],
   dims: BoardDimensions,
   seed = Date.now(),
+  allowedIds?: Set<string> | null,
 ): BoardGrid | null {
-  const pool = readyStaticSymbols(library)
+  const pool = readyStaticSymbols(library, allowedIds)
   if (pool.length === 0) return null
 
   let state = seed >>> 0
@@ -44,33 +53,4 @@ export function fillBoardFromLibrary(
     grid.push(column)
   }
   return grid
-}
-
-/** Extra strip symbols above/below for spin runway (same pool). */
-export function buildSpinStrip(
-  library: LibrarySymbol[],
-  visibleRows: number,
-  pad: number,
-  seed: number,
-): BoardCell[] {
-  const pool = readyStaticSymbols(library)
-  if (pool.length === 0) return []
-
-  let state = seed >>> 0
-  const rand = () => {
-    state = (state * 1664525 + 1013904223) >>> 0
-    return state / 0x100000000
-  }
-
-  const length = visibleRows + pad * 2
-  const strip: BoardCell[] = []
-  for (let i = 0; i < length; i += 1) {
-    const pick = pool[Math.floor(rand() * pool.length)]!
-    strip.push({
-      symbolId: pick.id,
-      label: pick.label,
-      staticUrl: pick.staticSprite!.url,
-    })
-  }
-  return strip
 }

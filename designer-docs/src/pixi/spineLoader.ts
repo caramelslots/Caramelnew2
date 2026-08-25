@@ -104,7 +104,8 @@ export async function loadSpineFromSource(source: SpineAssetSource): Promise<Loa
   const parser = new SkeletonJson(attachmentLoader)
   parser.scale = 1
   const skeletonData = parser.readSkeletonData(skeletonJson)
-  const spine = new Spine(skeletonData)
+  // autoUpdate setter stacks Ticker listeners on every `= true` — enable once only.
+  const spine = new Spine({ skeletonData, autoUpdate: false })
   spine.autoUpdate = true
 
   let disposed = false

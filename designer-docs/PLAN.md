@@ -161,46 +161,55 @@
 
 ### Phase 2 — Reel board & spin mechanics
 
-**Status: in progress — static spin + device/quality shell**
+**Status: done (static spin + Spine land→idle + win demo + pool assign)**
 
 - Сетка C×R (min 3×3, default 5×4).
-- Ячейки: static на spin; Spine land/idle — следующий шаг Phase 2.
+- Ячейки: **static на spin**; после стопа **Spine land (`stop`) → idle**; **Win demo**.
 - Spin / staggered stop / pad / mask.
-- Назначение символов с библиотеки на барабан (random fill из ready/partial static).
+- Назначение символов: чипы pool All/Clear + Refill.
+- Тогл «Spine after stop».
 
 **Done when:** Spin на 5×4 выглядит и ощущается как слот cat_mafia по символам.
 
 ### Phase 3 — Stage environment (desk, background, HUD)
 
-- Background cover-layout в духе cat_mafia.
-- Desk / frame playfield.
-- HUD shell (композиция слота).
-- Привязка board к parchment/playfield proportions.
+**Status: done (2026-08-24)**
+
+- Background cover (`day.webp`) + desk base/contour с `DESK_PARCHMENT`.
+- HUD shell: info / menu / buy / − spin + / balance·bet / auto / turbo.
+- Тогл «Stage (bg + desk + HUD)» в Reel Lab.
+- Ассеты в `designer_assets/stage/`.
 
 **Done when:** скрин Lab узнаваем как «слот», не как таблица спрайтов.
 
 ### Phase 4 — Device viewports
 
-- Все 7 пресетов размеров.
-- Scale-to-fit контента при смене пресета.
-- Корректный portrait для Mobile L/M/S.
+**Status: done (2026-08-24)**
+
+- Все 7 пресетов: chip picker Landscape / Portrait.
+- **Contain-fit** фрейма в wrap (логическое окно + `fit %` если меньше).
+- Layout kind: desktop / laptop / popout / popoutS / portrait — разные avail/scale для доски.
+- Portrait HUD + округлённый frame.
 
 **Done when:** переключение Desktop → Popout S → Mobile M меняет картинку осмысленно, как смена окна.
 
 ### Phase 5 — Resolution quality lab
 
-- Пресеты 4K / 2K / 1080p / 720p через internal render scale.
-- UI сравнения качества.
-- Подсказки дизайнеру («на Popout S + 720p static 196 выглядит так»).
+**Status: done (2026-08-24)**
+
+- Пресеты 4K / 2K / 1080p / 720p через internal `resolutionScale`.
+- Quality picker + **Compare A/B** (два device frame рядом).
+- Quality lab: dens, glyph CSS px, texels/px от 196, verdict Sharp/OK/Soft/Mushy + текстовая подсказка.
 
 **Done when:** можно ответить на вопрос «насколько ухудшится качество» без экспорта в игру.
 
 ### Phase 6 — UX polish & inspect (закрытие V1)
 
-- Inspect ячейки, метрики, варнинги в одном месте.
-- Горячие сценарии: загрузка → fill board → spin → device → quality.
-- Стабильность перфа (много Spine: idle только на видимых; на spin — static).
-- Документация внутри UI: коротко «как пользоваться Lab».
+**Status: done (2026-08-24)**
+
+- Inspect справа: how-to, быстрые сценарии, статус board/device/quality, selected + warnings.
+- Spine budget: max **16** live idle; overflow → static / freeze после land.
+- Гайд «Символы» + Symbol Preview без регресса.
 
 **Done when:** чеклист §7 проходит целиком.
 
@@ -208,16 +217,16 @@
 
 ## 7. Acceptance checklist V1
 
-- [ ] Гайд «Символы» на месте (WebP, H/L, 196, пример H1 + static + animations).
-- [ ] Дизайнер загружает свои символы (static + spine) пачкой.
-- [ ] Сетка любая ≥ 3×3, default 5×4.
-- [ ] Spin: static в движении; land/idle/win на Spine как в cat_mafia.
-- [ ] Видны background, desk/frame, HUD-контекст.
-- [ ] Работают все device-пресеты из таблицы §3.4.
-- [ ] Работают quality-пресеты 4K / 2K / 1080p / 720p внутри фрейма.
-- [ ] Можно оценить деградацию качества символов.
-- [ ] Inspect/варнинги понятны без знания кодовой базы.
-- [ ] Нет регресса текущего одиночного Spine preview для разбора клипа.
+- [x] Гайд «Символы» на месте (WebP, H/L, 196, пример H1 + static + animations).
+- [x] Дизайнер загружает свои символы (static + spine) пачкой.
+- [x] Сетка любая ≥ 3×3, default 5×4.
+- [x] Spin: static в движении; land/idle/win на Spine как в cat_mafia.
+- [x] Видны background, desk/frame, HUD-контекст.
+- [x] Работают все device-пресеты из таблицы §3.4.
+- [x] Работают quality-пресеты 4K / 2K / 1080p / 720p внутри фрейма.
+- [x] Можно оценить деградацию качества символов.
+- [x] Inspect/варнинги понятны без знания кодовой базы.
+- [x] Нет регресса текущего одиночного Spine preview для разбора клипа.
 
 ---
 

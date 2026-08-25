@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import '@esotericsoftware/spine-pixi-v8'
 import { AppShell, type WorkspaceMode } from './components/layout/AppShell'
+import { DesignerGuideAccordion } from './components/docs/DesignerGuideAccordion'
 import { SymbolLibraryPanel } from './components/library/SymbolLibraryPanel'
 import { MetricsPanel } from './components/metrics/MetricsPanel'
+import {
+  ReelInspectPanel,
+  type QuickScenarioId,
+} from './components/reel/ReelInspectPanel'
 import { ReelLabStage } from './components/reel/ReelLabStage'
 import { AnimationControls } from './components/symbols/AnimationControls'
 import { SymbolInfoCard } from './components/symbols/SymbolInfoCard'
@@ -21,6 +26,9 @@ import {
   DEFAULT_BOARD_ROWS,
   type BoardDimensions,
 } from './reel/constants'
+import type { BoardGrid } from './reel/fillBoard'
+import { MAX_LIVE_IDLE_SPINES } from './reel/spineBudget'
+import type { QualityReport } from './stage/qualityLab'
 import type { DevicePresetId, QualityPresetId } from './stage/presets'
 import type {
   AnimationRole,
@@ -87,6 +95,21 @@ export default function App() {
   })
   const [deviceId, setDeviceId] = useState<DevicePresetId>('desktop')
   const [qualityId, setQualityId] = useState<QualityPresetId>('1080p')
+  const [reelGrid, setReelGrid] = useState<BoardGrid | null>(null)
+  const [qualityReport, setQualityReport] = useState<QualityReport | null>(null)
+  const [scenarioRequest, setScenarioRequest] = useState<{
+    id: QuickScenarioId
+    nonce: number
+  } | null>(null)
+
+  const handleQuickScenario = useCallback((id: QuickScenarioId) => {
+    setMode('reel')
+    setScenarioRequest({ id, nonce: Date.now() })
+  }, [])
+
+  const handleQualityReport = useCallback((report: QualityReport) => {
+    setQualityReport(report)
+  }, [])
 
   useEffect(
     () => () => {
@@ -182,6 +205,7 @@ export default function App() {
     <AppShell
       mode={mode}
       onModeChange={setMode}
+      docs={<DesignerGuideAccordion />}
       left={
         <>
           <SymbolLibraryPanel
@@ -190,7 +214,9 @@ export default function App() {
             onRemove={handleRemove}
             onSelect={selectSymbol}
           />
-          <CustomUploadPanel onUpload={handleUpload} onUploadMany={addUploads} />
+          {mode === 'symbol' ? (
+            <CustomUploadPanel onUpload={handleUpload} onUploadMany={addUploads} />
+          ) : null}
         </>
       }
       center={
@@ -199,10 +225,13 @@ export default function App() {
             board={board}
             deviceId={deviceId}
             qualityId={qualityId}
+            scenarioRequest={scenarioRequest}
             symbols={library}
             onBoardChange={setBoard}
             onDeviceChange={setDeviceId}
+            onGridChange={setReelGrid}
             onQualityChange={setQualityId}
+            onQualityReport={handleQualityReport}
           />
         ) : (
           <div className="stage-frame">
@@ -230,59 +259,18 @@ export default function App() {
       }
       right={
         mode === 'reel' ? (
-          <section className="panel-block">
-            <div className="panel-block__head">
-              <h2>Reel Lab</h2>
-              <p>
-                Spin на static (как в игре при прокруте). Device и Quality уже влияют на
-                фрейм и плотность пикселей.
-              </p>
-            </div>
-            <ul className="inspect-list">
-              <li>
-                Board{' '}
-                <strong>
-                  {board.cols}×{board.rows}
-                </strong>
-              </li>
-              <li>
-                Device <strong>{deviceId}</strong>
-              </li>
-              <li>
-                Quality <strong>{qualityId}</strong>
-              </li>
-              <li>
-                Ready / partial static{' '}
-                <strong>
-                  {
-                    library.filter(
-                      (item) =>
-                        item.staticSprite &&
-                        (item.status.readiness === 'ready' ||
-                          item.status.readiness === 'partial'),
-                    ).length
-                  }
-                </strong>
-              </li>
-            </ul>
-            {selected?.staticSprite ? (
-              <div className="guide-static" style={{ marginTop: 12 }}>
-                <div className="guide-static__head">
-                  <p className="guide-static__label">Selected static</p>
-                  <p className="muted">{selected.label}</p>
-                </div>
-                <div className="guide-static__frame">
-                  <img
-                    alt=""
-                    className="guide-static__img"
-                    src={selected.staticSprite.url}
-                  />
-                </div>
-              </div>
-            ) : (
-              <p className="muted">Выберите символ со static в Library.</p>
-            )}
-          </section>
+          <ReelInspectPanel
+            board={board}
+            deviceId={deviceId}
+            grid={reelGrid}
+            library={library}
+            qualityId={qualityId}
+            qualityReport={qualityReport}
+            selected={selected}
+            spineBudget={MAX_LIVE_IDLE_SPINES}
+            onQuickScenario={handleQuickScenario}
+            onSelectSymbol={selectSymbol}
+          />
         ) : (
           <>
             <SymbolInfoCard error={error} source={source} />

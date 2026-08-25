@@ -32,8 +32,8 @@ const SECTIONS: { id: SectionId; title: string; summary: string }[] = [
 
 export function DesignerGuideAccordion() {
   const baseId = useId()
-  const [symbolsOpen, setSymbolsOpen] = useState(true)
-  const [openId, setOpenId] = useState<SectionId | null>('naming')
+  const [symbolsOpen, setSymbolsOpen] = useState(false)
+  const [openId, setOpenId] = useState<SectionId | null>(null)
 
   const toggleInner = (id: SectionId) => {
     setOpenId((current) => (current === id ? null : id))

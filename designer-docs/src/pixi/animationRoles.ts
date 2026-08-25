@@ -2,7 +2,8 @@ import type { AnimationRole, AnimationRoleMap } from '../types'
 
 const ROLE_CANDIDATES: Record<AnimationRole, string[]> = {
   idle: ['idle'],
-  bounce: ['bounce', 'stop'],
+  // cat_mafia land for H/L uses `stop`; accept bounce / Special_*/bounce as fallback
+  bounce: ['stop', 'bounce'],
   win: ['win', 'activation'],
 }
 
