@@ -1,21 +1,28 @@
 import { Container, Graphics, Sprite, Texture } from 'pixi.js'
 import type { BoardDimensions } from '../reel/constants'
-import type { ResolvedStageUrls } from './stagePack'
+import {
+  layoutBackgroundSpine,
+  layoutBackgroundSprite,
+  loadBackgroundSpine,
+  type LoadedBackgroundSpine,
+} from './backgroundSpine'
 import type { StageLayoutKind } from './deviceFit'
 import {
   DESK_PARCHMENT,
-  backgroundCoverScale,
   deskSizeForBoard,
   layoutStageContent,
 } from './layout'
+import type { ResolvedStageUrls, StageBackgroundSpinePack } from './stagePack'
 
 export type StageLayers = {
-  background: Sprite
+  /** Static still and/or Spine street — always a Container under the desk. */
+  backgroundRoot: Container
   contentRoot: Container
   deskBase: Sprite
   deskContour: Sprite
   playfield: Container
   layout: () => void
+  dispose: () => void
 }
 
 async function textureFromUrl(url: string): Promise<Texture> {
@@ -38,6 +45,7 @@ export async function createStageLayers(
   getScreen: () => { width: number; height: number },
   getLayoutKind: () => StageLayoutKind,
   urls: ResolvedStageUrls,
+  backgroundSpine?: StageBackgroundSpinePack | null,
 ): Promise<StageLayers> {
   const [bgTex, deskBaseTex, deskContourTex] = await Promise.all([
     textureFromUrl(urls.background),
@@ -45,8 +53,19 @@ export async function createStageLayers(
     textureFromUrl(urls.deskContour),
   ])
 
-  const background = new Sprite(bgTex)
-  background.anchor.set(0.5)
+  const backgroundRoot = new Container()
+
+  const still = new Sprite(bgTex)
+  still.anchor.set(0.5)
+  backgroundRoot.addChild(still)
+
+  let loadedSpine: LoadedBackgroundSpine | null = null
+  if (backgroundSpine) {
+    loadedSpine = await loadBackgroundSpine(backgroundSpine)
+    // Hide still while Spine plays (still remains as fallback if spine fails mid-session).
+    still.visible = false
+    backgroundRoot.addChild(loadedSpine.spine)
+  }
 
   const contentRoot = new Container()
 
@@ -70,13 +89,14 @@ export async function createStageLayers(
     if (screen.width <= 0 || screen.height <= 0) return
     const kind = getLayoutKind()
 
-    const bgScale = backgroundCoverScale(screen, {
-      width: bgTex.width,
-      height: bgTex.height,
-    })
-    background.scale.set(bgScale)
-    background.x = screen.width / 2
-    background.y = screen.height / 2
+    if (loadedSpine) {
+      layoutBackgroundSpine(loadedSpine.spine, screen)
+    } else {
+      layoutBackgroundSprite(still, screen, {
+        width: bgTex.width,
+        height: bgTex.height,
+      })
+    }
 
     const placed = layoutStageContent(screen, board, kind)
     const desk = deskSizeForBoard(board)
@@ -104,11 +124,15 @@ export async function createStageLayers(
   layout()
 
   return {
-    background,
+    backgroundRoot,
     contentRoot,
     deskBase,
     deskContour,
     playfield,
     layout,
+    dispose: () => {
+      loadedSpine?.dispose()
+      loadedSpine = null
+    },
   }
 }

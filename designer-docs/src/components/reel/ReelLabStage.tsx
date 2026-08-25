@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { LibrarySymbol } from '../../library/types'
-import {
-  MIN_BOARD_COLS,
-  MIN_BOARD_ROWS,
-  clampBoardDim,
-  type BoardDimensions,
-} from '../../reel/constants'
+import { type BoardDimensions } from '../../reel/constants'
 import { readyStaticSymbols, type BoardGrid } from '../../reel/fillBoard'
 import { ReelBoardCanvas } from '../../reel/ReelBoardCanvas'
 import { resolveStageUrls } from '../../stage/defaultStageUrls'
@@ -19,9 +14,8 @@ import {
 } from '../../stage/presets'
 import type { StagePackOverrides } from '../../stage/stagePack'
 import { DeviceViewport } from '../stage/DeviceViewport'
-import { SlotHudShell } from '../stage/SlotHudShell'
-import { StageAssetsPanel } from '../stage/StageAssetsPanel'
 import type { QuickScenarioId } from './ReelInspectPanel'
+import { ReelLabSettingsDrawer } from './ReelLabSettingsDrawer'
 
 function getFullscreenElement(): Element | null {
   const doc = document as Document & { webkitFullscreenElement?: Element | null }
@@ -43,6 +37,7 @@ async function requestElFullscreen(el: HTMLElement): Promise<void> {
 
 async function exitElFullscreen(): Promise<void> {
   const doc = document as Document & {
+    webkitFullscreenElement?: Element | null
     webkitExitFullscreen?: () => Promise<void> | void
   }
   if (document.fullscreenElement && document.exitFullscreen) {
@@ -89,15 +84,12 @@ export function ReelLabStage({
   const [winNonce, setWinNonce] = useState(0)
   const [refillNonce, setRefillNonce] = useState(0)
   const [spinning, setSpinning] = useState(false)
-  const [spinningB, setSpinningB] = useState(false)
   const [grid, setGrid] = useState<BoardGrid | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [useSpineAfterStop, setUseSpineAfterStop] = useState(true)
   const [showEnvironment, setShowEnvironment] = useState(true)
   const [allowedIds, setAllowedIds] = useState<string[] | null>(null)
-  const [compareEnabled, setCompareEnabled] = useState(false)
-  const [compareQualityId, setCompareQualityId] = useState<QualityPresetId>('720p')
-  const [showMore, setShowMore] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [stageOverrides, setStageOverrides] = useState<StagePackOverrides>({})
   const [isFullscreen, setIsFullscreen] = useState(false)
   const labRef = useRef<HTMLDivElement>(null)
@@ -116,10 +108,7 @@ export function ReelLabStage({
     }
   }, [])
 
-  const compareQuality =
-    QUALITY_PRESETS.find((item) => item.id === compareQualityId) ?? QUALITY_PRESETS[3]!
-
-  const reportA = useMemo(
+  const qualityReport = useMemo(
     () =>
       analyzeQuality({
         device,
@@ -131,21 +120,9 @@ export function ReelLabStage({
     [device, quality, layoutKind, board.cols, board.rows],
   )
 
-  const reportB = useMemo(
-    () =>
-      analyzeQuality({
-        device,
-        quality: compareQuality,
-        layoutKind,
-        boardCols: board.cols,
-        boardRows: board.rows,
-      }),
-    [device, compareQuality, layoutKind, board.cols, board.rows],
-  )
-
   useEffect(() => {
-    onQualityReport?.(reportA)
-  }, [reportA, onQualityReport])
+    onQualityReport?.(qualityReport)
+  }, [qualityReport, onQualityReport])
 
   useEffect(() => {
     if (!scenarioRequest) return
@@ -153,23 +130,14 @@ export function ReelLabStage({
       case 'desktop-1080':
         onDeviceChange('desktop')
         onQualityChange('1080p')
-        setCompareEnabled(false)
         break
       case 'popout-720':
         onDeviceChange('popoutS')
         onQualityChange('720p')
-        setCompareEnabled(false)
         break
       case 'mobile-1080':
         onDeviceChange('mobileM')
         onQualityChange('1080p')
-        setCompareEnabled(false)
-        break
-      case 'compare-4k-720':
-        onDeviceChange('desktop')
-        onQualityChange('4k')
-        setCompareQualityId('720p')
-        setCompareEnabled(true)
         break
     }
     setRefillNonce((value) => value + 1)
@@ -180,8 +148,8 @@ export function ReelLabStage({
     onGridChange?.(next)
   }
 
-  const canSpin = staticReady > 0 && !spinning && !spinningB
-  const canWin = Boolean(grid) && !spinning && !spinningB && useSpineAfterStop
+  const canSpin = staticReady > 0 && !spinning
+  const canWin = Boolean(grid) && !spinning && useSpineAfterStop
 
   const toggleFullscreen = () => {
     const el = labRef.current
@@ -207,6 +175,7 @@ export function ReelLabStage({
 
   const sharedBoardProps = {
     allowedSymbolIds: allowedIds,
+    backgroundSpine: stageOverrides.backgroundSpine ?? null,
     board,
     layoutKind,
     library: symbols,
@@ -221,69 +190,18 @@ export function ReelLabStage({
   return (
     <div
       ref={labRef}
-      className={[
-        'reel-lab',
-        showMore ? 'reel-lab--more' : '',
-        isFullscreen ? 'reel-lab--fullscreen' : '',
-      ]
-        .filter(Boolean)
-        .join(' ')}
+      className={['reel-lab', isFullscreen ? 'reel-lab--fullscreen' : ''].filter(Boolean).join(' ')}
     >
       <div className="reel-lab__bar">
-        <label className="field field--inline">
-          <span>Device</span>
-          <select
-            value={deviceId}
-            onChange={(event) => onDeviceChange(event.target.value as DevicePresetId)}
-          >
-            {DEVICE_PRESETS.map((preset) => (
-              <option key={preset.id} value={preset.id}>
-                {preset.label} · {preset.width}×{preset.height}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="field field--inline">
-          <span>Quality</span>
-          <select
-            value={qualityId}
-            onChange={(event) => onQualityChange(event.target.value as QualityPresetId)}
-          >
-            {QUALITY_PRESETS.map((preset) => (
-              <option key={preset.id} value={preset.id}>
-                {preset.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {compareEnabled ? (
-          <label className="field field--inline">
-            <span>vs B</span>
-            <select
-              value={compareQualityId}
-              onChange={(event) =>
-                setCompareQualityId(event.target.value as QualityPresetId)
-              }
-            >
-              {QUALITY_PRESETS.map((preset) => (
-                <option key={preset.id} value={preset.id}>
-                  {preset.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
-
-        <label className="check-field reel-lab__check">
-          <input
-            checked={compareEnabled}
-            type="checkbox"
-            onChange={(event) => setCompareEnabled(event.target.checked)}
-          />
-          <span>A/B</span>
-        </label>
+        <div className="reel-lab__bar-meta">
+          <span className="reel-lab__pill">
+            {device.label} · {device.width}×{device.height}
+          </span>
+          <span className="reel-lab__pill">{quality.label}</span>
+          <span className="reel-lab__pill">
+            {board.cols}×{board.rows}
+          </span>
+        </div>
 
         <div className="reel-lab__actions">
           <button
@@ -292,7 +210,7 @@ export function ReelLabStage({
             type="button"
             onClick={() => setSpinNonce((value) => value + 1)}
           >
-            {spinning || spinningB ? 'Spinning…' : 'Spin'}
+            {spinning ? 'Spinning…' : 'Spin'}
           </button>
           <button
             className="btn"
@@ -304,18 +222,19 @@ export function ReelLabStage({
           </button>
           <button
             className="btn"
-            disabled={staticReady === 0 || spinning || spinningB}
+            disabled={staticReady === 0 || spinning}
             type="button"
             onClick={() => setRefillNonce((value) => value + 1)}
           >
             Refill
           </button>
           <button
-            className="btn btn--ghost"
+            aria-expanded={settingsOpen}
+            className={settingsOpen ? 'btn is-active' : 'btn'}
             type="button"
-            onClick={() => setShowMore((open) => !open)}
+            onClick={() => setSettingsOpen(true)}
           >
-            {showMore ? 'Less' : 'More'}
+            Settings
           </button>
           <button
             aria-pressed={isFullscreen}
@@ -329,129 +248,43 @@ export function ReelLabStage({
         </div>
       </div>
 
-      {showMore ? (
-        <div className="reel-lab__more-wrap">
-          <div className="reel-lab__more">
-            <label className="field field--inline">
-              <span>Cols</span>
-              <input
-                min={MIN_BOARD_COLS}
-                type="number"
-                value={board.cols}
-                onChange={(event) =>
-                  onBoardChange({
-                    ...board,
-                    cols: clampBoardDim(Number(event.target.value), MIN_BOARD_COLS),
-                  })
-                }
-              />
-            </label>
-            <label className="field field--inline">
-              <span>Rows</span>
-              <input
-                min={MIN_BOARD_ROWS}
-                type="number"
-                value={board.rows}
-                onChange={(event) =>
-                  onBoardChange({
-                    ...board,
-                    rows: clampBoardDim(Number(event.target.value), MIN_BOARD_ROWS),
-                  })
-                }
-              />
-            </label>
-            <label className="check-field">
-              <input
-                checked={useSpineAfterStop}
-                type="checkbox"
-                onChange={(event) => setUseSpineAfterStop(event.target.checked)}
-              />
-              <span>Spine after stop</span>
-            </label>
-            <label className="check-field">
-              <input
-                checked={showEnvironment}
-                type="checkbox"
-                onChange={(event) => setShowEnvironment(event.target.checked)}
-              />
-              <span>Stage look</span>
-            </label>
-
-            {pool.length > 1 ? (
-              <div className="reel-lab__pool-chips">
-                {pool.map((item) => {
-                  const on =
-                    allowedIds === null
-                      ? true
-                      : allowedIds.length === 0
-                        ? false
-                        : allowedIds.includes(item.id)
-                  return (
-                    <button
-                      key={item.id}
-                      className={on ? 'pool-chip is-on' : 'pool-chip'}
-                      type="button"
-                      onClick={() => toggleAllowed(item.id)}
-                    >
-                      <span>{item.label}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            ) : null}
-          </div>
-          <StageAssetsPanel overrides={stageOverrides} onChange={setStageOverrides} />
-        </div>
-      ) : null}
-
-      <div className={compareEnabled ? 'quality-compare' : 'reel-lab__stage'}>
+      <div className="reel-lab__stage">
         <DeviceViewport
-          density={reportA.density}
+          density={qualityReport.density}
           device={device}
-          qualityLabel={compareEnabled ? `A · ${quality.label}` : quality.label}
+          qualityLabel={quality.label}
         >
           <ReelBoardCanvas
             {...sharedBoardProps}
-            resolutionScale={reportA.resolutionScale}
+            resolutionScale={qualityReport.resolutionScale}
             onError={setError}
             onGridChange={setGridAndNotify}
             onSpinningChange={setSpinning}
           />
-          {showEnvironment ? (
-            <SlotHudShell
-              orientation={device.orientation}
-              spinning={spinning}
-              urls={stageUrls}
-              onSpinClick={canSpin ? () => setSpinNonce((value) => value + 1) : undefined}
-            />
-          ) : null}
         </DeviceViewport>
-
-        {compareEnabled ? (
-          <DeviceViewport
-            density={reportB.density}
-            device={device}
-            qualityLabel={`B · ${compareQuality.label}`}
-          >
-            <ReelBoardCanvas
-              {...sharedBoardProps}
-              resolutionScale={reportB.resolutionScale}
-              onError={setError}
-              onGridChange={() => undefined}
-              onSpinningChange={setSpinningB}
-            />
-            {showEnvironment ? (
-              <SlotHudShell
-                orientation={device.orientation}
-                spinning={spinningB}
-                urls={stageUrls}
-              />
-            ) : null}
-          </DeviceViewport>
-        ) : null}
       </div>
 
       {error ? <p className="form-error">{error}</p> : null}
+
+      <ReelLabSettingsDrawer
+        allowedIds={allowedIds}
+        board={board}
+        deviceId={deviceId}
+        open={settingsOpen}
+        pool={pool}
+        qualityId={qualityId}
+        showEnvironment={showEnvironment}
+        stageOverrides={stageOverrides}
+        useSpineAfterStop={useSpineAfterStop}
+        onBoardChange={onBoardChange}
+        onClose={() => setSettingsOpen(false)}
+        onDeviceChange={onDeviceChange}
+        onQualityChange={onQualityChange}
+        onShowEnvironmentChange={setShowEnvironment}
+        onStageOverridesChange={setStageOverrides}
+        onToggleAllowed={toggleAllowed}
+        onUseSpineAfterStopChange={setUseSpineAfterStop}
+      />
     </div>
   )
 }

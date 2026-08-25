@@ -3,7 +3,7 @@
  * Canvas PNG data URLs — Pixi needs bitmap dimensions (SVG data URLs break width).
  */
 
-import type { ResolvedStageUrls, StageSlotId } from './stagePack'
+import type { ResolvedStageUrls, StagePackOverrides, StageSlotId } from './stagePack'
 
 function canvasUrl(
   width: number,
@@ -20,22 +20,25 @@ function canvasUrl(
 }
 
 function makeBackground(): string {
-  return canvasUrl(1920, 1080, (ctx, w, h) => {
+  // Aspect closer to cat_mafia street plate (~1920×956); ground lower so desk
+  // sits over the street instead of glued to the horizon line.
+  return canvasUrl(1920, 956, (ctx, w, h) => {
     const g = ctx.createLinearGradient(0, 0, 0, h)
     g.addColorStop(0, '#1a2433')
-    g.addColorStop(0.55, '#2a3545')
+    g.addColorStop(0.48, '#2a3545')
+    g.addColorStop(0.72, '#3a4038')
     g.addColorStop(1, '#3d3428')
     ctx.fillStyle = g
     ctx.fillRect(0, 0, w, h)
-    ctx.fillStyle = 'rgba(42, 36, 28, 0.85)'
-    ctx.fillRect(0, h * 0.67, w, h * 0.33)
+    ctx.fillStyle = 'rgba(42, 36, 28, 0.88)'
+    ctx.fillRect(0, h * 0.78, w, h * 0.22)
     ctx.fillStyle = '#9aa7b8'
     ctx.font = '600 42px system-ui, sans-serif'
     ctx.textAlign = 'center'
-    ctx.fillText('Default background', w / 2, 160)
+    ctx.fillText('Default background', w / 2, 140)
     ctx.fillStyle = '#6f7c8c'
     ctx.font = '22px system-ui, sans-serif'
-    ctx.fillText('Upload your own in Stage assets', w / 2, 210)
+    ctx.fillText('Upload your own in Stage assets', w / 2, 190)
   })
 }
 
@@ -75,37 +78,6 @@ function makeDeskContour(): string {
     ctx.strokeStyle = 'rgba(232, 210, 168, 0.9)'
     ctx.lineWidth = 6
     strokeRoundRect(ctx, holeX - 4, holeY - 4, holeW + 8, holeH + 8, 12)
-  })
-}
-
-function roundIcon(label: string, fill: string, size = 128): string {
-  return canvasUrl(size, size, (ctx, w) => {
-    ctx.beginPath()
-    ctx.arc(w / 2, w / 2, w / 2 - 4, 0, Math.PI * 2)
-    ctx.fillStyle = fill
-    ctx.fill()
-    ctx.strokeStyle = '#0f1218'
-    ctx.lineWidth = 4
-    ctx.stroke()
-    ctx.fillStyle = '#fff'
-    ctx.font = `700 ${Math.round(w * 0.22)}px system-ui, sans-serif`
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(label, w / 2, w / 2 + 1)
-  })
-}
-
-function panelIcon(label: string, w = 220, h = 88): string {
-  return canvasUrl(w, h, (ctx) => {
-    roundRect(ctx, 2, 2, w - 4, h - 4, 14, '#2b3340')
-    ctx.strokeStyle = '#d4a017'
-    ctx.lineWidth = 3
-    strokeRoundRect(ctx, 2, 2, w - 4, h - 4, 14)
-    ctx.fillStyle = '#f2e6c8'
-    ctx.font = '700 18px system-ui, sans-serif'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(label, w / 2, h / 2)
   })
 }
 
@@ -156,21 +128,24 @@ export function getDefaultStageUrls(): ResolvedStageUrls {
     background: makeBackground(),
     deskBase: makeDeskBase(),
     deskContour: makeDeskContour(),
-    spin: roundIcon('SPIN', '#c45c26', 160),
-    betMinus: roundIcon('−', '#3a4554', 96),
-    betPlus: roundIcon('+', '#3a4554', 96),
-    info: roundIcon('i', '#3a4554', 96),
-    menu: roundIcon('≡', '#3a4554', 96),
-    buyBonus: panelIcon('BUY BONUS'),
-    autoplay: panelIcon('AUTO', 140, 88),
-    turbo: roundIcon('T', '#3a4554', 96),
   }
   return cached
 }
 
-export function resolveStageUrls(
-  overrides: Partial<Record<StageSlotId, string>>,
-): ResolvedStageUrls {
+/** Drop cached defaults (e.g. after HMR) so new paint runs. */
+export function resetDefaultStageUrls(): void {
+  cached = null
+}
+
+// Hot-reload: rebuild procedural defaults when this module updates.
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    cached = null
+  })
+  cached = null
+}
+
+export function resolveStageUrls(overrides: StagePackOverrides = {}): ResolvedStageUrls {
   const defaults = getDefaultStageUrls()
   const resolved = { ...defaults }
   for (const key of Object.keys(defaults) as StageSlotId[]) {

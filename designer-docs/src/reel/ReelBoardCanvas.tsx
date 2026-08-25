@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { Application, Container, Sprite, Texture } from 'pixi.js'
+import { Application, Container, Texture } from 'pixi.js'
 import type { LibrarySymbol } from '../library/types'
 import { createStageLayers } from '../stage/buildStage'
 import type { StageLayoutKind } from '../stage/deviceFit'
-import type { ResolvedStageUrls } from '../stage/stagePack'
+import type { ResolvedStageUrls, StageBackgroundSpinePack } from '../stage/stagePack'
 import {
   SYMBOL_SIZE,
   type BoardDimensions,
@@ -32,6 +32,8 @@ type ReelBoardCanvasProps = {
   board: BoardDimensions
   resolutionScale: number
   stageUrls: ResolvedStageUrls
+  /** Optional Spine street — when set, replaces the static background sprite. */
+  backgroundSpine?: StageBackgroundSpinePack | null
   /** When set, only these symbol ids are used to fill the board. Empty = all ready. */
   allowedSymbolIds: string[] | null
   spinNonce: number
@@ -89,6 +91,7 @@ export function ReelBoardCanvas({
   board,
   resolutionScale,
   stageUrls,
+  backgroundSpine = null,
   allowedSymbolIds,
   spinNonce,
   winNonce,
@@ -107,6 +110,8 @@ export function ReelBoardCanvas({
   layoutKindRef.current = layoutKind
   const stageUrlsRef = useRef(stageUrls)
   stageUrlsRef.current = stageUrls
+  const backgroundSpineRef = useRef(backgroundSpine)
+  backgroundSpineRef.current = backgroundSpine
   const cacheRef = useRef(new Map<string, Texture>())
   const templatesRef = useRef(new Map<string, SpineTemplate>())
   const gridRef = useRef<BoardGrid | null>(null)
@@ -118,6 +123,7 @@ export function ReelBoardCanvas({
   useSpineRef.current = useSpineAfterStop
   const spinningRef = useRef(false)
   const rafRef = useRef<number | null>(null)
+  const stageDisposeRef = useRef<(() => void) | null>(null)
   const onSpinningChangeRef = useRef(onSpinningChange)
   const onGridChangeRef = useRef(onGridChange)
   const onErrorRef = useRef(onError)
@@ -130,7 +136,10 @@ export function ReelBoardCanvas({
     stageUrls.background,
     stageUrls.deskBase,
     stageUrls.deskContour,
-  ].join('|')
+    backgroundSpine?.skeletonUrl ?? '',
+    backgroundSpine?.atlasUrl ?? '',
+    backgroundSpine ? Object.keys(backgroundSpine.pageUrls).sort().join('|') : '',
+  ].join('::')
 
   const allowedSet = () => {
     const ids = allowedRef.current
@@ -215,7 +224,7 @@ export function ReelBoardCanvas({
       try {
         const app = new Application()
         await app.init({
-          background: '#0a0c10',
+          background: '#1a2433',
           antialias: true,
           resolution: Math.min((window.devicePixelRatio || 1) * resolutionScale, 3),
           autoDensity: true,
@@ -239,16 +248,19 @@ export function ReelBoardCanvas({
             }),
             () => layoutKindRef.current,
             stageUrlsRef.current,
+            backgroundSpineRef.current,
           )
           if (cancelled) {
+            layers.dispose()
             safeDestroy(app)
             return
           }
-          app.stage.addChild(layers.background)
+          app.stage.addChild(layers.backgroundRoot)
           app.stage.addChild(layers.contentRoot)
           playfieldRef.current = layers.playfield
           layers.layout()
           app.renderer.on('resize', layers.layout)
+          stageDisposeRef.current = layers.dispose
         } else {
           const { Graphics } = await import('pixi.js')
           const { boardPixelSize } = await import('./constants')
@@ -294,6 +306,8 @@ export function ReelBoardCanvas({
     return () => {
       cancelled = true
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      stageDisposeRef.current?.()
+      stageDisposeRef.current = null
       clearSpinePool()
       templatesRef.current.clear()
       safeDestroy(appRef.current)

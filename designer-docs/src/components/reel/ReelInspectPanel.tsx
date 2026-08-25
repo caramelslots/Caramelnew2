@@ -19,11 +19,7 @@ type ReelInspectPanelProps = {
   onQuickScenario: (scenario: QuickScenarioId) => void
 }
 
-export type QuickScenarioId =
-  | 'desktop-1080'
-  | 'popout-720'
-  | 'mobile-1080'
-  | 'compare-4k-720'
+export type QuickScenarioId = 'desktop-1080' | 'popout-720' | 'mobile-1080'
 
 export function ReelInspectPanel({
   library,
@@ -95,13 +91,6 @@ export function ReelInspectPanel({
             <button className="btn" type="button" onClick={() => onQuickScenario('mobile-1080')}>
               Mobile
             </button>
-            <button
-              className="btn"
-              type="button"
-              onClick={() => onQuickScenario('compare-4k-720')}
-            >
-              A/B
-            </button>
           </div>
         </div>
       </section>
@@ -159,24 +148,6 @@ export function ReelInspectPanel({
           </ul>
         </section>
       ) : null}
-
-      <details className="panel-block howto-details">
-        <summary>Как пользоваться</summary>
-        <ol className="howto-steps">
-          <li>
-            <strong>Upload</strong> static 196 + Spine
-          </li>
-          <li>
-            <strong>Spin</strong> в Reel Lab
-          </li>
-          <li>
-            <strong>Device / Quality</strong> сверху
-          </li>
-          <li>
-            <strong>A/B</strong> — сравнить качество
-          </li>
-        </ol>
-      </details>
     </div>
   )
 }

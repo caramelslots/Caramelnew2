@@ -25,23 +25,27 @@ export const BOARD_LAYOUT_SCALE = {
 } as const
 
 export const BOARD_LAYOUT_OFFSET = {
-  desktop: { x: 0, y: -24 },
-  laptop: { x: 0, y: -20 },
-  popout: { x: 0, y: -14 },
-  popoutS: { x: 0, y: -8 },
-  portrait: { x: 0, y: -36 },
+  /** Match cat_mafia BOARD_LAYOUT_OFFSETS (desktop / tablet / landscape / portrait). */
+  desktop: { x: -20, y: -36 },
+  laptop: { x: -16, y: -26 },
+  popout: { x: -12, y: -4 },
+  popoutS: { x: -8, y: -2 },
+  portrait: { x: 0, y: -60 },
 } as const
 
-/** Fraction of canvas reserved for board assembly (rest = HUD / margins). */
+/** Fraction of canvas reserved for board assembly (rest = HUD / margins).
+ *  cy ≈ cat_mafia desktop: board sits in upper play area, HUD over street below. */
 const AVAIL = {
-  desktop: { w: 0.94, h: 0.72, cy: 0.42 },
-  laptop: { w: 0.94, h: 0.7, cy: 0.41 },
-  popout: { w: 0.95, h: 0.66, cy: 0.4 },
-  popoutS: { w: 0.96, h: 0.62, cy: 0.38 },
-  portrait: { w: 0.94, h: 0.55, cy: 0.36 },
+  desktop: { w: 0.94, h: 0.68, cy: 0.4 },
+  laptop: { w: 0.94, h: 0.66, cy: 0.39 },
+  popout: { w: 0.95, h: 0.62, cy: 0.38 },
+  popoutS: { w: 0.96, h: 0.58, cy: 0.36 },
+  portrait: { w: 0.94, h: 0.52, cy: 0.34 },
 } as const
 
 export const BG_VIEW_ZOOM = 0.95
+/** Nudge to match cat_mafia still-vs-spine cover (`BG_STILL_MATCH_SCALE`). */
+export const BG_STILL_MATCH_SCALE = 1.012
 
 export function deskSizeForBoard(board: BoardDimensions) {
   const boardPx = boardPixelSize(board)
@@ -72,18 +76,37 @@ export function layoutStageContent(
 
   return {
     scale,
-    centerX: canvas.width * 0.5 + offset.x * scale * 0.15,
-    centerY: canvas.height * avail.cy + offset.y * scale * 0.15,
+    // Same idea as cat_mafia boardLayout: canvas center + layout offset (game px).
+    centerX: canvas.width * 0.5 + offset.x * scale,
+    centerY: canvas.height * avail.cy + offset.y * scale,
     desk,
     board: boardPixelSize(board),
     kind,
   }
 }
 
+/**
+ * cat_mafia street cover: fill canvas height; slight horizontal zoom-out
+ * (`BG_VIEW_ZOOM`) so more of the scene fits — not uniform letterbox.
+ */
+export function backgroundCoverScaleXY(
+  canvas: { width: number; height: number },
+  texture: { width: number; height: number },
+): { x: number; y: number } {
+  const tw = Math.max(texture.width, 1)
+  const th = Math.max(texture.height, 1)
+  const cover = Math.max(canvas.width / tw, canvas.height / th)
+  return {
+    x: cover * BG_VIEW_ZOOM * BG_STILL_MATCH_SCALE,
+    y: (canvas.height / th) * BG_STILL_MATCH_SCALE,
+  }
+}
+
+/** @deprecated use backgroundCoverScaleXY — kept for quality helpers if any. */
 export function backgroundCoverScale(
   canvas: { width: number; height: number },
   texture: { width: number; height: number },
 ) {
-  const cover = Math.max(canvas.width / texture.width, canvas.height / texture.height)
-  return cover * BG_VIEW_ZOOM
+  const { x, y } = backgroundCoverScaleXY(canvas, texture)
+  return Math.max(x, y)
 }

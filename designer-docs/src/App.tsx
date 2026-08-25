@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import '@esotericsoftware/spine-pixi-v8'
 import { AppShell, type WorkspaceMode } from './components/layout/AppShell'
+import { useTheme } from './theme/useTheme'
 import { DesignerGuideAccordion } from './components/docs/DesignerGuideAccordion'
 import { SymbolLibraryPanel } from './components/library/SymbolLibraryPanel'
 import { MetricsPanel } from './components/metrics/MetricsPanel'
@@ -38,6 +39,7 @@ import type {
 } from './types'
 
 export default function App() {
+  const { theme, toggleTheme } = useTheme()
   const [mode, setMode] = useState<WorkspaceMode>('symbol')
   const [library, setLibrary] = useState<LibrarySymbol[]>(() => createCatalogLibrarySymbols())
   const libraryRef = useRef(library)
@@ -204,7 +206,9 @@ export default function App() {
   return (
     <AppShell
       mode={mode}
+      theme={theme}
       onModeChange={setMode}
+      onToggleTheme={toggleTheme}
       docs={<DesignerGuideAccordion />}
       left={
         <>
