@@ -87,7 +87,9 @@
 						<span class="mascot-wrap dog">
 							<DuelPickMascot species="dog" mirror playing={show} />
 						</span>
-						<span class="vs-mini">VS</span>
+						{#if isPortrait}
+							<span class="vs-mini">VS</span>
+						{/if}
 						<span class="mascot-wrap cat">
 							<DuelPickMascot playing={show} />
 						</span>
@@ -98,7 +100,9 @@
 				<article class="rule">
 					<div class="visual boards-visual" aria-hidden="true">
 						<img src={BUY_BONUS_ASSETS.deskL} alt="" draggable="false" class="desk" />
-						<span class="vs-mini">VS</span>
+						{#if isPortrait}
+							<span class="vs-mini">VS</span>
+						{/if}
 						<img src={BUY_BONUS_ASSETS.deskR} alt="" draggable="false" class="desk" />
 					</div>
 					<p class="copy">{rule2}</p>

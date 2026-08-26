@@ -360,11 +360,12 @@ type PosePlayback = {
 
 /**
  * Pose → Spine mapping (`designer_assets/cat_render`):
- * - like (`react`) = line wins / bonus trigger (one-shot → idle)
- * - applause (`clap`) = big-win celebration (play once)
+ * - like (`react`) = Big / Super Win celebration (one-shot → idle)
+ * - applause (`clap`) = Epic / Sensational celebration (play once)
  * - hat = paw coin catch
  * - gun_start = catch BT fly at the hand; load / gun_end_load seat the drum after
- * - gun_shot_* = FS target shoot round
+ * - gun_shot_* = FS target pick (stat_idle → aim → shoot on tap → end)
+ *   and Stage E drum shoot round (stat_idle → aim → shoot×N → end)
  */
 export const MASCOT_POSE_PLAYBACK: Record<MascotPose, PosePlayback> = {
 	idle: { animation: 'idle', loop: true },
@@ -442,7 +443,7 @@ export const MASCOT_DOG_SPINE_FILES = [
 export const MASCOT_SPINE_ASSET_URLS = MASCOT_SPINE_FILES.map(resolveMascotSpineUrl);
 export const MASCOT_DOG_SPINE_ASSET_URLS = MASCOT_DOG_SPINE_FILES.map(resolveMascotSpineUrl);
 
-/** Atlas image — keep PNG (lossy WebP breaks PMA mesh edges). White = basegame. */
+/** Atlas image — keep PNG (lossy WebP breaks PMA mesh edges). White = freegame / duel. */
 export const MASCOT_SPINE_IMAGE_URL = resolveMascotSpineUrl('white/mascot_cat.png');
 export const MASCOT_SPINE_GRAY_IMAGE_URL = resolveMascotSpineUrl('gray/mascot_cat.png');
 
@@ -485,16 +486,18 @@ export const MASCOT_DOG_IDLE_VARIANTS: readonly MascotDogSpineAnimation[] = [
 	'blinking',
 	'idle_mouth',
 	'idle_glow',
+	'angry_final',
 ] as const;
 
-/** blinking often; idle_mouth / idle_glow equally less often. */
+/** blinking often; mouth / glow / angry less often. */
 export const MASCOT_DOG_IDLE_VARIANT_WEIGHTS: ReadonlyArray<{
 	animation: MascotDogSpineAnimation;
 	weight: number;
 }> = [
-	{ animation: 'blinking', weight: 0.5 },
-	{ animation: 'idle_mouth', weight: 0.25 },
-	{ animation: 'idle_glow', weight: 0.25 },
+	{ animation: 'blinking', weight: 0.4 },
+	{ animation: 'idle_mouth', weight: 0.2 },
+	{ animation: 'idle_glow', weight: 0.2 },
+	{ animation: 'angry_final', weight: 0.2 },
 ] as const;
 
 export const pickMascotDogIdleVariant = (): MascotDogSpineAnimation => {
@@ -509,7 +512,7 @@ export const pickMascotDogIdleVariant = (): MascotDogSpineAnimation => {
 
 /**
  * Map shared `mascotPose` beats onto dog clips.
- * Duel left mascot stays on idle flavour; `react` = dog lost (`angry_final`).
+ * Duel left mascot stays on idle flavour (angry_final is an idle variant, not a loss pose).
  */
 export const MASCOT_DOG_POSE_PLAYBACK: Record<
 	MascotPose,
@@ -524,8 +527,7 @@ export const MASCOT_DOG_POSE_PLAYBACK: Record<
 	gunEndLoad: { animation: 'idle', loop: true },
 	gunStatIdle: { animation: 'idle', loop: true },
 	gunStatLoad: { animation: 'idle', loop: true },
-	/** Dog lost the duel — hold angry until outro unmounts. */
-	react: { animation: 'angry_final', loop: true },
+	react: { animation: 'idle', loop: true },
 	wow: { animation: 'idle_glow', loop: true },
 	clap: { animation: 'idle_mouth', loop: true },
 	hatCatch: { animation: 'idle', loop: true },

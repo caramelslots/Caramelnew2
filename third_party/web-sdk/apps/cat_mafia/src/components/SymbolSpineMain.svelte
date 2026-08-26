@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { SpineProvider, SpineTrack, type SpineTrackProps } from 'pixi-svelte';
-	import { stateBetDerived } from 'state-shared';
 
 	import { getSymbolInfo } from '../game/utils';
 	import { SYMBOL_SIZE } from '../game/constants';
@@ -20,10 +19,23 @@
 
 	const props: Props = $props();
 
-	// Namespaced rest poses (`*/idle`) are frozen. Designer `idle` loops on
-	// every visible living symbol at once while the board is idle.
+	/**
+	 * Board symbol spines always play at 1× — idle and win share this.
+	 * Turbo only shortens waits + reel scroll (see stateGame.timeScale override).
+	 */
+	const SYMBOL_SPINE_TIME_SCALE = 1;
+
+	// Namespaced rest poses (`*/idle`) are frozen. Living clips — designer
+	// `idle`, `win` / `activation`, and W/B celebrate tracks — loop at the
+	// same 1× pace. Idle additionally waits for livingIdleActive.
 	const animationName = $derived(props.symbolInfo.animationName);
-	const isLivingIdle = $derived(animationName === 'idle');
+	const isLivingLoop = $derived(
+		animationName === 'idle' ||
+			animationName === 'win' ||
+			animationName === 'activation' ||
+			animationName === 'Special_2/win' ||
+			animationName === 'Special_1/wave',
+	);
 	const autoUpdate = $derived.by(() => {
 		const name = animationName;
 		if (!name) return true;
@@ -38,7 +50,7 @@
 		if ('loop' in props.symbolInfo && typeof props.symbolInfo.loop === 'boolean') {
 			return props.symbolInfo.loop;
 		}
-		return isLivingIdle;
+		return isLivingLoop;
 	});
 
 	// `reverseAnimation` on the descriptor signals that this clip should play
@@ -76,7 +88,7 @@
 		{loop}
 		trackIndex={0}
 		animationName={animationName}
-		timeScale={stateBetDerived.timeScale()}
+		timeScale={SYMBOL_SPINE_TIME_SCALE}
 		reverse={reverseAnimation}
 		animationEnd={animationEnd}
 		listener={props.listener}

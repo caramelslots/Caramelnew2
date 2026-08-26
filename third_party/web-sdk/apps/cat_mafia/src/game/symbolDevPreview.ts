@@ -60,7 +60,7 @@ export const SYMBOL_DEV_PREVIEW_GROUPS: readonly SymbolDevGroup[] = [
 	{
 		id: 'H3',
 		label: 'H3 Lit',
-		title: 'High 3 — lighter (idle / stop / win)',
+		title: 'High 3 — lighter (idle / stop / win, render_lighter_new)',
 		previewHeight: LIGHTER_PREVIEW_HEIGHT,
 		clips: renderClips('H3'),
 	},

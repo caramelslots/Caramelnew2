@@ -35,8 +35,15 @@
 
 	const isMysteryFx = (state: SymbolState) =>
 		state === 'mysteryReveal' || state === 'mysteryCollapse';
-	/** Win bounce / idle tease — above gold rails (BoardIdleBounceLayer). */
-	const isAboveRails = (state: SymbolState) => state === 'idleBounce' || state === 'win';
+	/** Win celebrate + idle tease — above gold rails (BoardIdleBounceLayer).
+	 *  `winLift` parks the cell above the rails with idle art first so the win
+	 *  spine never starts under the dividers then jumps over mid-clip.
+	 *  H1–H4 / letters keep their win spine on `postWinStatic` during spotlight. */
+	const isAboveRails = (state: SymbolState) =>
+		state === 'idleBounce' ||
+		state === 'winLift' ||
+		state === 'win' ||
+		state === 'postWinStatic';
 	const isPawName = (name: string) => name === 'PB' || name === 'PS' || name === 'PG';
 	/**
 	 * Resting / landing paw above the gold rails.

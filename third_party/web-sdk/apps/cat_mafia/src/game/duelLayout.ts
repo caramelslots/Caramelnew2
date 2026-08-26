@@ -89,6 +89,10 @@ const normalDeskScreenSize = (ml: MainLayoutLike, board: BoardLayoutLike) => {
 const DUEL_MASCOT_OVERHANG = 0.4;
 /** Gap between desk edge and mascot body (fraction of board width). */
 const DUEL_MASCOT_GAP_FRAC = 0.02;
+/** Dog is slightly smaller than the cat on desktop / tablet / landscape (phones use faces). */
+const DUEL_DOG_MASCOT_SCALE = 0.88;
+/** Extra left shift for the dog (fraction of board width) — tucks farther from the desk. */
+const DUEL_DOG_LEFT_NUDGE_FRAC = 0.06;
 
 export const computeDuelScreenLayout = (opts: {
 	canvasWidth: number;
@@ -137,7 +141,7 @@ export const computeDuelScreenLayout = (opts: {
 		const hudReserve = Math.round(opts.canvasHeight * 0.14);
 		const topReserve = Math.round(opts.canvasHeight * 0.09);
 		const availableH = Math.max(80, opts.canvasHeight - hudReserve - topReserve);
-		const vsSize = 8;
+		const vsSize = 0;
 		const gap = 2;
 		const sideGutter = 3;
 		const usable = Math.max(80, opts.canvasWidth - sideGutter * 2 - vsSize - gap * 2);
@@ -167,7 +171,7 @@ export const computeDuelScreenLayout = (opts: {
 		const hudReserve = Math.round(opts.canvasHeight * 0.13);
 		const topReserve = Math.round(opts.canvasHeight * 0.08);
 		const availableH = Math.max(120, opts.canvasHeight - hudReserve - topReserve);
-		const vsSize = 14;
+		const vsSize = 0;
 		const gap = 3;
 		const sideGutter = Math.max(opts.canvasWidth * 0.02, 6);
 		const usable = Math.max(120, opts.canvasWidth - sideGutter * 2 - vsSize - gap * 2);
@@ -198,7 +202,7 @@ export const computeDuelScreenLayout = (opts: {
 	const topReserveDesk = Math.round(Math.min(64, Math.max(44, opts.canvasHeight * 0.07)));
 	const availableH = Math.max(200, opts.canvasHeight - hudReserveDesk - topReserveDesk);
 
-	const vsSize = Math.max(22, Math.min(36, opts.canvasWidth * 0.018));
+	const vsSize = 0;
 	const gap = 4;
 	const sideGutter = Math.max(opts.canvasWidth * 0.02, 12);
 	const usable = Math.max(200, opts.canvasWidth - sideGutter * 2 - vsSize - gap * 2);
@@ -268,10 +272,14 @@ export const getDuelCatMascotBox = (layout: DuelScreenLayout) => {
 
 /** Screen box for the dog mascot left of the dog board (desktop). */
 export const getDuelDogMascotBox = (layout: DuelScreenLayout) => {
-	const { w, h } = duelMascotSize(layout);
+	const base = duelMascotSize(layout);
+	const scale = layout.isPortrait ? 1 : DUEL_DOG_MASCOT_SCALE;
+	const w = base.w * scale;
+	const h = base.h * scale;
 	const gap = layout.boardWidth * DUEL_MASCOT_GAP_FRAC;
 	const overhang = w * layout.mascotOverhang;
-	const left = layout.dogCenter.x - layout.boardWidth * 0.5 - gap - (w - overhang);
+	const leftNudge = layout.isPortrait ? 0 : layout.boardWidth * DUEL_DOG_LEFT_NUDGE_FRAC;
+	const left = layout.dogCenter.x - layout.boardWidth * 0.5 - gap - (w - overhang) - leftNudge;
 	const top = layout.dogCenter.y + layout.boardHeight * 0.18 - h * 0.5;
 	return {
 		left,

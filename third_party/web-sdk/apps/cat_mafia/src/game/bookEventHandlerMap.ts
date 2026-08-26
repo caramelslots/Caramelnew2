@@ -106,8 +106,6 @@ const playDuelWinLines = async (
 	eventEmitter.broadcast({ type: 'boardFramePulse', side });
 	// Dim only this desk — the other side stays full-bright.
 	stateDuel.winSpotlightSide = side;
-	// Each duel payline beat (phase-1 + SW product) gets its own like.
-	triggerMascotWinReaction(winLevelMap[2]);
 
 	for (const win of wins) {
 		const lineIndex = win.meta?.lineIndex ?? 0;
@@ -301,17 +299,13 @@ const findNextSetWin = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
 	return undefined;
 };
 
-const previousBookEvent = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
-	const startIdx = bookEvents.indexOf(fromEvent);
-	return startIdx > 0 ? bookEvents[startIdx - 1] : undefined;
-};
-
 /**
- * Mascot win beat: `like` for normal/big/super, `applause` for epic/sensational.
- * Always bumps `mascotAnimToken` so SW phase-2 / sticky ×product re-fires the same pose.
+ * Mascot win beat — only on full-screen Big Win+ banners:
+ * `like` for big/super, `applause` for epic/sensational.
+ * Bumps `mascotAnimToken` so a second setWin can re-fire the same pose.
  */
 const triggerMascotWinReaction = (winLevelData: WinLevelData | undefined) => {
-	if (!winLevelData || winLevelData.level <= 1) return;
+	if (!winLevelData || winLevelData.type !== 'big') return;
 	const pose =
 		winLevelData.alias === 'epic' || winLevelData.alias === 'sensational'
 			? 'clap'
@@ -641,14 +635,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 		eventEmitter.broadcast({ type: 'boardFramePulse' });
 
-		const nextSetWinEarly = findNextSetWin(bookEvents, bookEvent);
-		const nextWinLevelEarly =
-			nextSetWinEarly != null
-				? winLevelMap[nextSetWinEarly.winLevel as WinLevel]
-				: undefined;
-		// Every winInfo beat (SW phase-1 + phase-2) gets its own like / applause.
-		triggerMascotWinReaction(nextWinLevelEarly ?? winLevelMap[2]);
-
 		// All winning paylines render simultaneously — PaylineOverlay keeps an
 		// array of active lines so multiple `paylineShow` events stack.
 		// `paylineRows` — полный rows-паттерн линии через ВСЕ катушки (5),
@@ -795,8 +781,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (!hadTargetPick && !hadBonusCollect && bookEvent.positions?.length) {
 			await animateBonusSymbols({ positions: bookEvent.positions });
 		}
-		// Like when the bonus triggers (scatter / buy-in).
-		triggerMascotWinReaction(winLevelMap[2]);
 		// show free spin intro
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
@@ -860,7 +844,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.bulletFly = null;
 		stateGame.stickySwByReel = {};
 		stateGame.stickySwOpened = false;
-		stateGame.mascotPose = 'clap';
 
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
@@ -892,12 +875,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	setWin: async (bookEvent: BookEventOfType<'setWin'>, { bookEvents }: BookEventContext) => {
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
 
-		// Sticky SW ×product (and similar): second setWin without a new winInfo —
-		// still needs its own like / applause. Skip when winInfo just fired it.
-		const prev = previousBookEvent(bookEvents, bookEvent);
-		if (prev?.type !== 'winInfo') {
-			triggerMascotWinReaction(winLevelData);
-		}
+		// Like / applause only when the Big Win+ overlay runs (not on paylines).
+		triggerMascotWinReaction(winLevelData);
 
 		// Stake UX: small/medium wins are non-blocking — board amount + HUD WIN
 		// are raised during winInfo; skip duplicate increment here.
@@ -1068,7 +1047,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		}
 
 		// New open(s): lying cell → curtain per new column. Already-open columns skip curtain.
-		// Mascot like/applause stays on winInfo / setWin beats — not on the curtain itself.
+		// Mascot like/applause stays on Big Win setWin — not on the curtain itself.
 		for (const expand of bookEvent.expands) {
 			const reel = stateGame.board[expand.reel];
 			let swRows = 0;
@@ -1181,7 +1160,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		);
 	},
 
-	/** Stage E — one auto shoot round after main FS; then optional extra FS. */
+	/** Stage E — player taps targets after main FS; rewards come from the book. */
 	targetShootRound: async (bookEvent: BookEventOfType<'targetShootRound'>) => {
 		// Only one shooting round per bonus.
 		if (stateGame.fsExtraPhase) return;
@@ -1453,8 +1432,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			eventEmitter.broadcast({ type: 'paylineClearAll', side });
 			await playDuelWinLines(side, wins, totalWin);
 		} else if (bookEvent.spinWin > 0) {
-			// Product-only beat (no new paylines) — still cheer once for the ×product cash.
-			triggerMascotWinReaction(winLevelMap[2]);
 			await waitForGameSpeed(DUEL_POST_SPIN_MS, stateGame.gameSpeed);
 			return;
 		}

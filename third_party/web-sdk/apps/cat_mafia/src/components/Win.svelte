@@ -132,8 +132,7 @@
 	});
 
 	/**
-	 * Big / Super: idle so flavour keeps moving.
-	 * Epic / Sensational: keep applause (don't cancel the win reaction).
+	 * Big Win overlay only: like for Big/Super, applause for Epic/Sensational.
 	 */
 	$effect(() => {
 		winUpdateCount;
@@ -145,8 +144,9 @@
 			}
 			return;
 		}
-		if (stateGame.mascotPose !== 'idle') {
-			stateGame.mascotPose = 'idle';
+		if (stateGame.mascotPose !== 'react') {
+			stateGame.mascotAnimToken += 1;
+			stateGame.mascotPose = 'react';
 		}
 	});
 

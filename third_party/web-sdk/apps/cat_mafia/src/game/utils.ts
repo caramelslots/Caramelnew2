@@ -164,7 +164,7 @@ export const getSymbolInfo = ({
 	if (state === 'land' && stateGame.gameSpeed === 3) {
 		return SYMBOL_INFO_MAP[rawSymbol.name].static;
 	}
-	if (state === 'idleBounce') {
+	if (state === 'idleBounce' || state === 'winLift') {
 		return SYMBOL_INFO_MAP[rawSymbol.name].static;
 	}
 	return SYMBOL_INFO_MAP[rawSymbol.name][state];

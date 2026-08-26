@@ -1076,11 +1076,13 @@ const makeRenderLand = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: R
 	sizeRatios,
 	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
 });
+/** Win / activation — same 1× loop pace as living `idle` (see SymbolSpineMain). */
 const makeRenderWin = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) => ({
 	type: 'spine' as const,
 	assetKey,
 	animationName: opts?.winAnimationName ?? 'win',
 	sizeRatios,
+	loop: true as const,
 	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
 });
 const makeRenderSpinSprite = (imgKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) => ({
@@ -1436,6 +1438,7 @@ const wWin = {
 	assetKey: 'WWin' as const,
 	animationName: 'Special_2/win',
 	sizeRatios: wWinSizeRatios,
+	loop: true as const,
 };
 const wBounce = {
 	type: 'spine' as const,
@@ -1458,35 +1461,38 @@ const bWin = {
 	assetKey: 'B' as const,
 	animationName: 'Special_1/wave',
 	sizeRatios: bWinSizeRatios,
+	loop: true as const,
 };
 
 export const SYMBOL_INFO_MAP = {
 	// H1 (diamond): idle / stop / activation.
 	// H2 (revolver) / H3 (lighter) / H4 (telephone) / L1..L4 (A/K/Q/J): idle / stop / win.
+	// postWinStatic keeps the looping win clip (same 1× pace as living idle) for the
+	// spotlight hold — not a frozen idle frame.
 	H1: {
 		win: h1Win,
-		postWinStatic: h1Static,
+		postWinStatic: h1Win,
 		static: h1Static,
 		spin: h1Spin,
 		land: h1Land,
 	},
 	H2: {
 		win: h2Win,
-		postWinStatic: h2Static,
+		postWinStatic: h2Win,
 		static: h2Static,
 		spin: h2Spin,
 		land: h2Land,
 	},
 	H3: {
 		win: h3Win,
-		postWinStatic: h3Static,
+		postWinStatic: h3Win,
 		static: h3Static,
 		spin: h3Spin,
 		land: h3Land,
 	},
 	H4: {
 		win: h4Win,
-		postWinStatic: h4Static,
+		postWinStatic: h4Win,
 		static: h4Static,
 		spin: h4Spin,
 		land: h4Land,
@@ -1494,35 +1500,35 @@ export const SYMBOL_INFO_MAP = {
 	// L1–L4 = A / K / Q / J letter spines: idle rest, stop on land, win celebrate.
 	L1: {
 		win: l1Win,
-		postWinStatic: l1Static,
+		postWinStatic: l1Win,
 		static: l1Static,
 		spin: l1Spin,
 		land: l1Land,
 	},
 	L2: {
 		win: l2Win,
-		postWinStatic: l2Static,
+		postWinStatic: l2Win,
 		static: l2Static,
 		spin: l2Spin,
 		land: l2Land,
 	},
 	L3: {
 		win: l3Win,
-		postWinStatic: l3Static,
+		postWinStatic: l3Win,
 		static: l3Static,
 		spin: l3Spin,
 		land: l3Land,
 	},
 	L4: {
 		win: l4Win,
-		postWinStatic: l4Static,
+		postWinStatic: l4Win,
 		static: l4Static,
 		spin: l4Spin,
 		land: l4Land,
 	},
 	// Wild — WebP while scrolling (same as H/L); land/static stay on spine.
 	W: {
-		postWinStatic: wStatic,
+		postWinStatic: wWin,
 		static: wStatic,
 		spin: wSpin,
 		win: wWin,
@@ -1530,7 +1536,7 @@ export const SYMBOL_INFO_MAP = {
 	},
 	// Super Wild — alias Wild art for Stage B (badge via Symbol.svelte multiplier).
 	SW: {
-		postWinStatic: wStatic,
+		postWinStatic: wWin,
 		static: wStatic,
 		spin: wSpin,
 		win: wWin,
@@ -1570,7 +1576,7 @@ export const SYMBOL_INFO_MAP = {
 	},
 	// Bonus — WebP while scrolling; land/static stay on spine (paw bone aligned).
 	B: {
-		postWinStatic: bStatic,
+		postWinStatic: bWin,
 		static: bStatic,
 		spin: bSpin,
 		win: bWin,

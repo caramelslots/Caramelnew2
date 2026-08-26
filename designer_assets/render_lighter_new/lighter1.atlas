@@ -1,5 +1,5 @@
-H3.webp
-size:1996,596
+lighter1.png
+size:1786,596
 filter:Linear,Linear
 scale:0.4
 Circle_rays_22
@@ -41,5 +41,3 @@ offsets:0,1,235,255
 triangle
 bounds:1545,39,49,48
 offsets:4,4,56,55
-fx3
-bounds:1788,0,208,207

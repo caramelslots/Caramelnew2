@@ -121,6 +121,7 @@ export const i18nDerived = {
 	targetPickHintWon: (n: number) => t('TARGET_PICK_HINT_WON').replace('{n}', String(n)),
 	targetShootTitle: () => t('TARGET_SHOOT_TITLE'),
 	targetShootHintIntro: () => t('TARGET_SHOOT_HINT_INTRO'),
+	targetShootHintPick: () => t('TARGET_SHOOT_HINT_PICK'),
 	targetShootHintFiring: () => t('TARGET_SHOOT_HINT_FIRING'),
 	targetShootHintExtra: (n: number) => t('TARGET_SHOOT_HINT_EXTRA').replace('{n}', String(n)),
 	targetShootHintNone: () => t('TARGET_SHOOT_HINT_NONE'),

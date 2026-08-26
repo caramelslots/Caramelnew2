@@ -19,6 +19,8 @@ export const SYMBOL_STATES = [
 	'static',
 	'spin',
 	'land',
+	/** Park on the above-rails layer with idle art before `win` starts (avoids under→over mid-clip). */
+	'winLift',
 	'win',
 	'postWinStatic',
 	'idleBounce',

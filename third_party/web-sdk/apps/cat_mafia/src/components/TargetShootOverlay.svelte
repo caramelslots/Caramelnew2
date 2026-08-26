@@ -8,14 +8,21 @@
 
 <script lang="ts">
 	/**
-	 * Stage E: auto shooting round after main FS — no player input.
-	 * Each shot hits a predetermined target; rewards are empty / +1/+2/+3 FS.
-	 * Mascot: gun_shot_stat_idle → gun_shot_aim → gun_shot×N → gun_shot_end.
+	 * Stage E: player-tapped shooting round after main FS.
+	 * Math already fixed the reward sequence (+0/+1/+2/+3 FS); click only picks
+	 * which target face shows each reward (same UX pattern as freeSpinTargetPick).
+	 * Mascot: gun_shot_stat_idle → gun_shot_aim → gun_shot per tap → gun_shot_end.
 	 */
 	import { fade } from 'svelte/transition';
+	import { waitForResolve } from 'utils-shared/wait';
 
 	import { getContext } from '../game/context';
-	import { alignDrumForNextShot, playDrumChamberShot, advanceDrumAfterShot, syncDrumLoadRotation } from '../game/drumShoot';
+	import {
+		alignDrumForNextShot,
+		playDrumChamberShot,
+		advanceDrumAfterShot,
+		syncDrumLoadRotation,
+	} from '../game/drumShoot';
 	import {
 		MASCOT_GUN_SHOT_AIM_MS,
 		MASCOT_GUN_SHOT_END_MS,
@@ -28,74 +35,107 @@
 	const context = getContext();
 
 	let show = $state(false);
-	let shots = $state<{ targetIndex: number; reward: 0 | 1 | 2 | 3 }[]>([]);
+	let rewardQueue = $state<(0 | 1 | 2 | 3)[]>([]);
 	let extraFs = $state(0);
 	let hitSet = $state(new Set<number>());
 	let revealed = $state<Record<number, 0 | 1 | 2 | 3>>({});
 	let activeShot = $state<number | null>(null);
-	let phase = $state<'intro' | 'shooting' | 'summary'>('intro');
+	let phase = $state<'intro' | 'pick' | 'firing' | 'summary'>('intro');
+	let shotBusy = $state(false);
+	let oncomplete = $state(() => {});
 
 	const rewardLabel = (r: 0 | 1 | 2 | 3) => (r === 0 ? '—' : `+${r}`);
 	const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
+	const finishRound = async () => {
+		phase = 'summary';
+		stateGame.mascotPose = 'gunShotEnd';
+		await wait(MASCOT_GUN_SHOT_END_MS);
+		stateGame.mascotPose = 'idle';
+		stateGame.drumFiringChamber = null;
+		await wait(extraFs > 0 ? 1400 : 900);
+		show = false;
+		stateGame.drumShootActive = false;
+		oncomplete();
+	};
+
+	const onTargetClick = async (index: number) => {
+		if (phase !== 'pick' || shotBusy) return;
+		if (hitSet.has(index)) return;
+		if (rewardQueue.length === 0) return;
+
+		shotBusy = true;
+		phase = 'firing';
+		const reward = rewardQueue[0];
+		rewardQueue = rewardQueue.slice(1);
+		activeShot = index;
+
+		const chamber = await alignDrumForNextShot((ms) => wait(ms));
+		if (chamber === null) {
+			activeShot = null;
+			shotBusy = false;
+			await finishRound();
+			return;
+		}
+
+		stateGame.mascotPose = 'shoot';
+		stateGame.mascotAnimToken += 1;
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
+		await wait(MASCOT_GUN_SHOT_MS);
+
+		await playDrumChamberShot((ms) => wait(ms));
+
+		hitSet = new Set([...hitSet, index]);
+		revealed = { ...revealed, [index]: reward };
+		activeShot = null;
+
+		await advanceDrumAfterShot((ms) => wait(ms));
+
+		if (rewardQueue.length === 0) {
+			await finishRound();
+			return;
+		}
+
+		stateGame.mascotPose = 'aim';
+		phase = 'pick';
+		shotBusy = false;
+	};
+
 	context.eventEmitter.subscribeOnMount({
 		targetShootRound: async (event) => {
-			shots = event.shots.map((s) => ({
-				targetIndex: s.targetIndex,
-				reward: s.reward as 0 | 1 | 2 | 3,
-			}));
+			// Preserve reward order from math; ignore book targetIndex (player picks faces).
+			rewardQueue = event.shots.map((s) => s.reward as 0 | 1 | 2 | 3);
 			extraFs = event.extraFs;
 			hitSet = new Set();
 			revealed = {};
 			activeShot = null;
+			shotBusy = false;
 			phase = 'intro';
 			show = true;
 			stateGame.drumShootActive = true;
-			// Start from the CW load pose so empties at position 1 are skipped CCW.
 			syncDrumLoadRotation();
 
-			// 1) gun_shot_stat_idle once
 			stateGame.mascotPose = 'gunStatIdle';
 			await wait(MASCOT_GUN_STAT_IDLE_MS);
-
-			// 2) gun_shot_aim once
 			stateGame.mascotPose = 'aim';
 			await wait(MASCOT_GUN_SHOT_AIM_MS);
 
-			phase = 'shooting';
-
-			// 3) gun_shot → then shake → then cylinder step (drum idle during the clip).
-			for (let i = 0; i < shots.length; i++) {
-				const shot = shots[i];
-				activeShot = shot.targetIndex;
-
-				const chamber = await alignDrumForNextShot((ms) => wait(ms));
-				if (chamber === null) break;
-
-				stateGame.mascotPose = 'shoot';
-				stateGame.mascotAnimToken += 1;
-				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-				await wait(MASCOT_GUN_SHOT_MS);
-
-				await playDrumChamberShot((ms) => wait(ms));
-
-				hitSet = new Set([...hitSet, shot.targetIndex]);
-				revealed = { ...revealed, [shot.targetIndex]: shot.reward };
-				activeShot = null;
-
-				await advanceDrumAfterShot((ms) => wait(ms));
+			if (rewardQueue.length === 0) {
+				phase = 'summary';
+				stateGame.mascotPose = 'gunShotEnd';
+				await wait(MASCOT_GUN_SHOT_END_MS);
+				stateGame.mascotPose = 'idle';
+				stateGame.drumFiringChamber = null;
+				await wait(900);
+				show = false;
+				stateGame.drumShootActive = false;
+				return;
 			}
 
-			// 4) gun_shot_end once
-			phase = 'summary';
-			stateGame.mascotPose = 'gunShotEnd';
-			await wait(MASCOT_GUN_SHOT_END_MS);
-			stateGame.mascotPose = 'idle';
-			stateGame.drumFiringChamber = null;
-			// Keep spent casings visible through extra FS.
-			await wait(extraFs > 0 ? 1400 : 900);
-			show = false;
-			stateGame.drumShootActive = false;
+			phase = 'pick';
+			await waitForResolve((resolve) => {
+				oncomplete = resolve;
+			});
 		},
 	});
 </script>
@@ -107,7 +147,9 @@
 			<p class="hint">
 				{#if phase === 'intro'}
 					{context.i18nDerived.targetShootHintIntro()}
-				{:else if phase === 'shooting'}
+				{:else if phase === 'pick'}
+					{context.i18nDerived.targetShootHintPick()}
+				{:else if phase === 'firing'}
 					{context.i18nDerived.targetShootHintFiring()}
 				{:else if extraFs > 0}
 					{context.i18nDerived.targetShootHintExtra(extraFs)}
@@ -115,16 +157,19 @@
 					{context.i18nDerived.targetShootHintNone()}
 				{/if}
 			</p>
-			<div class="grid">
+			<div class="grid" class:locked={phase !== 'pick'}>
 				{#each Array.from({ length: TARGET_COUNT }, (_, i) => i) as i (i)}
 					{@const flipped = hitSet.has(i)}
 					{@const reward = revealed[i]}
-					<div
+					<button
+						type="button"
 						class="target"
 						class:flipped
 						class:shooting={activeShot === i}
 						class:prize={flipped && reward !== undefined && reward > 0}
-						aria-hidden="true"
+						disabled={phase !== 'pick' || flipped}
+						onclick={() => onTargetClick(i)}
+						aria-label={`Target ${i + 1}`}
 					>
 						<span class="face front">
 							<span class="ring ring-1"></span>
@@ -140,7 +185,7 @@
 								{/if}
 							{/if}
 						</span>
-					</div>
+					</button>
 				{/each}
 			</div>
 		</div>
@@ -156,7 +201,7 @@
 		align-items: center;
 		justify-content: center;
 		background: rgba(0, 0, 0, 0.78);
-		pointer-events: none;
+		pointer-events: auto;
 	}
 
 	.panel {
@@ -195,11 +240,23 @@
 		gap: 0.75rem;
 	}
 
+	.grid.locked {
+		pointer-events: none;
+	}
+
 	.target {
 		position: relative;
 		width: 96px;
 		height: 96px;
+		border: none;
+		background: transparent;
+		padding: 0;
+		cursor: pointer;
 		perspective: 600px;
+	}
+
+	.target:disabled {
+		cursor: default;
 	}
 
 	.face {

@@ -21,7 +21,7 @@
 </script>
 
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { Container, Graphics } from 'pixi-svelte';
 	import type * as PIXI from 'pixi.js';
 	import { MainContainer } from 'components-layout';
@@ -126,10 +126,16 @@
 				symbolPositions.map(async (position) => {
 					const reelSymbol = stack.board[position.reel]?.reelState.symbols[position.row];
 					if (!reelSymbol) return;
-					if (reelSymbol.symbolState === 'win' || reelSymbol.symbolState === 'postWinStatic') {
+					if (
+						reelSymbol.symbolState === 'win' ||
+						reelSymbol.symbolState === 'postWinStatic' ||
+						reelSymbol.symbolState === 'winLift'
+					) {
 						reelSymbol.symbolState = 'static';
-						await Promise.resolve();
+						await tick();
 					}
+					reelSymbol.symbolState = 'winLift';
+					await tick();
 					reelSymbol.symbolState = 'win';
 					await waitForResolve((resolve) => {
 						reelSymbol.oncomplete = resolve;

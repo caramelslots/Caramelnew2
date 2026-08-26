@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Skin } from '@esotericsoftware/spine-pixi-v8';
 	import { getContextSpine } from 'pixi-svelte';
 
 	type Props = {
@@ -13,29 +14,43 @@
 		x2_silver: 'paw_silver',
 		x3_gold: 'paw_gold',
 	} as const;
-	// appear_flash shows paw, then the reverse (x1/x2/x3). The board paw is not
-	// a paying coin, so the reverse must still be a paw — not a blank disc.
-	// Copy the paw attachment onto the text slots (don't strip them: the clip
-	// still enables those slots at t≈0.53). Overlay SpinePlayer parses its own
-	// json, so paying overlay coins keep their tier text.
-	const mirrorPawOnReverse = () => {
+
+	/**
+	 * Board PB/PS/PG: appear_flash flips to the reverse face. Paying overlay
+	 * coins must keep x1/x2/x3 on the shared `coin_*` skins — so mirror paw
+	 * onto the text slots only on a per-SkeletonData clone, never mutate the
+	 * asset skins (PawCoinPixiLayer shares `coinsPaw` with the board).
+	 */
+	const boardSkinCache = new WeakMap<object, Map<string, Skin>>();
+
+	const boardSkinFor = (name: Props['skin']): Skin | null => {
 		const data = spine.skeleton.data;
-		for (const skinName of ['coin_bronze', 'coin_silver', 'coin_gold'] as const) {
-			const skinData = data.findSkin(skinName);
-			if (!skinData) continue;
-			for (const [textSlotName, pawSlotName] of Object.entries(TEXT_TO_PAW)) {
-				const textSlot = data.findSlot(textSlotName);
-				const pawSlot = data.findSlot(pawSlotName);
-				if (!textSlot || !pawSlot) continue;
-				const pawAtt = skinData.getAttachment(pawSlot.index, pawSlotName);
-				if (pawAtt) skinData.setAttachment(textSlot.index, textSlotName, pawAtt);
-			}
+		const base = data.findSkin(`coin_${name}`);
+		if (!base) return null;
+
+		let byName = boardSkinCache.get(data);
+		if (!byName) {
+			byName = new Map();
+			boardSkinCache.set(data, byName);
 		}
+		const cached = byName.get(name);
+		if (cached) return cached;
+
+		const board = new Skin(`coin_${name}_board`);
+		board.addSkin(base);
+		for (const [textSlotName, pawSlotName] of Object.entries(TEXT_TO_PAW)) {
+			const textSlot = data.findSlot(textSlotName);
+			const pawSlot = data.findSlot(pawSlotName);
+			if (!textSlot || !pawSlot) continue;
+			const pawAtt = board.getAttachment(pawSlot.index, pawSlotName);
+			if (pawAtt) board.setAttachment(textSlot.index, textSlotName, pawAtt);
+		}
+		byName.set(name, board);
+		return board;
 	};
-	mirrorPawOnReverse();
 
 	const applySkin = (name: Props['skin']) => {
-		const skinData = spine.skeleton.data.findSkin(`coin_${name}`);
+		const skinData = boardSkinFor(name);
 		if (!skinData) return;
 		spine.skeleton.setSkin(skinData);
 		spine.skeleton.setSlotsToSetupPose();

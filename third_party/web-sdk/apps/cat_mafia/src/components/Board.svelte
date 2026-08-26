@@ -35,6 +35,7 @@
 </script>
 
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { stateBetDerived } from 'state-shared';
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 	import { Container } from 'pixi-svelte';
@@ -151,11 +152,17 @@
 					// $effect, so oncomplete never runs and the book pipeline hangs.
 					if (
 						reelSymbol.symbolState === 'win' ||
-						reelSymbol.symbolState === 'postWinStatic'
+						reelSymbol.symbolState === 'postWinStatic' ||
+						reelSymbol.symbolState === 'winLift'
 					) {
 						reelSymbol.symbolState = 'static';
-						await Promise.resolve();
+						await tick();
 					}
+					// Lift above gold rails with idle art first — starting `win` while still
+					// on the masked board makes the first half of H3/etc. play under the
+					// dividers, then remount above for the rest.
+					reelSymbol.symbolState = 'winLift';
+					await tick();
 					reelSymbol.symbolState = 'win';
 					await waitForResolve((resolve) => (reelSymbol.oncomplete = resolve));
 					reelSymbol.symbolState = 'postWinStatic';

@@ -286,7 +286,7 @@ export default {
 			scale: 2,
 		},
 	},
-	/** Full-body cat — white (basegame). Ref. designer_assets/cat_render/white. */
+	/** Full-body cat — white (freegame / duel). Ref. designer_assets/cat_render/white. */
 	mascotCat: {
 		type: 'spine',
 		src: {
@@ -295,7 +295,7 @@ export default {
 			scale: 1,
 		},
 	},
-	/** Full-body cat — gray (freegame / bonus). Ref. designer_assets/cat_render/gray. */
+	/** Full-body cat — gray (basegame). Ref. designer_assets/cat_render/gray. */
 	mascotCatGray: {
 		type: 'spine',
 		src: {

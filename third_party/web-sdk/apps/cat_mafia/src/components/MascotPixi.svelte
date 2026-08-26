@@ -75,9 +75,9 @@
 	const forceDogAnim = $derived(isDuelDog ? null : devPreview.mascotDogAnimation);
 	const previewDogOnPrimary = $derived(!isDuelDog && forceDogAnim !== null);
 	const useDogSpine = $derived(isDuelDog || previewDogOnPrimary);
-	/** White = basegame; gray = freegame / duel bonus. */
+	/** Gray = basegame; white = freegame / duel bonus. */
 	const catSpineKey = $derived(
-		context.stateGame.gameType === 'freegame' || stateDuel.active ? 'mascotCatGray' : 'mascotCat',
+		context.stateGame.gameType === 'freegame' || stateDuel.active ? 'mascotCat' : 'mascotCatGray',
 	);
 	const forceAnim = $derived(forceCatAnim ?? forceDogAnim);
 	const mascotAnimToken = $derived(context.stateGame.mascotAnimToken);
@@ -92,11 +92,8 @@
 	);
 
 	const pose = $derived.by((): MascotPose => {
-		// Duel dog: idle flavour during play; angry_final when the dog board lost.
-		if (isDuelDog) {
-			if (stateDuel.winner === 'cat') return 'react';
-			return 'idle';
-		}
+		// Duel dog stays on idle flavour (incl. angry_final as a random beat).
+		if (isDuelDog) return 'idle';
 		return (context.stateGame.mascotPose || 'idle') as MascotPose;
 	});
 	/** Always 1× — turbo must not speed up mascot clips. */

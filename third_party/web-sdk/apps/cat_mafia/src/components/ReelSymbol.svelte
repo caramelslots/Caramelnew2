@@ -35,7 +35,9 @@
 
 	const props: Props = $props();
 	const symbolRenderState = $derived(
-		props.reelSymbol.symbolState === 'idleBounce' ? 'static' : props.reelSymbol.symbolState,
+		props.reelSymbol.symbolState === 'idleBounce' || props.reelSymbol.symbolState === 'winLift'
+			? 'static'
+			: props.reelSymbol.symbolState,
 	);
 	const symbolInfo = $derived(
 		getSymbolInfo({ rawSymbol: props.reelSymbol.rawSymbol, state: props.reelSymbol.symbolState }),
@@ -72,7 +74,9 @@
 	// so only the desk that hit the line dims. Сбрасывается в `reveal` /
 	// следующем duelSpin / clearWinSpotlight.
 	const isWinningState = $derived(
-		props.reelSymbol.symbolState === 'win' || props.reelSymbol.symbolState === 'postWinStatic',
+		props.reelSymbol.symbolState === 'win' ||
+			props.reelSymbol.symbolState === 'postWinStatic' ||
+			props.reelSymbol.symbolState === 'winLift',
 	);
 	/** Base uses global flag; duel dims only the desk that just hit a line. */
 	const winSpotlightActive = $derived(
@@ -310,11 +314,12 @@
 		alpha={isSpinningSymbol ? 1 : dimAlphaTween.current}
 	>
 		<!-- Sprites: key by asset so H1Img→L3Img swaps cleanly (cheap remount).
-		     Spines: include state + animationName so B/M idle↔land/win remount
-		     correctly — a spine-only assetKey key left Special_1 / Mystery posed wrong. -->
+		     Spines: key by asset + clip so idle↔land↔win remount on clip change.
+		     Omit symbolState — win→postWinStatic keeps the same looping win clip
+		     without restarting (same 1× pace as living idle). -->
 		{#key symbolInfo.type === 'sprite'
 			? `sprite:${symbolInfo.assetKey}`
-			: `${symbolRenderState}:spine:${symbolInfo.assetKey}:${symbolInfo.animationName ?? ''}:${'devNonce' in symbolInfo ? symbolInfo.devNonce : ''}`}
+			: `spine:${symbolInfo.assetKey}:${symbolInfo.animationName ?? ''}:${'devNonce' in symbolInfo ? symbolInfo.devNonce : ''}`}
 			<Symbol
 				state={symbolRenderState}
 				rawSymbol={props.reelSymbol.rawSymbol}

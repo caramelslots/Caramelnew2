@@ -168,11 +168,11 @@
 			<span class="counter-value">{stateDuel.dogSpinIndex}/{stateDuel.totalSpinsPerSide}</span>
 		</div>
 
-		{#if !isPortrait}
+		{#if isPortrait}
 			<div
 				class="vs-badge"
-				style:left="{(duelLayout.dogCenter.x + duelLayout.catCenter.x) / 2}px"
-				style:top="{duelLayout.dogCenter.y}px"
+				style:left="{duelLayout.dogCenter.x}px"
+				style:top="{(duelLayout.dogCenter.y + duelLayout.catCenter.y) / 2}px"
 				aria-hidden="true"
 			>
 				VS
@@ -482,12 +482,6 @@
 
 	.duel-root.popout-s .counter-value {
 		font-size: 0.55rem;
-	}
-
-	.duel-root.popout-s .vs-badge {
-		width: 1.1rem;
-		height: 1.1rem;
-		font-size: 0.4rem;
 	}
 
 	.board-face {

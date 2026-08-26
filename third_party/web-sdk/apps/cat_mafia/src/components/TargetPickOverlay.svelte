@@ -11,22 +11,35 @@
 	/**
 	 * Stage C: 6 targets → player taps one → flip reveal FS count (8/10/12).
 	 * Awarded value is predetermined; click only drives UX.
+	 *
+	 * Mascot (same chain as Stage E shoot, but shoot only on tap):
+	 *   gun_shot_stat_idle → gun_shot_aim (hold while picking)
+	 *   → gun_shot on click → gun_shot_end → idle
 	 */
 	import { fade } from 'svelte/transition';
 	import { waitForResolve } from 'utils-shared/wait';
 
 	import { getContext } from '../game/context';
+	import {
+		MASCOT_GUN_SHOT_AIM_MS,
+		MASCOT_GUN_SHOT_END_MS,
+		MASCOT_GUN_SHOT_MS,
+		MASCOT_GUN_STAT_IDLE_MS,
+	} from '../game/mascotHtmlSpine';
+	import { stateGame } from '../game/stateGame.svelte';
 
 	const context = getContext();
 
 	let show = $state(false);
-	let phase = $state<'pick' | 'shoot' | 'reveal'>('pick');
+	let phase = $state<'prep' | 'pick' | 'shoot' | 'reveal'>('prep');
 	let targets = $state<number[]>([8, 10, 12, 8, 10, 12]);
 	let chosenIndex = $state(0);
 	let awardedFs = $state(10);
 	let clickedIndex = $state<number | null>(null);
 	let faceValues = $state<number[]>([8, 10, 12, 8, 10, 12]);
 	let oncomplete = $state(() => {});
+
+	const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 	const buildFaceValues = (clicked: number) => {
 		const faces = [...targets];
@@ -42,12 +55,20 @@
 	const onTargetClick = async (index: number) => {
 		if (phase !== 'pick') return;
 		clickedIndex = index;
-		phase = 'shoot';
 		faceValues = buildFaceValues(index);
+		phase = 'shoot';
+
+		stateGame.mascotPose = 'shoot';
+		stateGame.mascotAnimToken += 1;
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
-		await new Promise((r) => setTimeout(r, 350));
+		await wait(MASCOT_GUN_SHOT_MS);
+
 		phase = 'reveal';
-		await new Promise((r) => setTimeout(r, 1200));
+		await wait(900);
+
+		stateGame.mascotPose = 'gunShotEnd';
+		await wait(MASCOT_GUN_SHOT_END_MS);
+		stateGame.mascotPose = 'idle';
 		oncomplete();
 	};
 
@@ -58,8 +79,16 @@
 			awardedFs = event.awardedFs;
 			clickedIndex = null;
 			faceValues = [...targets];
-			phase = 'pick';
+			phase = 'prep';
 			show = true;
+
+			// Prep like Stage E shoot — no gun_shot until the player picks.
+			stateGame.mascotPose = 'gunStatIdle';
+			await wait(MASCOT_GUN_STAT_IDLE_MS);
+			stateGame.mascotPose = 'aim';
+			await wait(MASCOT_GUN_SHOT_AIM_MS);
+			phase = 'pick';
+
 			await waitForResolve((resolve) => {
 				oncomplete = () => {
 					show = false;
@@ -75,7 +104,7 @@
 		<div class="panel">
 			<h2 class="title">{context.i18nDerived.targetPickTitle()}</h2>
 			<p class="hint">
-				{#if phase === 'pick'}
+				{#if phase === 'prep' || phase === 'pick'}
 					{context.i18nDerived.targetPickHintPick()}
 				{:else if phase === 'shoot'}
 					{context.i18nDerived.targetPickHintShoot()}
