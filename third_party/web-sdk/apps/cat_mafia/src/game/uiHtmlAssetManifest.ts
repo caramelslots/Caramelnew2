@@ -62,16 +62,18 @@ export const SETTINGS_TURBO_URLS = [
 	HUD_ASSETS.turbo3,
 ] as const;
 
+/** Autoplay menu panel textures — `static/assets/sprites/ui/autoplay_menu/`. */
 export const AUTOSPIN_ASSETS = {
-	bg: uiHtmlAssetUrl('autoplay/bg_auto_panel.webp'),
+	bg: uiHtmlAssetUrl('autoplay_menu/board.webp'),
 	close: uiHtmlAssetUrl('autoplay/cross.webp'),
 	messageBg: uiHtmlAssetUrl('autoplay/bg_autoplay_message_panel.webp'),
 	messageOkBg: uiHtmlAssetUrl('autoplay/autoplay_message_ok_bg.webp'),
-	sliderHead: uiHtmlAssetUrl('autoplay/slider/head.webp'),
-	sliderFull: uiHtmlAssetUrl('autoplay/slider/full.webp'),
-	sliderButton: uiHtmlAssetUrl('autoplay/slider/button.webp'),
-	sliderEmpty: uiHtmlAssetUrl('autoplay/slider/empty.webp'),
-	startButton: uiHtmlAssetUrl('autoplay/main_button.webp'),
+	pawIcon: uiHtmlAssetUrl('autoplay_menu/paw.webp'),
+	bonusIcon: uiHtmlAssetUrl('autoplay_menu/bonus.webp'),
+	sliderFull: uiHtmlAssetUrl('autoplay_menu/slider_full.webp'),
+	sliderButton: uiHtmlAssetUrl('autoplay_menu/slider_knob.webp'),
+	sliderEmpty: uiHtmlAssetUrl('autoplay_menu/slider_empty.webp'),
+	startButton: uiHtmlAssetUrl('autoplay_menu/start.webp'),
 } as const;
 
 export const FEATURE_TOGGLE_ASSETS = {
@@ -116,7 +118,8 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	AUTOSPIN_ASSETS.close,
 	AUTOSPIN_ASSETS.messageBg,
 	AUTOSPIN_ASSETS.messageOkBg,
-	AUTOSPIN_ASSETS.sliderHead,
+	AUTOSPIN_ASSETS.pawIcon,
+	AUTOSPIN_ASSETS.bonusIcon,
 	AUTOSPIN_ASSETS.sliderFull,
 	AUTOSPIN_ASSETS.sliderButton,
 	AUTOSPIN_ASSETS.sliderEmpty,

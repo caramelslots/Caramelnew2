@@ -37,6 +37,8 @@
 		noHoverBg?: boolean;
 		/** Иконка кота слева (меню buy bonus / wok frame). */
 		showMenuCatIcon?: boolean;
+		/** Override иконки слева (например autopay bonus в меню автоигры). */
+		menuCatIconSrc?: string;
 	};
 
 	const {
@@ -50,10 +52,11 @@
 		disabled = false,
 		noHoverBg = false,
 		showMenuCatIcon = false,
+		menuCatIconSrc,
 	}: Props = $props();
 
 	const bonusSwitchBgUrl = FEATURE_TOGGLE_ASSETS.bonusSwitchBg;
-	const menuCatIconUrl = FEATURE_TOGGLE_ASSETS.menuCatIcon;
+	const menuCatIconUrl = $derived(menuCatIconSrc ?? FEATURE_TOGGLE_ASSETS.menuCatIcon);
 
 	const context = getContext();
 

@@ -1,5 +1,5 @@
 <!--
-	FeaturesAutoSpinOverlay.svelte — меню автоигры по designer_assets/bg_auto.png.
+	FeaturesAutoSpinOverlay.svelte — меню автоигры (textures: ui/autoplay_menu/).
 	Открывается при stateModal.modal?.name === 'autoSpin'. Закрытие — cross,
 	клик по пустому месту или повторный клик по autoplay в HUD.
 -->
@@ -31,7 +31,8 @@
 
 	const bgUrl = AUTOSPIN_ASSETS.bg;
 	const closeIconUrl = AUTOSPIN_ASSETS.close;
-	const sliderHeadUrl = AUTOSPIN_ASSETS.sliderHead;
+	const pawIconUrl = AUTOSPIN_ASSETS.pawIcon;
+	const bonusIconUrl = AUTOSPIN_ASSETS.bonusIcon;
 	const sliderFullUrl = AUTOSPIN_ASSETS.sliderFull;
 	const sliderButtonUrl = AUTOSPIN_ASSETS.sliderButton;
 	const sliderEmptyUrl = AUTOSPIN_ASSETS.sliderEmpty;
@@ -85,7 +86,7 @@
 	const setRoundByClientX = (clientX: number) => {
 		if (!trackEl || featureTogglesDisabled) return;
 		const rect = trackEl.getBoundingClientRect();
-		const thumbPx = rect.height * (48 / 95);
+		const thumbPx = Math.min(rect.height * 1.1, rect.width * 0.08);
 		const usable = Math.max(1, rect.width - thumbPx);
 		const ratio = (clientX - rect.left - thumbPx * 0.5) / usable;
 		const clamped = Math.max(0, Math.min(1, ratio));
@@ -142,7 +143,7 @@
 		launchCashStacksAutoplay((event) => context.eventEmitter.broadcast(event));
 	};
 
-	const startAutoplayLabel = $derived(context.i18nDerived.startAutoplay());
+	const startAutoplayLabel = $derived(context.i18nDerived.autoplayStart());
 </script>
 
 {#if isOpen}
@@ -174,6 +175,7 @@
 
 			<div class="panel-content">
 				<header class="panel-header">
+					<img class="header-paw" src={pawIconUrl} alt="" draggable="false" />
 					<h3 class="panel-title">{context.i18nDerived.autoplayTitle()}</h3>
 					<button
 						type="button"
@@ -191,6 +193,8 @@
 						features={['bonus_boost']}
 						disabled={featureTogglesDisabled}
 						noHoverBg
+						showMenuCatIcon
+						menuCatIconSrc={bonusIconUrl}
 					/>
 				</section>
 
@@ -227,8 +231,6 @@
 				<section class="rounds-section" aria-label={context.i18nDerived.autoplayRounds()}>
 					<div class="rounds-slider" class:disabled={featureTogglesDisabled}>
 						<div class="slider-rail">
-							<img class="slider-head" src={sliderHeadUrl} alt="" draggable="false" />
-
 							<div
 								bind:this={trackEl}
 								class="slider-track-wrap"
@@ -260,7 +262,6 @@
 
 					<div class="rounds-labels" aria-hidden="true">
 						<div class="rounds-labels-rail">
-							<span class="rounds-labels-head-spacer"></span>
 							<div class="rounds-labels-track">
 								{#each CASH_STACKS_ROUND_LABELS as label (label)}
 									<span
@@ -329,7 +330,7 @@
 		--panel-width: min(400px, 92vw);
 		position: relative;
 		width: var(--panel-width);
-		aspect-ratio: 1329 / 1444;
+		aspect-ratio: 1067 / 1202;
 		pointer-events: auto;
 		z-index: 1;
 		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
@@ -338,7 +339,7 @@
 
 	.autoplay-overlay.anchored .autoplay-panel {
 		position: fixed;
-		aspect-ratio: 1329 / 1380;
+		aspect-ratio: 1067 / 1202;
 		transform-origin: 55% 100%;
 		z-index: 1;
 	}
@@ -365,25 +366,35 @@
 		top: 0;
 		left: 0;
 		right: 0;
-		height: 20.5%;
+		height: 19%;
 		display: grid;
-		grid-template-columns: 1fr auto;
+		grid-template-columns: auto 1fr auto;
 		align-items: center;
-		padding: 0 7.5% 0 24%;
+		justify-items: center;
+		padding: 8.5% 8.5% 0.5%;
 		box-sizing: border-box;
 		pointer-events: none;
+		gap: 3%;
+	}
+
+	.header-paw {
+		width: calc(var(--panel-width) * 0.145);
+		height: auto;
+		aspect-ratio: 1;
+		object-fit: contain;
+		pointer-events: none;
+		user-select: none;
 	}
 
 	.panel-title {
 		margin: 0;
-		grid-column: 1;
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.085);
-		font-style: italic;
-		font-weight: 900;
-		letter-spacing: 0.05em;
+		font-size: calc(var(--panel-width) * 0.095);
+		font-style: normal;
+		font-weight: 800;
+		letter-spacing: 0.04em;
 		text-transform: uppercase;
-		color: #d4b44a;
+		color: #f3e6c8;
 		text-shadow:
 			0 1px 0 rgba(0, 0, 0, 0.85),
 			0 2px 6px rgba(0, 0, 0, 0.65);
@@ -394,9 +405,8 @@
 
 	.close-button {
 		position: relative;
-		grid-column: 2;
-		width: calc(var(--panel-width) * 0.125);
-		height: calc(var(--panel-width) * 0.125);
+		width: calc(var(--panel-width) * 0.145);
+		height: calc(var(--panel-width) * 0.145);
 		padding: 0;
 		border: 0;
 		background: transparent;
@@ -429,10 +439,10 @@
 
 	.features-section {
 		position: absolute;
-		top: 32.5%;
-		left: 10.5%;
-		right: 9%;
-		height: 13%;
+		top: 25.5%;
+		left: 9%;
+		right: 8.5%;
+		height: 15%;
 		display: flex;
 		align-items: center;
 		box-sizing: border-box;
@@ -442,9 +452,9 @@
 		width: 100%;
 		height: 100%;
 		display: grid;
-		grid-template-columns: 28% minmax(0, 1fr) auto;
+		grid-template-columns: 20% minmax(0, 1fr) auto;
 		align-items: center;
-		padding: 0 3.5% 0 0;
+		padding: 0 2% 0 0;
 		background: transparent;
 		border: 0;
 		border-radius: 0;
@@ -459,30 +469,39 @@
 		}
 	}
 
+	.features-section :global(.feature-cat-icon) {
+		grid-column: 1;
+		justify-self: center;
+		align-self: center;
+		width: 92%;
+		height: auto;
+		max-height: 100%;
+	}
+
 	.features-section :global(.feature-info) {
 		grid-column: 2;
 		justify-self: start;
 		align-self: center;
 		min-width: 0;
 		max-width: 100%;
-		margin-left: calc(var(--panel-width) * -0.015);
-		gap: calc(var(--panel-width) * 0.014);
+		margin-left: calc(var(--panel-width) * 0.02);
+		gap: calc(var(--panel-width) * 0.012);
 		overflow: hidden;
 	}
 
 	.features-section :global(.feature-row.compact .feature-name),
 	.features-section :global(.feature-row .feature-name) {
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.046);
-		font-style: italic;
-		font-weight: 900;
+		font-size: calc(var(--panel-width) * 0.042);
+		font-style: normal;
+		font-weight: 800;
 		text-transform: uppercase;
-		color: #d4b44a;
+		color: #f3e6c8;
 		text-shadow:
 			0 1px 0 rgba(0, 0, 0, 0.85),
 			0 2px 6px rgba(0, 0, 0, 0.65);
 		line-height: 1.1;
-		letter-spacing: 0.05em;
+		letter-spacing: 0.03em;
 		max-width: 100%;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -533,20 +552,17 @@
 
 	.rounds-section {
 		position: absolute;
-		top: 66%;
-		left: 8%;
-		right: 8%;
-		height: 14%;
+		top: 62%;
+		left: 10%;
+		right: 10%;
+		height: 13%;
 		box-sizing: border-box;
-		--head-width: calc(var(--panel-width) * 0.11);
-		/* Трек заходит под правый край головы — без зазора до линии. */
-		--track-start: calc(var(--head-width) * 0.84);
-		--thumb-width: calc(var(--panel-width) * 0.048);
+		--thumb-width: calc(var(--panel-width) * 0.07);
 	}
 
 	.rounds-slider {
 		width: 100%;
-		min-height: calc(var(--panel-width) * 0.1);
+		min-height: calc(var(--panel-width) * 0.08);
 
 		&.disabled {
 			opacity: 0.5;
@@ -557,36 +573,14 @@
 	.slider-rail {
 		position: relative;
 		width: 100%;
-		height: calc(var(--panel-width) * 0.105);
-		--slider-line-height: calc(var(--panel-width) * 0.04);
-		--slider-fill-height: calc(var(--panel-width) * 0.2);
-		/* Компенсация прозрачных полей в PNG (empty: 114/1019, full: 144/1090). */
-		--empty-img-scale: calc(1019 / 886);
-		--empty-img-offset: calc(-100% * 114 / 886);
-		--full-img-scale: calc(1090 / 850);
-		--full-img-offset: calc(-100cqw * 144 / 850);
-	}
-
-	.slider-head {
-		position: absolute;
-		left: 0;
-		top: 50%;
-		transform: translateY(-50%);
-		width: var(--head-width);
-		height: auto;
-		object-fit: contain;
-		pointer-events: none;
-		user-select: none;
-		z-index: 3;
+		height: calc(var(--panel-width) * 0.08);
+		--slider-line-height: calc(var(--panel-width) * 0.038);
+		--slider-fill-height: calc(var(--panel-width) * 0.038);
 	}
 
 	.slider-track-wrap {
 		position: absolute;
-		left: var(--track-start);
-		right: 0;
-		top: 50%;
-		transform: translateY(-50%);
-		height: calc(var(--panel-width) * 0.095);
+		inset: 0;
 		cursor: pointer;
 		touch-action: none;
 		user-select: none;
@@ -608,7 +602,7 @@
 		left: 0;
 		right: 0;
 		top: 50%;
-		height: calc(var(--panel-width) * 0.078);
+		height: var(--slider-line-height);
 		transform: translateY(-50%);
 		overflow: visible;
 		container-type: inline-size;
@@ -616,11 +610,9 @@
 
 	.slider-empty {
 		position: absolute;
-		top: 50%;
-		width: calc(100% * var(--empty-img-scale));
-		height: var(--slider-line-height);
-		left: var(--empty-img-offset);
-		transform: translateY(-50%);
+		inset: 0;
+		width: 100%;
+		height: 100%;
 		object-fit: fill;
 		pointer-events: none;
 		user-select: none;
@@ -630,9 +622,8 @@
 	.slider-fill {
 		position: absolute;
 		left: 0;
-		top: 50%;
-		height: var(--slider-fill-height);
-		transform: translateY(-50%);
+		top: 0;
+		height: 100%;
 		overflow: hidden;
 		min-width: 0;
 		pointer-events: none;
@@ -642,6 +633,7 @@
 				(100% - var(--thumb-width))
 		);
 		transition: width 0.32s ease-in-out;
+		border-radius: 999px;
 	}
 
 	.slider-track-wrap.dragging .slider-fill,
@@ -652,8 +644,8 @@
 	.slider-full {
 		position: absolute;
 		top: 0;
-		left: var(--full-img-offset);
-		width: calc(100cqw * var(--full-img-scale));
+		left: 0;
+		width: 100cqw;
 		height: 100%;
 		object-fit: fill;
 		object-position: left center;
@@ -666,6 +658,7 @@
 		top: 50%;
 		width: var(--thumb-width);
 		height: auto;
+		aspect-ratio: 1;
 		left: calc(var(--thumb-width) * 0.5 + var(--progress) * (100% - var(--thumb-width)));
 		transform: translate(-50%, -50%);
 		pointer-events: none;
@@ -687,18 +680,9 @@
 		height: calc(var(--panel-width) * 0.04);
 	}
 
-	.rounds-labels-head-spacer {
-		display: block;
-		width: var(--track-start);
-		height: 0;
-	}
-
 	.rounds-labels-track {
 		position: absolute;
-		left: var(--track-start);
-		right: 0;
-		top: 0;
-		height: 100%;
+		inset: 0;
 	}
 
 	.rounds-label {
@@ -718,12 +702,12 @@
 
 	.start-section {
 		position: absolute;
-		top: 79%;
-		left: 7%;
-		right: 7%;
+		top: 76.5%;
+		left: 8%;
+		right: 8%;
 		height: 14%;
 		display: flex;
-		align-items: flex-start;
+		align-items: center;
 		justify-content: center;
 		box-sizing: border-box;
 	}
@@ -731,10 +715,10 @@
 	.start-button {
 		position: relative;
 		display: block;
-		width: 62%;
+		width: 72%;
 		max-width: 100%;
 		margin: 0 auto;
-		aspect-ratio: 772 / 342;
+		aspect-ratio: 701 / 163;
 		padding: 0;
 		border: 0;
 		background: transparent;
@@ -743,8 +727,7 @@
 			transform 0.12s,
 			filter 0.12s,
 			opacity 0.12s;
-		/* Визуальный центр тёмной области main_button.png: (46+258)/2 / 342 */
-		--start-button-text-y: 44.44%;
+		--start-button-text-y: 50%;
 
 		&:hover:not(:disabled) {
 			filter: brightness(1.08);
@@ -781,15 +764,16 @@
 		transform: translate(-50%, -50%);
 		margin: 0;
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.038);
+		font-size: calc(var(--panel-width) * 0.055);
 		font-style: italic;
 		font-weight: 900;
-		letter-spacing: 0.05em;
+		letter-spacing: 0.06em;
 		text-transform: uppercase;
-		color: #d4b44a;
+		color: #f0d060;
 		line-height: 1;
 		white-space: nowrap;
 		text-shadow:
+			0 0 10px rgba(240, 208, 96, 0.35),
 			0 1px 0 rgba(0, 0, 0, 0.85),
 			0 2px 6px rgba(0, 0, 0, 0.65);
 		pointer-events: none;
@@ -798,32 +782,43 @@
 
 	.rounds-title {
 		position: absolute;
-		top: 48%;
-		left: 11%;
-		right: 11%;
+		top: 40%;
+		left: 12%;
+		right: 12%;
 		margin: 0;
-		text-align: center;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 4%;
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.044);
-		font-style: italic;
-		font-weight: 900;
-		letter-spacing: 0.05em;
+		font-size: calc(var(--panel-width) * 0.04);
+		font-style: normal;
+		font-weight: 800;
+		letter-spacing: 0.04em;
 		text-transform: uppercase;
-		color: #d4b44a;
+		color: #f3e6c8;
 		line-height: 1;
 		text-shadow:
 			0 1px 0 rgba(0, 0, 0, 0.85),
 			0 2px 6px rgba(0, 0, 0, 0.65);
 		pointer-events: none;
 		user-select: none;
+
+		&::before,
+		&::after {
+			content: '';
+			flex: 1;
+			height: 1px;
+			background: linear-gradient(90deg, transparent, rgba(212, 180, 74, 0.75), transparent);
+		}
 	}
 
 	.rounds-stepper {
 		position: absolute;
-		top: 54%;
+		top: 46%;
 		left: 11%;
 		right: 11%;
-		height: 13%;
+		height: 14%;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -832,8 +827,8 @@
 	}
 
 	.rounds-stepper-btn {
-		width: calc(var(--panel-width) * 0.115);
-		height: calc(var(--panel-width) * 0.115);
+		width: calc(var(--panel-width) * 0.14);
+		height: calc(var(--panel-width) * 0.14);
 		padding: 0;
 		border: 0;
 		background-color: transparent;
@@ -871,7 +866,7 @@
 		min-width: calc(var(--panel-width) * 0.3);
 		text-align: center;
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.084);
+		font-size: calc(var(--panel-width) * 0.125);
 		font-style: italic;
 		font-weight: 900;
 		letter-spacing: 0.05em;
@@ -889,20 +884,20 @@
 		--panel-width: min(360px, 94vw);
 
 		.features-section {
-			top: 31.5%;
-			left: 11%;
-			right: 10%;
-			height: 13.5%;
+			top: 25%;
+			left: 9%;
+			right: 8.5%;
+			height: 15.5%;
 			overflow: hidden;
 		}
 
 		.features-section :global(.feature-row) {
-			grid-template-columns: 22% minmax(0, 1fr) auto;
+			grid-template-columns: 20% minmax(0, 1fr) auto;
 			padding: 0 1.5% 0 0;
 		}
 
 		.features-section :global(.feature-row .feature-info) {
-			margin-left: 0;
+			margin-left: calc(var(--panel-width) * 0.015);
 			gap: calc(var(--panel-width) * 0.014);
 		}
 
@@ -936,13 +931,14 @@
 		filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.55));
 
 		.panel-title {
-			font-size: calc(var(--panel-width) * 0.08);
-			letter-spacing: 0.05em;
+			font-size: calc(var(--panel-width) * 0.1);
+			letter-spacing: 0.04em;
 		}
 
+		.header-paw,
 		.close-button {
-			width: calc(var(--panel-width) * 0.135);
-			height: calc(var(--panel-width) * 0.135);
+			width: calc(var(--panel-width) * 0.155);
+			height: calc(var(--panel-width) * 0.155);
 		}
 
 		.features-section :global(.feature-row .feature-name) {
@@ -962,16 +958,12 @@
 			height: calc(var(--panel-width) * 0.06);
 		}
 
-		.slider-head {
-			width: var(--head-width);
-		}
-
 		.slider-rail {
-			--thumb-width: calc(var(--panel-width) * 0.052);
+			--thumb-width: calc(var(--panel-width) * 0.078);
 		}
 
 		.rounds-section {
-			--thumb-width: calc(var(--panel-width) * 0.052);
+			--thumb-width: calc(var(--panel-width) * 0.078);
 		}
 
 		.rounds-label {
@@ -979,7 +971,7 @@
 		}
 
 		.start-button {
-			width: 68%;
+			width: 76%;
 		}
 
 		.start-button-label {
@@ -987,8 +979,8 @@
 		}
 
 		.rounds-stepper-btn {
-			width: calc(var(--panel-width) * 0.125);
-			height: calc(var(--panel-width) * 0.125);
+			width: calc(var(--panel-width) * 0.145);
+			height: calc(var(--panel-width) * 0.145);
 		}
 
 		.rounds-title {
@@ -996,7 +988,7 @@
 		}
 
 		.rounds-stepper-value {
-			font-size: calc(var(--panel-width) * 0.09);
+			font-size: calc(var(--panel-width) * 0.13);
 		}
 	}
 
@@ -1005,25 +997,25 @@
 			--panel-width: min(340px, 94vw);
 
 			.features-section {
-				top: 31.5%;
-				left: 11%;
-				right: 10%;
-				height: 13.5%;
+				top: 25%;
+				left: 9%;
+				right: 8.5%;
+				height: 15.5%;
 				overflow: hidden;
 			}
 
 			.features-section :global(.feature-row) {
-				grid-template-columns: 22% minmax(0, 1fr) auto;
+				grid-template-columns: 20% minmax(0, 1fr) auto;
 				padding: 0 1.5% 0 0;
 			}
 
 			.features-section :global(.feature-row .feature-info) {
-				margin-left: 0;
+				margin-left: calc(var(--panel-width) * 0.015);
 				gap: calc(var(--panel-width) * 0.014);
 			}
 
 			.features-section :global(.feature-row .feature-name) {
-				font-size: clamp(13px, calc(var(--panel-width) * 0.048), 17px);
+				font-size: clamp(13px, calc(var(--panel-width) * 0.042), 16px);
 				letter-spacing: 0.03em;
 				line-height: 1.05;
 			}
