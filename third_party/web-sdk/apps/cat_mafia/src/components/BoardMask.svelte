@@ -11,6 +11,7 @@
 		BOARD_MASK_WIN_BOUNCE_TOP,
 		BOARD_MASK_MYSTERY_OVERFLOW,
 		BOARD_MASK_FEATHER,
+		BOARD_MASK_BOTTOM_FEATHER,
 	} from '../game/constants';
 	import {
 		createBoardFeatherMaskTexture,
@@ -75,6 +76,7 @@
 			bottomOverflow: maskBottomOverflow,
 			gridHeight: layout.height,
 			feather: BOARD_MASK_FEATHER,
+			bottomFeather: BOARD_MASK_BOTTOM_FEATHER,
 		});
 		const prev = untrack(() => maskTexture);
 		maskTexture = next;

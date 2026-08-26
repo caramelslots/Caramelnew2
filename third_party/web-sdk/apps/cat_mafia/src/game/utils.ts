@@ -6,6 +6,7 @@ import { createGetEmptyPaddedBoard } from 'utils-slots';
 import {
 	SYMBOL_SIZE,
 	REEL_PADDING,
+	REEL_SYMBOL_X_NUDGE_PX,
 	SYMBOL_INFO_MAP,
 	BOARD_DIMENSIONS,
 	MYSTERY_REVEAL_ANIMATION,
@@ -90,7 +91,8 @@ export const convertTorResumableBet = (betToResume: Bet) => {
 };
 
 // other utils
-export const getSymbolX = (reelIndex: number) => SYMBOL_SIZE * (reelIndex + REEL_PADDING);
+export const getSymbolX = (reelIndex: number) =>
+	SYMBOL_SIZE * (reelIndex + REEL_PADDING) + (REEL_SYMBOL_X_NUDGE_PX[reelIndex] ?? 0);
 export const getSymbolY = (symbolIndexOfBoard: number) => (symbolIndexOfBoard + 0.5) * SYMBOL_SIZE;
 
 export const getMysteryRevealSymbolInfo = (

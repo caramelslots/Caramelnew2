@@ -1,8 +1,9 @@
 <!--
 	CashStacksSpinButton.svelte — кастомная замена SDK-шной ButtonBet.
-	spin_1 — обычный спин; spin_2 — автоигра (счётчик раундов поверх).
+	spin_1 — обычный спин (designer_assets/spin_button_new);
+	spin_2 — автоигра (счётчик раундов поверх), прежний ассет.
 
-	Ref. designer_assets/spine_1.png / spine_2.png
+	Ref. designer_assets/spin_button_new / spine_2.png
 -->
 <script lang="ts">
 	import { Container, Sprite, Text } from 'pixi-svelte';
@@ -67,8 +68,8 @@
 		return sizes.width * 0.28;
 	});
 
-	/** Optical center of the spin button for the autoplay counter. */
-	const counterOffsetY = $derived(sizes.height * 0.012);
+	/** Optical center of the spin button for the autoplay counter — slightly above geometric center. */
+	const counterOffsetY = $derived(sizes.height * -0.02);
 </script>
 
 {#if !hudLocked}

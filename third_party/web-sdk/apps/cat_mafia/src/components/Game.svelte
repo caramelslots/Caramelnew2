@@ -20,6 +20,7 @@
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import EnableSound from './EnableSound.svelte';
 	import EnableSymbolTextureOptimization from './EnableSymbolTextureOptimization.svelte';
+	import EnableSymbolCellFit from './EnableSymbolCellFit.svelte';
 	import EnableUiTextureOptimization from './EnableUiTextureOptimization.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
 	import EnableBoardIdleBounce from './EnableBoardIdleBounce.svelte';
@@ -40,7 +41,6 @@
 	import PawCoinPixiLayer from './PawCoinPixiLayer.svelte';
 	import RevolverDrumPlaceholder from './RevolverDrumPlaceholder.svelte';
 	import RevolverDrumPixi from './RevolverDrumPixi.svelte';
-	import BulletFlyOverlay from './BulletFlyOverlay.svelte';
 	import { devPreview } from '../game/devPreview.svelte';
 	import SuperWildCurtainOverlay from './SuperWildCurtainOverlay.svelte';
 	import TargetPickOverlay from './TargetPickOverlay.svelte';
@@ -96,6 +96,7 @@
 	<GameApp maxResolution={3} tuneForMobilePortrait webglOnIosAndroid>
 		<EnableSound />
 		<EnableSymbolTextureOptimization />
+		<EnableSymbolCellFit />
 		<EnableUiTextureOptimization />
 		<EnableHotkey />
 		<EnableGameActor />
@@ -127,13 +128,15 @@
 				sortableChildren
 			>
 				{#if stateDuel.active}
-					<!-- Paint order matches base: bases → reels → gold rails → paylines → win. -->
+					<!-- Paint order matches base: bases → reels → gold rails → win pops → paylines → win. -->
 					<DuelPixiBoard side="dog" layer="base" />
 					<DuelPixiBoard side="cat" layer="base" />
 					<DuelPixiBoard side="dog" layer="board" />
 					<DuelPixiBoard side="cat" layer="board" />
 					<DuelPixiBoard side="dog" layer="overlay" />
 					<DuelPixiBoard side="cat" layer="overlay" />
+					<DuelPixiBoard side="dog" layer="idleBounce" />
+					<DuelPixiBoard side="cat" layer="idleBounce" />
 					<DuelPixiBoard side="dog" layer="paylines" />
 					<DuelPixiBoard side="cat" layer="paylines" />
 					<DuelPixiBoard side="dog" layer="win" />
@@ -151,7 +154,7 @@
 						</MainContainer>
 					</Container>
 
-					<!-- Gold rails above resting symbols. Idle-tease pops + landed
+					<!-- Gold rails above resting symbols. Idle/win pops + landed
 					     paw coins render above the frame so they can overhang it. -->
 					<Container zIndex={-1}>
 						<MainContainer>
@@ -211,7 +214,6 @@
 <BuyBonusModalShell />
 <div class="html-underlays">
 	<RevolverDrumPlaceholder />
-	<BulletFlyOverlay />
 	<SuperWildCurtainOverlay />
 </div>
 <!-- Duel HTML chrome (pick / counters / outro). Desks + mascots + paw coins are Pixi. -->

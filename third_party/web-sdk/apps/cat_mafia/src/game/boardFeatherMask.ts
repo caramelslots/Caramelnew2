@@ -7,8 +7,10 @@ export type BoardFeatherMaskParams = {
 	bottomOverflow: number;
 	/** Visible playfield height (px). */
 	gridHeight: number;
-	/** Soft fade length at mask edges (px). */
+	/** Soft fade length at top (and bottom unless `bottomFeather` is set) (px). */
 	feather: number;
+	/** Override bottom fade length; `0` = hard clip at mask bottom. */
+	bottomFeather?: number;
 };
 
 const smoothstep = (t: number) => {
@@ -29,6 +31,7 @@ export const createBoardFeatherMaskTexture = (params: BoardFeatherMaskParams): P
 	const bottomOverflow = Math.max(0, params.bottomOverflow);
 	const gridHeight = Math.max(1, params.gridHeight);
 	const feather = Math.max(1, params.feather);
+	const bottomFeatherLen = params.bottomFeather ?? feather;
 
 	const gridTop = topOverflow;
 	const gridBottom = gridTop + gridHeight;
@@ -55,10 +58,15 @@ export const createBoardFeatherMaskTexture = (params: BoardFeatherMaskParams): P
 		}
 
 		if (bottomOverflow > 0 && y >= gridBottom) {
-			const bottomFeather = Math.min(feather, bottomOverflow);
-			const fadeStart = gridBottom + bottomOverflow - bottomFeather;
-			if (y >= fadeStart) {
-				alpha *= smoothstep((gridBottom + bottomOverflow - y) / bottomFeather);
+			if (bottomFeatherLen <= 0) {
+				// Hard runway: full alpha through bottomOverflow, then mask ends.
+				alpha = 1;
+			} else {
+				const bottomFeather = Math.min(bottomFeatherLen, bottomOverflow);
+				const fadeStart = gridBottom + bottomOverflow - bottomFeather;
+				if (y >= fadeStart) {
+					alpha *= smoothstep((gridBottom + bottomOverflow - y) / bottomFeather);
+				}
 			}
 		}
 

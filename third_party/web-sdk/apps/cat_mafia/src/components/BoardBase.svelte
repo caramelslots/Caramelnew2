@@ -19,7 +19,7 @@
 	type Props = {
 		/** When true, render only mystery reveal/collapse VFX (unmasked layer). */
 		mysteryFx?: boolean;
-		/** When true, render only idle-tease pops (above the gold rails). */
+		/** When true, render idle-tease / win pops (above the gold rails). */
 		idleBounce?: boolean;
 		/** When true, render landed PB/PS/PG above the gold rails (not while spinning). */
 		pawCoin?: boolean;
@@ -35,7 +35,8 @@
 
 	const isMysteryFx = (state: SymbolState) =>
 		state === 'mysteryReveal' || state === 'mysteryCollapse';
-	const isIdleBounce = (state: SymbolState) => state === 'idleBounce';
+	/** Win bounce / idle tease — above gold rails (BoardIdleBounceLayer). */
+	const isAboveRails = (state: SymbolState) => state === 'idleBounce' || state === 'win';
 	const isPawName = (name: string) => name === 'PB' || name === 'PS' || name === 'PG';
 	/**
 	 * Resting / landing paw above the gold rails.
@@ -57,11 +58,11 @@
 	) => {
 		const state = reelSymbol.symbolState;
 		if (props.mysteryFx) return isMysteryFx(state);
-		if (props.idleBounce) return isIdleBounce(state);
+		if (props.idleBounce) return isAboveRails(state);
 		if (props.pawCoin) return isPawCoinAboveFrame(reelSymbol, reelMotion);
 		return (
 			!isMysteryFx(state) &&
-			!isIdleBounce(state) &&
+			!isAboveRails(state) &&
 			!isPawCoinAboveFrame(reelSymbol, reelMotion)
 		);
 	};

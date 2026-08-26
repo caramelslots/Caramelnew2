@@ -292,19 +292,26 @@ export const stateGame = $state({
 	fsExtraPhase: false,
 	/** Keep revolver drum mounted from pre-FS cloud through outro. */
 	fsDrumWanted: false,
-	/** Brief fly UX: bullet cell → specific drum chamber (0..5). */
-	bulletFly: null as null | { reel: number; row: number; chamber: number; key: number },
+	/** Brief fly UX: one or more BT cells → cat hand (simultaneous). */
+	bulletFly: null as null | { reel: number; row: number; chamber: number; key: number }[],
 	/** Mascot pose → Spine clip map in `mascotHtmlSpine.ts`. */
 	mascotPose: 'idle' as
 		| 'idle'
 		| 'load'
 		| 'aim'
 		| 'shoot'
+		| 'gunStart'
+		| 'gunShotEnd'
+		| 'gunEndLoad'
+		| 'gunStatIdle'
+		| 'gunStatLoad'
 		| 'react'
 		| 'wow'
 		| 'clap'
 		| 'hatCatch'
 		| 'hatOn',
+	/** Bump to re-fire the same one-shot pose (e.g. gun_shot × N back-to-back). */
+	mascotAnimToken: 0,
 });
 
 /** Board symbol spines / land bounce stay at 1× — turbo only shortens waits + reel scroll. */

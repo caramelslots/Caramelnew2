@@ -3,33 +3,34 @@ import { Container, Sprite, Texture } from 'pixi.js'
 import { CELL_SYMBOL_SIZE, SYMBOL_SIZE } from './constants'
 import type { SpineTemplate } from './spinePool'
 import { setSpineAutoUpdate, spawnSpine } from './spinePool'
+import { DEFAULT_SPINE_SIZE_RATIO } from './symbolSizeFit'
 
 export type CellAnimMode = 'idle' | 'land' | 'win'
 
-const GLYPH = SYMBOL_SIZE * CELL_SYMBOL_SIZE
+/** Spin WebP glyph size — matches cat_mafia `propSpinSizeRatios` / `letterSpinSizeRatios`. */
+const SPIN_GLYPH = SYMBOL_SIZE * CELL_SYMBOL_SIZE
 
 /**
- * Fit Spine into a board cell (~SYMBOL_SIZE × 0.85), matching cat_mafia visual fill.
- * Call while spine is in setup/idle pose — before playing land — so bounce isn't reset.
+ * Scale Spine like cat_mafia SpineProvider:
+ * `scale = (SYMBOL_SIZE * sizeRatio) / skeletonData.height`
+ *
+ * Do NOT fit getLocalBounds into the cell — designer skeletons are much
+ * taller than the visible glyph; inflated sizeRatio lands the silhouette
+ * at ~0.85 × cell, same as the game.
  */
-export function fitSpineToCell(spine: Spine, fill = CELL_SYMBOL_SIZE): void {
-  const target = SYMBOL_SIZE * fill
+export function fitSpineToCell(
+  spine: Spine,
+  sizeRatio = DEFAULT_SPINE_SIZE_RATIO,
+): void {
+  const data = spine.skeleton.data
+  const skelH = Math.max(data.height, 1)
+  const targetHeight = SYMBOL_SIZE * sizeRatio
+  const scale = targetHeight / skelH
 
   spine.pivot.set(0, 0)
-  spine.scale.set(1)
   spine.x = 0
   spine.y = 0
-  spine.update(0)
-
-  const bounds = spine.getLocalBounds()
-  const bw = Math.max(bounds.width, 1)
-  const bh = Math.max(bounds.height, 1)
-  const scale = Math.min(target / bw, target / bh)
-
   spine.scale.set(scale)
-  spine.pivot.set(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2)
-  spine.x = 0
-  spine.y = 0
 }
 
 /** Static reel sprite sized like cat_mafia spin sprites (SYMBOL_SIZE × 0.85). */
@@ -37,13 +38,14 @@ export function createCellStaticSprite(
   texture: Texture,
   col: number,
   row: number,
+  offsetY = 0,
 ): Sprite {
   const sprite = new Sprite(texture)
   sprite.anchor.set(0.5)
-  sprite.width = GLYPH
-  sprite.height = GLYPH
+  sprite.width = SPIN_GLYPH
+  sprite.height = SPIN_GLYPH
   sprite.x = (col + 0.5) * SYMBOL_SIZE
-  sprite.y = (row + 0.5) * SYMBOL_SIZE
+  sprite.y = (row + 0.5) * SYMBOL_SIZE + offsetY
   return sprite
 }
 
@@ -72,11 +74,10 @@ export function createCellSpine(
 
   const holder = new Container()
   holder.x = (col + 0.5) * SYMBOL_SIZE
-  holder.y = (row + 0.5) * SYMBOL_SIZE
+  holder.y = (row + 0.5) * SYMBOL_SIZE + (template.offsetY ?? 0)
   holder.addChild(spine)
 
-  // Fit on setup pose first, then start the clip — don't refit mid-bounce.
-  fitSpineToCell(spine)
+  fitSpineToCell(spine, template.sizeRatio)
   playCellAnimation(spine, template, mode, {
     animateIdleAfterLand: options.animateIdleAfterLand !== false,
   })

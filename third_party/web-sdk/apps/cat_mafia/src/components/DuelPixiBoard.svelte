@@ -1,6 +1,6 @@
 <!--
-	One Duel desk layer. Game.svelte mounts base → board → overlay for both sides
-	so cat's desk never paints over dog's reels.
+	One Duel desk layer. Game.svelte mounts base → board → overlay → idleBounce →
+	paylines → win for both sides so cat's desk never paints over dog's reels.
 -->
 <script lang="ts" module>
 	import type { Position } from '../game/types';
@@ -11,7 +11,13 @@
 		symbolPositions: Position[];
 	};
 
-	export type DuelPixiBoardLayer = 'base' | 'board' | 'overlay' | 'paylines' | 'win';
+	export type DuelPixiBoardLayer =
+		| 'base'
+		| 'board'
+		| 'overlay'
+		| 'idleBounce'
+		| 'paylines'
+		| 'win';
 </script>
 
 <script lang="ts">
@@ -137,7 +143,7 @@
 
 {#if props.layer === 'base'}
 	<MainContainer>
-		<BoardFrame layer="base" {layout} disableCatZoom />
+		<BoardFrame layer="base" {layout} disableCatZoom side={props.side} />
 	</MainContainer>
 {:else if props.layer === 'board'}
 	<MainContainer>
@@ -150,7 +156,16 @@
 	</MainContainer>
 {:else if props.layer === 'overlay'}
 	<MainContainer>
-		<BoardFrame layer="overlay" {layout} disableCatZoom />
+		<BoardFrame layer="overlay" {layout} disableCatZoom side={props.side} />
+	</MainContainer>
+{:else if props.layer === 'idleBounce'}
+	<!-- Win / idle pops above gold rails (same split as BoardIdleBounceLayer).
+	     Without this, `symbolState === 'win'` unmounts from the masked board
+	     and nothing remounts — symbols vanish and duelBoardAnimateSymbols hangs. -->
+	<MainContainer>
+		<BoardContainer {layout} disableCatZoom>
+			<BoardBase board={stack.board} duelSide={props.side} idleBounce />
+		</BoardContainer>
 	</MainContainer>
 {:else if props.layer === 'paylines'}
 	<!-- Same as base PaylineLayer: above gold rails, not under the contour. -->

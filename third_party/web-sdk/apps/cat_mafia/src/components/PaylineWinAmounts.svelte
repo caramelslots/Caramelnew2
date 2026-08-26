@@ -30,6 +30,7 @@
 		SYMBOL_SIZE,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
+	import { getSymbolX } from '../game/utils';
 
 	type Props = {
 		side?: 'cat' | 'dog';
@@ -52,7 +53,7 @@
 		if (!activeAnchor) return null;
 
 		const centers = activeAnchor.positions.map((p) => ({
-			x: SYMBOL_SIZE * (p.reel + 0.5),
+			x: getSymbolX(p.reel),
 			y: SYMBOL_SIZE * (p.row - 0.5),
 		}));
 		const x = centers.reduce((sum, c) => sum + c.x, 0) / centers.length;

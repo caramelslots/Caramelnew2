@@ -2,9 +2,14 @@ import { preloadHtmlImages } from './preloadHtmlImages';
 import { GAME_INFO_SYMBOL_IMAGE_URLS, GAME_INFO_SYMBOL_IMAGES } from './gameInfoSymbols';
 import {
 	MASCOT_SPINE_IMAGE_URL,
+	MASCOT_SPINE_GRAY_IMAGE_URL,
 	startMascotSpinePreload,
 } from './mascotHtmlSpine';
 import { COIN_PAW_SPINE_WEBP_URL, startCoinPawSpinePreload } from './coinHtmlSpine';
+import {
+	SPIN_BUTTON_SPINE_WEBP_URL,
+	startSpinButtonSpinePreload,
+} from './spinButtonHtmlSpine';
 
 const UI_ASSET_BASE = `${import.meta.env.BASE_URL}assets/sprites/ui`;
 
@@ -89,6 +94,7 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	HUD_ASSETS.betPlus,
 	HUD_ASSETS.spin1,
 	HUD_ASSETS.spin2,
+	SPIN_BUTTON_SPINE_WEBP_URL,
 	HUD_ASSETS.autoplay,
 	HUD_ASSETS.autoplayMobile,
 	HUD_ASSETS.turbo1,
@@ -118,6 +124,7 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	FEATURE_TOGGLE_ASSETS.bonusSwitchBg,
 	FEATURE_TOGGLE_ASSETS.menuCatIcon,
 	MASCOT_ASSETS.body,
+	MASCOT_SPINE_GRAY_IMAGE_URL,
 	COIN_PAW_SPINE_WEBP_URL,
 	BUY_BONUS_ASSETS.menuBg,
 	BUY_BONUS_ASSETS.confirmBg,
@@ -191,6 +198,7 @@ export const startLoadingIdleUiPreload = () => {
 
 	startMascotSpinePreload();
 	startCoinPawSpinePreload();
+	startSpinButtonSpinePreload();
 
 	void preloadHtmlImages(LOADING_IDLE_UI_IMAGE_URLS, {
 		priority: LOADING_IDLE_UI_PRIORITY,

@@ -27,7 +27,9 @@ import {
 	BONUS_WIN_PRE_DELAY_MS,
 	BONUS_WIN_POST_DELAY_MS,
 	BULLET_FLY_MS,
-	BULLET_INSERT_MS,
+	BULLET_FLY_LEAD_MS,
+	BULLET_FLY_CATCH_MS,
+	BULLET_DISAPPEAR_EARLY_MS,
 	BULLET_FLY_GAP_MS,
 	MYSTERY_REVEAL_PRE_DELAY_MS,
 	MYSTERY_REVEAL_POST_DELAY_MS,
@@ -66,8 +68,11 @@ import {
 	MASCOT_COIN_FLY_DURATION_MS,
 	MASCOT_COIN_FLY_STAGGER_MS,
 	MASCOT_COIN_FLY_WAIT_MS,
+	MASCOT_GUN_END_LOAD_MS,
+	MASCOT_GUN_START_MS,
 	MASCOT_HAT_CATCH_BEFORE_COINS_MS,
 	MASCOT_HAT_ON_MS,
+	MASCOT_LOAD_MS,
 } from './mascotHtmlSpine';
 
 /** Beat between the paw landing (appear_flash flip) and the row→coin conversion. */
@@ -98,6 +103,11 @@ const playDuelWinLines = async (
 
 	await waitForGameSpeed(WIN_INFO_PRE_DELAY_MS, stateGame.gameSpeed);
 	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
+	eventEmitter.broadcast({ type: 'boardFramePulse', side });
+	// Dim only this desk — the other side stays full-bright.
+	stateDuel.winSpotlightSide = side;
+	// Each duel payline beat (phase-1 + SW product) gets its own like.
+	triggerMascotWinReaction(winLevelMap[2]);
 
 	for (const win of wins) {
 		const lineIndex = win.meta?.lineIndex ?? 0;
@@ -136,6 +146,7 @@ const playDuelWinLines = async (
 	spotlightClearTimer = setTimeout(
 		() => {
 			spotlightClearTimer = null;
+			stateDuel.winSpotlightSide = null;
 			eventEmitter.broadcast({ type: 'paylineClearAll', side });
 		},
 		scaleMsByGameSpeed(WIN_SPOTLIGHT_CLEAR_DELAY_MS, stateGame.gameSpeed),
@@ -160,6 +171,7 @@ export const clearWinSpotlight = () => {
 		spotlightClearTimer = null;
 	}
 	stateGame.winSpotlightActive = false;
+	stateDuel.winSpotlightSide = null;
 	eventEmitter.broadcast({ type: 'paylineClearAll' });
 };
 
@@ -287,6 +299,25 @@ const findNextSetWin = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
 		if (event.type === 'reveal') break;
 	}
 	return undefined;
+};
+
+const previousBookEvent = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
+	const startIdx = bookEvents.indexOf(fromEvent);
+	return startIdx > 0 ? bookEvents[startIdx - 1] : undefined;
+};
+
+/**
+ * Mascot win beat: `like` for normal/big/super, `applause` for epic/sensational.
+ * Always bumps `mascotAnimToken` so SW phase-2 / sticky ×product re-fires the same pose.
+ */
+const triggerMascotWinReaction = (winLevelData: WinLevelData | undefined) => {
+	if (!winLevelData || winLevelData.level <= 1) return;
+	const pose =
+		winLevelData.alias === 'epic' || winLevelData.alias === 'sensational'
+			? 'clap'
+			: 'react';
+	stateGame.mascotAnimToken += 1;
+	stateGame.mascotPose = pose;
 };
 
 /** Next `setTotalWin` before the following `reveal`, if any. */
@@ -608,6 +639,15 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		}
 
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
+		eventEmitter.broadcast({ type: 'boardFramePulse' });
+
+		const nextSetWinEarly = findNextSetWin(bookEvents, bookEvent);
+		const nextWinLevelEarly =
+			nextSetWinEarly != null
+				? winLevelMap[nextSetWinEarly.winLevel as WinLevel]
+				: undefined;
+		// Every winInfo beat (SW phase-1 + phase-2) gets its own like / applause.
+		triggerMascotWinReaction(nextWinLevelEarly ?? winLevelMap[2]);
 
 		// All winning paylines render simultaneously — PaylineOverlay keeps an
 		// array of active lines so multiple `paylineShow` events stack.
@@ -755,6 +795,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (!hadTargetPick && !hadBonusCollect && bookEvent.positions?.length) {
 			await animateBonusSymbols({ positions: bookEvent.positions });
 		}
+		// Like when the bonus triggers (scatter / buy-in).
+		triggerMascotWinReaction(winLevelMap[2]);
 		// show free spin intro
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
@@ -818,7 +860,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.bulletFly = null;
 		stateGame.stickySwByReel = {};
 		stateGame.stickySwOpened = false;
-		stateGame.mascotPose = 'idle';
+		stateGame.mascotPose = 'clap';
 
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
@@ -833,6 +875,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
 		stateUi.freeSpinCounterShow = false;
+		stateGame.mascotPose = 'idle';
 		// Drop drum after outro so it can sit through the celebration.
 		stateGame.fsDrumWanted = false;
 		stateGame.drumCount = 0;
@@ -848,6 +891,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 	setWin: async (bookEvent: BookEventOfType<'setWin'>, { bookEvents }: BookEventContext) => {
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
+
+		// Sticky SW ×product (and similar): second setWin without a new winInfo —
+		// still needs its own like / applause. Skip when winInfo just fired it.
+		const prev = previousBookEvent(bookEvents, bookEvent);
+		if (prev?.type !== 'winInfo') {
+			triggerMascotWinReaction(winLevelData);
+		}
 
 		// Stake UX: small/medium wins are non-blocking — board amount + HUD WIN
 		// are raised during winInfo; skip duplicate increment here.
@@ -875,7 +925,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				? winLevelMap[BIG_WIN_LEVEL]
 				: winLevelData;
 
-		stateGame.mascotPose = 'wow';
 		eventEmitter.broadcast({ type: 'winShow' });
 		winLevelSoundsPlay({ winLevelData: firstTierData });
 		await eventEmitter.broadcastAsync({
@@ -931,7 +980,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				eventEmitter.broadcast({ type: 'paylineClearAll', side });
 			}
 
-			stateGame.mascotPose = 'react';
 			for (const expand of bookEvent.expands) {
 				const alreadyOpen =
 					duelSwRowsOnReel(side, expand.reel) >= BOARD_DIMENSIONS.y ||
@@ -967,7 +1015,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
 			await waitForGameSpeed(400, stateGame.gameSpeed);
 			stateDuel.superWildCurtain = null;
-			stateGame.mascotPose = 'idle';
 			if (willShowCurtain) {
 				await waitForGameSpeed(SW_PHASE2_PRE_MS, stateGame.gameSpeed);
 			}
@@ -1021,7 +1068,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		}
 
 		// New open(s): lying cell → curtain per new column. Already-open columns skip curtain.
-		stateGame.mascotPose = 'react';
+		// Mascot like/applause stays on winInfo / setWin beats — not on the curtain itself.
 		for (const expand of bookEvent.expands) {
 			const reel = stateGame.board[expand.reel];
 			let swRows = 0;
@@ -1061,7 +1108,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
 		await waitForGameSpeed(400, stateGame.gameSpeed);
 		stateGame.superWildCurtain = null;
-		stateGame.mascotPose = 'idle';
 		// Beat before phase-2 winInfo (post-expand lines × product).
 		if (willShowCurtain) {
 			await waitForGameSpeed(SW_PHASE2_PRE_MS, stateGame.gameSpeed);
@@ -1071,37 +1117,62 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	bulletCollect: async (bookEvent: BookEventOfType<'bulletCollect'>) => {
 		// Extra FS after shoot: no bullets.
 		if (stateGame.fsExtraPhase) return;
-		for (const pos of bookEvent.bullets) {
-			if (stateGame.drumCount >= DRUM_MAX) break;
-			stateGame.bulletFly = {
+
+		const room = Math.max(0, DRUM_MAX - stateGame.drumCount);
+		const batch = bookEvent.bullets.slice(0, room);
+		if (batch.length > 0) {
+			// All collected BTs fly to the hand together, then one catch → load.
+			const baseKey = Date.now();
+			stateGame.bulletFly = batch.map((pos, i) => ({
 				reel: pos.reel,
 				row: pos.row,
-				chamber: stateGame.drumCount, // fill slot; load port is always at top
-				key: Date.now() + pos.reel,
-			};
-			stateGame.mascotPose = 'load';
+				chamber: stateGame.drumCount + i,
+				key: baseKey + i,
+			}));
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-			// Arrive at the hole, then crossfade: drum bullet seats while fly sinks.
-			// Keep CW load rotation until seat finishes so the chamber stays under the fly.
-			await waitForGameSpeed(BULLET_FLY_MS, stateGame.gameSpeed);
-			stateGame.drumCount = Math.min(DRUM_MAX, stateGame.drumCount + 1);
-			const seated = getDrumLastFilledChamberIndex(stateGame.drumCount);
-			if (seated !== null) {
-				stateGame.drumBulletOrientDeg = withDrumBulletOrient(
-					stateGame.drumBulletOrientDeg,
-					seated,
-				);
-				stateGame.drumSeatAnimKey = {
-					...stateGame.drumSeatAnimKey,
-					[seated]: (stateGame.drumSeatAnimKey[seated] ?? 0) + 1,
-				};
-			}
-			await waitForGameSpeed(BULLET_INSERT_MS, stateGame.gameSpeed);
+			eventEmitter.broadcast({ type: 'boardFramePulse' });
+			await waitForTimeout(BULLET_FLY_LEAD_MS);
+
+			stateGame.mascotPose = 'gunStart';
+			const gunStarted = performance.now();
+			await waitForTimeout(Math.max(0, BULLET_FLY_CATCH_MS - BULLET_DISAPPEAR_EARLY_MS));
 			stateGame.bulletFly = null;
-			syncDrumLoadRotation();
+			const gunElapsed = performance.now() - gunStarted;
+			if (gunElapsed < MASCOT_GUN_START_MS) {
+				await waitForTimeout(MASCOT_GUN_START_MS - gunElapsed);
+			}
+
+			// Seat drum UI when each clip finishes (`gun_start` = 1st, `load` = extras).
+			const seatNextChamber = () => {
+				stateGame.drumCount = Math.min(DRUM_MAX, stateGame.drumCount + 1);
+				const seated = getDrumLastFilledChamberIndex(stateGame.drumCount);
+				if (seated !== null) {
+					stateGame.drumBulletOrientDeg = withDrumBulletOrient(
+						stateGame.drumBulletOrientDeg,
+						seated,
+					);
+					stateGame.drumSeatAnimKey = {
+						...stateGame.drumSeatAnimKey,
+						[seated]: (stateGame.drumSeatAnimKey[seated] ?? 0) + 1,
+					};
+				}
+				syncDrumLoadRotation();
+			};
+			seatNextChamber();
+
+			for (let i = 1; i < batch.length; i++) {
+				stateGame.mascotPose = 'load';
+				stateGame.mascotAnimToken += 1;
+				await waitForTimeout(MASCOT_LOAD_MS);
+				seatNextChamber();
+			}
+
+			stateGame.mascotPose = 'gunEndLoad';
+			await waitForTimeout(MASCOT_GUN_END_LOAD_MS);
 			stateGame.mascotPose = 'idle';
 			await waitForGameSpeed(BULLET_FLY_GAP_MS, stateGame.gameSpeed);
 		}
+
 		stateGame.drumCount = Math.min(DRUM_MAX, bookEvent.drumCount);
 		syncDrumLoadRotation();
 		stateGame.drumBulletOrientDeg = syncDrumBulletOrients(
@@ -1210,11 +1281,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.pawCoinBagVisible = true;
 		stateGame.mascotPose = 'hatCatch';
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-		// Wait until brim-out shake (~1.90s+), then fly coins into the hat mid-shake.
+		eventEmitter.broadcast({ type: 'boardFramePulse' });
+		// Wait until brim-out shake hold (~1.90s), then fly coins into the hat.
+		// Hat clip is truncated here so it does NOT return until coins land.
 		await waitForTimeout(MASCOT_HAT_CATCH_BEFORE_COINS_MS);
 
 		stateGame.pawCoinFlying = true;
-		// Keep the hat out until the last coin finishes anticipation + flight
+		// Keep the hat frozen out until the last coin finishes anticipation + flight.
 		// (multi-row resolves outlast the single-row floor wait). Coin CSS still
 		// follows turbo — scale this wait to match fly duration.
 		const lastCoinLandMs =
@@ -1225,8 +1298,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		await waitForGameSpeed(Math.max(MASCOT_COIN_FLY_WAIT_MS, lastCoinLandMs), stateGame.gameSpeed);
 
 		stateBet.winBookEventAmount += bookEvent.totalCoinWin;
+		// Coins landed — resume hat forward so it finishes putting the hat back on.
 		stateGame.mascotPose = 'hatOn';
-		// Reverse idle3 back onto the head (~truncated brim-out clip length).
 		await waitForTimeout(MASCOT_HAT_ON_MS);
 
 		stateGame.pawCoinBagVisible = false;
@@ -1256,9 +1329,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.activeFeature = null;
 
 		const pad = getDuelPaddingBoard(config.paddingReels.basegame);
-		const startVisible = getDuelInitialVisibleBoard();
-		stateDuel.dogBoard = startVisible;
-		stateDuel.catBoard = startVisible.map((reel) => reel.map((cell) => ({ ...cell })));
+		stateDuel.dogBoard = getDuelInitialVisibleBoard();
+		stateDuel.catBoard = getDuelInitialVisibleBoard();
 		for (const side of ['dog', 'cat'] as const) {
 			const visible = side === 'dog' ? stateDuel.dogBoard : stateDuel.catBoard;
 			getDuelBoardStack(side).enhancedBoard.settle(padDuelBoardForPixi(visible, pad));
@@ -1307,6 +1379,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		else stateDuel.dogSpinWin = 0;
 
 		eventEmitter.broadcast({ type: 'paylineClearAll', side });
+		stateDuel.winSpotlightSide = null;
 
 		const paddingBoard = getDuelPaddingBoard(config.paddingReels.basegame);
 		// Same as bonus_normal reveal: chain from Pixi state (keeps sticky SW painted
@@ -1380,7 +1453,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			eventEmitter.broadcast({ type: 'paylineClearAll', side });
 			await playDuelWinLines(side, wins, totalWin);
 		} else if (bookEvent.spinWin > 0) {
-			// Product-only beat (no new paylines) — skip duplicate line pass.
+			// Product-only beat (no new paylines) — still cheer once for the ×product cash.
+			triggerMascotWinReaction(winLevelMap[2]);
 			await waitForGameSpeed(DUEL_POST_SPIN_MS, stateGame.gameSpeed);
 			return;
 		}
@@ -1451,7 +1525,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 						? winLevelMap[BIG_WIN_LEVEL]
 						: winLevelData;
 				eventEmitter.broadcast({ type: 'duelOutroHide' });
-				stateGame.mascotPose = 'wow';
+				stateGame.mascotPose = 'idle';
 				eventEmitter.broadcast({ type: 'winShow' });
 				winLevelSoundsPlay({ winLevelData: firstTierData });
 				await eventEmitter.broadcastAsync({

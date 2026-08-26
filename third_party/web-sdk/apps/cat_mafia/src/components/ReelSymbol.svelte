@@ -68,11 +68,17 @@
 	const idleYOffset = new Tween(0);
 
 	// Затемнение невыигрышных символов на время подсветки выигрыша.
-	// `winSpotlightActive` поднимается хелпером `animateSymbols`
-	// (bookEventHandlerMap) и сбрасывается в `reveal` следующего спина.
-	// Сам символ остаётся ярким, если он сам в 'win'/'postWinStatic'.
+	// Base: `stateGame.winSpotlightActive`. Duel: `stateDuel.winSpotlightSide`
+	// so only the desk that hit the line dims. Сбрасывается в `reveal` /
+	// следующем duelSpin / clearWinSpotlight.
 	const isWinningState = $derived(
 		props.reelSymbol.symbolState === 'win' || props.reelSymbol.symbolState === 'postWinStatic',
+	);
+	/** Base uses global flag; duel dims only the desk that just hit a line. */
+	const winSpotlightActive = $derived(
+		props.duelSide
+			? stateDuel.winSpotlightSide === props.duelSide
+			: stateGame.winSpotlightActive,
 	);
 	const isPawCovered = $derived(
 		stateGame.pawCoinCells.some(
@@ -150,7 +156,7 @@
 	$effect(() => {
 		const target =
 			isPawCovered ||
-			(stateGame.winSpotlightActive &&
+			(winSpotlightActive &&
 				!isWinningState &&
 				!(stateGame.pawPending && isPawSymbol))
 				? DIM_NON_WINNING.alpha

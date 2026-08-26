@@ -1,9 +1,9 @@
-/** designer_assets/spin — HTML SpinePlayer viewport (skeleton bounds). */
+/** designer_assets/spin_button_new — HTML SpinePlayer viewport (skeleton bounds). */
 export const SPIN_BUTTON_SPINE_VIEWPORT = {
-	x: -460.5,
-	y: -462.5,
-	width: 921,
-	height: 925,
+	x: -475,
+	y: -475,
+	width: 950,
+	height: 950,
 	padLeft: '0%',
 	padRight: '0%',
 	padTop: '0%',

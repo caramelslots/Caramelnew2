@@ -7,8 +7,7 @@ import { LOADER_SCREEN_IMAGE_URLS } from './loaderCardAssets';
 /** Stake GIF screen — animated day/night spine, audio manifest, transition, press font, high symbols. */
 export const LOADER_BATCH_1_KEYS = [
 	'mainBackground',
-	'boardDayBase',
-	'boardContour',
+	'boardFrame',
 	'sound',
 	'transition',
 	'prostoiWhiteFont',
@@ -87,6 +86,7 @@ export const LOADER_BATCH_3_KEYS = [
 	'coins',
 	'coinsPaw',
 	'mascotCat',
+	'mascotCatGray',
 	'mascotDog',
 	'betPlus',
 	'betMinus',

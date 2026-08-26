@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
 	 * Cat Mafia mascot — Spine HTML player to the right of the board.
-	 * Paw coins fly into the hat (idle3 catch → reverse put-on).
+	 * Paw coins fly into the hat (hat catch → reverse put-on).
 	 */
 	import '@esotericsoftware/spine-player/dist/spine-player.css';
 	import { SpinePlayer } from '@esotericsoftware/spine-player';
@@ -119,7 +119,7 @@
 				: showMascotLayout || forceAnim !== null),
 	);
 	const pose = $derived(
-		(context.stateGame.bulletFly ? 'load' : context.stateGame.mascotPose || 'idle') as MascotPose,
+		(context.stateGame.mascotPose || 'idle') as MascotPose,
 	);
 	/** Always 1× — turbo must not speed up mascot clips. */
 	const spineTimeScale = 1;
@@ -183,7 +183,7 @@
 	let idleVariantArmed = false;
 	/** blink / ears is currently playing (don't nest another). */
 	let idleVariantPlaying = false;
-	/** DEV idle3 = in-game hat catch sequence (forward → hold → reverse). */
+	/** DEV hat = in-game hat catch sequence (forward → hold → reverse). */
 	let forceIdle3Phase: 'catch' | 'hold' | 'on' | null = null;
 	let forceIdle3HoldTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -255,8 +255,8 @@
 	/**
 	 * Play a clip.
 	 * - Normal: hard cut via setup pose (clears leftover slots).
-	 * - Soft / mix: keep current bones so idle → idle3 intro (hand/hat) animates in.
-	 * - Reverse (hat on): TrackEntry.reverse from held end — hand fade-out is in idle3 RGBA.
+	 * - Soft / mix: keep current bones so idle → hat intro (hand/hat) animates in.
+	 * - Reverse (hat on): TrackEntry.reverse from held end — hand fade-out is in hat RGBA.
 	 */
 	const playClip = (
 		animation: MascotSpineAnimation,
@@ -275,7 +275,7 @@
 		state.timeScale = spineTimeScale;
 
 		if (opts?.reverse) {
-			// Seamless hat-on: keep current pose, play idle3 backwards from the end.
+			// Seamless hat-on: keep current pose, play hat backwards from the end.
 			const entry = state.setAnimation(0, animation, false);
 			if (!entry) return;
 			entry.reverse = true;
@@ -341,6 +341,11 @@
 		idleVariantPlaying = true;
 
 		const variant = pickMascotIdleVariant();
+		if (variant === 'idle' || !(MASCOT_IDLE_VARIANTS as readonly string[]).includes(variant)) {
+			idleVariantPlaying = false;
+			scheduleIdleVariant();
+			return;
+		}
 		playClip(variant, false, { soft: true });
 		player.animationState?.addAnimation(0, 'idle', true, 0);
 	};
@@ -367,8 +372,8 @@
 	/** Same beats as pawCoinResolve: hat out → hold → hat on (loops in DEV). */
 	const playForceIdle3Sequence = () => {
 		forceIdle3Phase = 'catch';
-		// Short mix — hand_palm fade-in in idle3 is ~0.45s and must stay visible.
-		playClip('idle3', false, { holdEnd: true, soft: true, mix: 0.08 });
+		// Short mix — hand_palm fade-in in hat is ~0.45s and must stay visible.
+		playClip('hat', false, { holdEnd: true, soft: true, mix: 0.08 });
 	};
 
 	const applyForceAnimation = (animation: MascotDevPreview) => {
@@ -380,7 +385,7 @@
 		resetIdleVariants();
 		clearForceIdle3();
 
-		if (animation === 'idle3') {
+		if (animation === 'hat') {
 			playForceIdle3Sequence();
 			return;
 		}
@@ -404,7 +409,7 @@
 		playClip(playback.animation, playback.loop, {
 			reverse: playback.reverse,
 			holdEnd: playback.holdEnd,
-			// Keep pose so idle3's hand/hat intro (and reverse outro) can play.
+			// Keep pose so hat's hand/hat intro (and reverse outro) can play.
 			// Short mix on hatCatch — longer mix ate the hand fade-in (hand "popped" in).
 			soft: fromIdleToHat || fromHatToIdle,
 			mix: fromIdleToHat ? 0.08 : fromHatToIdle ? 0.18 : undefined,
@@ -471,16 +476,16 @@
 					complete: (entry) => {
 						const name = entry.animation?.name as MascotSpineAnimation | undefined;
 
-						// DEV: idle3 mirrors in-game hatCatch → hold → hatOn.
-						if (activeForceAnim === 'idle3') {
-							if (name !== 'idle3') return;
+						// DEV: hat mirrors in-game hatCatch → hold → hatOn.
+						if (activeForceAnim === 'hat') {
+							if (name !== 'hat') return;
 							if (forceIdle3Phase === 'catch') {
 								holdCurrentClipEnd();
 								forceIdle3Phase = 'hold';
 								forceIdle3HoldTimer = setTimeout(() => {
-									if (activeForceAnim !== 'idle3' || !player) return;
+									if (activeForceAnim !== 'hat' || !player) return;
 									forceIdle3Phase = 'on';
-									playClip('idle3', false, { reverse: true });
+									playClip('hat', false, { reverse: true });
 								}, MASCOT_COIN_FLY_WAIT_MS);
 								return;
 							}
@@ -615,7 +620,7 @@
 		left: 0;
 		top: 0;
 		transform-origin: top left;
-		/* idle3 throws hat/arm outside the body bounds — don't clip */
+		/* hat throws hat/arm outside the body bounds — don't clip */
 		overflow: visible;
 	}
 

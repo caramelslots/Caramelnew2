@@ -1,6 +1,6 @@
 /** Duel bonus state — amounts stored as book cents (×100). */
 
-import { INITIAL_BOARD } from './constants';
+import { createInitialBoard } from './constants';
 
 export type DuelSide = 'cat' | 'dog';
 export type DuelPhase = 'idle' | 'pick' | 'playing' | 'outro';
@@ -9,12 +9,10 @@ export type DuelBoardCell = { name: string };
 
 const DUEL_FORBIDDEN = new Set(['B', 'BT', 'PB', 'PS', 'PG']);
 
-/** Visible 5×4 from INITIAL_BOARD (strip top/bottom pad + duel-forbidden symbols). */
+/** Visible 5×4 high-biased preview (no bonus / paw / bullet). */
 export const getDuelInitialVisibleBoard = (): DuelBoardCell[][] =>
-	INITIAL_BOARD.map((reel) =>
-		reel.slice(1, -1).map((cell) => ({
-			name: DUEL_FORBIDDEN.has(cell.name) ? 'L2' : cell.name,
-		})),
+	createInitialBoard({ exclude: DUEL_FORBIDDEN }).map((reel) =>
+		reel.slice(1, -1).map((cell) => ({ name: cell.name })),
 	);
 
 export const stateDuel = $state({
@@ -36,11 +34,17 @@ export const stateDuel = $state({
 	/** Which side currently owns the shared Pixi board (real reel spin). */
 	pixiSide: null as DuelSide | null,
 	spinning: false,
+	/** Independent random previews — cat and dog desks must not look identical. */
 	dogBoard: getDuelInitialVisibleBoard(),
 	catBoard: getDuelInitialVisibleBoard(),
 	winner: null as DuelSide | null,
 	payout: 0,
 	winLevel: 1,
+	/**
+	 * Win dimming only on this desk (other side stays full-bright).
+	 * Null = neither desk in spotlight.
+	 */
+	winSpotlightSide: null as DuelSide | null,
 	/** Per-side sticky SW columns (reel → mult), like bonus_normal FS. */
 	stickySwByReel: {
 		cat: {} as Record<number, number>,
@@ -76,6 +80,7 @@ export const resetDuelState = () => {
 	stateDuel.winner = null;
 	stateDuel.payout = 0;
 	stateDuel.winLevel = 1;
+	stateDuel.winSpotlightSide = null;
 	stateDuel.stickySwByReel = { cat: {}, dog: {} };
 	stateDuel.stickySwOpened = { cat: false, dog: false };
 	stateDuel.superWildCurtain = null;

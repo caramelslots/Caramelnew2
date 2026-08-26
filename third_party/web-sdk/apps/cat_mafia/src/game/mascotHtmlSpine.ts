@@ -39,11 +39,13 @@ export type MascotScreenBox = {
 };
 
 /**
- * idle3 timing (designer `hat` clip, truncated at brim-out):
- * - hat out ~1.73s, shake ~1.90–2.57s, hold last frame for coins, reverse = put-on.
- * Natural 1× Spine playback — no extra speed-up or clip shortening.
+ * Designer `hat` clip (~3.0s): out → shake → return.
+ * Pause at shake (~1.90s) while coins land, then resume forward to the end.
+ * (Do NOT reverse — the return is already in the second half of the clip.)
  */
-export const MASCOT_HAT_CATCH_BEFORE_COINS_MS = 1950;
+export const MASCOT_HAT_HOLD_TIME_S = 1.9;
+export const MASCOT_HAT_DURATION_S = 3.0;
+export const MASCOT_HAT_CATCH_BEFORE_COINS_MS = Math.round(MASCOT_HAT_HOLD_TIME_S * 1000);
 /** Squash press on the cell before the coin springs into its arc flight. */
 export const MASCOT_COIN_ANTICIPATE_MS = 130;
 /** CSS fly duration — keep in sync with `PawCoinOverlay` (one full turn). */
@@ -52,13 +54,21 @@ export const MASCOT_COIN_FLY_DURATION_MS = 820;
 export const MASCOT_COIN_FLY_STAGGER_MS = 70;
 /**
  * Wall-clock wait after launching coins (anticipation + fly + stagger for a
- * full row + settle into the shake / hold pose before hat-on reverse). The
+ * full row + settle into the hold pose before hat resumes). The
  * handler extends it for multi-row resolves so the last coin lands first.
  */
 export const MASCOT_COIN_FLY_WAIT_MS = 1400;
-/** Reverse idle3 put-on (~clip length 2.57s). */
-export const MASCOT_HAT_ON_MS = 2600;
+/** Resume hat from hold → end (~1.1s remaining). */
+export const MASCOT_HAT_ON_MS = Math.round((MASCOT_HAT_DURATION_S - MASCOT_HAT_HOLD_TIME_S) * 1000);
 
+/** Gun / load clip lengths (designer `cat_render`, wall-clock @ 1×). */
+export const MASCOT_GUN_START_MS = 2530;
+export const MASCOT_LOAD_MS = 670;
+export const MASCOT_GUN_END_LOAD_MS = 1130;
+export const MASCOT_GUN_STAT_IDLE_MS = 1430;
+export const MASCOT_GUN_SHOT_AIM_MS = 1670;
+export const MASCOT_GUN_SHOT_MS = 530;
+export const MASCOT_GUN_SHOT_END_MS = 1500;
 /**
  * Where paw-coins land while the hat is held out (idle3 brim-out / shake pose).
  * Fractions of the full mascot HTML box (includes left overscan). Measured by
@@ -73,6 +83,41 @@ export const getMascotHatCatchPoint = (box: MascotScreenBox) => ({
 	/** Front rim of the bowl opening (screen Y) — coins clip below it. */
 	brimY: box.top + box.height * 0.755,
 });
+
+/**
+ * `cartridge2` spine world (Y-up) on the open-hand frame of `gun_start`
+ * (~0.30s — paw open at chin; closing begins ~0.50–0.55s).
+ */
+export const MASCOT_GUN_START_CATCH_WORLD = { x: -114, y: 1060 } as const;
+/** Seconds into `gun_start` for the fly landing (open palm). */
+export const MASCOT_GUN_START_CATCH_S = 0.3;
+export const MASCOT_GUN_START_CATCH_MS = Math.round(MASCOT_GUN_START_CATCH_S * 1000);
+/** Finger clamp after the open catch pose. */
+export const MASCOT_GUN_START_SQUEEZE_S = 0.867;
+export const MASCOT_GUN_START_SQUEEZE_MS = Math.round(MASCOT_GUN_START_SQUEEZE_S * 1000);
+
+/**
+ * Map a spine-world point into the mascot screen box (same framing as Pixi).
+ */
+export const spineWorldToMascotScreen = (
+	box: MascotScreenBox,
+	world: { x: number; y: number },
+	viewport: MascotSpineViewport = MASCOT_SPINE_VIEWPORT,
+) => {
+	const t = getMascotPixiTransform(box, viewport);
+	const cx = viewport.x + viewport.width * 0.5;
+	const cy = viewport.y + viewport.height * 0.5;
+	return {
+		x: t.x + (world.x - cx) * t.scale,
+		y: t.y + (cy - world.y) * t.scale,
+	};
+};
+
+/**
+ * Where FS cartridges land for the `gun_start` catch (catching-hand bone).
+ */
+export const getMascotBulletCatchPoint = (box: MascotScreenBox) =>
+	spineWorldToMascotScreen(box, MASCOT_GUN_START_CATCH_WORLD);
 
 /**
  * Screen box for the mascot, anchored to the board so PC / laptop / popout
@@ -142,8 +187,9 @@ export const getMascotBoxSize = (scale = 1) => ({
 });
 
 /**
- * SpinePlayer viewport — expanded left/top for idle3 hat toss
- * (hat translate ~ -1225 x / +1575 y beyond setup pose).
+ * SpinePlayer / Pixi viewport — keep the pre-`cat_render` framing.
+ * Body bones match the old skeleton; this crop is what fixed size + position.
+ * (Wider AABB from hat extremes must not re-center the character.)
  */
 export const MASCOT_SPINE_VIEWPORT = {
 	x: -1700,
@@ -216,44 +262,63 @@ export const getMascotPixiTransform = (
 	};
 };
 
-/** Pose keys used by `stateGame.mascotPose` / bullet-fly. */
+/** Pose keys used by `stateGame.mascotPose` / bullet-fly / FS shoot. */
 export type MascotPose =
 	| 'idle'
 	| 'load'
 	| 'aim'
 	| 'shoot'
+	| 'gunStart'
+	| 'gunShotEnd'
+	| 'gunEndLoad'
+	| 'gunStatIdle'
+	| 'gunStatLoad'
 	| 'react'
 	| 'wow'
 	| 'clap'
-	/** idle3 forward — hat held out to catch paw coins. */
+	/** Designer `hat` — held out to catch paw coins. */
 	| 'hatCatch'
-	/** idle3 reversed — puts hat back on after coins land. */
+	/** After coins land — settle back to idle (designer clip as-is for now). */
 	| 'hatOn';
 
-/** Spine animation names in `mascot_cat.json`. */
+/** Spine animation names in `cat_render` white/gray `mascot_cat.json`. */
 export type MascotSpineAnimation =
 	| 'idle'
-	| 'idle2'
-	| 'idle3'
-	| 'idle3_ears'
 	| 'idle_blink'
-	| 'animation'
-	| 'animation2'
-	| 'animation3';
+	| 'idle_ears'
+	| 'idle_gyn'
+	| 'hat'
+	| 'load'
+	| 'like'
+	| 'applause'
+	| 'gun_start'
+	| 'gun_shot_aim'
+	| 'gun_shot'
+	| 'gun_shot_end'
+	| 'gun_end_load'
+	| 'gun_shot_stat_idle'
+	| 'gun_shot_stat_load';
 
 /** All clips (viewport + runtime). */
 export const MASCOT_SPINE_ANIMATIONS: readonly MascotSpineAnimation[] = [
 	'idle',
-	'idle2',
-	'idle3',
-	'idle3_ears',
 	'idle_blink',
-	'animation',
-	'animation2',
-	'animation3',
+	'idle_ears',
+	'idle_gyn',
+	'hat',
+	'load',
+	'like',
+	'applause',
+	'gun_start',
+	'gun_shot_aim',
+	'gun_shot',
+	'gun_shot_end',
+	'gun_end_load',
+	'gun_shot_stat_idle',
+	'gun_shot_stat_load',
 ] as const;
 
-/** DEV-only preview ids (map 1:1 to Spine clips, with idle3 = in-game hat sequence). */
+/** DEV-only preview ids (map 1:1 to Spine clips). */
 export type MascotDevPreview = MascotSpineAnimation;
 
 export type MascotDevPreviewItem = {
@@ -262,72 +327,83 @@ export type MascotDevPreviewItem = {
 	title: string;
 };
 
-/**
- * DEV panel buttons — idle family only.
- * `idle3` = in-game hat sequence (forward → hold → reverse).
- */
-export const MASCOT_DEV_PREVIEW_ITEMS: readonly MascotDevPreviewItem[] = [
-	{ id: 'idle', label: 'idle', title: 'Play Spine clip "idle" (loop)' },
-	{ id: 'idle2', label: 'idle2', title: 'Play Spine clip "idle2" (loop)' },
-	{
-		id: 'idle3',
-		label: 'idle3 (hat)',
-		title: 'In-game hat sequence: idle3 out → hold → reverse on (loops)',
-	},
-	{ id: 'idle3_ears', label: 'idle3_ears', title: 'Play Spine clip "idle3_ears" (loop)' },
-	{ id: 'idle_blink', label: 'idle_blink', title: 'Play Spine clip "idle_blink" (loop)' },
-] as const;
+/** DEV panel — every cat Spine clip for QA. */
+export const MASCOT_DEV_PREVIEW_ITEMS: readonly MascotDevPreviewItem[] =
+	MASCOT_SPINE_ANIMATIONS.map((id) =>
+		id === 'hat'
+			? {
+					id,
+					label: 'hat',
+					title: 'In-game hat sequence: out → pause → finish forward (loops)',
+				}
+			: {
+					id,
+					label: id,
+					title: `Play Spine clip "${id}" (loop)`,
+				},
+	);
 
 /** @deprecated use MASCOT_DEV_PREVIEW_ITEMS */
-export const MASCOT_DEV_PREVIEW_ANIMATIONS: readonly MascotSpineAnimation[] = [
-	'idle',
-	'idle2',
-	'idle3',
-	'idle3_ears',
-	'idle_blink',
-] as const;
+export const MASCOT_DEV_PREVIEW_ANIMATIONS: readonly MascotSpineAnimation[] =
+	MASCOT_SPINE_ANIMATIONS;
 
 type PosePlayback = {
 	animation: MascotSpineAnimation;
 	loop: boolean;
 	/** After a one-shot finishes, fall back to this pose animation (loop). */
 	returnTo?: MascotSpineAnimation;
-	/** Play clip backwards (hat back onto head). */
+	/** Play clip backwards (legacy hat put-on — unused while designer hat is as-is). */
 	reverse?: boolean;
 	/** Freeze on the last frame instead of returning (hat held out). */
 	holdEnd?: boolean;
 };
 
 /**
- * Temporary pose → Spine mapping (adjust freely):
- * - idle2 = clap hands
- * - idle3 = designer hat collect (hatCatch hold at brim-out ~2.57s) + reverse put-on (hatOn);
- *   hand/fingers + purple hat meshes; hat is out by ~1.73s
- * - idle3_ears = alert / aim
- * - animation / animation2 / animation3 = action beats
+ * Pose → Spine mapping (`designer_assets/cat_render`):
+ * - like (`react`) = line wins / bonus trigger (one-shot → idle)
+ * - applause (`clap`) = big-win celebration (play once)
+ * - hat = paw coin catch
+ * - gun_start = catch BT fly at the hand; load / gun_end_load seat the drum after
+ * - gun_shot_* = FS target shoot round
  */
 export const MASCOT_POSE_PLAYBACK: Record<MascotPose, PosePlayback> = {
 	idle: { animation: 'idle', loop: true },
-	load: { animation: 'animation', loop: false, returnTo: 'idle' },
-	aim: { animation: 'idle3_ears', loop: true },
-	shoot: { animation: 'animation2', loop: false, returnTo: 'idle3_ears' },
-	react: { animation: 'animation3', loop: false, returnTo: 'idle' },
-	wow: { animation: 'idle3', loop: true },
-	clap: { animation: 'idle2', loop: true },
-	hatCatch: { animation: 'idle3', loop: false, holdEnd: true },
-	hatOn: { animation: 'idle3', loop: false, reverse: true, returnTo: 'idle' },
+	load: { animation: 'load', loop: false, holdEnd: true },
+	gunStart: { animation: 'gun_start', loop: false, holdEnd: true },
+	aim: { animation: 'gun_shot_aim', loop: false, holdEnd: true },
+	shoot: { animation: 'gun_shot', loop: false, holdEnd: true },
+	gunShotEnd: { animation: 'gun_shot_end', loop: false, holdEnd: true },
+	gunEndLoad: { animation: 'gun_end_load', loop: false, returnTo: 'idle' },
+	gunStatIdle: { animation: 'gun_shot_stat_idle', loop: false, holdEnd: true },
+	gunStatLoad: { animation: 'gun_shot_stat_load', loop: false, holdEnd: true },
+	react: { animation: 'like', loop: false, returnTo: 'idle' },
+	/** @deprecated Prefer `clap` for big wins — kept as applause once for safety. */
+	wow: { animation: 'applause', loop: false, holdEnd: true },
+	clap: { animation: 'applause', loop: false, holdEnd: true },
+	hatCatch: { animation: 'hat', loop: false, holdEnd: true },
+	/** Resume `hat` forward from the pause (no reverse). */
+	hatOn: { animation: 'hat', loop: false, returnTo: 'idle' },
 };
 
-/** Idle flavour clips randomly queued while pose stays `idle`. */
-export const MASCOT_IDLE_VARIANTS: readonly MascotSpineAnimation[] = ['idle_blink', 'idle3_ears'];
+/** Idle flavour clips randomly queued while pose stays `idle` (excludes base idle). */
+export const MASCOT_IDLE_VARIANTS: readonly MascotSpineAnimation[] = [
+	'idle_blink',
+	'idle_ears',
+	'idle_gyn',
+];
 
-/** Weighted idle flavour — blink often, ear twitch less often. */
+/**
+ * Weighted idle roll — includes base `idle` (skip flavour).
+ * 40% idle / 30% blink / 20% ears / 10% gyn.
+ */
 export const MASCOT_IDLE_VARIANT_WEIGHTS: ReadonlyArray<{
 	animation: MascotSpineAnimation;
 	weight: number;
 }> = [
-	{ animation: 'idle_blink', weight: 0.72 },
-	{ animation: 'idle3_ears', weight: 0.28 },
+	{ animation: 'idle', weight: 0.4 },
+	{ animation: 'idle_blink', weight: 0.3 },
+	{ animation: 'idle_ears', weight: 0.2 },
+	{ animation: 'idle_gyn', weight: 0.1 },
 ] as const;
 
 export const pickMascotIdleVariant = (): MascotSpineAnimation => {
@@ -337,7 +413,7 @@ export const pickMascotIdleVariant = (): MascotSpineAnimation => {
 		roll -= item.weight;
 		if (roll <= 0) return item.animation;
 	}
-	return 'idle_blink';
+	return 'idle';
 };
 
 /** Delay before the next idle flavour clip (ms). */
@@ -348,9 +424,12 @@ export const resolveMascotSpineUrl = (file: string) =>
 	new URL(`assets/spines/mascot/${file}`.replace(/^\//, ''), window.location.href).href;
 
 export const MASCOT_SPINE_FILES = [
-	'mascot_cat.json',
-	'mascot_cat.atlas',
-	'mascot_cat.png',
+	'white/mascot_cat.json',
+	'white/mascot_cat.atlas',
+	'white/mascot_cat.png',
+	'gray/mascot_cat.json',
+	'gray/mascot_cat.atlas',
+	'gray/mascot_cat.png',
 ] as const;
 
 export const MASCOT_DOG_SPINE_FILES = [
@@ -363,8 +442,9 @@ export const MASCOT_DOG_SPINE_FILES = [
 export const MASCOT_SPINE_ASSET_URLS = MASCOT_SPINE_FILES.map(resolveMascotSpineUrl);
 export const MASCOT_DOG_SPINE_ASSET_URLS = MASCOT_DOG_SPINE_FILES.map(resolveMascotSpineUrl);
 
-/** Atlas image — keep PNG (lossy WebP breaks PMA mesh edges). */
-export const MASCOT_SPINE_IMAGE_URL = resolveMascotSpineUrl('mascot_cat.png');
+/** Atlas image — keep PNG (lossy WebP breaks PMA mesh edges). White = basegame. */
+export const MASCOT_SPINE_IMAGE_URL = resolveMascotSpineUrl('white/mascot_cat.png');
+export const MASCOT_SPINE_GRAY_IMAGE_URL = resolveMascotSpineUrl('gray/mascot_cat.png');
 
 /** Spine clip names in `mascot_dog.json`. */
 export type MascotDogSpineAnimation =
@@ -439,6 +519,11 @@ export const MASCOT_DOG_POSE_PLAYBACK: Record<
 	load: { animation: 'idle', loop: true },
 	aim: { animation: 'idle', loop: true },
 	shoot: { animation: 'idle', loop: true },
+	gunStart: { animation: 'idle', loop: true },
+	gunShotEnd: { animation: 'idle', loop: true },
+	gunEndLoad: { animation: 'idle', loop: true },
+	gunStatIdle: { animation: 'idle', loop: true },
+	gunStatLoad: { animation: 'idle', loop: true },
 	/** Dog lost the duel — hold angry until outro unmounts. */
 	react: { animation: 'angry_final', loop: true },
 	wow: { animation: 'idle_glow', loop: true },

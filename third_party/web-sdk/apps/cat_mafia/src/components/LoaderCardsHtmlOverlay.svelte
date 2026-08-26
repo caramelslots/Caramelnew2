@@ -5,6 +5,7 @@
 	import { untrack } from 'svelte';
 
 	import LoaderCardHtml from './LoaderCardHtml.svelte';
+	import PressToContinueHtml from './PressToContinueHtml.svelte';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { LOADER_NEON_LOGO_URL, LOADER_SCREEN_IMAGE_URLS } from '../game/loaderCardAssets';
@@ -180,6 +181,14 @@
 		{/if}
 		</div>
 	</div>
+	<!--
+		Sibling of the transformed cards box — fixed label must not sit under a
+		transform ancestor. Above LoaderStreetStill (42) and cards (44).
+		Space / tap handlers live in LoadingScreen.
+	-->
+	<div class="loader-press-to-continue">
+		<PressToContinueHtml />
+	</div>
 {/if}
 
 <style lang="scss">
@@ -204,6 +213,13 @@
 		pointer-events: none;
 		user-select: none;
 		overflow: visible;
+	}
+
+	.loader-press-to-continue {
+		position: fixed;
+		inset: 0;
+		z-index: 45;
+		pointer-events: none;
 	}
 
 	.cards-row {

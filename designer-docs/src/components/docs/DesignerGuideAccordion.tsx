@@ -1,14 +1,25 @@
-import { useCallback, useId, useMemo, useState } from 'react'
-import { catalogSourceFromId, catalogUrls } from '../../catalog/assetPaths'
-import { getCatalogSymbol } from '../../catalog/symbolCatalog'
+import { useCallback, useId, useState } from 'react'
 import { AnimationControls } from '../symbols/AnimationControls'
 import { SpinePreviewStage } from '../../pixi/SpinePreviewStage'
 import type {
   AnimationRole,
   AnimationRoleMap,
   PlaybackState,
+  SpineAssetSource,
   SpineMetrics,
 } from '../../types'
+
+/** Docs-only example — not seeded into the symbol library / Reel Lab. */
+const GUIDE_H1_SOURCE: SpineAssetSource = {
+  kind: 'catalog',
+  symbolId: 'H1',
+  skeletonUrl: '/designer-assets/H1/H1.json',
+  atlasUrl: '/designer-assets/H1/H1.atlas',
+  textureUrl: '/designer-assets/H1/H1.webp',
+  textureFileName: 'H1.webp',
+}
+
+const GUIDE_H1_STATIC_URL = '/designer-assets/H1/H1_static.webp'
 
 type SectionId = 'format' | 'naming' | 'size'
 
@@ -140,11 +151,8 @@ export function DesignerGuideAccordion() {
 }
 
 function GuideSymbolPreview() {
-  const source = useMemo(() => catalogSourceFromId('diamond'), [])
-  const staticSpriteUrl = useMemo(() => {
-    const symbol = getCatalogSymbol('diamond')
-    return symbol ? catalogUrls(symbol).staticSpriteUrl : null
-  }, [])
+  const source = GUIDE_H1_SOURCE
+  const staticSpriteUrl = GUIDE_H1_STATIC_URL
   const [animationNames, setAnimationNames] = useState<string[]>([])
   const [roles, setRoles] = useState<AnimationRoleMap>({
     idle: null,
@@ -202,7 +210,7 @@ function GuideSymbolPreview() {
       <div className="guide-preview__head">
         <div>
           <p className="guide-preview__id">H1</p>
-          <p className="guide-preview__name">Diamond · пример</p>
+          <p className="guide-preview__name">Пример символа</p>
         </div>
         <p className="muted">{loading ? 'Загрузка…' : error ? 'Ошибка' : 'Preview'}</p>
       </div>
@@ -239,7 +247,7 @@ function GuideSymbolPreview() {
         <div className="guide-static">
           <div className="guide-static__head">
             <p className="guide-static__label">Статика</p>
-            <p className="muted">H1.webp · 196×196</p>
+            <p className="muted">H1_static.webp · 196×196</p>
           </div>
           <div className="guide-static__frame">
             <img

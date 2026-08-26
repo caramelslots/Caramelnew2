@@ -5,6 +5,7 @@
 	import { getSymbolInfo } from '../game/utils';
 	import { SYMBOL_SIZE } from '../game/constants';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { getAutoCellFitRatio } from '../game/symbolCellFit.svelte';
 	import type { SymbolName } from '../game/types';
 
 	type Props = {
@@ -56,13 +57,19 @@
 			? props.symbolInfo.offsetY
 			: 0,
 	);
+	/** Runtime silhouette fit overrides static sizeRatios when available. */
+	const fitHeight = $derived.by(() => {
+		const auto = getAutoCellFitRatio(props.symbolInfo.assetKey);
+		const ratio = auto ?? props.symbolInfo.sizeRatios.height;
+		return SYMBOL_SIZE * ratio;
+	});
 </script>
 
 <SpineProvider
 	x={props.x}
 	y={(props.y ?? 0) + offsetY}
 	key={props.symbolInfo.assetKey}
-	height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height}
+	height={fitHeight}
 	{autoUpdate}
 >
 	<SpineTrack

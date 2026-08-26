@@ -131,6 +131,25 @@
 		}
 	});
 
+	/**
+	 * Big / Super: idle so flavour keeps moving.
+	 * Epic / Sensational: keep applause (don't cancel the win reaction).
+	 */
+	$effect(() => {
+		winUpdateCount;
+		if (!show || !winLevelData || winLevelData.type !== 'big') return;
+		if (winLevelData.alias === 'epic' || winLevelData.alias === 'sensational') {
+			if (stateGame.mascotPose !== 'clap') {
+				stateGame.mascotAnimToken += 1;
+				stateGame.mascotPose = 'clap';
+			}
+			return;
+		}
+		if (stateGame.mascotPose !== 'idle') {
+			stateGame.mascotPose = 'idle';
+		}
+	});
+
 	context.eventEmitter.subscribeOnMount({
 		winShow: () => {
 			show = true;

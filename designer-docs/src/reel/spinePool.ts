@@ -12,6 +12,7 @@ import type { LibrarySymbol } from '../library/types'
 import { listAnimationNames } from '../pixi/spineLoader'
 import { resolveAnimationRoles } from '../pixi/animationRoles'
 import type { AnimationRoleMap } from '../types'
+import { resolveSymbolSizeFit } from './symbolSizeFit'
 
 export type SpineTemplate = {
   symbolId: string
@@ -20,6 +21,9 @@ export type SpineTemplate = {
   texture: Texture
   roles: AnimationRoleMap
   animationNames: string[]
+  /** cat_mafia SpineProvider sizeRatio (height / SYMBOL_SIZE). */
+  sizeRatio: number
+  offsetY: number
 }
 
 const templates = new Map<string, Promise<SpineTemplate | null>>()
@@ -66,6 +70,8 @@ async function loadTemplate(symbol: LibrarySymbol): Promise<SpineTemplate | null
   }
   probe.destroy({ children: true })
 
+  const fit = resolveSymbolSizeFit(symbol.label)
+
   return {
     symbolId: symbol.id,
     skeletonData,
@@ -73,6 +79,8 @@ async function loadTemplate(symbol: LibrarySymbol): Promise<SpineTemplate | null
     texture,
     roles,
     animationNames,
+    sizeRatio: fit.sizeRatio,
+    offsetY: fit.offsetY,
   }
 }
 

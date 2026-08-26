@@ -78,6 +78,7 @@ export function ReelLabStage({
   const quality = QUALITY_PRESETS.find((item) => item.id === qualityId) ?? QUALITY_PRESETS[2]!
   const layoutKind = layoutKindForDevice(device.id)
   const pool = useMemo(() => readyStaticSymbols(symbols), [symbols])
+  const poolIdsKey = pool.map((item) => item.id).join('|')
   const staticReady = pool.length
 
   const [spinNonce, setSpinNonce] = useState(0)
@@ -95,6 +96,24 @@ export function ReelLabStage({
   const labRef = useRef<HTMLDivElement>(null)
 
   const stageUrls = useMemo(() => resolveStageUrls(stageOverrides), [stageOverrides])
+
+  // When library grows/shrinks, keep filter in sync and auto-include new uploads.
+  useEffect(() => {
+    setAllowedIds((prev) => {
+      if (prev === null) return null
+      const poolIds = pool.map((item) => item.id)
+      const poolSet = new Set(poolIds)
+      const kept = prev.filter((id) => poolSet.has(id))
+      const added = poolIds.filter((id) => !prev.includes(id))
+      const next = [...kept, ...added]
+      if (next.length === 0) return []
+      if (next.length === poolIds.length) return null
+      return next
+    })
+    setRefillNonce((value) => value + 1)
+    // poolIdsKey tracks identity of ready symbols without depending on pool array identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [poolIdsKey])
 
   useEffect(() => {
     const sync = () => {

@@ -8,11 +8,11 @@ import { createEnhanceBoard, createReelForSpinning } from 'utils-slots';
 
 import {
 	BOARD_DIMENSIONS,
-	INITIAL_BOARD,
 	INITIAL_SYMBOL_STATE,
 	SPIN_OPTIONS_DEFAULT,
 	SPIN_OPTIONS_FAST,
 	SYMBOL_SIZE,
+	createInitialBoard,
 	isVisibleBoardSymbolIndex,
 } from './constants';
 import { eventEmitter } from './eventEmitter';
@@ -55,12 +55,16 @@ const onSymbolLand = ({
 	}
 };
 
+/** Symbols that never land in Duel — also strip from fake spin padding. */
+const DUEL_FORBIDDEN_PADDING = new Set(['B', 'BT', 'PB', 'PS', 'PG']);
+
 const createDuelSideBoard = () => {
+	const initialBoard = createInitialBoard({ exclude: DUEL_FORBIDDEN_PADDING });
 	const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 		const reel = createReelForSpinning({
 			reelIndex,
 			symbolHeight: SYMBOL_SIZE,
-			initialSymbols: INITIAL_BOARD[reelIndex],
+			initialSymbols: initialBoard[reelIndex],
 			initialSymbolState: INITIAL_SYMBOL_STATE,
 			onReelStopping: () => {
 				eventEmitter.broadcast({
@@ -94,9 +98,6 @@ export const stateDuelBoards = $state({
 });
 
 export const getDuelBoardStack = (side: DuelSide) => stateDuelBoards[side];
-
-/** Symbols that never land in Duel — also strip from fake spin padding. */
-const DUEL_FORBIDDEN_PADDING = new Set(['B', 'BT', 'PB', 'PS', 'PG']);
 
 /** Bonus scatter never lands during Normal / Super FS — strip from scroll padding. */
 const FS_FORBIDDEN_PADDING = new Set(['B']);

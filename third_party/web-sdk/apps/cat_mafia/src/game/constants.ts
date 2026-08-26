@@ -141,17 +141,161 @@ export const HUD_BALANCE_BET_VALUE_COLOR = '#fff8ec';
 /** Half-cell inset so reel centers sit at 50, 150, … — equal columns in the desk art. */
 export const REEL_PADDING = 0.5;
 
-// Cat Mafia: 5 reels × 4 rows, padded top and bottom (6 cells per column).
-// Order: [top_padding, row0..row3, bottom_padding]
-export const INITIAL_BOARD: RawSymbol[][] = [
-	[{ name: 'L2' }, { name: 'L1' }, { name: 'L4' }, { name: 'H2' }, { name: 'L3' }, { name: 'H4' }],
-	[{ name: 'H1' }, { name: 'L4' }, { name: 'L2' }, { name: 'H3' }, { name: 'L1' }, { name: 'B' }],
-	[{ name: 'L3' }, { name: 'L1' }, { name: 'H4' }, { name: 'L4' }, { name: 'L2' }, { name: 'H2' }],
-	[{ name: 'H4' }, { name: 'H3' }, { name: 'L4' }, { name: 'L2' }, { name: 'L3' }, { name: 'H1' }],
-	[{ name: 'H3' }, { name: 'L3' }, { name: 'L4' }, { name: 'H1' }, { name: 'L2' }, { name: 'L1' }],
+/**
+ * Extra X (game-space px) for symbols on the rightmost reels — nudges them
+ * under the gold rails so the last dividers fully cover edges (e.g. H4 cord).
+ * Indices 3–4 = last two of five columns.
+ */
+export const REEL_SYMBOL_X_NUDGE_PX: Readonly<Record<number, number>> = {
+	3: 2,
+	4: 4,
+};
+
+/**
+ * Cat Mafia grid: 5 reels × 4 visible rows, plus top/bottom padding
+ * (`createInitialBoard` → [pad, row0..row3, pad]).
+ */
+export const BOARD_DIMENSIONS = { x: 5, y: 4 };
+
+/** Highs used when remapping curated preview templates. */
+const INITIAL_BOARD_HIGHS = ['H1', 'H2', 'H3', 'H4'] as const;
+const INITIAL_BOARD_LOWS = ['L1', 'L2', 'L3', 'L4'] as const;
+
+/**
+ * Curated 5×4 visible layouts (column-major: [reel][row]).
+ * Each board stages near-complete clusters — almost-lines, stacked pairs —
+ * so the idle desk looks composed rather than random noise. Padding is filled
+ * to echo the edge cells.
+ */
+const INITIAL_BOARD_TEMPLATES: ReadonlyArray<ReadonlyArray<ReadonlyArray<RawSymbol['name']>>> = [
+	// Almost-mid H1 line + stacked H2 tease on top.
+	[
+		['H2', 'H1', 'W', 'L4'],
+		['H2', 'H1', 'H3', 'H4'],
+		['H2', 'H1', 'L2', 'H4'],
+		['L3', 'L4', 'H3', 'W'],
+		['H4', 'H1', 'H3', 'L1'],
+	],
+	// Diagonal-ish H3 run + H4 pair on the bottom-left.
+	[
+		['H3', 'L1', 'H2', 'H4'],
+		['W', 'H3', 'L4', 'H4'],
+		['L2', 'H1', 'H3', 'L3'],
+		['H2', 'H2', 'W', 'H1'],
+		['H4', 'H2', 'L1', 'H3'],
+	],
+	// Wild bridge across a near H2 four-of-kind (broken on reel 3).
+	[
+		['H2', 'L3', 'H1', 'W'],
+		['H2', 'H4', 'H1', 'L2'],
+		['H2', 'W', 'H1', 'H4'],
+		['L4', 'H3', 'L1', 'H3'],
+		['H2', 'H3', 'H4', 'L3'],
+	],
+	// Two short stacks (H4 / H1) with a soft H3 band.
+	[
+		['H4', 'H4', 'L2', 'H3'],
+		['W', 'H1', 'H3', 'L4'],
+		['H2', 'H1', 'H3', 'H2'],
+		['L1', 'H1', 'W', 'H2'],
+		['H4', 'L3', 'H3', 'H4'],
+	],
+	// Premium top row tease + revolver (H2) column on reel 1.
+	[
+		['H1', 'L4', 'H4', 'W'],
+		['H1', 'H2', 'H2', 'H2'],
+		['H1', 'L1', 'H3', 'L3'],
+		['L2', 'H4', 'H3', 'H4'],
+		['W', 'H3', 'L4', 'H1'],
+	],
+	// Soft V of highs meeting mid-board with wilds as glue.
+	[
+		['H4', 'L3', 'H2', 'H1'],
+		['H3', 'H4', 'W', 'L2'],
+		['H1', 'H1', 'H1', 'H3'],
+		['W', 'H2', 'L4', 'H2'],
+		['L1', 'H3', 'H4', 'H2'],
+	],
 ];
 
-export const BOARD_DIMENSIONS = { x: INITIAL_BOARD.length, y: INITIAL_BOARD[0].length - 2 };
+const shuffleInPlace = <T>(items: T[]): T[] => {
+	for (let i = items.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[items[i], items[j]] = [items[j]!, items[i]!];
+	}
+	return items;
+};
+
+const pickOne = <T>(items: ReadonlyArray<T>): T =>
+	items[Math.floor(Math.random() * items.length)]!;
+
+/**
+ * Remap H/L families so the same silhouette pattern can feel fresh each load
+ * without breaking the near-combination structure.
+ */
+const buildSymbolRemap = (): Record<string, RawSymbol['name']> => {
+	const highs = shuffleInPlace([...INITIAL_BOARD_HIGHS]);
+	const lows = shuffleInPlace([...INITIAL_BOARD_LOWS]);
+	const map: Record<string, RawSymbol['name']> = { W: 'W' };
+	INITIAL_BOARD_HIGHS.forEach((name, i) => {
+		map[name] = highs[i]!;
+	});
+	INITIAL_BOARD_LOWS.forEach((name, i) => {
+		map[name] = lows[i]!;
+	});
+	return map;
+};
+
+const applyExclude = (
+	name: RawSymbol['name'],
+	exclude: ReadonlySet<string> | undefined,
+	fallback: RawSymbol['name'],
+): RawSymbol['name'] => (exclude?.has(name) ? fallback : name);
+
+/**
+ * Structured padded 5×6 preview board: pick a curated near-win composition,
+ * optionally remap H/L identities, echo edge cells into padding.
+ */
+export const createInitialBoard = (opts?: {
+	exclude?: ReadonlySet<string>;
+}): RawSymbol[][] => {
+	const template = pickOne(INITIAL_BOARD_TEMPLATES);
+	const remap = buildSymbolRemap();
+	const fallbackHigh = applyExclude(
+		remap.H2 ?? 'H2',
+		opts?.exclude,
+		applyExclude('L2', opts?.exclude, 'L1'),
+	);
+	const fallbackLow = applyExclude('L2', opts?.exclude, fallbackHigh);
+
+	const visible = template.map((column) =>
+		column.map((name) => {
+			const remapped = remap[name] ?? name;
+			return applyExclude(remapped, opts?.exclude, fallbackLow);
+		}),
+	);
+
+	return visible.map((column) => {
+		const topPad = applyExclude(
+			pickOne([column[0]!, column[1]!, fallbackHigh]),
+			opts?.exclude,
+			fallbackHigh,
+		);
+		const bottomPad = applyExclude(
+			pickOne([column[column.length - 1]!, column[column.length - 2]!, fallbackHigh]),
+			opts?.exclude,
+			fallbackHigh,
+		);
+		return [
+			{ name: topPad },
+			...column.map((name) => ({ name })),
+			{ name: bottomPad },
+		];
+	});
+};
+
+/** Module-load sample for the main base desk + length helpers (e.g. anticipation). */
+export const INITIAL_BOARD: RawSymbol[][] = createInitialBoard();
 
 /** Whether a settled reel-pool index is on the visible grid (not top/bottom padding). */
 export const isVisibleBoardSymbolIndex = (
@@ -221,16 +365,7 @@ export const IDLE_BOUNCE_CYCLE_DELAY_MS = 2000;
 export const IDLE_BOUNCE_ANIMATION_TIMEOUT_MS = 800;
 
 /** Living spine idle plays one symbol type at a time (H1 → H2 → …). */
-export const LIVING_IDLE_SYMBOL_ORDER = [
-	'H1',
-	'H2',
-	'H3',
-	'H4',
-	'L1',
-	'L2',
-	'L3',
-	'L4',
-] as const;
+export const LIVING_IDLE_SYMBOL_ORDER = ['H1', 'H2', 'H3', 'H4', 'L1', 'L2', 'L3', 'L4'] as const;
 
 /** How long one type keeps looping before the next type. Matches idle clip ~3s. */
 export const LIVING_IDLE_TURN_MS = 3000;
@@ -274,19 +409,20 @@ export const BOARD_MASK_IDLE_BOUNCE_TOP =
 
 /**
  * Extra mask coverage (px) beyond the visible board grid.
- * Gold rails are composited above symbols (`BoardFrame` overlay), so a short
- * runway is fine — symbols slide under the frame instead of vanishing mid-cell.
- * Keep bottom tight: the contour leaves a translucent gap above the gold bar
- * where a longer runway would let scrolling symbols bleed through.
- * top/bottom are measured from the grid edges outward.
+ * Bottom runway tucks symbols under the gold bar; keep it short and use a
+ * hard bottom edge (see `BOARD_MASK_BOTTOM_FEATHER`) so soft fade never
+ * leaks past the frame as “ghost” symbols.
  */
-export const BOARD_MASK_OVERFLOW = { top: 24, bottom: 6 } as const;
+export const BOARD_MASK_OVERFLOW = { top: 24, bottom: 11 } as const;
 
 /**
  * Mask runway while reels scroll — see BoardMask.svelte (`boardReelsActive`).
- * Bottom matches the stopped overflow so spin symbols clip before the desk gap.
+ * Bottom matches the stopped overflow so spin symbols clip under the frame.
  */
-export const BOARD_MASK_SPIN_OVERFLOW = { top: 24, bottom: 6 } as const;
+export const BOARD_MASK_SPIN_OVERFLOW = { top: 24, bottom: 11 } as const;
+
+/** Soft fade at the top runway only. Bottom is hard so symbols don’t ghost below the desk. */
+export const BOARD_MASK_BOTTOM_FEATHER = 0;
 
 export const BACKGROUND_RATIO = 2039 / 1000;
 export const PORTRAIT_BACKGROUND_RATIO = 1242 / 2208;
@@ -317,7 +453,7 @@ export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
  * inflate by skeleton/art so every symbol's *silhouette* lands near this
  * fraction of the 100px cell (keeps the board reading as one size).
  */
-const CELL_SYMBOL_SIZE = 0.85;
+export const CELL_SYMBOL_SIZE = 0.85;
 /** Aliases — spin / bounce paths still use the old names. */
 const HIGH_SYMBOL_SIZE = CELL_SYMBOL_SIZE;
 const LOW_SYMBOL_SIZE = CELL_SYMBOL_SIZE;
@@ -325,9 +461,13 @@ const LOW_SYMBOL_SIZE = CELL_SYMBOL_SIZE;
  * Art spans = dominant idle silhouette in skeleton units (atlas offsets /
  * atlas scale). Exclude full-bleed `Layer 1` / ray discs — those are FX
  * pads, not the symbol body.
+ *
+ * Letter L1–L4: static fallback only. Runtime `symbolCellFit` remeasures the
+ * idle body AABB and overrides sizeRatios so every letter fills the cell
+ * equally regardless of how large the designer packed the glyph.
  */
 const LETTER_SKELETON_HEIGHT = 2603.14;
-const LETTER_ART_HEIGHT = 1306; // A/J/K/Q glyph (~522 @ scale 0.4)
+const LETTER_ART_HEIGHT = 1306; // A/K/Q/J attachment pad (~522 @ scale 0.4)
 const LETTER_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * LETTER_SKELETON_HEIGHT) / LETTER_ART_HEIGHT;
 /** Telephone — handset width is the widest idle silhouette. */
 const TELEPHONE_SKELETON_HEIGHT = 2603.14;
@@ -468,24 +608,31 @@ export const zIndexes = {
 };
 
 /**
- * Geometry of the playfield inside the desk frame
- * (`boardDayBase` / `desk_day_base.webp`, 2048×2048). Measured from the dark
- * 5-column region inside the inner gold rails. Values are fractions of the
- * source image.
+ * Fixed on-screen desk slot (legacy `desk_day_base.webp` / `DESK_PARCHMENT`).
+ * Any board art — Spine, sprite, next redesign — is fitted into this box.
+ * Reels / UI stay tied to `boardLayout`; only the desk chrome lives in the slot.
  *
- *   width/heightFrac — playfield bbox size as a fraction of image size.
- *   offset*Frac      — playfield-center offset from image-center
- *                      (positive = right / down).
- *
- * Used by `BoardFrame.svelte` to scale the desk so the playfield wraps the
- * reel board, and to position it so the playfield center coincides with the
- * board-frame center.
+ *   width/heightFrac — playfield as a fraction of the slot.
+ *   offset*Frac      — playfield-center offset from slot-center (+x right, +y down).
  */
 export const DESK_PARCHMENT = {
 	widthFrac: 0.8662,
 	heightFrac: 0.6904,
 	offsetXFrac: -0.0005,
 	offsetYFrac: -0.0117,
+} as const;
+
+/**
+ * Current desk art content bounds (Spine `board` slot, skeleton Y-up).
+ * Fitted into the desk slot via scale = slotSize / contentSize.
+ * Swap these when the board asset changes — slot size/position stay fixed.
+ */
+export const BOARD_DESK_CONTENT = {
+	width: 2050,
+	height: 1993,
+	/** Content center in skeleton space (Y-up). spine-pixi uses `Skeleton.yDown`. */
+	centerX: 0,
+	centerY: 28.5,
 } as const;
 
 /**
@@ -534,7 +681,7 @@ export const BOARD_LAYOUT_SCALE = {
 export const BOARD_FRAME_OFFSET = { x: 0, y: 0 } as const;
 /** Vertical nudge (game px, +y = down) applied to all desk artwork layers (base / contour)
  *  without moving the reel grid or UI buttons. */
-export const DESK_VISUAL_OFFSET_Y = 0;
+export const DESK_VISUAL_OFFSET_Y = -13.5;
 
 /**
  * Reference width (px) for portrait board scaling. Parchment on-screen width
@@ -1151,11 +1298,24 @@ export const getFsOutroPopupVisualCenter = (mainLayout: { width: number; height:
  */
 export const BONUS_WIN_PRE_DELAY_MS = 400;
 
-/** Cartridge approach along arc to chamber mouth (`BulletFlyOverlay`). */
-export const BULLET_FLY_MS = 700;
-/** Sink into chamber + drum bullet fade/scale-in (crossfade handoff). */
-export const BULLET_INSERT_MS = 260;
-/** Full overlay lifetime — keep `bulletFly` until insert finishes. */
+/**
+ * Bullet collect flow:
+ * 1) Fly while idle (lead)
+ * 2) Start `gun_start`
+ * 3) Land toward open palm (~0.30s) and hide ~50ms early so the overlay
+ *    is gone before the fist reads closed (~0.50s+)
+ *
+ * Wall-clock — match mascot 1×.
+ */
+export const BULLET_FLY_LEAD_MS = 380;
+/** Open-palm beat into `gun_start` (keep in sync with MASCOT_GUN_START_CATCH_MS). */
+export const BULLET_FLY_CATCH_MS = 300;
+/** Clear HTML bullet this early vs catch beat (fist closes slightly ahead of wall-clock). */
+export const BULLET_DISAPPEAR_EARLY_MS = 50;
+export const BULLET_FLY_MS = BULLET_FLY_LEAD_MS + BULLET_FLY_CATCH_MS - BULLET_DISAPPEAR_EARLY_MS;
+/** Unused visually when we unmount on clear — kept for overlay CSS defaults. */
+export const BULLET_INSERT_MS = 50;
+/** Full overlay lifetime from fly start → hidden. */
 export const BULLET_FLY_TOTAL_MS = BULLET_FLY_MS + BULLET_INSERT_MS;
 /** Beat after a chamber fills — covers cylinder rotate to next empty at top. */
 export const BULLET_FLY_GAP_MS = 400;
@@ -1302,7 +1462,7 @@ const bWin = {
 
 export const SYMBOL_INFO_MAP = {
 	// H1 (diamond): idle / stop / activation.
-	// H2 (revolver) / H3 (lighter) / H4 (telephone) / L1..L4 (A/J/K/Q): idle / stop / win.
+	// H2 (revolver) / H3 (lighter) / H4 (telephone) / L1..L4 (A/K/Q/J): idle / stop / win.
 	H1: {
 		win: h1Win,
 		postWinStatic: h1Static,
@@ -1331,7 +1491,7 @@ export const SYMBOL_INFO_MAP = {
 		spin: h4Spin,
 		land: h4Land,
 	},
-	// L1–L4 = A / J / K / Q letter spines: idle rest, stop on land, win celebrate.
+	// L1–L4 = A / K / Q / J letter spines: idle rest, stop on land, win celebrate.
 	L1: {
 		win: l1Win,
 		postWinStatic: l1Static,

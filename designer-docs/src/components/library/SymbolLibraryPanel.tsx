@@ -20,7 +20,7 @@ export function SymbolLibraryPanel({
     <section className="panel-block" aria-labelledby="symbol-library-title">
       <div className="panel-block__head">
         <h2 id="symbol-library-title">Library</h2>
-        <p>Каталог и ваши символы · статус готовности к барабану</p>
+        <p>Загруженные символы · статус готовности к барабану</p>
       </div>
 
       {symbols.length === 0 ? (

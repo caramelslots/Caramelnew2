@@ -11,13 +11,13 @@ export default {
 			skeleton: assetUrl('assets/spines/background/skeleton.json'),
 		},
 	},
-	boardDayBase: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/boardFrame/desk_day_base.webp'),
-	},
-	boardContour: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/boardFrame/desk_contour.webp'),
+	/** Designer board spine — desk body + crest glow pulse (`animation`). */
+	boardFrame: {
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/board/board.atlas'),
+			skeleton: assetUrl('assets/spines/board/board.json'),
+		},
 	},
 	outlineReel: {
 		type: 'spine',
@@ -286,12 +286,21 @@ export default {
 			scale: 2,
 		},
 	},
-	/** Full-body cat — same files as the former HTML SpinePlayer mascot. */
+	/** Full-body cat — white (basegame). Ref. designer_assets/cat_render/white. */
 	mascotCat: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/mascot/mascot_cat.atlas'),
-			skeleton: assetUrl('assets/spines/mascot/mascot_cat.json'),
+			atlas: assetUrl('assets/spines/mascot/white/mascot_cat.atlas'),
+			skeleton: assetUrl('assets/spines/mascot/white/mascot_cat.json'),
+			scale: 1,
+		},
+	},
+	/** Full-body cat — gray (freegame / bonus). Ref. designer_assets/cat_render/gray. */
+	mascotCatGray: {
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/mascot/gray/mascot_cat.atlas'),
+			skeleton: assetUrl('assets/spines/mascot/gray/mascot_cat.json'),
 			scale: 1,
 		},
 	},

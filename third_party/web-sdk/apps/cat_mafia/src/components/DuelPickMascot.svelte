@@ -49,8 +49,8 @@
 		const viewport = isDog ? MASCOT_DOG_SPINE_VIEWPORT : MASCOT_SPINE_VIEWPORT;
 		const animNames = isDog ? MASCOT_DOG_SPINE_ANIMATIONS : MASCOT_SPINE_ANIMATIONS;
 		const viewportAnims = Object.fromEntries(animNames.map((name) => [name, viewport]));
-		const jsonFile = isDog ? 'mascot_dog.json' : 'mascot_cat.json';
-		const atlasFile = isDog ? 'mascot_dog.atlas' : 'mascot_cat.atlas';
+		const jsonFile = isDog ? 'mascot_dog.json' : 'white/mascot_cat.json';
+		const atlasFile = isDog ? 'mascot_dog.atlas' : 'white/mascot_cat.atlas';
 
 		const created = new SpinePlayer(el, {
 			jsonUrl: resolveMascotSpineUrl(jsonFile),

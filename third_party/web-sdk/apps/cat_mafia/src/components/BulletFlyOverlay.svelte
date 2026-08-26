@@ -1,10 +1,6 @@
 <script lang="ts">
 	/**
-	 * FS bullet collect: arc so the tip lands on the chamber centre, then a
-	 * short continuous sink (no stepped mid-keyframes — those felt jerky).
-	 *
-	 * Landing target is frozen when the fly starts — seating (`drumCount++`)
-	 * mid-flight must not retarget the path to the next empty chamber.
+	 * FS bullet collect: fly → open palm → hide before the fist closes.
 	 */
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
@@ -13,15 +9,18 @@
 		BULLET_FLY_MS,
 		BULLET_FLY_TOTAL_MS,
 		BULLET_INSERT_MS,
+		isPopoutViewport,
 		SYMBOL_SIZE,
 	} from '../game/constants';
 	import {
-		CHAMBER_HOLE_AT_DESKTOP,
-		getDrumChamberScreenPos,
-		getDrumLoadChamberIndex,
-		getDrumSize,
-		queryDrumLoadScreenPos,
-	} from '../game/revolverDrumLayout';
+		portraitBuyPanelCanvasTop,
+		portraitBuyPanelHeightCanvas,
+	} from '../game/portraitHudLayout';
+	import {
+		getMascotBulletCatchPoint,
+		getMascotPortraitScreenBox,
+		getMascotScreenBox,
+	} from '../game/mascotHtmlSpine';
 
 	const CARTRIDGE_IMG = `${import.meta.env.BASE_URL}assets/sprites/symbolsNew/Cartridge.webp`;
 
@@ -33,10 +32,17 @@
 
 	const context = getContext();
 	const show = $derived(gameEntrance.showContent);
-	const isDesktop = $derived(context.stateLayoutDerived.layoutType() === 'desktop');
-	const isPortrait = $derived(context.stateLayoutDerived.layoutType() === 'portrait');
-	const showOnLayout = $derived(isDesktop || isPortrait);
-	const fly = $derived(context.stateGame.bulletFly);
+	const layoutType = $derived(context.stateLayoutDerived.layoutType());
+	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
+	const isDesktop = $derived(layoutType === 'desktop');
+	const isPortrait = $derived(layoutType === 'portrait');
+	const isPopout = $derived(isPopoutViewport(canvasSizes));
+	const showOnLayout = $derived(
+		isDesktop || isPortrait || layoutType === 'tablet' || isPopout,
+	);
+	const flyBatch = $derived(context.stateGame.bulletFly);
+	/** Legacy HTML overlay — first bullet only (unused; Spine layer owns multi-fly). */
+	const fly = $derived(flyBatch?.[0] ?? null);
 
 	/** Snapshot of CSS for the active fly — never rebuilt after launch. */
 	let frozenStyle = $state('');
@@ -44,8 +50,8 @@
 
 	const buildFlyStyle = (active: NonNullable<typeof fly>) => {
 		const ml = context.stateLayoutDerived.mainLayout();
-		const layoutType = context.stateLayoutDerived.layoutType();
-		const off = BOARD_LAYOUT_OFFSETS[layoutType] ?? { x: 0, y: 0 };
+		const layout = context.stateLayoutDerived.layoutType();
+		const off = BOARD_LAYOUT_OFFSETS[layout] ?? { x: 0, y: 0 };
 		const board = context.stateGameDerived.boardLayout();
 		const centerX = ml.x + off.x * ml.scale;
 		const centerY = ml.y + off.y * ml.scale;
@@ -57,39 +63,41 @@
 		const startLeft = centerX - halfW + active.reel * cell + cell * 0.5;
 		const startTop = centerY - halfH + visibleRow * cell + cell * 0.5;
 
-		// Capture load port at launch (before seating bumps drumCount).
-		const drumCount = context.stateGame.drumCount;
-		const rotationDeg = context.stateGame.drumRotationDeg;
-		const loadChamber = getDrumLoadChamberIndex(drumCount) ?? 0;
-		const live = queryDrumLoadScreenPos();
-		const fallback = getDrumChamberScreenPos({
-			mainLayout: ml,
-			layoutType,
-			board,
-			isDesktop: context.stateLayoutDerived.layoutType() === 'desktop',
-			chamberIndex: loadChamber,
-			rotationDeg,
-			layoutDerived: context.stateLayoutDerived,
-		});
-		const hole = live ?? fallback;
+		// Same framing as MascotPixi so the hand target sits on the real cat.
+		const mascotCenterX = ml.x + (board.x - ml.width * 0.5) * ml.scale;
+		const mascotCenterY = ml.y + (board.y - ml.height * 0.5) * ml.scale;
+		const canvas = context.stateLayoutDerived.canvasSizes();
+		const mascot =
+			layout === 'portrait'
+				? getMascotPortraitScreenBox({
+						canvasWidth: canvas.width,
+						boardCenterY: mascotCenterY,
+						halfH,
+						buyPanelTop: portraitBuyPanelCanvasTop(context.stateLayoutDerived),
+						buyPanelHeight: portraitBuyPanelHeightCanvas(context.stateLayoutDerived),
+					})
+				: getMascotScreenBox({
+						centerX: mascotCenterX,
+						centerY: mascotCenterY,
+						halfW,
+						halfH,
+					});
+		const hand = getMascotBulletCatchPoint(mascot);
 
 		const size = Math.max(28, cell * 0.72);
-		const dx = hole.x - startLeft;
-		const dy = hole.y - startTop;
+		const dx = hand.x - startLeft;
+		const dy = hand.y - startTop;
 		const lift = Math.max(48, cell * 0.55);
 		const cx = dx * 0.5;
 		const cy = dy * 0.5 - lift;
 		const flyPath = `path('M 0 0 Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${dx.toFixed(1)} ${dy.toFixed(1)}')`;
 
-		const toHubX = hole.box.centerX - hole.x;
-		const toHubY = hole.box.centerY - hole.y;
-		const hubAngleDeg = (Math.atan2(toHubY, toHubX) * 180) / Math.PI;
-		const seatRot = TIP_LOCAL_ANGLE_DEG - hubAngleDeg;
+		// Tip points roughly along the final approach into the palm.
+		const approachAngleDeg = (Math.atan2(dy - cy * 0.35, dx - cx * 0.35) * 180) / Math.PI;
+		const seatRot = TIP_LOCAL_ANGLE_DEG - approachAngleDeg;
 
-		const holePx =
-			live?.holePx ?? CHAMBER_HOLE_AT_DESKTOP * (hole.box.size / getDrumSize(true));
-		const endScale = Math.min(0.22, (holePx * 1.2) / size);
-		const arriveScale = Math.max(endScale * 2.2, 0.36);
+		const arriveScale = 0.72;
+		const endScale = 0.28;
 
 		const ax = `${(TIP_ANCHOR_X * 100).toFixed(1)}%`;
 		const ay = `${(TIP_ANCHOR_Y * 100).toFixed(1)}%`;
@@ -141,7 +149,7 @@
 		offset-rotate: 0deg;
 		display: grid;
 		place-items: center;
-		animation: fly-along var(--approach-ms, 700ms) cubic-bezier(0.33, 0.1, 0.2, 1) forwards;
+		animation: fly-along var(--approach-ms, 630ms) linear forwards;
 	}
 
 	.bullet-fly__img {
@@ -150,10 +158,10 @@
 		object-fit: contain;
 		transform-origin: var(--tip-x, 78%) var(--tip-y, 15%);
 		filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.55));
-		/* Two continuous segments — no mid-stop scale steps. */
+		/* Pose on approach; unmount clears before fist closes. */
 		animation:
-			fly-pose var(--approach-ms, 700ms) cubic-bezier(0.33, 0.1, 0.25, 1) forwards,
-			fly-sink var(--insert-ms, 260ms) var(--approach-ms, 700ms) cubic-bezier(0.4, 0, 0.7, 0.3)
+			fly-pose var(--approach-ms, 630ms) linear forwards,
+			fly-sink var(--insert-ms, 50ms) var(--approach-ms, 630ms) cubic-bezier(0.4, 0, 0.7, 0.3)
 				forwards;
 	}
 
@@ -180,7 +188,7 @@
 		}
 	}
 
-	/* At the hole: one smooth ease-in shrink + fade (no pause). */
+	/* On arrival: sink + fade — must finish before the fist closes. */
 	@keyframes fly-sink {
 		from {
 			transform: scale(var(--arrive-scale)) rotate(var(--seat-rot));

@@ -10,11 +10,18 @@
 	/**
 	 * Stage E: auto shooting round after main FS — no player input.
 	 * Each shot hits a predetermined target; rewards are empty / +1/+2/+3 FS.
+	 * Mascot: gun_shot_stat_idle → gun_shot_aim → gun_shot×N → gun_shot_end.
 	 */
 	import { fade } from 'svelte/transition';
 
 	import { getContext } from '../game/context';
-	import { playDrumChamberShot, syncDrumLoadRotation } from '../game/drumShoot';
+	import { alignDrumForNextShot, playDrumChamberShot, advanceDrumAfterShot, syncDrumLoadRotation } from '../game/drumShoot';
+	import {
+		MASCOT_GUN_SHOT_AIM_MS,
+		MASCOT_GUN_SHOT_END_MS,
+		MASCOT_GUN_SHOT_MS,
+		MASCOT_GUN_STAT_IDLE_MS,
+	} from '../game/mascotHtmlSpine';
 	import { stateGame } from '../game/stateGame.svelte';
 
 	const TARGET_COUNT = 9;
@@ -29,6 +36,7 @@
 	let phase = $state<'intro' | 'shooting' | 'summary'>('intro');
 
 	const rewardLabel = (r: 0 | 1 | 2 | 3) => (r === 0 ? '—' : `+${r}`);
+	const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 	context.eventEmitter.subscribeOnMount({
 		targetShootRound: async (event) => {
@@ -43,33 +51,49 @@
 			phase = 'intro';
 			show = true;
 			stateGame.drumShootActive = true;
-			stateGame.mascotPose = 'aim';
 			// Start from the CW load pose so empties at position 1 are skipped CCW.
 			syncDrumLoadRotation();
 
-			await new Promise((r) => setTimeout(r, 600));
+			// 1) gun_shot_stat_idle once
+			stateGame.mascotPose = 'gunStatIdle';
+			await wait(MASCOT_GUN_STAT_IDLE_MS);
+
+			// 2) gun_shot_aim once
+			stateGame.mascotPose = 'aim';
+			await wait(MASCOT_GUN_SHOT_AIM_MS);
+
 			phase = 'shooting';
 
+			// 3) gun_shot → then shake → then cylinder step (drum idle during the clip).
 			for (let i = 0; i < shots.length; i++) {
 				const shot = shots[i];
 				activeShot = shot.targetIndex;
+
+				const chamber = await alignDrumForNextShot((ms) => wait(ms));
+				if (chamber === null) break;
+
 				stateGame.mascotPose = 'shoot';
+				stateGame.mascotAnimToken += 1;
 				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-				await playDrumChamberShot((ms) => new Promise((r) => setTimeout(r, ms)));
+				await wait(MASCOT_GUN_SHOT_MS);
+
+				await playDrumChamberShot((ms) => wait(ms));
 
 				hitSet = new Set([...hitSet, shot.targetIndex]);
 				revealed = { ...revealed, [shot.targetIndex]: shot.reward };
-				await new Promise((r) => setTimeout(r, 420));
 				activeShot = null;
-				stateGame.mascotPose = 'aim';
-				await new Promise((r) => setTimeout(r, 180));
+
+				await advanceDrumAfterShot((ms) => wait(ms));
 			}
 
+			// 4) gun_shot_end once
 			phase = 'summary';
+			stateGame.mascotPose = 'gunShotEnd';
+			await wait(MASCOT_GUN_SHOT_END_MS);
 			stateGame.mascotPose = 'idle';
 			stateGame.drumFiringChamber = null;
 			// Keep spent casings visible through extra FS.
-			await new Promise((r) => setTimeout(r, extraFs > 0 ? 1400 : 900));
+			await wait(extraFs > 0 ? 1400 : 900);
 			show = false;
 			stateGame.drumShootActive = false;
 		},

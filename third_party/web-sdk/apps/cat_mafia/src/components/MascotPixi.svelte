@@ -36,6 +36,7 @@
 	} from '../game/mascotHtmlSpine';
 	import MascotDogSpineController from './MascotDogSpineController.svelte';
 	import MascotSpineController from './MascotSpineController.svelte';
+	import BulletFlySpineLayer from './BulletFlySpineLayer.svelte';
 
 	type Props = {
 		variant?: 'primary' | 'duelDog';
@@ -74,7 +75,12 @@
 	const forceDogAnim = $derived(isDuelDog ? null : devPreview.mascotDogAnimation);
 	const previewDogOnPrimary = $derived(!isDuelDog && forceDogAnim !== null);
 	const useDogSpine = $derived(isDuelDog || previewDogOnPrimary);
+	/** White = basegame; gray = freegame / duel bonus. */
+	const catSpineKey = $derived(
+		context.stateGame.gameType === 'freegame' || stateDuel.active ? 'mascotCatGray' : 'mascotCat',
+	);
 	const forceAnim = $derived(forceCatAnim ?? forceDogAnim);
+	const mascotAnimToken = $derived(context.stateGame.mascotAnimToken);
 	const mounted = $derived(
 		gameEntrance.preloadContent &&
 			(isDuelDog
@@ -91,7 +97,7 @@
 			if (stateDuel.winner === 'cat') return 'react';
 			return 'idle';
 		}
-		return (context.stateGame.bulletFly ? 'load' : context.stateGame.mascotPose || 'idle') as MascotPose;
+		return (context.stateGame.mascotPose || 'idle') as MascotPose;
 	});
 	/** Always 1× — turbo must not speed up mascot clips. */
 	const spineTimeScale = 1;
@@ -209,7 +215,7 @@
 		sortableChildren
 	>
 		<SpineProvider
-			key={useDogSpine ? 'mascotDog' : 'mascotCat'}
+			key={useDogSpine ? 'mascotDog' : catSpineKey}
 			x={transform.spineX}
 			y={transform.spineY}
 			scale={transform.scale}
@@ -222,7 +228,14 @@
 					timeScale={spineTimeScale}
 				/>
 			{:else}
-				<MascotSpineController pose={pose} forceAnim={forceCatAnim} timeScale={spineTimeScale} />
+				<MascotSpineController
+					pose={pose}
+					forceAnim={forceCatAnim}
+					timeScale={spineTimeScale}
+					animToken={mascotAnimToken}
+				/>
+				<!-- Mid draw-order: above body, under catching hand. -->
+				<BulletFlySpineLayer />
 			{/if}
 		</SpineProvider>
 	</Container>

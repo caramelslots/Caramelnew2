@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { FadeContainer } from 'components-pixi';
+	import { OnPressFullScreen } from 'components-layout';
+	import { OnHotkey } from 'components-shared';
 
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { LOADER_STREET_SWAP_DELAY_MS } from '../game/constants';
 	import { startLoadingIdleUiPreload } from '../game/uiHtmlAssetManifest';
 	import TransitionAnimation from './TransitionAnimation.svelte';
-	import PressToContinue from './PressToContinue.svelte';
 
 	type Props = {
 		onloaded: () => void;
@@ -45,12 +46,15 @@
 		gameEntrance.loadingCloudActive = true;
 		loadingType = 'transition';
 	};
+
+	const canContinue = $derived(loadingType === 'start' && context.stateApp.loaded);
 </script>
 
-<!-- press to continue -->
-<FadeContainer show={loadingType === 'start' && context.stateApp.loaded}>
-	<PressToContinue onpress={startLoadingTransition} />
-</FadeContainer>
+<!-- Label is HTML (LoaderCardsHtmlOverlay) so it sits above LoaderStreetStill. -->
+{#if canContinue}
+	<OnHotkey hotkey="Space" onpress={startLoadingTransition} />
+	<OnPressFullScreen onpress={startLoadingTransition} />
+{/if}
 
 <!-- transition between the loading screen and the game -->
 <FadeContainer show={loadingType === 'transition'}>

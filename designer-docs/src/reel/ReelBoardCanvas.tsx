@@ -11,6 +11,7 @@ import {
 import { createCellSpine, createCellStaticSprite, type CellAnimMode } from './cellSpine'
 import { fillBoardFromLibrary, type BoardGrid } from './fillBoard'
 import { MAX_LIVE_IDLE_SPINES } from './spineBudget'
+import { resolveSymbolSizeFit } from './symbolSizeFit'
 import {
   clearSpinePool,
   preloadSpineTemplates,
@@ -163,7 +164,8 @@ export function ReelBoardCanvas({
 
         if (!template) {
           const texture = await loadTexture(cell.staticUrl, cacheRef.current)
-          playfield.addChild(createCellStaticSprite(texture, col, row))
+          const fit = resolveSymbolSizeFit(cell.label)
+          playfield.addChild(createCellStaticSprite(texture, col, row, fit.offsetY))
           continue
         }
 
@@ -210,7 +212,8 @@ export function ReelBoardCanvas({
         continue
       }
       const texture = await loadTexture(cell.staticUrl, cacheRef.current)
-      playfield.addChild(createCellStaticSprite(texture, colIndex, row))
+      const fit = resolveSymbolSizeFit(cell.label)
+      playfield.addChild(createCellStaticSprite(texture, colIndex, row, fit.offsetY))
     }
   }
 
@@ -438,10 +441,9 @@ export function ReelBoardCanvas({
             const cell = strip[i]!
             const texture = await loadTexture(cell.staticUrl, cacheRef.current)
             if (cancelled) return
-            const sprite = createCellStaticSprite(texture, 0, 0)
-            sprite.x = SYMBOL_SIZE * 0.5
-            // Stride must be SYMBOL_SIZE (100), never glyph size — cells/sec = speed/stride.
-            sprite.y = (i + 0.5) * SYMBOL_SIZE
+            const fit = resolveSymbolSizeFit(cell.label)
+            // col=0 → x at half-cell; row=i → stride SYMBOL_SIZE (not glyph).
+            const sprite = createCellStaticSprite(texture, 0, i, fit.offsetY)
             container.addChild(sprite)
           }
 

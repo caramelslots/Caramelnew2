@@ -15,7 +15,6 @@ import { SymbolInfoCard } from './components/symbols/SymbolInfoCard'
 import { CustomUploadPanel } from './components/upload/CustomUploadPanel'
 import type { ValidatedUpload } from './components/upload/UploadValidation'
 import {
-  createCatalogLibrarySymbols,
   createLibrarySymbolFromUpload,
   librarySymbolToSpineSource,
 } from './library/createLibrarySymbol'
@@ -41,13 +40,12 @@ import type {
 export default function App() {
   const { theme, toggleTheme } = useTheme()
   const [mode, setMode] = useState<WorkspaceMode>('symbol')
-  const [library, setLibrary] = useState<LibrarySymbol[]>(() => createCatalogLibrarySymbols())
+  /** Empty by default — Reel Lab fills from uploaded symbols only. */
+  const [library, setLibrary] = useState<LibrarySymbol[]>([])
   const libraryRef = useRef(library)
   libraryRef.current = library
 
-  const [selectedId, setSelectedId] = useState<string | null>(
-    () => library[0]?.id ?? null,
-  )
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const selected = useMemo(
     () => library.find((item) => item.id === selectedId) ?? null,
@@ -218,9 +216,7 @@ export default function App() {
             onRemove={handleRemove}
             onSelect={selectSymbol}
           />
-          {mode === 'symbol' ? (
-            <CustomUploadPanel onUpload={handleUpload} onUploadMany={addUploads} />
-          ) : null}
+          <CustomUploadPanel onUpload={handleUpload} onUploadMany={addUploads} />
         </>
       }
       center={

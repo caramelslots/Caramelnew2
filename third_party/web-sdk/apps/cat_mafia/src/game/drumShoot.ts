@@ -31,9 +31,9 @@ const spinDrumCcw = async (wait: WaitFn) => {
 
 /**
  * Advance CCW until position 1 (12 o'clock) holds a live round.
- * After a partial load the top port is empty — skip empties before the first shot.
+ * Call BEFORE starting `gun_shot` so the cylinder is still during the clip.
  */
-const alignLiveRoundToFirePosition = async (wait: WaitFn) => {
+export const alignDrumForNextShot = async (wait: WaitFn) => {
 	for (let i = 0; i < DRUM_MAX; i++) {
 		const chamber = getChamberAtFirePosition(stateGame.drumRotationDeg);
 		if (
@@ -47,24 +47,27 @@ const alignLiveRoundToFirePosition = async (wait: WaitFn) => {
 };
 
 /**
- * One Stage E shot: fire only from position 1, then step the cylinder CCW.
- * Empties between live rounds are skipped with CCW spins (no shot).
+ * Shake + mark spent — only after the mascot `gun_shot` clip has finished.
+ * Does not rotate the cylinder (see `advanceDrumAfterShot`).
  */
 export const playDrumChamberShot = async (wait: WaitFn) => {
-	const chamber = await alignLiveRoundToFirePosition(wait);
-	if (chamber === null) return null;
+	const chamber = getChamberAtFirePosition(stateGame.drumRotationDeg);
+	if (!isDrumChamberLive(chamber, stateGame.drumCount, stateGame.drumSpentChambers)) {
+		return null;
+	}
 
 	stateGame.drumFiringChamber = chamber;
 	stateGame.drumSpentChambers = { ...stateGame.drumSpentChambers, [chamber]: true };
 	stateGame.drumShakeKey += 1;
 	await wait(DRUM_SHAKE_MS);
 	stateGame.drumFiringChamber = null;
-
-	// Shoot → spin: bring the next chamber to position 1 for the following shot.
-	if (!isDrumFullySpent()) {
-		await spinDrumCcw(wait);
-	}
 	return chamber;
+};
+
+/** Step the cylinder CCW after shake — brings the next live round to position 1. */
+export const advanceDrumAfterShot = async (wait: WaitFn) => {
+	if (isDrumFullySpent()) return;
+	await spinDrumCcw(wait);
 };
 
 /** True when every filled chamber has already been fired (spent). */

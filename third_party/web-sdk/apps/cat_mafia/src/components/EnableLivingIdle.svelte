@@ -16,6 +16,7 @@
 	const canRunLivingIdle = () => {
 		if (
 			stateGame.winSpotlightActive ||
+			stateDuel.winSpotlightSide != null ||
 			stateGame.winOverlayActive ||
 			stateGame.transitionActive ||
 			stateGame.freeSpinIntroActive ||

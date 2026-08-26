@@ -27,14 +27,29 @@
 	import { stateGame, stateGameDerived } from '../game/stateGame.svelte';
 	import { stateLayout } from '../game/stateLayout';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
-	import { MASCOT_DEV_PREVIEW_ITEMS, MASCOT_DOG_DEV_PREVIEW_ITEMS } from '../game/mascotHtmlSpine';
+	import {
+		MASCOT_DEV_PREVIEW_ITEMS,
+		MASCOT_DOG_DEV_PREVIEW_ITEMS,
+		MASCOT_GUN_END_LOAD_MS,
+		MASCOT_GUN_SHOT_AIM_MS,
+		MASCOT_GUN_SHOT_END_MS,
+		MASCOT_GUN_SHOT_MS,
+		MASCOT_GUN_START_MS,
+		MASCOT_GUN_STAT_IDLE_MS,
+		MASCOT_LOAD_MS,
+	} from '../game/mascotHtmlSpine';
 	import { SYMBOL_DEV_PREVIEW_GROUPS } from '../game/symbolDevPreview';
-	import { BOARD_DIMENSIONS, BULLET_FLY_MS, BULLET_INSERT_MS } from '../game/constants';
+	import {
+		BOARD_DIMENSIONS,
+		BULLET_DISAPPEAR_EARLY_MS,
+		BULLET_FLY_CATCH_MS,
+		BULLET_FLY_LEAD_MS,
+	} from '../game/constants';
 	import {
 		getDrumLastFilledChamberIndex,
 		withDrumBulletOrient,
 	} from '../game/revolverDrumLayout';
-	import { fillDrumForPreview, isDrumFullySpent, playDrumChamberShot, syncDrumLoadRotation } from '../game/drumShoot';
+	import { fillDrumForPreview, isDrumFullySpent, alignDrumForNextShot, playDrumChamberShot, advanceDrumAfterShot, syncDrumLoadRotation } from '../game/drumShoot';
 	import {
 		getRawUrlLang,
 		INVALID_LANG_LABELS,
@@ -99,22 +114,29 @@
 		devPreview.symbolAnim = null;
 	};
 
-	/** Desktop HTML fly: cartridge cell → revolver drum (same path as bulletCollect). */
+	/** Desktop fly: N cartridges → cat hand → gun_start (same as bulletCollect). */
 	const DRUM_MAX_PREVIEW = 6;
 	let bulletFlyBusy = $state(false);
 
-	const previewBulletFly = async () => {
+	const previewBoardFramePulse = () => {
+		eventEmitter.broadcast({ type: 'boardFramePulse' });
+	};
+
+	const previewBulletFly = async (count = 1) => {
 		if (bulletFlyBusy) return;
 		bulletFlyBusy = true;
 		devPreview.forceShowDrum = true;
 		devPreview.symbolAnim = null;
 
-		// Mark the launch cell with BT so the origin is obvious.
-		const launchReel = 2;
-		const launchRow = 2; // 1-based visible row (BulletFlyOverlay uses row - 1)
+		const n = Math.max(1, Math.min(3, count));
+		const launchRow = 2; // 1-based visible row
+		// Center the launch reels around mid board (0..4).
+		const mid = 2;
+		const launchReels = Array.from({ length: n }, (_, i) => mid - Math.floor((n - 1) / 2) + i);
+
 		const visible = Array.from({ length: BOARD_DIMENSIONS.x }, (_, reel) =>
 			Array.from({ length: BOARD_DIMENSIONS.y }, (_, row) =>
-				reel === launchReel && row === launchRow - 1
+				launchReels.includes(reel) && row === launchRow - 1
 					? ({ name: 'BT' } as RawSymbol)
 					: ({ name: 'L2' } as RawSymbol),
 			),
@@ -126,29 +148,54 @@
 			}
 		}
 
-		stateGame.bulletFly = {
-			reel: launchReel,
+		const baseKey = Date.now();
+		const startChamber = stateGame.drumCount % DRUM_MAX_PREVIEW;
+		stateGame.bulletFly = launchReels.map((reel, i) => ({
+			reel,
 			row: launchRow,
-			chamber: stateGame.drumCount % DRUM_MAX_PREVIEW,
-			key: Date.now(),
-		};
-		stateGame.mascotPose = 'load';
-		await new Promise((r) => setTimeout(r, BULLET_FLY_MS));
-		stateGame.drumCount = Math.min(DRUM_MAX_PREVIEW, stateGame.drumCount + 1);
-		const seated = getDrumLastFilledChamberIndex(stateGame.drumCount);
-		if (seated !== null) {
-			stateGame.drumBulletOrientDeg = withDrumBulletOrient(
-				stateGame.drumBulletOrientDeg,
-				seated,
-			);
-			stateGame.drumSeatAnimKey = {
-				...stateGame.drumSeatAnimKey,
-				[seated]: (stateGame.drumSeatAnimKey[seated] ?? 0) + 1,
-			};
-		}
-		await new Promise((r) => setTimeout(r, BULLET_INSERT_MS));
+			chamber: (startChamber + i) % DRUM_MAX_PREVIEW,
+			key: baseKey + i,
+		}));
+		await new Promise((r) => setTimeout(r, BULLET_FLY_LEAD_MS));
+
+		stateGame.mascotPose = 'gunStart';
+		const gunStarted = performance.now();
+		await new Promise((r) =>
+			setTimeout(r, Math.max(0, BULLET_FLY_CATCH_MS - BULLET_DISAPPEAR_EARLY_MS)),
+		);
+
 		stateGame.bulletFly = null;
-		syncDrumLoadRotation();
+		const gunElapsed = performance.now() - gunStarted;
+		if (gunElapsed < MASCOT_GUN_START_MS) {
+			await new Promise((r) => setTimeout(r, MASCOT_GUN_START_MS - gunElapsed));
+		}
+
+		// Seat drum UI when each clip finishes (`gun_start` = 1st, `load` = extras).
+		const seatNextChamber = () => {
+			stateGame.drumCount = Math.min(DRUM_MAX_PREVIEW, stateGame.drumCount + 1);
+			const seated = getDrumLastFilledChamberIndex(stateGame.drumCount);
+			if (seated !== null) {
+				stateGame.drumBulletOrientDeg = withDrumBulletOrient(
+					stateGame.drumBulletOrientDeg,
+					seated,
+				);
+				stateGame.drumSeatAnimKey = {
+					...stateGame.drumSeatAnimKey,
+					[seated]: (stateGame.drumSeatAnimKey[seated] ?? 0) + 1,
+				};
+			}
+			syncDrumLoadRotation();
+		};
+		seatNextChamber();
+
+		for (let i = 1; i < n; i++) {
+			stateGame.mascotPose = 'load';
+			stateGame.mascotAnimToken += 1;
+			await new Promise((r) => setTimeout(r, MASCOT_LOAD_MS));
+			seatNextChamber();
+		}
+		stateGame.mascotPose = 'gunEndLoad';
+		await new Promise((r) => setTimeout(r, MASCOT_GUN_END_LOAD_MS));
 		stateGame.mascotPose = 'idle';
 		await new Promise((r) => setTimeout(r, 400));
 		bulletFlyBusy = false;
@@ -184,13 +231,25 @@
 			syncDrumLoadRotation();
 		}
 
+		stateGame.mascotPose = 'gunStatIdle';
+		await new Promise((r) => setTimeout(r, MASCOT_GUN_STAT_IDLE_MS));
+		stateGame.mascotPose = 'aim';
+		await new Promise((r) => setTimeout(r, MASCOT_GUN_SHOT_AIM_MS));
+
 		while (!isDrumFullySpent()) {
+			const chamber = await alignDrumForNextShot((ms) => new Promise((r) => setTimeout(r, ms)));
+			if (chamber === null) break;
+
 			stateGame.mascotPose = 'shoot';
+			stateGame.mascotAnimToken += 1;
+			await new Promise((r) => setTimeout(r, MASCOT_GUN_SHOT_MS));
+
 			await playDrumChamberShot((ms) => new Promise((r) => setTimeout(r, ms)));
-			stateGame.mascotPose = 'aim';
-			await new Promise((r) => setTimeout(r, 160));
+			await advanceDrumAfterShot((ms) => new Promise((r) => setTimeout(r, ms)));
 		}
 
+		stateGame.mascotPose = 'gunShotEnd';
+		await new Promise((r) => setTimeout(r, MASCOT_GUN_SHOT_END_MS));
 		stateGame.mascotPose = 'idle';
 		stateGame.drumShootActive = false;
 		bulletFlyBusy = false;
@@ -1192,17 +1251,58 @@
 			</section>
 
 			<section>
+				<h4>Board Frame</h4>
+				<p class="subhint">Desk crest glow (`animation`) — same pulse as lines / BT / paw.</p>
+				<div class="grid">
+					<button
+						type="button"
+						title="Play boardFramePulse once"
+						onclick={previewBoardFramePulse}
+					>
+						Pulse Once
+					</button>
+					<button
+						type="button"
+						title="Play boardFramePulse three times with a short gap"
+						onclick={() => {
+							eventEmitter.broadcast({ type: 'boardFramePulse', times: 3 });
+						}}
+					>
+						Pulse ×3
+					</button>
+				</div>
+			</section>
+
+			<section>
 				<h4>Bullet Fly</h4>
-				<p class="subhint">Desktop: cartridge flies into drum; shoot swaps to spent art + shake.</p>
+				<p class="subhint">Desktop: cartridge(s) fly to cat hand together (gun_start catch); shoot swaps to spent art + shake.</p>
 				<div class="grid">
 					<button
 						type="button"
 						disabled={bulletFlyBusy}
-						class:active={!!stateGame.bulletFly || devPreview.forceShowDrum}
-						title="Preview BT → drum fly (same overlay as bulletCollect)"
-						onclick={previewBulletFly}
+						class:active={!!stateGame.bulletFly?.length || devPreview.forceShowDrum}
+						title="Preview 1× BT → hand fly + gun_start"
+						onclick={() => previewBulletFly(1)}
 					>
-						{bulletFlyBusy ? 'Flying…' : 'Fly → Drum'}
+						{bulletFlyBusy ? 'Flying…' : 'Fly ×1'}
+					</button>
+					<button
+						type="button"
+						disabled={bulletFlyBusy}
+						class:active={!!stateGame.bulletFly?.length || devPreview.forceShowDrum}
+						title="Preview 2× BT → hand together + gun_start"
+						onclick={() => previewBulletFly(2)}
+					>
+						{bulletFlyBusy ? 'Flying…' : 'Fly ×2'}
+					</button>
+					<button
+						type="button"
+						disabled={bulletFlyBusy}
+						class:active={!!stateGame.bulletFly?.length || devPreview.forceShowDrum}
+						title="Preview 3× BT → hand together + gun_start"
+						onclick={() => previewBulletFly(3)}
+					>
+						{bulletFlyBusy ? 'Flying…' : 'Fly ×3'}
 					</button>
 					<button
 						type="button"

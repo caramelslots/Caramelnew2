@@ -34,6 +34,7 @@
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
+	import { getSymbolX } from '../game/utils';
 
 	type Props = {
 		/** Duel desk filter — ignore payline events for the other side. */
@@ -141,7 +142,7 @@
 	});
 
 	const getCellCenter = (reel: number, paddedRow: number): Point => ({
-		x: SYMBOL_SIZE * (reel + 0.5),
+		x: getSymbolX(reel),
 		y: SYMBOL_SIZE * (paddedRow - 0.5),
 	});
 
