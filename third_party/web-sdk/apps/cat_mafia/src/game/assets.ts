@@ -301,7 +301,7 @@ export default {
 			scale: 1,
 		},
 	},
-	/** Full-body cat — gray (basegame). Ref. designer_assets/cat_render/gray. */
+	/** Full-body cat — gray (basegame). Ref. designer_assets/gray. */
 	mascotCatGray: {
 		type: 'spine',
 		src: {
