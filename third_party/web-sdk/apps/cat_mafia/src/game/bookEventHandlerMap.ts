@@ -102,6 +102,13 @@ const playDuelWinLines = async (
 ) => {
 	if (!wins.length || totalWin <= 0) return;
 
+	// Cancel any pending global spotlight clear from a previous desk/spin —
+	// otherwise it can fire mid-celebration and wipe lines before win anims.
+	if (spotlightClearTimer !== null) {
+		clearTimeout(spotlightClearTimer);
+		spotlightClearTimer = null;
+	}
+
 	await waitForGameSpeed(WIN_INFO_PRE_DELAY_MS, stateGame.gameSpeed);
 
 	// Phone portrait: only one desk may celebrate at a time. Tear down the
