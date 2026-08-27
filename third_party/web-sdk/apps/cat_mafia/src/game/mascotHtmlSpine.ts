@@ -364,14 +364,14 @@ type PosePlayback = {
  * - applause (`clap`) = Epic / Sensational celebration (play once)
  * - hat = paw coin catch
  * - gun_start = catch BT fly at the hand; load / gun_end_load seat the drum after
- * - gun_shot_* = FS target pick (stat_idle → aim → shoot on tap → end)
- *   and Stage E drum shoot round (stat_idle → aim → shoot×N → end)
+ * - gun_shot_* = FS target pick (stat_idle → aim loop → shoot on tap → end)
+ *   and Stage E drum shoot round (stat_idle → aim loop → shoot×N → end)
  */
 export const MASCOT_POSE_PLAYBACK: Record<MascotPose, PosePlayback> = {
 	idle: { animation: 'idle', loop: true },
 	load: { animation: 'load', loop: false, holdEnd: true },
 	gunStart: { animation: 'gun_start', loop: false, holdEnd: true },
-	aim: { animation: 'gun_shot_aim', loop: false, holdEnd: true },
+	aim: { animation: 'gun_shot_aim', loop: true },
 	shoot: { animation: 'gun_shot', loop: false, holdEnd: true },
 	gunShotEnd: { animation: 'gun_shot_end', loop: false, holdEnd: true },
 	gunEndLoad: { animation: 'gun_end_load', loop: false, returnTo: 'idle' },

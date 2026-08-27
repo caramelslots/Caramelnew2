@@ -11,7 +11,7 @@
 	 * Stage E: player-tapped shooting round after main FS.
 	 * Math already fixed the reward sequence (+0/+1/+2/+3 FS); click only picks
 	 * which target face shows each reward (same UX pattern as freeSpinTargetPick).
-	 * Mascot: gun_shot_stat_idle → gun_shot_aim → gun_shot per tap → gun_shot_end.
+	 * Mascot: gun_shot_stat_idle → gun_shot_aim (loop) → gun_shot per tap → gun_shot_end.
 	 */
 	import { fade } from 'svelte/transition';
 	import { waitForResolve } from 'utils-shared/wait';

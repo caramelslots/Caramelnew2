@@ -13,7 +13,7 @@
 	 * Awarded value is predetermined; click only drives UX.
 	 *
 	 * Mascot (same chain as Stage E shoot, but shoot only on tap):
-	 *   gun_shot_stat_idle → gun_shot_aim (hold while picking)
+	 *   gun_shot_stat_idle → gun_shot_aim (loop while picking)
 	 *   → gun_shot on click → gun_shot_end → idle
 	 */
 	import { fade } from 'svelte/transition';
