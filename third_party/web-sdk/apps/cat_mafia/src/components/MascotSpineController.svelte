@@ -6,7 +6,6 @@
 	import { onDestroy } from 'svelte';
 	import { getContextSpine } from 'pixi-svelte';
 
-	import { getContext } from '../game/context';
 	import {
 		MASCOT_COIN_FLY_WAIT_MS,
 		MASCOT_HAT_DURATION_S,
@@ -19,7 +18,6 @@
 		type MascotPose,
 		type MascotSpineAnimation,
 	} from '../game/mascotHtmlSpine';
-	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
 
 	type Props = {
 		pose: MascotPose;
@@ -31,11 +29,6 @@
 
 	const props: Props = $props();
 	const spine = getContextSpine();
-	const context = getContext();
-	/** Perf: phones stay on a frozen base idle — no blink/ears/gyn flavour. */
-	const isPhone = $derived(
-		isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType()),
-	);
 
 	let ready = $state(false);
 	let activePose: MascotPose | undefined;
@@ -180,25 +173,16 @@
 		forceIdle3Phase = null;
 	};
 
-	/** Freeze the current track (phone idle stand-still). */
-	const freezeCurrentTrack = () => {
-		const entry = spine.state?.getCurrent(0);
-		if (!entry) return;
-		entry.timeScale = 0;
-	};
-
 	const scheduleIdleVariant = () => {
 		clearIdleVariantTimer();
-		if (isPhone) return;
 		if (activeForceAnim || activePose !== 'idle' || idleVariantPlaying) return;
 		idleVariantTimer = setTimeout(() => {
-			if (isPhone || activeForceAnim || activePose !== 'idle' || idleVariantPlaying) return;
+			if (activeForceAnim || activePose !== 'idle' || idleVariantPlaying) return;
 			idleVariantArmed = true;
 		}, nextMascotIdleVariantDelayMs());
 	};
 
 	const playArmedIdleVariant = () => {
-		if (isPhone) return;
 		if (!idleVariantArmed || idleVariantPlaying) return;
 		if (activeForceAnim || activePose !== 'idle') return;
 		const current = spine.state?.getCurrent(0);
@@ -299,8 +283,7 @@
 			mix: fromHatToIdle ? 0.18 : undefined,
 		});
 		if (playback.loop && next === 'idle') {
-			if (isPhone) freezeCurrentTrack();
-			else scheduleIdleVariant();
+			scheduleIdleVariant();
 		}
 	};
 
@@ -342,8 +325,7 @@
 				mix: 0.18,
 			});
 			if (back === 'idle') {
-				if (isPhone) freezeCurrentTrack();
-				else scheduleIdleVariant();
+				scheduleIdleVariant();
 			}
 		}
 	};

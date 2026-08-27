@@ -1,6 +1,7 @@
 <!--
-	One paying paw-coin spine: appear_flash once, then freeze on the tier face
-	(same as HTML CoinPawSprite row mode). Parent owns fly transforms.
+	Paying paw-coin: play appear_flash once, then freeze on its last frame
+	(reverse face with x1 / x2 / x3). Do NOT swap to main_coin_slow — that
+	clip clears the multiplier slots. Matches HTML CoinPawSprite row mode.
 -->
 <script lang="ts">
 	import { SpineProvider, SpineTrack } from 'pixi-svelte';
@@ -16,7 +17,8 @@
 	const props: Props = $props();
 	let landed = $state(false);
 	const playing = $derived(!landed);
-	const animationName = $derived(playing ? 'appear_flash' : 'main_coin_slow');
+	// Stay on appear_flash forever — freeze at the end frame when landed.
+	const animationName = 'appear_flash';
 	const autoUpdate = $derived(playing);
 </script>
 

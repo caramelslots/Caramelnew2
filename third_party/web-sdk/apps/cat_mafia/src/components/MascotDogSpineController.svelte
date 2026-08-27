@@ -6,7 +6,6 @@
 	import { onDestroy } from 'svelte';
 	import { getContextSpine } from 'pixi-svelte';
 
-	import { getContext } from '../game/context';
 	import {
 		MASCOT_DOG_IDLE_VARIANTS,
 		MASCOT_DOG_POSE_PLAYBACK,
@@ -15,7 +14,6 @@
 		type MascotDogSpineAnimation,
 		type MascotPose,
 	} from '../game/mascotHtmlSpine';
-	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
 
 	type Props = {
 		pose: MascotPose;
@@ -26,10 +24,6 @@
 
 	const props: Props = $props();
 	const spine = getContextSpine();
-	const context = getContext();
-	const isPhone = $derived(
-		isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType()),
-	);
 
 	let ready = $state(false);
 	let activePose: MascotPose | undefined;
@@ -74,24 +68,16 @@
 		idleVariantPlaying = false;
 	};
 
-	const freezeCurrentTrack = () => {
-		const entry = spine.state?.getCurrent(0);
-		if (!entry) return;
-		entry.timeScale = 0;
-	};
-
 	const scheduleIdleVariant = () => {
 		clearIdleVariantTimer();
-		if (isPhone) return;
 		if (activeForceAnim || activePose !== 'idle' || idleVariantPlaying) return;
 		idleVariantTimer = setTimeout(() => {
-			if (isPhone || activeForceAnim || activePose !== 'idle' || idleVariantPlaying) return;
+			if (activeForceAnim || activePose !== 'idle' || idleVariantPlaying) return;
 			idleVariantArmed = true;
 		}, nextMascotIdleVariantDelayMs());
 	};
 
 	const playArmedIdleVariant = () => {
-		if (isPhone) return;
 		if (!idleVariantArmed || idleVariantPlaying) return;
 		if (activeForceAnim || activePose !== 'idle') return;
 		const current = spine.state?.getCurrent(0);
@@ -134,8 +120,7 @@
 		const playback = MASCOT_DOG_POSE_PLAYBACK[next];
 		playClip(playback.animation, playback.loop);
 		if (playback.loop && next === 'idle') {
-			if (isPhone) freezeCurrentTrack();
-			else scheduleIdleVariant();
+			scheduleIdleVariant();
 		}
 	};
 
@@ -152,8 +137,7 @@
 			activePose = back === 'idle' ? 'idle' : activePose;
 			playClip(back, true);
 			if (back === 'idle') {
-				if (isPhone) freezeCurrentTrack();
-				else scheduleIdleVariant();
+				scheduleIdleVariant();
 			}
 		}
 	};
