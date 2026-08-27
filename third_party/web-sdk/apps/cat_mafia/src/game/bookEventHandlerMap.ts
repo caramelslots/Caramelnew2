@@ -103,6 +103,13 @@ const playDuelWinLines = async (
 	if (!wins.length || totalWin <= 0) return;
 
 	await waitForGameSpeed(WIN_INFO_PRE_DELAY_MS, stateGame.gameSpeed);
+
+	// Phone portrait: only one desk may celebrate at a time. Tear down the
+	// other board's lines / postWinStatic right before this side starts.
+	if (stateLayoutDerived.layoutType() === 'portrait') {
+		clearDuelSideWinPresentation(side === 'cat' ? 'dog' : 'cat');
+	}
+
 	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 	eventEmitter.broadcast({ type: 'boardFramePulse', side });
 	// Dim only this desk — the other side stays full-bright.
@@ -173,6 +180,15 @@ const resetWinCelebrateSymbolsToIdle = () => {
 	resetBoardCelebrateToIdle(stateGame.board);
 	resetBoardCelebrateToIdle(getDuelBoardStack('dog').board);
 	resetBoardCelebrateToIdle(getDuelBoardStack('cat').board);
+};
+
+/** Drop paylines + celebrate on one duel desk only (phone one-at-a-time win). */
+const clearDuelSideWinPresentation = (side: DuelSide) => {
+	eventEmitter.broadcast({ type: 'paylineClearAll', side });
+	resetBoardCelebrateToIdle(getDuelBoardStack(side).board);
+	if (stateDuel.winSpotlightSide === side) {
+		stateDuel.winSpotlightSide = null;
+	}
 };
 
 /**
