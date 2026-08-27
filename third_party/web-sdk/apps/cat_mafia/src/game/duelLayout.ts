@@ -20,7 +20,7 @@ export const DUEL_PLAYFIELD = {
 } as const;
 
 /**
- * Dark gold-framed plaque under the playfield on desk_day_base.webp
+ * Dark gold-framed plaque under the playfield on the board spine nameplate slot
  * (the WIN / bank slot). Measured from the texture.
  */
 export const DUEL_NAMEPLATE = {

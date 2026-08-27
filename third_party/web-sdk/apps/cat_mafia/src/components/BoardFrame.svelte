@@ -43,11 +43,13 @@
 
 	type Props = {
 		/**
-		 * `base` — desk fill under the reels.
+		 * `base` — desk fill under the reels (no nameplate).
 		 * `overlay` — frame + vertical gold grids above resting symbols
 		 * (column holes masked). Idle/win pops render above this layer.
+		 * `nameplate` — WIN bank plate under the desk, above the overlay
+		 * frame so the bottom gold rail does not cover it.
 		 */
-		layer?: 'base' | 'overlay';
+		layer?: 'base' | 'overlay' | 'nameplate';
 		layout?: BoardLayout;
 		disableCatZoom?: boolean;
 		/** Duel desk — filters `boardFramePulse` to this side only. */
@@ -63,12 +65,25 @@
 		'back',
 		'dark_outlines',
 		'paw',
+		// Drawn on `nameplate` above the overlay frame.
+		'below',
 	] as const;
 	/**
 	 * Rails / crest above resting symbols. Keep `board` visible and mask out
 	 * the five reel columns so only the frame + vertical gold grids remain.
 	 */
 	const OVERLAY_HIDDEN_SLOTS = ['below'] as const;
+	/** Only the under-desk WIN plate — everything else stays on base/overlay. */
+	const NAMEPLATE_HIDDEN_SLOTS = [
+		'glow2',
+		'glow3',
+		'gold_lines2',
+		'gold_lines',
+		'back',
+		'dark_outlines',
+		'paw',
+		'board',
+	] as const;
 	const GLOW_ZERO_ALPHA_SLOTS = ['glow2', 'glow3'] as const;
 
 	const BOARD_PULSE_ANIMATION = 'animation';
@@ -157,7 +172,11 @@
 			{/if}
 			<SpineProvider key="boardFrame" x={contentRootX} y={contentRootY} scale={contentScale}>
 				<BoardFrameSlotFilter
-					hiddenSlots={layer === 'base' ? BASE_HIDDEN_SLOTS : OVERLAY_HIDDEN_SLOTS}
+					hiddenSlots={layer === 'base'
+						? BASE_HIDDEN_SLOTS
+						: layer === 'nameplate'
+							? NAMEPLATE_HIDDEN_SLOTS
+							: OVERLAY_HIDDEN_SLOTS}
 					zeroAlphaSlots={layer === 'overlay' ? GLOW_ZERO_ALPHA_SLOTS : undefined}
 				/>
 				{#if layer === 'overlay'}

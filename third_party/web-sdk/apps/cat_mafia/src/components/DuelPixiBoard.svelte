@@ -1,6 +1,7 @@
 <!--
-	One Duel desk layer. Game.svelte mounts base → board → overlay → idleBounce →
-	paylines → win for both sides so cat's desk never paints over dog's reels.
+	One Duel desk layer. Game.svelte mounts base → board → overlay → nameplate →
+	idleBounce → paylines → win for both sides so cat's desk never paints over
+	dog's reels.
 -->
 <script lang="ts" module>
 	import type { Position } from '../game/types';
@@ -15,6 +16,7 @@
 		| 'base'
 		| 'board'
 		| 'overlay'
+		| 'nameplate'
 		| 'idleBounce'
 		| 'paylines'
 		| 'win';
@@ -163,6 +165,11 @@
 {:else if props.layer === 'overlay'}
 	<MainContainer>
 		<BoardFrame layer="overlay" {layout} disableCatZoom side={props.side} />
+	</MainContainer>
+{:else if props.layer === 'nameplate'}
+	<!-- Under-desk WIN plate above the overlay bottom rail. -->
+	<MainContainer>
+		<BoardFrame layer="nameplate" {layout} disableCatZoom side={props.side} />
 	</MainContainer>
 {:else if props.layer === 'idleBounce'}
 	<!-- Win / idle pops above gold rails (same split as BoardIdleBounceLayer).

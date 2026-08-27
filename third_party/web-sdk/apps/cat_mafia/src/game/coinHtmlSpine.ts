@@ -23,7 +23,7 @@ export const COIN_PAW_FLASH_CLIP = 'flash';
 
 export type CoinPawSpineMode = 'row' | 'flash';
 
-/** Same window as `scripts/bake-coins.html` so cell crop stays aligned. */
+/** Same 256² viewport window as the HTML paw-coin cell crop. */
 export const COIN_PAW_SPINE_VIEWPORT = {
 	x: -300,
 	y: -310,
@@ -44,7 +44,7 @@ const COIN_PAW_VIEWPORT_ANIMS = {
 } as const;
 
 export const resolveCoinPawSpineUrl = (file: string) =>
-	new URL(`assets/spines/coins/${file}`.replace(/^\//, ''), window.location.href).href;
+	new URL(`assets/spines/symbols/coins/${file}`.replace(/^\//, ''), window.location.href).href;
 
 export const COIN_PAW_SPINE_FILES = ['coins.json', 'coins.atlas', 'coins.webp'] as const;
 

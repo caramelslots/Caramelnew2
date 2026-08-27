@@ -22,7 +22,7 @@
 		getMascotScreenBox,
 	} from '../game/mascotHtmlSpine';
 
-	const CARTRIDGE_IMG = `${import.meta.env.BASE_URL}assets/sprites/symbolsNew/Cartridge.webp`;
+	const CARTRIDGE_IMG = `${import.meta.env.BASE_URL}assets/sprites/symbols/Cartridge.webp`;
 
 	/** Tip anchor in Cartridge.webp (196²), from silver-region centroid. */
 	const TIP_ANCHOR_X = 0.78;

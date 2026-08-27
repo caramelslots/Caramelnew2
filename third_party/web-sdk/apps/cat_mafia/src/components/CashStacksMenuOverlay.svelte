@@ -1,7 +1,6 @@
 <!--
 	CashStacksMenuOverlay.svelte — меню настроек (турбо, звук, музыка)
-	по designer_assets/бекг.png и связанным иконкам/слайдеру.
-	Координаты строк выверены по PNG (слоты x 38.5–75.3%, иконки слева).
+	textures: ui/settings/ (burger_board + frames + sliders).
 -->
 <script lang="ts">
 	import { scale } from 'svelte/transition';
@@ -12,7 +11,11 @@
 	import { getContext } from '../game/context';
 	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
 	import { computeMenuPanelAnchor } from '../game/popupHudLayout';
-	import { SETTINGS_ASSETS, SETTINGS_TURBO_URLS } from '../game/uiHtmlAssetManifest';
+	import {
+		SETTINGS_ASSETS,
+		SETTINGS_TURBO_URLS,
+		AUTOSPIN_ASSETS,
+	} from '../game/uiHtmlAssetManifest';
 	import { computeDesktopHudLayout, resolveDesktopHudConfig } from '../game/desktopHudLayout';
 	import { computePortraitHudCanvas } from '../game/portraitHudLayout';
 	import { stateGame } from '../game/stateGame.svelte';
@@ -38,10 +41,7 @@
 			};
 		}
 
-		const hud = computeDesktopHudLayout(
-			stateLayoutDerived,
-			resolveDesktopHudConfig(isPopoutSmall),
-		);
+		const hud = computeDesktopHudLayout(stateLayoutDerived, resolveDesktopHudConfig(isPopoutSmall));
 		return {
 			left: hud.menu.x,
 			top: hud.menu.y,
@@ -57,15 +57,12 @@
 
 	let panelEl: HTMLDivElement | undefined = $state(undefined);
 
-	/**
-	 * Opaque card bounds inside bg_settings_panel.webp (2000²):
-	 * bbox (334,265)–(1663,1520) → fractions below.
-	 */
+	/** Opaque card inside burger_board (gold frame ~6%). */
 	const MENU_OPAQUE_INSET = {
-		left: 334 / 2000,
-		right: (2000 - 1 - 1663) / 2000,
-		top: 265 / 2000,
-		bottom: (2000 - 1 - 1520) / 2000,
+		left: 0.055,
+		right: 0.055,
+		top: 0.05,
+		bottom: 0.055,
 	} as const;
 
 	const isPointerInsideMenuCard = (clientX: number, clientY: number) => {
@@ -79,6 +76,10 @@
 	};
 
 	const bgUrl = SETTINGS_ASSETS.bg;
+	const pawIconUrl = AUTOSPIN_ASSETS.pawIcon;
+	const closeIconUrl = AUTOSPIN_ASSETS.close;
+	const frameTurboUrl = SETTINGS_ASSETS.frameTurbo;
+	const frameVolumeUrl = SETTINGS_ASSETS.frameVolume;
 	const soundIconUrls = {
 		off: SETTINGS_ASSETS.soundOff,
 		low: SETTINGS_ASSETS.soundLow,
@@ -101,7 +102,10 @@
 		if (!isOpen) return;
 
 		const onPointerDown = (event: PointerEvent) => {
-			if (event.target instanceof Element && event.target.closest('[data-test="menu-toggle-hit"]')) {
+			if (
+				event.target instanceof Element &&
+				event.target.closest('[data-test="menu-toggle-hit"]')
+			) {
 				return;
 			}
 			if (isPointerInsideMenuCard(event.clientX, event.clientY)) return;
@@ -124,50 +128,8 @@
 		if (volume > 30) return soundIconUrls.mid;
 		return soundIconUrls.low;
 	});
-	const musicIconUrl = $derived(
-		stateSound.volumeValueMusic === 0 ? musicOffUrl : musicOnUrl,
-	);
-
-	/** Row icons — panel-local px (scale with panel, crisp at rest on resize). */
-	const MENU_ROW_ICON_CENTER_X = 0.285;
-	const MENU_ROW_ICON_SIZE = 0.12;
-	const MENU_ROW_HEIGHT = 0.085;
-
-	const rowIcons = $derived.by(() => {
-		const w = panelWidth;
-		const size = Math.round(w * MENU_ROW_ICON_SIZE);
-		const rowCenter = (top: number) => Math.round(w * (top + MENU_ROW_HEIGHT / 2));
-
-		return {
-			turbo: {
-				x: Math.round(w * MENU_ROW_ICON_CENTER_X),
-				y: rowCenter(0.355),
-				size,
-				url: turboUrls[stateGame.gameSpeed - 1],
-				label: 'Game speed',
-				test: 'menu-icon-turbo' as const,
-				action: 'turbo' as const,
-			},
-			volume: {
-				x: Math.round(w * MENU_ROW_ICON_CENTER_X),
-				y: rowCenter(0.48),
-				size,
-				url: soundIconUrl,
-				label: 'Master volume',
-				test: 'menu-icon-volume' as const,
-				action: 'volume' as const,
-			},
-			music: {
-				x: Math.round(w * MENU_ROW_ICON_CENTER_X),
-				y: rowCenter(0.605),
-				size,
-				url: musicIconUrl,
-				label: 'Music',
-				test: 'menu-icon-music' as const,
-				action: 'music' as const,
-			},
-		};
-	});
+	const musicIconUrl = $derived(stateSound.volumeValueMusic === 0 ? musicOffUrl : musicOnUrl);
+	const turboIconUrl = $derived(turboUrls[stateGame.gameSpeed - 1]);
 
 	$effect(() => {
 		if (isOpen && stateModal.modal?.name === 'autoSpin') {
@@ -210,21 +172,9 @@
 	) => {
 		if (!el) return;
 		const rect = el.getBoundingClientRect();
-		const thumbPx = rect.height * (48 / 95);
+		const thumbPx = Math.min(rect.height * 1.1, rect.width * 0.1);
 		const usable = Math.max(1, rect.width - thumbPx);
 		const ratio = (clientX - rect.left - thumbPx * 0.5) / usable;
-		const clamped = Math.max(0, Math.min(1, ratio));
-		setValue(Math.round(clamped * 100));
-	};
-
-	const setMusicSliderValue = (
-		el: HTMLDivElement | undefined,
-		clientX: number,
-		setValue: (value: number) => void,
-	) => {
-		if (!el) return;
-		const rect = el.getBoundingClientRect();
-		const ratio = (clientX - rect.left) / rect.width;
 		const clamped = Math.max(0, Math.min(1, ratio));
 		setValue(Math.round(clamped * 100));
 	};
@@ -253,12 +203,6 @@
 		}
 	};
 
-	const onRowIconPress = (action: 'turbo' | 'volume' | 'music') => {
-		if (action === 'turbo') cycleTurbo();
-		else if (action === 'volume') toggleMasterVolume();
-		else toggleMusic();
-	};
-
 	const onVolumePointerDown = (e: PointerEvent) => {
 		isVolumeDragging = true;
 		(e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
@@ -284,13 +228,13 @@
 	const onMusicPointerDown = (e: PointerEvent) => {
 		isMusicDragging = true;
 		(e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
-		setMusicSliderValue(musicEl, e.clientX, setMusicVolume);
+		setSliderValue(musicEl, e.clientX, setMusicVolume);
 		playClick();
 	};
 
 	const onMusicPointerMove = (e: PointerEvent) => {
 		if (!isMusicDragging) return;
-		setMusicSliderValue(musicEl, e.clientX, setMusicVolume);
+		setSliderValue(musicEl, e.clientX, setMusicVolume);
 	};
 
 	const onMusicPointerUp = (e: PointerEvent) => {
@@ -340,110 +284,136 @@
 				in:scale={{ duration: PANEL_IN_MS, easing: backOut, start: 0.86, opacity: 0 }}
 				out:scale={{ duration: PANEL_OUT_MS, easing: cubicOut, start: 0.95, opacity: 0 }}
 			>
-		<img class="panel-bg" src={bgUrl} alt="" draggable="false" />
+				<img class="panel-bg" src={bgUrl} alt="" draggable="false" />
 
-		{#each Object.values(rowIcons) as icon (icon.label)}
-			<button
-				type="button"
-				class="menu-row-icon"
-				style:left="{icon.x}px"
-				style:top="{icon.y}px"
-				style:width="{icon.size}px"
-				style:height="{icon.size}px"
-				style:background-image="url('{icon.url}')"
-				aria-label={icon.label}
-				data-test={icon.test}
-				onclick={() => onRowIconPress(icon.action)}
-			></button>
-		{/each}
-
-		<div class="panel-content">
-			<header class="panel-header">
-				<h3 class="panel-title">{context.i18nDerived.settingsMenuTitle()}</h3>
-			</header>
-
-			<section class="settings-row turbo-row" aria-label="Game speed">
-				<div
-					class="row-slot turbo-control"
-					role="radiogroup"
-					aria-label="Game speed"
-					style:--turbo-active-index={stateGame.gameSpeed - 1}
-				>
-					<div class="turbo-seg-highlight" aria-hidden="true"></div>
-					{#each [1, 2, 3] as level (level)}
+				<div class="panel-content">
+					<header class="panel-header">
+						<img class="header-paw" src={pawIconUrl} alt="" draggable="false" />
+						<h3 class="panel-title">{context.i18nDerived.settingsMenuTitle()}</h3>
 						<button
 							type="button"
-							class="turbo-seg-btn"
-							class:is-selected={stateGame.gameSpeed === level}
-							onclick={() => setSpeed(level as 1 | 2 | 3)}
-							aria-pressed={stateGame.gameSpeed === level}
-							data-test="speed-{level}"
+							class="close-button"
+							onclick={closeMenu}
+							aria-label="close"
+							data-test="menu-close"
 						>
-							{level}
+							<img class="close-icon" src={closeIconUrl} alt="" draggable="false" />
 						</button>
-					{/each}
-				</div>
-			</section>
+					</header>
 
-			<section class="settings-row volume-row" aria-label="Master volume">
-				<div class="row-slot settings-slider">
-					<div class="slider-rail">
+					<section class="settings-row turbo-row" aria-label="Game speed">
+						<button
+							type="button"
+							class="row-icon"
+							style:background-image="url('{turboIconUrl}')"
+							aria-label="Game speed"
+							data-test="menu-icon-turbo"
+							onclick={cycleTurbo}
+						></button>
 						<div
-							bind:this={volumeEl}
-							class="slider-track-wrap"
-							class:dragging={isVolumeDragging}
-							style:--progress={volumeProgress}
-							role="slider"
-							aria-label="Master volume"
-							aria-valuemin={0}
-							aria-valuemax={100}
-							aria-valuenow={stateSound.volumeValueMaster}
-							tabindex="0"
-							onpointerdown={onVolumePointerDown}
-							onpointermove={onVolumePointerMove}
-							onpointerup={onVolumePointerUp}
-							onpointercancel={onVolumePointerUp}
-							data-test="volume-slider"
+							class="row-slot turbo-control"
+							role="radiogroup"
+							aria-label="Game speed"
+							style:background-image="url('{frameTurboUrl}')"
+							style:--turbo-active-index={stateGame.gameSpeed - 1}
 						>
-							<div class="slider-track">
-								<img class="slider-empty" src={sliderEmptyUrl} alt="" draggable="false" />
-								<div class="slider-fill">
-									<img class="slider-full" src={sliderFullUrl} alt="" draggable="false" />
+							<div class="turbo-seg-highlight" aria-hidden="true"></div>
+							{#each [1, 2, 3] as level (level)}
+								<button
+									type="button"
+									class="turbo-seg-btn"
+									class:is-selected={stateGame.gameSpeed === level}
+									onclick={() => setSpeed(level as 1 | 2 | 3)}
+									aria-pressed={stateGame.gameSpeed === level}
+									data-test="speed-{level}"
+								>
+									{level}
+								</button>
+							{/each}
+						</div>
+					</section>
+
+					<section class="settings-row volume-row" aria-label="Master volume">
+						<button
+							type="button"
+							class="row-icon"
+							style:background-image="url('{soundIconUrl}')"
+							aria-label="Master volume"
+							data-test="menu-icon-volume"
+							onclick={toggleMasterVolume}
+						></button>
+						<div class="row-slot volume-frame" style:background-image="url('{frameVolumeUrl}')">
+							<div class="settings-slider">
+								<div
+									bind:this={volumeEl}
+									class="slider-track-wrap"
+									class:dragging={isVolumeDragging}
+									style:--progress={volumeProgress}
+									role="slider"
+									aria-label="Master volume"
+									aria-valuemin={0}
+									aria-valuemax={100}
+									aria-valuenow={stateSound.volumeValueMaster}
+									tabindex="0"
+									onpointerdown={onVolumePointerDown}
+									onpointermove={onVolumePointerMove}
+									onpointerup={onVolumePointerUp}
+									onpointercancel={onVolumePointerUp}
+									data-test="volume-slider"
+								>
+									<div class="slider-track">
+										<img class="slider-empty" src={sliderEmptyUrl} alt="" draggable="false" />
+										<div class="slider-fill">
+											<img class="slider-full" src={sliderFullUrl} alt="" draggable="false" />
+										</div>
+									</div>
+									<img class="slider-thumb" src={sliderKnobUrl} alt="" draggable="false" />
 								</div>
 							</div>
-							<img class="slider-thumb" src={sliderKnobUrl} alt="" draggable="false" />
 						</div>
-					</div>
-				</div>
-			</section>
+					</section>
 
-			<section class="settings-row music-row" aria-label="Music">
-				<div class="row-slot music-slider">
-					<div
-						bind:this={musicEl}
-						class="music-slider-wrap"
-						class:dragging={isMusicDragging}
-						style:--progress={musicProgress}
-						role="slider"
-						aria-label="Music volume"
-						aria-valuemin={0}
-						aria-valuemax={100}
-						aria-valuenow={stateSound.volumeValueMusic}
-						tabindex="0"
-						onpointerdown={onMusicPointerDown}
-						onpointermove={onMusicPointerMove}
-						onpointerup={onMusicPointerUp}
-						onpointercancel={onMusicPointerUp}
-						data-test="music-slider"
-					>
-						<div class="music-slider-track">
-							<div class="music-slider-fill"></div>
+					<section class="settings-row music-row" aria-label="Music">
+						<button
+							type="button"
+							class="row-icon"
+							style:background-image="url('{musicIconUrl}')"
+							aria-label="Music"
+							data-test="menu-icon-music"
+							onclick={toggleMusic}
+						></button>
+						<div class="row-slot volume-frame" style:background-image="url('{frameVolumeUrl}')">
+							<div class="settings-slider">
+								<div
+									bind:this={musicEl}
+									class="slider-track-wrap"
+									class:dragging={isMusicDragging}
+									style:--progress={musicProgress}
+									role="slider"
+									aria-label="Music volume"
+									aria-valuemin={0}
+									aria-valuemax={100}
+									aria-valuenow={stateSound.volumeValueMusic}
+									tabindex="0"
+									onpointerdown={onMusicPointerDown}
+									onpointermove={onMusicPointerMove}
+									onpointerup={onMusicPointerUp}
+									onpointercancel={onMusicPointerUp}
+									data-test="music-slider"
+								>
+									<div class="slider-track">
+										<img class="slider-empty" src={sliderEmptyUrl} alt="" draggable="false" />
+										<div class="slider-fill">
+											<img class="slider-full" src={sliderFullUrl} alt="" draggable="false" />
+										</div>
+									</div>
+									<img class="slider-thumb" src={sliderKnobUrl} alt="" draggable="false" />
+								</div>
+							</div>
 						</div>
-					</div>
+					</section>
 				</div>
-			</section>
-		</div>
-		</div>
+			</div>
 		</div>
 	</div>
 {/if}
@@ -486,12 +456,14 @@
 	}
 
 	.menu-panel {
-		--panel-width: 400px;
+		--panel-width: 320px;
 		position: relative;
 		width: var(--panel-width);
-		aspect-ratio: 1;
+		aspect-ratio: 1067 / 1032;
 		pointer-events: auto;
-		filter: drop-shadow(0 calc(var(--panel-width) * 0.03) calc(var(--panel-width) * 0.08) rgba(0, 0, 0, 0.55));
+		filter: drop-shadow(
+			0 calc(var(--panel-width) * 0.03) calc(var(--panel-width) * 0.08) rgba(0, 0, 0, 0.55)
+		);
 		transform-origin: 12% 100%;
 
 		&:focus {
@@ -500,11 +472,15 @@
 	}
 
 	.menu-panel.popout-l {
-		filter: drop-shadow(0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.07) rgba(0, 0, 0, 0.6));
+		filter: drop-shadow(
+			0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.07) rgba(0, 0, 0, 0.6)
+		);
 	}
 
 	.menu-panel.popout-s {
-		filter: drop-shadow(0 calc(var(--panel-width) * 0.015) calc(var(--panel-width) * 0.045) rgba(0, 0, 0, 0.55));
+		filter: drop-shadow(
+			0 calc(var(--panel-width) * 0.015) calc(var(--panel-width) * 0.045) rgba(0, 0, 0, 0.55)
+		);
 	}
 
 	.panel-bg {
@@ -522,10 +498,109 @@
 		inset: 0;
 	}
 
-	.menu-row-icon {
+	.panel-header {
 		position: absolute;
-		z-index: 2;
-		transform: translate(-50%, -50%);
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 20%;
+		display: grid;
+		grid-template-columns: auto 1fr auto;
+		align-items: center;
+		justify-items: center;
+		padding: 9.5% 8% 0.5%;
+		box-sizing: border-box;
+		pointer-events: none;
+		gap: 3%;
+	}
+
+	.header-paw {
+		width: calc(var(--panel-width) * 0.14);
+		height: auto;
+		aspect-ratio: 1;
+		object-fit: contain;
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.panel-title {
+		margin: 0;
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.078);
+		font-weight: 800;
+		font-style: normal;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: #f3e6c8;
+		text-shadow:
+			0 1px 0 rgba(0, 0, 0, 0.85),
+			0 2px 6px rgba(0, 0, 0, 0.65);
+		text-align: center;
+		line-height: 1.1;
+	}
+
+	.close-button {
+		width: calc(var(--panel-width) * 0.14);
+		height: calc(var(--panel-width) * 0.14);
+		padding: 0;
+		border: 0;
+		background: transparent;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: auto;
+		transition:
+			transform 0.12s,
+			filter 0.12s;
+
+		&:hover {
+			filter: brightness(1.12);
+			transform: scale(1.06);
+		}
+
+		&:active {
+			transform: scale(0.96);
+		}
+	}
+
+	.close-icon {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.settings-row {
+		position: absolute;
+		left: 8%;
+		right: 8%;
+		height: 16.5%;
+		display: grid;
+		grid-template-columns: 18% 1fr;
+		align-items: center;
+		column-gap: 3%;
+		box-sizing: border-box;
+	}
+
+	.turbo-row {
+		top: 31%;
+	}
+
+	.volume-row {
+		top: 50%;
+	}
+
+	.music-row {
+		top: 69%;
+	}
+
+	.row-icon {
+		width: 100%;
+		aspect-ratio: 1;
+		max-height: 100%;
+		justify-self: center;
 		border: 0;
 		padding: 0;
 		appearance: none;
@@ -534,108 +609,74 @@
 		background-repeat: no-repeat;
 		background-position: center;
 		background-size: contain;
-		pointer-events: auto;
 		cursor: pointer;
 		user-select: none;
 		-webkit-tap-highlight-color: transparent;
 		touch-action: manipulation;
+		transition: transform 0.1s;
 
 		&:active {
-			transform: translate(-50%, -50%) scale(0.94);
+			transform: scale(0.94);
 		}
 	}
 
-	/* Header frame: y 13.2–27.7% on source PNG */
-	.panel-header {
-		position: absolute;
-		top: 13.5%;
-		left: 17%;
-		right: 17%;
-		height: 13%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		pointer-events: none;
-	}
-
-	.panel-title {
-		margin: 0;
-		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.062);
-		font-weight: 900;
-		font-style: italic;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-		color: #7ee8ff;
-		text-shadow:
-			0 0 calc(var(--panel-width) * 0.03) rgba(80, 220, 255, 0.75),
-			0 calc(var(--panel-width) * 0.005) calc(var(--panel-width) * 0.015) rgba(0, 0, 0, 0.85);
-	}
-
-	/*
-		Row layout from bg PNG analysis:
-		  icons  — left ~21%, width ~12%
-		  slots  — left 39%, right 25%  (orange rects 38.5–75.3%)
-	*/
-	.settings-row {
-		position: absolute;
-		left: 0;
-		right: 0;
-		height: 8.5%;
-	}
-
-	.turbo-row {
-		top: 35.5%;
-	}
-
-	.volume-row {
-		top: 48%;
-	}
-
-	.music-row {
-		top: 60.5%;
-	}
-
 	.row-slot {
-		position: absolute;
-		left: 39%;
-		right: 24.7%;
-		top: 50%;
-		height: 88%;
-		transform: translateY(-50%);
+		position: relative;
+		width: 100%;
+		height: 92%;
 		min-width: 0;
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: 100% 100%;
 	}
 
 	.turbo-control {
-		--turbo-btn-width: calc(var(--panel-width) * 0.1025);
-		--turbo-btn-height: calc(var(--panel-width) * 0.06);
-		--turbo-gap: calc(var(--panel-width) * 0.0125);
-		--turbo-offset-x: 0px;
-		position: relative;
 		display: flex;
 		align-items: center;
-		justify-content: flex-start;
-		gap: var(--turbo-gap);
-		height: 100%;
-		padding-left: var(--turbo-offset-x);
+		justify-content: stretch;
+		height: 92%;
+		padding: 0 1.2%;
 		box-sizing: border-box;
 	}
 
 	.turbo-seg-highlight {
 		position: absolute;
-		top: 50%;
-		width: var(--turbo-btn-width);
-		height: var(--turbo-btn-height);
-		transform: translateY(-50%);
+		top: 8%;
+		bottom: 8%;
+		/* Равные отступы слева/справа внутри сегмента. */
+		--turbo-seg-w: calc((100% - 2.4%) / 3);
+		--turbo-seg-inset: 0.7%;
+		width: calc(var(--turbo-seg-w) - 2 * var(--turbo-seg-inset));
 		left: calc(
-			var(--turbo-offset-x) + var(--turbo-active-index) *
-				(var(--turbo-btn-width) + var(--turbo-gap))
+			1.2% + var(--turbo-active-index) * var(--turbo-seg-w) + var(--turbo-seg-inset)
 		);
-		border-radius: calc(var(--panel-width) * 0.015);
-		background-image: linear-gradient(180deg, #ff9700 0%, #ffd51a 100%);
+		border-radius: calc(var(--panel-width) * 0.012);
+		background-image:
+			linear-gradient(
+				90deg,
+				rgba(255, 248, 200, 0.55) 0%,
+				rgba(255, 248, 200, 0) 10%,
+				rgba(255, 248, 200, 0) 90%,
+				rgba(90, 35, 0, 0.35) 100%
+			),
+			linear-gradient(
+				180deg,
+				#fff6a8 0%,
+				#ffe056 6%,
+				#f0b020 18%,
+				#e89810 42%,
+				#d88808 72%,
+				#c87800 100%
+			);
 		box-shadow:
-			inset 0 calc(var(--panel-width) * 0.0025) 0 rgba(255, 255, 255, 0.35),
-			0 calc(var(--panel-width) * 0.0025) calc(var(--panel-width) * 0.0075) rgba(0, 0, 0, 0.2);
+			inset 0 calc(var(--panel-width) * 0.004) 0 #fffce0,
+			inset 0 calc(var(--panel-width) * 0.008) 0 rgba(120, 50, 0, 0.45),
+			inset calc(var(--panel-width) * 0.004) 0 0 rgba(255, 250, 210, 0.65),
+			inset calc(var(--panel-width) * -0.004) 0 0 rgba(90, 35, 0, 0.4),
+			inset 0 calc(var(--panel-width) * -0.004) calc(var(--panel-width) * 0.01)
+				rgba(80, 30, 0, 0.35),
+			inset 0 0 calc(var(--panel-width) * 0.018) rgba(255, 200, 40, 0.35),
+			0 calc(var(--panel-width) * 0.002) calc(var(--panel-width) * 0.006) rgba(0, 0, 0, 0.35);
 		pointer-events: none;
 		transition: left 0.15s ease;
 		z-index: 0;
@@ -644,31 +685,31 @@
 	.turbo-seg-btn {
 		position: relative;
 		z-index: 1;
-		flex: 0 0 var(--turbo-btn-width);
+		flex: 1 1 0;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: var(--turbo-btn-width);
-		height: var(--turbo-btn-height);
+		height: 100%;
 		padding: 0;
 		border: 0;
 		background: transparent;
 		appearance: none;
 		-webkit-appearance: none;
-		color: #d4a843;
-		font-family: Georgia, 'Times New Roman', serif;
-		font-size: calc(var(--panel-width) * 0.035);
-		font-weight: 700;
+		color: #f0d060;
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.055);
+		font-weight: 800;
 		font-style: italic;
 		line-height: 1;
+		/* Italic цифры визуально съезжают влево — лёгкая компенсация. */
+		transform: translateX(0.06em);
 		cursor: pointer;
-		transform: translateY(calc(var(--panel-width) * -0.005));
 		transition:
 			color 0.15s,
 			transform 0.08s;
 
 		&:hover:not(.is-selected) {
-			color: #f0c858;
+			color: #ffe08a;
 		}
 
 		&.is-selected {
@@ -676,24 +717,21 @@
 		}
 
 		&:active {
-			transform: translateY(calc(var(--panel-width) * -0.005)) scale(0.96);
+			transform: translateX(0.06em) scale(0.96);
 		}
 	}
 
+	.volume-frame {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0 3.5%;
+		box-sizing: border-box;
+	}
+
 	.settings-slider {
-		--thumb-width: calc(var(--panel-width) * 0.048);
-		--slider-bar-height: calc(var(--panel-width) * 0.032);
-	}
-
-	.settings-slider .slider-rail {
-		width: 98%;
-	}
-
-	.settings-slider .slider-track-wrap {
-		top: 41%;
-	}
-
-	.slider-rail {
+		--thumb-width: calc(var(--panel-width) * 0.085);
+		--slider-bar-height: calc(var(--panel-width) * 0.042);
 		position: relative;
 		width: 100%;
 		height: 100%;
@@ -705,7 +743,7 @@
 		right: 0;
 		top: 50%;
 		transform: translateY(-50%);
-		height: calc(var(--panel-width) * 0.085);
+		height: calc(var(--panel-width) * 0.11);
 		cursor: pointer;
 		touch-action: none;
 		user-select: none;
@@ -716,7 +754,7 @@
 		}
 
 		&:focus-visible {
-			outline: calc(var(--panel-width) * 0.005) solid rgba(110, 193, 255, 0.55);
+			outline: calc(var(--panel-width) * 0.005) solid rgba(240, 208, 96, 0.55);
 			outline-offset: calc(var(--panel-width) * 0.005);
 			border-radius: 999px;
 		}
@@ -758,6 +796,7 @@
 				(100% - var(--thumb-width))
 		);
 		transition: width 0.12s ease-out;
+		border-radius: 999px;
 	}
 
 	.slider-track-wrap.dragging .slider-fill,
@@ -782,6 +821,7 @@
 		top: 50%;
 		width: var(--thumb-width);
 		height: auto;
+		aspect-ratio: 1;
 		left: calc(var(--thumb-width) * 0.5 + var(--progress) * (100% - var(--thumb-width)));
 		transform: translate(-50%, -50%);
 		pointer-events: none;
@@ -790,58 +830,25 @@
 		z-index: 2;
 	}
 
-	.music-slider {
-		--slider-bar-height: calc(var(--panel-width) * 0.068);
-		--music-slider-radius: calc(var(--panel-width) * 0.008);
-		width: 36%;
-	}
-
-	.music-slider-wrap {
-		position: absolute;
-		left: 0;
-		right: 0;
-		top: 46%;
-		transform: translateY(-50%);
-		height: calc(var(--panel-width) * 0.11);
-		cursor: pointer;
-		touch-action: none;
-		user-select: none;
-
-		&:focus {
-			outline: none;
-		}
-
-		&:focus-visible {
-			outline: calc(var(--panel-width) * 0.005) solid rgba(255, 213, 26, 0.55);
-			outline-offset: calc(var(--panel-width) * 0.005);
-			border-radius: var(--music-slider-radius);
+	.menu-panel.portrait {
+		.panel-title {
+			font-size: calc(var(--panel-width) * 0.072);
 		}
 	}
 
-	.music-slider-track {
-		position: absolute;
-		left: 0;
-		right: 0;
-		top: 50%;
-		height: var(--slider-bar-height);
-		transform: translateY(-50%);
-		padding: calc(var(--panel-width) * 0.006);
-		box-sizing: border-box;
-		border-radius: var(--music-slider-radius);
-	}
+	.menu-panel.popout-s {
+		.panel-title {
+			font-size: calc(var(--panel-width) * 0.085);
+		}
 
-	.music-slider-fill {
-		height: 100%;
-		width: calc(var(--progress) * 100%);
-		border-radius: var(--music-slider-radius);
-		background: linear-gradient(180deg, #ff9700 0%, #ffd51a 100%);
-		border: calc(var(--panel-width) * 0.0025) solid #ffffe0;
-		box-sizing: border-box;
-		pointer-events: none;
-		transition: width 0.12s ease-out;
-	}
+		.header-paw,
+		.close-button {
+			width: calc(var(--panel-width) * 0.155);
+			height: calc(var(--panel-width) * 0.155);
+		}
 
-	.music-slider-wrap.dragging .music-slider-fill {
-		transition: none;
+		.turbo-seg-btn {
+			font-size: calc(var(--panel-width) * 0.06);
+		}
 	}
 </style>

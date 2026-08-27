@@ -2,7 +2,8 @@
 	import ReelSymbol from './ReelSymbol.svelte';
 	import { getContext } from '../game/context';
 	import type { SymbolState } from '../game/types';
-	import type { DuelSide } from '../game/stateDuel.svelte';
+	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
+	import { stateGame } from '../game/stateGame.svelte';
 
 	type ReelLike = {
 		reelState: {
@@ -35,15 +36,25 @@
 
 	const isMysteryFx = (state: SymbolState) =>
 		state === 'mysteryReveal' || state === 'mysteryCollapse';
-	/** Win celebrate + idle tease — above gold rails (BoardIdleBounceLayer).
-	 *  `winLift` parks the cell above the rails with idle art first so the win
-	 *  spine never starts under the dividers then jumps over mid-clip.
-	 *  H1–H4 / letters keep their win spine on `postWinStatic` during spotlight. */
+
+	/** Payline spotlight still holding (base or duel). */
+	const spotlightHolding = $derived(
+		stateGame.winSpotlightActive || stateDuel.winSpotlightSide != null,
+	);
+
+	/**
+	 * Win celebrate + idle tease — above gold rails (BoardIdleBounceLayer).
+	 * `win` / `winLift` always lift so H3 flame/rays aren't clipped by dividers.
+	 * `postWinStatic` stays above only while spotlight is on — after clear
+	 * (and during pawCoinResolve, which clears spotlight then paints coins)
+	 * cells drop back under the rails so win FX don't burn under/around coins.
+	 */
 	const isAboveRails = (state: SymbolState) =>
 		state === 'idleBounce' ||
 		state === 'winLift' ||
 		state === 'win' ||
-		state === 'postWinStatic';
+		(state === 'postWinStatic' && spotlightHolding);
+
 	const isPawName = (name: string) => name === 'PB' || name === 'PS' || name === 'PG';
 	/**
 	 * Resting / landing paw above the gold rails.

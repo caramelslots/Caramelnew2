@@ -3,6 +3,7 @@
 
 	import { getSymbolInfo } from '../game/utils';
 	import type { SymbolName } from '../game/types';
+	import type { DuelSide } from '../game/stateDuel.svelte';
 	import SymbolSpineMain from './SymbolSpineMain.svelte';
 
 	type Props = {
@@ -13,6 +14,7 @@
 		listener: SpineTrackProps['listener'];
 		loop?: boolean;
 		inViewport?: boolean;
+		duelSide?: DuelSide;
 	};
 
 	const props: Props = $props();
@@ -24,6 +26,7 @@
 	symbolInfo={props.symbolInfo}
 	symbolName={props.symbolName}
 	inViewport={props.inViewport}
+	duelSide={props.duelSide}
 	listener={props.listener}
 	loop={props.loop}
 />

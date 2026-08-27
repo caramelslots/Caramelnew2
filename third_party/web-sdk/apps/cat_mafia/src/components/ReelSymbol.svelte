@@ -54,12 +54,11 @@
 
 	// Per-symbol win bounce. Runs for symbols whose win state shows a frozen
 	// idle spine + container scale tween (M). W (`Special_2/win`),
-	// B (`Special_1/wave`), H1 diamond (`activation`), H2 revolver / H3
+	// B (`Special_1/wave` legacy), H1 diamond (`activation`), H2 revolver / H3
 	// lighter / H4 telephone / letter lows (`win`) drive their own spine
-	// celebration — skip the bounce.
+	// celebration — skip the bounce. Bonus B is a static sprite now.
 	const usesDedicatedSpineWin = $derived(
 		symbolInfo.animationName === 'Special_2/win' ||
-			symbolInfo.animationName === 'Special_1/wave' ||
 			symbolInfo.animationName === 'win' ||
 			symbolInfo.animationName === 'activation',
 	);
@@ -293,14 +292,15 @@
 		spinActive={maskRunwayActive}
 		alpha={bgAlphaTween.current}
 	>
-		<Symbol
-			state={bgSymbolState}
-			rawSymbol={revealedRawSymbol}
-			showMultiplier={showMultiplier}
-			oncomplete={() => {
-				bgSymbolState = 'static';
-			}}
-		/>
+			<Symbol
+				state={bgSymbolState}
+				rawSymbol={revealedRawSymbol}
+				showMultiplier={showMultiplier}
+				duelSide={props.duelSide}
+				oncomplete={() => {
+					bgSymbolState = 'static';
+				}}
+			/>
 	</SymbolWrap>
 {/if}
 
@@ -314,17 +314,22 @@
 		alpha={isSpinningSymbol ? 1 : dimAlphaTween.current}
 	>
 		<!-- Sprites: key by asset so H1Img→L3Img swaps cleanly (cheap remount).
-		     Spines: key by asset + clip so idle↔land↔win remount on clip change.
-		     Omit symbolState — win→postWinStatic keeps the same looping win clip
-		     without restarting (same 1× pace as living idle). -->
+		     Paw coins: key by skin+clip so land(appear) → static(loop) remounts
+		     onto a clean frozen face instead of a stuck appear_flash frame.
+		     Spines: key by asset + clip + loop so win (one-shot) → postWinStatic
+		     (looping) remounts and keeps celebrating instead of freezing on the
+		     last bright frame. -->
 		{#key symbolInfo.type === 'sprite'
 			? `sprite:${symbolInfo.assetKey}`
-			: `spine:${symbolInfo.assetKey}:${symbolInfo.animationName ?? ''}:${'devNonce' in symbolInfo ? symbolInfo.devNonce : ''}`}
+			: symbolInfo.type === 'coinPaw'
+				? `coinPaw:${'skin' in symbolInfo ? symbolInfo.skin : ''}:${'clip' in symbolInfo ? symbolInfo.clip : ''}`
+				: `spine:${symbolInfo.assetKey}:${symbolInfo.animationName ?? ''}:${'loop' in symbolInfo && symbolInfo.loop ? 'L' : '1'}:${'devNonce' in symbolInfo ? symbolInfo.devNonce : ''}`}
 			<Symbol
 				state={symbolRenderState}
 				rawSymbol={props.reelSymbol.rawSymbol}
 				inViewport={inViewport}
 				showMultiplier={showMultiplier}
+				duelSide={props.duelSide}
 				oncomplete={() => {
 					const state = props.reelSymbol.symbolState;
 					if (state === 'idleBounce') return;

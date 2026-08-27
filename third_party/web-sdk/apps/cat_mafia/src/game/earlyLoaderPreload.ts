@@ -5,10 +5,10 @@ export const resolveGameStaticUrl = (path: string) =>
 
 /**
  * Static street under the logo/cards loader.
- * 1920×940 — same plate aspect as Spine `background_day` (cropped from day.webp).
+ * 1920×956 — same plate as `night.webp` and LOADER_BG_PX.
  */
 export const LOADER_STATIC_DAY_URL = resolveGameStaticUrl(
-	'assets/sprites/background/day_loader.webp',
+	'assets/sprites/background/day.webp',
 );
 
 /** Street background Spine for Pixi `mainBackground` (batch 1 + early HTTP warm). */

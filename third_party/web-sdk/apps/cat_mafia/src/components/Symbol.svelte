@@ -8,6 +8,7 @@
 	import { getSymbolInfo } from '../game/utils';
 	import { BITMAP_FONT_SCALE, FONT_PROSTOI } from '../game/constants';
 	import type { SymbolState, RawSymbol } from '../game/types';
+	import type { DuelSide } from '../game/stateDuel.svelte';
 	import { getContext } from '../game/context';
 
 	type Props = {
@@ -23,6 +24,8 @@
 		 * do not show multiplier text even if rawSymbol.multiplier is set.
 		 */
 		showMultiplier?: boolean;
+		/** Duel desk — living idle freezes only on the celebrating side. */
+		duelSide?: DuelSide;
 	};
 
 	const props: Props = $props();
@@ -55,6 +58,7 @@
 		{symbolInfo}
 		symbolName={props.rawSymbol.name}
 		inViewport={props.inViewport}
+		duelSide={props.duelSide}
 		x={props.x}
 		y={props.y}
 		listener={{

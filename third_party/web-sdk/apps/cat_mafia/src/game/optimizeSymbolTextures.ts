@@ -11,7 +11,7 @@ const isSymbolTexture = (asset: unknown): asset is SymbolTexture =>
 	'height' in asset &&
 	'source' in asset;
 
-/** Static symbol sprites from symbolsNew/*.webp (196²). */
+/** Static symbol sprites from symbols/*.webp (196²). */
 export const SYMBOL_TEXTURE_KEYS = [
 	'H1Img',
 	'H2Img',

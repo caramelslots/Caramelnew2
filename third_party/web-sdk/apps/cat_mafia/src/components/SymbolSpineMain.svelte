@@ -3,6 +3,7 @@
 
 	import { getSymbolInfo } from '../game/utils';
 	import { SYMBOL_SIZE } from '../game/constants';
+	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { getAutoCellFitRatio } from '../game/symbolCellFit.svelte';
 	import type { SymbolName } from '../game/types';
@@ -15,6 +16,8 @@
 		listener: SpineTrackProps['listener'];
 		loop?: boolean;
 		inViewport?: boolean;
+		/** Duel desk — freeze living idle only while this side holds the win spotlight. */
+		duelSide?: DuelSide;
 	};
 
 	const props: Props = $props();
@@ -25,23 +28,20 @@
 	 */
 	const SYMBOL_SPINE_TIME_SCALE = 1;
 
-	// Namespaced rest poses (`*/idle`) are frozen. Living clips — designer
-	// `idle`, `win` / `activation`, and W/B celebrate tracks — loop at the
-	// same 1× pace. Idle additionally waits for livingIdleActive.
+	// Namespaced rest poses (`*/idle`) are frozen. One-shot celebrate clips
+	// (`win` / `activation` / W/B) await complete; postWinStatic descriptors
+	// set `loop: true` so the hold keeps playing at 1×.
 	const animationName = $derived(props.symbolInfo.animationName);
-	const isLivingLoop = $derived(
-		animationName === 'idle' ||
-			animationName === 'win' ||
-			animationName === 'activation' ||
-			animationName === 'Special_2/win' ||
-			animationName === 'Special_1/wave',
-	);
+	const isLivingIdle = $derived(animationName === 'idle');
 	const autoUpdate = $derived.by(() => {
 		const name = animationName;
 		if (!name) return true;
 		if (name === 'idle') {
 			if (props.inViewport === false) return false;
-			return stateGame.livingIdleActive;
+			if (!stateGame.livingIdleActive) return false;
+			// Duel: only the celebrating desk freezes; the other keeps breathing.
+			if (props.duelSide && stateDuel.winSpotlightSide === props.duelSide) return false;
+			return true;
 		}
 		return !name.endsWith('/idle');
 	});
@@ -50,7 +50,7 @@
 		if ('loop' in props.symbolInfo && typeof props.symbolInfo.loop === 'boolean') {
 			return props.symbolInfo.loop;
 		}
-		return isLivingLoop;
+		return isLivingIdle;
 	});
 
 	// `reverseAnimation` on the descriptor signals that this clip should play

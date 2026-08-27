@@ -9,19 +9,24 @@ type LayoutDerived = ReturnType<typeof createLayout>['stateLayoutDerived'];
 /** Design reference at 1280×720 — popups stay compact, only shrink on narrow viewports. */
 const DESIGN_CANVAS_WIDTH = 1280;
 const AUTOPLAY_REF_WIDTH = 132;
-const MENU_REF_WIDTH = 400;
+const MENU_REF_WIDTH = 320;
 const GAP_ABOVE_BUTTON = 5;
 const MENU_PANEL_DROP = 98;
 const MENU_PANEL_DROP_POPOUT_S_FACTOR = 1.1;
 const MENU_PANEL_SHIFT_LEFT = 0;
-/** Extra left offset on portrait — fraction of panel width, applied after anchor alignment. */
-const MENU_PANEL_SHIFT_LEFT_PORTRAIT = 0.2;
+/** Extra left offset on portrait — fraction of panel width, applied after anchor alignment.
+ *  Smaller = правее. */
+const MENU_PANEL_SHIFT_LEFT_PORTRAIT = 0.1;
 /** Matches `.menu-panel` transform-origin X (12%) — hinge above menu button. */
 const MENU_PANEL_ANCHOR_X_FRACTION = 0.12;
 const MENU_PANEL_LIFT = 0.045;
+/** Portrait phone: raise settings menu (fraction of panel width). */
+const MENU_PANEL_LIFT_PORTRAIT = 0.3;
+/** Extra upward lift for desktop/landscape settings menu (fraction of panel width). */
+const MENU_PANEL_LIFT_DESKTOP = 0.3;
 const MENU_PANEL_POPOUT_S_EXTRA_LIFT = 0;
-/** Negative = shift panel left of the autoplay HUD button anchor. */
-const AUTOPLAY_PANEL_SHIFT_LEFT = -0.28;
+/** Negative = left of autoplay HUD button; closer to 0 / positive = правее. Desktop only (portrait uses centered modal). */
+const AUTOPLAY_PANEL_SHIFT_LEFT = -0.08;
 const AUTOPLAY_PANEL_LIFT = 0.045;
 const SCREEN_MARGIN = 12;
 const MIN_POPUP_WIDTH = 108;
@@ -92,9 +97,9 @@ const resolveMenuPanelWidth = (
 	if (layoutType === 'portrait') {
 		return Math.min(MENU_REF_WIDTH, canvasWidth * 0.94);
 	}
-	if (isPopoutSmall) return Math.min(197, canvasWidth * 0.68);
-	if (isPopout) return Math.min(305, canvasWidth * 0.58);
-	return Math.min(MENU_REF_WIDTH, canvasWidth * 0.311);
+	if (isPopoutSmall) return Math.min(160, canvasWidth * 0.68);
+	if (isPopout) return Math.min(245, canvasWidth * 0.58);
+	return Math.min(MENU_REF_WIDTH, canvasWidth * 0.25);
 };
 
 export const resolveMenuPanelWidthForLayout = (layoutDerived: LayoutDerived) => {
@@ -268,7 +273,7 @@ export const computeMenuPanelAnchor = (layoutDerived: LayoutDerived): MenuPanelA
 				hud.util.iconSize / 2 +
 				GAP_ABOVE_BUTTON -
 				drop +
-				menuFit.width * MENU_PANEL_LIFT,
+				menuFit.width * MENU_PANEL_LIFT_PORTRAIT,
 			width: menuFit.width,
 		};
 	}
@@ -285,7 +290,7 @@ export const computeMenuPanelAnchor = (layoutDerived: LayoutDerived): MenuPanelA
 			hud.menu.size / 2 +
 			GAP_ABOVE_BUTTON -
 			drop +
-			menuFit.width * MENU_PANEL_LIFT +
+			menuFit.width * MENU_PANEL_LIFT_DESKTOP +
 			extraLift,
 		width: menuFit.width,
 	};

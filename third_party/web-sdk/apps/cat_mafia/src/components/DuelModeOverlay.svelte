@@ -80,6 +80,29 @@
 	const portraitAvatarSize = $derived(Math.round(Math.min(88, duelLayout.boardWidth * 0.28)));
 	const pickOpen = $derived(pickShow && !underCloud);
 
+	/** Dog share of combined banks (0..1). Both zero → 50/50. */
+	const dogBankShare = $derived.by(() => {
+		const dog = stateDuel.dogTotal;
+		const cat = stateDuel.catTotal;
+		const sum = dog + cat;
+		if (sum <= 0) return 0.5;
+		return dog / sum;
+	});
+	const bankRatioLeft = $derived(
+		duelLayout.dogCenter.x - duelLayout.boardWidth * 0.5,
+	);
+	const bankRatioFullWidth = $derived(
+		duelLayout.catCenter.x +
+			duelLayout.boardWidth * 0.5 -
+			(duelLayout.dogCenter.x - duelLayout.boardWidth * 0.5),
+	);
+	/** Narrow centered strip under the desks (~42% of desk span). */
+	const bankRatioWidth = $derived(bankRatioFullWidth * 0.42);
+	const bankRatioCenteredLeft = $derived(
+		bankRatioLeft + (bankRatioFullWidth - bankRatioWidth) * 0.5,
+	);
+	const bankRatioBottom = $derived(Math.max(52, Math.round(duelLayout.hudReserve * 0.38)));
+
 	// Warm duel pick spines after the board is up (or immediately when pick opens).
 	$effect(() => {
 		if (pickShow) pickSpinesWarmed = true;
@@ -225,6 +248,26 @@
 					duelLayout.boardHeight * 0.5 -
 					portraitAvatarSize * 0.72}px"
 			/>
+		{/if}
+
+		{#if !isPortrait}
+			<div
+				class="bank-ratio"
+				style:left="{bankRatioCenteredLeft}px"
+				style:width="{bankRatioWidth}px"
+				style:bottom="{bankRatioBottom}px"
+				style:--dog-share={dogBankShare}
+				data-test="duel-bank-ratio"
+				role="img"
+				aria-label="Dog bank {Math.round(dogBankShare * 100)} percent, Cat bank {Math.round(
+					(1 - dogBankShare) * 100,
+				)} percent"
+			>
+				<div class="bank-ratio-track">
+					<span class="bank-ratio-dog"></span>
+					<span class="bank-ratio-cat"></span>
+				</div>
+			</div>
 		{/if}
 	</div>
 {/if}
@@ -515,6 +558,46 @@
 		border: 1px solid rgba(255, 220, 140, 0.4);
 		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
 		z-index: 2;
+	}
+
+	.bank-ratio {
+		position: absolute;
+		z-index: 2;
+		pointer-events: none;
+	}
+
+	.bank-ratio-track {
+		display: flex;
+		width: 100%;
+		height: clamp(0.85rem, 1.6vh, 1.15rem);
+		overflow: hidden;
+		border-radius: 999px;
+		border: 1px solid rgba(255, 220, 140, 0.38);
+		background: rgba(12, 8, 20, 0.72);
+		box-shadow:
+			inset 0 1px 0 rgba(255, 240, 200, 0.08),
+			0 4px 12px rgba(0, 0, 0, 0.35);
+	}
+
+	.bank-ratio-dog,
+	.bank-ratio-cat {
+		display: block;
+		height: 100%;
+		transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	.bank-ratio-dog {
+		width: calc(var(--dog-share, 0.5) * 100%);
+		background: linear-gradient(180deg, #5aa7ff 0%, #1d5fd0 55%, #143f96 100%);
+	}
+
+	.bank-ratio-cat {
+		width: calc((1 - var(--dog-share, 0.5)) * 100%);
+		background: linear-gradient(180deg, #ff6b6b 0%, #d22727 55%, #8f1212 100%);
+	}
+
+	.duel-root.popout-s .bank-ratio-track {
+		height: 0.5rem;
 	}
 
 	.duel-modal {

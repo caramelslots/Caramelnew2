@@ -22,10 +22,10 @@
 	} from '../game/revolverDrumLayout';
 
 	const BASE = import.meta.env.BASE_URL;
-	const BARREL_IMG = `${BASE}assets/sprites/revolverDrum/barrel.webp`;
-	const BULLET_1_IMG = `${BASE}assets/sprites/revolverDrum/bullet_1.webp`;
-	const BULLET_2_IMG = `${BASE}assets/sprites/revolverDrum/bullet_2.webp`;
-	const OVERLAY_IMG = `${BASE}assets/sprites/revolverDrum/overlay.webp`;
+	const BARREL_IMG = `${BASE}assets/sprites/fsExtraCounter/barrel.webp`;
+	const BULLET_1_IMG = `${BASE}assets/sprites/fsExtraCounter/bullet_1.webp`;
+	const BULLET_2_IMG = `${BASE}assets/sprites/fsExtraCounter/bullet_2.webp`;
+	const OVERLAY_IMG = `${BASE}assets/sprites/fsExtraCounter/overlay.webp`;
 
 	type Props = {
 		/** Force-show for layout QA. */

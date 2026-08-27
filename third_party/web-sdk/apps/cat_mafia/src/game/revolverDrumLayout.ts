@@ -8,7 +8,7 @@ export const DRUM_MAX = 6;
 export const DRUM_STEP_DEG = 360 / DRUM_MAX;
 
 /**
- * Art metrics from `static/assets/sprites/revolverDrum/barrel.webp` (830²).
+ * Art metrics from `static/assets/sprites/fsExtraCounter/barrel.webp` (830²).
  * Centres from light pocket-rim fits — no extra angle/radial nudges.
  */
 const ART_SIZE = 830;

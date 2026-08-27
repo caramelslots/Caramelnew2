@@ -1,6 +1,8 @@
 <!--
-	Toggles living spine idle for all visible symbols at once (every mode / device).
-	In Duel, both desks animate whenever their reels are stopped (book play is not xstate idle).
+	Toggles living spine idle for visible symbols (every mode / device).
+	In Duel, both desks keep the global gate on while one side spins or
+	celebrates — per-desk freeze during that desk's win spotlight lives in
+	SymbolSpineMain (so the other desk keeps breathing).
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
@@ -16,7 +18,6 @@
 	const canRunLivingIdle = () => {
 		if (
 			stateGame.winSpotlightActive ||
-			stateDuel.winSpotlightSide != null ||
 			stateGame.winOverlayActive ||
 			stateGame.transitionActive ||
 			stateGame.freeSpinIntroActive ||
@@ -26,7 +27,7 @@
 			return false;
 		}
 		// Duel: keep living idle on both desks even while one side spins
-		// (spinning cells aren't on the idle clip anyway). Perf test for phone.
+		// or holds a win spotlight (spinning / win cells aren't on idle anyway).
 		if (stateDuel.active) {
 			return true;
 		}

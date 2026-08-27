@@ -29,7 +29,7 @@ export const BG_IDLE_ANIMATION = 'idle_final_delay2';
 export const BG_VIEW_ZOOM = 0.95;
 
 /**
- * day.webp loader still is framed slightly tighter than the Spine plate.
+ * day.webp loader still (1920×956) is slightly taller than the Spine plate (1920×940).
  * Pixi cover is multiplied by this so the animated street matches the still
  * (without changing the HTML still box).
  * 1 = raw cover; >1 pulls Pixi closer. Keep small — 1.035 overshot (too close).

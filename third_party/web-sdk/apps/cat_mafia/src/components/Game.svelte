@@ -128,13 +128,16 @@
 				sortableChildren
 			>
 				{#if stateDuel.active}
-					<!-- Paint order matches base: bases → reels → gold rails → win pops → paylines → win. -->
+					<!-- Paint order matches base: bases → reels → gold rails →
+					     nameplate → win pops → paylines → win text. -->
 					<DuelPixiBoard side="dog" layer="base" />
 					<DuelPixiBoard side="cat" layer="base" />
 					<DuelPixiBoard side="dog" layer="board" />
 					<DuelPixiBoard side="cat" layer="board" />
 					<DuelPixiBoard side="dog" layer="overlay" />
 					<DuelPixiBoard side="cat" layer="overlay" />
+					<DuelPixiBoard side="dog" layer="nameplate" />
+					<DuelPixiBoard side="cat" layer="nameplate" />
 					<DuelPixiBoard side="dog" layer="idleBounce" />
 					<DuelPixiBoard side="cat" layer="idleBounce" />
 					<DuelPixiBoard side="dog" layer="paylines" />
@@ -162,6 +165,13 @@
 						</MainContainer>
 					</Container>
 
+					<!-- WIN nameplate above the overlay bottom rail (was under it on base). -->
+					<Container zIndex={-0.75}>
+						<MainContainer>
+							<BoardFrame layer="nameplate" />
+						</MainContainer>
+					</Container>
+
 					<Container zIndex={-0.5}>
 						<MainContainer>
 							<BoardIdleBounceLayer />
@@ -175,11 +185,14 @@
 						</MainContainer>
 					</Container>
 
-					<UiCashStacksLayout>
-						{#snippet gameName()}
-							<UiGameName name="Cat Mafia" />
-						{/snippet}
-					</UiCashStacksLayout>
+					<!-- WIN $ text above the nameplate art. -->
+					<Container zIndex={1}>
+						<UiCashStacksLayout>
+							{#snippet gameName()}
+								<UiGameName name="Cat Mafia" />
+							{/snippet}
+						</UiCashStacksLayout>
+					</Container>
 				{/if}
 				<!-- Paw coins under mascot so the hat / hand occlude the fly. -->
 				<PawCoinPixiLayer zIndex={5} />

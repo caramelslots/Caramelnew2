@@ -52,10 +52,9 @@
 		timeScale={stateBetDerived.timeScale()}
 		listener={{
 			complete: () => {
-				if (playing) {
-					landed = true;
-					props.oncomplete?.();
-				}
+				if (landed || props.clip !== 'appear') return;
+				landed = true;
+				props.oncomplete?.();
 			},
 		}}
 	/>

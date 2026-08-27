@@ -1251,9 +1251,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.pawCoinTotal = bookEvent.totalCoinWin;
 		stateGame.pawCoinFlying = false;
 		stateGame.pawCoinPlayId += 1;
+		// Freeze covered cells on the masked board (static) — do not leave them in
+		// postWinStatic/win FX under the coin overlay (that burned rays through coins
+		// after postWinStatic was lifted above the rails for H3).
 		for (const cell of pawCoinCells) {
 			const symbol = stateGame.board[cell.reel]?.reelState.symbols[cell.row];
-			if (symbol) symbol.symbolState = 'postWinStatic';
+			if (symbol) symbol.symbolState = 'static';
 		}
 		// Hat out to catch — coins fly into the brim, then hat goes back on.
 		// Mascot clips always play at 1× (not turbo-scaled); waits match wall-clock clip length.

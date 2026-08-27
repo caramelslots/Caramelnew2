@@ -22,8 +22,8 @@ export default {
 	outlineReel: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/outlineReel/skeleton.atlas'),
-			skeleton: assetUrl('assets/spines/outlineReel/skeleton.json'),
+			atlas: assetUrl('assets/spines/bonusReel/skeleton.atlas'),
+			skeleton: assetUrl('assets/spines/bonusReel/skeleton.json'),
 		},
 	},
 	// Designer-handoff `designer_assets/Symbols/export` — combined skeleton
@@ -35,64 +35,64 @@ export default {
 	H1: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/H1/H1.atlas'),
-			skeleton: assetUrl('assets/spines/H1/H1.json'),
+			atlas: assetUrl('assets/spines/symbols/H1/H1.atlas'),
+			skeleton: assetUrl('assets/spines/symbols/H1/H1.json'),
 			scale: 1,
 		},
 	},
 	H2: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/H2/H2.atlas'),
-			skeleton: assetUrl('assets/spines/H2/H2.json'),
+			atlas: assetUrl('assets/spines/symbols/H2/H2.atlas'),
+			skeleton: assetUrl('assets/spines/symbols/H2/H2.json'),
 			scale: 1,
 		},
 	},
 	H3: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/H3/H3.atlas'),
-			skeleton: assetUrl('assets/spines/H3/H3.json'),
+			atlas: assetUrl('assets/spines/symbols/H3/H3.atlas'),
+			skeleton: assetUrl('assets/spines/symbols/H3/H3.json'),
 			scale: 1,
 		},
 	},
 	H4: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/H4/H4.atlas'),
-			skeleton: assetUrl('assets/spines/H4/H4.json'),
+			atlas: assetUrl('assets/spines/symbols/H4/H4.atlas'),
+			skeleton: assetUrl('assets/spines/symbols/H4/H4.json'),
 			scale: 1,
 		},
 	},
 	L1: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/L1/L1.atlas'),
-			skeleton: assetUrl('assets/spines/L1/L1.json'),
+			atlas: assetUrl('assets/spines/symbols/L1/L1.atlas'),
+			skeleton: assetUrl('assets/spines/symbols/L1/L1.json'),
 			scale: 1,
 		},
 	},
 	L2: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/L2/L2.atlas'),
-			skeleton: assetUrl('assets/spines/L2/L2.json'),
+			atlas: assetUrl('assets/spines/symbols/L2/L2.atlas'),
+			skeleton: assetUrl('assets/spines/symbols/L2/L2.json'),
 			scale: 1,
 		},
 	},
 	L3: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/L3/L3.atlas'),
-			skeleton: assetUrl('assets/spines/L3/L3.json'),
+			atlas: assetUrl('assets/spines/symbols/L3/L3.atlas'),
+			skeleton: assetUrl('assets/spines/symbols/L3/L3.json'),
 			scale: 1,
 		},
 	},
 	L4: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/L4/L4.atlas'),
-			skeleton: assetUrl('assets/spines/L4/L4.json'),
+			atlas: assetUrl('assets/spines/symbols/L4/L4.atlas'),
+			skeleton: assetUrl('assets/spines/symbols/L4/L4.json'),
 			scale: 1,
 		},
 	},
@@ -130,8 +130,8 @@ export default {
 	BT: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/cartridge/cartridge.atlas'),
-			skeleton: assetUrl('assets/spines/cartridge/cartridge.json'),
+			atlas: assetUrl('assets/spines/symbols/cartridge/cartridge.atlas'),
+			skeleton: assetUrl('assets/spines/symbols/cartridge/cartridge.json'),
 			scale: 1,
 		},
 	},
@@ -156,47 +156,48 @@ export default {
 	// WebPs; W/B are cut from the packed symbolsNew atlas.
 	H1Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/H1.webp'),
+		src: assetUrl('assets/sprites/symbols/H1.webp'),
 	},
 	H2Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/H2.webp'),
+		src: assetUrl('assets/sprites/symbols/H2.webp'),
 	},
 	H3Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/H3.webp'),
+		src: assetUrl('assets/sprites/symbols/H3.webp'),
 	},
 	H4Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/H4.webp'),
+		src: assetUrl('assets/sprites/symbols/H4.webp'),
 	},
 	L1Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/L1.webp'),
+		src: assetUrl('assets/sprites/symbols/L1.webp'),
 	},
 	L2Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/L2.webp'),
+		src: assetUrl('assets/sprites/symbols/L2.webp'),
 	},
 	L3Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/L3.webp'),
+		src: assetUrl('assets/sprites/symbols/L3.webp'),
 	},
 	L4Img: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/L4.webp'),
+		src: assetUrl('assets/sprites/symbols/L4.webp'),
 	},
 	BImg: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Special_1.webp'),
+		// Designer autoplay bonus icon (padded 196²).
+		src: assetUrl('assets/sprites/symbols/Bonus.webp'),
 	},
 	BTImg: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Cartridge.webp'),
+		src: assetUrl('assets/sprites/symbols/Cartridge.webp'),
 	},
 	WImg: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbolsNew/Special_2.webp'),
+		src: assetUrl('assets/sprites/symbols/Special_2.webp'),
 	},
 	babloFont: {
 		type: 'font',
@@ -261,8 +262,8 @@ export default {
 	fsPopup: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/fsPopup/fs_popup.atlas'),
-			skeleton: assetUrl('assets/spines/fsPopup/fs_popup.json'),
+			atlas: assetUrl('assets/spines/fsEnd/fs_popup.atlas'),
+			skeleton: assetUrl('assets/spines/fsEnd/fs_popup.json'),
 			scale: 2,
 		},
 	},
@@ -324,8 +325,8 @@ export default {
 	coinsPaw: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/coins/coins.atlas'),
-			skeleton: assetUrl('assets/spines/coins/coins.json'),
+			atlas: assetUrl('assets/spines/symbols/coins/coins.atlas'),
+			skeleton: assetUrl('assets/spines/symbols/coins/coins.json'),
 			scale: 1,
 		},
 	},
@@ -379,18 +380,18 @@ export default {
 	},
 	revolverBarrel: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/revolverDrum/barrel.webp'),
+		src: assetUrl('assets/sprites/fsExtraCounter/barrel.webp'),
 	},
 	revolverBullet1: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/revolverDrum/bullet_1.webp'),
+		src: assetUrl('assets/sprites/fsExtraCounter/bullet_1.webp'),
 	},
 	revolverBullet2: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/revolverDrum/bullet_2.webp'),
+		src: assetUrl('assets/sprites/fsExtraCounter/bullet_2.webp'),
 	},
 	revolverOverlay: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/revolverDrum/overlay.webp'),
+		src: assetUrl('assets/sprites/fsExtraCounter/overlay.webp'),
 	},
 } as const;

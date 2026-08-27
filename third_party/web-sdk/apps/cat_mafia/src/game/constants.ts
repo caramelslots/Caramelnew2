@@ -4,7 +4,7 @@ import type { RawSymbol, SymbolState } from './types';
 
 export const SYMBOL_SIZE = 100;
 
-/** Native symbol sprite edge length (symbolsNew/*.webp). */
+/** Native symbol sprite edge length (symbols/*.webp). */
 export const SYMBOL_TEXTURE_NATIVE_PX = 196;
 
 /** Cap mainLayout.scale so reel symbols are not upscaled past texture density. */
@@ -608,7 +608,7 @@ export const zIndexes = {
 };
 
 /**
- * Fixed on-screen desk slot (legacy `desk_day_base.webp` / `DESK_PARCHMENT`).
+ * Fixed on-screen desk slot (`DESK_PARCHMENT`).
  * Any board art — Spine, sprite, next redesign — is fitted into this box.
  * Reels / UI stay tied to `boardLayout`; only the desk chrome lives in the slot.
  *
@@ -1059,7 +1059,7 @@ const revolverSizeRatios = { width: REVOLVER_SYMBOL_SIZE, height: REVOLVER_SYMBO
 const cartridgeSizeRatios = { width: CARTRIDGE_SYMBOL_SIZE, height: CARTRIDGE_SYMBOL_SIZE };
 
 type RenderSizeRatios = { width: number; height: number };
-type RenderOpts = { offsetY?: number; winAnimationName?: string };
+type RenderOpts = { offsetY?: number; winAnimationName?: string; loop?: boolean };
 
 /** Designer render clips — flat names idle / stop / win (or activation). */
 const makeRenderStatic = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) => ({
@@ -1076,15 +1076,21 @@ const makeRenderLand = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: R
 	sizeRatios,
 	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
 });
-/** Win / activation — same 1× loop pace as living `idle` (see SymbolSpineMain). */
+/**
+ * One-shot celebrate for `win` — `loop: false` so Spine `complete` resolves
+ * boardWithAnimateSymbols. Spotlight hold uses `makeRenderPostWin` (looping).
+ */
 const makeRenderWin = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) => ({
 	type: 'spine' as const,
 	assetKey,
 	animationName: opts?.winAnimationName ?? 'win',
 	sizeRatios,
-	loop: true as const,
+	loop: opts?.loop ?? false,
 	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
 });
+/** Looping celebrate for `postWinStatic` during payline spotlight hold. */
+const makeRenderPostWin = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) =>
+	makeRenderWin(assetKey, sizeRatios, { ...opts, loop: true });
 const makeRenderSpinSprite = (imgKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) => ({
 	type: 'sprite' as const,
 	assetKey: imgKey,
@@ -1099,18 +1105,22 @@ const diamondOpts = { winAnimationName: 'activation' };
 const h1Static = makeRenderStatic('H1', diamondSizeRatios);
 const h1Land = makeRenderLand('H1', diamondSizeRatios);
 const h1Win = makeRenderWin('H1', diamondSizeRatios, diamondOpts);
+const h1PostWin = makeRenderPostWin('H1', diamondSizeRatios, diamondOpts);
 
 const h2Static = makeRenderStatic('H2', revolverSizeRatios);
 const h2Land = makeRenderLand('H2', revolverSizeRatios);
 const h2Win = makeRenderWin('H2', revolverSizeRatios);
+const h2PostWin = makeRenderPostWin('H2', revolverSizeRatios);
 
 const h3Static = makeRenderStatic('H3', lighterSizeRatios, lighterOpts);
 const h3Land = makeRenderLand('H3', lighterSizeRatios, lighterOpts);
 const h3Win = makeRenderWin('H3', lighterSizeRatios, lighterOpts);
+const h3PostWin = makeRenderPostWin('H3', lighterSizeRatios, lighterOpts);
 
 const h4Static = makeRenderStatic('H4', telephoneSizeRatios);
 const h4Land = makeRenderLand('H4', telephoneSizeRatios);
 const h4Win = makeRenderWin('H4', telephoneSizeRatios);
+const h4PostWin = makeRenderPostWin('H4', telephoneSizeRatios);
 
 const l1Static = makeRenderStatic('L1', letterSizeRatios);
 const l2Static = makeRenderStatic('L2', letterSizeRatios);
@@ -1124,6 +1134,10 @@ const l1Win = makeRenderWin('L1', letterSizeRatios);
 const l2Win = makeRenderWin('L2', letterSizeRatios);
 const l3Win = makeRenderWin('L3', letterSizeRatios);
 const l4Win = makeRenderWin('L4', letterSizeRatios);
+const l1PostWin = makeRenderPostWin('L1', letterSizeRatios);
+const l2PostWin = makeRenderPostWin('L2', letterSizeRatios);
+const l3PostWin = makeRenderPostWin('L3', letterSizeRatios);
+const l4PostWin = makeRenderPostWin('L4', letterSizeRatios);
 
 // Spin WebPs already contain only the glyph/prop in a 196² canvas — use the
 // on-cell fill directly. Inflated spine sizeRatios (skeleton ≫ art) would make
@@ -1139,7 +1153,8 @@ const l2Spin = makeRenderSpinSprite('L2Img', letterSpinSizeRatios);
 const l3Spin = makeRenderSpinSprite('L3Img', letterSpinSizeRatios);
 const l4Spin = makeRenderSpinSprite('L4Img', letterSpinSizeRatios);
 const wSpin = makeRenderSpinSprite('WImg', propSpinSizeRatios);
-const bSpin = makeRenderSpinSprite('BImg', propSpinSizeRatios);
+// Bonus — padded 196² symbol sprite (Bonus.webp / BImg).
+const bSprite = makeRenderSpinSprite('BImg', propSpinSizeRatios);
 /** Cartridge has no `idle` — sprite for rest/spin; spine `stop` on land. */
 const btSprite = makeRenderSpinSprite('BTImg', propSpinSizeRatios);
 const btLand = makeRenderLand('BT', cartridgeSizeRatios);
@@ -1368,24 +1383,9 @@ export const MYSTERY_REVEAL_SYNC_ANIMATION = 'Mystery/explosion';
  * pointed at a different animation later without touching the sync path). */
 export const MYSTERY_REVEAL_ANIMATION = 'Mystery/explosion';
 
-// Bonus rest pose — the kitty's paw lives in a *separate* atlas region
-// from the body in the spine (`Paw` slot vs `Special_1` slot), positioned
-// via the `Paw` bone. The legacy static PNG (`Special_1.png`) bakes both
-// together at slightly different coordinates, so swapping sprite ⇄ spine
-// caused the paw to "jump" / disappear at every state transition. We
-// instead render the same spine in every state and play a synthesised
-// zero-movement `Special_1/idle` clip for static/spin/postWinStatic, so
-// the paw is always pinned at the spine's rest position.
-const bStatic = {
-	type: 'spine' as const,
-	assetKey: 'B' as const,
-	animationName: 'Special_1/idle',
-	sizeRatios: { width: 1, height: 1 },
-};
-
 /**
  * Paw-coin board symbols — rendered by SymbolCoinPaw.svelte from the LIVE
- * coins spine (`assets/spines/coins/coins.*`, skins coin_bronze/silver/gold),
+ * coins spine (`assets/spines/symbols/coins/coins.*`, skins coin_bronze/silver/gold),
  * same 60fps source as the HTML paw overlay. `clip: 'loop'` is the frozen
  * rest face (main_coin_slow frame 0 — no constant motion on the board),
  * `clip: 'appear'` is the one-shot pop-in flip with flash (appear_flash)
@@ -1427,7 +1427,6 @@ const wStatic = {
 	sizeRatios: bounceSizeRatios,
 };
 const wWinSizeRatios = { width: SPECIAL_SYMBOL_SIZE, height: SPECIAL_SYMBOL_SIZE };
-const bWinSizeRatios = { width: SPECIAL_SYMBOL_SIZE, height: SPECIAL_SYMBOL_SIZE };
 const mRevealSizeRatios = { width: M_SIZE, height: M_SIZE };
 
 // Win celebrations use the dedicated `*Win` skeletons so the win track's
@@ -1438,6 +1437,10 @@ const wWin = {
 	assetKey: 'WWin' as const,
 	animationName: 'Special_2/win',
 	sizeRatios: wWinSizeRatios,
+	loop: false as const,
+};
+const wPostWin = {
+	...wWin,
 	loop: true as const,
 };
 const wBounce = {
@@ -1446,53 +1449,36 @@ const wBounce = {
 	animationName: 'Special_2/bounce',
 	sizeRatios: bounceSizeRatios,
 };
-// Bonus landing plays the BONUS-letter reveal (`Special_1/win` on the
-// text skeleton) when the kitty settles on the reel.
-const bBounce = {
-	type: 'spine' as const,
-	assetKey: 'BWin' as const,
-	animationName: 'Special_1/win',
-	sizeRatios: bounceSizeRatios,
-};
-// Scatter / bonus-collect highlight plays the paw `wave` on the slim
-// body skeleton (no text slots).
-const bWin = {
-	type: 'spine' as const,
-	assetKey: 'B' as const,
-	animationName: 'Special_1/wave',
-	sizeRatios: bWinSizeRatios,
-	loop: true as const,
-};
 
 export const SYMBOL_INFO_MAP = {
 	// H1 (diamond): idle / stop / activation.
 	// H2 (revolver) / H3 (lighter) / H4 (telephone) / L1..L4 (A/K/Q/J): idle / stop / win.
-	// postWinStatic keeps the looping win clip (same 1× pace as living idle) for the
-	// spotlight hold — not a frozen idle frame.
+	// `win` is one-shot (awaits complete); `postWinStatic` loops the same clip
+	// for the spotlight hold (remount via loop flag in ReelSymbol key).
 	H1: {
 		win: h1Win,
-		postWinStatic: h1Win,
+		postWinStatic: h1PostWin,
 		static: h1Static,
 		spin: h1Spin,
 		land: h1Land,
 	},
 	H2: {
 		win: h2Win,
-		postWinStatic: h2Win,
+		postWinStatic: h2PostWin,
 		static: h2Static,
 		spin: h2Spin,
 		land: h2Land,
 	},
 	H3: {
 		win: h3Win,
-		postWinStatic: h3Win,
+		postWinStatic: h3PostWin,
 		static: h3Static,
 		spin: h3Spin,
 		land: h3Land,
 	},
 	H4: {
 		win: h4Win,
-		postWinStatic: h4Win,
+		postWinStatic: h4PostWin,
 		static: h4Static,
 		spin: h4Spin,
 		land: h4Land,
@@ -1500,35 +1486,35 @@ export const SYMBOL_INFO_MAP = {
 	// L1–L4 = A / K / Q / J letter spines: idle rest, stop on land, win celebrate.
 	L1: {
 		win: l1Win,
-		postWinStatic: l1Win,
+		postWinStatic: l1PostWin,
 		static: l1Static,
 		spin: l1Spin,
 		land: l1Land,
 	},
 	L2: {
 		win: l2Win,
-		postWinStatic: l2Win,
+		postWinStatic: l2PostWin,
 		static: l2Static,
 		spin: l2Spin,
 		land: l2Land,
 	},
 	L3: {
 		win: l3Win,
-		postWinStatic: l3Win,
+		postWinStatic: l3PostWin,
 		static: l3Static,
 		spin: l3Spin,
 		land: l3Land,
 	},
 	L4: {
 		win: l4Win,
-		postWinStatic: l4Win,
+		postWinStatic: l4PostWin,
 		static: l4Static,
 		spin: l4Spin,
 		land: l4Land,
 	},
 	// Wild — WebP while scrolling (same as H/L); land/static stay on spine.
 	W: {
-		postWinStatic: wWin,
+		postWinStatic: wPostWin,
 		static: wStatic,
 		spin: wSpin,
 		win: wWin,
@@ -1536,7 +1522,7 @@ export const SYMBOL_INFO_MAP = {
 	},
 	// Super Wild — alias Wild art for Stage B (badge via Symbol.svelte multiplier).
 	SW: {
-		postWinStatic: wWin,
+		postWinStatic: wPostWin,
 		static: wStatic,
 		spin: wSpin,
 		win: wWin,
@@ -1574,13 +1560,14 @@ export const SYMBOL_INFO_MAP = {
 		win: btSprite,
 		land: btLand,
 	},
-	// Bonus — WebP while scrolling; land/static stay on spine (paw bone aligned).
+	// Bonus — Bonus.webp on all board states (BImg).
+	// Spine Special_1 kept in assets for DEV symbol-anim preview only.
 	B: {
-		postWinStatic: bWin,
-		static: bStatic,
-		spin: bSpin,
-		win: bWin,
-		land: bBounce,
+		postWinStatic: bSprite,
+		static: bSprite,
+		spin: bSprite,
+		win: bSprite,
+		land: bSprite,
 	},
 	// Mystery — same idle spine for rest/spin; land/reveal stay on Mystery.json.
 	M: {

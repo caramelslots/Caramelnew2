@@ -2,7 +2,7 @@
 """
 Extract the per-symbol static sprites out of the packed Spine atlas
 (`spines/symbolsNew/symbols.webp` + `symbols.atlas`) and write them as
-standalone WebP files into `sprites/symbolsNew/`.
+standalone WebP files into `sprites/symbols/`.
 
 These static sprites are the resting-state previews used by `assets.ts`
 (`WImg`, `BImg`, ...) and the paytable overlay (`gameInfoSymbols.ts`).
@@ -19,14 +19,14 @@ from PIL import Image
 SCRIPT_DIR = Path(__file__).resolve().parent
 APP_ROOT = SCRIPT_DIR.parent
 ATLAS_DIR = APP_ROOT / "static/assets/spines/symbolsNew"
-SPRITE_DIR = APP_ROOT / "static/assets/sprites/symbolsNew"
+SPRITE_DIR = APP_ROOT / "static/assets/sprites/symbols"
 ATLAS_FILE = ATLAS_DIR / "symbols.atlas"
 
 # Atlas region name -> output sprite filename (without extension). Only the
 # regions listed here become standalone sprites; the rest live purely inside
 # the Spine skeletons.
 REGION_TO_SPRITE = {
-    "Special_1": "Special_1",
+    "Special_1": "Bonus",
     "Special_2": "Special_2",
 }
 

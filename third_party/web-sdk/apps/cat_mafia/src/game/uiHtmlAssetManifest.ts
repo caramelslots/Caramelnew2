@@ -52,6 +52,8 @@ export const SETTINGS_ASSETS = {
 	sliderEmpty: uiHtmlAssetUrl('settings/slider_empty.webp'),
 	sliderFull: uiHtmlAssetUrl('settings/slider_full.webp'),
 	sliderKnob: uiHtmlAssetUrl('settings/slider_knob.webp'),
+	frameTurbo: uiHtmlAssetUrl('settings/frame_turbo.webp'),
+	frameVolume: uiHtmlAssetUrl('settings/frame_volume.webp'),
 	musicOn: uiHtmlAssetUrl('settings/music_on.webp'),
 	musicOff: uiHtmlAssetUrl('settings/music_off.webp'),
 } as const;
@@ -111,6 +113,8 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	SETTINGS_ASSETS.sliderEmpty,
 	SETTINGS_ASSETS.sliderFull,
 	SETTINGS_ASSETS.sliderKnob,
+	SETTINGS_ASSETS.frameTurbo,
+	SETTINGS_ASSETS.frameVolume,
 	SETTINGS_ASSETS.musicOn,
 	SETTINGS_ASSETS.musicOff,
 	...SETTINGS_TURBO_URLS,

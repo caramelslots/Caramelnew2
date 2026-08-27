@@ -29,7 +29,7 @@
 		timeScale={props.timeScale}
 		listener={{
 			complete: () => {
-				if (playing) landed = true;
+				if (!landed) landed = true;
 			},
 		}}
 	/>

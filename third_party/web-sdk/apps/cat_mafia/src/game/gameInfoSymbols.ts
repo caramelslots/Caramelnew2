@@ -4,7 +4,7 @@ export type GameInfoSymbolId = 'H1' | 'H2' | 'H3' | 'H4' | 'L1' | 'L2' | 'L3' | 
 export type GameInfoImageSymbolId = Exclude<GameInfoSymbolId, 'M'>;
 
 const symbolAssetUrl = (file: string) =>
-	`${import.meta.env.BASE_URL}assets/sprites/symbolsNew/${file}`;
+	`${import.meta.env.BASE_URL}assets/sprites/symbols/${file}`;
 
 export const GAME_INFO_SYMBOL_IMAGES: Record<GameInfoImageSymbolId, string> = {
 	H1: symbolAssetUrl('H1.webp'),
@@ -16,7 +16,7 @@ export const GAME_INFO_SYMBOL_IMAGES: Record<GameInfoImageSymbolId, string> = {
 	L3: symbolAssetUrl('L3.webp'),
 	L4: symbolAssetUrl('L4.webp'),
 	W: symbolAssetUrl('Special_2.webp'),
-	B: symbolAssetUrl('Special_1.webp'),
+	B: symbolAssetUrl('Bonus.webp'),
 };
 
 export const GAME_INFO_SPECIAL_SYMBOL_ENTRIES = [
