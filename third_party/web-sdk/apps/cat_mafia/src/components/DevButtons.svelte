@@ -216,6 +216,39 @@
 		bulletFlyBusy = false;
 	};
 
+	/** Remember basegame/freegame when toggling FS board chrome preview. */
+	let fsChromePrevGameType: GameType | null = null;
+
+	const toggleFsBoardChromePreview = () => {
+		const next = !devPreview.forceShowFsBoardChrome;
+		devPreview.forceShowFsBoardChrome = next;
+		devPreview.symbolAnim = null;
+
+		if (next) {
+			fsChromePrevGameType = stateGame.gameType;
+			stateGame.gameType = 'freegame';
+			devPreview.forceShowDrum = true;
+			eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
+			eventEmitter.broadcast({
+				type: 'freeSpinCounterUpdate',
+				current: 3,
+				total: 10,
+			});
+			stateGame.drumSpentChambers = {};
+			stateGame.drumCount = 0;
+			stateGame.drumBulletOrientDeg = {};
+			stateGame.drumSeatAnimKey = {};
+			fillDrumForPreview(3);
+		} else {
+			eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
+			if (fsChromePrevGameType) {
+				stateGame.gameType = fsChromePrevGameType;
+				fsChromePrevGameType = null;
+			}
+			resetBulletFlyPreview();
+		}
+	};
+
 	const previewDrumShoot = async () => {
 		if (bulletFlyBusy) return;
 		bulletFlyBusy = true;
@@ -1269,6 +1302,21 @@
 						}}
 					>
 						Pulse ×3
+					</button>
+				</div>
+			</section>
+
+			<section>
+				<h4>FS Board Chrome</h4>
+				<p class="subhint">Desktop: spinboard (left) + barrel rim/drum (right) on the board.</p>
+				<div class="grid">
+					<button
+						type="button"
+						class:active={devPreview.forceShowFsBoardChrome}
+						title="Toggle free-spin side plaques on the board (desktop)"
+						onclick={toggleFsBoardChromePreview}
+					>
+						{devPreview.forceShowFsBoardChrome ? 'Hide FS Board' : 'Show FS Board'}
 					</button>
 				</div>
 			</section>

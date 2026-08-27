@@ -1162,7 +1162,8 @@ const btLand = makeRenderLand('BT', cartridgeSizeRatios);
 /**
  * Затемнение невыигрышных символов во время win-анимации.
  * Пока проигрываются paylines, все символы вне `win`/`postWinStatic`
- * получают пониженный alpha. Флаг `winSpotlightActive` также расширяет BoardMask.
+ * получают пониженный alpha (H3/H4 — tint, не alpha: additive glow иначе
+ * просвечивает доску). Флаг `winSpotlightActive` также расширяет BoardMask.
  */
 export const DIM_NON_WINNING = {
 	alpha: 0.35,

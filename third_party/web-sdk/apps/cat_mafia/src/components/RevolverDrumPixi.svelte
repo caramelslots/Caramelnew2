@@ -48,16 +48,21 @@
 		return context.stateGame.gameType === 'freegame';
 	});
 
-	const isDesktop = $derived(context.stateLayoutDerived.layoutType() === 'desktop');
-	const isPortrait = $derived(context.stateLayoutDerived.layoutType() === 'portrait');
-	const showOnLayout = $derived(isDesktop || isPortrait);
+	const layoutType = $derived(context.stateLayoutDerived.layoutType());
+	const isPortrait = $derived(layoutType === 'portrait');
+	/**
+	 * Side rim on Desktop / Laptop / Popout / tablet. Phone portrait only uses
+	 * the Buy Bonus drum slot. Popouts are landscape + short side ≤480 — not phones.
+	 */
+	const useSideChrome = $derived(!isPortrait);
+	const showOnLayout = $derived(true);
 
 	const box = $derived(
 		getDrumBoxScreenPos({
 			mainLayout: context.stateLayoutDerived.mainLayout(),
-			layoutType: context.stateLayoutDerived.layoutType(),
+			layoutType,
 			board: context.stateGameDerived.boardLayout(),
-			isDesktop,
+			isDesktop: useSideChrome,
 			layoutDerived: context.stateLayoutDerived,
 		}),
 	);
@@ -168,5 +173,17 @@
 			{/each}
 		</Container>
 		<Sprite key="revolverOverlay" width={box.size} height={box.size} anchor={0.5} />
+		{#if useSideChrome && box.rim}
+			{@const rim = box.rim}
+			<!-- Gold frame above the cylinder so the barrel sits cleanly in the hole. -->
+			<Sprite
+				key="revolverBarrelRim"
+				x={rim.left + rim.width * 0.5 - box.centerX}
+				y={rim.top + rim.height * 0.5 - box.centerY}
+				width={rim.width}
+				height={rim.height}
+				anchor={0.5}
+			/>
+		{/if}
 	</Container>
 {/if}

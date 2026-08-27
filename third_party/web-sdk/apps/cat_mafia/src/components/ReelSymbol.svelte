@@ -132,6 +132,16 @@
 	);
 	const dimAlphaTween = new Tween(1);
 
+	/** H3/H4 idle spines use additive glow slots — container alpha makes them
+	 *  see-through over the board. Dim via tint multiply instead (keep alpha 1). */
+	const dimViaTint = $derived(
+		props.reelSymbol.rawSymbol.name === 'H3' || props.reelSymbol.rawSymbol.name === 'H4',
+	);
+	const dimTintFromFactor = (factor: number) => {
+		const c = Math.max(0, Math.min(255, Math.round(factor * 255)));
+		return (c << 16) | (c << 8) | c;
+	};
+
 	const wrapYOffset = $derived(
 		(applyWinPresentation ? winYOffset.current : 0) +
 			(applyIdleBouncePresentation ? idleYOffset.current : 0),
@@ -311,7 +321,10 @@
 		spinActive={maskRunwayActive}
 		scaleX={props.reelSymbol.landScaleX() * wrapScale}
 		scaleY={props.reelSymbol.landScaleY() * wrapScale}
-		alpha={isSpinningSymbol ? 1 : dimAlphaTween.current}
+		alpha={dimViaTint || isSpinningSymbol ? 1 : dimAlphaTween.current}
+		tint={dimViaTint && !isSpinningSymbol && dimAlphaTween.current < 1
+			? dimTintFromFactor(dimAlphaTween.current)
+			: 0xffffff}
 	>
 		<!-- Sprites: key by asset so H1Img→L3Img swaps cleanly (cheap remount).
 		     Paw coins: key by skin+clip so land(appear) → static(loop) remounts

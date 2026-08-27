@@ -200,7 +200,10 @@
 				<MascotPixi zIndex={6} />
 				<MascotPixi variant="duelDog" zIndex={6} />
 				<!-- Under Transition (100) + FS outro / Win coins (10); above board. -->
-				<RevolverDrumPixi zIndex={8} forceShow={devPreview.forceShowDrum} />
+				<RevolverDrumPixi
+					zIndex={8}
+					forceShow={devPreview.forceShowDrum || devPreview.forceShowFsBoardChrome}
+				/>
 				<!-- Keep Win mounted during Duel so Big Win can play on Cat victory. -->
 				<Win />
 				<FreeSpinCounter />

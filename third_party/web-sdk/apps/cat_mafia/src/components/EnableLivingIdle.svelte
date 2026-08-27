@@ -1,8 +1,9 @@
 <!--
 	Toggles living spine idle for visible symbols (every mode / device).
-	In Duel, both desks keep the global gate on while one side spins or
-	celebrates — per-desk freeze during that desk's win spotlight lives in
-	SymbolSpineMain (so the other desk keeps breathing).
+	Desktop duel: both desks keep the global gate on while one side celebrates —
+	per-desk freeze lives in SymbolSpineMain (other desk keeps breathing).
+	Phone: freeze living idle on BOTH desks for the whole win spotlight hold
+	(perf — two boards of spine idle during lines is too heavy).
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
@@ -12,12 +13,16 @@
 	import { getContext } from '../game/context';
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import { stateGame, stateGameDerived } from '../game/stateGame.svelte';
+	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
 
 	const context = getContext();
 
 	const canRunLivingIdle = () => {
+		const phone = isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType());
 		if (
 			stateGame.winSpotlightActive ||
+			// Phone duel: any desk celebrating → freeze idle everywhere.
+			(phone && stateDuel.winSpotlightSide != null) ||
 			stateGame.winOverlayActive ||
 			stateGame.transitionActive ||
 			stateGame.freeSpinIntroActive ||
@@ -26,8 +31,8 @@
 		) {
 			return false;
 		}
-		// Duel: keep living idle on both desks even while one side spins
-		// or holds a win spotlight (spinning / win cells aren't on idle anyway).
+		// Duel (desktop): keep living idle on both desks even while one side
+		// spins / holds spotlight — SymbolSpineMain freezes only that desk.
 		if (stateDuel.active) {
 			return true;
 		}

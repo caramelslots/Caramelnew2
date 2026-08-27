@@ -1,4 +1,9 @@
-import { BOARD_LAYOUT_OFFSETS, PORTRAIT_UI_LAYOUT } from './constants';
+import {
+	BOARD_LAYOUT_OFFSETS,
+	BOARD_LAYOUT_SCALE,
+	BOARD_SIZES,
+	PORTRAIT_UI_LAYOUT,
+} from './constants';
 import { portraitBuyPanelCanvasTop } from './portraitHudLayout';
 import type { createLayout } from 'utils-layout';
 
@@ -27,11 +32,63 @@ export const CHAMBER_POS_FRAC: ReadonlyArray<{ x: number; y: number }> = [
 	{ x: 194.49 / ART_SIZE, y: 288.77 / ART_SIZE },
 ];
 
-const DESKTOP_DRUM_SIZE = 104;
+/** Reference hole size on PC desktop (screen px at mainLayout.scale ≈ 1). */
+const DESKTOP_DRUM_SIZE = 96;
 const MOBILE_DRUM_SIZE = 84;
+
+/**
+ * Drum hole as a fraction of on-screen board width — locks PC proportions so
+ * Popout L/S scale the rim+barrel with the board instead of a fixed px size.
+ */
+const DRUM_HOLE_FRAC_OF_BOARD_WIDTH =
+	DESKTOP_DRUM_SIZE / (BOARD_SIZES.width * BOARD_LAYOUT_SCALE.desktop);
+
+/**
+ * Desktop gold rim art (`barrel_rim.webp` 484×418) — left mounts + circular hole.
+ * Barrel is centred on the hole and sized 1:1 to the inner opening.
+ */
+const RIM_ART_W = 484;
+const RIM_ART_H = 418;
+/** Inner hole diameter in art px (circle fit on opaque ring inner edge). */
+const RIM_INNER_DIAMETER = 344;
+const RIM_CIRCLE_CX = 274.1;
+const RIM_CIRCLE_CY = 208.6;
+/** 1 = barrel fills the rim hole exactly (rim drawn above as the frame). */
+const DRUM_IN_RIM_SCALE = 1;
+/**
+ * Mount inset as a fraction of on-screen board width (PC-tuned −18px @ ~610px board).
+ * More negative = further to the right of the board edge.
+ */
+const RIM_MOUNT_OVERLAP_FRAC = 20 / (BOARD_SIZES.width * BOARD_LAYOUT_SCALE.desktop);
+/**
+ * Vertical centre of the drum/rim as a fraction of board height from the top.
+ * Lower = higher on the board (spinboard uses its own frac in FreeSpinCounter).
+ */
+const DESKTOP_CHROME_CENTER_Y_FRAC = 0.12;
 
 /** Chamber hole / bullet size in the desktop drum box. */
 export const CHAMBER_HOLE_AT_DESKTOP = (ART_HOLE_DIAMETER / ART_SIZE) * DESKTOP_DRUM_SIZE;
+
+/** Side-chrome drum hole in screen px — scales with board on Desktop / Popout / Laptop. */
+export const getSideChromeDrumHoleSize = (args: {
+	board: { visualWidth: number };
+	mainLayout: { scale: number };
+}) => Math.max(28, args.board.visualWidth * args.mainLayout.scale * DRUM_HOLE_FRAC_OF_BOARD_WIDTH);
+
+/** Rim sprite size so the inner hole matches `holeSize`. */
+export const getDrumRimSize = (holeSize: number) => {
+	const scale = holeSize / RIM_INNER_DIAMETER;
+	return { width: RIM_ART_W * scale, height: RIM_ART_H * scale, scale };
+};
+
+/** Circle (drum) centre inside the rim sprite, local top-left coords. */
+export const getDrumRimCircleLocal = (rim: { width: number; height: number; scale: number }) => ({
+	x: RIM_CIRCLE_CX * rim.scale,
+	y: RIM_CIRCLE_CY * rim.scale,
+});
+
+/** Barrel sprite size seated inside the rim hole. */
+export const getDrumSizeInRim = (holeSize: number) => holeSize * DRUM_IN_RIM_SCALE;
 
 /**
  * CW cylinder rotation: after each load, spin so the next empty sits at top.
@@ -45,8 +102,7 @@ export const getDrumRotationDeg = (filledCount: number) =>
  * Positive `rotationDeg` is CW (CSS); shoot advances by decreasing it (CCW).
  */
 export const getChamberAtFirePosition = (rotationDeg: number) => {
-	const steps =
-		(((Math.round(rotationDeg / DRUM_STEP_DEG) % DRUM_MAX) + DRUM_MAX) % DRUM_MAX);
+	const steps = ((Math.round(rotationDeg / DRUM_STEP_DEG) % DRUM_MAX) + DRUM_MAX) % DRUM_MAX;
 	return (DRUM_MAX - steps) % DRUM_MAX;
 };
 
@@ -161,10 +217,12 @@ export const getDrumBoxScreenPos = (args: {
 	layoutType: keyof typeof BOARD_LAYOUT_OFFSETS | string;
 	board: { visualWidth: number; visualHeight: number; scale: number };
 	isDesktop: boolean;
-	/** Required for portrait — drum sits on the Buy Bonus button. */
+	/** Required for phone portrait — drum sits on the Buy Bonus button. */
 	layoutDerived?: LayoutDerived;
 }) => {
-	// Phone portrait: replace Buy Bonus with the drum (same slot).
+	// Phone portrait (Mobile L/M/S): replace Buy Bonus with the drum (same slot).
+	// Popout S/L are landscape — they use the side rim path below, even when the
+	// short side is ≤480 (canvasSizeType looks "phone").
 	if (args.layoutType === 'portrait' && args.layoutDerived) {
 		const buy = getPortraitBuyBonusButtonBox(args.layoutDerived);
 		const size = Math.min(
@@ -174,7 +232,7 @@ export const getDrumBoxScreenPos = (args: {
 		);
 		const left = buy.centerX - size * 0.5;
 		const top = buy.centerY - size * 0.5;
-		return { left, top, size, centerX: buy.centerX, centerY: buy.centerY };
+		return { left, top, size, holeSize: size, centerX: buy.centerX, centerY: buy.centerY };
 	}
 
 	const off = BOARD_LAYOUT_OFFSETS[args.layoutType as keyof typeof BOARD_LAYOUT_OFFSETS] ?? {
@@ -183,12 +241,47 @@ export const getDrumBoxScreenPos = (args: {
 	};
 	const boardCenterX = args.mainLayout.x + off.x * args.mainLayout.scale;
 	const boardCenterY = args.mainLayout.y + off.y * args.mainLayout.scale;
-	const halfW = (args.board.visualWidth / 2) * args.mainLayout.scale;
+	const boardScreenW = args.board.visualWidth * args.mainLayout.scale;
+	const halfW = boardScreenW * 0.5;
 	const halfH = (args.board.visualHeight / 2) * args.mainLayout.scale;
+	// Desktop / Laptop / Popout / tablet — side rim beside the board.
+	const useSideChrome = args.layoutType !== 'portrait';
+
+	if (useSideChrome) {
+		const holeSize = getSideChromeDrumHoleSize({
+			board: args.board,
+			mainLayout: args.mainLayout,
+		});
+		const rim = getDrumRimSize(holeSize);
+		const circle = getDrumRimCircleLocal(rim);
+		const size = getDrumSizeInRim(holeSize);
+		const rimLeft = boardCenterX + halfW + boardScreenW * RIM_MOUNT_OVERLAP_FRAC;
+		const chromeCenterY = boardCenterY - halfH + halfH * 2 * DESKTOP_CHROME_CENTER_Y_FRAC;
+		const rimTop = chromeCenterY - circle.y;
+		const centerX = rimLeft + circle.x;
+		const centerY = chromeCenterY;
+		return {
+			left: centerX - size * 0.5,
+			top: centerY - size * 0.5,
+			size,
+			holeSize,
+			centerX,
+			centerY,
+			rim: {
+				left: rimLeft,
+				top: rimTop,
+				width: rim.width,
+				height: rim.height,
+				centerX: rimLeft + rim.width * 0.5,
+				centerY: rimTop + rim.height * 0.5,
+			},
+		};
+	}
+
 	const size = getDrumSize(args.isDesktop);
 	const left = boardCenterX + halfW + 16;
 	const top = boardCenterY - halfH - size * 0.35;
-	return { left, top, size, centerX: left + size * 0.5, centerY: top + size * 0.5 };
+	return { left, top, size, holeSize: size, centerX: left + size * 0.5, centerY: top + size * 0.5 };
 };
 
 /** Screen pos of a chamber using art fractions + current cylinder rotation. */

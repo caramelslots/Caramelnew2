@@ -100,6 +100,7 @@ export const LOADER_BATCH_3_KEYS = [
 	'turbo2',
 	'turbo3',
 	'revolverBarrel',
+	'revolverBarrelRim',
 	'revolverBullet1',
 	'revolverBullet2',
 	'revolverOverlay',
@@ -117,6 +118,7 @@ export const LOADER_BATCH_4_KEYS = [
 	'fsCongBoard',
 	'fsCongNumber',
 	'fsLeftCounter',
+	'fsLeftCounterSpinboard',
 ] as const satisfies readonly (keyof typeof assets)[];
 
 export const LOADER_ASSET_BATCHES = [

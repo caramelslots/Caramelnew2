@@ -142,11 +142,7 @@ const playDuelWinLines = async (
 
 	if (spotlightClearTimer !== null) clearTimeout(spotlightClearTimer);
 	spotlightClearTimer = setTimeout(
-		() => {
-			spotlightClearTimer = null;
-			stateDuel.winSpotlightSide = null;
-			eventEmitter.broadcast({ type: 'paylineClearAll', side });
-		},
+		() => clearWinSpotlight(),
 		scaleMsByGameSpeed(WIN_SPOTLIGHT_CLEAR_DELAY_MS, stateGame.gameSpeed),
 	);
 };
@@ -157,11 +153,32 @@ let spotlightClearTimer: ReturnType<typeof setTimeout> | null = null;
 import { toRevealedRawSymbol } from './utils';
 import { resetIdleBounceSymbols } from './boardIdleBounce';
 
+/** Snap celebrate cells back to idle once paylines / spotlight end. */
+const resetBoardCelebrateToIdle = (board: typeof stateGame.board) => {
+	for (const reel of board) {
+		for (const reelSymbol of reel.reelState.symbols) {
+			if (
+				reelSymbol.symbolState === 'winLift' ||
+				reelSymbol.symbolState === 'win' ||
+				reelSymbol.symbolState === 'postWinStatic'
+			) {
+				reelSymbol.symbolState = 'static';
+			}
+		}
+	}
+};
+
+const resetWinCelebrateSymbolsToIdle = () => {
+	resetBoardCelebrateToIdle(stateGame.board);
+	resetBoardCelebrateToIdle(getDuelBoardStack('dog').board);
+	resetBoardCelebrateToIdle(getDuelBoardStack('cat').board);
+};
+
 /**
  * Немедленно снимает затемнение невыигрышных символов и скрывает paylines,
- * отменяя фоновый таймер. Вызывается при старте нового спина (как только
- * игрок нажал Bet — см. actor.onNewGameStart), чтобы линии/затемнение
- * пропадали одновременно со стартом барабанов, а не после него.
+ * отменяя фоновый таймер. Выигрышные символы возвращаются в idle (`static`),
+ * чтобы не продолжали крутить Win после исчезновения линий.
+ * Вызывается по таймеру spotlight и при старте нового спина (actor.onNewGameStart).
  */
 export const clearWinSpotlight = () => {
 	if (spotlightClearTimer !== null) {
@@ -171,6 +188,7 @@ export const clearWinSpotlight = () => {
 	stateGame.winSpotlightActive = false;
 	stateDuel.winSpotlightSide = null;
 	eventEmitter.broadcast({ type: 'paylineClearAll' });
+	resetWinCelebrateSymbolsToIdle();
 };
 
 const DRUM_MAX = 6;
@@ -635,6 +653,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 		eventEmitter.broadcast({ type: 'boardFramePulse' });
 
+		// Raise spotlight before paylines so non-winners start dimming with the
+		// line draw (animateSymbols also sets this; idempotent).
+		stateGame.winSpotlightActive = true;
+
 		// All winning paylines render simultaneously — PaylineOverlay keeps an
 		// array of active lines so multiple `paylineShow` events stack.
 		// `paylineRows` — полный rows-паттерн линии через ВСЕ катушки (5),
@@ -713,11 +735,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// отменит таймер через clearTimeout выше.
 		if (spotlightClearTimer !== null) clearTimeout(spotlightClearTimer);
 		spotlightClearTimer = setTimeout(
-			() => {
-				spotlightClearTimer = null;
-				stateGame.winSpotlightActive = false;
-				eventEmitter.broadcast({ type: 'paylineClearAll' });
-			},
+			() => clearWinSpotlight(),
 			scaleMsByGameSpeed(WIN_SPOTLIGHT_CLEAR_DELAY_MS, stateGame.gameSpeed),
 		);
 	},
@@ -956,7 +974,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			);
 			if (willShowCurtain) {
 				await waitForGameSpeed(SW_PHASE1_HOLD_MS, stateGame.gameSpeed);
-				eventEmitter.broadcast({ type: 'paylineClearAll', side });
+				clearWinSpotlight();
 			}
 
 			for (const expand of bookEvent.expands) {

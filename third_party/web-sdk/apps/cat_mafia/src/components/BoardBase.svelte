@@ -45,9 +45,8 @@
 	/**
 	 * Win celebrate + idle tease — above gold rails (BoardIdleBounceLayer).
 	 * `win` / `winLift` always lift so H3 flame/rays aren't clipped by dividers.
-	 * `postWinStatic` stays above only while spotlight is on — after clear
-	 * (and during pawCoinResolve, which clears spotlight then paints coins)
-	 * cells drop back under the rails so win FX don't burn under/around coins.
+	 * `postWinStatic` stays above only while spotlight is on — after clear,
+	 * celebrate cells snap back to `static` (idle) via clearWinSpotlight.
 	 */
 	const isAboveRails = (state: SymbolState) =>
 		state === 'idleBounce' ||

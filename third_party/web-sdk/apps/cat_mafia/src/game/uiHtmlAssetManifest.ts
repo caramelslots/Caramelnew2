@@ -18,7 +18,7 @@ export const uiHtmlAssetUrl = (path: string) =>
 
 export const HUD_ASSETS = {
 	info: uiHtmlAssetUrl('info/info.webp'),
-	menu: uiHtmlAssetUrl('menu/menu.webp'),
+	menu: uiHtmlAssetUrl('settings/menu.webp'),
 	betMinus: uiHtmlAssetUrl('bet/minus.webp'),
 	betPlus: uiHtmlAssetUrl('bet/plus.webp'),
 	spin1: uiHtmlAssetUrl('spin/spin_1.webp'),
@@ -56,12 +56,15 @@ export const SETTINGS_ASSETS = {
 	frameVolume: uiHtmlAssetUrl('settings/frame_volume.webp'),
 	musicOn: uiHtmlAssetUrl('settings/music_on.webp'),
 	musicOff: uiHtmlAssetUrl('settings/music_off.webp'),
+	turbo1: uiHtmlAssetUrl('settings/turbo_1.webp'),
+	turbo2: uiHtmlAssetUrl('settings/turbo_2.webp'),
+	turbo3: uiHtmlAssetUrl('settings/turbo_3.webp'),
 } as const;
 
 export const SETTINGS_TURBO_URLS = [
-	HUD_ASSETS.turbo1,
-	HUD_ASSETS.turbo2,
-	HUD_ASSETS.turbo3,
+	SETTINGS_ASSETS.turbo1,
+	SETTINGS_ASSETS.turbo2,
+	SETTINGS_ASSETS.turbo3,
 ] as const;
 
 /** Autoplay menu panel textures — `static/assets/sprites/ui/autoplay_menu/`. */

@@ -29,6 +29,11 @@
 		 */
 		alpha?: number;
 		/**
+		 * Multiply tint (Pixi). Used instead of alpha for H3/H4 dim so additive
+		 * spine glows darken without becoming see-through over the board.
+		 */
+		tint?: number;
+		/**
 		 * Keep rendering while the reel is scrolling — SymbolWrap culling is
 		 * based on the visible board window only; fast spins can temporarily
 		 * move pool symbols outside that window even though they are on-screen
@@ -59,6 +64,7 @@
 		y={props.y}
 		scale={{ x: props.scaleX ?? 1, y: props.scaleY ?? 1 }}
 		alpha={props.alpha ?? 1}
+		tint={props.tint ?? 0xffffff}
 	>
 		{@render props.children()}
 	</Container>

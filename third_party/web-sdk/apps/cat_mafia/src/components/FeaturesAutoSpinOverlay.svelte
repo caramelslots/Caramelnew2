@@ -375,12 +375,13 @@
 		box-sizing: border-box;
 		pointer-events: none;
 		gap: 3%;
+		/* Shared side-icon size — paw (left) and close (right) must match. */
+		--header-side-icon: calc(var(--panel-width) * 0.145);
 	}
 
 	.header-paw {
-		width: calc(var(--panel-width) * 0.145);
-		height: auto;
-		aspect-ratio: 1;
+		width: var(--header-side-icon);
+		height: var(--header-side-icon);
 		object-fit: contain;
 		pointer-events: none;
 		user-select: none;
@@ -405,8 +406,8 @@
 
 	.close-button {
 		position: relative;
-		width: calc(var(--panel-width) * 0.145);
-		height: calc(var(--panel-width) * 0.145);
+		width: var(--header-side-icon);
+		height: var(--header-side-icon);
 		padding: 0;
 		border: 0;
 		background: transparent;
@@ -415,6 +416,7 @@
 		align-items: center;
 		justify-content: center;
 		pointer-events: auto;
+		overflow: visible;
 		transition:
 			transform 0.12s,
 			filter 0.12s;
@@ -430,8 +432,10 @@
 	}
 
 	.close-icon {
-		width: 100%;
-		height: 100%;
+		/* cross.webp has ~14% transparent margin; scale so the gold ring
+		 * matches the paw badge diameter beside the title. */
+		width: 116%;
+		height: 116%;
 		object-fit: contain;
 		pointer-events: none;
 		user-select: none;
@@ -935,10 +939,8 @@
 			letter-spacing: 0.04em;
 		}
 
-		.header-paw,
-		.close-button {
-			width: calc(var(--panel-width) * 0.155);
-			height: calc(var(--panel-width) * 0.155);
+		.panel-header {
+			--header-side-icon: calc(var(--panel-width) * 0.155);
 		}
 
 		.features-section :global(.feature-row .feature-name) {

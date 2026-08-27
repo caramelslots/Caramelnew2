@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """
-Extract the per-symbol static sprites out of the packed Spine atlas
-(`spines/symbolsNew/symbols.webp` + `symbols.atlas`) and write them as
-standalone WebP files into `sprites/symbols/`.
+Extract per-symbol static WebP sprites from each symbol's Spine atlas.
 
-These static sprites are the resting-state previews used by `assets.ts`
-(`WImg`, `BImg`, ...) and the paytable overlay (`gameInfoSymbols.ts`).
+Source:  assets/spines/symbols/{H1,H2,…}/  (atlas + page image)
+Output:  assets/sprites/symbols/{Name}.webp
+         static/assets/sprites/symbols/{Name}.webp  (dev-server copy)
 
-Regions with a trimmed `offsets:` entry (e.g. `Special_1`) are re-expanded
-onto their original untrimmed canvas so every sprite stays 196x196.
+Spine packs some regions with `rotate:90` (90° CCW in the atlas). Those must
+be restored with a 90° CW transpose before fitting, otherwise letters like J/K
+land sideways / look cropped (see previous L4.webp).
+
+Glyphs are alpha-trimmed and letterboxed into SYMBOL_TEXTURE_NATIVE_PX (196²)
+on an opaque black canvas — same convention as the reel spin sprites.
 """
 from __future__ import annotations
 
@@ -18,115 +21,176 @@ from PIL import Image
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 APP_ROOT = SCRIPT_DIR.parent
-ATLAS_DIR = APP_ROOT / "static/assets/spines/symbolsNew"
-SPRITE_DIR = APP_ROOT / "static/assets/sprites/symbols"
-ATLAS_FILE = ATLAS_DIR / "symbols.atlas"
+SPINE_ROOT = APP_ROOT / "assets/spines/symbols"
+SPRITE_DIRS = (
+	APP_ROOT / "assets/sprites/symbols",
+	APP_ROOT / "static/assets/sprites/symbols",
+)
+# cat_mafia → apps → web-sdk → third_party → repo root
+DESIGNER_ROOT = APP_ROOT.parents[3] / "designer_assets"
 
-# Atlas region name -> output sprite filename (without extension). Only the
-# regions listed here become standalone sprites; the rest live purely inside
-# the Spine skeletons.
-REGION_TO_SPRITE = {
-    "Special_1": "Bonus",
-    "Special_2": "Special_2",
+SYMBOL_SIZE = 196
+# Tiny inset so Lanczos resize doesn't clip bevel/shadow into the frame edge.
+FIT_PADDING = 0.02
+
+# Atlas region name for the resting glyph inside each per-symbol skeleton.
+ATLAS_REGION_BY_SYMBOL: dict[str, str] = {
+	"H1": "diamond",
+	"L1": "A",
+	"L2": "K",
+	"L3": "Q",
+	"L4": "J",
+}
+
+# Full composed stills when the atlas has no single idle glyph (H2 = crossed
+# revolvers). H1 designer still includes the sparkle star that sits on a
+# separate spine attachment.
+DESIGNER_STILL_BY_SYMBOL: dict[str, Path] = {
+	"H1": DESIGNER_ROOT / "H1" / "H1_static.webp",
+	"H2": DESIGNER_ROOT / "H2" / "H2_static.webp",
 }
 
 
 def parse_atlas(atlas_path: Path) -> tuple[str, dict[str, dict]]:
-    """Parse the compact Spine 4.x atlas format.
+	"""Parse Spine 4.x compact atlas → (page image name, region fields)."""
+	lines = atlas_path.read_text(encoding="utf-8").splitlines()
+	page_image = ""
+	regions: dict[str, dict] = {}
 
-    Returns the page image filename and a map of region name -> fields
-    (`bounds`, optional `offsets`, optional `rotate`).
-    """
-    lines = atlas_path.read_text(encoding="utf-8").splitlines()
-    page_image = ""
-    regions: dict[str, dict] = {}
+	i = 0
+	while i < len(lines):
+		line = lines[i]
+		if line.strip():
+			page_image = line.strip()
+			i += 1
+			break
+		i += 1
 
-    i = 0
-    # First non-empty line before the `size:`/`filter:` header is the page image.
-    while i < len(lines):
-        line = lines[i]
-        if line.strip():
-            page_image = line.strip()
-            i += 1
-            break
-        i += 1
-
-    current: str | None = None
-    while i < len(lines):
-        raw = lines[i]
-        i += 1
-        if not raw.strip():
-            current = None
-            continue
-        # Page-level headers we don't care about here.
-        if ":" in raw and not raw.startswith((" ", "\t")) and raw.split(":", 1)[0] in {
-            "size",
-            "filter",
-            "format",
-            "repeat",
-            "pma",
-            "scale",
-        }:
-            continue
-        if ":" not in raw:
-            current = raw.strip()
-            regions[current] = {}
-            continue
-        if current is None:
-            continue
-        key, value = raw.strip().split(":", 1)
-        parts = [p.strip() for p in value.split(",")]
-        if key in {"bounds", "offsets", "xy", "size", "offset"}:
-            regions[current][key] = [int(float(p)) for p in parts]
-        elif key == "rotate":
-            regions[current][key] = value.strip()
-    return page_image, regions
+	current: str | None = None
+	while i < len(lines):
+		raw = lines[i]
+		i += 1
+		if not raw.strip():
+			current = None
+			continue
+		if ":" in raw and not raw.startswith((" ", "\t")) and raw.split(":", 1)[0] in {
+			"size",
+			"filter",
+			"format",
+			"repeat",
+			"pma",
+			"scale",
+		}:
+			continue
+		if ":" not in raw:
+			current = raw.strip()
+			regions[current] = {}
+			continue
+		if current is None:
+			continue
+		key, value = raw.strip().split(":", 1)
+		parts = [p.strip() for p in value.split(",")]
+		if key in {"bounds", "offsets", "xy", "size", "offset"}:
+			regions[current][key] = [int(float(p)) for p in parts]
+		elif key == "rotate":
+			regions[current][key] = value.strip()
+	return page_image, regions
 
 
-def region_box(fields: dict) -> tuple[int, int, int, int]:
-    if "bounds" in fields:
-        x, y, w, h = fields["bounds"]
-    else:
-        x, y = fields["xy"]
-        w, h = fields["size"]
-    return x, y, w, h
+def unrotate_atlas_region(crop: Image.Image, rotate: str | None) -> Image.Image:
+	"""Undo Spine atlas packing rotation.
+
+	`rotate:90` / `true` means the region was stored rotated 90° counter-clockwise.
+	Restore with 90° clockwise (PIL ROTATE_270).
+	"""
+	if rotate in (None, "false", "0"):
+		return crop
+	angle = 90 if rotate == "true" else int(rotate)
+	if angle == 90:
+		return crop.transpose(Image.ROTATE_270)
+	if angle == 180:
+		return crop.transpose(Image.ROTATE_180)
+	if angle == 270:
+		return crop.transpose(Image.ROTATE_90)
+	raise ValueError(f"unsupported atlas rotate value: {rotate!r}")
+
+
+def extract_region(atlas_img: Image.Image, fields: dict) -> Image.Image:
+	if "bounds" in fields:
+		x, y, w, h = fields["bounds"]
+	else:
+		x, y = fields["xy"]
+		w, h = fields["size"]
+	crop = atlas_img.crop((x, y, x + w, y + h))
+	return unrotate_atlas_region(crop, fields.get("rotate"))
+
+
+def fit_square(
+	im: Image.Image,
+	size: int = SYMBOL_SIZE,
+	padding: float = FIT_PADDING,
+	bg: tuple[int, int, int, int] = (0, 0, 0, 255),
+) -> Image.Image:
+	"""Alpha-trim and center into an opaque square canvas."""
+	im = im.convert("RGBA")
+	bbox = im.getbbox()
+	if not bbox:
+		return Image.new("RGBA", (size, size), bg)
+	cropped = im.crop(bbox)
+	cw, ch = cropped.size
+	inner = size * (1.0 - 2.0 * padding)
+	scale = min(inner / cw, inner / ch)
+	nw = max(1, int(round(cw * scale)))
+	nh = max(1, int(round(ch * scale)))
+	resized = cropped.resize((nw, nh), Image.Resampling.LANCZOS)
+	canvas = Image.new("RGBA", (size, size), bg)
+	canvas.paste(resized, ((size - nw) // 2, (size - nh) // 2), resized)
+	return canvas
+
+
+def save_sprite(sprite: Image.Image, name: str) -> None:
+	for sprite_dir in SPRITE_DIRS:
+		sprite_dir.mkdir(parents=True, exist_ok=True)
+		out_path = sprite_dir / f"{name}.webp"
+		sprite.save(out_path, "WEBP", lossless=True, method=6)
+		print(f"  wrote {out_path.relative_to(APP_ROOT)} ({sprite.width}x{sprite.height})")
+
+
+def extract_from_atlas(symbol: str, region_name: str) -> Image.Image:
+	atlas_path = SPINE_ROOT / symbol / f"{symbol}.atlas"
+	page_image, regions = parse_atlas(atlas_path)
+	if region_name not in regions:
+		raise KeyError(f"{symbol}: region {region_name!r} missing from {atlas_path.name}")
+	fields = regions[region_name]
+	atlas_img = Image.open(SPINE_ROOT / symbol / page_image).convert("RGBA")
+	glyph = extract_region(atlas_img, fields)
+	rotate = fields.get("rotate")
+	print(f"  {symbol}: region={region_name!r} rotate={rotate!r} glyph={glyph.size}")
+	return fit_square(glyph)
+
+
+def extract_from_designer(symbol: str, still_path: Path) -> Image.Image:
+	if not still_path.is_file():
+		raise FileNotFoundError(still_path)
+	print(f"  {symbol}: designer still {still_path}")
+	return fit_square(Image.open(still_path).convert("RGBA"))
 
 
 def extract() -> None:
-    page_image, regions = parse_atlas(ATLAS_FILE)
-    atlas_img = Image.open(ATLAS_DIR / page_image).convert("RGBA")
-    SPRITE_DIR.mkdir(parents=True, exist_ok=True)
+	# Designer stills win when present (composed idle), else atlas glyph.
+	done: set[str] = set()
+	for symbol, still in DESIGNER_STILL_BY_SYMBOL.items():
+		save_sprite(extract_from_designer(symbol, still), symbol)
+		done.add(symbol)
 
-    for region_name, sprite_name in REGION_TO_SPRITE.items():
-        if region_name not in regions:
-            raise KeyError(f"Region {region_name!r} missing from {ATLAS_FILE.name}")
-        fields = regions[region_name]
-        rotate = fields.get("rotate")
-        if rotate not in (None, "false"):
-            raise NotImplementedError(
-                f"Region {region_name!r} is rotated ({rotate}); packer must disable rotation"
-            )
+	for symbol, region in ATLAS_REGION_BY_SYMBOL.items():
+		if symbol in done:
+			continue
+		save_sprite(extract_from_atlas(symbol, region), symbol)
 
-        x, y, w, h = region_box(fields)
-        crop = atlas_img.crop((x, y, x + w, y + h))
-
-        if "offsets" in fields:
-            # offsets: offsetX, offsetY, originalWidth, originalHeight
-            # (offsetX/offsetY measured from the original image's bottom-left).
-            off_x, off_y, orig_w, orig_h = fields["offsets"]
-            canvas = Image.new("RGBA", (orig_w, orig_h), (0, 0, 0, 0))
-            paste_top = orig_h - off_y - h
-            canvas.paste(crop, (off_x, paste_top))
-            sprite = canvas
-        else:
-            sprite = crop
-
-        out_path = SPRITE_DIR / f"{sprite_name}.webp"
-        sprite.save(out_path, "WEBP", lossless=True, method=6)
-        print(f"  wrote {out_path.relative_to(APP_ROOT)} ({sprite.width}x{sprite.height})")
-
-    print("done.")
+	print("done.")
+	print("Note: H3/H4 stay as composed sprites (atlas only has mesh parts).")
 
 
 if __name__ == "__main__":
-    extract()
+	extract()

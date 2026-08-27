@@ -279,6 +279,11 @@ export default {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/fsLeftCounter/fs_left_counter.webp'),
 	},
+	/** Desktop FS plaque (Bonus / Super Bonus) — mounts to the left of the board. */
+	fsLeftCounterSpinboard: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/fsLeftCounter/spinboard.webp'),
+	},
 	transition: {
 		type: 'spine',
 		src: {
@@ -360,7 +365,7 @@ export default {
 	},
 	menuButton: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/ui/menu/menu.webp'),
+		src: assetUrl('assets/sprites/ui/settings/menu.webp'),
 	},
 	infoButton: {
 		type: 'sprite',
@@ -381,6 +386,11 @@ export default {
 	revolverBarrel: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/fsExtraCounter/barrel.webp'),
+	},
+	/** Desktop gold rim + left mounts around the revolver drum. */
+	revolverBarrelRim: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/fsExtraCounter/barrel_rim.webp'),
 	},
 	revolverBullet1: {
 		type: 'sprite',

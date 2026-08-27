@@ -27,6 +27,11 @@ export const devPreview = $state({
 	/** Keep revolver drum HTML overlay visible (FS-only UI) for bullet-fly QA. */
 	forceShowDrum: false,
 	/**
+	 * Desktop FS board chrome: spinboard (left) + barrel rim/drum (right).
+	 * Also drives FreeSpinCounter visibility with sample spin text.
+	 */
+	forceShowFsBoardChrome: false,
+	/**
 	 * Pin designer paw coins on the board (x1 bronze / x2 silver / x3 gold).
 	 * `nonce` remounts the sprites so appear can replay.
 	 */

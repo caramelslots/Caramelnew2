@@ -23,6 +23,7 @@
 
 	const BASE = import.meta.env.BASE_URL;
 	const BARREL_IMG = `${BASE}assets/sprites/fsExtraCounter/barrel.webp`;
+	const BARREL_RIM_IMG = `${BASE}assets/sprites/fsExtraCounter/barrel_rim.webp`;
 	const BULLET_1_IMG = `${BASE}assets/sprites/fsExtraCounter/bullet_1.webp`;
 	const BULLET_2_IMG = `${BASE}assets/sprites/fsExtraCounter/bullet_2.webp`;
 	const OVERLAY_IMG = `${BASE}assets/sprites/fsExtraCounter/overlay.webp`;
@@ -57,24 +58,33 @@
 		return context.stateGame.gameType === 'freegame';
 	});
 
-	const isDesktop = $derived(context.stateLayoutDerived.layoutType() === 'desktop');
-	const isPortrait = $derived(context.stateLayoutDerived.layoutType() === 'portrait');
-	const showOnLayout = $derived(isDesktop || isPortrait);
+	const layoutType = $derived(context.stateLayoutDerived.layoutType());
+	const isPortrait = $derived(layoutType === 'portrait');
+	const useSideChrome = $derived(!isPortrait);
+	const showOnLayout = $derived(true);
 
 	const box = $derived(
 		getDrumBoxScreenPos({
 			mainLayout: context.stateLayoutDerived.mainLayout(),
-			layoutType: context.stateLayoutDerived.layoutType(),
+			layoutType,
 			board: context.stateGameDerived.boardLayout(),
-			isDesktop,
+			isDesktop: useSideChrome,
 			layoutDerived: context.stateLayoutDerived,
 		}),
 	);
 
 	const style = $derived.by(() => {
 		const z = elevate ? 65 : 42;
+		const rim = box.rim;
+		if (useSideChrome && rim) {
+			// Expand the fixed box to the rim so mounts stay aligned; cylinder stays centred on the hole.
+			const padL = box.left - rim.left;
+			const padT = box.top - rim.top;
+			return `left:${rim.left}px;top:${rim.top}px;width:${rim.width}px;height:${rim.height}px;z-index:${z};--drum-size:${box.size}px;--drum-pad-l:${padL}px;--drum-pad-t:${padT}px;`;
+		}
 		return `left:${box.left}px;top:${box.top}px;width:${box.size}px;z-index:${z};`;
 	});
+	const withRim = $derived(useSideChrome && !!box.rim);
 
 	const holePx = $derived(CHAMBER_HOLE_AT_DESKTOP * (box.size / getDrumSize(true)));
 
@@ -113,7 +123,10 @@
 </script>
 
 {#if show && showOnLayout}
-	<div class="drum" style={style} aria-hidden="true" title="Revolver drum">
+	<div class="drum" class:with-rim={withRim} style={style} aria-hidden="true" title="Revolver drum">
+		{#if withRim}
+			<img class="rim" src={BARREL_RIM_IMG} alt="" draggable="false" />
+		{/if}
 		<div class="cylinder" bind:this={cylinderEl}>
 			<div class="rotor" style:transform="rotate({rotationDeg}deg)">
 				<div class="barrel" style:background-image="url('{BARREL_IMG}')"></div>
@@ -165,11 +178,36 @@
 		height: auto;
 	}
 
+	.drum.with-rim {
+		display: block;
+	}
+
+	.rim {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: fill;
+		pointer-events: none;
+		user-select: none;
+		z-index: 4;
+	}
+
 	.cylinder {
 		position: relative;
 		width: 100%;
 		aspect-ratio: 1;
 		flex: 0 0 auto;
+	}
+
+	.drum.with-rim .cylinder {
+		position: absolute;
+		left: var(--drum-pad-l, 0);
+		top: var(--drum-pad-t, 0);
+		width: var(--drum-size, 100%);
+		height: var(--drum-size, 100%);
+		aspect-ratio: auto;
+		z-index: 1;
 	}
 
 	.cylinder.shake {
