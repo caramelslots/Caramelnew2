@@ -626,14 +626,15 @@ class GameStateOverride(GameExecutables):
         return self.create_symbol(repl) if repl else cell
 
     def enforce_feature_symbol_rules(self) -> None:
-        """Base: no BT. Main FS: no paw coins (PB/PS/PG→BT). Extra FS: no BT / paws.
+        """Base: no BT. Main FS: no paw coins (PB/PS/PG→BT). Extra FS / full drum: no BT / paws.
 
         Also strips padding top/bottom — reveal_event includes them in the board.
         """
+        drum_full = self.drum_count >= self.config.drum_max
         if self.gametype == self.config.basegame_type:
             repl = {"BT": "L2"}
-        elif self.fs_extra_phase:
-            # Extra FS after shoot: no bullets anywhere (visible + padding).
+        elif self.fs_extra_phase or drum_full:
+            # Extra FS after shoot, or main FS once the drum is full: no bullets.
             repl = {"BT": "L2", "PB": "L2", "PS": "L2", "PG": "L2"}
         else:
             # Main FS: convert leftover paw coins → BT; keep BT from FR strips.

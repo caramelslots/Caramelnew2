@@ -1,10 +1,9 @@
 # Stage assets
 
-Default background / desk / HUD are **procedural placeholders** generated in
-`designer-docs/src/stage/defaultStageUrls.ts` — they are **not** taken from
-`third_party/web-sdk/apps/cat_mafia`.
+Default background / desk are **procedural placeholders** generated in
+`designer-docs/src/stage/defaultStageUrls.ts`.
 
-Designers upload overrides in Reel Lab → **More → Stage assets**.
+Designers upload overrides in Reel Lab → **Settings → Stage assets**.
 
-Optional files under this folder are unused by the app unless you wire them
-manually; prefer in-app upload (blob URLs).
+Optional cat_mafia references can be uploaded manually; they are **not**
+wired as defaults.

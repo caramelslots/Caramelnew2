@@ -1,6 +1,6 @@
 import { CELL_SYMBOL_SIZE, SYMBOL_SIZE } from '../reel/constants'
 import { SYMBOL_TEXTURE_NATIVE_PX } from '../catalog/symbolSpecs'
-import { BOARD_LAYOUT_SCALE, layoutStageContent } from './layout'
+import { layoutStageContent } from './layout'
 import type { StageLayoutKind } from './deviceFit'
 import {
   qualityScaleForFrame,
@@ -63,16 +63,15 @@ export function analyzeQuality(args: {
     layoutKind,
   )
 
-  const glyphCssPx = SYMBOL_SIZE * CELL_SYMBOL_SIZE * placed.scale
+  const glyphCssPx = SYMBOL_SIZE * CELL_SYMBOL_SIZE * placed.effectiveBoardScale
   const texelsPerCssPx =
     (SYMBOL_TEXTURE_NATIVE_PX / Math.max(glyphCssPx, 1)) * resolutionScale
 
   const verdict = verdictFromTexels(texelsPerCssPx)
-  const layoutBoost = BOARD_LAYOUT_SCALE[layoutKind]
 
   const hint = [
     `${device.label} ${device.width}×${device.height} @ ${quality.label}:`,
-    `internal dens ${resolutionScale.toFixed(2)}× (layout ${layoutKind}, board×${layoutBoost}).`,
+    `internal dens ${resolutionScale.toFixed(2)}× (layout ${placed.gameLayout}, main×${placed.main.scale.toFixed(2)}, board×${placed.board.scale.toFixed(2)}).`,
     `Glyph ≈ ${glyphCssPx.toFixed(0)} CSS px; 196px static → ${texelsPerCssPx.toFixed(2)} texels/px.`,
     verdict === 'sharp' || verdict === 'ok'
       ? 'Статика должна читаться чётко.'

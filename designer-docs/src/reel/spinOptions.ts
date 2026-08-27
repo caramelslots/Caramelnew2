@@ -7,7 +7,8 @@ export const REEL_SPEED_LABEL = '1.4 px/ms'
 
 /** cat_mafia reelPaddingMultiplierNormal */
 export const REEL_PADDING_MULT = 0.7
-/** cat_mafia reelSpinDelay (ms × reelIndex) */
+/** cat_mafia reelSpinDelay — used for pre-spin launch stagger in the game.
+ *  Reel Lab starts all columns together; stop order comes from padding distance. */
 export const REEL_SPIN_DELAY_MS = 60
 
 /**

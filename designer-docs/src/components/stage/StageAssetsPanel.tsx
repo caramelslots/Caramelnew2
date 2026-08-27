@@ -90,7 +90,7 @@ export function StageAssetsPanel({ overrides, onChange }: StageAssetsPanelProps)
     <section className="panel-block stage-assets-panel">
       <div className="panel-block__head">
         <h2>Stage assets</h2>
-        <p>Свои фон / desk. Пусто = нейтральный default (не cat_mafia).</p>
+        <p>Свои фон / desk. Пусто = дефолтная procedural-доска (можно заменить upload’ом).</p>
       </div>
 
       <input
@@ -158,7 +158,7 @@ export function StageAssetsPanel({ overrides, onChange }: StageAssetsPanelProps)
       </div>
       {spineError ? <p className="form-error">{spineError}</p> : null}
       <p className="stage-assets-panel__hint">
-        Как в cat_mafia: папка <code>background/</code> с <code>skeleton.json</code>,{' '}
+        Опционально: папка <code>background/</code> с <code>skeleton.json</code>,{' '}
         <code>skeleton.atlas</code>, <code>skeleton.webp</code> (+ <code>_2</code>/<code>_3</code>).
         При наличии Spine still-фон прячется.
       </p>
@@ -171,6 +171,7 @@ export function StageAssetsPanel({ overrides, onChange }: StageAssetsPanelProps)
             custom={Boolean(overrides[slot.id])}
             label={slot.label}
             previewUrl={overrides[slot.id] ?? defaults[slot.id]}
+            statusLabel={overrides[slot.id] ? 'Custom' : 'Default'}
             onClear={() => setSlot(slot.id, null)}
             onPick={() => pick(slot.id)}
           />
@@ -235,12 +236,14 @@ function StageAssetRow({
   label,
   custom,
   previewUrl,
+  statusLabel,
   onPick,
   onClear,
 }: {
   label: string
   custom: boolean
   previewUrl?: string
+  statusLabel: string
   onPick: () => void
   onClear: () => void
 }) {
@@ -251,7 +254,7 @@ function StageAssetRow({
       </div>
       <div className="stage-asset-row__meta">
         <strong>{label}</strong>
-        <span>{custom ? 'Custom' : 'Default'}</span>
+        <span>{statusLabel}</span>
       </div>
       <div className="stage-asset-row__actions">
         <button className="btn" type="button" onClick={onPick}>

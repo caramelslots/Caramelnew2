@@ -1,9 +1,10 @@
 /**
- * Neutral placeholder stage visuals (not cat_mafia).
- * Canvas PNG data URLs — Pixi needs bitmap dimensions (SVG data URLs break width).
+ * Stage URL resolver — procedural defaults; designers upload overrides.
+ * cat_mafia assets are optional via Stage assets upload (not default).
  */
 
 import type { ResolvedStageUrls, StagePackOverrides, StageSlotId } from './stagePack'
+import { DESK_PARCHMENT } from './layout'
 
 function canvasUrl(
   width: number,
@@ -20,8 +21,6 @@ function canvasUrl(
 }
 
 function makeBackground(): string {
-  // Aspect closer to cat_mafia street plate (~1920×956); ground lower so desk
-  // sits over the street instead of glued to the horizon line.
   return canvasUrl(1920, 956, (ctx, w, h) => {
     const g = ctx.createLinearGradient(0, 0, 0, h)
     g.addColorStop(0, '#1a2433')
@@ -42,16 +41,17 @@ function makeBackground(): string {
   })
 }
 
+/**
+ * Desk art with playfield hole matching DESK_PARCHMENT fractions.
+ * Stretched to the parchment slot so the hole aligns with the 5×4 board.
+ */
 function makeDeskBase(): string {
   const W = 1200
   const H = 900
-  // Keep in sync with layout.ts DESK_PARCHMENT (tight lab frame).
-  const widthFrac = 1 / 1.12
-  const heightFrac = 1 / 1.18
-  const holeW = W * widthFrac
-  const holeH = H * heightFrac
-  const holeX = (W - holeW) / 2
-  const holeY = (H - holeH) / 2
+  const holeW = W * DESK_PARCHMENT.widthFrac
+  const holeH = H * DESK_PARCHMENT.heightFrac
+  const holeX = (W - holeW) / 2 + DESK_PARCHMENT.offsetXFrac * W
+  const holeY = (H - holeH) / 2 + DESK_PARCHMENT.offsetYFrac * H
 
   return canvasUrl(W, H, (ctx, w, h) => {
     roundRect(ctx, 0, 0, w, h, 40, '#c4a574')
@@ -63,12 +63,10 @@ function makeDeskBase(): string {
 function makeDeskContour(): string {
   const W = 1200
   const H = 900
-  const widthFrac = 1 / 1.12
-  const heightFrac = 1 / 1.18
-  const holeW = W * widthFrac
-  const holeH = H * heightFrac
-  const holeX = (W - holeW) / 2
-  const holeY = (H - holeH) / 2
+  const holeW = W * DESK_PARCHMENT.widthFrac
+  const holeH = H * DESK_PARCHMENT.heightFrac
+  const holeX = (W - holeW) / 2 + DESK_PARCHMENT.offsetXFrac * W
+  const holeY = (H - holeH) / 2 + DESK_PARCHMENT.offsetYFrac * H
 
   return canvasUrl(W, H, (ctx) => {
     ctx.clearRect(0, 0, W, H)
@@ -121,7 +119,6 @@ function strokeRoundRect(
 
 let cached: ResolvedStageUrls | null = null
 
-/** Neutral defaults — never pulled from cat_mafia. */
 export function getDefaultStageUrls(): ResolvedStageUrls {
   if (cached) return cached
   cached = {
@@ -132,12 +129,15 @@ export function getDefaultStageUrls(): ResolvedStageUrls {
   return cached
 }
 
-/** Drop cached defaults (e.g. after HMR) so new paint runs. */
+/** @deprecated alias — same as getDefaultStageUrls. */
+export function getProceduralStageUrls(): ResolvedStageUrls {
+  return getDefaultStageUrls()
+}
+
 export function resetDefaultStageUrls(): void {
   cached = null
 }
 
-// Hot-reload: rebuild procedural defaults when this module updates.
 if (import.meta.hot) {
   import.meta.hot.accept(() => {
     cached = null

@@ -6,10 +6,12 @@ import type { StageLayoutKind } from '../stage/deviceFit'
 import type { ResolvedStageUrls, StageBackgroundSpinePack } from '../stage/stagePack'
 import {
   SYMBOL_SIZE,
+  getSymbolX,
+  getSymbolY,
   type BoardDimensions,
 } from './constants'
-import { createCellSpine, createCellStaticSprite, type CellAnimMode } from './cellSpine'
-import { fillBoardFromLibrary, type BoardGrid } from './fillBoard'
+import { createCellSpine, createCellStaticSprite, createStripStaticSprite, type CellAnimMode } from './cellSpine'
+import { fillBoardFromLibrary, type BoardCell, type BoardGrid } from './fillBoard'
 import { MAX_LIVE_IDLE_SPINES } from './spineBudget'
 import { resolveSymbolSizeFit } from './symbolSizeFit'
 import {
@@ -18,7 +20,6 @@ import {
   type SpineTemplate,
 } from './spinePool'
 import {
-  REEL_SPIN_DELAY_MS,
   scrollRowsForColumn,
 } from './spinOptions'
 
@@ -124,6 +125,8 @@ export function ReelBoardCanvas({
   useSpineRef.current = useSpineAfterStop
   const spinningRef = useRef(false)
   const rafRef = useRef<number | null>(null)
+  /** Visible cell display objects [col][row] — reparented into strips on spin (no texture pop). */
+  const cellNodesRef = useRef<(Container | null)[][]>([])
   const stageDisposeRef = useRef<(() => void) | null>(null)
   const onSpinningChangeRef = useRef(onSpinningChange)
   const onGridChangeRef = useRef(onGridChange)
@@ -156,8 +159,10 @@ export function ReelBoardCanvas({
     const wantSpine = useSpineRef.current
     const totalCells = grid.reduce((sum, col) => sum + col.length, 0)
     let liveIdle = 0
+    const nodes: (Container | null)[][] = []
 
     for (let col = 0; col < grid.length; col += 1) {
+      const colNodes: (Container | null)[] = []
       for (let row = 0; row < grid[col]!.length; row += 1) {
         const cell = grid[col]![row]!
         const template = wantSpine ? templatesRef.current.get(cell.symbolId) : undefined
@@ -165,56 +170,74 @@ export function ReelBoardCanvas({
         if (!template) {
           const texture = await loadTexture(cell.staticUrl, cacheRef.current)
           const fit = resolveSymbolSizeFit(cell.label)
-          playfield.addChild(createCellStaticSprite(texture, col, row, fit.offsetY))
+          const sprite = createCellStaticSprite(texture, col, row, fit.offsetY)
+          playfield.addChild(sprite)
+          colNodes.push(sprite)
           continue
         }
 
         // cat_mafia: static/idle = Spine `idle`; win = Spine win/activation.
-        // Budget only freezes ticker (autoUpdate=false) — still shows idle pose,
-        // never swaps last columns to WebP (that caused “missing idle”).
         if (mode === 'idle') {
           const live =
             totalCells <= MAX_LIVE_IDLE_SPINES || liveIdle < MAX_LIVE_IDLE_SPINES
           if (live) liveIdle += 1
-          playfield.addChild(
-            createCellSpine(template, col, row, 'idle', { autoUpdate: live }).holder,
-          )
+          const { holder } = createCellSpine(template, col, row, 'idle', {
+            autoUpdate: live,
+          })
+          playfield.addChild(holder)
+          colNodes.push(holder)
           continue
         }
 
-        playfield.addChild(createCellSpine(template, col, row, mode).holder)
+        const { holder } = createCellSpine(template, col, row, mode)
+        playfield.addChild(holder)
+        colNodes.push(holder)
       }
+      nodes.push(colNodes)
     }
+    cellNodesRef.current = nodes
   }
 
   /**
-   * Land one column like cat_mafia:
-   * spin WebP strip removed → Spine `stop` → queue Spine `idle` on same instance.
-   * No WebP swap after land (that was the flicker).
+   * Land one column — sync hard cut like cat_mafia.
+   * Also refreshes cellNodesRef for that column so the next spin can reparent.
    */
-  const paintColumnLand = async (grid: BoardGrid, colIndex: number) => {
+  const landColumnSync = (grid: BoardGrid, colIndex: number) => {
     const playfield = playfieldRef.current
     if (!playfield) return
     const column = grid[colIndex]
     if (!column) return
 
     const wantSpine = useSpineRef.current
+    const holders: Container[] = []
+    const colNodes: (Container | null)[] = []
+
     for (let row = 0; row < column.length; row += 1) {
       const cell = column[row]!
       const template = wantSpine ? templatesRef.current.get(cell.symbolId) : undefined
       if (template) {
-        playfield.addChild(
-          createCellSpine(template, colIndex, row, 'land', {
-            animateIdleAfterLand: true,
-            autoUpdate: true,
-          }).holder,
-        )
+        const { holder } = createCellSpine(template, colIndex, row, 'land', {
+          animateIdleAfterLand: true,
+          autoUpdate: true,
+        })
+        holders.push(holder)
+        colNodes.push(holder)
         continue
       }
-      const texture = await loadTexture(cell.staticUrl, cacheRef.current)
-      const fit = resolveSymbolSizeFit(cell.label)
-      playfield.addChild(createCellStaticSprite(texture, colIndex, row, fit.offsetY))
+      const texture = cacheRef.current.get(cell.staticUrl)
+      if (texture) {
+        const fit = resolveSymbolSizeFit(cell.label)
+        const sprite = createCellStaticSprite(texture, colIndex, row, fit.offsetY)
+        holders.push(sprite)
+        colNodes.push(sprite)
+      } else {
+        colNodes.push(null)
+      }
     }
+
+    for (const holder of holders) playfield.addChild(holder)
+    if (!cellNodesRef.current[colIndex]) cellNodesRef.current[colIndex] = []
+    cellNodesRef.current[colIndex] = colNodes
   }
 
   // Boot Pixi + stage environment (bg + desk)
@@ -360,7 +383,10 @@ export function ReelBoardCanvas({
     }
   }, [bootId, board, library, allowedSymbolIds, useSpineAfterStop, refillNonce])
 
-  // Spin — static strips scroll DOWN; each column lands with Spine stop→idle (cat_mafia)
+  // Spin — cat_mafia-style:
+  // • Reparent current cell nodes into strips (no Spine→WebP pop at click)
+  // • All columns start moving on the same frame
+  // • Stop stagger = different travel distance per column (padding), not start delay
   useEffect(() => {
     if (spinNonce === 0) return
     const playfield = playfieldRef.current
@@ -392,18 +418,48 @@ export function ReelBoardCanvas({
           return
         }
 
-        // Prefetch every static used on this spin so column build doesn't stall mid-loop.
+        const currentGrid = gridRef.current ?? finalGrid
+
+        type ColPlan = {
+          colIndex: number
+          travelInt: number
+          stripLen: number
+          filler: BoardCell[]
+        }
+
+        const plans: ColPlan[] = []
         const urls = new Set<string>()
+
         for (const col of finalGrid) {
           for (const cell of col) urls.add(cell.staticUrl)
         }
+        for (const col of currentGrid) {
+          for (const cell of col) urls.add(cell.staticUrl)
+        }
+
+        for (let col = 0; col < cols; col += 1) {
+          const travelRows = scrollRowsForColumn(rows, col)
+          const travelInt = Math.max(rows, Math.ceil(travelRows))
+          const stripLen = travelInt + rows
+          const filler =
+            fillBoardFromLibrary(
+              libraryRef.current,
+              { cols: 1, rows: stripLen },
+              spinNonce + col * 17,
+              allowedSet(),
+            )?.[0] ?? []
+          if (filler.length === 0) continue
+          for (const cell of filler) urls.add(cell.staticUrl)
+          plans.push({ colIndex: col, travelInt, stripLen, filler })
+        }
+
         await Promise.all([...urls].map((url) => loadTexture(url, cacheRef.current)))
         if (cancelled) return
 
-        spinningRef.current = true
-        onSpinningChangeRef.current(true)
-        ownsSpinFlag = true
-        clearPlayfield(playfield)
+        if (plans.length === 0) {
+          onErrorRef.current('Не удалось собрать колонки для спина.')
+          return
+        }
 
         type ColState = {
           colIndex: number
@@ -412,71 +468,76 @@ export function ReelBoardCanvas({
           targetY: number
           done: boolean
           landed: boolean
-          launchAt: number
         }
 
+        // ONE sync frame: reparent current nodes → strips → mount → scroll.
+        // No awaits here — otherwise symbols vanish while other columns load.
         const columns: ColState[] = []
-
-        for (let col = 0; col < cols; col += 1) {
-          if (cancelled) return
-          const travelRows = scrollRowsForColumn(rows, col)
-          const stripLen = Math.ceil(travelRows) + rows
-          const stripPool =
-            fillBoardFromLibrary(
-              libraryRef.current,
-              { cols: 1, rows: stripLen },
-              spinNonce + col * 17,
-              allowedSet(),
-            )?.[0] ?? []
-          if (stripPool.length === 0) continue
-
+        for (const plan of plans) {
+          const { colIndex: col, travelInt, stripLen, filler } = plan
           const container = new Container()
-          container.x = col * SYMBOL_SIZE
-          const strip = [...stripPool]
+          container.x = getSymbolX(col) - SYMBOL_SIZE * 0.5
+
+          for (let i = 0; i < stripLen; i += 1) {
+            if (i >= travelInt && i < travelInt + rows) continue
+            const cell =
+              i < rows
+                ? finalGrid[col]![i]!
+                : (filler[i] ?? filler[i % Math.max(filler.length, 1)]!)
+            if (!cell) continue
+            const texture = cacheRef.current.get(cell.staticUrl)
+            if (!texture) continue
+            container.addChild(createStripStaticSprite(texture, i))
+          }
+
+          const colNodes = cellNodesRef.current[col] ?? []
           for (let row = 0; row < rows; row += 1) {
-            strip[row] = finalGrid[col]![row]!
+            const node = colNodes[row]
+            if (!node || node.destroyed) {
+              const cell = currentGrid[col]![row]!
+              const texture = cacheRef.current.get(cell.staticUrl)
+              if (!texture) continue
+              const fit = resolveSymbolSizeFit(cell.label)
+              const sprite = createStripStaticSprite(texture, travelInt + row)
+              sprite.y += fit.offsetY
+              container.addChild(sprite)
+              continue
+            }
+            if (node.parent) node.parent.removeChild(node)
+            const prevOffset = node.y - getSymbolY(row)
+            node.x = SYMBOL_SIZE * 0.5
+            node.y =
+              (travelInt + row + 0.5) * SYMBOL_SIZE +
+              (Number.isFinite(prevOffset) ? prevOffset : 0)
+            container.addChild(node)
           }
+          cellNodesRef.current[col] = []
 
-          for (let i = 0; i < strip.length; i += 1) {
-            const cell = strip[i]!
-            const texture = await loadTexture(cell.staticUrl, cacheRef.current)
-            if (cancelled) return
-            const fit = resolveSymbolSizeFit(cell.label)
-            // col=0 → x at half-cell; row=i → stride SYMBOL_SIZE (not glyph).
-            const sprite = createCellStaticSprite(texture, 0, i, fit.offsetY)
-            container.addChild(sprite)
-          }
-
-          // Match cat_mafia distance topY→defaultY = (reelLength+padding)×SYMBOL_SIZE.
-          // Lab parks at y=0 (symbols laid out from row 0); game parks at defaultY=-SYMBOL_SIZE.
-          const targetY = 0
-          const startY = -travelRows * SYMBOL_SIZE
+          const startY = -travelInt * SYMBOL_SIZE
           container.y = startY
-          playfield.addChild(container)
           columns.push({
             colIndex: col,
             container,
             startY,
-            targetY,
+            targetY: 0,
             done: false,
             landed: false,
-            launchAt: 0,
           })
         }
 
-        if (columns.length === 0) {
-          onErrorRef.current('Не удалось собрать колонки для спина.')
-          return
-        }
+        spinningRef.current = true
+        onSpinningChangeRef.current(true)
+        ownsSpinFlag = true
 
+        // Leftover idle nodes (if any) — destroy; strips already hold reparented ones.
+        clearPlayfield(playfield)
+        for (const col of columns) playfield.addChild(col.container)
+
+        // All columns launch together. Stop order = different travel distances.
         const spinSpeed = SPIN_SPEED_PX_MS
         const spinStart = performance.now()
-        for (const col of columns) {
-          col.launchAt = spinStart + col.colIndex * REEL_SPIN_DELAY_MS
-        }
 
         await new Promise<void>((resolve) => {
-          let pendingLands = 0
           let settled = false
           let rafId = 0
 
@@ -489,36 +550,14 @@ export function ReelBoardCanvas({
           }
           settleSpin = settle
 
-          const tryFinish = () => {
-            if (cancelled) {
-              settle()
-              return
-            }
-            if (pendingLands > 0) return
-            if (!columns.every((col) => col.done && col.landed)) return
-            gridRef.current = finalGrid
-            onGridChangeRef.current(finalGrid)
-            settle()
-          }
-
           const landColumn = (col: ColState) => {
             if (col.landed) return
             col.landed = true
-            if (cancelled) {
-              tryFinish()
-              return
-            }
+            if (cancelled) return
+
+            landColumnSync(finalGrid, col.colIndex)
             playfield.removeChild(col.container)
             col.container.destroy({ children: true })
-            pendingLands += 1
-            void paintColumnLand(finalGrid, col.colIndex)
-              .catch((err) => {
-                onErrorRef.current(err instanceof Error ? err.message : 'Land failed')
-              })
-              .finally(() => {
-                pendingLands -= 1
-                tryFinish()
-              })
           }
 
           const onFrame = () => {
@@ -526,19 +565,14 @@ export function ReelBoardCanvas({
               settle()
               return
             }
-            const now = performance.now()
-            let allScrollingDone = true
+            const elapsed = performance.now() - spinStart
+            let allDone = true
 
             for (const col of columns) {
               if (col.done) continue
-              if (now < col.launchAt) {
-                allScrollingDone = false
-                continue
-              }
-
-              allScrollingDone = false
+              allDone = false
               const distance = col.targetY - col.startY
-              const y = col.startY + Math.min(distance, spinSpeed * (now - col.launchAt))
+              const y = col.startY + Math.min(distance, spinSpeed * elapsed)
               col.container.y = y
               if (y >= col.targetY - 0.5) {
                 col.container.y = col.targetY
@@ -547,8 +581,10 @@ export function ReelBoardCanvas({
               }
             }
 
-            if (allScrollingDone) {
-              tryFinish()
+            if (allDone && columns.every((col) => col.landed)) {
+              gridRef.current = finalGrid
+              onGridChangeRef.current(finalGrid)
+              settle()
               return
             }
             rafId = requestAnimationFrame(onFrame)
@@ -582,6 +618,7 @@ export function ReelBoardCanvas({
     if (winNonce === 0 || spinningRef.current) return
     const grid = gridRef.current
     if (!grid) return
+    cellNodesRef.current = []
     void paintSettled(grid, 'win').catch((err) =>
       onErrorRef.current(err instanceof Error ? err.message : 'Win demo failed'),
     )

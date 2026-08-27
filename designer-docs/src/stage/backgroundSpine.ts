@@ -179,13 +179,23 @@ export function layoutBackgroundSpine(
   spine.scale.set(scale.x, scale.y)
 }
 
-/** Still-image cover (fallback when no Spine pack). */
+/**
+ * Still-image cover. Street stills (day.webp ~1920×956) use BG_PLATE_NATIVE
+ * so the plate matches Spine cover; other uploads use their own texture size.
+ */
 export function layoutBackgroundSprite(
   sprite: { scale: { set: (x: number, y: number) => void }; x: number; y: number },
   canvas: { width: number; height: number },
   texture: { width: number; height: number },
+  options?: { useStreetPlateNative?: boolean },
 ): void {
-  const scale = backgroundCoverScaleXY(canvas, texture)
+  const plate =
+    options?.useStreetPlateNative !== false &&
+    Math.abs(texture.width - 1920) < 8 &&
+    Math.abs(texture.height - 956) < 24
+      ? BG_PLATE_NATIVE
+      : texture
+  const scale = backgroundCoverScaleXY(canvas, plate)
   sprite.scale.set(scale.x, scale.y)
   sprite.x = canvas.width / 2
   sprite.y = canvas.height / 2

@@ -27,7 +27,8 @@
 	import { Container, Graphics } from 'pixi-svelte';
 	import type * as PIXI from 'pixi.js';
 	import { MainContainer } from 'components-layout';
-	import { waitForResolve } from 'utils-shared/wait';
+	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
+	import { stateBetDerived } from 'state-shared';
 
 	import {
 		BITMAP_FONT_SCALE,
@@ -40,6 +41,7 @@
 	import { computeDuelScreenLayout, getDuelPixiBoardLayout } from '../game/duelLayout';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
 	import { getDuelBoardStack } from '../game/stateDuelBoards.svelte';
+	import type { ReelSymbol } from '../game/stateGame.svelte';
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardFrame from './BoardFrame.svelte';
 	import BoardBase from './BoardBase.svelte';
@@ -121,6 +123,17 @@
 		stack.enhancedBoard.readyToSpinEffect();
 	});
 
+	/** Spine win clips are ~1–2s; if `oncomplete` never fires the book pipeline hangs silently. */
+	const DUEL_WIN_ANIM_TIMEOUT_MS = 3500;
+
+	const waitForWinComplete = (reelSymbol: ReelSymbol) =>
+		Promise.race([
+			waitForResolve((resolve) => {
+				reelSymbol.oncomplete = resolve;
+			}),
+			waitForTimeout(Math.ceil(DUEL_WIN_ANIM_TIMEOUT_MS / stateBetDerived.timeScale())),
+		]);
+
 	context.eventEmitter.subscribeOnMount({
 		duelBoardAnimateSymbols: async ({ side, symbolPositions }) => {
 			if (props.layer !== 'board' || side !== props.side) return;
@@ -139,9 +152,7 @@
 					reelSymbol.symbolState = 'winLift';
 					await tick();
 					reelSymbol.symbolState = 'win';
-					await waitForResolve((resolve) => {
-						reelSymbol.oncomplete = resolve;
-					});
+					await waitForWinComplete(reelSymbol);
 					reelSymbol.symbolState = 'postWinStatic';
 				}),
 			);

@@ -7,6 +7,7 @@ import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
+import { stateLayoutDerived } from './stateLayout';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
 import config from './config';
@@ -321,9 +322,11 @@ const findNextSetWin = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
  * Mascot win beat — only on full-screen Big Win+ banners:
  * `like` for big/super, `applause` for epic/sensational.
  * Bumps `mascotAnimToken` so a second setWin can re-fire the same pose.
+ * Portrait phone skips — keep idle looping under the banner.
  */
 const triggerMascotWinReaction = (winLevelData: WinLevelData | undefined) => {
 	if (!winLevelData || winLevelData.type !== 'big') return;
+	if (stateLayoutDerived.layoutType() === 'portrait') return;
 	const pose =
 		winLevelData.alias === 'epic' || winLevelData.alias === 'sensational'
 			? 'clap'
@@ -551,17 +554,19 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Full reel scroll starts here once RGS has returned the result board.
 		// Frozen Mystery reels don't spin — they stay showing ? until FS ends.
 		// Pending-collapse reels are also skipped: the collapse handles their display.
-		// Extra FS after shoot: strip BT from the reveal board (math should too;
-		// this guards stale RGS / old storybook books that still land bullets).
-		const revealEvent =
-			stateGame.fsExtraPhase && bookEvent.gameType === 'freegame'
-				? {
-						...bookEvent,
-						board: bookEvent.board.map((reel) =>
-							reel.map((cell) => (cell.name === 'BT' ? { ...cell, name: 'L2' as const } : cell)),
-						),
-					}
-				: bookEvent;
+		// Extra FS after shoot, or main FS with a full drum: strip BT from the
+		// reveal board (math should too; guards stale RGS / old storybook books).
+		const stripBulletsFromReveal =
+			bookEvent.gameType === 'freegame' &&
+			(stateGame.fsExtraPhase || stateGame.drumCount >= DRUM_MAX);
+		const revealEvent = stripBulletsFromReveal
+			? {
+					...bookEvent,
+					board: bookEvent.board.map((reel) =>
+						reel.map((cell) => (cell.name === 'BT' ? { ...cell, name: 'L2' as const } : cell)),
+					),
+				}
+			: bookEvent;
 
 		stateGame.catSlowTriggerReel = computeCatSlowTriggerReel(
 			revealEvent.board,
@@ -1523,7 +1528,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 						? winLevelMap[BIG_WIN_LEVEL]
 						: winLevelData;
 				eventEmitter.broadcast({ type: 'duelOutroHide' });
-				stateGame.mascotPose = 'idle';
 				eventEmitter.broadcast({ type: 'winShow' });
 				winLevelSoundsPlay({ winLevelData: firstTierData });
 				await eventEmitter.broadcastAsync({
@@ -1533,7 +1537,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				});
 				winLevelSoundsStop({ music: 'bgm_freespin' });
 				bigWinShown = true;
-				stateGame.mascotPose = 'idle';
 			}
 		}
 
@@ -1544,7 +1547,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		await waitForTimeout(TRANSITION_THEME_SWITCH_DELAY_MS);
 		eventEmitter.broadcast({ type: 'duelOutroHide' });
 		if (bigWinShown) {
+			// Same order as setWin: hide overlay first so Win.svelte won't re-force
+			// clap/react, then restore looping idle (clap uses holdEnd without returnTo).
 			eventEmitter.broadcast({ type: 'winHide' });
+			stateGame.mascotPose = 'idle';
 		}
 		resetDuelState();
 		stateBet.activeBetModeKey = 'BASE';

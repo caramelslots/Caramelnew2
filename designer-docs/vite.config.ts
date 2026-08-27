@@ -6,6 +6,10 @@ import react from '@vitejs/plugin-react'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 const designerAssetsRoot = path.resolve(rootDir, '../designer_assets')
+const catMafiaAssetsRoot = path.resolve(
+  rootDir,
+  '../third_party/web-sdk/apps/cat_mafia/static/assets',
+)
 
 const MIME: Record<string, string> = {
   '.json': 'application/json',
@@ -16,9 +20,7 @@ const MIME: Record<string, string> = {
   '.jpeg': 'image/jpeg',
 }
 
-function serveDesignerAssets(): Plugin {
-  const mount = '/designer-assets'
-
+function serveStaticMount(mount: string, assetsRoot: string, name: string): Plugin {
   const handler = (
     req: { url?: string },
     res: {
@@ -30,9 +32,9 @@ function serveDesignerAssets(): Plugin {
   ) => {
     const raw = req.url?.split('?')[0] ?? ''
     const rel = decodeURIComponent(raw.replace(/^\/+/, ''))
-    const filePath = path.normalize(path.join(designerAssetsRoot, rel))
+    const filePath = path.normalize(path.join(assetsRoot, rel))
 
-    if (!filePath.startsWith(designerAssetsRoot)) {
+    if (!filePath.startsWith(assetsRoot)) {
       res.statusCode = 403
       res.end('Forbidden')
       return
@@ -51,7 +53,7 @@ function serveDesignerAssets(): Plugin {
   }
 
   return {
-    name: 'serve-designer-assets',
+    name,
     configureServer(server) {
       server.middlewares.use(mount, handler)
     },
@@ -59,16 +61,20 @@ function serveDesignerAssets(): Plugin {
       server.middlewares.use(mount, handler)
     },
     closeBundle() {
-      const outDir = path.resolve(rootDir, 'dist/designer-assets')
-      if (!fs.existsSync(designerAssetsRoot)) return
+      const outDir = path.resolve(rootDir, `dist${mount}`)
+      if (!fs.existsSync(assetsRoot)) return
       fs.mkdirSync(outDir, { recursive: true })
-      fs.cpSync(designerAssetsRoot, outDir, { recursive: true })
+      fs.cpSync(assetsRoot, outDir, { recursive: true })
     },
   }
 }
 
 export default defineConfig({
-  plugins: [react(), serveDesignerAssets()],
+  plugins: [
+    react(),
+    serveStaticMount('/designer-assets', designerAssetsRoot, 'serve-designer-assets'),
+    serveStaticMount('/cat-mafia-assets', catMafiaAssetsRoot, 'serve-cat-mafia-assets'),
+  ],
   resolve: {
     alias: {
       '@assets': designerAssetsRoot,

@@ -96,6 +96,7 @@ export function ReelLabStage({
   const labRef = useRef<HTMLDivElement>(null)
 
   const stageUrls = useMemo(() => resolveStageUrls(stageOverrides), [stageOverrides])
+  const backgroundSpine = stageOverrides.backgroundSpine ?? null
 
   // When library grows/shrinks, keep filter in sync and auto-include new uploads.
   useEffect(() => {
@@ -194,7 +195,7 @@ export function ReelLabStage({
 
   const sharedBoardProps = {
     allowedSymbolIds: allowedIds,
-    backgroundSpine: stageOverrides.backgroundSpine ?? null,
+    backgroundSpine,
     board,
     layoutKind,
     library: symbols,
