@@ -1,4 +1,6 @@
 import { useCallback, useId, useState } from 'react'
+import { BackgroundGuideAccordion } from './BackgroundGuideAccordion'
+import { HudGuideAccordion } from './HudGuideAccordion'
 import { AnimationControls } from '../symbols/AnimationControls'
 import { SpinePreviewStage } from '../../pixi/SpinePreviewStage'
 import type {
@@ -21,9 +23,19 @@ const GUIDE_H1_SOURCE: SpineAssetSource = {
 
 const GUIDE_H1_STATIC_URL = '/designer-assets/H1/H1_static.webp'
 
-type SectionId = 'format' | 'naming' | 'size'
+type SectionId = 'structure' | 'animations' | 'format' | 'naming' | 'size'
 
 const SECTIONS: { id: SectionId; title: string; summary: string }[] = [
+  {
+    id: 'structure',
+    title: 'Структура папки',
+    summary: 'Как сдавать один символ — пример H1',
+  },
+  {
+    id: 'animations',
+    title: 'Анимации — idle, stop, activation',
+    summary: 'Три обязательных клипа в Spine',
+  },
   {
     id: 'format',
     title: 'Формат — WebP',
@@ -36,8 +48,8 @@ const SECTIONS: { id: SectionId; title: string; summary: string }[] = [
   },
   {
     id: 'size',
-    title: 'Размер — 196×196',
-    summary: 'Квадратный static-спрайт',
+    title: 'Размер — 196×196 или 392×392',
+    summary: 'На барабане всегда 196×196',
   },
 ]
 
@@ -56,14 +68,7 @@ export function DesignerGuideAccordion() {
   return (
     <section className="guide" aria-labelledby={`${baseId}-title`}>
       <div className="guide__head">
-        <div>
-          <p className="guide__eyebrow">Требования к ассетам</p>
-          <h2 id={`${baseId}-title`}>Документация для дизайнеров</h2>
-        </div>
-        <p className="guide__lead">
-          Общие правила сдачи символов для слотов. Соблюдайте их на всех новых
-          проектах — так ассеты сразу подходят под пайплайн без правок.
-        </p>
+        <h2 id={`${baseId}-title`}>Документация для дизайнеров</h2>
       </div>
 
       <div className="accordion">
@@ -78,9 +83,7 @@ export function DesignerGuideAccordion() {
               onClick={() => setSymbolsOpen((open) => !open)}
             >
               <span className="accordion__title">Символы</span>
-              <span className="accordion__hint">
-                Формат, нейминг, размер + пример H1
-              </span>
+              <span className="accordion__hint">H1 — структура, анимации, формат, размер</span>
               <span aria-hidden="true" className="accordion__chevron" />
             </button>
           </h3>
@@ -129,6 +132,8 @@ export function DesignerGuideAccordion() {
                           hidden={!isOpen}
                           role="region"
                         >
+                          {section.id === 'structure' ? <StructureSection /> : null}
+                          {section.id === 'animations' ? <AnimationsSection /> : null}
                           {section.id === 'format' ? <FormatSection /> : null}
                           {section.id === 'naming' ? <NamingSection /> : null}
                           {section.id === 'size' ? <SizeSection /> : null}
@@ -140,11 +145,15 @@ export function DesignerGuideAccordion() {
               </div>
 
               <aside className="guide-symbols__preview">
-                <GuideSymbolPreview />
+                {symbolsOpen ? <GuideSymbolPreview /> : null}
               </aside>
             </div>
           </div>
         </div>
+
+        <HudGuideAccordion />
+
+        <BackgroundGuideAccordion />
       </div>
     </section>
   )
@@ -264,26 +273,111 @@ function GuideSymbolPreview() {
   )
 }
 
+function StructureSection() {
+  const rows = [
+    {
+      file: 'H1.json',
+      role: 'Spine skeleton',
+      note: 'Три анимации: idle, stop, activation (см. раздел «Анимации»).',
+    },
+    {
+      file: 'H1.atlas',
+      role: 'Spine atlas',
+      note: 'В первой строке — имя текстуры атласа: H1.webp.',
+    },
+    {
+      file: 'H1.webp',
+      role: 'Текстура Spine-атласа',
+      note: 'Кадры анимации. Размер свободный (часто 1024² / 2048²), не путать со static.',
+    },
+    {
+      file: 'H1_static.webp',
+      role: 'Static для барабана',
+      note: 'Отдельный квадрат 196×196 или 392×392 — показывается при спине.',
+    },
+  ] as const
+
+  return (
+    <div className="guide-copy">
+      <div className="guide-tree" aria-label="Структура папки H1">
+        <p className="guide-tree__root">
+          <span className="guide-tree__icon" aria-hidden="true">
+            📁
+          </span>
+          <code>H1/</code>
+        </p>
+        <ul className="guide-tree__list">
+          {rows.map((row) => (
+            <li className="guide-tree__item" key={row.file}>
+              <code>{row.file}</code>
+              <span className="guide-tree__role">{row.role}</span>
+              <span className="guide-tree__note">{row.note}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <p className="guide-callout">
+        4 файла: <code>{'{id}'}.json</code>, <code>{'{id}'}.atlas</code>,{' '}
+        <code>{'{id}'}.webp</code>, <code>{'{id}'}_static.webp</code>.
+      </p>
+    </div>
+  )
+}
+
+function AnimationsSection() {
+  const rows = [
+    {
+      clip: 'idle',
+      when: 'Покой на барабане после остановки',
+      loop: 'Да (loop)',
+    },
+    {
+      clip: 'stop',
+      when: 'Посадка символа при стопе барабана',
+      loop: 'Нет (one-shot)',
+    },
+    {
+      clip: 'activation',
+      when: 'Выигрышная линия / win-демо',
+      loop: 'Да (loop)',
+    },
+  ] as const
+
+  return (
+    <div className="guide-copy">
+      <div className="naming-table-wrap">
+        <table className="naming-table">
+          <thead>
+            <tr>
+              <th>Имя клипа</th>
+              <th>Когда играет</th>
+              <th>Loop</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={row.clip}>
+                <td>
+                  <code>{row.clip}</code>
+                </td>
+                <td>{row.when}</td>
+                <td>{row.loop}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 function FormatSection() {
   return (
     <div className="guide-copy">
       <p>
-        Статический символ для барабана сдаётся <strong>только в формате WebP</strong>.
-      </p>
-      <ul>
-        <li>Один символ = один файл WebP (без PNG/JPG в финальной сдаче).</li>
-        <li>
-          WebP нужен для стабильного качества при небольшом весе текстур на
-          барабане.
-        </li>
-        <li>
-          Текстура Spine-атласа тоже предпочтительно WebP, но это{' '}
-          <em>отдельный</em> файл анимации. Она не заменяет static-спрайт.
-        </li>
-      </ul>
-      <p className="guide-callout">
-        Имя файла: <code>H1.webp</code>, <code>L2.webp</code> и т.д. — расширение
-        только <code>.webp</code>.
+        Static барабана и текстуры Spine — <strong>WebP</strong>.{' '}
+        <code>H1_static.webp</code> и <code>H1.webp</code> — разные файлы.
       </p>
     </div>
   )
@@ -303,37 +397,13 @@ function NamingSection() {
 
   return (
     <div className="guide-copy">
-      <p>
-        Символы именуются по <strong>слотовым id</strong>, а не по названию арта.
-        Одинаковые имена у static-файла и у папки Spine.
-      </p>
-
-      <div className="guide-defs">
-        <div className="guide-def">
-          <strong>High (H1–H4)</strong>
-          <p>
-            Высокооплачиваемые символы — ключевой арт слота, обычно предметы или
-            персонажи. Дают более крупные выплаты; в наборе их меньше по частоте,
-            зато они визуально главные.
-          </p>
-        </div>
-        <div className="guide-def">
-          <strong>Low (L1–L4)</strong>
-          <p>
-            Низкооплачиваемые символы — чаще всего буквы/масти (A, K, Q, J и т.п.).
-            Появляются чаще, выплаты меньше; визуально проще и легче читаются в
-            сетке.
-          </p>
-        </div>
-      </div>
-
       <div className="naming-table-wrap">
         <table className="naming-table">
           <thead>
             <tr>
               <th>ID</th>
               <th>Тип</th>
-              <th>Static</th>
+              <th>Static (барабан)</th>
               <th>Spine-папка</th>
             </tr>
           </thead>
@@ -345,7 +415,7 @@ function NamingSection() {
                 </td>
                 <td>{row.role}</td>
                 <td>
-                  <code>{row.id}.webp</code>
+                  <code>{row.id}_static.webp</code>
                 </td>
                 <td>
                   <code>{row.id}/</code> → <code>{row.id}.json</code>,{' '}
@@ -356,21 +426,6 @@ function NamingSection() {
           </tbody>
         </table>
       </div>
-
-      <ul>
-        <li>
-          Не сдаём финальные имена вроде «Diamond», «Ace» — только id из таблицы
-          (<code>H1</code>, <code>L3</code>…).
-        </li>
-        <li>
-          В <code>.atlas</code> имя страницы текстуры = имя файла:{' '}
-          <code>H1.webp</code>.
-        </li>
-        <li>
-          Анимации: <code>idle</code>, <code>stop</code> (посадка),{' '}
-          <code>win</code> (или согласованный аналог вроде <code>activation</code>).
-        </li>
-      </ul>
     </div>
   )
 }
@@ -379,23 +434,8 @@ function SizeSection() {
   return (
     <div className="guide-copy">
       <p>
-        Размер <strong>static-спрайта</strong> для барабана:{' '}
-        <strong>196×196 пикселей</strong>.
-      </p>
-      <ul>
-        <li>Холст строго квадратный: ширина = высота = 196.</li>
-        <li>
-          Рисуйте символ внутри квадрата с небольшим запасом по краям — на
-          барабане спрайт масштабируется в ячейку.
-        </li>
-        <li>
-          Не используйте 512 / 1024 / 2048 как static. Большие размеры — только
-          для текстуры Spine-атласа анимации.
-        </li>
-      </ul>
-      <p className="guide-callout">
-        Минимум на символ: <code>H1.webp</code> 196×196 + папка Spine{' '}
-        <code>H1/</code> с анимациями.
+        Static — квадрат <strong>196×196</strong> или <strong>392×392</strong> WebP.
+        На барабане отображается как <strong>196×196</strong>.
       </p>
     </div>
   )

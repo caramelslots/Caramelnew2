@@ -8,6 +8,7 @@ import type {
 } from '../types'
 import { PixiCanvas } from './PixiCanvas'
 import { useSpinePlayer } from './useSpinePlayer'
+import type { FitSpineOptions } from './previewLayout'
 
 type SpinePreviewStageProps = {
   source: SpineAssetSource | null
@@ -16,6 +17,10 @@ type SpinePreviewStageProps = {
   onMetricsChange: (metrics: SpineMetrics | null) => void
   onError: (message: string | null) => void
   onLoadingChange: (loading: boolean) => void
+  startEmpty?: boolean
+  resetOnComplete?: boolean
+  fitOptions?: FitSpineOptions
+  onPlaybackComplete?: () => void
 }
 
 export function SpinePreviewStage({
@@ -25,6 +30,10 @@ export function SpinePreviewStage({
   onMetricsChange,
   onError,
   onLoadingChange,
+  startEmpty,
+  resetOnComplete,
+  fitOptions,
+  onPlaybackComplete,
 }: SpinePreviewStageProps) {
   const [app, setApp] = useState<Application | null>(null)
   const handleAppReady = useCallback((next: Application | null) => {
@@ -39,6 +48,10 @@ export function SpinePreviewStage({
     onMetricsChange,
     onError,
     onLoadingChange,
+    startEmpty,
+    resetOnComplete,
+    fitOptions,
+    onPlaybackComplete,
   })
 
   return <PixiCanvas className="pixi-host" onAppReady={handleAppReady} />

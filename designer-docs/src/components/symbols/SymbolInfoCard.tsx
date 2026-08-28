@@ -40,7 +40,7 @@ export function SymbolInfoCard({ source, error }: SymbolInfoCardProps) {
         </li>
         <li>
           <span>Expected clips</span>
-          <strong>idle · bounce/stop · win/activation</strong>
+          <strong>idle · stop · activation</strong>
         </li>
         <li>
           <span>Export</span>

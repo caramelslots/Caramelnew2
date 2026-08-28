@@ -82,7 +82,7 @@ export type CreateCellSpineOptions = {
  * Place Spine in a cell — cat_mafia SYMBOL_INFO_MAP mapping:
  * - idle/static → animation `idle` (loop)
  * - land → `stop` once, then idle on same spine
- * - win → `win`/`activation`
+ * - win → `win`/`activation` (loop)
  */
 export function createCellSpine(
   template: SpineTemplate,

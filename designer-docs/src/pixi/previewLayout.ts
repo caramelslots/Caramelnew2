@@ -4,6 +4,16 @@ import { Graphics } from 'pixi.js'
 const GRID = 48
 const FIT_PADDING = 0.82
 
+export type FitSpineOptions = {
+  /** Fraction of view used for fitting (lower = more margin). Default 0.82. */
+  padding?: number
+  /** Fixed skeleton bounds — use when getBounds() under-reports glow / halo. */
+  skeletonX?: number
+  skeletonY?: number
+  skeletonWidth?: number
+  skeletonHeight?: number
+}
+
 export function drawPreviewGrid(
   graphics: Graphics,
   width: number,
@@ -35,17 +45,31 @@ export function drawPreviewGrid(
   graphics.stroke()
 }
 
-export function fitSpineToView(spine: Spine, viewWidth: number, viewHeight: number): void {
+export function fitSpineToView(
+  spine: Spine,
+  viewWidth: number,
+  viewHeight: number,
+  options?: FitSpineOptions,
+): void {
   spine.scale.set(1)
   spine.x = 0
   spine.y = 0
-  spine.skeleton.setToSetupPose()
   spine.update(0)
 
-  const bounds = spine.getBounds()
+  const padding = options?.padding ?? FIT_PADDING
+  const bounds =
+    options?.skeletonWidth && options?.skeletonHeight
+      ? {
+          x: options.skeletonX ?? -options.skeletonWidth / 2,
+          y: options.skeletonY ?? -options.skeletonHeight / 2,
+          width: options.skeletonWidth,
+          height: options.skeletonHeight,
+        }
+      : spine.getBounds()
+
   const bw = Math.max(bounds.width, 1)
   const bh = Math.max(bounds.height, 1)
-  const scale = Math.min((viewWidth * FIT_PADDING) / bw, (viewHeight * FIT_PADDING) / bh)
+  const scale = Math.min((viewWidth * padding) / bw, (viewHeight * padding) / bh)
 
   spine.scale.set(scale)
   spine.x = viewWidth / 2 - (bounds.x + bounds.width / 2) * scale

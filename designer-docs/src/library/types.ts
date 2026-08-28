@@ -1,4 +1,9 @@
-import { STATIC_SPRITE_SPEC, SYMBOL_TEXTURE_NATIVE_PX } from '../catalog/symbolSpecs'
+import {
+  STATIC_SPRITE_SPEC,
+  SYMBOL_TEXTURE_NATIVE_PX,
+  SYMBOL_TEXTURE_SOURCE_PX,
+  isAcceptedStaticSpriteSize,
+} from '../catalog/symbolSpecs'
 import type { AnimationRoleMap } from '../types'
 
 export type LibraryReadiness = 'ready' | 'partial' | 'blocked'
@@ -67,20 +72,22 @@ export function computeLibraryStatus(args: {
         `Static формат «${staticSprite.format}» — нужен ${STATIC_SPRITE_SPEC.format}.`,
       )
     }
-    sizeOk =
-      staticSprite.width === SYMBOL_TEXTURE_NATIVE_PX &&
-      staticSprite.height === SYMBOL_TEXTURE_NATIVE_PX
+    sizeOk = isAcceptedStaticSpriteSize(staticSprite.width, staticSprite.height)
     if (!sizeOk) {
       warnings.push(
-        `Static ${staticSprite.width}×${staticSprite.height} — идеал ${SYMBOL_TEXTURE_NATIVE_PX}×${SYMBOL_TEXTURE_NATIVE_PX}.`,
+        `Static ${staticSprite.width}×${staticSprite.height} — нужен квадрат ${SYMBOL_TEXTURE_SOURCE_PX.join(' или ')}.`,
+      )
+    } else if (staticSprite.width !== SYMBOL_TEXTURE_NATIVE_PX) {
+      warnings.push(
+        `Static ${staticSprite.width}×${staticSprite.height} — на барабане будет сжат до ${SYMBOL_TEXTURE_NATIVE_PX}×${SYMBOL_TEXTURE_NATIVE_PX}.`,
       )
     }
   }
 
   if (args.roles) {
     if (!args.roles.idle) warnings.push('Нет клипа idle.')
-    if (!args.roles.bounce) warnings.push('Нет клипа stop/bounce (посадка).')
-    if (!args.roles.win) warnings.push('Нет клипа win/activation.')
+    if (!args.roles.bounce) warnings.push('Нет клипа stop (посадка).')
+    if (!args.roles.win) warnings.push('Нет клипа activation (выигрыш).')
   }
 
   let readiness: LibraryReadiness = 'blocked'

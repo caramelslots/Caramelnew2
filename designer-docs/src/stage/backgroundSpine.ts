@@ -1,12 +1,12 @@
 /**
  * Load + place animated street background (Spine), matching cat_mafia cover math.
  */
-import { Texture } from 'pixi.js'
+import { Assets, Texture } from 'pixi.js'
 import {
   AtlasAttachmentLoader,
   SkeletonJson,
+  Skin,
   Spine,
-  SpineTexture,
   TextureAtlas,
 } from '@esotericsoftware/spine-pixi-v8'
 import { setSpineAutoUpdate } from '../reel/spinePool'
@@ -36,29 +36,38 @@ export type LoadedBackgroundSpine = {
   dispose: () => void
 }
 
-async function readText(url: string): Promise<string> {
-  const response = await fetch(url)
-  if (!response.ok) throw new Error(`Background atlas/skeleton fetch failed (${response.status})`)
-  return response.text()
-}
-
 async function readJson(url: string): Promise<unknown> {
   const response = await fetch(url)
   if (!response.ok) throw new Error(`Background skeleton fetch failed (${response.status})`)
   return response.json()
 }
 
-async function loadTexture(url: string): Promise<Texture> {
-  const response = await fetch(url)
-  if (!response.ok) throw new Error(`Background texture fetch failed (${response.status})`)
-  const blob = await response.blob()
-  const bitmap = await createImageBitmap(blob)
-  const texture = Texture.from(bitmap)
-  if (!texture.source) {
-    bitmap.close()
-    throw new Error('Background texture has no source')
+function atlasAssetAlias(pack: StageBackgroundSpinePack): string {
+  const pages = Object.keys(pack.pageUrls).sort().join('|')
+  return `designer-bg-atlas:${pack.atlasUrl}:${pages}`
+}
+
+/** Load multi-page atlas through spine-pixi-v8 Assets parser (same as cat_mafia). */
+async function loadBackgroundAtlas(pack: StageBackgroundSpinePack): Promise<TextureAtlas> {
+  const alias = atlasAssetAlias(pack)
+  if (!Assets.cache.has(alias)) {
+    Assets.add({
+      alias,
+      src: pack.atlasUrl,
+      data: { images: pack.pageUrls },
+    })
   }
-  return texture
+  return Assets.load<TextureAtlas>(alias)
+}
+
+function atlasTextures(atlas: TextureAtlas): Texture[] {
+  const out: Texture[] = []
+  for (const page of atlas.pages) {
+    const spineTex = page.texture
+    const pixiTexture = spineTex?.texture as Texture | undefined
+    if (pixiTexture) out.push(pixiTexture)
+  }
+  return out
 }
 
 /** Page texture file names listed in a Spine .atlas. */
@@ -80,37 +89,43 @@ export function pickBackgroundIdleAnimation(names: string[], preferred?: string 
   return fuzzy ?? names[0] ?? null
 }
 
+/** Street background uses combined default + day/night skins (cat_mafia BackgroundSkinController). */
+export function applyBackgroundSkin(spine: Spine, skinName: 'day' | 'night' = 'day'): void {
+  const combined = new Skin('designerBackground')
+  const defaultSkin = spine.skeleton.data.findSkin('default')
+  const themeSkin = spine.skeleton.data.findSkin(skinName)
+  if (defaultSkin) combined.addSkin(defaultSkin)
+  if (themeSkin) combined.addSkin(themeSkin)
+  spine.skeleton.setSkin(combined)
+  spine.skeleton.setSlotsToSetupPose()
+}
+
 export async function loadBackgroundSpine(
   pack: StageBackgroundSpinePack,
 ): Promise<LoadedBackgroundSpine> {
-  const [atlasText, skeletonJson] = await Promise.all([
-    readText(pack.atlasUrl),
+  const [atlas, skeletonJson] = await Promise.all([
+    loadBackgroundAtlas(pack),
     readJson(pack.skeletonUrl),
   ])
 
-  const pages = atlasPageNames(atlasText)
-  if (pages.length === 0) {
+  if (atlas.pages.length === 0) {
     throw new Error('Background .atlas has no texture pages')
   }
 
-  const textures: Texture[] = []
-  const atlas = new TextureAtlas(atlasText)
-
   for (const page of atlas.pages) {
-    const name = page.name
-    const url = pack.pageUrls[name]
-    if (!url) {
-      throw new Error(`Missing texture for atlas page "${name}"`)
+    if (!page.texture) {
+      throw new Error(`Atlas page "${page.name}" has no texture`)
     }
-    const texture = await loadTexture(url)
-    textures.push(texture)
-    page.setTexture(SpineTexture.from(texture.source))
   }
+
+  const textures = atlasTextures(atlas)
+  const atlasAlias = atlasAssetAlias(pack)
 
   const parser = new SkeletonJson(new AtlasAttachmentLoader(atlas))
   parser.scale = 1
   const skeletonData = parser.readSkeletonData(skeletonJson)
   const spine = new Spine({ skeletonData, autoUpdate: false })
+  applyBackgroundSkin(spine, 'day')
   setSpineAutoUpdate(spine, true)
 
   const animationNames = skeletonData.animations.map((item) => item.name)
@@ -118,6 +133,7 @@ export async function loadBackgroundSpine(
   if (animationName) {
     spine.state.setAnimation(0, animationName, true)
   }
+  spine.update(0)
 
   let disposed = false
   return {
@@ -139,13 +155,9 @@ export async function loadBackgroundSpine(
       } catch {
         // ignore
       }
-      for (const texture of textures) {
-        try {
-          texture.destroy(true)
-        } catch {
-          // ignore
-        }
-      }
+      void Assets.unload(atlasAlias).catch(() => {
+        // ignore
+      })
     },
   }
 }
@@ -192,7 +204,7 @@ export function layoutBackgroundSprite(
   const plate =
     options?.useStreetPlateNative !== false &&
     Math.abs(texture.width - 1920) < 8 &&
-    Math.abs(texture.height - 956) < 24
+    (Math.abs(texture.height - 1080) < 24 || Math.abs(texture.height - 956) < 24)
       ? BG_PLATE_NATIVE
       : texture
   const scale = backgroundCoverScaleXY(canvas, plate)

@@ -54,12 +54,18 @@ function deskTextureFromPage(page: Texture, url: string): Texture {
   return new Texture({ source: page.source, frame })
 }
 
+export type CreateStageLayersOptions = {
+  /** Docs preview — keep static still under Spine until animation is visible. */
+  keepStillWithSpine?: boolean
+}
+
 export async function createStageLayers(
   board: BoardDimensions,
   getScreen: () => { width: number; height: number },
   getLayoutKind: () => StageLayoutKind,
   urls: ResolvedStageUrls,
   backgroundSpine?: StageBackgroundSpinePack | null,
+  options?: CreateStageLayersOptions,
 ): Promise<StageLayers> {
   const [bgTex, deskBasePage, deskContourPage] = await Promise.all([
     textureFromUrl(urls.background),
@@ -80,7 +86,9 @@ export async function createStageLayers(
   let loadedSpine: LoadedBackgroundSpine | null = null
   if (backgroundSpine) {
     loadedSpine = await loadBackgroundSpine(backgroundSpine)
-    still.visible = false
+    if (!options?.keepStillWithSpine) {
+      still.visible = false
+    }
     backgroundRoot.addChild(loadedSpine.spine)
   }
 
@@ -124,12 +132,11 @@ export async function createStageLayers(
 
     if (loadedSpine) {
       layoutBackgroundSpine(loadedSpine.spine, screen)
-    } else {
-      layoutBackgroundSprite(still, screen, {
-        width: bgTex.width,
-        height: bgTex.height,
-      })
     }
+    layoutBackgroundSprite(still, screen, {
+      width: bgTex.width,
+      height: bgTex.height,
+    })
 
     const placed = layoutStageContent(screen, board, kind)
 

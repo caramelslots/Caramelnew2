@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import '@esotericsoftware/spine-pixi-v8'
+import './pixi/patchSpinePipe'
 import { AppShell, type WorkspaceMode } from './components/layout/AppShell'
 import { useTheme } from './theme/useTheme'
 import { DesignerGuideAccordion } from './components/docs/DesignerGuideAccordion'

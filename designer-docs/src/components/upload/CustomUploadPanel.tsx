@@ -154,7 +154,7 @@ export function CustomUploadPanel({ onUpload, onUploadMany }: CustomUploadPanelP
         </p>
         <p>
           На символ: <code>.json</code> + <code>.atlas</code> + текстура атласа + static
-          (<code>H1.webp</code> / <code>*_static.webp</code>).
+          (<code>H1.webp</code> + <code>H1_static.webp</code>).
         </p>
         <button
           className="btn"
@@ -217,7 +217,7 @@ export function CustomUploadPanel({ onUpload, onUploadMany }: CustomUploadPanelP
             type="file"
             onChange={(event) => setFile('staticSprite', event.target.files)}
           />
-          <em>{pick.staticSprite?.name ?? 'H1.webp · 196×196'}</em>
+          <em>{pick.staticSprite?.name ?? 'H1_static.webp · 196×196 или 392×392'}</em>
         </label>
 
         {error ? (
