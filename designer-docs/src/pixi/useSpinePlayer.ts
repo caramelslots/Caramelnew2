@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Application } from 'pixi.js'
-import type { Spine } from '@esotericsoftware/spine-pixi-v8'
+import type { AnimationStateListener, Spine, TrackEntry } from '@esotericsoftware/spine-pixi-v8'
 import type {
   AnimationRoleMap,
   PlaybackState,
@@ -55,9 +55,7 @@ export function useSpinePlayer({
   fitOptionsRef.current = fitOptions
   const onPlaybackCompleteRef = useRef(onPlaybackComplete)
   onPlaybackCompleteRef.current = onPlaybackComplete
-  const completeListenerRef = useRef<{ complete: (entry: { animation?: { name: string } }) => void } | null>(
-    null,
-  )
+  const completeListenerRef = useRef<AnimationStateListener | null>(null)
   const [readyTick, setReadyTick] = useState(0)
 
   const detachCompleteListener = (spine: Spine | null) => {
@@ -222,8 +220,8 @@ export function useSpinePlayer({
 
     detachCompleteListener(spine)
 
-    const listener = {
-      complete: (entry: { animation?: { name: string } }) => {
+    const listener: AnimationStateListener = {
+      complete: (entry: TrackEntry) => {
         const clip = playbackRef.current.animationName
         if (!clip || entry.animation?.name !== clip || playbackRef.current.loop) return
         resetToSetup(spine)

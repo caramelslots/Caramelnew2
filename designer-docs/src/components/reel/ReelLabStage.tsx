@@ -5,7 +5,7 @@ import { readyStaticSymbols, type BoardGrid } from '../../reel/fillBoard'
 import { ReelBoardCanvas } from '../../reel/ReelBoardCanvas'
 import { resolveStageUrls } from '../../stage/defaultStageUrls'
 import { layoutKindForDevice } from '../../stage/deviceFit'
-import { analyzeQuality, type QualityReport } from '../../stage/qualityLab'
+import { analyzeQuality } from '../../stage/qualityLab'
 import {
   DEVICE_PRESETS,
   QUALITY_PRESETS,

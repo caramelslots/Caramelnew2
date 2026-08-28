@@ -2,7 +2,6 @@ import { useId, useState } from 'react'
 import {
   HUD_GUIDE_EXAMPLES,
   HUD_SPEC_ROWS,
-  HUD_SQUARE_ICON_PEAK,
 } from '../../catalog/hudSpecs'
 import { GuideSpinPreview, HudSpinNestedAccordion } from './SpinGuideAccordion'
 

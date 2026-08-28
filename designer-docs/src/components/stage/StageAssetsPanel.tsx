@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type DragEvent } from 'react'
+import { useRef, useState, type DragEvent } from 'react'
 import {
   GUIDE_BACKGROUND_SPINE_PACK,
   GUIDE_BACKGROUND_STATIC_URL,
