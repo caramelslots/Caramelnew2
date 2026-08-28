@@ -12,7 +12,7 @@ import type { SpineAssetSource } from '../types'
 export function librarySymbolToSpineSource(
   symbol: LibrarySymbol,
 ): SpineAssetSource | null {
-  if (!symbol.status.spineOk) return null
+  if (!symbol.spine.skeletonUrl) return null
   if (symbol.kind === 'catalog') {
     return {
       kind: 'catalog',
@@ -43,6 +43,7 @@ export function createLibrarySymbolFromUpload(
   const status = computeLibraryStatus({
     hasSpine: true,
     staticSprite,
+    roles: payload.roles,
   })
 
   return {
@@ -57,10 +58,10 @@ export function createLibrarySymbolFromUpload(
       atlasTextureName: payload.atlasTextureName,
     },
     staticSprite,
-    roles: null,
-    animationNames: [],
+    roles: payload.roles,
+    animationNames: payload.animationNames,
     status,
-    thumbUrl: staticSprite?.url ?? null,
+    thumbUrl: staticSprite?.url ?? payload.textureUrl,
     revoke: payload.revoke,
   }
 }

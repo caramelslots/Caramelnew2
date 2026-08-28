@@ -80,7 +80,10 @@ function LibraryRow({
           aria-current={selected ? 'true' : undefined}
           className="library-row__main"
           type="button"
-          onClick={() => onSelect(item.id)}
+          onClick={() => {
+            if (selected) return
+            onSelect(item.id)
+          }}
         >
           <span className="library-row__thumb" aria-hidden="true">
             {item.thumbUrl ? (

@@ -1,14 +1,16 @@
 /**
  * Load + place animated street background (Spine), matching cat_mafia cover math.
  */
-import { Assets, Texture } from 'pixi.js'
+import { Texture } from 'pixi.js'
 import {
   AtlasAttachmentLoader,
   SkeletonJson,
   Skin,
   Spine,
+  SpineTexture,
   TextureAtlas,
 } from '@esotericsoftware/spine-pixi-v8'
+import { loadPixiTextureFromUrl } from '../pixi/spineLoader'
 import { setSpineAutoUpdate } from '../reel/spinePool'
 import type { StageBackgroundSpinePack } from './stagePack'
 import { BG_STILL_MATCH_SCALE, BG_VIEW_ZOOM, backgroundCoverScaleXY } from './layout'
@@ -42,32 +44,45 @@ async function readJson(url: string): Promise<unknown> {
   return response.json()
 }
 
-function atlasAssetAlias(pack: StageBackgroundSpinePack): string {
-  const pages = Object.keys(pack.pageUrls).sort().join('|')
-  return `designer-bg-atlas:${pack.atlasUrl}:${pages}`
+async function readText(url: string): Promise<string> {
+  const response = await fetch(url)
+  if (!response.ok) throw new Error(`Background atlas fetch failed (${response.status})`)
+  return response.text()
 }
 
-/** Load multi-page atlas through spine-pixi-v8 Assets parser (same as cat_mafia). */
-async function loadBackgroundAtlas(pack: StageBackgroundSpinePack): Promise<TextureAtlas> {
-  const alias = atlasAssetAlias(pack)
-  if (!Assets.cache.has(alias)) {
-    Assets.add({
-      alias,
-      src: pack.atlasUrl,
-      data: { images: pack.pageUrls },
-    })
+function resolvePageUrl(pageUrls: Record<string, string>, pageName: string): string {
+  if (pageUrls[pageName]) return pageUrls[pageName]!
+  const lower = pageName.toLowerCase()
+  const key = Object.keys(pageUrls).find((item) => item.toLowerCase() === lower)
+  if (!key) {
+    throw new Error(`Нет текстуры для страницы atlas «${pageName}»`)
   }
-  return Assets.load<TextureAtlas>(alias)
+  return pageUrls[key]!
 }
 
-function atlasTextures(atlas: TextureAtlas): Texture[] {
-  const out: Texture[] = []
+/**
+ * Manual multi-page atlas load — blob: URLs from folder upload do not work
+ * reliably through Pixi Assets (same approach as symbol spineLoader).
+ */
+async function loadBackgroundAtlas(
+  pack: StageBackgroundSpinePack,
+): Promise<{ atlas: TextureAtlas; textures: Texture[] }> {
+  const atlasText = await readText(pack.atlasUrl)
+  const atlas = new TextureAtlas(atlasText)
+  const textures: Texture[] = []
+
+  if (atlas.pages.length === 0) {
+    throw new Error('Background .atlas has no texture pages')
+  }
+
   for (const page of atlas.pages) {
-    const spineTex = page.texture
-    const pixiTexture = spineTex?.texture as Texture | undefined
-    if (pixiTexture) out.push(pixiTexture)
+    const url = resolvePageUrl(pack.pageUrls, page.name)
+    const texture = await loadPixiTextureFromUrl(url)
+    page.setTexture(SpineTexture.from(texture.source))
+    textures.push(texture)
   }
-  return out
+
+  return { atlas, textures }
 }
 
 /** Page texture file names listed in a Spine .atlas. */
@@ -100,26 +115,24 @@ export function applyBackgroundSkin(spine: Spine, skinName: 'day' | 'night' = 'd
   spine.skeleton.setSlotsToSetupPose()
 }
 
+export function backgroundSpineHasVisibleBounds(spine: Spine): boolean {
+  const bounds = spine.getBounds()
+  return bounds.width > 1 && bounds.height > 1
+}
+
 export async function loadBackgroundSpine(
   pack: StageBackgroundSpinePack,
 ): Promise<LoadedBackgroundSpine> {
-  const [atlas, skeletonJson] = await Promise.all([
+  const [{ atlas, textures }, skeletonJson] = await Promise.all([
     loadBackgroundAtlas(pack),
     readJson(pack.skeletonUrl),
   ])
-
-  if (atlas.pages.length === 0) {
-    throw new Error('Background .atlas has no texture pages')
-  }
 
   for (const page of atlas.pages) {
     if (!page.texture) {
       throw new Error(`Atlas page "${page.name}" has no texture`)
     }
   }
-
-  const textures = atlasTextures(atlas)
-  const atlasAlias = atlasAssetAlias(pack)
 
   const parser = new SkeletonJson(new AtlasAttachmentLoader(atlas))
   parser.scale = 1
@@ -155,9 +168,13 @@ export async function loadBackgroundSpine(
       } catch {
         // ignore
       }
-      void Assets.unload(atlasAlias).catch(() => {
-        // ignore
-      })
+      for (const texture of textures) {
+        try {
+          texture.destroy(true)
+        } catch {
+          // ignore
+        }
+      }
     },
   }
 }

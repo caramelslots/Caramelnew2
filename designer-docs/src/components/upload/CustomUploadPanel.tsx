@@ -1,12 +1,9 @@
-import { useId, useRef, useState, type DragEvent, type FormEvent } from 'react'
+import { useId, useRef, useState, type DragEvent } from 'react'
+import { computeLibraryStatus } from '../../library/types'
 import type { ValidatedUpload } from './UploadValidation'
 import {
-  buildValidatedUpload,
   buildValidatedUploadsFromFiles,
   collectFilesFromDataTransfer,
-  staticSpecHint,
-  validateUploadFiles,
-  type UploadPick,
 } from './UploadValidation'
 
 type CustomUploadPanelProps = {
@@ -14,92 +11,54 @@ type CustomUploadPanelProps = {
   onUploadMany?: (payloads: ValidatedUpload[]) => void
 }
 
-const emptyPick = (): UploadPick => ({
-  skeleton: null,
-  atlas: null,
-  texture: null,
-  staticSprite: null,
-})
+function docWarningsForUpload(upload: ValidatedUpload): string[] {
+  return computeLibraryStatus({
+    hasSpine: true,
+    staticSprite: upload.staticSprite,
+    roles: upload.roles,
+  }).warnings
+}
 
 export function CustomUploadPanel({ onUpload, onUploadMany }: CustomUploadPanelProps) {
   const formId = useId()
   const folderInputRef = useRef<HTMLInputElement>(null)
-  const [pick, setPick] = useState<UploadPick>(emptyPick)
   const [error, setError] = useState<string | null>(null)
-  const [notes, setNotes] = useState<string[]>([])
+  const [warnings, setWarnings] = useState<string[]>([])
+  const [success, setSuccess] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [dragOver, setDragOver] = useState(false)
 
-  const setFile = (key: keyof UploadPick, fileList: FileList | null) => {
-    setPick((prev) => ({ ...prev, [key]: fileList?.[0] ?? null }))
-    setError(null)
-    setNotes([])
-  }
-
-  const commitOne = (validated: ValidatedUpload) => {
-    onUpload(validated)
-  }
-
   const commitMany = (validated: ValidatedUpload[]) => {
     if (validated.length === 1) {
-      commitOne(validated[0]!)
+      onUpload(validated[0]!)
       return
     }
     if (onUploadMany) onUploadMany(validated)
-    else validated.forEach(commitOne)
-  }
-
-  const handleSubmit = async (event: FormEvent) => {
-    event.preventDefault()
-    const validationError = validateUploadFiles(pick)
-    if (validationError) {
-      setError(validationError)
-      return
-    }
-
-    setBusy(true)
-    setError(null)
-    setNotes([])
-    try {
-      const validated = await buildValidatedUpload(pick)
-      const hint = staticSpecHint(validated.staticSprite)
-      commitOne(validated)
-      setPick(emptyPick)
-      setNotes(
-        hint
-          ? [hint]
-          : validated.staticSprite
-            ? ['Символ добавлен в библиотеку.']
-            : ['Символ добавлен без static — статус Partial.'],
-      )
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed')
-    } finally {
-      setBusy(false)
-    }
+    else validated.forEach((item) => onUpload(item))
   }
 
   const ingestFiles = async (files: File[]) => {
     setBusy(true)
     setError(null)
-    setNotes([])
+    setWarnings([])
+    setSuccess(null)
     try {
       const { uploads, errors } = await buildValidatedUploadsFromFiles(files)
-      if (uploads.length > 0) commitMany(uploads)
-      const hints = uploads
-        .map((item) => {
-          const hint = staticSpecHint(item.staticSprite)
-          return hint ? `${item.label}: ${hint}` : null
-        })
-        .filter((line): line is string => Boolean(line))
-      setNotes([
-        uploads.length > 0 ? `Добавлено символов: ${uploads.length}.` : '',
-        ...hints,
-      ].filter(Boolean))
+      if (uploads.length > 0) {
+        commitMany(uploads)
+        const docWarnings = uploads.flatMap((upload) =>
+          docWarningsForUpload(upload).map((line) => `${upload.label}: ${line}`),
+        )
+        setWarnings(docWarnings)
+        setSuccess(
+          uploads.length === 1
+            ? `Символ «${uploads[0]!.label}» добавлен.`
+            : `Добавлено символов: ${uploads.length}.`,
+        )
+      }
       if (errors.length > 0) {
         setError(errors.join('\n'))
       }
-      setPick(emptyPick)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed')
     } finally {
@@ -128,9 +87,7 @@ export function CustomUploadPanel({ onUpload, onUploadMany }: CustomUploadPanelP
     <section className="panel-block" aria-labelledby={`${formId}-title`}>
       <div className="panel-block__head">
         <h2 id={`${formId}-title`}>Upload</h2>
-        <p>
-          Spine + отдельный static WebP. Можно дропнуть несколько папок сразу.
-        </p>
+        <p>Папка символа: .json + .atlas + текстура + static WebP</p>
       </div>
 
       <div
@@ -152,17 +109,14 @@ export function CustomUploadPanel({ onUpload, onUploadMany }: CustomUploadPanelP
         <p>
           <strong>Drop folder(s) here</strong>
         </p>
-        <p>
-          На символ: <code>.json</code> + <code>.atlas</code> + текстура атласа + static
-          (<code>H1.webp</code> + <code>H1_static.webp</code>).
-        </p>
+        <p className="muted">Пример: папка H1/ как в документации</p>
         <button
-          className="btn"
+          className="btn btn--primary"
           disabled={busy}
           type="button"
           onClick={() => folderInputRef.current?.click()}
         >
-          Choose folder
+          {busy ? 'Loading…' : 'Choose folder'}
         </button>
         <input
           ref={folderInputRef}
@@ -177,64 +131,23 @@ export function CustomUploadPanel({ onUpload, onUploadMany }: CustomUploadPanelP
         />
       </div>
 
-      <form className="upload-form" onSubmit={handleSubmit}>
-        <p className="upload-or">или выбрать файлы вручную</p>
-
-        <label className="file-field">
-          <span>Skeleton (.json)</span>
-          <input
-            accept=".json,application/json"
-            type="file"
-            onChange={(event) => setFile('skeleton', event.target.files)}
-          />
-          <em>{pick.skeleton?.name ?? 'Choose file'}</em>
-        </label>
-
-        <label className="file-field">
-          <span>Atlas (.atlas)</span>
-          <input
-            accept=".atlas,text/plain"
-            type="file"
-            onChange={(event) => setFile('atlas', event.target.files)}
-          />
-          <em>{pick.atlas?.name ?? 'Choose file'}</em>
-        </label>
-
-        <label className="file-field">
-          <span>Atlas texture</span>
-          <input
-            accept=".webp,.png,.jpg,.jpeg,image/*"
-            type="file"
-            onChange={(event) => setFile('texture', event.target.files)}
-          />
-          <em>{pick.texture?.name ?? 'Choose file'}</em>
-        </label>
-
-        <label className="file-field">
-          <span>Static sprite (reel)</span>
-          <input
-            accept=".webp,.png,.jpg,.jpeg,image/*"
-            type="file"
-            onChange={(event) => setFile('staticSprite', event.target.files)}
-          />
-          <em>{pick.staticSprite?.name ?? 'H1_static.webp · 196×196 или 392×392'}</em>
-        </label>
-
-        {error ? (
-          <p className="form-error" style={{ whiteSpace: 'pre-wrap' }}>
-            {error}
-          </p>
-        ) : null}
-        {notes.map((note) => (
-          <p className="form-note" key={note}>
-            {note}
-          </p>
-        ))}
-
-        <button className="btn btn--primary" disabled={busy} type="submit">
-          {busy ? 'Loading…' : 'Add to library'}
-        </button>
-      </form>
+      {success ? <p className="form-note">{success}</p> : null}
+      {warnings.length > 0 ? (
+        <div className="form-warnings" role="status">
+          <p className="form-warnings__title">Не совпадает с документацией</p>
+          <ul>
+            {warnings.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+          <p className="muted">Символ всё равно добавлен — preview и проверка доступны.</p>
+        </div>
+      ) : null}
+      {error ? (
+        <p className="form-error" style={{ whiteSpace: 'pre-wrap' }}>
+          {error}
+        </p>
+      ) : null}
     </section>
   )
 }

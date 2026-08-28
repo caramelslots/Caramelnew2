@@ -5,6 +5,7 @@ import {
   isAcceptedStaticSpriteSize,
 } from '../catalog/symbolSpecs'
 import type { AnimationRoleMap } from '../types'
+import { animationRoleWarnings } from '../pixi/animationRoles'
 
 export type LibraryReadiness = 'ready' | 'partial' | 'blocked'
 
@@ -85,9 +86,7 @@ export function computeLibraryStatus(args: {
   }
 
   if (args.roles) {
-    if (!args.roles.idle) warnings.push('Нет клипа idle.')
-    if (!args.roles.bounce) warnings.push('Нет клипа stop (посадка).')
-    if (!args.roles.win) warnings.push('Нет клипа activation (выигрыш).')
+    warnings.push(...animationRoleWarnings(args.roles))
   }
 
   let readiness: LibraryReadiness = 'blocked'

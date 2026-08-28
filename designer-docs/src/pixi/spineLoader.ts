@@ -35,7 +35,8 @@ async function readJson(url: string): Promise<unknown> {
  * Load texture outside Pixi Assets cache so remount/dispose cannot
  * null out a shared Texture.source while another load is in flight.
  */
-async function loadTexture(url: string): Promise<Texture> {
+/** Fetch + decode raster for Spine (works with blob: ObjectURLs). */
+export async function loadPixiTextureFromUrl(url: string): Promise<Texture> {
   const response = await fetch(url)
   if (!response.ok) {
     throw new Error(`Failed to fetch texture ${url} (${response.status})`)
@@ -91,7 +92,7 @@ export async function loadSpineFromSource(source: SpineAssetSource): Promise<Loa
   const [atlasText, skeletonJson, texture] = await Promise.all([
     readText(source.atlasUrl),
     readJson(source.skeletonUrl),
-    loadTexture(source.textureUrl),
+    loadPixiTextureFromUrl(source.textureUrl),
   ])
 
   const atlas = new TextureAtlas(atlasText)

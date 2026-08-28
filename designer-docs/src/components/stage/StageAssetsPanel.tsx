@@ -1,271 +1,197 @@
 import { useId, useRef, useState, type DragEvent } from 'react'
-import { getDefaultStageUrls } from '../../stage/defaultStageUrls'
-import { atlasPageNames } from '../../stage/backgroundSpine'
 import {
-  STAGE_SLOT_META,
-  revokeBackgroundSpine,
-  type StageBackgroundSpinePack,
-  type StagePackOverrides,
-  type StageSlotId,
-} from '../../stage/stagePack'
+  GUIDE_BACKGROUND_SPINE_PACK,
+  GUIDE_BACKGROUND_STATIC_URL,
+} from '../../catalog/backgroundSpecs'
+import {
+  buildBackgroundPackFromFiles,
+  type BackgroundPackUpload,
+} from '../../stage/backgroundUpload'
+import { revokeBackgroundSpine, type StagePackOverrides } from '../../stage/stagePack'
+import { collectFilesFromDataTransfer } from '../upload/UploadValidation'
 
 type StageAssetsPanelProps = {
   overrides: StagePackOverrides
   onChange: (next: StagePackOverrides) => void
 }
 
-const JSON_EXT = /\.json$/i
-const ATLAS_EXT = /\.atlas$/i
-const TEX_EXT = /\.(webp|png|jpe?g)$/i
-
 export function StageAssetsPanel({ overrides, onChange }: StageAssetsPanelProps) {
-  const inputId = useId()
-  const fileRef = useRef<HTMLInputElement>(null)
-  const spineInputRef = useRef<HTMLInputElement>(null)
-  const pendingSlot = useRef<StageSlotId | null>(null)
-  const defaults = getDefaultStageUrls()
-  const [spineError, setSpineError] = useState<string | null>(null)
-  const [spineDrag, setSpineDrag] = useState(false)
+  const folderInputRef = useRef<HTMLInputElement>(null)
+  const activePackRevokeRef = useRef<(() => void) | null>(null)
+  const [bgError, setBgError] = useState<string | null>(null)
+  const [bgWarnings, setBgWarnings] = useState<string[]>([])
+  const [bgSuccess, setBgSuccess] = useState<string | null>(null)
+  const [bgBusy, setBgBusy] = useState(false)
+  const [bgDrag, setBgDrag] = useState(false)
 
-  const setSlot = (id: StageSlotId, url: string | null) => {
-    const next = { ...overrides }
-    if (url) next[id] = url
-    else delete next[id]
-    onChange(next)
-  }
-
-  const setBackgroundSpine = (pack: StageBackgroundSpinePack | null) => {
-    const next = { ...overrides }
+  const revokeCustomBackground = () => {
+    activePackRevokeRef.current?.()
+    activePackRevokeRef.current = null
     revokeBackgroundSpine(overrides.backgroundSpine)
-    if (pack) next.backgroundSpine = pack
-    else delete next.backgroundSpine
-    onChange(next)
-    setSpineError(null)
-  }
-
-  const pick = (id: StageSlotId) => {
-    pendingSlot.current = id
-    const input = fileRef.current
-    if (!input) return
-    const meta = STAGE_SLOT_META.find((item) => item.id === id)
-    input.accept = meta?.accept ?? 'image/*'
-    input.click()
-  }
-
-  const onFile = (fileList: FileList | null) => {
-    const id = pendingSlot.current
-    pendingSlot.current = null
-    const file = fileList?.[0]
-    if (!id || !file) return
-    if (overrides[id]?.startsWith('blob:')) URL.revokeObjectURL(overrides[id]!)
-    setSlot(id, URL.createObjectURL(file))
-  }
-
-  const commitSpineFiles = async (files: File[]) => {
-    setSpineError(null)
-    try {
-      const pack = await buildBackgroundSpinePack(files)
-      setBackgroundSpine(pack)
-    } catch (err) {
-      setSpineError(err instanceof Error ? err.message : 'Spine background upload failed')
+    if (overrides.background?.startsWith('blob:')) {
+      URL.revokeObjectURL(overrides.background)
     }
   }
 
-  const onSpineFiles = (fileList: FileList | null) => {
+  const applyBackgroundPack = (pack: BackgroundPackUpload | null) => {
+    revokeCustomBackground()
+    const next = { ...overrides }
+    delete next.backgroundSpine
+    delete next.background
+
+    if (pack) {
+      activePackRevokeRef.current = pack.revoke
+      next.backgroundSpine = pack.spine
+      if (pack.staticUrl) next.background = pack.staticUrl
+    }
+
+    onChange(next)
+    setBgError(null)
+    setBgWarnings(pack?.warnings ?? [])
+    setBgSuccess(
+      pack
+        ? `Фон «${pack.spine.label ?? 'background'}» · ${Object.keys(pack.spine.pageUrls).length} atlas pages`
+        : null,
+    )
+  }
+
+  const commitBackgroundFiles = async (files: File[]) => {
+    setBgBusy(true)
+    setBgError(null)
+    setBgWarnings([])
+    setBgSuccess(null)
+    try {
+      const pack = await buildBackgroundPackFromFiles(files)
+      applyBackgroundPack(pack)
+    } catch (err) {
+      setBgError(err instanceof Error ? err.message : 'Background upload failed')
+    } finally {
+      setBgBusy(false)
+    }
+  }
+
+  const onBackgroundFolder = async (fileList: FileList | null) => {
     if (!fileList?.length) return
-    void commitSpineFiles([...fileList])
+    await commitBackgroundFiles([...fileList])
+    if (folderInputRef.current) folderInputRef.current.value = ''
   }
 
-  const onSpineDrop = (event: DragEvent) => {
+  const onBackgroundDrop = async (event: DragEvent) => {
     event.preventDefault()
-    setSpineDrag(false)
-    const list = event.dataTransfer?.files
-    if (list?.length) void commitSpineFiles([...list])
+    setBgDrag(false)
+    try {
+      const files = await collectFilesFromDataTransfer(event.dataTransfer)
+      await commitBackgroundFiles(files)
+    } catch (err) {
+      setBgError(err instanceof Error ? err.message : 'Drop failed')
+    }
   }
 
-  const env = STAGE_SLOT_META.filter((item) => item.group === 'environment')
+  const loadExampleBackground = () => {
+    revokeCustomBackground()
+    onChange({
+      ...overrides,
+      background: GUIDE_BACKGROUND_STATIC_URL,
+      backgroundSpine: GUIDE_BACKGROUND_SPINE_PACK,
+    })
+    setBgError(null)
+    setBgWarnings([])
+    setBgSuccess('Пример designer_assets/background')
+  }
+
+  const resetBackground = () => {
+    applyBackgroundPack(null)
+  }
+
   const spine = overrides.backgroundSpine
+  const hasCustomBackground = Boolean(spine || overrides.background?.startsWith('blob:'))
 
   return (
     <section className="panel-block stage-assets-panel">
       <div className="panel-block__head">
-        <h2>Stage assets</h2>
-        <p>Свои фон / desk. Пусто = дефолтная procedural-доска (можно заменить upload’ом).</p>
+        <h2>Background</h2>
+        <p>
+          Папка <code>background/</code> как в документации — Spine + static, multi-page atlas.
+        </p>
       </div>
 
-      <input
-        ref={fileRef}
-        accept="image/*"
-        className="sr-only"
-        id={inputId}
-        type="file"
-        onChange={(event) => {
-          onFile(event.target.files)
-          event.target.value = ''
-        }}
-      />
-      <input
-        ref={spineInputRef}
-        accept=".json,.atlas,.webp,.png,.jpg,.jpeg"
-        className="sr-only"
-        multiple
-        type="file"
-        onChange={(event) => {
-          onSpineFiles(event.target.files)
-          event.target.value = ''
-        }}
-      />
-
-      <p className="stage-assets-panel__group">Animated background</p>
       <div
         className={
-          spineDrag
+          bgDrag
             ? 'stage-spine-drop is-active'
-            : spine
+            : hasCustomBackground
               ? 'stage-spine-drop is-custom'
               : 'stage-spine-drop'
         }
         onDragEnter={(event) => {
           event.preventDefault()
-          setSpineDrag(true)
+          setBgDrag(true)
         }}
-        onDragLeave={() => setSpineDrag(false)}
+        onDragLeave={(event) => {
+          event.preventDefault()
+          if (event.currentTarget === event.target) setBgDrag(false)
+        }}
         onDragOver={(event) => event.preventDefault()}
-        onDrop={onSpineDrop}
+        onDrop={onBackgroundDrop}
       >
         <div className="stage-spine-drop__meta">
-          <strong>{spine ? spine.label ?? 'Spine background' : 'Spine street'}</strong>
+          <strong>{spine ? spine.label ?? 'Custom background' : 'Street background'}</strong>
           <span>
             {spine
-              ? `Custom · ${Object.keys(spine.pageUrls).length} tex · ${spine.animationName ?? 'auto idle'}`
-              : 'json + atlas + webp (можно несколько страниц)'}
+              ? `${Object.keys(spine.pageUrls).length} atlas pages · ${overrides.background ? 'static loaded' : 'no static'}`
+              : 'background.json + .atlas + .webp (+ _2, _3, …) + background_static.webp'}
           </span>
         </div>
         <div className="stage-asset-row__actions">
           <button
-            className="btn"
+            className="btn btn--primary"
+            disabled={bgBusy}
             type="button"
-            onClick={() => spineInputRef.current?.click()}
+            onClick={() => folderInputRef.current?.click()}
           >
-            Upload
+            {bgBusy ? 'Loading…' : 'Choose folder'}
           </button>
-          {spine ? (
-            <button className="btn btn--ghost" type="button" onClick={() => setBackgroundSpine(null)}>
+          <button className="btn" type="button" onClick={loadExampleBackground}>
+            Example
+          </button>
+          {hasCustomBackground ? (
+            <button className="btn btn--ghost" type="button" onClick={resetBackground}>
               Reset
             </button>
           ) : null}
         </div>
+        <input
+          ref={folderInputRef}
+          className="sr-only"
+          multiple
+          type="file"
+          onChange={(event) => void onBackgroundFolder(event.target.files)}
+          {...({
+            webkitdirectory: '',
+            directory: '',
+          } as Record<string, string>)}
+        />
       </div>
-      {spineError ? <p className="form-error">{spineError}</p> : null}
+
+      {bgSuccess ? <p className="form-note">{bgSuccess}</p> : null}
+      {bgWarnings.length > 0 ? (
+        <div className="form-warnings" role="status">
+          <p className="form-warnings__title">Не совпадает с документацией</p>
+          <ul>
+            {bgWarnings.map((line) => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+          <p className="muted">Фон всё равно применится в Reel Lab.</p>
+        </div>
+      ) : null}
+      {bgError ? <p className="form-error">{bgError}</p> : null}
+
       <p className="stage-assets-panel__hint">
-        Опционально: папка <code>background/</code> с <code>skeleton.json</code>,{' '}
-        <code>skeleton.atlas</code>, <code>skeleton.webp</code> (+ <code>_2</code>/<code>_3</code>).
-        При наличии Spine still-фон прячется.
+        Atlas может содержать любое число страниц — имена в <code>.atlas</code> = имена файлов (
+        <code>background.webp</code>, <code>background_2.webp</code>, …). При Spine still прячется
+        после загрузки анимации.
       </p>
-
-      <p className="stage-assets-panel__group">Environment</p>
-      <ul className="stage-asset-list">
-        {env.map((slot) => (
-          <StageAssetRow
-            key={slot.id}
-            custom={Boolean(overrides[slot.id])}
-            label={slot.label}
-            previewUrl={overrides[slot.id] ?? defaults[slot.id]}
-            statusLabel={overrides[slot.id] ? 'Custom' : 'Default'}
-            onClear={() => setSlot(slot.id, null)}
-            onPick={() => pick(slot.id)}
-          />
-        ))}
-      </ul>
     </section>
-  )
-}
-
-async function buildBackgroundSpinePack(files: File[]): Promise<StageBackgroundSpinePack> {
-  const skeleton = files.find((file) => JSON_EXT.test(file.name))
-  const atlas = files.find((file) => ATLAS_EXT.test(file.name))
-  if (!skeleton) throw new Error('Нужен skeleton.json')
-  if (!atlas) throw new Error('Нужен skeleton.atlas')
-
-  const atlasText = await atlas.text()
-  const pages = atlasPageNames(atlasText)
-  if (pages.length === 0) throw new Error('В .atlas нет страниц текстур')
-
-  const byName = new Map(files.map((file) => [file.name.toLowerCase(), file]))
-  const pageUrls: Record<string, string> = {}
-  const urlsToRevoke: string[] = []
-
-  try {
-    for (const page of pages) {
-      const file = byName.get(page.toLowerCase())
-      if (!file) {
-        const loose = files.find(
-          (item) => TEX_EXT.test(item.name) && item.name.toLowerCase().includes(page.toLowerCase().replace(/\.[^.]+$/, '')),
-        )
-        if (!loose) {
-          throw new Error(`Нет файла текстуры для страницы "${page}"`)
-        }
-        const url = URL.createObjectURL(loose)
-        urlsToRevoke.push(url)
-        pageUrls[page] = url
-        continue
-      }
-      const url = URL.createObjectURL(file)
-      urlsToRevoke.push(url)
-      pageUrls[page] = url
-    }
-
-    const skeletonUrl = URL.createObjectURL(skeleton)
-    const atlasUrl = URL.createObjectURL(new Blob([atlasText], { type: 'text/plain' }))
-    urlsToRevoke.push(skeletonUrl, atlasUrl)
-
-    return {
-      skeletonUrl,
-      atlasUrl,
-      pageUrls,
-      label: skeleton.name.replace(/\.json$/i, ''),
-      animationName: null,
-    }
-  } catch (err) {
-    for (const url of urlsToRevoke) URL.revokeObjectURL(url)
-    throw err
-  }
-}
-
-function StageAssetRow({
-  label,
-  custom,
-  previewUrl,
-  statusLabel,
-  onPick,
-  onClear,
-}: {
-  label: string
-  custom: boolean
-  previewUrl?: string
-  statusLabel: string
-  onPick: () => void
-  onClear: () => void
-}) {
-  return (
-    <li className={custom ? 'stage-asset-row is-custom' : 'stage-asset-row'}>
-      <div className="stage-asset-row__thumb">
-        {previewUrl ? <img alt="" src={previewUrl} /> : <span>DEF</span>}
-      </div>
-      <div className="stage-asset-row__meta">
-        <strong>{label}</strong>
-        <span>{statusLabel}</span>
-      </div>
-      <div className="stage-asset-row__actions">
-        <button className="btn" type="button" onClick={onPick}>
-          Upload
-        </button>
-        {custom ? (
-          <button className="btn btn--ghost" type="button" onClick={onClear}>
-            Reset
-          </button>
-        ) : null}
-      </div>
-    </li>
   )
 }

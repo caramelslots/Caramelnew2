@@ -1,5 +1,10 @@
 import { STATIC_SPRITE_SPEC } from '../../catalog/symbolSpecs'
 import type { StaticSpriteInfo } from '../../library/types'
+import type { AnimationRoleMap } from '../../types'
+import {
+  listAnimationNamesFromSkeletonJson,
+  resolveAnimationRoles,
+} from '../../pixi/animationRoles'
 
 const TEXTURE_EXT = /\.(webp|png|jpe?g)$/i
 const SKELETON_EXT = /\.json$/i
@@ -22,6 +27,8 @@ export type ValidatedUpload = {
   textureFileName: string
   atlasTextureName: string
   staticSprite: StaticSpriteInfo | null
+  animationNames: string[]
+  roles: AnimationRoleMap
   revoke: () => void
 }
 
@@ -217,6 +224,15 @@ export async function buildValidatedUpload(files: UploadPick): Promise<Validated
   const urls = [skeletonUrl, atlasUrl, textureUrl]
   if (staticSprite) urls.push(staticSprite.url)
 
+  let skeletonJson: unknown
+  try {
+    skeletonJson = JSON.parse(await files.skeleton.text())
+  } catch {
+    throw new Error('Skeleton .json повреждён или не читается.')
+  }
+  const animationNames = listAnimationNamesFromSkeletonJson(skeletonJson)
+  const roles = resolveAnimationRoles(animationNames)
+
   return {
     label,
     skeletonUrl,
@@ -225,6 +241,8 @@ export async function buildValidatedUpload(files: UploadPick): Promise<Validated
     textureFileName: files.texture.name,
     atlasTextureName,
     staticSprite,
+    animationNames,
+    roles,
     revoke: () => {
       for (const url of urls) URL.revokeObjectURL(url)
     },

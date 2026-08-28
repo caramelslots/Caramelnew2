@@ -1,21 +1,14 @@
+import type { LibrarySymbol } from '../../library/types'
 import type { SpineAssetSource } from '../../types'
 
 type SymbolInfoCardProps = {
   source: SpineAssetSource | null
+  selected: LibrarySymbol | null
   error: string | null
 }
 
-export function SymbolInfoCard({ source, error }: SymbolInfoCardProps) {
-  if (error) {
-    return (
-      <section className="panel-block panel-block--alert">
-        <h2>Load error</h2>
-        <p>{error}</p>
-      </section>
-    )
-  }
-
-  if (!source) {
+export function SymbolInfoCard({ source, selected, error }: SymbolInfoCardProps) {
+  if (!selected) {
     return (
       <section className="panel-block">
         <h2>Symbol</h2>
@@ -24,8 +17,8 @@ export function SymbolInfoCard({ source, error }: SymbolInfoCardProps) {
     )
   }
 
-  const title = source.kind === 'catalog' ? source.symbolId : source.label
-  const kind = source.kind === 'catalog' ? 'Catalog' : 'Custom upload'
+  const title = selected.label
+  const kind = selected.kind === 'catalog' ? 'Catalog' : 'Upload'
 
   return (
     <section className="panel-block" aria-labelledby="symbol-info-title">
@@ -33,20 +26,33 @@ export function SymbolInfoCard({ source, error }: SymbolInfoCardProps) {
         <h2 id="symbol-info-title">{title}</h2>
         <p>{kind}</p>
       </div>
-      <ul className="spec-list">
-        <li>
-          <span>Texture</span>
-          <strong>{source.textureFileName}</strong>
-        </li>
-        <li>
-          <span>Expected clips</span>
-          <strong>idle · stop · activation</strong>
-        </li>
-        <li>
-          <span>Export</span>
-          <strong>Spine 4.2 · JSON + atlas + webp</strong>
-        </li>
-      </ul>
+      {error ? (
+        <p className="form-error" style={{ marginBottom: 8 }}>
+          Spine: {error}
+        </p>
+      ) : null}
+      {source ? (
+        <ul className="spec-list">
+          <li>
+            <span>Texture</span>
+            <strong>{source.textureFileName}</strong>
+          </li>
+          <li>
+            <span>Клипы</span>
+            <strong>idle · stop · activation</strong>
+          </li>
+          <li>
+            <span>Static</span>
+            <strong>
+              {selected.staticSprite
+                ? `${selected.staticSprite.width}×${selected.staticSprite.height} ${selected.staticSprite.format}`
+                : 'нет'}
+            </strong>
+          </li>
+        </ul>
+      ) : (
+        <p className="muted">Spine-пакет не загружен.</p>
+      )}
     </section>
   )
 }

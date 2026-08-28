@@ -28,8 +28,6 @@ import {
   type BoardDimensions,
 } from './reel/constants'
 import type { BoardGrid } from './reel/fillBoard'
-import { MAX_LIVE_IDLE_SPINES } from './reel/spineBudget'
-import type { QualityReport } from './stage/qualityLab'
 import type { DevicePresetId, QualityPresetId } from './stage/presets'
 import type {
   AnimationRole,
@@ -68,7 +66,7 @@ export default function App() {
     : ''
 
   const source = useMemo(() => {
-    if (!selected || !selected.status.spineOk) return null
+    if (!selected?.spine.skeletonUrl) return null
     return librarySymbolToSpineSource(selected)
     // selectedSpineKey captures the spine identity without roles/status churn.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -97,7 +95,6 @@ export default function App() {
   const [deviceId, setDeviceId] = useState<DevicePresetId>('desktop')
   const [qualityId, setQualityId] = useState<QualityPresetId>('1080p')
   const [reelGrid, setReelGrid] = useState<BoardGrid | null>(null)
-  const [qualityReport, setQualityReport] = useState<QualityReport | null>(null)
   const [scenarioRequest, setScenarioRequest] = useState<{
     id: QuickScenarioId
     nonce: number
@@ -106,10 +103,6 @@ export default function App() {
   const handleQuickScenario = useCallback((id: QuickScenarioId) => {
     setMode('reel')
     setScenarioRequest({ id, nonce: Date.now() })
-  }, [])
-
-  const handleQualityReport = useCallback((report: QualityReport) => {
-    setQualityReport(report)
   }, [])
 
   useEffect(
@@ -122,6 +115,7 @@ export default function App() {
   )
 
   const selectSymbol = (id: string) => {
+    if (id === selectedId) return
     setSelectedId(id)
     setPlayback((prev) => ({ ...prev, animationName: null, playNonce: prev.playNonce + 1 }))
     setError(null)
@@ -232,13 +226,12 @@ export default function App() {
             onDeviceChange={setDeviceId}
             onGridChange={setReelGrid}
             onQualityChange={setQualityId}
-            onQualityReport={handleQualityReport}
           />
         ) : (
           <div className="stage-frame">
             <div className="stage-frame__bar">
               <span>
-                {loading ? 'Loading…' : source ? 'Live preview' : 'No symbol / no spine'}
+                {loading ? 'Loading…' : source ? 'Live preview' : 'No symbol selected'}
               </span>
               {customActive ? <span className="chip">Custom</span> : null}
               {selected ? (
@@ -247,14 +240,26 @@ export default function App() {
                 </span>
               ) : null}
             </div>
-            <SpinePreviewStage
-              playback={playback}
-              source={source}
-              onAnimationsChange={handleAnimationsChange}
-              onError={setError}
-              onLoadingChange={setLoading}
-              onMetricsChange={setMetrics}
-            />
+            {selected && selected.status.warnings.length > 0 ? (
+              <div className="stage-frame__warnings" role="status">
+                <p className="stage-frame__warnings-title">Не совпадает с документацией</p>
+                <ul>
+                  {selected.status.warnings.map((warning) => (
+                    <li key={warning}>{warning}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            <div className="stage-frame__canvas">
+              <SpinePreviewStage
+                playback={playback}
+                source={source}
+                onAnimationsChange={handleAnimationsChange}
+                onError={setError}
+                onLoadingChange={setLoading}
+                onMetricsChange={setMetrics}
+              />
+            </div>
           </div>
         )
       }
@@ -266,20 +271,18 @@ export default function App() {
             grid={reelGrid}
             library={library}
             qualityId={qualityId}
-            qualityReport={qualityReport}
-            selected={selected}
-            spineBudget={MAX_LIVE_IDLE_SPINES}
             onQuickScenario={handleQuickScenario}
+            onQualityChange={setQualityId}
             onSelectSymbol={selectSymbol}
           />
         ) : (
           <>
-            <SymbolInfoCard error={error} source={source} />
+            <SymbolInfoCard error={error} selected={selected} source={source} />
             {selected?.status.warnings.length ? (
               <section className="panel-block panel-block--alert">
                 <div className="panel-block__head">
-                  <h2>Warnings</h2>
-                  <p>Проверка static / клипов</p>
+                  <h2>Документация</h2>
+                  <p>Отличия от требований — preview работает</p>
                 </div>
                 <ul className="library-warnings">
                   {selected.status.warnings.map((warning) => (

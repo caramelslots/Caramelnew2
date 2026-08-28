@@ -1,6 +1,7 @@
 import { Container, Rectangle, Sprite, Texture } from 'pixi.js'
 import { type BoardDimensions } from '../reel/constants'
 import {
+  backgroundSpineHasVisibleBounds,
   layoutBackgroundSpine,
   layoutBackgroundSprite,
   loadBackgroundSpine,
@@ -86,10 +87,11 @@ export async function createStageLayers(
   let loadedSpine: LoadedBackgroundSpine | null = null
   if (backgroundSpine) {
     loadedSpine = await loadBackgroundSpine(backgroundSpine)
-    if (!options?.keepStillWithSpine) {
+    backgroundRoot.addChild(loadedSpine.spine)
+    const spineVisible = backgroundSpineHasVisibleBounds(loadedSpine.spine)
+    if (!options?.keepStillWithSpine && spineVisible) {
       still.visible = false
     }
-    backgroundRoot.addChild(loadedSpine.spine)
   }
 
   /**

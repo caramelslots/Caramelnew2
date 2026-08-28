@@ -1,5 +1,7 @@
+import '@esotericsoftware/spine-pixi-v8'
 import { useEffect, useRef, useState } from 'react'
 import { Application, Container, Texture } from 'pixi.js'
+import '../pixi/patchSpinePipe'
 import type { LibrarySymbol } from '../library/types'
 import { createStageLayers } from '../stage/buildStage'
 import type { StageLayoutKind } from '../stage/deviceFit'
@@ -362,7 +364,7 @@ export function ReelBoardCanvas({
         )
         if (!grid) {
           onGridChangeRef.current(null)
-          onErrorRef.current('Добавьте в Library символы со static WebP.')
+          onErrorRef.current(null)
           return
         }
         gridRef.current = grid

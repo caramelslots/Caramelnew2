@@ -8,7 +8,7 @@ type QualityPickerProps = {
 export function QualityPicker({ value, onChange }: QualityPickerProps) {
   return (
     <div className="quality-picker">
-      <div className="quality-picker__grid">
+      <div className="quality-picker__chips">
         {QUALITY_PRESETS.map((preset) => (
           <button
             key={preset.id}

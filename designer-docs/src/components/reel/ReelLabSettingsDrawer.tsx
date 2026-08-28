@@ -16,8 +16,6 @@ type ReelLabSettingsDrawerProps = {
   board: BoardDimensions
   deviceId: DevicePresetId
   qualityId: QualityPresetId
-  useSpineAfterStop: boolean
-  showEnvironment: boolean
   pool: LibrarySymbol[]
   allowedIds: string[] | null
   stageOverrides: StagePackOverrides
@@ -25,8 +23,6 @@ type ReelLabSettingsDrawerProps = {
   onBoardChange: (board: BoardDimensions) => void
   onDeviceChange: (id: DevicePresetId) => void
   onQualityChange: (id: QualityPresetId) => void
-  onUseSpineAfterStopChange: (value: boolean) => void
-  onShowEnvironmentChange: (value: boolean) => void
   onToggleAllowed: (id: string) => void
   onStageOverridesChange: (next: StagePackOverrides) => void
 }
@@ -36,8 +32,6 @@ export function ReelLabSettingsDrawer({
   board,
   deviceId,
   qualityId,
-  useSpineAfterStop,
-  showEnvironment,
   pool,
   allowedIds,
   stageOverrides,
@@ -45,8 +39,6 @@ export function ReelLabSettingsDrawer({
   onBoardChange,
   onDeviceChange,
   onQualityChange,
-  onUseSpineAfterStopChange,
-  onShowEnvironmentChange,
   onToggleAllowed,
   onStageOverridesChange,
 }: ReelLabSettingsDrawerProps) {
@@ -132,51 +124,19 @@ export function ReelLabSettingsDrawer({
           <section className="reel-settings__section">
             <h3>Board</h3>
             <div className="reel-settings__row">
-              <label className="field">
-                <span>Cols</span>
-                <input
-                  min={MIN_BOARD_COLS}
-                  type="number"
-                  value={board.cols}
-                  onChange={(event) =>
-                    onBoardChange({
-                      ...board,
-                      cols: clampBoardDim(Number(event.target.value), MIN_BOARD_COLS),
-                    })
-                  }
-                />
-              </label>
-              <label className="field">
-                <span>Rows</span>
-                <input
-                  min={MIN_BOARD_ROWS}
-                  type="number"
-                  value={board.rows}
-                  onChange={(event) =>
-                    onBoardChange({
-                      ...board,
-                      rows: clampBoardDim(Number(event.target.value), MIN_BOARD_ROWS),
-                    })
-                  }
-                />
-              </label>
+              <BoardDimStepper
+                label="Cols"
+                min={MIN_BOARD_COLS}
+                value={board.cols}
+                onChange={(cols) => onBoardChange({ ...board, cols })}
+              />
+              <BoardDimStepper
+                label="Rows"
+                min={MIN_BOARD_ROWS}
+                value={board.rows}
+                onChange={(rows) => onBoardChange({ ...board, rows })}
+              />
             </div>
-            <label className="check-field">
-              <input
-                checked={useSpineAfterStop}
-                type="checkbox"
-                onChange={(event) => onUseSpineAfterStopChange(event.target.checked)}
-              />
-              <span>Spine after stop</span>
-            </label>
-            <label className="check-field">
-              <input
-                checked={showEnvironment}
-                type="checkbox"
-                onChange={(event) => onShowEnvironmentChange(event.target.checked)}
-              />
-              <span>Stage look (bg / desk)</span>
-            </label>
           </section>
 
           {pool.length > 1 ? (
@@ -210,6 +170,50 @@ export function ReelLabSettingsDrawer({
           </section>
         </div>
       </aside>
+    </div>
+  )
+}
+
+function BoardDimStepper({
+  label,
+  value,
+  min,
+  onChange,
+}: {
+  label: string
+  value: number
+  min: number
+  onChange: (next: number) => void
+}) {
+  const step = (delta: number) => {
+    onChange(clampBoardDim(value + delta, min))
+  }
+
+  return (
+    <div className="field board-dim-stepper">
+      <span>{label}</span>
+      <div className="board-dim-stepper__control">
+        <span className="board-dim-stepper__value">{value}</span>
+        <div className="board-dim-stepper__arrows">
+          <button
+            aria-label={`${label} +1`}
+            className="board-dim-stepper__btn"
+            type="button"
+            onClick={() => step(1)}
+          >
+            ▲
+          </button>
+          <button
+            aria-label={`${label} −1`}
+            className="board-dim-stepper__btn"
+            disabled={value <= min}
+            type="button"
+            onClick={() => step(-1)}
+          >
+            ▼
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

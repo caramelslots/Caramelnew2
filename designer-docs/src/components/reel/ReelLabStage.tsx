@@ -13,6 +13,7 @@ import {
   type QualityPresetId,
 } from '../../stage/presets'
 import type { StagePackOverrides } from '../../stage/stagePack'
+import { revokeBackgroundSpine } from '../../stage/stagePack'
 import { DeviceViewport } from '../stage/DeviceViewport'
 import type { QuickScenarioId } from './ReelInspectPanel'
 import { ReelLabSettingsDrawer } from './ReelLabSettingsDrawer'
@@ -59,7 +60,6 @@ type ReelLabStageProps = {
   onDeviceChange: (id: DevicePresetId) => void
   onQualityChange: (id: QualityPresetId) => void
   onGridChange?: (grid: BoardGrid | null) => void
-  onQualityReport?: (report: QualityReport) => void
 }
 
 export function ReelLabStage({
@@ -72,7 +72,6 @@ export function ReelLabStage({
   onDeviceChange,
   onQualityChange,
   onGridChange,
-  onQualityReport,
 }: ReelLabStageProps) {
   const device = DEVICE_PRESETS.find((item) => item.id === deviceId) ?? DEVICE_PRESETS[0]!
   const quality = QUALITY_PRESETS.find((item) => item.id === qualityId) ?? QUALITY_PRESETS[2]!
@@ -87,16 +86,27 @@ export function ReelLabStage({
   const [spinning, setSpinning] = useState(false)
   const [grid, setGrid] = useState<BoardGrid | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [useSpineAfterStop, setUseSpineAfterStop] = useState(true)
-  const [showEnvironment, setShowEnvironment] = useState(true)
   const [allowedIds, setAllowedIds] = useState<string[] | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [stageOverrides, setStageOverrides] = useState<StagePackOverrides>({})
+  const stageOverridesRef = useRef(stageOverrides)
+  stageOverridesRef.current = stageOverrides
   const [isFullscreen, setIsFullscreen] = useState(false)
   const labRef = useRef<HTMLDivElement>(null)
 
   const stageUrls = useMemo(() => resolveStageUrls(stageOverrides), [stageOverrides])
   const backgroundSpine = stageOverrides.backgroundSpine ?? null
+
+  useEffect(() => {
+    return () => {
+      const overrides = stageOverridesRef.current
+      revokeBackgroundSpine(overrides.backgroundSpine)
+      for (const key of ['background', 'deskBase', 'deskContour'] as const) {
+        const url = overrides[key]
+        if (typeof url === 'string' && url.startsWith('blob:')) URL.revokeObjectURL(url)
+      }
+    }
+  }, [])
 
   // When library grows/shrinks, keep filter in sync and auto-include new uploads.
   useEffect(() => {
@@ -141,10 +151,6 @@ export function ReelLabStage({
   )
 
   useEffect(() => {
-    onQualityReport?.(qualityReport)
-  }, [qualityReport, onQualityReport])
-
-  useEffect(() => {
     if (!scenarioRequest) return
     switch (scenarioRequest.id) {
       case 'desktop-1080':
@@ -169,7 +175,7 @@ export function ReelLabStage({
   }
 
   const canSpin = staticReady > 0 && !spinning
-  const canWin = Boolean(grid) && !spinning && useSpineAfterStop
+  const canWin = Boolean(grid) && !spinning
 
   const toggleFullscreen = () => {
     const el = labRef.current
@@ -200,10 +206,10 @@ export function ReelLabStage({
     layoutKind,
     library: symbols,
     refillNonce,
-    showEnvironment,
+    showEnvironment: true,
     spinNonce,
     stageUrls,
-    useSpineAfterStop,
+    useSpineAfterStop: true,
     winNonce,
   }
 
@@ -221,6 +227,11 @@ export function ReelLabStage({
           <span className="reel-lab__pill">
             {board.cols}×{board.rows}
           </span>
+          {backgroundSpine ? (
+            <span className="reel-lab__pill">
+              BG · {Object.keys(backgroundSpine.pageUrls).length}p
+            </span>
+          ) : null}
         </div>
 
         <div className="reel-lab__actions">
@@ -293,17 +304,13 @@ export function ReelLabStage({
         open={settingsOpen}
         pool={pool}
         qualityId={qualityId}
-        showEnvironment={showEnvironment}
         stageOverrides={stageOverrides}
-        useSpineAfterStop={useSpineAfterStop}
         onBoardChange={onBoardChange}
         onClose={() => setSettingsOpen(false)}
         onDeviceChange={onDeviceChange}
         onQualityChange={onQualityChange}
-        onShowEnvironmentChange={setShowEnvironment}
         onStageOverridesChange={setStageOverrides}
         onToggleAllowed={toggleAllowed}
-        onUseSpineAfterStopChange={setUseSpineAfterStop}
       />
     </div>
   )

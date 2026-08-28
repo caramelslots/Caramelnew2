@@ -29,7 +29,7 @@ export const BOARD_MASK_SPIN_OVERFLOW = { top: 24, bottom: 11 } as const
 export const MIN_BOARD_COLS = 3
 export const MIN_BOARD_ROWS = 3
 export const DEFAULT_BOARD_COLS = 5
-export const DEFAULT_BOARD_ROWS = 4
+export const DEFAULT_BOARD_ROWS = 5
 
 export type BoardDimensions = {
   cols: number
