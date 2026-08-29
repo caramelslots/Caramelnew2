@@ -32,6 +32,11 @@ export const devPreview = $state({
 	 */
 	forceShowFsBoardChrome: false,
 	/**
+	 * Layout-only Duel preview (dual desks + scale + mascots) without running a book.
+	 * Sets `stateDuel.active` with sample banks / counters.
+	 */
+	forceShowDuelLayout: false,
+	/**
 	 * Pin designer paw coins on the board (x1 bronze / x2 silver / x3 gold).
 	 * `nonce` remounts the sprites so appear can replay.
 	 */

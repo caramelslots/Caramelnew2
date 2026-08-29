@@ -6,8 +6,8 @@
 	  2. Автоигра запущена → клик останавливает автоигру.
 	  3. Idle → открывает модалку выбора параметров автоигры.
 
-	Desktop: designer_assets/autoplay.png + текст «Autoplay».
-	Portrait/mobile: designer_assets/buttons/autoplay_mob.png (квадратная иконка).
+	Desktop: ui/autoplay/autoplay.webp (AUTO_PC) + текст «Autoplay».
+	Portrait/mobile: ui/autoplay/autoplay_mobile.webp (квадратная иконка).
 -->
 <script lang="ts">
 	import { Container, Sprite, Text } from 'pixi-svelte';

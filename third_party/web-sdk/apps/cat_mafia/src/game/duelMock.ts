@@ -112,6 +112,7 @@ export const buildDuelMockBook = (
 		{ index: 0, type: 'duelStart', totalSpinsPerSide: 10, playerSide },
 		...buildSpins(playerSide, playerWon),
 	];
+	// Purchase 3×B reveal is injected in playBet via ensureDuelPurchaseReveal.
 	const end = events.find((e) => e.type === 'duelEnd');
 	const payoutCents = end && end.type === 'duelEnd' ? end.payout : 0;
 

@@ -21,6 +21,7 @@ import { stateGame } from './stateGame.svelte';
 import { devPreview } from './devPreview.svelte';
 import { resolveSymbolDevPreview } from './symbolDevPreview';
 import type { RawSymbol, SymbolName, SymbolState } from './types';
+import { ensureDuelPurchaseReveal } from './duelPurchaseReveal';
 
 // general utils
 export const { getEmptyBoard } = createGetEmptyPaddedBoard({ reelsDimensions: BOARD_DIMENSIONS });
@@ -54,7 +55,9 @@ export const playBookEvents = async (
 
 export const playBet = async (bet: Bet) => {
 	stateBet.winBookEventAmount = 0;
-	await playBookEvents(bet.state);
+	// Buy Duel: cosmetic basegame spin with 3× B before duelStart (math books omit it).
+	const events = ensureDuelPurchaseReveal(bet.state);
+	await playBookEvents(events);
 	eventEmitter.broadcast({ type: 'stopButtonEnable' });
 };
 

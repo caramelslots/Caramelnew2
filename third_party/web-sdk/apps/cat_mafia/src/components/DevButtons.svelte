@@ -74,6 +74,16 @@
 	import type { BookEvent } from '../game/typesBookEvent';
 	import type { GameType, RawSymbol, SymbolName } from '../game/types';
 	import config from '../game/config';
+	import {
+		getDuelInitialVisibleBoard,
+		resetDuelState,
+		stateDuel,
+	} from '../game/stateDuel.svelte';
+	import {
+		getDuelBoardStack,
+		getDuelPaddingBoard,
+		padDuelBoardForPixi,
+	} from '../game/stateDuelBoards.svelte';
 
 	let open = $state(false);
 	let langOpen = $state(false);
@@ -225,6 +235,7 @@
 		devPreview.symbolAnim = null;
 
 		if (next) {
+			if (devPreview.forceShowDuelLayout) toggleDuelLayoutPreview(false);
 			fsChromePrevGameType = stateGame.gameType;
 			stateGame.gameType = 'freegame';
 			devPreview.forceShowDrum = true;
@@ -246,6 +257,40 @@
 				fsChromePrevGameType = null;
 			}
 			resetBulletFlyPreview();
+		}
+	};
+
+	/** Dual-desk + bank scale layout without starting a Duel book. */
+	const toggleDuelLayoutPreview = (force?: boolean) => {
+		const next = force ?? !devPreview.forceShowDuelLayout;
+		devPreview.forceShowDuelLayout = next;
+		devPreview.symbolAnim = null;
+
+		if (next) {
+			if (devPreview.forceShowFsBoardChrome) toggleFsBoardChromePreview();
+			resetDuelState();
+			stateDuel.active = true;
+			stateDuel.phase = 'playing';
+			stateDuel.playerSide = 'cat';
+			stateDuel.totalSpinsPerSide = 10;
+			stateDuel.dogSpinIndex = 4;
+			stateDuel.catSpinIndex = 3;
+			// Sample banks so the paw sits off-centre (dog slightly ahead).
+			stateDuel.dogTotal = 180;
+			stateDuel.catTotal = 120;
+			stateDuel.activeSide = 'dog';
+			stateGame.duelIntroActive = false;
+
+			const pad = getDuelPaddingBoard(config.paddingReels.basegame);
+			stateDuel.dogBoard = getDuelInitialVisibleBoard();
+			stateDuel.catBoard = getDuelInitialVisibleBoard();
+			for (const side of ['dog', 'cat'] as const) {
+				const visible = side === 'dog' ? stateDuel.dogBoard : stateDuel.catBoard;
+				getDuelBoardStack(side).enhancedBoard.settle(padDuelBoardForPixi(visible, pad));
+				eventEmitter.broadcast({ type: 'paylineClearAll', side });
+			}
+		} else {
+			resetDuelState();
 		}
 	};
 
@@ -1317,6 +1362,21 @@
 						onclick={toggleFsBoardChromePreview}
 					>
 						{devPreview.forceShowFsBoardChrome ? 'Hide FS Board' : 'Show FS Board'}
+					</button>
+				</div>
+			</section>
+
+			<section>
+				<h4>Duel Layout</h4>
+				<p class="subhint">Dual desks + VS scale + mascots — layout only, no book / spins.</p>
+				<div class="grid">
+					<button
+						type="button"
+						class:active={devPreview.forceShowDuelLayout}
+						title="Toggle Duel dual-board layout without starting a duel"
+						onclick={() => toggleDuelLayoutPreview()}
+					>
+						{devPreview.forceShowDuelLayout ? 'Hide Duel Layout' : 'Show Duel Layout'}
 					</button>
 				</div>
 			</section>

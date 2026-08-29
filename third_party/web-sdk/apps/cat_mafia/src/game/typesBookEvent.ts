@@ -188,6 +188,13 @@ export type BookEventTargetShootRound = {
 };
 
 /** Duel Stage C — math book events. Amounts are book cents (×100 bet multiples). */
+export type BookEventDuelPurchaseCelebrate = {
+	index: number;
+	type: 'duelPurchaseCelebrate';
+	/** Padded B scatter positions — same celebrate path as freeSpinTrigger. */
+	positions: Position[];
+};
+
 export type BookEventDuelStart = {
 	index: number;
 	type: 'duelStart';
@@ -272,6 +279,7 @@ export type BookEvent =
 	| BookEventBulletCollect
 	| BookEventTargetShootRound
 	// Cat Mafia Duel Stage A
+	| BookEventDuelPurchaseCelebrate
 	| BookEventDuelStart
 	| BookEventDuelSpin
 	| BookEventDuelSpinWin

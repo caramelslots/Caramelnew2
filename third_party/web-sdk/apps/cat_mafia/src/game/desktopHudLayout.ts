@@ -1,6 +1,7 @@
 import type { createLayout } from 'utils-layout';
 
 import {
+	AUTOPLAY_PILL_ASPECT,
 	BUY_PANEL_ASPECT,
 	DESKTOP_UI_LAYOUT,
 } from './constants';
@@ -64,11 +65,15 @@ const utilBarOrigin = (layoutWidth: number, layoutHeight: number) => ({
  * Single-row desktop HUD — three packed groups, same proportions on every
  * non-phone canvas:
  *   [i][☰][BUY BONUS]   [−][SPIN][+]   BALANCE/BET [AUTO][⚡]
+ * When `hideAutoplay` (bonus / duel / replay), AUTO drops and BALANCE/BET
+ * pack against turbo: BALANCE/BET [⚡]
  */
 export const computeDesktopHudLayout = (
 	layoutDerived: LayoutDerived,
 	config: DesktopHudLayoutConfig,
+	opts?: { hideAutoplay?: boolean },
 ): DesktopHudPositions => {
+	const hideAutoplay = opts?.hideAutoplay === true;
 	const ml = layoutDerived.mainLayoutStandard();
 	const canvas = layoutDerived.canvasSizes();
 	const bar = utilBarOrigin(ml.width, ml.height);
@@ -90,7 +95,7 @@ export const computeDesktopHudLayout = (
 	const spinRaiseY = toSize(cluster.spinRaiseY ?? 0);
 
 	/**
-	 * Buy Bonus + Auto share the same panel sprite / aspect.
+	 * Buy Bonus + Auto are separate panel sprites; keep each aspect correct.
 	 * If height would exceed the HUD row, shrink width too so buttons don’t stretch.
 	 */
 	const panelHMax = iconSize * 1.05;
@@ -101,10 +106,14 @@ export const computeDesktopHudLayout = (
 		buyBonusW = buyBonusH * BUY_PANEL_ASPECT;
 	}
 	let autoplayWidth = buyBonusW * cluster.autoplayScale;
-	let autoplayHeight = autoplayWidth / BUY_PANEL_ASPECT;
+	let autoplayHeight = autoplayWidth / AUTOPLAY_PILL_ASPECT;
 	if (autoplayHeight > panelHMax) {
 		autoplayHeight = panelHMax;
-		autoplayWidth = autoplayHeight * BUY_PANEL_ASPECT;
+		autoplayWidth = autoplayHeight * AUTOPLAY_PILL_ASPECT;
+	}
+	if (hideAutoplay) {
+		autoplayWidth = 0;
+		autoplayHeight = 0;
 	}
 
 	const balanceFontSize = toSize(config.balanceFontSize);
@@ -147,17 +156,23 @@ export const computeDesktopHudLayout = (
 
 	/**
 	 * Right group as one rigid pack ending at the right margin:
-	 * Balance/Bet → Auto → Turbo
+	 * Balance/Bet → Auto → Turbo  (or Balance/Bet → Turbo when autoplay is gone)
 	 */
-	const rightPackW = balanceBlockW + gap + autoplayWidth + gap + turboSize;
+	const rightPackW = hideAutoplay
+		? balanceBlockW + gap + turboSize
+		: balanceBlockW + gap + autoplayWidth + gap + turboSize;
 	const centerRight = increaseX + smallHalf;
 	const rightPackLeftIdeal = canvas.width - sideMargin - rightPackW;
 	const rightPackLeft = Math.max(centerRight + gap, rightPackLeftIdeal);
 
 	/** balanceAnchorX = right edge of text (CSS translateX(-100%)). */
 	const balanceAnchorX = rightPackLeft + balanceBlockW;
-	const autoX = balanceAnchorX + gap + autoplayHalfW;
-	const turbX = autoX + autoplayHalfW + gap + turboHalf;
+	const autoX = hideAutoplay
+		? balanceAnchorX
+		: balanceAnchorX + gap + autoplayHalfW;
+	const turbX = hideAutoplay
+		? balanceAnchorX + gap + turboHalf
+		: autoX + autoplayHalfW + gap + turboHalf;
 
 	return {
 		info: { x: infoX, y: barY, size: iconSize },

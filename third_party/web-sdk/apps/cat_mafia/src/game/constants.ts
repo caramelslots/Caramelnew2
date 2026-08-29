@@ -483,6 +483,8 @@ const LIGHTER_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * LIGHTER_SKELETON_HEIGHT) / LIGHT
 /** No Y nudge — shared cell fill already centers props with letters. */
 /** Lift H3 (lighter) a few px in the cell — rest pose sits slightly low. */
 const LIGHTER_OFFSET_Y = -6;
+/** Drop L3 (Q) a few px — glyph sits slightly high in the cell. */
+const L3_OFFSET_Y = 5;
 /**
  * Diamond (H1) — fit by outer glow (~752 @ 0.5 → 1504), not body-only;
  * body-only made the gem read larger than letters on the board.
@@ -1026,8 +1028,8 @@ export const PORTRAIT_UI_LAYOUT = {
 } as const;
 
 /** Base Pixi sizes for portrait util buttons (before container scale), ref UI_BASE_SIZE 150. */
-/** Designer autoplay pill — ref designer_assets/autoplay.png (1912×739). */
-export const AUTOPLAY_PILL_ASPECT = 1912 / 739;
+/** Designer autoplay pill — ref AUTO_PC (993×515 after crop). */
+export const AUTOPLAY_PILL_ASPECT = 993 / 515;
 export const AUTOPLAY_PILL_BASE = {
 	width: Math.round(68 * AUTOPLAY_PILL_ASPECT),
 	height: 68,
@@ -1099,6 +1101,7 @@ const makeRenderSpinSprite = (imgKey: string, sizeRatios: RenderSizeRatios, opts
 });
 
 const lighterOpts = { offsetY: LIGHTER_OFFSET_Y };
+const l3Opts = { offsetY: L3_OFFSET_Y };
 /** Diamond celebrate clip is named `activation` (no `win` track). */
 const diamondOpts = { winAnimationName: 'activation' };
 
@@ -1124,19 +1127,19 @@ const h4PostWin = makeRenderPostWin('H4', telephoneSizeRatios);
 
 const l1Static = makeRenderStatic('L1', letterSizeRatios);
 const l2Static = makeRenderStatic('L2', letterSizeRatios);
-const l3Static = makeRenderStatic('L3', letterSizeRatios);
+const l3Static = makeRenderStatic('L3', letterSizeRatios, l3Opts);
 const l4Static = makeRenderStatic('L4', letterSizeRatios);
 const l1Land = makeRenderLand('L1', letterSizeRatios);
 const l2Land = makeRenderLand('L2', letterSizeRatios);
-const l3Land = makeRenderLand('L3', letterSizeRatios);
+const l3Land = makeRenderLand('L3', letterSizeRatios, l3Opts);
 const l4Land = makeRenderLand('L4', letterSizeRatios);
 const l1Win = makeRenderWin('L1', letterSizeRatios);
 const l2Win = makeRenderWin('L2', letterSizeRatios);
-const l3Win = makeRenderWin('L3', letterSizeRatios);
+const l3Win = makeRenderWin('L3', letterSizeRatios, l3Opts);
 const l4Win = makeRenderWin('L4', letterSizeRatios);
 const l1PostWin = makeRenderPostWin('L1', letterSizeRatios);
 const l2PostWin = makeRenderPostWin('L2', letterSizeRatios);
-const l3PostWin = makeRenderPostWin('L3', letterSizeRatios);
+const l3PostWin = makeRenderPostWin('L3', letterSizeRatios, l3Opts);
 const l4PostWin = makeRenderPostWin('L4', letterSizeRatios);
 
 // Spin WebPs already contain only the glyph/prop in a 196² canvas — use the
@@ -1150,7 +1153,7 @@ const h3Spin = makeRenderSpinSprite('H3Img', propSpinSizeRatios, lighterOpts);
 const h4Spin = makeRenderSpinSprite('H4Img', propSpinSizeRatios);
 const l1Spin = makeRenderSpinSprite('L1Img', letterSpinSizeRatios);
 const l2Spin = makeRenderSpinSprite('L2Img', letterSpinSizeRatios);
-const l3Spin = makeRenderSpinSprite('L3Img', letterSpinSizeRatios);
+const l3Spin = makeRenderSpinSprite('L3Img', letterSpinSizeRatios, l3Opts);
 const l4Spin = makeRenderSpinSprite('L4Img', letterSpinSizeRatios);
 const wSpin = makeRenderSpinSprite('WImg', propSpinSizeRatios);
 // Bonus — padded 196² symbol sprite (Bonus.webp / BImg).

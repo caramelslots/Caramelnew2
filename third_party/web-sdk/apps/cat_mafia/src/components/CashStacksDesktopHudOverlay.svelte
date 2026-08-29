@@ -39,6 +39,7 @@
 	const minusUrl = HUD_ASSETS.betMinus;
 	const plusUrl = HUD_ASSETS.betPlus;
 	const buyBonusBgUrl = HUD_ASSETS.buyBonusPanel;
+	const autoplayBgUrl = HUD_ASSETS.autoplay;
 	const turboUrls = {
 		1: HUD_ASSETS.turbo1,
 		2: HUD_ASSETS.turbo2,
@@ -76,7 +77,11 @@
 	const overlayMounted = $derived(show || spinPrewarmActive);
 
 	const hudConfig = $derived(resolveDesktopHudConfig(isPopoutSmall));
-	const pos = $derived(computeDesktopHudLayout(stateLayoutDerived, hudConfig));
+	/** Bonus / duel / replay hide AUTO — pack BALANCE/BET against turbo. */
+	const hideAutoplay = $derived(hudLocked || isReplay);
+	const pos = $derived(
+		computeDesktopHudLayout(stateLayoutDerived, hudConfig, { hideAutoplay }),
+	);
 
 	const buyBonusLabel = $derived(context.i18nDerived.buyBonusPanelButton());
 	const showBuyBonus = $derived(!hudLocked && !isReplay && !isFreeSpinsActive());
@@ -329,19 +334,19 @@
 
 				<button
 					type="button"
-					class="hud-buy-bonus-btn"
+					class="hud-buy-bonus-btn hud-autoplay-btn"
 					class:dimmed={autoplayDisabled && !isAutoSpinModalOpen}
 					style:left="{pos.autoplay.x}px"
 					style:top="{pos.autoplay.y}px"
 					style:width="{pos.autoplay.width}px"
 					style:height="{pos.autoplay.height}px"
-					style:background-image="url('{buyBonusBgUrl}')"
+					style:background-image="url('{autoplayBgUrl}')"
 					style:font-size="{pos.autoplay.fontSize}px"
 					disabled={autoplayDisabled}
 					aria-label={context.i18nDerived.autoplayTitle()}
 					onclick={onAutoplayPress}
 				>
-					<span class="hud-buy-bonus-label" style:font-size="{pos.autoplay.fontSize}px">
+					<span class="hud-buy-bonus-label hud-autoplay-label" style:font-size="{pos.autoplay.fontSize}px">
 						{context.i18nDerived.autoplayTitle()}
 					</span>
 				</button>
@@ -453,6 +458,12 @@
 			0 2px 6px rgba(0, 0, 0, 0.85);
 		pointer-events: none;
 		user-select: none;
+	}
+
+	.hud-autoplay-label {
+		text-shadow:
+			0 0 8px rgba(255, 200, 100, 0.55),
+			0 2px 5px rgba(0, 0, 0, 0.9);
 	}
 
 	.hud-balance-bet {

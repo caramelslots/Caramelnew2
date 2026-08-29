@@ -8,6 +8,7 @@ import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
 import { stateLayoutDerived } from './stateLayout';
+import { devPreview } from './devPreview.svelte';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
 import config from './config';
@@ -1339,11 +1340,21 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 
 	// === Duel Stage C (math books — amounts in book cents) ===
+	/** Cosmetic 3×B celebrate after purchase reveal — same anim as freeSpinTrigger. */
+	duelPurchaseCelebrate: async (bookEvent: BookEventOfType<'duelPurchaseCelebrate'>) => {
+		clearWinSpotlight();
+		if (bookEvent.positions?.length) {
+			await animateBonusSymbols({ positions: bookEvent.positions });
+		}
+	},
+
 	duelStart: async (bookEvent: BookEventOfType<'duelStart'>) => {
 		const preservedSide =
 			bookEvent.playerSide === 'cat' || bookEvent.playerSide === 'dog'
 				? bookEvent.playerSide
 				: stateDuel.playerSide;
+		// Real book overrides layout-only DEV preview.
+		devPreview.forceShowDuelLayout = false;
 		resetDuelState();
 		// Keep active=false until the cloud cover — same reveal timing as FS.
 		stateDuel.phase = 'pick';
