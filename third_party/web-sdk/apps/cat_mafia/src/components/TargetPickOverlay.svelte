@@ -9,88 +9,285 @@
 
 <script lang="ts">
 	/**
-	 * Stage C: 6 targets → player taps one → flip reveal FS count (8/10/12).
-	 * Awarded value is predetermined; click only drives UX.
-	 *
-	 * Mascot (same chain as Stage E shoot, but shoot only on tap):
-	 *   gun_shot_stat_idle → gun_shot_aim (loop while picking)
-	 *   → gun_shot on click → gun_shot_end → idle
+	 * Target pick (after freegame cloud): board slides in → shot → Spine flip →
+	 * FreeSpinIntro while the board slides up and hides.
 	 */
-	import { fade } from 'svelte/transition';
 	import { waitForResolve } from 'utils-shared/wait';
 
 	import { getContext } from '../game/context';
+	import { BOARD_LAYOUT_OFFSETS } from '../game/constants';
 	import {
 		MASCOT_GUN_SHOT_AIM_MS,
 		MASCOT_GUN_SHOT_END_MS,
 		MASCOT_GUN_SHOT_MS,
 		MASCOT_GUN_STAT_IDLE_MS,
+		getMascotGunMuzzlePoint,
+		getMascotPortraitScreenBox,
+		getMascotScreenBox,
 	} from '../game/mascotHtmlSpine';
+	import {
+		portraitBuyPanelCanvasTop,
+		portraitBuyPanelHeightCanvas,
+	} from '../game/portraitHudLayout';
+	import {
+		TARGET_SHOT_EXPLOSION_START_MS,
+		TARGET_SHOT_MUZZLE_DELAY_MS,
+		buildTargetShotCurve,
+		startShotBulletPreload,
+	} from '../game/shotBulletAssets';
 	import { stateGame } from '../game/stateGame.svelte';
+	import {
+		TARGET_BOARD_DEV_VALUES,
+		TARGET_BOARD_PICK_FLIP_MS_BY_ANIM,
+		TARGET_PICK_SLIDE_MS,
+		pickTargetFlipAnim,
+		startTargetBoardPreload,
+		targetPickInnerClip,
+		type TargetBoardPickFlipAnim,
+	} from '../game/targetBoardAssets';
+	import TargetPickBoard from './TargetPickBoard.svelte';
+	import TargetShotBulletOverlay, {
+		type TargetShotFlight,
+	} from './TargetShotBulletOverlay.svelte';
 
 	const context = getContext();
 
 	let show = $state(false);
 	let phase = $state<'prep' | 'pick' | 'shoot' | 'reveal'>('prep');
-	let targets = $state<number[]>([8, 10, 12, 8, 10, 12]);
+	let targets = $state<number[]>([...TARGET_BOARD_DEV_VALUES]);
 	let chosenIndex = $state(0);
 	let awardedFs = $state(10);
-	let clickedIndex = $state<number | null>(null);
-	let faceValues = $state<number[]>([8, 10, 12, 8, 10, 12]);
+	let faceValues = $state<number[]>([...TARGET_BOARD_DEV_VALUES]);
+	let flipped = $state<boolean[]>(Array.from({ length: 6 }, () => false));
+	let spineSeat = $state<number | null>(null);
+	let spineNonce = $state(0);
+	let flipAnim = $state<TargetBoardPickFlipAnim>('v4');
+	let shotFlight = $state<TargetShotFlight | null>(null);
 	let oncomplete = $state(() => {});
+	let onSpineResolve = $state<(() => void) | null>(null);
+	let pickBoard = $state<TargetPickBoard | undefined>();
+
+	$effect(() => {
+		if (!show) return;
+		stateGame.targetPickFlipped = flipped;
+		stateGame.targetPickSpineSeat = spineSeat;
+	});
 
 	const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
+	const tweenSlide = (to: number, ms = TARGET_PICK_SLIDE_MS) =>
+		new Promise<void>((resolve) => {
+			const from = stateGame.targetPickSlide;
+			const origin = performance.now();
+			const tick = (now: number) => {
+				const t = Math.min(1, (now - origin) / ms);
+				const ease = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+				stateGame.targetPickSlide = from + (to - from) * ease;
+				if (t < 1) {
+					requestAnimationFrame(tick);
+					return;
+				}
+				stateGame.targetPickSlide = to;
+				resolve();
+			};
+			requestAnimationFrame(tick);
+		});
+
+	/** Same inner-frame hole as the Pixi cabinet — seats stay on the wood. */
+	const gridStyle = $derived.by(() => {
+		const ml = context.stateLayoutDerived.mainLayout();
+		const layoutType = context.stateLayoutDerived.layoutType();
+		const off = BOARD_LAYOUT_OFFSETS[layoutType] ?? { x: 0, y: 0 };
+		const board = context.stateGameDerived.boardLayout();
+		const hole = targetPickInnerClip();
+		const centerX = ml.x + off.x * ml.scale;
+		const centerY = ml.y + off.y * ml.scale;
+		const cell = board.scale * ml.scale;
+		const originX = centerX - board.width * 0.5 * cell;
+		const originY = centerY - board.height * 0.5 * cell;
+		return [
+			`left:${originX + hole.x * cell}px`,
+			`top:${originY + hole.y * cell}px`,
+			`width:${hole.width * cell}px`,
+			`height:${hole.height * cell}px`,
+			`--slide:${stateGame.targetPickSlide}`,
+		].join(';');
+	});
+
 	const buildFaceValues = (clicked: number) => {
-		const faces = [...targets];
-		// Put awardedFs on the clicked target; put original chosen value into chosenIndex slot if needed.
 		const others = targets.filter((_, i) => i !== chosenIndex);
-		const result = faces.map((_, i) => {
+		return targets.map((_, i) => {
 			if (i === clicked) return awardedFs;
 			return others.shift() ?? 10;
 		});
-		return result;
+	};
+
+	const resolveMuzzlePoint = () => {
+		const live = stateGame.mascotGunMuzzleScreen;
+		if (live) return { x: live.x, y: live.y };
+
+		const ml = context.stateLayoutDerived.mainLayout();
+		const layout = context.stateLayoutDerived.layoutType();
+		const board = context.stateGameDerived.boardLayout();
+		const halfW = (board.visualWidth / 2) * ml.scale;
+		const halfH = (board.visualHeight / 2) * ml.scale;
+		const mascotCenterX = ml.x + (board.x - ml.width * 0.5) * ml.scale;
+		const mascotCenterY = ml.y + (board.y - ml.height * 0.5) * ml.scale;
+		const canvas = context.stateLayoutDerived.canvasSizes();
+		const mascot =
+			layout === 'portrait'
+				? getMascotPortraitScreenBox({
+						canvasWidth: canvas.width,
+						boardCenterY: mascotCenterY,
+						halfH,
+						buyPanelTop: portraitBuyPanelCanvasTop(context.stateLayoutDerived),
+						buyPanelHeight: portraitBuyPanelHeightCanvas(context.stateLayoutDerived),
+					})
+				: getMascotScreenBox({
+						centerX: mascotCenterX,
+						centerY: mascotCenterY,
+						halfW,
+						halfH,
+					});
+		return getMascotGunMuzzlePoint(mascot);
+	};
+
+	const onSpineComplete = () => {
+		onSpineResolve?.();
+		onSpineResolve = null;
 	};
 
 	const onTargetClick = async (index: number) => {
 		if (phase !== 'pick') return;
-		clickedIndex = index;
 		faceValues = buildFaceValues(index);
 		phase = 'shoot';
 
+		const hit = pickBoard?.getSeatHit(index);
+
 		stateGame.mascotPose = 'shoot';
 		stateGame.mascotAnimToken += 1;
+
+		// `gun_shot` holds its last frame — advance to `gun_shot_end` as soon as
+		// the clip finishes, in parallel with the bullet / flip.
+		const mascotAfterShot = (async () => {
+			await wait(MASCOT_GUN_SHOT_MS);
+			stateGame.mascotPose = 'gunShotEnd';
+			await wait(MASCOT_GUN_SHOT_END_MS);
+		})();
+
+		// Wait for the `gun_shot` muzzle-flash beat before launching the projectile.
+		await wait(TARGET_SHOT_MUZZLE_DELAY_MS);
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
-		await wait(MASCOT_GUN_SHOT_MS);
 
+		if (hit) {
+			flipAnim = pickTargetFlipAnim({ x: hit.offsetX, y: hit.offsetY });
+			const muzzle = resolveMuzzlePoint();
+			// Re-sample seat center at launch (board may have moved during aim/flash).
+			const center = pickBoard?.getSeatCenter(index);
+			const endX = (center?.x ?? hit.x - hit.offsetX) + hit.offsetX;
+			const endY = (center?.y ?? hit.y - hit.offsetY) + hit.offsetY;
+			const curve = buildTargetShotCurve({
+				startX: muzzle.x,
+				startY: muzzle.y,
+				endX,
+				endY,
+				seatIndex: index,
+				orientation:
+					context.stateLayoutDerived.layoutType() === 'portrait' ? 'below' : 'side',
+			});
+			shotFlight = {
+				nonce: (shotFlight?.nonce ?? 0) + 1,
+				startX: muzzle.x,
+				startY: muzzle.y,
+				endX,
+				endY,
+				points: curve.points,
+				flyMs: curve.flyMs,
+			};
+			await wait(curve.flyMs);
+		} else {
+			await wait(480);
+		}
+
+		shotFlight = null;
+
+		// Flip with the explosion burst (~67ms into `explosion_bullet`), not on land.
+		await wait(TARGET_SHOT_EXPLOSION_START_MS);
 		phase = 'reveal';
-		await wait(900);
+		spineSeat = index;
+		spineNonce += 1;
 
-		stateGame.mascotPose = 'gunShotEnd';
-		await wait(MASCOT_GUN_SHOT_END_MS);
+		const flipMs = TARGET_BOARD_PICK_FLIP_MS_BY_ANIM[flipAnim];
+		await waitForResolve((resolve) => {
+			onSpineResolve = resolve;
+			setTimeout(resolve, flipMs + 150);
+		});
+		onSpineResolve = null;
+
+		flipped = flipped.map((v, i) => (i === index ? true : v));
+		spineSeat = null;
+
+		await mascotAfterShot;
 		stateGame.mascotPose = 'idle';
+
+		// Congrats over the board; board rides up while the player reads it.
+		const slideOut = tweenSlide(0);
+		context.eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
+		context.eventEmitter.broadcast({
+			type: 'soundMusic',
+			name: 'bgm_freespin',
+			withIntro: true,
+		});
+		await context.eventEmitter.broadcastAsync({
+			type: 'freeSpinIntroUpdate',
+			totalFreeSpins: awardedFs,
+		});
+		context.eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
+		await slideOut;
+
+		stateGame.targetPickOpen = false;
+		show = false;
 		oncomplete();
 	};
 
 	context.eventEmitter.subscribeOnMount({
 		freeSpinTargetPick: async (event) => {
-			targets = event.targets.length === 6 ? [...event.targets] : [8, 10, 12, 8, 10, 12];
+			startShotBulletPreload();
+			startTargetBoardPreload();
+			targets = event.targets.length === 6 ? [...event.targets] : [...TARGET_BOARD_DEV_VALUES];
 			chosenIndex = event.chosenIndex;
 			awardedFs = event.awardedFs;
-			clickedIndex = null;
 			faceValues = [...targets];
+			flipped = Array.from({ length: 6 }, () => false);
+			spineSeat = null;
+			spineNonce = 0;
+			flipAnim = 'v4';
+			shotFlight = null;
+			onSpineResolve = null;
 			phase = 'prep';
+			stateGame.targetPickSeatMode = 'six';
+			stateGame.targetPickSlide = 0;
+			stateGame.targetPickOpen = true;
 			show = true;
 
-			// Prep like Stage E shoot — no gun_shot until the player picks.
+			// Draw / aim as soon as target mode starts — parallel with the board slide,
+			// not after the targets have finished arriving.
 			stateGame.mascotPose = 'gunStatIdle';
-			await wait(MASCOT_GUN_STAT_IDLE_MS);
-			stateGame.mascotPose = 'aim';
-			await wait(MASCOT_GUN_SHOT_AIM_MS);
+			const mascotAimReady = (async () => {
+				await wait(MASCOT_GUN_STAT_IDLE_MS);
+				stateGame.mascotPose = 'aim';
+			})();
+
+			await Promise.all([tweenSlide(1), mascotAimReady]);
+			// Short beat so the aim loop is readable before taps unlock.
+			await wait(Math.min(280, MASCOT_GUN_SHOT_AIM_MS * 0.15));
 			phase = 'pick';
 
 			await waitForResolve((resolve) => {
 				oncomplete = () => {
+					stateGame.targetPickSlide = 0;
+					stateGame.targetPickOpen = false;
 					show = false;
 					resolve();
 				};
@@ -100,45 +297,25 @@
 </script>
 
 {#if show}
-	<div class="overlay" transition:fade={{ duration: 180 }} data-test="target-pick-overlay">
-		<div class="panel">
-			<h2 class="title">{context.i18nDerived.targetPickTitle()}</h2>
-			<p class="hint">
-				{#if phase === 'prep' || phase === 'pick'}
-					{context.i18nDerived.targetPickHintPick()}
-				{:else if phase === 'shoot'}
-					{context.i18nDerived.targetPickHintShoot()}
-				{:else}
-					{context.i18nDerived.targetPickHintWon(awardedFs)}
-				{/if}
-			</p>
-			<div class="grid" class:locked={phase !== 'pick'}>
-				{#each faceValues as value, i (i)}
-					<button
-						type="button"
-						class="target"
-						class:flipped={phase === 'reveal'}
-						class:winner={phase === 'reveal' && i === clickedIndex}
-						class:shooting={phase === 'shoot' && i === clickedIndex}
-						disabled={phase !== 'pick'}
-						onclick={() => onTargetClick(i)}
-						aria-label={`Target ${i + 1}`}
-					>
-						<span class="face front">
-							<span class="ring ring-1"></span>
-							<span class="ring ring-2"></span>
-							<span class="ring ring-3"></span>
-							<span class="bull"></span>
-						</span>
-						<span class="face back">
-							<span class="fs-num">{value}</span>
-							<span class="fs-label">FS</span>
-						</span>
-					</button>
-				{/each}
+	<div class="overlay" data-test="target-pick-overlay">
+		<div class="grid-clip" style={gridStyle}>
+			<div class="slide">
+				<TargetPickBoard
+					bind:this={pickBoard}
+					values={faceValues}
+					{flipped}
+					{spineSeat}
+					{spineNonce}
+					{flipAnim}
+					locked={phase !== 'pick'}
+					onSelect={onTargetClick}
+					onSpineComplete={onSpineComplete}
+				/>
 			</div>
 		</div>
 	</div>
+
+	<TargetShotBulletOverlay flight={shotFlight} />
 {/if}
 
 <style lang="scss">
@@ -146,158 +323,27 @@
 		position: fixed;
 		inset: 0;
 		z-index: 60;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: rgba(0, 0, 0, 0.72);
+		pointer-events: none;
+		background: transparent;
+	}
+
+	.grid-clip {
+		position: absolute;
+		overflow: hidden;
 		pointer-events: auto;
 	}
 
-	.panel {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 1.25rem 1.5rem 1.5rem;
-		border-radius: 16px;
-		background: rgba(18, 14, 10, 0.94);
-		border: 1px solid rgba(201, 162, 74, 0.55);
-		box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
-		max-width: min(560px, 94vw);
+	.slide {
+		width: 100%;
+		height: 100%;
+		transform: translateY(calc((var(--slide, 0) - 1) * 100%));
+		will-change: transform;
 	}
 
-	.title {
-		margin: 0;
-		font-family: 'proxima-nova', sans-serif;
-		font-size: 1.35rem;
-		letter-spacing: 0.14em;
-		color: #f0d78c;
-	}
-
-	.hint {
-		margin: 0 0 0.35rem;
-		font-family: 'proxima-nova', sans-serif;
-		font-size: 0.9rem;
-		color: rgba(255, 255, 255, 0.75);
-		text-align: center;
-	}
-
-	.grid {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(88px, 1fr));
-		gap: 0.85rem;
-	}
-
-	.grid.locked {
-		pointer-events: none;
-	}
-
-	.target {
-		position: relative;
-		width: 100px;
-		height: 100px;
-		border: none;
-		background: transparent;
-		cursor: pointer;
-		perspective: 600px;
-		padding: 0;
-	}
-
-	.target:disabled {
-		cursor: default;
-	}
-
-	.face {
-		position: absolute;
-		inset: 0;
-		border-radius: 50%;
-		backface-visibility: hidden;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-direction: column;
-		transition: transform 0.55s ease;
-	}
-
-	.front {
-		background: radial-gradient(circle at 40% 35%, #fff 0 12%, #e23 12% 28%, #fff 28% 44%, #e23 44% 60%, #fff 60% 76%, #e23 76% 100%);
-		border: 3px solid #222;
-		box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
-	}
-
-	.ring {
-		position: absolute;
-		border-radius: 50%;
-		border: 2px solid rgba(0, 0, 0, 0.08);
-		pointer-events: none;
-	}
-
-	.ring-1 {
-		inset: 18%;
-	}
-	.ring-2 {
-		inset: 34%;
-	}
-	.ring-3 {
-		inset: 48%;
-	}
-
-	.bull {
-		width: 14%;
-		height: 14%;
-		border-radius: 50%;
-		background: #111;
-		z-index: 1;
-	}
-
-	.back {
-		background: radial-gradient(circle at 35% 30%, #3a2a12, #1a1208);
-		border: 3px solid #c9a24a;
-		transform: rotateY(180deg);
-		color: #f0d78c;
-	}
-
-	.target.flipped .front {
-		transform: rotateY(180deg);
-	}
-
-	.target.flipped .back {
-		transform: rotateY(360deg);
-	}
-
-	.target.shooting .front {
-		animation: hit-flash 0.35s ease-out;
-	}
-
-	.target.winner .back {
-		box-shadow: 0 0 0 3px #f0d78c, 0 8px 20px rgba(240, 215, 140, 0.45);
-	}
-
-	.fs-num {
-		font-family: 'proxima-nova', sans-serif;
-		font-size: 2rem;
-		font-weight: 800;
-		line-height: 1;
-	}
-
-	.fs-label {
-		font-family: 'proxima-nova', sans-serif;
-		font-size: 0.7rem;
-		letter-spacing: 0.12em;
-	}
-
-	@keyframes hit-flash {
-		0% {
-			transform: scale(1);
-			filter: brightness(1);
-		}
-		40% {
-			transform: scale(1.08);
-			filter: brightness(1.6);
-		}
-		100% {
-			transform: scale(1);
-			filter: brightness(1);
-		}
+	.slide :global(.board) {
+		width: 100% !important;
+		height: 100% !important;
+		max-height: none;
+		aspect-ratio: auto !important;
 	}
 </style>

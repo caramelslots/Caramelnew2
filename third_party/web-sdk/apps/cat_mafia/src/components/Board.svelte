@@ -192,7 +192,9 @@
 		<!-- Feather mask applies to symbols only — outline spine uses its own clip mask. -->
 		<Container>
 			<BoardMask />
-			<BoardBase />
+			<Container y={context.stateGameDerived.targetPickBoardY()}>
+				<BoardBase />
+			</Container>
 		</Container>
 		<!-- Mystery explosion uses screen-blend Aura slots — render outside the
 		     board mask so VFX composite over parchment instead of a transparent RT. -->

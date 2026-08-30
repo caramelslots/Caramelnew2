@@ -779,9 +779,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		}
 		stateBet.winBookEventAmount = bookEvent.amount;
 	},
-	// Cat Mafia Stage C — target pick before FS intro (natural + buy).
+	// Cat Mafia Stage C — cloud → target board → pick → congrats (while board exits).
 	freeSpinTargetPick: async (bookEvent: BookEventOfType<'freeSpinTargetPick'>) => {
 		clearWinSpotlight();
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
+		await eventEmitter.broadcastAsync({ type: 'uiHide' });
+		await eventEmitter.broadcastAsync({ type: 'transition', gameType: 'freegame' });
 		await eventEmitter.broadcastAsync({
 			type: 'freeSpinTargetPick',
 			targets: bookEvent.targets,
@@ -828,18 +831,20 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (!hadTargetPick && !hadBonusCollect && bookEvent.positions?.length) {
 			await animateBonusSymbols({ positions: bookEvent.positions });
 		}
-		// show free spin intro
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
-		await eventEmitter.broadcastAsync({ type: 'uiHide' });
-		await eventEmitter.broadcastAsync({ type: 'transition', gameType: 'freegame' });
-		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
-		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin', withIntro: true });
-		await eventEmitter.broadcastAsync({
-			type: 'freeSpinIntroUpdate',
-			totalFreeSpins: bookEvent.totalFs,
-		});
-		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
+		// Target-pick path already ran cloud + FreeSpinIntro while the board exited.
+		if (!hadTargetPick) {
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
+			await eventEmitter.broadcastAsync({ type: 'uiHide' });
+			await eventEmitter.broadcastAsync({ type: 'transition', gameType: 'freegame' });
+			eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
+			eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin', withIntro: true });
+			await eventEmitter.broadcastAsync({
+				type: 'freeSpinIntroUpdate',
+				totalFreeSpins: bookEvent.totalFs,
+			});
+			eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
+		}
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 		stateUi.freeSpinCounterShow = true;
 		eventEmitter.broadcast({
@@ -1211,6 +1216,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	targetShootRound: async (bookEvent: BookEventOfType<'targetShootRound'>) => {
 		// Only one shooting round per bonus.
 		if (stateGame.fsExtraPhase) return;
+
+		// Kill paylines / win celebrate before the cabinet slides over the mask.
+		clearWinSpotlight();
 
 		await eventEmitter.broadcastAsync({
 			type: 'targetShootRound',

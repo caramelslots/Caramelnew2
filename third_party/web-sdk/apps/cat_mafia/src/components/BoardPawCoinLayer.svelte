@@ -3,6 +3,8 @@
 	 * Landed PB/PS/PG above the gold rails.
 	 * Spinning paws stay on the masked board so they clip at the playfield edge.
 	 */
+	import { Container } from 'pixi-svelte';
+
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardBase from './BoardBase.svelte';
 	import { getContext } from '../game/context';
@@ -18,6 +20,8 @@
 
 {#if show}
 	<BoardContainer>
-		<BoardBase pawCoin />
+		<Container y={context.stateGameDerived.targetPickBoardY()}>
+			<BoardBase pawCoin />
+		</Container>
 	</BoardContainer>
 {/if}

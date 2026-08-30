@@ -35,6 +35,7 @@
 		type MascotScreenBox,
 	} from '../game/mascotHtmlSpine';
 	import MascotDogSpineController from './MascotDogSpineController.svelte';
+	import MascotGunMuzzleTracker from './MascotGunMuzzleTracker.svelte';
 	import MascotSpineController from './MascotSpineController.svelte';
 	import BulletFlySpineLayer from './BulletFlySpineLayer.svelte';
 
@@ -231,6 +232,9 @@
 					timeScale={spineTimeScale}
 					animToken={mascotAnimToken}
 				/>
+				{#if box}
+					<MascotGunMuzzleTracker {box} />
+				{/if}
 				<!-- Mid draw-order: above body, under catching hand. -->
 				<BulletFlySpineLayer />
 			{/if}

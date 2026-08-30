@@ -8,15 +8,14 @@
 
 <script lang="ts">
 	/**
-	 * Stage E: player-tapped shooting round after main FS.
-	 * Math already fixed the reward sequence (+0/+1/+2/+3 FS); click only picks
-	 * which target face shows each reward (same UX pattern as freeSpinTargetPick).
-	 * Mascot: gun_shot_stat_idle → gun_shot_aim (loop) → gun_shot per tap → gun_shot_end.
+	 * Stage E: after main FS, 9-target board slides in → player taps (drum shots) →
+	 * FreeSpinIntro while the board slides up. Math fixes the reward queue;
+	 * click only picks which face shows each reward.
 	 */
-	import { fade } from 'svelte/transition';
 	import { waitForResolve } from 'utils-shared/wait';
 
 	import { getContext } from '../game/context';
+	import { BOARD_LAYOUT_OFFSETS } from '../game/constants';
 	import {
 		alignDrumForNextShot,
 		playDrumChamberShot,
@@ -28,168 +27,352 @@
 		MASCOT_GUN_SHOT_END_MS,
 		MASCOT_GUN_SHOT_MS,
 		MASCOT_GUN_STAT_IDLE_MS,
+		getMascotGunMuzzlePoint,
+		getMascotPortraitScreenBox,
+		getMascotScreenBox,
 	} from '../game/mascotHtmlSpine';
+	import {
+		portraitBuyPanelCanvasTop,
+		portraitBuyPanelHeightCanvas,
+	} from '../game/portraitHudLayout';
+	import {
+		TARGET_SHOT_EXPLOSION_START_MS,
+		TARGET_SHOT_MUZZLE_DELAY_MS,
+		buildTargetShotCurve,
+		startShotBulletPreload,
+	} from '../game/shotBulletAssets';
 	import { stateGame } from '../game/stateGame.svelte';
+	import {
+		TARGET_BOARD_PICK_FLIP_MS_BY_ANIM,
+		TARGET_PICK_SLIDE_MS,
+		TARGET_SHOOT_SEAT_COUNT,
+		pickTargetFlipAnim,
+		startTargetBoardPreload,
+		targetPickInnerClip,
+		type TargetBoardPickFlipAnim,
+	} from '../game/targetBoardAssets';
+	import TargetShootBoard from './TargetShootBoard.svelte';
+	import TargetShotBulletOverlay, {
+		type TargetShotFlight,
+	} from './TargetShotBulletOverlay.svelte';
 
-	const TARGET_COUNT = 9;
 	const context = getContext();
 
 	let show = $state(false);
+	let phase = $state<'prep' | 'pick' | 'done'>('prep');
 	let rewardQueue = $state<(0 | 1 | 2 | 3)[]>([]);
 	let extraFs = $state(0);
-	let hitSet = $state(new Set<number>());
-	let revealed = $state<Record<number, 0 | 1 | 2 | 3>>({});
-	let activeShot = $state<number | null>(null);
-	let phase = $state<'intro' | 'pick' | 'firing' | 'summary'>('intro');
-	let shotBusy = $state(false);
+	let faceValues = $state<number[]>(Array.from({ length: TARGET_SHOOT_SEAT_COUNT }, () => 0));
+	let flipped = $state<boolean[]>(Array.from({ length: TARGET_SHOOT_SEAT_COUNT }, () => false));
+	let spineSeat = $state<number | null>(null);
+	let spineNonce = $state(0);
+	let flipAnim = $state<TargetBoardPickFlipAnim>('v4');
+	let shotFlight = $state<TargetShotFlight | null>(null);
+	let pendingSeats = $state<number[]>([]);
+	let reservedSeats = $state<Set<number>>(new Set());
+	let draining = $state(false);
 	let oncomplete = $state(() => {});
+	let onSpineResolve = $state<(() => void) | null>(null);
+	let shootBoard = $state<TargetShootBoard | undefined>();
 
-	const rewardLabel = (r: 0 | 1 | 2 | 3) => (r === 0 ? '—' : `+${r}`);
+	const seatsLocked = $derived(phase !== 'pick');
+
+	$effect(() => {
+		if (!show) return;
+		stateGame.targetPickFlipped = flipped;
+		stateGame.targetPickSpineSeat = spineSeat;
+	});
+
 	const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-	const finishRound = async () => {
-		phase = 'summary';
+	const tweenSlide = (to: number, ms = TARGET_PICK_SLIDE_MS) =>
+		new Promise<void>((resolve) => {
+			const from = stateGame.targetPickSlide;
+			const origin = performance.now();
+			const tick = (now: number) => {
+				const t = Math.min(1, (now - origin) / ms);
+				const ease = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+				stateGame.targetPickSlide = from + (to - from) * ease;
+				if (t < 1) {
+					requestAnimationFrame(tick);
+					return;
+				}
+				stateGame.targetPickSlide = to;
+				resolve();
+			};
+			requestAnimationFrame(tick);
+		});
+
+	const gridStyle = $derived.by(() => {
+		const ml = context.stateLayoutDerived.mainLayout();
+		const layoutType = context.stateLayoutDerived.layoutType();
+		const off = BOARD_LAYOUT_OFFSETS[layoutType] ?? { x: 0, y: 0 };
+		const board = context.stateGameDerived.boardLayout();
+		const hole = targetPickInnerClip();
+		const centerX = ml.x + off.x * ml.scale;
+		const centerY = ml.y + off.y * ml.scale;
+		const cell = board.scale * ml.scale;
+		const originX = centerX - board.width * 0.5 * cell;
+		const originY = centerY - board.height * 0.5 * cell;
+		return [
+			`left:${originX + hole.x * cell}px`,
+			`top:${originY + hole.y * cell}px`,
+			`width:${hole.width * cell}px`,
+			`height:${hole.height * cell}px`,
+			`--slide:${stateGame.targetPickSlide}`,
+		].join(';');
+	});
+
+	const resolveMuzzlePoint = () => {
+		const live = stateGame.mascotGunMuzzleScreen;
+		if (live) return { x: live.x, y: live.y };
+
+		const ml = context.stateLayoutDerived.mainLayout();
+		const layout = context.stateLayoutDerived.layoutType();
+		const board = context.stateGameDerived.boardLayout();
+		const halfW = (board.visualWidth / 2) * ml.scale;
+		const halfH = (board.visualHeight / 2) * ml.scale;
+		const mascotCenterX = ml.x + (board.x - ml.width * 0.5) * ml.scale;
+		const mascotCenterY = ml.y + (board.y - ml.height * 0.5) * ml.scale;
+		const canvas = context.stateLayoutDerived.canvasSizes();
+		const mascot =
+			layout === 'portrait'
+				? getMascotPortraitScreenBox({
+						canvasWidth: canvas.width,
+						boardCenterY: mascotCenterY,
+						halfH,
+						buyPanelTop: portraitBuyPanelCanvasTop(context.stateLayoutDerived),
+						buyPanelHeight: portraitBuyPanelHeightCanvas(context.stateLayoutDerived),
+					})
+				: getMascotScreenBox({
+						centerX: mascotCenterX,
+						centerY: mascotCenterY,
+						halfW,
+						halfH,
+					});
+		return getMascotGunMuzzlePoint(mascot);
+	};
+
+	const onSpineComplete = () => {
+		onSpineResolve?.();
+		onSpineResolve = null;
+	};
+
+	const closeBoard = async () => {
+		phase = 'done';
+		pendingSeats = [];
+		reservedSeats = new Set();
+		// Out of ammo — only now hide the gun.
 		stateGame.mascotPose = 'gunShotEnd';
 		await wait(MASCOT_GUN_SHOT_END_MS);
 		stateGame.mascotPose = 'idle';
 		stateGame.drumFiringChamber = null;
-		await wait(extraFs > 0 ? 1400 : 900);
-		show = false;
+
+		const slideOut = tweenSlide(0);
+		if (extraFs > 0) {
+			context.eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
+			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
+			await context.eventEmitter.broadcastAsync({
+				type: 'freeSpinIntroUpdate',
+				totalFreeSpins: extraFs,
+			});
+			context.eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
+		}
+		await slideOut;
+
+		stateGame.targetPickOpen = false;
+		stateGame.targetPickSeatMode = 'six';
 		stateGame.drumShootActive = false;
+		show = false;
 		oncomplete();
 	};
 
-	const onTargetClick = async (index: number) => {
-		if (phase !== 'pick' || shotBusy) return;
-		if (hitSet.has(index)) return;
-		if (rewardQueue.length === 0) return;
+	const fireOneShot = async (index: number) => {
+		if (rewardQueue.length === 0) {
+			reservedSeats = new Set([...reservedSeats].filter((i) => i !== index));
+			return;
+		}
 
-		shotBusy = true;
-		phase = 'firing';
 		const reward = rewardQueue[0];
 		rewardQueue = rewardQueue.slice(1);
-		activeShot = index;
+		faceValues = faceValues.map((v, i) => (i === index ? reward : v));
 
 		const chamber = await alignDrumForNextShot((ms) => wait(ms));
 		if (chamber === null) {
-			activeShot = null;
-			shotBusy = false;
-			await finishRound();
+			reservedSeats = new Set([...reservedSeats].filter((i) => i !== index));
+			rewardQueue = [];
 			return;
 		}
+
+		const hit = shootBoard?.getSeatHit(index);
 
 		stateGame.mascotPose = 'shoot';
 		stateGame.mascotAnimToken += 1;
+
+		// Keep the gun out: after `gun_shot` return to looped aim (not gun_shot_end).
+		void (async () => {
+			await wait(MASCOT_GUN_SHOT_MS);
+			if (phase === 'done') return;
+			stateGame.mascotPose = 'aim';
+		})();
+
+		await wait(TARGET_SHOT_MUZZLE_DELAY_MS);
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-		await wait(MASCOT_GUN_SHOT_MS);
 
-		await playDrumChamberShot((ms) => wait(ms));
-
-		hitSet = new Set([...hitSet, index]);
-		revealed = { ...revealed, [index]: reward };
-		activeShot = null;
-
-		await advanceDrumAfterShot((ms) => wait(ms));
-
-		if (rewardQueue.length === 0) {
-			await finishRound();
-			return;
+		if (hit) {
+			flipAnim = pickTargetFlipAnim({ x: hit.offsetX, y: hit.offsetY });
+			const muzzle = resolveMuzzlePoint();
+			const center = shootBoard?.getSeatCenter(index);
+			const endX = (center?.x ?? hit.x - hit.offsetX) + hit.offsetX;
+			const endY = (center?.y ?? hit.y - hit.offsetY) + hit.offsetY;
+			const curve = buildTargetShotCurve({
+				startX: muzzle.x,
+				startY: muzzle.y,
+				endX,
+				endY,
+				seatIndex: index,
+				orientation:
+					context.stateLayoutDerived.layoutType() === 'portrait' ? 'below' : 'side',
+			});
+			shotFlight = {
+				nonce: (shotFlight?.nonce ?? 0) + 1,
+				startX: muzzle.x,
+				startY: muzzle.y,
+				endX,
+				endY,
+				points: curve.points,
+				flyMs: curve.flyMs,
+			};
+			await wait(curve.flyMs);
+		} else {
+			await wait(480);
 		}
 
+		shotFlight = null;
+		await playDrumChamberShot((ms) => wait(ms));
+
+		await wait(TARGET_SHOT_EXPLOSION_START_MS);
+		spineSeat = index;
+		spineNonce += 1;
+
+		const flipMs = TARGET_BOARD_PICK_FLIP_MS_BY_ANIM[flipAnim];
+		await waitForResolve((resolve) => {
+			onSpineResolve = resolve;
+			setTimeout(resolve, flipMs + 150);
+		});
+		onSpineResolve = null;
+
+		flipped = flipped.map((v, i) => (i === index ? true : v));
+		spineSeat = null;
+		reservedSeats = new Set([...reservedSeats].filter((i) => i !== index));
+
+		await advanceDrumAfterShot((ms) => wait(ms));
+	};
+
+	const drainShotQueue = async () => {
+		if (draining) return;
+		draining = true;
+		while (pendingSeats.length > 0 && phase === 'pick') {
+			const index = pendingSeats[0];
+			pendingSeats = pendingSeats.slice(1);
+			await fireOneShot(index);
+		}
+		draining = false;
+
+		if (phase !== 'pick') return;
+		if (rewardQueue.length === 0) {
+			await closeBoard();
+			return;
+		}
 		stateGame.mascotPose = 'aim';
-		phase = 'pick';
-		shotBusy = false;
+	};
+
+	const onTargetClick = (index: number) => {
+		// Accept taps immediately while a prior shot is still animating.
+		if (phase !== 'pick') return;
+		if (flipped[index] || reservedSeats.has(index)) return;
+		const reserved = reservedSeats.size;
+		if (rewardQueue.length <= reserved) return;
+
+		reservedSeats = new Set([...reservedSeats, index]);
+		pendingSeats = [...pendingSeats, index];
+		void drainShotQueue();
 	};
 
 	context.eventEmitter.subscribeOnMount({
 		targetShootRound: async (event) => {
-			// Preserve reward order from math; ignore book targetIndex (player picks faces).
+			startShotBulletPreload();
+			startTargetBoardPreload();
 			rewardQueue = event.shots.map((s) => s.reward as 0 | 1 | 2 | 3);
 			extraFs = event.extraFs;
-			hitSet = new Set();
-			revealed = {};
-			activeShot = null;
-			shotBusy = false;
-			phase = 'intro';
-			show = true;
+			faceValues = Array.from({ length: TARGET_SHOOT_SEAT_COUNT }, () => 0);
+			flipped = Array.from({ length: TARGET_SHOOT_SEAT_COUNT }, () => false);
+			spineSeat = null;
+			spineNonce = 0;
+			flipAnim = 'v4';
+			shotFlight = null;
+			pendingSeats = [];
+			reservedSeats = new Set();
+			draining = false;
+			onSpineResolve = null;
+			phase = 'prep';
+
+			stateGame.targetPickSeatMode = 'nine';
+			stateGame.targetPickSlide = 0;
+			stateGame.targetPickOpen = true;
 			stateGame.drumShootActive = true;
 			syncDrumLoadRotation();
+			show = true;
 
 			stateGame.mascotPose = 'gunStatIdle';
-			await wait(MASCOT_GUN_STAT_IDLE_MS);
-			stateGame.mascotPose = 'aim';
-			await wait(MASCOT_GUN_SHOT_AIM_MS);
+			const mascotAimReady = (async () => {
+				await wait(MASCOT_GUN_STAT_IDLE_MS);
+				stateGame.mascotPose = 'aim';
+			})();
+
+			await Promise.all([tweenSlide(1), mascotAimReady]);
+			await wait(Math.min(280, MASCOT_GUN_SHOT_AIM_MS * 0.15));
 
 			if (rewardQueue.length === 0) {
-				phase = 'summary';
-				stateGame.mascotPose = 'gunShotEnd';
-				await wait(MASCOT_GUN_SHOT_END_MS);
-				stateGame.mascotPose = 'idle';
-				stateGame.drumFiringChamber = null;
-				await wait(900);
-				show = false;
-				stateGame.drumShootActive = false;
+				await closeBoard();
 				return;
 			}
 
 			phase = 'pick';
 			await waitForResolve((resolve) => {
-				oncomplete = resolve;
+				oncomplete = () => {
+					stateGame.targetPickSlide = 0;
+					stateGame.targetPickOpen = false;
+					stateGame.targetPickSeatMode = 'six';
+					stateGame.drumShootActive = false;
+					show = false;
+					resolve();
+				};
 			});
 		},
 	});
 </script>
 
 {#if show}
-	<div class="overlay" transition:fade={{ duration: 180 }} data-test="target-shoot-overlay">
-		<div class="panel">
-			<h2 class="title">{context.i18nDerived.targetShootTitle()}</h2>
-			<p class="hint">
-				{#if phase === 'intro'}
-					{context.i18nDerived.targetShootHintIntro()}
-				{:else if phase === 'pick'}
-					{context.i18nDerived.targetShootHintPick()}
-				{:else if phase === 'firing'}
-					{context.i18nDerived.targetShootHintFiring()}
-				{:else if extraFs > 0}
-					{context.i18nDerived.targetShootHintExtra(extraFs)}
-				{:else}
-					{context.i18nDerived.targetShootHintNone()}
-				{/if}
-			</p>
-			<div class="grid" class:locked={phase !== 'pick'}>
-				{#each Array.from({ length: TARGET_COUNT }, (_, i) => i) as i (i)}
-					{@const flipped = hitSet.has(i)}
-					{@const reward = revealed[i]}
-					<button
-						type="button"
-						class="target"
-						class:flipped
-						class:shooting={activeShot === i}
-						class:prize={flipped && reward !== undefined && reward > 0}
-						disabled={phase !== 'pick' || flipped}
-						onclick={() => onTargetClick(i)}
-						aria-label={`Target ${i + 1}`}
-					>
-						<span class="face front">
-							<span class="ring ring-1"></span>
-							<span class="ring ring-2"></span>
-							<span class="ring ring-3"></span>
-							<span class="bull"></span>
-						</span>
-						<span class="face back">
-							{#if reward !== undefined}
-								<span class="fs-num">{rewardLabel(reward)}</span>
-								{#if reward > 0}
-									<span class="fs-label">FS</span>
-								{/if}
-							{/if}
-						</span>
-					</button>
-				{/each}
+	<div class="overlay" data-test="target-shoot-overlay">
+		<div class="grid-clip" style={gridStyle}>
+			<div class="slide">
+				<TargetShootBoard
+					bind:this={shootBoard}
+					values={faceValues}
+					{flipped}
+					{spineSeat}
+					{spineNonce}
+					{flipAnim}
+					locked={seatsLocked}
+					onSelect={onTargetClick}
+					onSpineComplete={onSpineComplete}
+				/>
 			</div>
 		</div>
 	</div>
+
+	<TargetShotBulletOverlay flight={shotFlight} />
 {/if}
 
 <style lang="scss">
@@ -197,167 +380,27 @@
 		position: fixed;
 		inset: 0;
 		z-index: 60;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background: rgba(0, 0, 0, 0.78);
+		pointer-events: none;
+		background: transparent;
+	}
+
+	.grid-clip {
+		position: absolute;
+		overflow: hidden;
 		pointer-events: auto;
 	}
 
-	.panel {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 1.25rem 1.5rem 1.5rem;
-		border-radius: 16px;
-		background: rgba(18, 14, 10, 0.94);
-		border: 1px solid rgba(201, 162, 74, 0.55);
-		box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
-		max-width: min(560px, 94vw);
+	.slide {
+		width: 100%;
+		height: 100%;
+		transform: translateY(calc((var(--slide, 0) - 1) * 100%));
+		will-change: transform;
 	}
 
-	.title {
-		margin: 0;
-		font-family: 'proxima-nova', sans-serif;
-		font-size: 1.35rem;
-		letter-spacing: 0.14em;
-		color: #f0d78c;
-	}
-
-	.hint {
-		margin: 0 0 0.35rem;
-		font-family: 'proxima-nova', sans-serif;
-		font-size: 0.95rem;
-		color: rgba(255, 255, 255, 0.78);
-		text-align: center;
-		min-height: 1.4em;
-	}
-
-	.grid {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(84px, 1fr));
-		gap: 0.75rem;
-	}
-
-	.grid.locked {
-		pointer-events: none;
-	}
-
-	.target {
-		position: relative;
-		width: 96px;
-		height: 96px;
-		border: none;
-		background: transparent;
-		padding: 0;
-		cursor: pointer;
-		perspective: 600px;
-	}
-
-	.target:disabled {
-		cursor: default;
-	}
-
-	.face {
-		position: absolute;
-		inset: 0;
-		border-radius: 50%;
-		backface-visibility: hidden;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-direction: column;
-		transition: transform 0.45s ease;
-	}
-
-	.front {
-		background: radial-gradient(
-			circle at 40% 35%,
-			#fff 0 12%,
-			#e23 12% 28%,
-			#fff 28% 44%,
-			#e23 44% 60%,
-			#fff 60% 76%,
-			#e23 76% 100%
-		);
-		border: 3px solid #222;
-		box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
-	}
-
-	.ring {
-		position: absolute;
-		border-radius: 50%;
-		border: 2px solid rgba(0, 0, 0, 0.08);
-		pointer-events: none;
-	}
-
-	.ring-1 {
-		inset: 18%;
-	}
-	.ring-2 {
-		inset: 34%;
-	}
-	.ring-3 {
-		inset: 48%;
-	}
-
-	.bull {
-		width: 14%;
-		height: 14%;
-		border-radius: 50%;
-		background: #111;
-		z-index: 1;
-	}
-
-	.back {
-		background: radial-gradient(circle at 35% 30%, #3a2a12, #1a1208);
-		border: 3px solid #c9a24a;
-		transform: rotateY(180deg);
-		color: #f0d78c;
-	}
-
-	.target.flipped .front {
-		transform: rotateY(180deg);
-	}
-
-	.target.flipped .back {
-		transform: rotateY(360deg);
-	}
-
-	.target.shooting .front {
-		animation: hit-flash 0.28s ease-out;
-	}
-
-	.target.prize .back {
-		box-shadow: 0 0 0 3px #f0d78c, 0 8px 20px rgba(240, 215, 140, 0.45);
-	}
-
-	.fs-num {
-		font-family: 'proxima-nova', sans-serif;
-		font-size: 1.75rem;
-		font-weight: 800;
-		line-height: 1;
-	}
-
-	.fs-label {
-		font-family: 'proxima-nova', sans-serif;
-		font-size: 0.65rem;
-		letter-spacing: 0.12em;
-	}
-
-	@keyframes hit-flash {
-		0% {
-			transform: scale(1);
-			filter: brightness(1);
-		}
-		40% {
-			transform: scale(1.1);
-			filter: brightness(1.7);
-		}
-		100% {
-			transform: scale(1);
-			filter: brightness(1);
-		}
+	.slide :global(.board) {
+		width: 100% !important;
+		height: 100% !important;
+		max-height: none;
+		aspect-ratio: auto !important;
 	}
 </style>

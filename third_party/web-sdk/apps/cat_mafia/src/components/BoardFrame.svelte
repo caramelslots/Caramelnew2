@@ -46,10 +46,13 @@
 		 * `base` — desk fill under the reels (no nameplate).
 		 * `overlay` — frame + vertical gold grids above resting symbols
 		 * (column holes masked). Idle/win pops render above this layer.
+		 * `rails` — column grids only (under the target-pick cabinet).
 		 * `nameplate` — WIN bank plate under the desk, above the overlay
 		 * frame so the bottom gold rail does not cover it.
 		 */
-		layer?: 'base' | 'overlay' | 'nameplate';
+		layer?: 'base' | 'overlay' | 'rails' | 'nameplate';
+		/** Overlay mask: hide rails while the target cabinet covers them. */
+		maskVariant?: 'all' | 'frame' | 'rails';
 		layout?: BoardLayout;
 		disableCatZoom?: boolean;
 		/** Duel desk — filters `boardFramePulse` to this side only. */
@@ -90,6 +93,9 @@
 
 	const props: Props = $props();
 	const layer = $derived(props.layer ?? 'base');
+	const maskVariant = $derived(
+		props.maskVariant ?? (layer === 'rails' ? 'rails' : 'all'),
+	);
 
 	const context = getContext();
 
@@ -162,12 +168,13 @@
 	<Container x={-boardLayout.pivot.x} y={-boardLayout.pivot.y}>
 		<!-- Fixed desk slot: size/position independent of the art inside. -->
 		<Container x={slotCenterX} y={slotCenterY}>
-			{#if layer === 'overlay'}
+			{#if layer === 'overlay' || layer === 'rails'}
 				<BoardFrameRailsMask
 					slotWidth={slotSize.width}
 					slotHeight={slotSize.height}
 					boardWidth={boardLayout.width}
 					boardHeight={boardLayout.height}
+					variant={maskVariant}
 				/>
 			{/if}
 			<SpineProvider key="boardFrame" x={contentRootX} y={contentRootY} scale={contentScale}>

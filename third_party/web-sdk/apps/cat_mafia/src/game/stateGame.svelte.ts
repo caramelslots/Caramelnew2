@@ -92,6 +92,7 @@ import {
 import { devPreview } from './devPreview.svelte';
 import { gameSpeedMultFor } from './gameSpeed';
 import { REEL_SCROLL_SPEED_MULT_CAT, catSlowReelsAfterTrigger } from './catAnticipation';
+import { targetPickInnerClip } from './targetBoardAssets';
 
 const REEL_SCROLL_SPEED_MULT_SLOW = 0.5;
 
@@ -259,6 +260,14 @@ export const stateGame = $state({
 		mult: number;
 		phase: 'expanding' | 'done';
 	},
+	/** 0 = symbols in playfield; 1 = symbols parked below the mask (target board in). */
+	targetPickSlide: 0,
+	/** Target-pick cabinet is mounted (Pixi plate under the desk frame). */
+	targetPickOpen: false,
+	/** `six` = entry pick (6 seats); `nine` = Stage E extra-FS shoot. */
+	targetPickSeatMode: 'six' as 'six' | 'nine',
+	targetPickFlipped: Array.from({ length: 6 }, () => false),
+	targetPickSpineSeat: null as number | null,
 	// === Cat Mafia Stage D ===
 	/** Normal vs Super bonus rules for Super Wild. */
 	bonusMode: null as null | 'normal' | 'super',
@@ -294,6 +303,11 @@ export const stateGame = $state({
 	fsDrumWanted: false,
 	/** Brief fly UX: one or more BT cells → cat hand (simultaneous). */
 	bulletFly: null as null | { reel: number; row: number; chamber: number; key: number }[],
+	/**
+	 * Live barrel tip in screen space — from Spine flash bone `main4`
+	 * (see MascotGunMuzzleTracker). Null when the mascot is unmounted.
+	 */
+	mascotGunMuzzleScreen: null as null | { x: number; y: number },
 	/** Mascot pose → Spine clip map in `mascotHtmlSpine.ts`. */
 	mascotPose: 'idle' as
 		| 'idle'
@@ -382,6 +396,11 @@ const boardIdleBouncing = () =>
 	);
 
 const { enhanceBoard } = createEnhanceBoard();
+const targetPickBoardY = () =>
+	// Same travel as the Pixi/HTML cabinet (`(slide-1)*clip.height`) so symbols
+	// and the board keep pace — no growing gap under the mask.
+	stateGame.targetPickSlide * targetPickInnerClip().height;
+
 const enhancedBoard = enhanceBoard({ board: stateGame.board });
 
 export const { getWinLevelDataByWinLevelAlias } = createGetWinLevelDataByWinLevelAlias({
@@ -397,6 +416,8 @@ export const stateGameDerived = {
 	boardReelsActive,
 	boardMysteryAnimating,
 	boardIdleBouncing,
+	/** Board-local Y (px) to park symbols under the playfield mask. */
+	targetPickBoardY,
 	scatterLandIndex,
 	enhancedBoard,
 	getWinLevelDataByWinLevelAlias,

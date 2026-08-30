@@ -69,6 +69,7 @@
 	import {
 		SW_DEMO_VISIBLE_BOARD,
 		superWildExpandDemo,
+		freeSpinTargetPickDemo,
 	} from '../stories/data/catmafia_events';
 	import type { WinLevel } from '../game/winLevelMap';
 	import type { BookEvent } from '../game/typesBookEvent';
@@ -268,6 +269,7 @@
 
 		if (next) {
 			if (devPreview.forceShowFsBoardChrome) toggleFsBoardChromePreview();
+			if (devPreview.forceShowTargetBoard) toggleTargetBoardPreview(false);
 			resetDuelState();
 			stateDuel.active = true;
 			stateDuel.phase = 'playing';
@@ -293,6 +295,24 @@
 			resetDuelState();
 		}
 	};
+
+	/** Designer target board (6 flip targets) — layout / click QA. */
+	const toggleTargetBoardPreview = (force?: boolean) => {
+		const next = force ?? !devPreview.forceShowTargetBoard;
+		devPreview.forceShowTargetBoard = next;
+		devPreview.symbolAnim = null;
+		if (next && devPreview.forceShowDuelLayout) toggleDuelLayoutPreview(false);
+	};
+
+	/**
+	 * Production freeSpinTargetPick path: cloud → board → aim → click → shot →
+	 * flip → FreeSpinIntro while board slides up.
+	 */
+	const playTargetPickPreview = () =>
+		guard(async () => {
+			if (devPreview.forceShowTargetBoard) toggleTargetBoardPreview(false);
+			await playBookEvent(asEvent(freeSpinTargetPickDemo), { bookEvents: [] });
+		});
 
 	const previewDrumShoot = async () => {
 		if (bulletFlyBusy) return;
@@ -1377,6 +1397,20 @@
 						onclick={() => toggleDuelLayoutPreview()}
 					>
 						{devPreview.forceShowDuelLayout ? 'Hide Duel Layout' : 'Show Duel Layout'}
+					</button>
+				</div>
+			</section>
+
+			<section>
+				<h4>Target Pick</h4>
+				<div class="grid">
+					<button
+						type="button"
+						disabled={busy}
+						title="freeSpinTargetPick: aim → click → shot → flip"
+						onclick={playTargetPickPreview}
+					>
+						Play Target Pick
 					</button>
 				</div>
 			</section>

@@ -120,6 +120,15 @@ export const getMascotBulletCatchPoint = (box: MascotScreenBox) =>
 	spineWorldToMascotScreen(box, MASCOT_GUN_START_CATCH_WORLD);
 
 /**
+ * Approximate revolver muzzle during `gun_shot_aim` / `gun_shot` when the live
+ * flash-bone sample is unavailable. Spine world (Y-up); biased to barrel tip.
+ */
+export const MASCOT_GUN_MUZZLE_WORLD = { x: -1220, y: 1720 } as const;
+
+export const getMascotGunMuzzlePoint = (box: MascotScreenBox) =>
+	spineWorldToMascotScreen(box, MASCOT_GUN_MUZZLE_WORLD);
+
+/**
  * Screen box for the mascot, anchored to the board so PC / laptop / popout
  * keep the same relative pose.
  */
@@ -373,7 +382,7 @@ export const MASCOT_POSE_PLAYBACK: Record<MascotPose, PosePlayback> = {
 	gunStart: { animation: 'gun_start', loop: false, holdEnd: true },
 	aim: { animation: 'gun_shot_aim', loop: true },
 	shoot: { animation: 'gun_shot', loop: false, holdEnd: true },
-	gunShotEnd: { animation: 'gun_shot_end', loop: false, holdEnd: true },
+	gunShotEnd: { animation: 'gun_shot_end', loop: false, returnTo: 'idle' },
 	gunEndLoad: { animation: 'gun_end_load', loop: false, returnTo: 'idle' },
 	gunStatIdle: { animation: 'gun_shot_stat_idle', loop: false, holdEnd: true },
 	gunStatLoad: { animation: 'gun_shot_stat_load', loop: false, holdEnd: true },

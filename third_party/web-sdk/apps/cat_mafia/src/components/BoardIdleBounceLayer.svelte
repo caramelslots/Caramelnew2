@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Container } from 'pixi-svelte';
+
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardBase from './BoardBase.svelte';
 	import { getContext } from '../game/context';
@@ -14,6 +16,8 @@
 
 {#if show}
 	<BoardContainer>
-		<BoardBase idleBounce />
+		<Container y={context.stateGameDerived.targetPickBoardY()}>
+			<BoardBase idleBounce />
+		</Container>
 	</BoardContainer>
 {/if}

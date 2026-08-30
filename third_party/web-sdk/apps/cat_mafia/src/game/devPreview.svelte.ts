@@ -41,4 +41,9 @@ export const devPreview = $state({
 	 * `nonce` remounts the sprites so appear can replay.
 	 */
 	pawCoins: null as null | { tiers: Array<1 | 2 | 3>; nonce: number },
+	/**
+	 * Designer target board (shooting gallery + 6 flip targets).
+	 * Layout / interaction QA before wiring into bonus_normal / bonus_super pick.
+	 */
+	forceShowTargetBoard: false,
 });

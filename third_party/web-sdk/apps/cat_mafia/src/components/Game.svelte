@@ -14,6 +14,7 @@
 	import CashStacksModals from './CashStacksModals.svelte';
 
 	import { getContext } from '../game/context';
+	import { stateGame } from '../game/stateGame.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { startLoadingIdleUiPreload } from '../game/uiHtmlAssetManifest';
 	import { GAME_ENTRANCE_MS } from '../game/constants';
@@ -43,7 +44,9 @@
 	import RevolverDrumPixi from './RevolverDrumPixi.svelte';
 	import { devPreview } from '../game/devPreview.svelte';
 	import SuperWildCurtainOverlay from './SuperWildCurtainOverlay.svelte';
+	import TargetBoardOverlay from './TargetBoardOverlay.svelte';
 	import TargetPickOverlay from './TargetPickOverlay.svelte';
+	import TargetPickPixiLayer from './TargetPickPixiLayer.svelte';
 	import TargetShootOverlay from './TargetShootOverlay.svelte';
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
@@ -157,15 +160,21 @@
 						</MainContainer>
 					</Container>
 
-					<!-- Gold rails above resting symbols. Idle/win pops + landed
-					     paw coins render above the frame so they can overhang it. -->
+					<!-- Full slot spine (frame + gold lines). -->
 					<Container zIndex={-1}>
 						<MainContainer>
 							<BoardFrame layer="overlay" />
 						</MainContainer>
 					</Container>
 
-					<!-- WIN nameplate above the overlay bottom rail (was under it on base). -->
+					<!-- Target cabinet above the spine, clipped to the inner window. -->
+					<Container zIndex={-0.85}>
+						<MainContainer>
+							<TargetPickPixiLayer />
+						</MainContainer>
+					</Container>
+
+					<!-- WIN sum plate — above the cabinet. -->
 					<Container zIndex={-0.75}>
 						<MainContainer>
 							<BoardFrame layer="nameplate" />
@@ -235,6 +244,7 @@
 <!-- Duel HTML chrome (pick / counters / outro). Desks + mascots + paw coins are Pixi. -->
 <DuelModeOverlay />
 <DuelIntro />
+<TargetBoardOverlay />
 <TargetPickOverlay />
 <TargetShootOverlay />
 <FreeSpinIntro />

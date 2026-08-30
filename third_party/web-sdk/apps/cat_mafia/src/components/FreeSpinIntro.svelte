@@ -199,7 +199,8 @@
 	.overlay {
 		position: fixed;
 		inset: 0;
-		z-index: 60;
+		/* Above TargetPickOverlay (60) so congrats sits over the sliding board. */
+		z-index: 70;
 		cursor: pointer;
 		background: rgba(0, 0, 0, 0.5);
 	}

@@ -95,6 +95,8 @@
 			props.reelSymbol.rawSymbol.name === 'PS' ||
 			props.reelSymbol.rawSymbol.name === 'PG',
 	);
+	/** FS bullets stay bright during payline spotlight (not part of lines). */
+	const isBulletSymbol = $derived(props.reelSymbol.rawSymbol.name === 'BT');
 	const isSpinningSymbol = $derived(props.reelSymbol.symbolState === 'spin');
 	const applyWinPresentation = $derived(isWinningState && !isSpinningSymbol);
 	const applyIdleBouncePresentation = $derived(isIdleBouncing);
@@ -143,17 +145,21 @@
 	};
 
 	const wrapYOffset = $derived(
-		(applyWinPresentation ? winYOffset.current : 0) +
-			(applyIdleBouncePresentation ? idleYOffset.current : 0),
+		stateGame.targetPickOpen
+			? 0
+			: (applyWinPresentation ? winYOffset.current : 0) +
+				(applyIdleBouncePresentation ? idleYOffset.current : 0),
 	);
 	const wrapScale = $derived(
-		(applyWinPresentation ? winScale.current : 1) *
-			(applyIdleBouncePresentation ? idleScale.current : 1),
+		stateGame.targetPickOpen
+			? 1
+			: (applyWinPresentation ? winScale.current : 1) *
+				(applyIdleBouncePresentation ? idleScale.current : 1),
 	);
 
 	$effect(() => {
 		const state = props.reelSymbol.symbolState;
-		if (state === 'spin' || state === 'static' || state === 'land') {
+		if (stateGame.targetPickOpen || state === 'spin' || state === 'static' || state === 'land') {
 			untrack(() => {
 				winScale.set(1, { duration: 0 });
 				winYOffset.set(0, { duration: 0 });
@@ -171,6 +177,7 @@
 			isPawCovered ||
 			(winSpotlightActive &&
 				!isWinningState &&
+				!isBulletSymbol &&
 				!(stateGame.pawPending && isPawSymbol))
 				? DIM_NON_WINNING.alpha
 				: 1;
@@ -236,6 +243,7 @@
 	$effect(() => {
 		const state = props.reelSymbol.symbolState;
 		untrack(() => {
+			if (stateGame.targetPickOpen) return;
 			if (state === 'win' && !usesDedicatedSpineWin) {
 				runWinContainerBounce(finishWinBounce, () => props.reelSymbol.symbolState === 'win');
 			}
@@ -245,6 +253,7 @@
 	$effect(() => {
 		const state = props.reelSymbol.symbolState;
 		untrack(() => {
+			if (stateGame.targetPickOpen) return;
 			if (state === 'idleBounce') {
 				runIdlePopAnimation();
 			}

@@ -10,6 +10,8 @@ import {
 	SPIN_BUTTON_SPINE_WEBP_URL,
 	startSpinButtonSpinePreload,
 } from './spinButtonHtmlSpine';
+import { startTargetBoardPreload, TARGET_BOARD_SPRITES } from './targetBoardAssets';
+import { startShotBulletPreload, SHOT_BULLET_SPRITES } from './shotBulletAssets';
 
 const UI_ASSET_BASE = `${import.meta.env.BASE_URL}assets/sprites/ui`;
 
@@ -145,6 +147,11 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	BUY_BONUS_ASSETS.buyButtonBg,
 	BUY_BONUS_ASSETS.cancelButtonBg,
 	BUY_BONUS_ASSETS.confirmButtonBg,
+	TARGET_BOARD_SPRITES.background,
+	TARGET_BOARD_SPRITES.front,
+	TARGET_BOARD_SPRITES.back,
+	TARGET_BOARD_SPRITES.holder,
+	SHOT_BULLET_SPRITES.bullet,
 	...GAME_INFO_SYMBOL_IMAGE_URLS,
 ]);
 
@@ -209,6 +216,8 @@ export const startLoadingIdleUiPreload = () => {
 	startMascotSpinePreload();
 	startCoinPawSpinePreload();
 	startSpinButtonSpinePreload();
+	startTargetBoardPreload();
+	startShotBulletPreload();
 
 	void preloadHtmlImages(LOADING_IDLE_UI_IMAGE_URLS, {
 		priority: LOADING_IDLE_UI_PRIORITY,

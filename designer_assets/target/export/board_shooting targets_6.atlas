@@ -1,0 +1,13 @@
+board_shooting targets_6.png
+size:4096,2048
+filter:Linear,Linear
+back
+bounds:525,1230,291,292
+background
+bounds:1998,2,2050,1675
+edge
+bounds:2,1524,1994,153
+front
+bounds:818,1231,291,291
+holder
+bounds:2,1236,521,286

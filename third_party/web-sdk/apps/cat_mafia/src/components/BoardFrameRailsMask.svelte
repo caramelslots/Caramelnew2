@@ -21,6 +21,8 @@
 		slotHeight: number;
 		boardWidth: number;
 		boardHeight: number;
+		/** `all` — frame + rails (default). `frame` / `rails` split for target pick. */
+		variant?: 'all' | 'frame' | 'rails';
 	};
 
 	/**
@@ -36,15 +38,15 @@
 		const sw = props.slotWidth;
 		const sh = props.slotHeight;
 		const pfW = props.boardWidth * DESK_PARCHMENT_PADDING.width;
-		// Hole extends through the black gap above the gold bar (same runway as
-		// BoardMask bottom) so overlay dark fill does not fake-clip symbols early.
-		const pfH =
-			props.boardHeight * DESK_PARCHMENT_PADDING.height + BOARD_MASK_OVERFLOW.bottom;
+		const playH = props.boardHeight * DESK_PARCHMENT_PADDING.height;
+		const variant = props.variant ?? 'all';
+		// Normal play: hole includes the 11px runway so symbols tuck under the
+		// gold bar. Target pick (`frame`): same flush bottom as the top — that
+		// runway is exactly where the gold lines leak under the cabinet.
+		const pfH = variant === 'frame' ? playH : playH + BOARD_MASK_OVERFLOW.bottom;
 		const pfCx = DESK_PARCHMENT.offsetXFrac * sw;
 		const pfCy = DESK_PARCHMENT.offsetYFrac * sh;
-		// Keep top aligned with padded playfield; extra height grows downward only.
-		const pfTop =
-			pfCy - (props.boardHeight * DESK_PARCHMENT_PADDING.height) / 2;
+		const pfTop = pfCy - playH / 2;
 		const pfLeft = pfCx - pfW / 2;
 		const pfRight = pfCx + pfW / 2;
 		const pfBottom = pfTop + pfH;
@@ -52,16 +54,20 @@
 		const colW = pfW / cols;
 		const gap = Math.max(2, sw * DIVIDER_WIDTH_FRAC);
 
-		// Outer frame (everything outside the playfield holes).
-		g.rect(-sw / 2, -sh / 2, sw, pfTop + sh / 2); // top
-		g.rect(-sw / 2, pfBottom, sw, sh / 2 - pfBottom); // bottom (covers gold bar)
-		g.rect(-sw / 2, pfTop, pfLeft + sw / 2, pfH); // left
-		g.rect(pfRight, pfTop, sw / 2 - pfRight, pfH); // right
+		g.clear();
 
-		// Vertical gold rails between columns.
-		for (let i = 1; i < cols; i++) {
-			const cx = pfLeft + i * colW;
-			g.rect(cx - gap / 2, pfTop, gap, pfH);
+		if (variant !== 'rails') {
+			g.rect(-sw / 2, -sh / 2, sw, pfTop + sh / 2);
+			g.rect(-sw / 2, pfBottom, sw, sh / 2 - pfBottom);
+			g.rect(-sw / 2, pfTop, pfLeft + sw / 2, pfH);
+			g.rect(pfRight, pfTop, sw / 2 - pfRight, pfH);
+		}
+
+		if (variant !== 'frame') {
+			for (let i = 1; i < cols; i++) {
+				const cx = pfLeft + i * colW;
+				g.rect(cx - gap / 2, pfTop, gap, pfH);
+			}
 		}
 
 		g.fill(0xffffff);

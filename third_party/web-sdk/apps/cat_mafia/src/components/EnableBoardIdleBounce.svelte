@@ -23,6 +23,7 @@
 	const canRunIdleBounce = () =>
 		context.stateXstateDerived.isIdle() &&
 		stateGame.idleBounceAllowed &&
+		!stateGame.targetPickOpen &&
 		!stateGameDerived.boardReelsActive() &&
 		!stateGameDerived.boardMysteryAnimating() &&
 		!stateGame.winSpotlightActive &&
@@ -31,6 +32,10 @@
 		!stateGame.freeSpinIntroActive &&
 		!stateGame.duelIntroActive &&
 		stateModal.modal == null;
+
+	$effect(() => {
+		if (stateGame.targetPickOpen) resetIdleBounceSymbols();
+	});
 
 	const sleep = (ms: number, cancelled: () => boolean) =>
 		new Promise<void>((resolve) => {
