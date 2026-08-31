@@ -28,19 +28,21 @@ export const TARGET_SHOT_FLY_MS = 480;
 export const TARGET_SHOT_IMPACT_MS = 420;
 
 /**
- * Delay after the bullet lands before the disc flip — matches when
- * `explosion_bullet` first shows explosion/glow (~0.0667s), not the hit frame.
+ * Delay after the bullet lands before the disc flip (~100ms after impact,
+ * slightly after the explosion burst starts).
  */
-export const TARGET_SHOT_EXPLOSION_START_MS = 67;
+export const TARGET_SHOT_EXPLOSION_START_MS = 100;
 
 /** How long the drawn flight path wipes muzzle→tip after impact. */
-export const TARGET_SHOT_PATH_FADE_MS = 220;
+export const TARGET_SHOT_PATH_FADE_MS = 120;
 
 /** Sampled polyline for a stylized gallery shot. */
 export type TargetShotCurve = {
-	/** Dense path samples muzzle → seat (inclusive). */
+	/** Dense path samples muzzle → seat (inclusive) — bullet motion. */
 	points: { x: number; y: number }[];
 	flyMs: number;
+	/** FPS-independent SVG cubic (M + C) for the trail stroke. */
+	svgPath: string;
 };
 
 /**
@@ -69,6 +71,25 @@ const cubicPoint = (
 		x: uuu * p0x + 3 * uu * t * p1x + 3 * u * tt * p2x + ttt * p3x,
 		y: uuu * p0y + 3 * uu * t * p1y + 3 * u * tt * p2y + ttt * p3y,
 	};
+};
+
+/** Single cubic Bezier SVG path — stays smooth even when RAF is sparse. */
+export const cubicSvgPath = (
+	p0: { x: number; y: number },
+	p1: { x: number; y: number },
+	p2: { x: number; y: number },
+	p3: { x: number; y: number },
+) =>
+	`M ${p0.x.toFixed(1)} ${p0.y.toFixed(1)} C ${p1.x.toFixed(1)} ${p1.y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}, ${p3.x.toFixed(1)} ${p3.y.toFixed(1)}`;
+
+/** Dense polyline fallback when control points are unavailable. */
+export const polylineSvgPath = (points: { x: number; y: number }[]) => {
+	if (points.length === 0) return '';
+	if (points.length === 1) return `M ${points[0]!.x.toFixed(1)} ${points[0]!.y.toFixed(1)}`;
+	const [first, ...rest] = points;
+	return `M ${first!.x.toFixed(1)} ${first!.y.toFixed(1)} ${rest
+		.map((p) => `L ${p.x.toFixed(1)} ${p.y.toFixed(1)}`)
+		.join(' ')}`;
 };
 
 export const resolveTargetShotOrientation = (start: {
@@ -156,7 +177,7 @@ export const buildTargetShotCurve = (args: {
 		p2y = Math.min(args.startY, args.endY) - loft;
 	}
 
-	const samples = 24;
+	const samples = 48;
 	const points: { x: number; y: number }[] = [];
 	for (let i = 0; i <= samples; i++) {
 		const t = i / samples;
@@ -168,7 +189,16 @@ export const buildTargetShotCurve = (args: {
 	const flyMs = nearestColumn
 		? Math.max(420, Math.min(580, 360 + dist * 0.28))
 		: Math.max(380, Math.min(560, 320 + dist * 0.22));
-	return { points, flyMs };
+	return {
+		points,
+		flyMs,
+		svgPath: cubicSvgPath(
+			{ x: args.startX, y: args.startY },
+			{ x: p1x, y: p1y },
+			{ x: p2x, y: p2y },
+			{ x: args.endX, y: args.endY },
+		),
+	};
 };
 
 /** Sample position + tangent along a polyline by normalized arc length t∈[0,1]. */
@@ -286,7 +316,7 @@ export const SHOT_BULLET_IMPACT_ANCHOR = {
 } as const;
 
 /** On-screen size — shared so hit does not shrink/jump the canvas. */
-export const SHOT_BULLET_FLY_DISPLAY = { width: 480, height: 360 } as const;
+export const SHOT_BULLET_FLY_DISPLAY = { width: 400, height: 300 } as const;
 export const SHOT_BULLET_IMPACT_DISPLAY = SHOT_BULLET_FLY_DISPLAY;
 
 export const SHOT_BULLET_SPINE_FILES = [

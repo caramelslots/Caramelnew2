@@ -330,6 +330,30 @@ const applyStickySwPreExpanded = async () => {
 	}
 };
 
+/**
+ * Spin segment bounds containing `fromEvent`: from the nearest prior `reveal`
+ * (inclusive) through the event before the next `reveal` (or end of book).
+ */
+const getSpinSegmentRange = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
+	const idx = bookEvents.indexOf(fromEvent);
+	if (idx < 0) return { start: -1, end: -1, idx: -1 };
+	let start = 0;
+	for (let i = idx; i >= 0; i--) {
+		if (bookEvents[i]?.type === 'reveal') {
+			start = i;
+			break;
+		}
+	}
+	let end = bookEvents.length - 1;
+	for (let i = idx + 1; i < bookEvents.length; i++) {
+		if (bookEvents[i]?.type === 'reveal') {
+			end = i - 1;
+			break;
+		}
+	}
+	return { start, end, idx };
+};
+
 /** Next `setWin` before the following `reveal`, if any. */
 const findNextSetWin = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
 	const startIdx = bookEvents.indexOf(fromEvent);
@@ -371,10 +395,108 @@ const findNextSetTotalWin = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
 	return undefined;
 };
 
-/** SW spins emit multiple winInfo/setTotalWin (pre-expand + product). */
-const spinHasSuperWildExpand = (bookEvents: BookEvent[]) =>
-	bookEvents.some((e) => e.type === 'superWildExpand');
+/** `superWildExpand` index inside this spin segment, or -1. */
+const findExpandIndexInSpin = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
+	const { start, end } = getSpinSegmentRange(bookEvents, fromEvent);
+	if (start < 0) return -1;
+	for (let i = start; i <= end; i++) {
+		if (bookEvents[i]?.type === 'superWildExpand') return i;
+	}
+	return -1;
+};
 
+/** This spin emits `superWildExpand` (new column curtain / sticky payload). */
+const spinHasSuperWildExpand = (bookEvents: BookEvent[], fromEvent: BookEvent) =>
+	findExpandIndexInSpin(bookEvents, fromEvent) >= 0;
+
+/**
+ * True two-beat SW: expand in this spin is followed by another winInfo
+ * (base lying-SW or bonus new sticky column). Sticky-only product scaling
+ * has no expand / no second winInfo — not a two-beat.
+ */
+const spinHasNewSwTwoBeat = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
+	const expandIndex = findExpandIndexInSpin(bookEvents, fromEvent);
+	if (expandIndex < 0) return false;
+	const { end } = getSpinSegmentRange(bookEvents, fromEvent);
+	for (let i = expandIndex + 1; i <= end; i++) {
+		if (bookEvents[i]?.type === 'winInfo') return true;
+	}
+	return false;
+};
+
+/** Lines then paw on the same board — second celebration beat after coins. */
+const spinHasPawTwoBeat = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
+	const { start, end } = getSpinSegmentRange(bookEvents, fromEvent);
+	if (start < 0) return false;
+	let pawIdx = -1;
+	for (let i = start; i <= end; i++) {
+		if (bookEvents[i]?.type === 'pawCoinResolve') {
+			pawIdx = i;
+			break;
+		}
+	}
+	if (pawIdx < 0) return false;
+	for (let i = start; i < pawIdx; i++) {
+		if (bookEvents[i]?.type === 'winInfo') return true;
+	}
+	return false;
+};
+
+/**
+ * Sticky already open, no new curtain two-beat / no paw: math emits
+ * setWin(pre) → setWin(post-product). Only the final Big Win overlay.
+ */
+const spinIsStickyProductOnly = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
+	if (spinHasNewSwTwoBeat(bookEvents, fromEvent)) return false;
+	if (spinHasPawTwoBeat(bookEvents, fromEvent)) return false;
+	const { start, end } = getSpinSegmentRange(bookEvents, fromEvent);
+	if (start < 0) return false;
+	let setWinCount = 0;
+	for (let i = start; i <= end; i++) {
+		if (bookEvents[i]?.type === 'setWin') setWinCount += 1;
+	}
+	return setWinCount >= 2;
+};
+
+/**
+ * Big Win overlay gate:
+ * - New SW two-beat / paw two-beat → up to 2 overlays (each big setWin)
+ * - Sticky-product-only → only the last setWin in the spin
+ * - Otherwise → at most one overlay (first big setWin)
+ */
+const shouldShowBigWinOverlay = (
+	bookEvent: BookEventOfType<'setWin'>,
+	bookEvents: BookEvent[],
+) => {
+	const { start, end, idx } = getSpinSegmentRange(bookEvents, bookEvent);
+	if (idx < 0) return true;
+
+	const setWinIndices: number[] = [];
+	for (let i = start; i <= end; i++) {
+		if (bookEvents[i]?.type === 'setWin') setWinIndices.push(i);
+	}
+	const ordinal = setWinIndices.indexOf(idx);
+	const isLastSetWin = ordinal === setWinIndices.length - 1;
+
+	if (spinIsStickyProductOnly(bookEvents, bookEvent)) {
+		return isLastSetWin;
+	}
+
+	const allowDual = spinHasNewSwTwoBeat(bookEvents, bookEvent) || spinHasPawTwoBeat(bookEvents, bookEvent);
+	let priorBigShown = 0;
+	for (const setWinIdx of setWinIndices) {
+		if (setWinIdx >= idx) break;
+		const prior = bookEvents[setWinIdx] as BookEventOfType<'setWin'>;
+		const priorLevel = winLevelMap[prior.winLevel as WinLevel];
+		if (priorLevel?.type !== 'big') continue;
+		// Prior big in sticky-only would have been skipped — not counted here
+		// because sticky-product-only returns above.
+		priorBigShown += 1;
+	}
+
+	if (allowDual) return priorBigShown < 2;
+	return priorBigShown < 1;
+};
 const IDLE_BOUNCE_BLOCKING_EVENTS = new Set(['winInfo', 'setWin', 'finalWin']);
 
 /** True when this reveal's round includes a win — idle symbol tease stays off. */
@@ -645,11 +767,15 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				(e) => e.type === 'winInfo' && 'index' in e && e.index === bookEvent.index,
 			);
 		}
-		const expandIndex = bookEvents.findIndex((e) => e.type === 'superWildExpand');
+		// Spin-scoped expand — never the first expand earlier in a multi-spin FS book.
+		const expandIndex = findExpandIndexInSpin(bookEvents, bookEvent);
+		const { end: segmentEnd } = getSpinSegmentRange(bookEvents, bookEvent);
 		// True two-beat: expand is followed by another winInfo (base + bonus new SW).
-		// Sticky-only FS spins emit expand without a second winInfo — don't hold paylines.
+		// Sticky-only FS spins emit product setWins without a second winInfo — don't hold.
 		const hasWinInfoAfterExpand =
-			expandIndex >= 0 && bookEvents.slice(expandIndex + 1).some((e) => e.type === 'winInfo');
+			expandIndex >= 0 &&
+			segmentEnd >= 0 &&
+			bookEvents.slice(expandIndex + 1, segmentEnd + 1).some((e) => e.type === 'winInfo');
 		// Phase 2: winInfo after SW curtain — clear phase-1 lines, longer beat.
 		const isPostSwExpand = eventIndex >= 0 && expandIndex >= 0 && eventIndex > expandIndex;
 		// Phase 1 when a curtain + second winInfo follows — expand handler clears after hold.
@@ -731,7 +857,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			if (
 				isSmallWinFlow &&
 				!isPostSwExpand &&
-				!spinHasSuperWildExpand(bookEvents) &&
+				!spinHasSuperWildExpand(bookEvents, bookEvent) &&
 				stickyProduct <= 1
 			) {
 				stateBet.winBookEventAmount = stateBet.winBookEventAmount + bookEvent.totalWin;
@@ -772,19 +898,17 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		bookEvent: BookEventOfType<'setTotalWin'>,
 		{ bookEvents }: BookEventContext,
 	) => {
-		// Intermediate totals before SW product / phase-2 — skip so HUD only
+		// Intermediate totals before SW product / phase-2 / paw — skip so HUD only
 		// jumps once to the final cumulative (avoids up→down→up flicker).
-		if (spinHasSuperWildExpand(bookEvents) && findNextSetTotalWin(bookEvents, bookEvent)) {
+		if (findNextSetTotalWin(bookEvents, bookEvent)) {
 			return;
 		}
 		stateBet.winBookEventAmount = bookEvent.amount;
 	},
-	// Cat Mafia Stage C — cloud → target board → pick → congrats (while board exits).
+	// Cat Mafia Stage C — gallery on base (HUD stays, spin-dimmed) → cloud + intro.
 	freeSpinTargetPick: async (bookEvent: BookEventOfType<'freeSpinTargetPick'>) => {
 		clearWinSpotlight();
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
-		await eventEmitter.broadcastAsync({ type: 'uiHide' });
-		await eventEmitter.broadcastAsync({ type: 'transition', gameType: 'freegame' });
 		await eventEmitter.broadcastAsync({
 			type: 'freeSpinTargetPick',
 			targets: bookEvent.targets,
@@ -831,20 +955,22 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (!hadTargetPick && !hadBonusCollect && bookEvent.positions?.length) {
 			await animateBonusSymbols({ positions: bookEvent.positions });
 		}
-		// Target-pick path already ran cloud + FreeSpinIntro while the board exited.
 		if (!hadTargetPick) {
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
-			await eventEmitter.broadcastAsync({ type: 'uiHide' });
-			await eventEmitter.broadcastAsync({ type: 'transition', gameType: 'freegame' });
-			eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
-			eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin', withIntro: true });
-			await eventEmitter.broadcastAsync({
-				type: 'freeSpinIntroUpdate',
-				totalFreeSpins: bookEvent.totalFs,
-			});
-			eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
 		}
+		// Hide HUD for steam / intro (gallery kept HUD visible during pick).
+		await eventEmitter.broadcastAsync({ type: 'uiHide' });
+		await eventEmitter.broadcastAsync({ type: 'transition', gameType: 'freegame' });
+		// Safety: if theme-switch dismiss missed, snap gallery off before intro.
+		eventEmitter.broadcast({ type: 'targetPickDismiss' });
+		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
+		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin', withIntro: true });
+		await eventEmitter.broadcastAsync({
+			type: 'freeSpinIntroUpdate',
+			totalFreeSpins: bookEvent.totalFs,
+		});
+		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 		stateUi.freeSpinCounterShow = true;
 		eventEmitter.broadcast({
@@ -927,17 +1053,23 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	setWin: async (bookEvent: BookEventOfType<'setWin'>, { bookEvents }: BookEventContext) => {
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
 
-		// Like / applause only when the Big Win+ overlay runs (not on paylines).
-		triggerMascotWinReaction(winLevelData);
-
 		// Stake UX: small/medium wins are non-blocking — board amount + HUD WIN
 		// are raised during winInfo; skip duplicate increment here.
 		if (winLevelData.type !== 'big') {
 			return;
 		}
 
-		// Big-win HUD before celebration. With SW, multiple setWin can fire
-		// (pre-expand + ×product) — `+= spin` double-counts; use next setTotalWin.
+		// Dual Big Win only for new-SW two-beat / paw two-beat; sticky-product
+		// pre-scale and any other multi-setWin spin → single final overlay.
+		if (!shouldShowBigWinOverlay(bookEvent, bookEvents)) {
+			return;
+		}
+
+		// Like / applause only when the Big Win+ overlay actually runs.
+		triggerMascotWinReaction(winLevelData);
+
+		// Big-win HUD before celebration. Prefer the setTotalWin that belongs to
+		// this beat (next in segment); final segment total still lands via setTotalWin.
 		const nextTotal = findNextSetTotalWin(bookEvents, bookEvent);
 		if (nextTotal) {
 			stateBet.winBookEventAmount = nextTotal.amount;
@@ -974,7 +1106,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	bonusCollect: async () => {},
 	ladderTierUp: async () => {},
 	mysteryReelActivate: async () => {},
-	mysteryReelUnlock: async () => {},
+	mysteryReelUnlock: async (bookEvent: BookEventOfType<'mysteryReelUnlock'>) => {
+		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
+		await eventEmitter.broadcastAsync({
+			type: 'freeSpinIntroUpdate',
+			totalFreeSpins: bookEvent.rewardSpins,
+			mode: 'extra',
+		});
+		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
+	},
 	mysteryReveal: async () => {},
 
 	// === Cat Mafia Stage B ===

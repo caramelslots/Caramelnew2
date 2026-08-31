@@ -267,9 +267,28 @@ export default {
 			scale: 2,
 		},
 	},
+	/** Free-spins congrats modal layers (designer FS_* — stacked in FreeSpinIntro). */
+	fsCongRays: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/fsCong/fs_rays.webp'),
+	},
+	fsCongBg: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/fsCong/fs_bg.webp'),
+	},
+	fsCongFrame: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/fsCong/fs_frame.webp'),
+	},
+	/** Empty FREE SPINS banner (gems + frame) — label text is overlaid for i18n. */
 	fsCongBoard: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/fsCong/fs_cong.webp'),
+		src: assetUrl('assets/sprites/fsCong/fs_board.webp'),
+	},
+	/** Banner with baked English "FREE SPINS" (designer FS_BOARD_2). */
+	fsCongBoardLabeled: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/fsCong/fs_board_2.webp'),
 	},
 	fsCongNumber: {
 		type: 'sprite',

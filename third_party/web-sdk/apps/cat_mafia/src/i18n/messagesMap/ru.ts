@@ -52,6 +52,7 @@ export default {
 	FS_COUNTER_LABEL: 'ФРИСПИН',
 	FS_COUNTER_OF: 'ИЗ',
 	FS_REMAINING: 'ФРИСПИНОВ',
+	EXTRA_SPINS: 'ЭКСТРА СПИНОВ',
 	PROGRESS_LADDER: 'ПРОГРЕСС',
 	BONUS_COLLECTED: 'СОБРАНО БОНУСОВ',
 	MYSTERY_REEL_METER: 'MYSTERY REELS',

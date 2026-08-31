@@ -22,6 +22,7 @@
 	import {
 		BOARD_DESK_CONTENT,
 		BOARD_FRAME_OFFSET,
+		DESK_BOTTOM_PULL_PX,
 		DESK_PARCHMENT,
 		DESK_PARCHMENT_PADDING,
 		DESK_VISUAL_OFFSET_Y,
@@ -117,18 +118,24 @@
 		frameY - DESK_PARCHMENT.offsetYFrac * slotSize.height + DESK_VISUAL_OFFSET_Y,
 	);
 
-	/** Stretch current desk art to fill the slot (object-fit: fill). */
+	/**
+	 * Stretch desk art to fill the slot (object-fit: fill), then top-anchor a Y
+	 * compress so DESK_BOTTOM_PULL_PX lifts only the bottom rail.
+	 */
 	const contentScale = $derived({
 		x: slotSize.width / BOARD_DESK_CONTENT.width,
-		y: slotSize.height / BOARD_DESK_CONTENT.height,
+		y: (slotSize.height - DESK_BOTTOM_PULL_PX) / BOARD_DESK_CONTENT.height,
 	});
 
 	/**
 	 * Spine root inside the slot so content center sits at slot (0,0).
 	 * `Skeleton.yDown` → skeleton (cx, cy) draws at local (cx, −cy).
+	 * −DESK_BOTTOM_PULL_PX/2 after the shorter Y scale keeps the top rail fixed.
 	 */
 	const contentRootX = $derived(-BOARD_DESK_CONTENT.centerX * contentScale.x);
-	const contentRootY = $derived(BOARD_DESK_CONTENT.centerY * contentScale.y);
+	const contentRootY = $derived(
+		BOARD_DESK_CONTENT.centerY * contentScale.y - DESK_BOTTOM_PULL_PX / 2,
+	);
 
 	/** Bump to force-replay the one-shot glow clip (even if already complete). */
 	let pulseToken = $state(0);

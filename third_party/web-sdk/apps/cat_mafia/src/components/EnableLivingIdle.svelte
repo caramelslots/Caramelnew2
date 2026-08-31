@@ -20,6 +20,7 @@
 	const canRunLivingIdle = () => {
 		const phone = isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType());
 		if (
+			stateGame.targetPickOpen ||
 			stateGame.winSpotlightActive ||
 			// Phone duel: any desk celebrating → freeze idle everywhere.
 			(phone && stateDuel.winSpotlightSide != null) ||

@@ -305,13 +305,14 @@
 	};
 
 	/**
-	 * Production freeSpinTargetPick path: cloud → board → aim → click → shot →
-	 * flip → FreeSpinIntro while board slides up.
+	 * Production freeSpinTargetPick path: board stays until steam covers
+	 * (solo preview dismisses immediately after pick).
 	 */
 	const playTargetPickPreview = () =>
 		guard(async () => {
 			if (devPreview.forceShowTargetBoard) toggleTargetBoardPreview(false);
 			await playBookEvent(asEvent(freeSpinTargetPickDemo), { bookEvents: [] });
+			eventEmitter.broadcast({ type: 'targetPickDismiss' });
 		});
 
 	const previewDrumShoot = async () => {
@@ -936,6 +937,17 @@
 			eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
 		});
 
+	const playFsExtraIntroPreview = () =>
+		guard(async () => {
+			eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
+			await eventEmitter.broadcastAsync({
+				type: 'freeSpinIntroUpdate',
+				totalFreeSpins: 3,
+				mode: 'extra',
+			});
+			eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
+		});
+
 	let loaderProgressTimer: ReturnType<typeof setInterval> | null = null;
 
 	const stopLoaderProgressTimer = () => {
@@ -1549,6 +1561,9 @@
 					</button>
 					<button type="button" disabled={busy} onclick={playFsIntroPreview}>
 						FS Intro
+					</button>
+					<button type="button" disabled={busy} onclick={playFsExtraIntroPreview}>
+						FS Extra Spins
 					</button>
 					<button type="button" disabled={busy} onclick={() => playFsEnd(3, 1200)}>
 						FS End (Small)

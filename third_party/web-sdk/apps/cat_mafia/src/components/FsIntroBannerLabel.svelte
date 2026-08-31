@@ -29,10 +29,17 @@
 		sizeRatio: number;
 		/** Vertical centre as a fraction of panel height. */
 		yRatio: number;
+		/** Horizontal offset from centre as a fraction of panel width (positive = right). */
+		xOffsetRatio?: number;
 		/** Max text width as a fraction of panel width. */
 		maxWidthRatio?: number;
 		/** Minimum horizontal scale when fitting long strings. */
 		minScale?: number;
+	/**
+	 * When set, lay letters along an upward arc (degrees left→right).
+	 * Circle centre sits below the peak so the bow matches the plaque crest.
+	 */
+		archAngleDeg?: number;
 		panelWidth: number;
 		panelHeight: number;
 		layoutScale: number;
@@ -44,6 +51,10 @@
 	let imgEl = $state<HTMLImageElement | undefined>();
 	let systemEl = $state<HTMLParagraphElement | undefined>();
 	let fitScale = $state(1);
+
+	const archAngleDeg = $derived(props.archAngleDeg ?? 0);
+	const useArch = $derived(archAngleDeg > 0);
+	const archChars = $derived(Array.from(props.text));
 
 	const context = getContext();
 	const locale = $derived(stateI18n.i18n.locale);
@@ -90,15 +101,42 @@
 
 	const positionStyle = $derived(
 		[
-			`left:50%`,
+			`left:calc(50% + ${props.panelWidth * (props.xOffsetRatio ?? 0)}px)`,
 			`top:${props.panelHeight * props.yRatio}px`,
-			`max-width:${maxWidth * props.layoutScale}px`,
-		].join(';'),
+			useArch ? '' : `max-width:${maxWidth * props.layoutScale}px`,
+		]
+			.filter(Boolean)
+			.join(';'),
 	);
 
 	const systemTransformStyle = $derived(
 		`transform:translate(-50%, -50%) scale(${fitScale});`,
 	);
+
+	/** Per-glyph layout on an upward arc; circle centre below the peak (Y down). */
+	const archGlyphLayout = $derived.by(() => {
+		const chars = archChars;
+		const n = chars.length;
+		if (!useArch || n === 0) return [] as { char: string; x: number; y: number; rot: number }[];
+
+		const chord = maxWidth * props.layoutScale;
+		const halfRad = (archAngleDeg * Math.PI) / 360;
+		// Larger radius → shallower bow; peak at (0,0), ends lower (+Y).
+		const radius = halfRad > 0.001 ? chord / (2 * Math.sin(halfRad)) : chord;
+		const step = n > 1 ? (2 * halfRad) / (n - 1) : 0;
+
+		return chars.map((char, i) => {
+			const phi = n > 1 ? -halfRad + i * step : 0;
+			return {
+				char,
+				x: radius * Math.sin(phi),
+				// Peak highest (y=0); ends drop — centre of curvature below text.
+				y: radius * (1 - Math.cos(phi)),
+				// Tilt toward circle centre below (CSS clockwise = +).
+				rot: (phi * 180) / Math.PI,
+			};
+		});
+	});
 
 	const fitScaleToWidth = (naturalWidth: number, limitWidth: number) => {
 		if (naturalWidth <= 0 || limitWidth <= 0) return 1;
@@ -107,7 +145,7 @@
 
 	const refitSystemLabel = () => {
 		const el = systemEl;
-		if (!el) return;
+		if (!el || useArch) return;
 
 		fitScale = 1;
 		el.style.transform = 'translate(-50%, -50%) scale(1)';
@@ -118,7 +156,7 @@
 	};
 
 	$effect(() => {
-		if (useBitmap) return;
+		if (useBitmap || useArch) return;
 
 		props.text;
 		locale;
@@ -134,7 +172,7 @@
 	});
 
 	$effect(() => {
-		if (useBitmap || !systemEl) return;
+		if (useBitmap || useArch || !systemEl) return;
 
 		const observer = new ResizeObserver(() => refitSystemLabel());
 		observer.observe(systemEl);
@@ -149,8 +187,74 @@
 
 		const renderFontSize = basePanelWidth * props.sizeRatio * BITMAP_FONT_SCALE;
 		const renderMaxWidth = basePanelWidth * (props.maxWidthRatio ?? 0.88);
-
 		const container = new PIXI.Container();
+
+		if (useArch && archChars.length > 0) {
+			const halfRad = (archAngleDeg * Math.PI) / 360;
+			const radius = halfRad > 0.001 ? renderMaxWidth / (2 * Math.sin(halfRad)) : renderMaxWidth;
+			const n = archChars.length;
+			const step = n > 1 ? (2 * halfRad) / (n - 1) : 0;
+			let minX = Infinity;
+			let maxX = -Infinity;
+			let minY = Infinity;
+			let maxY = -Infinity;
+
+			for (let i = 0; i < n; i++) {
+				const phi = n > 1 ? -halfRad + i * step : 0;
+				const glyph = useBitmap
+					? new PIXI.BitmapText({
+							text: archChars[i]!,
+							style: {
+								fontFamily,
+								fontSize: renderFontSize,
+								align: 'center',
+								fontWeight: 'bold',
+								letterSpacing: 0,
+							},
+						})
+					: new PIXI.Text({
+							text: archChars[i]!,
+							style: arabicLocaleTextStyle(
+								{
+									fontFamily,
+									fontSize: renderFontSize,
+									align: 'center',
+								},
+								props.fallbackFill,
+							),
+						});
+				glyph.anchor.set(0.5, 0.5);
+				glyph.rotation = phi;
+				const gx = radius * Math.sin(phi);
+				const gy = radius * (1 - Math.cos(phi));
+				glyph.position.set(gx, gy);
+				container.addChild(glyph);
+
+				const half = renderFontSize * 0.65;
+				minX = Math.min(minX, gx - half);
+				maxX = Math.max(maxX, gx + half);
+				minY = Math.min(minY, gy - half);
+				maxY = Math.max(maxY, gy + half);
+			}
+
+			const pad = Math.ceil(renderFontSize * 0.4);
+			const w = Math.max(1, Math.ceil(maxX - minX) + pad * 2);
+			const h = Math.max(1, Math.ceil(maxY - minY) + pad * 2);
+			container.position.set(-minX + pad, -minY + pad);
+
+			const rt = PIXI.RenderTexture.create({ width: w, height: h });
+			renderer.render({ container, target: rt });
+			const canvas = renderer.extract.canvas(rt);
+			imgEl.src = canvas.toDataURL('image/png');
+			imgEl.style.width = `${w * props.layoutScale}px`;
+			imgEl.style.height = `${h * props.layoutScale}px`;
+
+			return () => {
+				rt.destroy(true);
+				container.destroy({ children: true });
+			};
+		}
+
 		const textNode = useBitmap
 			? new PIXI.BitmapText({
 					text: props.text,
@@ -202,6 +306,25 @@
 
 {#if usePixiRender && canRender}
 	<img bind:this={imgEl} class="label" style={positionStyle} alt="" />
+{:else if !usePixiRender && localeFontReady && useArch}
+	<div
+		class="label label--arch"
+		class:label--cjk={isCjkLocale(locale)}
+		class:label--arabic={isArabicLocale(locale)}
+		class:label--krutoi={isArabicLocale(locale) && props.useKrutoi}
+		style={positionStyle}
+		dir={textDirection}
+		lang={locale}
+		aria-label={props.text}
+	>
+		{#each archGlyphLayout as glyph, i (i)}
+			<span
+				class="arch-char"
+				style="transform:translate(-50%, -50%) translate({glyph.x}px, {glyph.y}px) rotate({glyph.rot}deg)"
+				>{glyph.char === ' ' ? '\u00a0' : glyph.char}</span
+			>
+		{/each}
+	</div>
 {:else if !usePixiRender && localeFontReady}
 	<p
 		bind:this={systemEl}
@@ -240,6 +363,29 @@
 		color: v-bind(systemFill);
 		text-transform: uppercase;
 		line-height: 1.1;
+	}
+
+	.label--arch {
+		margin: 0;
+		padding: 0;
+		width: 0;
+		height: 0;
+		font-family: v-bind(fontFamily);
+		font-size: v-bind('`${systemFontSize}px`');
+		font-weight: 700;
+		letter-spacing: 0;
+		color: v-bind(systemFill);
+		text-transform: uppercase;
+		line-height: 1;
+	}
+
+	.arch-char {
+		position: absolute;
+		left: 0;
+		top: 0;
+		display: block;
+		white-space: pre;
+		transform-origin: center center;
 	}
 
 	.label--cjk {

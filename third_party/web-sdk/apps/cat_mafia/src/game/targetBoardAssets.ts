@@ -6,6 +6,7 @@
 import {
 	BOARD_FRAME_OFFSET,
 	BOARD_SIZES,
+	DESK_BOTTOM_PULL_PX,
 	DESK_PARCHMENT,
 	DESK_PARCHMENT_PADDING,
 	DESK_VISUAL_OFFSET_Y,
@@ -72,7 +73,10 @@ export const TARGET_BOARD_SPINE_ANIMS = [
 export type TargetBoardSpineAnim = (typeof TARGET_BOARD_SPINE_ANIMS)[number];
 
 /** Production pick flip clips — chosen from hit offset (see pickTargetFlipAnim). */
-export const TARGET_BOARD_PICK_FLIP_ANIMS = ['v3', 'v4'] as const satisfies readonly TargetBoardSpineAnim[];
+export const TARGET_BOARD_PICK_FLIP_ANIMS = [
+	'v3',
+	'v4',
+] as const satisfies readonly TargetBoardSpineAnim[];
 export type TargetBoardPickFlipAnim = (typeof TARGET_BOARD_PICK_FLIP_ANIMS)[number];
 
 /** @deprecated prefer pickTargetFlipAnim — kept as the default / fallback clip. */
@@ -97,8 +101,8 @@ export const pickTargetFlipAnim = (hitOffset: { x: number; y: number }): TargetB
 /** Symbols drop / target board slide through the reel mask. */
 export const TARGET_PICK_SLIDE_MS = 1100;
 
-/** Extra px below the 5×4 so the plate covers the bottom gold-line runway. */
-export const TARGET_PICK_BOTTOM_TUCK = 13;
+/** Extra px below the 5×4 so the plate tucks under the pulled gold rail. */
+export const TARGET_PICK_BOTTOM_TUCK = 2;
 /** Inset from the padded playfield so square corners stay off the frame rivets. */
 export const TARGET_PICK_SIDE_INSET = 5;
 /** Drop the top of the plate so it sits under the upper gold bar. */
@@ -107,6 +111,7 @@ export const TARGET_PICK_TOP_INSET = 3;
 /**
  * Inner window of the slot gold frame in board-local px (top-left of the 5×4).
  * Sides are inset so the cabinet cannot paint over the gold corner chrome.
+ * Height follows DESK_BOTTOM_PULL only — mask slack is independent.
  */
 export const targetPickInnerClip = () => {
 	const boardWidth = BOARD_SIZES.width;
@@ -128,7 +133,7 @@ export const targetPickInnerClip = () => {
 		x: slotCenterX + pfLeft + TARGET_PICK_SIDE_INSET,
 		y: slotCenterY + pfTop + TARGET_PICK_TOP_INSET,
 		width: pfW - TARGET_PICK_SIDE_INSET * 2,
-		height: playH - TARGET_PICK_TOP_INSET + TARGET_PICK_BOTTOM_TUCK,
+		height: playH - TARGET_PICK_TOP_INSET - DESK_BOTTOM_PULL_PX + TARGET_PICK_BOTTOM_TUCK + 13,
 	};
 };
 

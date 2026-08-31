@@ -34,6 +34,7 @@ export default {
 	FS_COUNTER_LABEL: 'フリースピン',
 	FS_COUNTER_OF: '/',
 	FS_REMAINING: 'フリースピン',
+	EXTRA_SPINS: 'EXTRA SPINS',
 	PROGRESS_LADDER: '進捗',
 	BONUS_COLLECTED: '収集ボーナス',
 	MYSTERY_REEL_METER: 'MYSTERY REELS',

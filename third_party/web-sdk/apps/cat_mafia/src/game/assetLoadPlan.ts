@@ -115,7 +115,11 @@ export const LOADER_BATCH_3_KEYS = [
 export const LOADER_BATCH_4_KEYS = [
 	'bigwin',
 	'fsPopup',
+	'fsCongRays',
+	'fsCongBg',
+	'fsCongFrame',
 	'fsCongBoard',
+	'fsCongBoardLabeled',
 	'fsCongNumber',
 	'fsLeftCounter',
 	'fsLeftCounterSpinboard',

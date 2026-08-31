@@ -175,6 +175,7 @@
 			await context.eventEmitter.broadcastAsync({
 				type: 'freeSpinIntroUpdate',
 				totalFreeSpins: extraFs,
+				mode: 'extra',
 			});
 			context.eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
 		}
@@ -241,6 +242,7 @@
 				endX,
 				endY,
 				points: curve.points,
+				svgPath: curve.svgPath,
 				flyMs: curve.flyMs,
 			};
 			await wait(curve.flyMs);

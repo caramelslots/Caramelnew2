@@ -21,6 +21,7 @@
 		TARGET_SHOT_FLY_MS,
 		TARGET_SHOT_IMPACT_MS,
 		TARGET_SHOT_PATH_FADE_MS,
+		polylineSvgPath,
 		resolveShotBulletSpineUrl,
 		sampleShotPath,
 	} from '../game/shotBulletAssets';
@@ -33,6 +34,8 @@
 		endY: number;
 		/** Dense muzzle→seat samples from `buildTargetShotCurve`. */
 		points: { x: number; y: number }[];
+		/** Smooth cubic SVG path — preferred over RAF-sampled polyline. */
+		svgPath?: string;
 		flyMs?: number;
 	};
 
@@ -45,7 +48,9 @@
 	let phase = $state<'idle' | 'fly' | 'impact'>('idle');
 	let wrapStyle = $state('opacity:0');
 	let pathD = $state('');
-	/** 0 = full path from muzzle; 1 = wiped through to the tip. */
+	/** 0→1: how much of the cubic is drawn behind the bullet (fly). */
+	let pathReveal = $state(0);
+	/** 0→1: wipe from muzzle toward tip after impact. */
 	let pathTrim = $state(0);
 	let host = $state<HTMLDivElement | undefined>();
 	let player: SpinePlayer | undefined;
@@ -137,6 +142,7 @@
 				return;
 			}
 			pathTrim = 1;
+			pathReveal = 0;
 			pathD = '';
 		};
 		pathFadeRaf = requestAnimationFrame(tick);
@@ -151,6 +157,7 @@
 
 	const startImpact = (x: number, y: number, nonce: number) => {
 		phase = 'impact';
+		pathReveal = 1;
 		setImpactPose(x, y);
 		playClip(SHOT_BULLET_IMPACT_ANIM, false, SHOT_BULLET_IMPACT_SLOTS);
 		fadePathOut(nonce);
@@ -158,10 +165,13 @@
 		impactTimer = setTimeout(() => endImpact(nonce), TARGET_SHOT_IMPACT_MS);
 	};
 
-	// pathLength=1 → trim from muzzle (start) toward tip (end).
-	const pathStrokeStyle = $derived(
-		`stroke-dasharray:${Math.max(0, 1 - pathTrim)} 1;stroke-dashoffset:${-pathTrim}`,
-	);
+	// pathLength=1: draw [pathTrim → pathReveal] so the trail rides behind the tip.
+	const pathStrokeStyle = $derived.by(() => {
+		const from = Math.max(0, Math.min(1, pathTrim));
+		const to = Math.max(from, Math.min(1, pathReveal));
+		const drawn = Math.max(0, to - from);
+		return `stroke-dasharray:${drawn} 1;stroke-dashoffset:${-from}`;
+	});
 
 	onMount(() => {
 		const el = host;
@@ -225,10 +235,11 @@
 		const endY = flight.endY;
 		const flyMs = Math.max(280, flight.flyMs ?? TARGET_SHOT_FLY_MS);
 		const nonce = flight.nonce;
-		const pts: string[] = [];
 
 		phase = 'fly';
-		pathD = '';
+		// Full cubic geometry once; reveal with dash so the trail stays behind the tip.
+		pathD = flight.svgPath || polylineSvgPath(pathPts);
+		pathReveal = 0;
 		pathTrim = 0;
 		playClip(SHOT_BULLET_FLY_ANIM, true, SHOT_BULLET_FLY_SLOTS);
 		const origin = performance.now();
@@ -243,10 +254,7 @@
 			const opacity = t < 0.04 ? t / 0.04 : 1;
 
 			setFlyPose(sample.x, sample.y, tipRot, opacity);
-
-			pts.push(`${sample.x.toFixed(1)},${sample.y.toFixed(1)}`);
-			pathD = pts.length > 1 ? `M ${pts.join(' L ')}` : '';
-			pathTrim = 0;
+			pathReveal = ease;
 
 			if (t < 1) {
 				raf = requestAnimationFrame(tick);

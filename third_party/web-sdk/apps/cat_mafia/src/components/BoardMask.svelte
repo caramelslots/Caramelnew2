@@ -12,6 +12,8 @@
 		BOARD_MASK_MYSTERY_OVERFLOW,
 		BOARD_MASK_FEATHER,
 		BOARD_MASK_BOTTOM_FEATHER,
+		DESK_BOTTOM_MASK_SLACK_PX,
+		DESK_BOTTOM_PULL_PX,
 	} from '../game/constants';
 	import {
 		createBoardFeatherMaskTexture,
@@ -54,9 +56,12 @@
 	const maskBottomOverflow = $derived(
 		mysteryMaskActive
 			? BOARD_MASK_MYSTERY_OVERFLOW
-			: reelsActive
-				? BOARD_MASK_SPIN_OVERFLOW.bottom
-				: BOARD_MASK_OVERFLOW.bottom,
+			: Math.max(
+					0,
+					(reelsActive ? BOARD_MASK_SPIN_OVERFLOW.bottom : BOARD_MASK_OVERFLOW.bottom) -
+						DESK_BOTTOM_PULL_PX +
+						DESK_BOTTOM_MASK_SLACK_PX,
+				),
 	);
 
 	const maskX = $derived(-SYMBOL_SIZE);

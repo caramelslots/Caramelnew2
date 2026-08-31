@@ -34,6 +34,7 @@ export default {
 	FS_COUNTER_LABEL: 'دورة مجانية',
 	FS_COUNTER_OF: '/',
 	FS_REMAINING: 'دورات مجانية',
+	EXTRA_SPINS: 'EXTRA SPINS',
 	PROGRESS_LADDER: 'التقدم',
 	BONUS_COLLECTED: 'المكافآت المجمعة',
 	MYSTERY_REEL_METER: 'MYSTERY REELS',

@@ -34,6 +34,7 @@ export default {
 	FS_COUNTER_LABEL: 'मुफ़्त स्पिन',
 	FS_COUNTER_OF: '/',
 	FS_REMAINING: 'मुफ़्त स्पिन',
+	EXTRA_SPINS: 'EXTRA SPINS',
 	PROGRESS_LADDER: 'प्रगति',
 	BONUS_COLLECTED: 'एकत्रित बोनस',
 	MYSTERY_REEL_METER: 'MYSTERY REELS',

@@ -245,6 +245,7 @@
 				endX,
 				endY,
 				points: curve.points,
+				svgPath: curve.svgPath,
 				flyMs: curve.flyMs,
 			};
 			await wait(curve.flyMs);

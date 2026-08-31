@@ -226,8 +226,7 @@ const shuffleInPlace = <T>(items: T[]): T[] => {
 	return items;
 };
 
-const pickOne = <T>(items: ReadonlyArray<T>): T =>
-	items[Math.floor(Math.random() * items.length)]!;
+const pickOne = <T>(items: ReadonlyArray<T>): T => items[Math.floor(Math.random() * items.length)]!;
 
 /**
  * Remap H/L families so the same silhouette pattern can feel fresh each load
@@ -256,9 +255,7 @@ const applyExclude = (
  * Structured padded 5×6 preview board: pick a curated near-win composition,
  * optionally remap H/L identities, echo edge cells into padding.
  */
-export const createInitialBoard = (opts?: {
-	exclude?: ReadonlySet<string>;
-}): RawSymbol[][] => {
+export const createInitialBoard = (opts?: { exclude?: ReadonlySet<string> }): RawSymbol[][] => {
 	const template = pickOne(INITIAL_BOARD_TEMPLATES);
 	const remap = buildSymbolRemap();
 	const fallbackHigh = applyExclude(
@@ -286,11 +283,7 @@ export const createInitialBoard = (opts?: {
 			opts?.exclude,
 			fallbackHigh,
 		);
-		return [
-			{ name: topPad },
-			...column.map((name) => ({ name })),
-			{ name: bottomPad },
-		];
+		return [{ name: topPad }, ...column.map((name) => ({ name })), { name: bottomPad }];
 	});
 };
 
@@ -625,8 +618,10 @@ export const DESK_PARCHMENT = {
 } as const;
 
 /**
- * Current desk art content bounds (Spine `board` slot, skeleton Y-up).
+ * Current desk art content bounds (Spine `board` attachment, skeleton Y-up).
  * Fitted into the desk slot via scale = slotSize / contentSize.
+ * `centerY` matches the board attachment's y (board.json) so the dark
+ * playfield sits on the reel grid the same way the old Sprite desk did.
  * Swap these when the board asset changes — slot size/position stay fixed.
  */
 export const BOARD_DESK_CONTENT = {
@@ -682,8 +677,25 @@ export const BOARD_LAYOUT_SCALE = {
 /** Frame bezel + glow offset from board center (px): +x right, +y down. */
 export const BOARD_FRAME_OFFSET = { x: 0, y: 0 } as const;
 /** Vertical nudge (game px, +y = down) applied to all desk artwork layers (base / contour)
- *  without moving the reel grid or UI buttons. */
-export const DESK_VISUAL_OFFSET_Y = -13.5;
+ *  without moving the reel grid or UI buttons.
+ *  Keep 0 — same as the pre-Spine Sprite desk. The -13.5 fudge added with the
+ *  animated board lifted the frame and opened the top inset above the symbols.
+ */
+export const DESK_VISUAL_OFFSET_Y = 0;
+
+/**
+ * Pull only the bottom gold rail up toward the reel grid (game px), keeping the
+ * top rail fixed — top-anchored Y compress of desk art in BoardFrame.
+ * Restores the bottom tuck that DESK_VISUAL_OFFSET_Y = -13.5 used to fake,
+ * without reopening the top inset.
+ */
+export const DESK_BOTTOM_PULL_PX = 13.5;
+
+/**
+ * Extra px to keep mask holes / symbol runway a hair below the pulled gold
+ * rail. Independent of target-board clip height (`targetPickInnerClip`).
+ */
+export const DESK_BOTTOM_MASK_SLACK_PX = 8;
 
 /**
  * Reference width (px) for portrait board scaling. Parchment on-screen width

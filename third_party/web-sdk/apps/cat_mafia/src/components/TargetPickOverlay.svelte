@@ -1,16 +1,18 @@
 <script lang="ts" module>
-	export type EmitterEventFreeSpinTargetPick = {
-		type: 'freeSpinTargetPick';
-		targets: number[];
-		chosenIndex: number;
-		awardedFs: number;
-	};
+	export type EmitterEventFreeSpinTargetPick =
+		| {
+				type: 'freeSpinTargetPick';
+				targets: number[];
+				chosenIndex: number;
+				awardedFs: number;
+		  }
+		| { type: 'targetPickDismiss' };
 </script>
 
 <script lang="ts">
 	/**
-	 * Target pick (after freegame cloud): board slides in → shot → Spine flip →
-	 * FreeSpinIntro while the board slides up and hides.
+	 * Target pick on base: board slides in → shot → Spine flip.
+	 * Board stays up until steam covers (`targetPickDismiss`); then symbols.
 	 */
 	import { waitForResolve } from 'utils-shared/wait';
 
@@ -202,6 +204,7 @@
 				endX,
 				endY,
 				points: curve.points,
+				svgPath: curve.svgPath,
 				flyMs: curve.flyMs,
 			};
 			await wait(curve.flyMs);
@@ -230,28 +233,19 @@
 		await mascotAfterShot;
 		stateGame.mascotPose = 'idle';
 
-		// Congrats over the board; board rides up while the player reads it.
-		const slideOut = tweenSlide(0);
-		context.eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
-		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
-		context.eventEmitter.broadcast({
-			type: 'soundMusic',
-			name: 'bgm_freespin',
-			withIntro: true,
-		});
-		await context.eventEmitter.broadcastAsync({
-			type: 'freeSpinIntroUpdate',
-			totalFreeSpins: awardedFs,
-		});
-		context.eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
-		await slideOut;
-
-		stateGame.targetPickOpen = false;
-		show = false;
+		// Keep the gallery up; freeSpinTrigger starts the cloud, and
+		// `targetPickDismiss` snaps to symbols while the screen is covered.
 		oncomplete();
 	};
 
 	context.eventEmitter.subscribeOnMount({
+		targetPickDismiss: () => {
+			shotFlight = null;
+			stateGame.targetPickSlide = 0;
+			stateGame.targetPickOpen = false;
+			show = false;
+			phase = 'prep';
+		},
 		freeSpinTargetPick: async (event) => {
 			startShotBulletPreload();
 			startTargetBoardPreload();
@@ -286,9 +280,7 @@
 
 			await waitForResolve((resolve) => {
 				oncomplete = () => {
-					stateGame.targetPickSlide = 0;
-					stateGame.targetPickOpen = false;
-					show = false;
+					// Leave slide/open as-is — dismissed mid-transition.
 					resolve();
 				};
 			});

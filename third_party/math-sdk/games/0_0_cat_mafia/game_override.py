@@ -1154,9 +1154,25 @@ class GameStateOverride(GameExecutables):
             return
         paw_coin_resolve_event(self, paws, rows, total)
         if total > 0:
+            from src.events.event_constants import EventConstants
             from src.events.events import set_total_event
 
             self.win_manager.update_spinwin(total)
+            # Second celebration beat: paw coin total only (lines already had setWin).
+            if not self.wincap_triggered:
+                self.book.add_event(
+                    {
+                        "index": len(self.book.events),
+                        "type": EventConstants.SET_WIN.value,
+                        "amount": int(
+                            min(
+                                round(total * 100, 0),
+                                self.config.wincap * 100,
+                            )
+                        ),
+                        "winLevel": self.config.get_win_level(total),
+                    }
+                )
             set_total_event(self)
 
     def run_target_shoot_round(self) -> None:

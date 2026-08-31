@@ -12,6 +12,8 @@
 		BOARD_DESK_CONTENT,
 		BOARD_DIMENSIONS,
 		BOARD_MASK_OVERFLOW,
+		DESK_BOTTOM_MASK_SLACK_PX,
+		DESK_BOTTOM_PULL_PX,
 		DESK_PARCHMENT,
 		DESK_PARCHMENT_PADDING,
 	} from '../game/constants';
@@ -40,10 +42,13 @@
 		const pfW = props.boardWidth * DESK_PARCHMENT_PADDING.width;
 		const playH = props.boardHeight * DESK_PARCHMENT_PADDING.height;
 		const variant = props.variant ?? 'all';
-		// Normal play: hole includes the 11px runway so symbols tuck under the
-		// gold bar. Target pick (`frame`): same flush bottom as the top — that
-		// runway is exactly where the gold lines leak under the cabinet.
-		const pfH = variant === 'frame' ? playH : playH + BOARD_MASK_OVERFLOW.bottom;
+		// Normal play: hole includes the bottom runway so symbols tuck under the
+		// gold bar. Target pick (`frame`): flush bottom — that runway is where
+		// gold lines leak under the cabinet. DESK_BOTTOM_PULL lifts the painted
+		// gold rail, so shorten holes by the same amount or the mask still
+		// punches through below the new rail.
+		const bottomRunway = variant === 'frame' ? 0 : BOARD_MASK_OVERFLOW.bottom;
+		const pfH = playH + bottomRunway - DESK_BOTTOM_PULL_PX + DESK_BOTTOM_MASK_SLACK_PX;
 		const pfCx = DESK_PARCHMENT.offsetXFrac * sw;
 		const pfCy = DESK_PARCHMENT.offsetYFrac * sh;
 		const pfTop = pfCy - playH / 2;

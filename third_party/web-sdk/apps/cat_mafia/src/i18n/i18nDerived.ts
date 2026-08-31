@@ -92,6 +92,7 @@ export const i18nDerived = {
 	fsCounterLabel: () => t('FS_COUNTER_LABEL'),
 	fsCounterText: (current: number, total: number) => `${current} ${t('FS_COUNTER_OF')} ${total}`,
 	fsRemaining: () => t('FS_REMAINING'),
+	extraSpins: () => t('EXTRA_SPINS'),
 	// Mystery Reel Meter (top-right HUD во FS)
 	mysteryReelMeter: () => t('MYSTERY_REEL_METER'),
 	bonusToNextReel: () => t('BONUS_TO_NEXT_REEL'),

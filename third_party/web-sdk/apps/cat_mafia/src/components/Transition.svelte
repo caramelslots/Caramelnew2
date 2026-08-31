@@ -38,6 +38,10 @@
 				if (pendingGameType === 'freegame') stateGame.fsDrumWanted = true;
 				pendingGameType = undefined;
 			}
+			// Swap gallery → symbols while steam fully covers the board.
+			if (stateGame.targetPickOpen) {
+				context.eventEmitter.broadcast({ type: 'targetPickDismiss' });
+			}
 		}}
 		oncomplete={() => {
 			oncomplete();

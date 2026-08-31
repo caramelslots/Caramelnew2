@@ -256,14 +256,14 @@
 		position: relative;
 	}
 
-	/* HUD (z-index 40–45); raise Pixi during cloud transition or win overlay. */
+	/* HUD (z-index 40–45); raise Pixi above HTML tir overlays (60–72) during cloud. */
 	.html-underlays {
 		position: relative;
 		z-index: 40;
 	}
 
 	.pixi-stage.above-html-ui {
-		z-index: 50;
+		z-index: 100;
 	}
 
 	:global(.daloniil-ui-enter) {

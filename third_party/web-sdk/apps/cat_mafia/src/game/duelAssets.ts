@@ -22,10 +22,12 @@ export const DUEL_BANK_SCALE_PAW_SRC = assetUrl('assets/sprites/duel/scale_paw.p
  */
 export const DUEL_BANK_SCALE = {
 	aspect: 1500 / 270,
-	/** Paw centre X when dog bank share = 1 — flush to inner edge of left shield. */
-	trackLeft: 220 / 1500,
-	/** Paw centre X when dog bank share = 0 — flush to inner edge of right shield. */
-	trackRight: 1320 / 1500,
+	/**
+	 * Paw centre extremes (dog lead → left, cat lead → right).
+	 * Inset from the shield hubs so the 89px diamond clears the side emblems at 100%.
+	 */
+	trackLeft: 270 / 1500,
+	trackRight: 1230 / 1500,
 	/** Neutral / 50-50 sits on the VS badge (art centre). */
 	trackCenter: 750 / 1500,
 	/** Vertical centre of the blue/red bar. */
