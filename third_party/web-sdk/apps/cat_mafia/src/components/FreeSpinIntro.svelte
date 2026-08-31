@@ -43,8 +43,7 @@
 	const raysUrl = assets.fsCongRays.src;
 	const bgUrl = assets.fsCongBg.src;
 	const frameUrl = assets.fsCongFrame.src;
-	const boardEmptyUrl = assets.fsCongBoard.src;
-	const boardLabeledUrl = assets.fsCongBoardLabeled.src;
+	const boardUrl = assets.fsCongBoard.src;
 
 	/** Designer canvas 2000×1500 — all FS_* layers share this artboard. */
 	const BOARD_RATIO = 2000 / 1500;
@@ -59,7 +58,8 @@
 	const NUMBER_Y_RATIO = 0.462;
 	/** Slightly lower on phones so the digit sits better in the plaque. */
 	const NUMBER_Y_RATIO_PORTRAIT = 0.485;
-	const FREE_SPINS_Y_RATIO = 0.629;
+	const FREE_SPINS_Y_RATIO = 0.625;
+	const FREE_SPINS_SIZE_RATIO = 0.056;
 	/** Number glyph size vs panel width (this is what you tweak). */
 	const NUMBER_FONT_RATIO = 0.14;
 	const NUMBER_FONT_RATIO_PORTRAIT = 0.11;
@@ -80,7 +80,10 @@
 		const isPortrait = layoutType === 'portrait';
 
 		const panelWidth =
-			SYMBOL_SIZE * BOARD_DIMENSIONS.x * (isPortrait ? BOARD_SCALE_PORTRAIT : BOARD_SCALE) * ml.scale;
+			SYMBOL_SIZE *
+			BOARD_DIMENSIONS.x *
+			(isPortrait ? BOARD_SCALE_PORTRAIT : BOARD_SCALE) *
+			ml.scale;
 		const panelHeight = panelWidth / BOARD_RATIO;
 		const numberFontRatio = isPortrait ? NUMBER_FONT_RATIO_PORTRAIT : NUMBER_FONT_RATIO;
 		const numberFontPx = Math.max(20, Math.round(panelWidth * numberFontRatio));
@@ -114,7 +117,7 @@
 
 	const freeSpinsStyle = $derived.by(() => {
 		const p = panelLayout;
-		const fontPx = Math.max(14, Math.round(p.panelWidth * 0.042));
+		const fontPx = Math.max(14, Math.round(p.panelWidth * FREE_SPINS_SIZE_RATIO));
 		return [
 			`top:${p.panelHeight * FREE_SPINS_Y_RATIO}px`,
 			`font-size:${fontPx}px`,
@@ -140,13 +143,6 @@
 	const extraSpinsText = $derived(context.i18nDerived.extraSpins());
 	const isExtraMode = $derived(introMode === 'extra');
 	const bannerLabel = $derived(isExtraMode ? extraSpinsText : freeSpinsText);
-	/** Designer FS_BOARD_2 has English "FREE SPINS" baked in — only for award mode. */
-	const useBakedFreeSpinsLabel = $derived(
-		!isExtraMode && freeSpinsText.trim().toUpperCase() === 'FREE SPINS',
-	);
-	const boardUrl = $derived(useBakedFreeSpinsLabel ? boardLabeledUrl : boardEmptyUrl);
-	/** Always overlay banner text in extra mode (or non-EN award). */
-	const showBannerLabel = $derived(isExtraMode || !useBakedFreeSpinsLabel);
 
 	/** Proxima-nova on a circular arc — spaced by glyph width so the bow stays smooth. */
 	const congratulationsGlyphs = $derived.by(() => {
@@ -266,9 +262,7 @@
 				>
 					{#if isExtraMode}<span class="number-plus">+</span>{/if}{totalFreeSpins}
 				</div>
-				{#if showBannerLabel}
-					<p class="free-spins" style={freeSpinsStyle}>{bannerLabel}</p>
-				{/if}
+				<p class="free-spins" style={freeSpinsStyle}>{bannerLabel}</p>
 			</div>
 		</div>
 

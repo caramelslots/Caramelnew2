@@ -119,8 +119,6 @@ export const LOADER_BATCH_4_KEYS = [
 	'fsCongBg',
 	'fsCongFrame',
 	'fsCongBoard',
-	'fsCongBoardLabeled',
-	'fsCongNumber',
 	'fsLeftCounter',
 	'fsLeftCounterSpinboard',
 	/** Tir FX (entry pick + Stage E) — Pixi spine, not HTML SpinePlayer. */
@@ -173,9 +171,7 @@ export const collectBatchHttpUrls = (
 export const getBatch3KeysForLocale = (locale: string): readonly string[] => {
 	const activeFontKeys = new Set(getLocaleSpecificFontKeys(locale));
 	const localeFontSet = new Set<string>(LOCALE_FONT_KEYS);
-	return LOADER_BATCH_3_KEYS.filter(
-		(key) => !localeFontSet.has(key) || activeFontKeys.has(key),
-	);
+	return LOADER_BATCH_3_KEYS.filter((key) => !localeFontSet.has(key) || activeFontKeys.has(key));
 };
 
 /** HTTP warm-up during the Stake GIF (before Pixi / auth may be ready). */

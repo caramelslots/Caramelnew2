@@ -1,6 +1,9 @@
 /** Resolve static/ asset URL relative to the deployed page (Stake Engine v### subpath-safe). */
 const assetUrl = (path: string) =>
-	new URL(path.replace(/^\//, ''), typeof window !== 'undefined' ? window.location.href : import.meta.url).href;
+	new URL(
+		path.replace(/^\//, ''),
+		typeof window !== 'undefined' ? window.location.href : import.meta.url,
+	).href;
 
 export default {
 	/** Animated street scene — skins: day (basegame) / night (freegame). */
@@ -302,15 +305,6 @@ export default {
 	fsCongBoard: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/fsCong/fs_board.webp'),
-	},
-	/** Banner with baked English "FREE SPINS" (designer FS_BOARD_2). */
-	fsCongBoardLabeled: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/fsCong/fs_board_2.webp'),
-	},
-	fsCongNumber: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/fsCong/10_fs_cong_table.webp'),
 	},
 	fsLeftCounter: {
 		type: 'sprite',
