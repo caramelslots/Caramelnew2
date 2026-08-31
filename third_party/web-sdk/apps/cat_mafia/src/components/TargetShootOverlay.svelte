@@ -269,7 +269,8 @@
 			await wait(480);
 		}
 
-		await playDrumChamberShot((ms) => wait(ms));
+		// Match x6: flip with the explosion burst on impact — don't wait for drum shake.
+		const drumShotPromise = playDrumChamberShot((ms) => wait(ms));
 
 		await wait(TARGET_SHOT_EXPLOSION_START_MS);
 		spineSeat = index;
@@ -300,6 +301,7 @@
 		stateGame.targetShotFlipLabel = null;
 		reservedSeats = new Set([...reservedSeats].filter((i) => i !== index));
 
+		await drumShotPromise;
 		await advanceDrumAfterShot((ms) => wait(ms));
 	};
 
