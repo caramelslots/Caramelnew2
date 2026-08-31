@@ -18,6 +18,8 @@
 		TARGET_PICK_HOLDER_TOP_FRAC,
 		TARGET_PICK_HOLDER_WIDTH_FRAC,
 		TARGET_PICK_SEAT_WIDTH_FRAC,
+		TARGET_SHOOT_CONTENT,
+		TARGET_SHOOT_NATIVE,
 		TARGET_SHOOT_SEAT_WIDTH_FRAC,
 		TARGET_SHOOT_SLOTS,
 		targetBoardSlotPoint,
@@ -30,6 +32,11 @@
 	const nine = $derived(stateGame.targetPickSeatMode === 'nine');
 	const slots = $derived(nine ? TARGET_SHOOT_SLOTS : TARGET_BOARD_SLOTS);
 	const seatWidthFrac = $derived(nine ? TARGET_SHOOT_SEAT_WIDTH_FRAC : TARGET_PICK_SEAT_WIDTH_FRAC);
+	const boardContent = $derived(nine ? TARGET_SHOOT_CONTENT : TARGET_BOARD_CONTENT);
+	const boardNative = $derived(nine ? TARGET_SHOOT_NATIVE : TARGET_BOARD_NATIVE);
+	const boardBgUrl = $derived(
+		nine ? TARGET_BOARD_SPRITES.background9 : TARGET_BOARD_SPRITES.background,
+	);
 
 	let wood = $state<PIXI.Texture>(PIXI.Texture.EMPTY);
 	let holder = $state<PIXI.Texture>(PIXI.Texture.EMPTY);
@@ -46,8 +53,13 @@
 		const size = clip.width * seatWidthFrac;
 		const holderW = size * TARGET_PICK_HOLDER_WIDTH_FRAC;
 		const holderH = holderW * TARGET_PICK_HOLDER_ASPECT;
+		const content = boardContent;
 		return slots.map((slot, i) => {
-			const p = targetBoardSlotPoint(slot, { x: clip.x, y: 0, width: clip.width, height: clip.height });
+			const p = targetBoardSlotPoint(
+				slot,
+				{ x: clip.x, y: 0, width: clip.width, height: clip.height },
+				content,
+			);
 			const flipped = stateGame.targetPickFlipped[i] === true;
 			const spinning = stateGame.targetPickSpineSeat === i;
 			return {
@@ -76,18 +88,22 @@
 
 	$effect(() => {
 		if (!open) return;
+		const bgUrl = boardBgUrl;
+		const native = boardNative;
+		const content = boardContent;
 		let cancelled = false;
+		wood = PIXI.Texture.EMPTY;
 		void Promise.all([
-			loadTex(TARGET_BOARD_SPRITES.background),
+			loadTex(bgUrl),
 			loadTex(TARGET_BOARD_SPRITES.holder),
 			loadTex(TARGET_BOARD_SPRITES.front),
 		]).then(([bg, h, f]) => {
 			if (cancelled) return;
 			const frame = new PIXI.Rectangle(
-				Math.round(TARGET_BOARD_CONTENT.left * TARGET_BOARD_NATIVE.width),
-				Math.round(TARGET_BOARD_CONTENT.top * TARGET_BOARD_NATIVE.height),
-				Math.round(TARGET_BOARD_CONTENT.width * TARGET_BOARD_NATIVE.width),
-				Math.round(TARGET_BOARD_CONTENT.height * TARGET_BOARD_NATIVE.height),
+				Math.round(content.left * native.width),
+				Math.round(content.top * native.height),
+				Math.round(content.width * native.width),
+				Math.round(content.height * native.height),
 			);
 			wood = new PIXI.Texture({ source: bg.source, frame });
 			holder = h;

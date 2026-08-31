@@ -46,4 +46,9 @@ export const devPreview = $state({
 	 * Layout / interaction QA before wiring into bonus_normal / bonus_super pick.
 	 */
 	forceShowTargetBoard: false,
+	/**
+	 * Stage E 9-target cabinet (`background_9.webp`) in the gold frame.
+	 * Pixi wood + HTML seats — art / seat layout QA.
+	 */
+	forceShowTargetShoot: false,
 });

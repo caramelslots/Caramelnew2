@@ -21,6 +21,8 @@ export const resolveTargetBoardSpineUrl = (file: string) =>
 
 export const TARGET_BOARD_SPRITES = {
 	background: targetBoardSpriteUrl('background.webp'),
+	/** Stage E / extra-FS 9-seat cabinet (`designer_assets/9 мишеней фон.png`). */
+	background9: targetBoardSpriteUrl('background_9.webp'),
 	front: targetBoardSpriteUrl('front.webp'),
 	back: targetBoardSpriteUrl('back.webp'),
 	holder: targetBoardSpriteUrl('holder.webp'),
@@ -41,10 +43,28 @@ export const TARGET_BOARD_CONTENT = {
 	height: 1407 / 1675,
 } as const;
 
+/** Native 9-seat plate (`background_9.webp` / designer_assets/9 мишеней фон.png). */
+export const TARGET_SHOOT_NATIVE = { width: 1735, height: 1399 } as const;
+
+/**
+ * Full 3-shelf cabinet — aspect ≈ 5:4, stretched to the playfield with no crop.
+ */
+export const TARGET_SHOOT_CONTENT = {
+	left: 0,
+	top: 0,
+	width: 1,
+	height: 1,
+} as const;
+
+type BoardContent = { left: number; top: number; width: number; height: number };
+
 /** Seat position as % of the cropped 5×4 board (PNG-space slot → wood box). */
-export const targetBoardSlotStyle = (slot: { x: number; y: number }) => {
-	const x = (slot.x - TARGET_BOARD_CONTENT.left) / TARGET_BOARD_CONTENT.width;
-	const y = (slot.y - TARGET_BOARD_CONTENT.top) / TARGET_BOARD_CONTENT.height;
+export const targetBoardSlotStyle = (
+	slot: { x: number; y: number },
+	content: BoardContent = TARGET_BOARD_CONTENT,
+) => {
+	const x = (slot.x - content.left) / content.width;
+	const y = (slot.y - content.top) / content.height;
 	return `left:${x * 100}%;top:${y * 100}%`;
 };
 
@@ -200,27 +220,26 @@ export const TARGET_BOARD_SLOTS = [
 ] as const;
 
 /**
- * Stage E — 9 seats (3×3) on the same 6-target plate until the dedicated
- * shoot-board texture lands. Packed under the nameplate / above the plinth.
+ * Stage E — 9 seats (3×3) on background_9.webp (three shelves under the plaque).
  */
 export const TARGET_SHOOT_SEAT_COUNT = 9;
 export const TARGET_SHOOT_SLOTS = [
-	{ x: 0.24, y: 0.34 },
-	{ x: 0.5, y: 0.34 },
-	{ x: 0.76, y: 0.34 },
-	{ x: 0.24, y: 0.56 },
-	{ x: 0.5, y: 0.56 },
-	{ x: 0.76, y: 0.56 },
-	{ x: 0.24, y: 0.78 },
-	{ x: 0.5, y: 0.78 },
-	{ x: 0.76, y: 0.78 },
+	{ x: 0.2, y: 0.26 },
+	{ x: 0.5, y: 0.26 },
+	{ x: 0.8, y: 0.26 },
+	{ x: 0.2, y: 0.55 },
+	{ x: 0.5, y: 0.55 },
+	{ x: 0.8, y: 0.55 },
+	{ x: 0.2, y: 0.85 },
+	{ x: 0.5, y: 0.85 },
+	{ x: 0.8, y: 0.85 },
 ] as const;
 
 /** Board-local drop so stands sit a few px lower on the shelf. */
 export const TARGET_PICK_SEAT_Y_NUDGE = 5;
 
 export const TARGET_PICK_SEAT_WIDTH_FRAC = 0.225;
-/** Slightly smaller discs so 3×3 fits the temporary 6-target wood. */
+/** Disc size on the 3-shelf Stage E plate. */
 export const TARGET_SHOOT_SEAT_WIDTH_FRAC = 0.175;
 export const TARGET_PICK_DISC_LIFT_FRAC = 0.18;
 export const TARGET_PICK_HOLDER_WIDTH_FRAC = 1.22;
@@ -230,11 +249,12 @@ export const TARGET_PICK_HOLDER_TOP_FRAC = 0.58;
 export const targetBoardSlotPoint = (
 	slot: { x: number; y: number },
 	box: { x: number; y: number; width: number; height: number },
+	content: BoardContent = TARGET_BOARD_CONTENT,
 ) => ({
-	x: box.x + ((slot.x - TARGET_BOARD_CONTENT.left) / TARGET_BOARD_CONTENT.width) * box.width,
+	x: box.x + ((slot.x - content.left) / content.width) * box.width,
 	y:
 		box.y +
-		((slot.y - TARGET_BOARD_CONTENT.top) / TARGET_BOARD_CONTENT.height) * box.height +
+		((slot.y - content.top) / content.height) * box.height +
 		TARGET_PICK_SEAT_Y_NUDGE,
 });
 
@@ -253,6 +273,7 @@ export const TARGET_BOARD_SPINE_ASSET_URLS = TARGET_BOARD_SPINE_FILES.map(
 
 export const TARGET_BOARD_SPRITE_URLS = [
 	TARGET_BOARD_SPRITES.background,
+	TARGET_BOARD_SPRITES.background9,
 	TARGET_BOARD_SPRITES.front,
 	TARGET_BOARD_SPRITES.back,
 	TARGET_BOARD_SPRITES.holder,

@@ -70,6 +70,7 @@
 		SW_DEMO_VISIBLE_BOARD,
 		superWildExpandDemo,
 		freeSpinTargetPickDemo,
+		targetShootRoundDemo,
 	} from '../stories/data/catmafia_events';
 	import type { WinLevel } from '../game/winLevelMap';
 	import type { BookEvent } from '../game/typesBookEvent';
@@ -270,6 +271,7 @@
 		if (next) {
 			if (devPreview.forceShowFsBoardChrome) toggleFsBoardChromePreview();
 			if (devPreview.forceShowTargetBoard) toggleTargetBoardPreview(false);
+			if (devPreview.forceShowTargetShoot) toggleTargetShootPreview(false);
 			resetDuelState();
 			stateDuel.active = true;
 			stateDuel.phase = 'playing';
@@ -301,7 +303,21 @@
 		const next = force ?? !devPreview.forceShowTargetBoard;
 		devPreview.forceShowTargetBoard = next;
 		devPreview.symbolAnim = null;
-		if (next && devPreview.forceShowDuelLayout) toggleDuelLayoutPreview(false);
+		if (next) {
+			if (devPreview.forceShowDuelLayout) toggleDuelLayoutPreview(false);
+			if (devPreview.forceShowTargetShoot) toggleTargetShootPreview(false);
+		}
+	};
+
+	/** Stage E 9-target cabinet in the gold frame — art / seat layout QA. */
+	const toggleTargetShootPreview = (force?: boolean) => {
+		const next = force ?? !devPreview.forceShowTargetShoot;
+		devPreview.forceShowTargetShoot = next;
+		devPreview.symbolAnim = null;
+		if (next) {
+			if (devPreview.forceShowDuelLayout) toggleDuelLayoutPreview(false);
+			if (devPreview.forceShowTargetBoard) toggleTargetBoardPreview(false);
+		}
 	};
 
 	/**
@@ -311,8 +327,21 @@
 	const playTargetPickPreview = () =>
 		guard(async () => {
 			if (devPreview.forceShowTargetBoard) toggleTargetBoardPreview(false);
+			if (devPreview.forceShowTargetShoot) toggleTargetShootPreview(false);
 			await playBookEvent(asEvent(freeSpinTargetPickDemo), { bookEvents: [] });
 			eventEmitter.broadcast({ type: 'targetPickDismiss' });
+		});
+
+	/** Production Stage E path: 9-target board + drum shots. */
+	const playTargetShootPreview = () =>
+		guard(async () => {
+			if (devPreview.forceShowTargetBoard) toggleTargetBoardPreview(false);
+			if (devPreview.forceShowTargetShoot) toggleTargetShootPreview(false);
+			stateGame.gameType = 'freegame';
+			stateGame.drumSpentChambers = {};
+			stateGame.drumCount = 0;
+			fillDrumForPreview(3);
+			await playBookEvent(asEvent(targetShootRoundDemo), { bookEvents: [] });
 		});
 
 	const previewDrumShoot = async () => {
@@ -1414,8 +1443,25 @@
 			</section>
 
 			<section>
-				<h4>Target Pick</h4>
+				<h4>Target Board</h4>
+				<p class="subhint">Pick ×6 entry board · Shoot ×9 Stage E cabinet (background_9).</p>
 				<div class="grid">
+					<button
+						type="button"
+						class:active={devPreview.forceShowTargetBoard}
+						title="Floating pick×6 board preview (designer target)"
+						onclick={() => toggleTargetBoardPreview()}
+					>
+						{devPreview.forceShowTargetBoard ? 'Hide Target ×6' : 'Show Target ×6'}
+					</button>
+					<button
+						type="button"
+						class:active={devPreview.forceShowTargetShoot}
+						title="Stage E 9-target cabinet in the gold frame (background_9.webp)"
+						onclick={() => toggleTargetShootPreview()}
+					>
+						{devPreview.forceShowTargetShoot ? 'Hide Target ×9' : 'Show Target ×9'}
+					</button>
 					<button
 						type="button"
 						disabled={busy}
@@ -1423,6 +1469,14 @@
 						onclick={playTargetPickPreview}
 					>
 						Play Target Pick
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="targetShootRound: 9 seats + drum shots → extra FS"
+						onclick={playTargetShootPreview}
+					>
+						Play Target Shoot
 					</button>
 				</div>
 			</section>

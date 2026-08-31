@@ -1,13 +1,13 @@
 <!--
-	Stage E shoot board: 9 HTML hit seats on the shared cabinet (temp 3×3).
+	Stage E shoot board: 9 HTML hit seats on background_9.webp (3×3 shelves).
 	Flip FX in Pixi (TargetFlipPixiLayer); HTML keeps the reward face after flip.
 -->
 <script lang="ts">
 	import { getContext } from '../game/context';
 	import { isPopoutSmallViewport } from '../game/constants';
 	import {
-		TARGET_BOARD_CONTENT,
 		TARGET_BOARD_SPRITES,
+		TARGET_SHOOT_CONTENT,
 		TARGET_SHOOT_SEAT_WIDTH_FRAC,
 		TARGET_SHOOT_SLOTS,
 		targetBoardSlotStyle,
@@ -53,11 +53,11 @@
 
 	const artStyle = $derived(
 		[
-			`--board-bg:url('${TARGET_BOARD_SPRITES.background}')`,
-			`--cl:${TARGET_BOARD_CONTENT.left}`,
-			`--ct:${TARGET_BOARD_CONTENT.top}`,
-			`--cw:${TARGET_BOARD_CONTENT.width}`,
-			`--ch:${TARGET_BOARD_CONTENT.height}`,
+			`--board-bg:url('${TARGET_BOARD_SPRITES.background9}')`,
+			`--cl:${TARGET_SHOOT_CONTENT.left}`,
+			`--ct:${TARGET_SHOOT_CONTENT.top}`,
+			`--cw:${TARGET_SHOOT_CONTENT.width}`,
+			`--ch:${TARGET_SHOOT_CONTENT.height}`,
 			`--prompt-fs:${promptFs}px`,
 			`--seat-w:${seatW}`,
 		].join(';'),
@@ -114,7 +114,7 @@
 			class:flipped={isFlipped}
 			class:spinning={isSpinning}
 			data-seat={i}
-			style={targetBoardSlotStyle(slot)}
+			style={targetBoardSlotStyle(slot, TARGET_SHOOT_CONTENT)}
 			disabled={locked || isFlipped || isSpinning}
 			onclick={() => onClick(i)}
 			aria-label={`Target ${i + 1}`}

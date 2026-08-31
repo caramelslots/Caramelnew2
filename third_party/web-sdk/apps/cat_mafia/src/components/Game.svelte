@@ -52,6 +52,7 @@
 	import TargetPickOverlay from './TargetPickOverlay.svelte';
 	import TargetPickPixiLayer from './TargetPickPixiLayer.svelte';
 	import TargetShootOverlay from './TargetShootOverlay.svelte';
+	import TargetShootDevOverlay from './TargetShootDevOverlay.svelte';
 	import TargetShotTrailHtml from './TargetShotTrailHtml.svelte';
 	import TargetFlipLabelHtml from './TargetFlipLabelHtml.svelte';
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
@@ -260,6 +261,7 @@
 <TargetBoardOverlay />
 <TargetPickOverlay />
 <TargetShootOverlay />
+<TargetShootDevOverlay />
 <TargetShotTrailHtml />
 <TargetFlipLabelHtml />
 <FreeSpinIntro />
