@@ -963,6 +963,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		await eventEmitter.broadcastAsync({ type: 'transition', gameType: 'freegame' });
 		// Safety: if theme-switch dismiss missed, snap gallery off before intro.
 		eventEmitter.broadcast({ type: 'targetPickDismiss' });
+		// Left counter appears with fsCong intro (right after transition).
+		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
+		stateUi.freeSpinCounterShow = true;
+		eventEmitter.broadcast({
+			type: 'freeSpinCounterUpdate',
+			current: 0,
+			total: bookEvent.totalFs,
+		});
+		stateUi.freeSpinCounterCurrent = 0;
+		stateUi.freeSpinCounterTotal = bookEvent.totalFs;
 		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin', withIntro: true });
@@ -971,14 +981,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			totalFreeSpins: bookEvent.totalFs,
 		});
 		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
-		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
-		stateUi.freeSpinCounterShow = true;
-		eventEmitter.broadcast({
-			type: 'freeSpinCounterUpdate',
-			current: undefined,
-			total: bookEvent.totalFs,
-		});
-		stateUi.freeSpinCounterTotal = bookEvent.totalFs;
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 		await eventEmitter.broadcastAsync({ type: 'drawerButtonShow' });
 		eventEmitter.broadcast({ type: 'drawerFold' });

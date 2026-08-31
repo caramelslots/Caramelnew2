@@ -107,6 +107,7 @@
 			`top:${p.centerY}px`,
 			`width:${p.panelWidth}px`,
 			`height:${p.panelHeight}px`,
+			`--fs-cong-mask:url(${JSON.stringify(bgUrl)})`,
 		].join(';');
 	});
 
@@ -220,8 +221,11 @@
 		tabindex="0"
 	>
 		<div class="panel" style={panelStyle}>
-			<img class="layer layer-rays" src={raysUrl} alt="" draggable="false" />
 			<img class="layer layer-bg" src={bgUrl} alt="" draggable="false" />
+			<!-- Rays clipped to plaque shape (fs_bg alpha) so spin never spills past the frame. -->
+			<div class="rays-mask" aria-hidden="true">
+				<img class="layer-rays" src={raysUrl} alt="" draggable="false" />
+			</div>
 			<img class="layer layer-frame" src={frameUrl} alt="" draggable="false" />
 			<img class="layer layer-board" src={boardUrl} alt="" draggable="false" />
 
@@ -299,13 +303,42 @@
 		pointer-events: none;
 	}
 
-	.layer-rays {
+	.layer-bg {
 		z-index: 0;
-		animation: fs-cong-rays-spin 48s linear infinite;
 	}
 
-	.layer-bg {
+	.rays-mask {
+		position: absolute;
+		inset: 0;
 		z-index: 1;
+		pointer-events: none;
+		-webkit-mask-image: var(--fs-cong-mask);
+		mask-image: var(--fs-cong-mask);
+		-webkit-mask-size: contain;
+		mask-size: contain;
+		-webkit-mask-repeat: no-repeat;
+		mask-repeat: no-repeat;
+		-webkit-mask-position: center;
+		mask-position: center;
+		-webkit-mask-mode: alpha;
+		mask-mode: alpha;
+	}
+
+	.layer-rays {
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		/* Oversized so rotation never leaves empty corners inside the plaque. */
+		width: 145%;
+		height: 145%;
+		display: block;
+		object-fit: contain;
+		user-select: none;
+		pointer-events: none;
+		transform: translate(-50%, -50%);
+		transform-origin: center center;
+		mix-blend-mode: soft-light;
+		animation: fs-cong-rays-spin 48s linear infinite;
 	}
 
 	.layer-frame {
@@ -408,11 +441,11 @@
 
 	@keyframes fs-cong-rays-spin {
 		from {
-			transform: rotate(0deg);
+			transform: translate(-50%, -50%) rotate(0deg);
 		}
 
 		to {
-			transform: rotate(360deg);
+			transform: translate(-50%, -50%) rotate(360deg);
 		}
 	}
 
