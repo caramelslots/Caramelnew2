@@ -26,8 +26,8 @@ export const DUEL_BANK_SCALE = {
 	 * Paw centre extremes (dog lead → left, cat lead → right).
 	 * Inset from the shield hubs so the 89px diamond clears the side emblems at 100%.
 	 */
-	trackLeft: 270 / 1500,
-	trackRight: 1230 / 1500,
+	trackLeft: 245 / 1500,
+	trackRight: 1275 / 1500,
 	/** Neutral / 50-50 sits on the VS badge (art centre). */
 	trackCenter: 750 / 1500,
 	/** Vertical centre of the blue/red bar. */
