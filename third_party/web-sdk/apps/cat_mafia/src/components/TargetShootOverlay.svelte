@@ -37,9 +37,11 @@
 	} from '../game/portraitHudLayout';
 	import {
 		TARGET_SHOT_EXPLOSION_START_MS,
+		TARGET_SHOT_IMPACT_MS,
 		TARGET_SHOT_MUZZLE_DELAY_MS,
 		buildTargetShotCurve,
 		startShotBulletPreload,
+		type TargetShotFlight,
 	} from '../game/shotBulletAssets';
 	import { stateGame } from '../game/stateGame.svelte';
 	import {
@@ -52,9 +54,6 @@
 		type TargetBoardPickFlipAnim,
 	} from '../game/targetBoardAssets';
 	import TargetShootBoard from './TargetShootBoard.svelte';
-	import TargetShotBulletOverlay, {
-		type TargetShotFlight,
-	} from './TargetShotBulletOverlay.svelte';
 
 	const context = getContext();
 
@@ -67,7 +66,6 @@
 	let spineSeat = $state<number | null>(null);
 	let spineNonce = $state(0);
 	let flipAnim = $state<TargetBoardPickFlipAnim>('v4');
-	let shotFlight = $state<TargetShotFlight | null>(null);
 	let pendingSeats = $state<number[]>([]);
 	let reservedSeats = $state<Set<number>>(new Set());
 	let draining = $state(false);
@@ -153,15 +151,13 @@
 		return getMascotGunMuzzlePoint(mascot);
 	};
 
-	const onSpineComplete = () => {
-		onSpineResolve?.();
-		onSpineResolve = null;
-	};
-
 	const closeBoard = async () => {
 		phase = 'done';
 		pendingSeats = [];
 		reservedSeats = new Set();
+		stateGame.targetShotFlight = null;
+		stateGame.targetShotFlip = null;
+		stateGame.targetShotFlipLabel = null;
 		// Out of ammo — only now hide the gun.
 		stateGame.mascotPose = 'gunShotEnd';
 		await wait(MASCOT_GUN_SHOT_END_MS);
@@ -186,6 +182,17 @@
 		stateGame.drumShootActive = false;
 		show = false;
 		oncomplete();
+	};
+
+	const seatSizePx = (index: number) => {
+		const el = shootBoard
+			? (document.querySelector(`[data-test="target-shoot-board"] [data-seat="${index}"]`) as
+					| HTMLElement
+					| null)
+			: null;
+		if (!el) return 72;
+		const r = el.getBoundingClientRect();
+		return Math.min(r.width, r.height);
 	};
 
 	const fireOneShot = async (index: number) => {
@@ -220,12 +227,16 @@
 		await wait(TARGET_SHOT_MUZZLE_DELAY_MS);
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 
+		let impactX = 0;
+		let impactY = 0;
 		if (hit) {
 			flipAnim = pickTargetFlipAnim({ x: hit.offsetX, y: hit.offsetY });
 			const muzzle = resolveMuzzlePoint();
 			const center = shootBoard?.getSeatCenter(index);
 			const endX = (center?.x ?? hit.x - hit.offsetX) + hit.offsetX;
 			const endY = (center?.y ?? hit.y - hit.offsetY) + hit.offsetY;
+			impactX = center?.x ?? hit.x - hit.offsetX;
+			impactY = center?.y ?? hit.y - hit.offsetY;
 			const curve = buildTargetShotCurve({
 				startX: muzzle.x,
 				startY: muzzle.y,
@@ -235,8 +246,8 @@
 				orientation:
 					context.stateLayoutDerived.layoutType() === 'portrait' ? 'below' : 'side',
 			});
-			shotFlight = {
-				nonce: (shotFlight?.nonce ?? 0) + 1,
+			const nextFlight: TargetShotFlight = {
+				nonce: (stateGame.targetShotFlightSeq += 1),
 				startX: muzzle.x,
 				startY: muzzle.y,
 				endX,
@@ -245,17 +256,36 @@
 				svgPath: curve.svgPath,
 				flyMs: curve.flyMs,
 			};
+			stateGame.targetShotFlight = nextFlight;
 			await wait(curve.flyMs);
+			const landedNonce = nextFlight.nonce;
+			void (async () => {
+				await wait(TARGET_SHOT_IMPACT_MS);
+				if (stateGame.targetShotFlight?.nonce === landedNonce) {
+					stateGame.targetShotFlight = null;
+				}
+			})();
 		} else {
 			await wait(480);
 		}
 
-		shotFlight = null;
 		await playDrumChamberShot((ms) => wait(ms));
 
 		await wait(TARGET_SHOT_EXPLOSION_START_MS);
 		spineSeat = index;
 		spineNonce += 1;
+		const size = seatSizePx(index);
+		const center = shootBoard?.getSeatCenter(index);
+		stateGame.targetShotFlip = {
+			nonce: spineNonce,
+			anim: flipAnim,
+			value: reward,
+			displayText: reward <= 0 ? '-' : `+${reward}`,
+			showFsLabel: reward > 0,
+			x: center?.x ?? impactX,
+			y: center?.y ?? impactY,
+			size,
+		};
 
 		const flipMs = TARGET_BOARD_PICK_FLIP_MS_BY_ANIM[flipAnim];
 		await waitForResolve((resolve) => {
@@ -266,6 +296,8 @@
 
 		flipped = flipped.map((v, i) => (i === index ? true : v));
 		spineSeat = null;
+		stateGame.targetShotFlip = null;
+		stateGame.targetShotFlipLabel = null;
 		reservedSeats = new Set([...reservedSeats].filter((i) => i !== index));
 
 		await advanceDrumAfterShot((ms) => wait(ms));
@@ -312,7 +344,9 @@
 			spineSeat = null;
 			spineNonce = 0;
 			flipAnim = 'v4';
-			shotFlight = null;
+			stateGame.targetShotFlight = null;
+			stateGame.targetShotFlip = null;
+			stateGame.targetShotFlipLabel = null;
 			pendingSeats = [];
 			reservedSeats = new Set();
 			draining = false;
@@ -365,16 +399,12 @@
 					{flipped}
 					{spineSeat}
 					{spineNonce}
-					{flipAnim}
 					locked={seatsLocked}
 					onSelect={onTargetClick}
-					onSpineComplete={onSpineComplete}
 				/>
 			</div>
 		</div>
 	</div>
-
-	<TargetShotBulletOverlay flight={shotFlight} />
 {/if}
 
 <style lang="scss">

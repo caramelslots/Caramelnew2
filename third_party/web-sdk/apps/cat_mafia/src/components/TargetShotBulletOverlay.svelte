@@ -26,18 +26,8 @@
 		sampleShotPath,
 	} from '../game/shotBulletAssets';
 
-	export type TargetShotFlight = {
-		nonce: number;
-		startX: number;
-		startY: number;
-		endX: number;
-		endY: number;
-		/** Dense muzzle→seat samples from `buildTargetShotCurve`. */
-		points: { x: number; y: number }[];
-		/** Smooth cubic SVG path — preferred over RAF-sampled polyline. */
-		svgPath?: string;
-		flyMs?: number;
-	};
+	export type { TargetShotFlight } from '../game/shotBulletAssets';
+	import type { TargetShotFlight } from '../game/shotBulletAssets';
 
 	type Props = {
 		flight: TargetShotFlight | null;
@@ -318,11 +308,11 @@
 
 	.path-glow {
 		fill: none;
-		stroke: rgba(255, 200, 90, 0.5);
-		stroke-width: 8;
+		stroke: rgba(255, 200, 90, 0.45);
+		stroke-width: 6;
 		stroke-linecap: round;
 		stroke-linejoin: round;
-		filter: blur(2.5px);
+		/* No CSS filter blur — Safari GPU crash risk on phone during Stage E hit. */
 	}
 
 	.path-core {

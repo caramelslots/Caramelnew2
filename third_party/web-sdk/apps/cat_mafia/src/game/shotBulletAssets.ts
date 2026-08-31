@@ -319,6 +319,42 @@ export const SHOT_BULLET_IMPACT_ANCHOR = {
 export const SHOT_BULLET_FLY_DISPLAY = { width: 400, height: 300 } as const;
 export const SHOT_BULLET_IMPACT_DISPLAY = SHOT_BULLET_FLY_DISPLAY;
 
+/** Flight payload shared by HTML (legacy) and Pixi tir FX layers. */
+export type TargetShotFlight = {
+	nonce: number;
+	startX: number;
+	startY: number;
+	endX: number;
+	endY: number;
+	/** Dense muzzle→seat samples from `buildTargetShotCurve`. */
+	points: { x: number; y: number }[];
+	/** Smooth cubic SVG / Graphics path. */
+	svgPath?: string;
+	flyMs?: number;
+};
+
+/**
+ * Pixi transform: tip (fly) / root (impact) at local (0,0) after parent places
+ * the container on the path sample. Matches spine-pixi Y-up → Y-down (mascot).
+ */
+export const getShotBulletPixiTransform = (
+	display: { width: number; height: number } = SHOT_BULLET_FLY_DISPLAY,
+) => {
+	const vp = SHOT_BULLET_FLY_VIEWPORT;
+	const scale = display.width / vp.width;
+	const tipX = SHOT_BULLET_FLY_TIP_X;
+	const tipY = 0;
+	return {
+		scale,
+		/** Tip bone → container origin. */
+		spineX: -tipX * scale,
+		spineY: tipY * scale,
+		/** Impact pins skeleton root (0,0) to the hit. */
+		impactSpineX: 0,
+		impactSpineY: 0,
+	};
+};
+
 export const SHOT_BULLET_SPINE_FILES = [
 	'shot_bullet.json',
 	'shot_bullet.atlas',

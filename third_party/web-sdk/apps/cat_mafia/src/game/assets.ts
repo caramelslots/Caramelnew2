@@ -26,6 +26,24 @@ export default {
 			skeleton: assetUrl('assets/spines/bonusReel/skeleton.json'),
 		},
 	},
+	/** Tir shot projectile + impact (`designer_assets/bullet`). */
+	shotBullet: {
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/shotBullet/shot_bullet.atlas'),
+			skeleton: assetUrl('assets/spines/shotBullet/shot_bullet.json'),
+			scale: 1,
+		},
+	},
+	/** Tir seat flip (disc only — Pixi, not HTML SpinePlayer). */
+	targetBoardFlip: {
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/targetBoard/target_board.atlas'),
+			skeleton: assetUrl('assets/spines/targetBoard/target_board.json'),
+			scale: 1,
+		},
+	},
 	// Designer-handoff `designer_assets/Symbols/export` — combined skeleton
 	// with all symbol slots + bounce/win/explosion animations. Split into
 	// per-symbol skeletons by `scripts/splitSymbolsSpine.py` so each ReelSymbol

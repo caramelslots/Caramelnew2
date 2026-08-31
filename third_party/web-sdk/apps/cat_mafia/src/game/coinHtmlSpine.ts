@@ -61,6 +61,8 @@ export const startCoinPawSpinePreload = () => {
 	const queue = [...COIN_PAW_SPINE_ASSET_URLS];
 	const workerCount = Math.min(3, queue.length);
 
+	// Fetch only — do not spawn HTML SpinePlayers. Production paw uses Pixi;
+	// players are created lazily on subscribe and disposed when idle.
 	void Promise.all(
 		Array.from({ length: workerCount }, async () => {
 			while (queue.length > 0) {
@@ -73,11 +75,7 @@ export const startCoinPawSpinePreload = () => {
 				}
 			}
 		}),
-	).then(() => {
-		ensureRuntime('bronze', 'row');
-		ensureRuntime('silver', 'row');
-		ensureRuntime('gold', 'row');
-	});
+	);
 };
 
 export type CoinPawSpineTarget = {
@@ -91,6 +89,7 @@ type RuntimeKey = `${CoinPawSkin}:${CoinPawSpineMode}`;
 
 type SkinRuntime = {
 	player: SpinePlayer;
+	host: HTMLDivElement;
 	ready: boolean;
 	mode: CoinPawSpineMode;
 	targets: Set<CoinPawSpineTarget>;
@@ -106,6 +105,19 @@ let hubCss = false;
 
 const runtimeKey = (skin: CoinPawSkin, mode: CoinPawSpineMode): RuntimeKey => `${skin}:${mode}`;
 
+const disposeRuntime = (key: RuntimeKey, runtime: SkinRuntime) => {
+	try {
+		runtime.player.dispose();
+	} catch {
+		/* already torn down */
+	}
+	runtime.host.remove();
+	runtimes.delete(key);
+	if (runtimes.size === 0 && hubRoot) {
+		hubRoot.remove();
+		hubRoot = null;
+	}
+};
 const ensureHubCss = () => {
 	if (hubCss || typeof document === 'undefined') return;
 	hubCss = true;
@@ -235,6 +247,7 @@ const ensureRuntime = (skin: CoinPawSkin, mode: CoinPawSpineMode): SkinRuntime =
 
 	const runtime: SkinRuntime = {
 		player: null as unknown as SpinePlayer,
+		host,
 		ready: false,
 		mode,
 		targets: new Set(),
@@ -250,7 +263,7 @@ const ensureRuntime = (skin: CoinPawSkin, mode: CoinPawSpineMode): SkinRuntime =
 		showLoading: false,
 		backgroundColor: '#00000000',
 		premultipliedAlpha: false,
-		preserveDrawingBuffer: true,
+		preserveDrawingBuffer: false,
 		alpha: true,
 		defaultMix: 0,
 		skin: COIN_PAW_SPINE_SKIN[skin],
@@ -305,8 +318,7 @@ export const subscribeCoinPawSpine = (target: CoinPawSpineTarget) => {
 		runtime.targets.delete(target);
 		frozenTargets.delete(target);
 		if (runtime.targets.size === 0) {
-			runtime.player.paused = true;
-			runtime.clipReady = false;
+			disposeRuntime(runtimeKey(target.skin, mode), runtime);
 		}
 	};
 };

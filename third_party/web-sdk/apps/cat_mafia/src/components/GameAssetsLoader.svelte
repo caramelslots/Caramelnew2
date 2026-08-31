@@ -12,6 +12,7 @@
 		getBatch3KeysForLocale,
 	} from '../game/assetLoadPlan';
 	import { waitForLoaderStage } from '../game/loaderAssetPipeline.svelte';
+	import { downscalePhoneSpineAtlases } from '../game/phoneSpineAtlasDownscale';
 	import { stateUrlDerived } from 'state-shared';
 
 	type Props = { children: Snippet };
@@ -101,6 +102,8 @@
 				// background while the player reads "Press to continue" and watches the transition.
 				void loadAssetBatch(batch4).then((batch4Assets) => {
 					mergeLoadedAssets(batch4Assets);
+					// Batch 4 may include tir atlases loaded after initial phone downscale.
+					downscalePhoneSpineAtlases();
 				});
 			})();
 		}

@@ -226,6 +226,11 @@ export const stateGame = $state({
 	transitionActive: false,
 	/** Target mode for the in-flight cloud transition (set for the whole anim). */
 	transitionGameType: undefined as GameType | undefined,
+	/**
+	 * Active Pixi cat spine key (gray base / white FS|duel).
+	 * Phone unloads the other atlas — see EnableMascotCatSkinMemory.
+	 */
+	mascotCatSpineKey: 'mascotCatGray' as 'mascotCat' | 'mascotCatGray',
 	// Big-win overlay only — raises Pixi canvas above HTML HUD so celebration
 	// renders on top while the dim layer keeps controls visible underneath.
 	// Small/medium wins leave this false so the HUD stays at normal stacking.
@@ -268,6 +273,14 @@ export const stateGame = $state({
 	targetPickSeatMode: 'six' as 'six' | 'nine',
 	targetPickFlipped: Array.from({ length: 6 }, () => false),
 	targetPickSpineSeat: null as number | null,
+	/** Pixi tir shot FX (replaces HTML TargetShotBulletOverlay). */
+	targetShotFlight: null as null | import('./shotBulletAssets').TargetShotFlight,
+	/** Monotonic flight id — survives `targetShotFlight = null` between shots. */
+	targetShotFlightSeq: 0,
+	/** Pixi tir seat flip (replaces HTML TargetFlipSpine). */
+	targetShotFlip: null as null | import('./targetBoardAssets').TargetShotFlipFx,
+	/** HTML FS label driven by Pixi flip bone (avoids Text size jump). */
+	targetShotFlipLabel: null as null | { visible: boolean; scaleX: number; scaleY: number },
 	// === Cat Mafia Stage D ===
 	/** Normal vs Super bonus rules for Super Wild. */
 	bonusMode: null as null | 'normal' | 'super',

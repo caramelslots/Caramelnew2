@@ -123,6 +123,9 @@ export const LOADER_BATCH_4_KEYS = [
 	'fsCongNumber',
 	'fsLeftCounter',
 	'fsLeftCounterSpinboard',
+	/** Tir FX (entry pick + Stage E) — Pixi spine, not HTML SpinePlayer. */
+	'shotBullet',
+	'targetBoardFlip',
 ] as const satisfies readonly (keyof typeof assets)[];
 
 export const LOADER_ASSET_BATCHES = [

@@ -1,7 +1,6 @@
 <!--
-	Shooting-gallery board: 6 HTML seats + one persistent Spine player.
-	On hit the player is moved onto that seat and v3/v4 is played. Static disc
-	stays until the player is already loaded (preload during aim).
+	Shooting-gallery board: 6 HTML hit seats. Flip FX live in Pixi
+	(TargetFlipPixiLayer); HTML keeps the static FS back face after flip.
 -->
 <script lang="ts">
 	import { getContext } from '../game/context';
@@ -11,28 +10,22 @@
 		TARGET_BOARD_SLOTS,
 		TARGET_BOARD_SPRITES,
 		targetBoardSlotStyle,
-		type TargetBoardPickFlipAnim,
-		type TargetBoardSpineAnim,
 	} from '../game/targetBoardAssets';
 	import { randomTargetHitOffset } from '../game/shotBulletAssets';
-	import TargetFlipSpine from './TargetFlipSpine.svelte';
 
 	type Props = {
 		values: number[];
 		flipped: boolean[];
 		spineSeat?: number | null;
 		spineNonce?: number;
-		flipAnim?: TargetBoardSpineAnim;
 		locked?: boolean;
 		onSelect?: (index: number) => void;
-		onSpineComplete?: () => void;
 	};
 
 	const props: Props = $props();
 	const context = getContext();
 
 	let root = $state<HTMLDivElement | undefined>();
-	let playerReady = $state(false);
 	/** Board-driven prompt size — tighter on popout-s so it fits the plaque. */
 	let promptFs = $state(14);
 
@@ -49,11 +42,6 @@
 	);
 	const spineSeat = $derived(props.spineSeat ?? null);
 	const spineNonce = $derived(props.spineNonce ?? 0);
-	const flipAnim = $derived((props.flipAnim ?? 'v4') as TargetBoardPickFlipAnim);
-	const flipSlot = $derived(
-		spineSeat != null ? TARGET_BOARD_SLOTS[spineSeat] : TARGET_BOARD_SLOTS[0],
-	);
-	const flipValue = $derived(spineSeat != null ? (props.values[spineSeat] ?? 0) : 0);
 
 	const syncPromptSize = () => {
 		const w = root?.clientWidth ?? 0;
@@ -134,8 +122,8 @@
 			aria-label={`Target ${i + 1}`}
 		>
 			<!-- Stands + idle discs are Pixi (under the mascot). HTML keeps
-			     hit targets, the FS back face, and the flip player. -->
-			{#if isFlipped && !(isSpinning && playerReady)}
+			     hit targets and the FS back face after flip. -->
+			{#if isFlipped && !isSpinning}
 				<span class="disc">
 					<span class="face back" style={`background-image:url('${TARGET_BOARD_SPRITES.back}')`}>
 						<span class="fs">
@@ -147,23 +135,6 @@
 			{/if}
 		</button>
 	{/each}
-
-	<div
-		class="flip-slot"
-		class:on={spineSeat != null && spineNonce > 0}
-		style={targetBoardSlotStyle(flipSlot)}
-		aria-hidden="true"
-	>
-		<TargetFlipSpine
-			nonce={spineNonce}
-			value={flipValue}
-			animation={flipAnim}
-			onready={() => {
-				playerReady = true;
-			}}
-			oncomplete={() => props.onSpineComplete?.()}
-		/>
-	</div>
 </div>
 
 <style lang="scss">
@@ -235,20 +206,6 @@
 		background-position: center;
 	}
 
-	.flip-slot {
-		position: absolute;
-		width: 22.5%;
-		aspect-ratio: 1;
-		transform: translate(-50%, calc(-50% - 18% + 5px));
-		pointer-events: none;
-		z-index: 2;
-		opacity: 0;
-	}
-
-	.flip-slot.on {
-		opacity: 1;
-	}
-
 	.back {
 		display: flex;
 		align-items: center;
@@ -279,5 +236,16 @@
 		font-size: clamp(0.55rem, 1.4vw, 0.75rem);
 		letter-spacing: 0.14em;
 		margin-top: 0.12em;
+	}
+
+	/* Phone: slightly larger FS digits on the disc. */
+	@media (max-width: 500px), ((hover: none) and (pointer: coarse) and (max-width: 900px)) {
+		.fs-num {
+			font-size: clamp(1.55rem, 4.5vw, 2.55rem);
+		}
+
+		.fs-label {
+			font-size: clamp(0.62rem, 1.65vw, 0.85rem);
+		}
 	}
 </style>

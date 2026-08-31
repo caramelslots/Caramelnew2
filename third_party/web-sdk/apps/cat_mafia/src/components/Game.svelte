@@ -23,6 +23,8 @@
 	import EnableSymbolTextureOptimization from './EnableSymbolTextureOptimization.svelte';
 	import EnableSymbolCellFit from './EnableSymbolCellFit.svelte';
 	import EnableUiTextureOptimization from './EnableUiTextureOptimization.svelte';
+	import EnablePhoneSpineAtlasDownscale from './EnablePhoneSpineAtlasDownscale.svelte';
+	import EnableMascotCatSkinMemory from './EnableMascotCatSkinMemory.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
 	import EnableBoardIdleBounce from './EnableBoardIdleBounce.svelte';
 	import EnableLivingIdle from './EnableLivingIdle.svelte';
@@ -40,6 +42,8 @@
 	import Win from './Win.svelte';
 	import MascotPixi from './MascotPixi.svelte';
 	import PawCoinPixiLayer from './PawCoinPixiLayer.svelte';
+	import TargetShotBulletPixiLayer from './TargetShotBulletPixiLayer.svelte';
+	import TargetFlipPixiLayer from './TargetFlipPixiLayer.svelte';
 	import RevolverDrumPlaceholder from './RevolverDrumPlaceholder.svelte';
 	import RevolverDrumPixi from './RevolverDrumPixi.svelte';
 	import { devPreview } from '../game/devPreview.svelte';
@@ -48,6 +52,8 @@
 	import TargetPickOverlay from './TargetPickOverlay.svelte';
 	import TargetPickPixiLayer from './TargetPickPixiLayer.svelte';
 	import TargetShootOverlay from './TargetShootOverlay.svelte';
+	import TargetShotTrailHtml from './TargetShotTrailHtml.svelte';
+	import TargetFlipLabelHtml from './TargetFlipLabelHtml.svelte';
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
@@ -94,13 +100,14 @@
 	class:above-html-ui={context.stateGame.transitionActive ||
 		context.stateGame.winOverlayActive ||
 		gameEntrance.loadingCloudActive}
-
 >
 	<GameApp maxResolution={3} tuneForMobilePortrait webglOnIosAndroid>
 		<EnableSound />
 		<EnableSymbolTextureOptimization />
 		<EnableSymbolCellFit />
 		<EnableUiTextureOptimization />
+		<EnablePhoneSpineAtlasDownscale />
+		<EnableMascotCatSkinMemory />
 		<EnableHotkey />
 		<EnableGameActor />
 		<EnableBoardIdleBounce />
@@ -207,7 +214,13 @@
 				<PawCoinPixiLayer zIndex={5} />
 				<!-- Pixi mascot above boards + coins; under Win / Transition. -->
 				<MascotPixi zIndex={6} />
-				<MascotPixi variant="duelDog" zIndex={6} />
+				<!-- Dog atlas is heavy — mount only while duel is live (not portrait). -->
+				{#if stateDuel.active}
+					<MascotPixi variant="duelDog" zIndex={6} />
+				{/if}
+				<!-- Tir FX above board HTML while flight/flip runs (stage lifted). -->
+				<TargetShotBulletPixiLayer zIndex={90} />
+				<TargetFlipPixiLayer zIndex={91} />
 				<!-- Under Transition (100) + FS outro / Win coins (10); above board. -->
 				<RevolverDrumPixi
 					zIndex={8}
@@ -247,6 +260,8 @@
 <TargetBoardOverlay />
 <TargetPickOverlay />
 <TargetShootOverlay />
+<TargetShotTrailHtml />
+<TargetFlipLabelHtml />
 <FreeSpinIntro />
 <DevCheats />
 <DevButtons />
@@ -256,7 +271,7 @@
 		position: relative;
 	}
 
-	/* HUD (z-index 40–45); raise Pixi above HTML tir overlays (60–72) during cloud. */
+	/* HUD (z-index 40–45); raise Pixi only for cloud / win (not tir FX — that hid HUD). */
 	.html-underlays {
 		position: relative;
 		z-index: 40;

@@ -1,6 +1,6 @@
 <!--
-	Stage E shoot board: 9 HTML seats on the shared cabinet texture (temp 3×3).
-	Hit moves the Spine flip player onto that seat; static disc stays until ready.
+	Stage E shoot board: 9 HTML hit seats on the shared cabinet (temp 3×3).
+	Flip FX in Pixi (TargetFlipPixiLayer); HTML keeps the reward face after flip.
 -->
 <script lang="ts">
 	import { getContext } from '../game/context';
@@ -12,11 +12,8 @@
 		TARGET_SHOOT_SLOTS,
 		targetBoardSlotStyle,
 		targetPickInnerClip,
-		type TargetBoardPickFlipAnim,
-		type TargetBoardSpineAnim,
 	} from '../game/targetBoardAssets';
 	import { randomTargetHitOffset } from '../game/shotBulletAssets';
-	import TargetFlipSpine from './TargetFlipSpine.svelte';
 
 	type Props = {
 		/** Per-seat reward (0–3). Shown after flip. */
@@ -24,17 +21,14 @@
 		flipped: boolean[];
 		spineSeat?: number | null;
 		spineNonce?: number;
-		flipAnim?: TargetBoardSpineAnim;
 		locked?: boolean;
 		onSelect?: (index: number) => void;
-		onSpineComplete?: () => void;
 	};
 
 	const props: Props = $props();
 	const context = getContext();
 
 	let root = $state<HTMLDivElement | undefined>();
-	let playerReady = $state(false);
 
 	const locked = $derived(props.locked === true);
 	const seatW = `${TARGET_SHOOT_SEAT_WIDTH_FRAC * 100}%`;
@@ -70,15 +64,8 @@
 	);
 	const spineSeat = $derived(props.spineSeat ?? null);
 	const spineNonce = $derived(props.spineNonce ?? 0);
-	const flipAnim = $derived((props.flipAnim ?? 'v4') as TargetBoardPickFlipAnim);
-	const flipSlot = $derived(
-		spineSeat != null ? TARGET_SHOOT_SLOTS[spineSeat] : TARGET_SHOOT_SLOTS[0],
-	);
-	const flipValue = $derived(spineSeat != null ? (props.values[spineSeat] ?? 0) : 0);
 
 	const rewardLabel = (r: number) => (r <= 0 ? '-' : `+${r}`);
-	const flipDisplayText = $derived(flipValue <= 0 ? '-' : `+${flipValue}`);
-	const flipShowFs = $derived(flipValue > 0);
 
 	export function getSeatCenter(index: number): { x: number; y: number } | null {
 		const el = root?.querySelector<HTMLElement>(`[data-seat="${index}"]`);
@@ -132,7 +119,7 @@
 			onclick={() => onClick(i)}
 			aria-label={`Target ${i + 1}`}
 		>
-			{#if isFlipped && !(isSpinning && playerReady)}
+			{#if isFlipped && !isSpinning}
 				<span class="disc">
 					<span class="face back" style={`background-image:url('${TARGET_BOARD_SPRITES.back}')`}>
 						<span class="fs">
@@ -146,25 +133,6 @@
 			{/if}
 		</button>
 	{/each}
-
-	<div
-		class="flip-slot"
-		class:on={spineSeat != null && spineNonce > 0}
-		style={targetBoardSlotStyle(flipSlot)}
-		aria-hidden="true"
-	>
-		<TargetFlipSpine
-			nonce={spineNonce}
-			value={flipValue}
-			displayText={flipDisplayText}
-			showFsLabel={flipShowFs}
-			animation={flipAnim}
-			onready={() => {
-				playerReady = true;
-			}}
-			oncomplete={() => props.onSpineComplete?.()}
-		/>
-	</div>
 </div>
 
 <style lang="scss">
@@ -231,20 +199,6 @@
 		background-position: center;
 	}
 
-	.flip-slot {
-		position: absolute;
-		width: var(--seat-w, 17.5%);
-		aspect-ratio: 1;
-		transform: translate(-50%, calc(-50% - 18% + 5px));
-		pointer-events: none;
-		z-index: 2;
-		opacity: 0;
-	}
-
-	.flip-slot.on {
-		opacity: 1;
-	}
-
 	.back {
 		display: flex;
 		align-items: center;
@@ -276,5 +230,16 @@
 		font-size: clamp(0.55rem, 1.4vw, 0.75rem);
 		letter-spacing: 0.14em;
 		margin-top: 0.12em;
+	}
+
+	/* Phone: slightly larger FS digits on the disc. */
+	@media (max-width: 500px), ((hover: none) and (pointer: coarse) and (max-width: 900px)) {
+		.fs-num {
+			font-size: clamp(1.55rem, 4.5vw, 2.55rem);
+		}
+
+		.fs-label {
+			font-size: clamp(0.62rem, 1.65vw, 0.85rem);
+		}
 	}
 </style>

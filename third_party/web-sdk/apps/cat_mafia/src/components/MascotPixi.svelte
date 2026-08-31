@@ -76,19 +76,18 @@
 	const forceDogAnim = $derived(isDuelDog ? null : devPreview.mascotDogAnimation);
 	const previewDogOnPrimary = $derived(!isDuelDog && forceDogAnim !== null);
 	const useDogSpine = $derived(isDuelDog || previewDogOnPrimary);
-	/** Gray = basegame; white = freegame / duel bonus. */
-	const catSpineKey = $derived(
-		context.stateGame.gameType === 'freegame' || stateDuel.active ? 'mascotCat' : 'mascotCatGray',
-	);
+	/** Gray = basegame; white = freegame / duel — key owned by EnableMascotCatSkinMemory. */
+	const catSpineKey = $derived(context.stateGame.mascotCatSpineKey);
 	const forceAnim = $derived(forceCatAnim ?? forceDogAnim);
 	const mascotAnimToken = $derived(context.stateGame.mascotAnimToken);
 	const mounted = $derived(
 		gameEntrance.preloadContent &&
 			(isDuelDog
-				? layoutType === 'desktop' ||
-					layoutType === 'tablet' ||
-					layoutType === 'landscape' ||
-					isPopout
+				? stateDuel.active &&
+					(layoutType === 'desktop' ||
+						layoutType === 'tablet' ||
+						layoutType === 'landscape' ||
+						isPopout)
 				: showMascotLayout || forceAnim !== null),
 	);
 

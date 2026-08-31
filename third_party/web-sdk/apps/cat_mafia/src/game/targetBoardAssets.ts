@@ -138,19 +138,50 @@ export const targetPickInnerClip = () => {
 };
 
 /**
- * Seat flip viewport. Skeleton uses scaleY = -1 (same as full-board QA),
- * so the disc around container y≈257 lands near y≈−257.
+ * Seat flip viewport in skeleton Y-up (spine-pixi → Pixi Y-down).
+ * Front/back are meshes with vertices ±211 (≈422 diameter) on `container`
+ * @ y≈256.84. Atlas width 291 is the texture only — do NOT use it for scale.
  */
 export const TARGET_BOARD_FLIP_VIEWPORT = {
-	x: -220,
-	y: -480,
-	width: 440,
-	height: 440,
+	x: -211,
+	y: 256.84 - 211,
+	width: 422,
+	height: 422,
 	padLeft: '0%',
 	padRight: '0%',
 	padTop: '0%',
 	padBottom: '0%',
 } as const;
+
+/** Pixi tir flip — one seat disc at screen position. */
+export type TargetShotFlipFx = {
+	nonce: number;
+	anim: TargetBoardPickFlipAnim;
+	value: number;
+	displayText?: string;
+	showFsLabel?: boolean;
+	/** Seat / disc center in canvas px. */
+	x: number;
+	y: number;
+	/** Seat box size (px) — disc fills this. */
+	size: number;
+};
+
+/**
+ * Fit flip viewport into a seat-sized box; disc center at local origin.
+ * Same spine offset convention as `getMascotPixiTransform`.
+ */
+export const getTargetFlipPixiTransform = (seatSize: number) => {
+	const vp = TARGET_BOARD_FLIP_VIEWPORT;
+	const scale = seatSize / vp.width;
+	const cx = vp.x + vp.width * 0.5;
+	const cy = vp.y + vp.height * 0.5;
+	return {
+		scale,
+		spineX: -cx * scale,
+		spineY: cy * scale,
+	};
+};
 
 /** Slots kept visible during seat flip (disc only). */
 export const TARGET_BOARD_FLIP_VISIBLE_SLOTS = ['front', 'back'] as const;

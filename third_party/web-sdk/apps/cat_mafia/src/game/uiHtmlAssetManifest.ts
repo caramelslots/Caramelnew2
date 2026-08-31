@@ -5,7 +5,7 @@ import {
 	MASCOT_SPINE_GRAY_IMAGE_URL,
 	startMascotSpinePreload,
 } from './mascotHtmlSpine';
-import { COIN_PAW_SPINE_WEBP_URL, startCoinPawSpinePreload } from './coinHtmlSpine';
+import { COIN_PAW_SPINE_WEBP_URL } from './coinHtmlSpine';
 import {
 	SPIN_BUTTON_SPINE_WEBP_URL,
 	startSpinButtonSpinePreload,
@@ -214,7 +214,7 @@ export const startLoadingIdleUiPreload = () => {
 	loadingIdleUiPreloadStarted = true;
 
 	startMascotSpinePreload();
-	startCoinPawSpinePreload();
+	// Coin paw is Pixi in production — do not spawn HTML SpinePlayers at load.
 	startSpinButtonSpinePreload();
 	startTargetBoardPreload();
 	startShotBulletPreload();
