@@ -48,8 +48,8 @@
 		 * `overlay` — frame + vertical gold grids above resting symbols
 		 * (column holes masked). Idle/win pops render above this layer.
 		 * `rails` — column grids only (under the target-pick cabinet).
-		 * `nameplate` — WIN bank plate under the desk, above the overlay
-		 * frame so the bottom gold rail does not cover it.
+		 * `nameplate` — WIN bank plate under the desk, above SW curtains so
+		 * curtain feet tuck under the bottom gold rail.
 		 */
 		layer?: 'base' | 'overlay' | 'rails' | 'nameplate';
 		/** Overlay mask: hide rails while the target cabinet covers them. */

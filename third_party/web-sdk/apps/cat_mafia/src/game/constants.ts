@@ -1168,6 +1168,15 @@ const l2Spin = makeRenderSpinSprite('L2Img', letterSpinSizeRatios);
 const l3Spin = makeRenderSpinSprite('L3Img', letterSpinSizeRatios, l3Opts);
 const l4Spin = makeRenderSpinSprite('L4Img', letterSpinSizeRatios);
 const wSpin = makeRenderSpinSprite('WImg', propSpinSizeRatios);
+// Super Wild static = Spine open_0 lying tile. Size matches the curtain fit
+// (≈1 cell tall when the column viewport is scaled to the board).
+const SW_OPEN0_H_FRAC = 0.24957;
+const SW_COLUMN_COVER_Y = 1.015;
+const swSizeRatios = {
+	width: 1,
+	height: SW_OPEN0_H_FRAC * SW_COLUMN_COVER_Y * BOARD_DIMENSIONS.y,
+} as const;
+const swSprite = makeRenderSpinSprite('SWImg', swSizeRatios);
 // Bonus — padded 196² symbol sprite (Bonus.webp / BImg).
 const bSprite = makeRenderSpinSprite('BImg', propSpinSizeRatios);
 /** Cartridge has no `idle` — sprite for rest/spin; spine `stop` on land. */
@@ -1254,6 +1263,8 @@ export const WIN_INFO_PRE_DELAY_MS = 100;
  * Base SW two-beat: hold phase-1 paylines (lying SW) before clearing for curtain.
  */
 export const SW_PHASE1_HOLD_MS = 550;
+/** Hold after Spine `open` settles before clearing the overlay. */
+export const SW_OPEN_SETTLE_MS = 280;
 /** After curtain settles, beat before phase-2 winInfo (post-expand lines). */
 export const SW_PHASE2_PRE_MS = 320;
 /** Extra pre-delay on the post-expand winInfo so the second interaction reads clearly. */
@@ -1536,13 +1547,13 @@ export const SYMBOL_INFO_MAP = {
 		win: wWin,
 		land: wBounce,
 	},
-	// Super Wild — alias Wild art for Stage B (badge via Symbol.svelte multiplier).
+	// Super Wild — designer open_0 WILD tile on the reel; curtain opens up from it.
 	SW: {
-		postWinStatic: wPostWin,
-		static: wStatic,
-		spin: wSpin,
-		win: wWin,
-		land: wBounce,
+		postWinStatic: swSprite,
+		static: swSprite,
+		spin: swSprite,
+		win: swSprite,
+		land: swSprite,
 	},
 	// Paw coins (rework) — rendered as the designer coin-paw spritesheet
 	// (bronze / silver / gold), see SymbolCoinPaw.svelte. The coin itself

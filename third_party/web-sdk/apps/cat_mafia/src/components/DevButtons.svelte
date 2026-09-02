@@ -603,6 +603,152 @@
 		});
 	};
 
+	/**
+	 * SW demos: lying Super Wilds on chosen column(s) → phase-1 line → curtain.
+	 * `cols1` = 1-based column numbers (any subset of 1..BOARD_DIMENSIONS.x).
+	 */
+	const SW_DEMO_POOL: SymbolName[] = ['L1', 'L2', 'L3', 'L4', 'H1', 'H2', 'H3', 'H4'];
+	const SW_DEMO_MULTS = [2, 4, 6, 8] as const;
+	const SW_DEMO_SINGLE_COLS = Array.from({ length: BOARD_DIMENSIONS.x }, (_, i) => i + 1);
+	const SW_DEMO_PRESETS: { label: string; cols: number[] }[] = [
+		{ label: '2 3', cols: [2, 3] },
+		{ label: '1 2 3', cols: [1, 2, 3] },
+		{ label: '3 4 5', cols: [3, 4, 5] },
+		{
+			label: `All 1–${BOARD_DIMENSIONS.x}`,
+			cols: Array.from({ length: BOARD_DIMENSIONS.x }, (_, i) => i + 1),
+		},
+	];
+	/** Lying SW rows per column (never full height so curtain always runs). */
+	const SW_DEMO_LIE_COUNT = 1;
+
+	const swDemoRows = (): number[] => {
+		const count = SW_DEMO_LIE_COUNT;
+		const start = Math.max(
+			0,
+			Math.min(Math.floor((BOARD_DIMENSIONS.y - count) / 2), BOARD_DIMENSIONS.y - count),
+		);
+		return Array.from({ length: count }, (_, i) => start + i);
+	};
+
+	const playSwDrop = (cols1: number[]) =>
+		guard(async () => {
+			applyBetMode('BASE');
+			stateGame.gameType = 'basegame';
+			stateGame.stickySwByReel = {};
+			stateGame.stickySwOpened = false;
+			stateGame.bonusMode = null;
+			stateBet.winBookEventAmount = 0;
+
+			const unit = 100;
+			const mult = SW_DEMO_MULTS[Math.floor(Math.random() * SW_DEMO_MULTS.length)];
+			const swReels = [
+				...new Set(
+					cols1
+						.map((c) => c - 1)
+						.filter((r) => r >= 0 && r < BOARD_DIMENSIONS.x),
+				),
+			].sort((a, b) => a - b);
+			if (!swReels.length) return;
+
+			const rows = swDemoRows();
+			const lineRow = rows[Math.floor(rows.length / 2)];
+			const ROW_PAD = 1;
+
+			const randomCell = () => ({
+				name: SW_DEMO_POOL[Math.floor(Math.random() * SW_DEMO_POOL.length)],
+			});
+			const board = Array.from({ length: BOARD_DIMENSIONS.x }, (_, reel) =>
+				Array.from({ length: BOARD_DIMENSIONS.y }, (_, row) => {
+					if (swReels.includes(reel) && rows.includes(row)) {
+						return { name: 'SW' as const, wild: true as const, multiplier: mult };
+					}
+					// Fill the payline with H2 so phase-1 lights the lying SW.
+					if (row === lineRow) return { name: 'H2' as const };
+					return randomCell();
+				}),
+			);
+
+			const phase1Amount = 5 * unit;
+			const phase2Amount = phase1Amount * mult;
+			const linePositions = Array.from({ length: BOARD_DIMENSIONS.x }, (_, reel) => ({
+				reel,
+				row: lineRow + ROW_PAD,
+			}));
+
+			const phase1Win = {
+				type: 'winInfo' as const,
+				totalWin: phase1Amount,
+				wins: [
+					{
+						symbol: 'H2',
+						kind: 5,
+						win: phase1Amount,
+						positions: linePositions,
+						meta: {
+							lineIndex: 1,
+							multiplier: 1,
+							winWithoutMult: phase1Amount,
+							globalMult: 1,
+							lineMultiplier: 1.0,
+						},
+					},
+				],
+			};
+
+			const phase2Win = {
+				type: 'winInfo' as const,
+				totalWin: phase2Amount,
+				wins: [
+					{
+						symbol: 'H2',
+						kind: 5,
+						win: phase2Amount,
+						positions: linePositions,
+						meta: {
+							lineIndex: 1,
+							multiplier: mult,
+							winWithoutMult: phase1Amount,
+							globalMult: 1,
+							lineMultiplier: mult,
+						},
+					},
+				],
+			};
+
+			const expand = {
+				type: 'superWildExpand' as const,
+				// Hinge on the topmost lying SW so the curtain rises from that cell.
+				expands: swReels.map((reel) => ({
+					reel,
+					row: Math.min(...rows) + ROW_PAD,
+					mult,
+				})),
+				productMult: mult,
+			};
+
+			const colLabel = swReels.map((r) => r + 1).join('+');
+			// eslint-disable-next-line no-console
+			console.log(`[DEV] SW cols=[${colLabel}] rows=[${rows.join(',')}] mult=×${mult}`);
+			const events = [
+				reveal(board),
+				asEvent(phase1Win),
+				asEvent({ type: 'setWin', amount: phase1Amount, winLevel: 5 }),
+				asEvent({ type: 'setTotalWin', amount: phase1Amount }),
+				asEvent(expand),
+				asEvent(phase2Win),
+				asEvent({ type: 'setWin', amount: phase2Amount, winLevel: 6 }),
+				asEvent({ type: 'setTotalWin', amount: phase2Amount }),
+				asEvent({ type: 'finalWin', amount: phase2Amount }),
+			];
+			await playBet({
+				id: -1,
+				payoutMultiplier: phase2Amount,
+				events,
+				state: events,
+			} as Parameters<typeof playBet>[0]);
+		});
+
 	const playSwBaseBook = () =>
 		playMathBook(
 			pickBook(
@@ -1273,6 +1419,37 @@
 			</section>
 
 			<section>
+				<h4>Super Wild</h4>
+				<p class="subhint">
+					Columns (1-based). Singles · presets · <b>All 1–{BOARD_DIMENSIONS.x}</b> opens a curtain on every reel.
+				</p>
+				<div class="grid grid--5">
+					{#each SW_DEMO_SINGLE_COLS as col}
+						<button
+							type="button"
+							disabled={busy}
+							title={`SW column ${col} → curtain expand`}
+							onclick={() => playSwDrop([col])}
+						>
+							{col}
+						</button>
+					{/each}
+				</div>
+				<div class="grid" style="margin-top: 4px">
+					{#each SW_DEMO_PRESETS as preset}
+						<button
+							type="button"
+							disabled={busy}
+							title={`SW columns ${preset.cols.join(', ')} → curtain expand`}
+							onclick={() => playSwDrop(preset.cols)}
+						>
+							{preset.label}
+						</button>
+					{/each}
+				</div>
+			</section>
+
+			<section>
 				<h4>Reel Speed</h4>
 				<div class="grid">
 					<button
@@ -1814,6 +1991,10 @@
 
 	.grid--3 {
 		grid-template-columns: 1fr 1fr 1fr;
+	}
+
+	.grid--5 {
+		grid-template-columns: repeat(5, 1fr);
 	}
 
 	.dev-body button {

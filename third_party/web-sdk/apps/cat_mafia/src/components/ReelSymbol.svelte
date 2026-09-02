@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Tween } from 'svelte/motion';
-	import { backOut, cubicIn, sineIn, sineInOut, sineOut } from 'svelte/easing';
+	import { backOut, cubicIn, cubicOut, sineIn, sineInOut, sineOut } from 'svelte/easing';
 	import { untrack } from 'svelte';
 
 	import { stateBetDerived } from 'state-shared';
@@ -20,6 +20,8 @@
 	} from '../game/constants';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
+	import { gameSpeedMultFor } from '../game/gameSpeed';
+	import { SUPER_WILD_DROP_DIST, SUPER_WILD_DROP_MS } from '../game/superWildHtmlSpine';
 	import type { ReelSymbol } from '../game/stateGame.svelte';
 
 	type Props = {
@@ -43,12 +45,21 @@
 		getSymbolInfo({ rawSymbol: props.reelSymbol.rawSymbol, state: props.reelSymbol.symbolState }),
 	);
 
-	/** ×N only on opened sticky / post-curtain SW columns — not on lying SW. */
+	/** ×N only on opened sticky / post-curtain SW columns — not on lying SW.
+	 *  Curtain overlay owns the mult readout (drum) while it's up. */
 	const showMultiplier = $derived.by(() => {
 		if (props.reelSymbol.rawSymbol.name !== 'SW') return false;
 		if (props.duelSide) {
+			if (
+				stateDuel.superWildCurtains.some(
+					(c) => c.side === props.duelSide && c.reel === props.reelIndex,
+				)
+			) {
+				return false;
+			}
 			return stateDuel.stickySwByReel[props.duelSide][props.reelIndex] != null;
 		}
+		if (stateGame.superWildCurtains.some((c) => c.reel === props.reelIndex)) return false;
 		return stateGame.stickySwByReel[props.reelIndex] != null;
 	});
 
@@ -112,7 +123,8 @@
 		reelMotion !== 'stopped' ||
 			isSpinningSymbol ||
 			applyWinPresentation ||
-			applyIdleBouncePresentation,
+			applyIdleBouncePresentation ||
+			swDropY.current > 0.5,
 	);
 	// Cull symbols outside the visible / feather runway. During spin use the
 	// same expanded window as SymbolWrap (±1 row) — never force-render the
@@ -133,6 +145,8 @@
 			isSymbolCenterInPlayfield(props.reelSymbol.symbolY()),
 	);
 	const dimAlphaTween = new Tween(1);
+	/** SW curtain open — slide this reel's symbols down under the board mask. */
+	const swDropY = new Tween(0);
 
 	/** H3/H4 idle spines use additive glow slots — container alpha makes them
 	 *  see-through over the board. Dim via tint multiply instead (keep alpha 1). */
@@ -148,7 +162,8 @@
 		stateGame.targetPickOpen
 			? 0
 			: (applyWinPresentation ? winYOffset.current : 0) +
-				(applyIdleBouncePresentation ? idleYOffset.current : 0),
+				(applyIdleBouncePresentation ? idleYOffset.current : 0) +
+				swDropY.current,
 	);
 	const wrapScale = $derived(
 		stateGame.targetPickOpen
@@ -167,9 +182,50 @@
 				idleYOffset.set(0, { duration: 0 });
 				if (state === 'spin') {
 					dimAlphaTween.set(1, { duration: 0 });
+					const covered = props.duelSide
+						? stateDuel.superWildCurtains.some(
+								(c) => c.side === props.duelSide && c.reel === props.reelIndex,
+							)
+						: stateGame.superWildCurtains.some((c) => c.reel === props.reelIndex);
+					if (!covered) swDropY.set(0, { duration: 0 });
 				}
 			});
 		}
+	});
+
+	$effect(() => {
+		const curtain = props.duelSide
+			? (stateDuel.superWildCurtains.find(
+					(c) => c.side === props.duelSide && c.reel === props.reelIndex,
+				) ?? null)
+			: (stateGame.superWildCurtains.find((c) => c.reel === props.reelIndex) ?? null);
+		// Keep the whole reel (incl. painted SW) under the board while the curtain
+		// covers this column — nothing should peek through the overlay.
+		const covered = curtain != null;
+		const dropping = covered && curtain.phase === 'expanding';
+		// Clear the reel under the curtain — SW is replaced by Spine open_0;
+		// other symbols drop away so they don't show through transparent spine.
+		const duration = dropping ? SUPER_WILD_DROP_MS / gameSpeedMultFor(stateGame.gameSpeed) : 0;
+		untrack(() => {
+			void swDropY.set(covered ? SUPER_WILD_DROP_DIST : 0, {
+				duration,
+				easing: dropping ? cubicOut : sineOut,
+			});
+		});
+	});
+
+	/**
+	 * Board SW is replaced by Spine `open` frame-0 (curtain foot) — hide it
+	 * immediately so we don't see a double WILD under the curtain.
+	 */
+	const swReplacedByCurtain = $derived.by(() => {
+		if (props.reelSymbol.rawSymbol.name !== 'SW') return false;
+		const curtain = props.duelSide
+			? stateDuel.superWildCurtains.some(
+					(c) => c.side === props.duelSide && c.reel === props.reelIndex,
+				)
+			: stateGame.superWildCurtains.some((c) => c.reel === props.reelIndex);
+		return curtain;
 	});
 
 	$effect(() => {
@@ -330,7 +386,11 @@
 		spinActive={maskRunwayActive}
 		scaleX={props.reelSymbol.landScaleX() * wrapScale}
 		scaleY={props.reelSymbol.landScaleY() * wrapScale}
-		alpha={dimViaTint || isSpinningSymbol ? 1 : dimAlphaTween.current}
+		alpha={swReplacedByCurtain
+			? 0
+			: dimViaTint || isSpinningSymbol
+				? 1
+				: dimAlphaTween.current}
 		tint={dimViaTint && !isSpinningSymbol && dimAlphaTween.current < 1
 			? dimTintFromFactor(dimAlphaTween.current)
 			: 0xffffff}

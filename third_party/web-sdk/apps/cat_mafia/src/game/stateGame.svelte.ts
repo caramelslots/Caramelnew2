@@ -260,11 +260,14 @@ export const stateGame = $state({
 	pawCoinFlying: false,
 	/** Bumps each paw resolve so appear_flash remounts from the start. */
 	pawCoinPlayId: 0,
-	superWildCurtain: null as null | {
+	/** One curtain per opened SW column — stays until next reveal. */
+	superWildCurtains: [] as {
 		reel: number;
 		mult: number;
 		phase: 'expanding' | 'done';
-	},
+		/** Padded board row of the lying SW the curtain grows from (upward). */
+		originRow: number;
+	}[],
 	/** 0 = symbols in playfield; 1 = symbols parked below the mask (target board in). */
 	targetPickSlide: 0,
 	/** Target-pick cabinet is mounted (Pixi plate under the desk frame). */

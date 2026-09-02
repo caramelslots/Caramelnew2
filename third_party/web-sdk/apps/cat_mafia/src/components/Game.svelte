@@ -36,9 +36,11 @@
 	import LoadingScreen from './LoadingScreen.svelte';
 	import BoardFrame from './BoardFrame.svelte';
 	import Board from './Board.svelte';
+	import BoardContainer from './BoardContainer.svelte';
 	import BoardIdleBounceLayer from './BoardIdleBounceLayer.svelte';
 	import BoardPawCoinLayer from './BoardPawCoinLayer.svelte';
 	import PaylineLayer from './PaylineLayer.svelte';
+	import SuperWildCurtainPixi from './SuperWildCurtainPixi.svelte';
 	import Win from './Win.svelte';
 	import MascotPixi from './MascotPixi.svelte';
 	import PawCoinPixiLayer from './PawCoinPixiLayer.svelte';
@@ -47,7 +49,6 @@
 	import RevolverDrumPlaceholder from './RevolverDrumPlaceholder.svelte';
 	import RevolverDrumPixi from './RevolverDrumPixi.svelte';
 	import { devPreview } from '../game/devPreview.svelte';
-	import SuperWildCurtainOverlay from './SuperWildCurtainOverlay.svelte';
 	import TargetBoardOverlay from './TargetBoardOverlay.svelte';
 	import TargetPickOverlay from './TargetPickOverlay.svelte';
 	import TargetPickPixiLayer from './TargetPickPixiLayer.svelte';
@@ -140,17 +141,19 @@
 			>
 				{#if stateDuel.active}
 					<!-- Paint order matches base: bases → reels → gold rails →
-					     nameplate → win pops → paylines → win text. -->
+					     win pops → SW curtains → nameplate → paylines → win text. -->
 					<DuelPixiBoard side="dog" layer="base" />
 					<DuelPixiBoard side="cat" layer="base" />
 					<DuelPixiBoard side="dog" layer="board" />
 					<DuelPixiBoard side="cat" layer="board" />
 					<DuelPixiBoard side="dog" layer="overlay" />
 					<DuelPixiBoard side="cat" layer="overlay" />
-					<DuelPixiBoard side="dog" layer="nameplate" />
-					<DuelPixiBoard side="cat" layer="nameplate" />
 					<DuelPixiBoard side="dog" layer="idleBounce" />
 					<DuelPixiBoard side="cat" layer="idleBounce" />
+					<DuelPixiBoard side="dog" layer="superWild" />
+					<DuelPixiBoard side="cat" layer="superWild" />
+					<DuelPixiBoard side="dog" layer="nameplate" />
+					<DuelPixiBoard side="cat" layer="nameplate" />
 					<DuelPixiBoard side="dog" layer="paylines" />
 					<DuelPixiBoard side="cat" layer="paylines" />
 					<DuelPixiBoard side="dog" layer="win" />
@@ -182,17 +185,26 @@
 						</MainContainer>
 					</Container>
 
-					<!-- WIN sum plate — above the cabinet. -->
-					<Container zIndex={-0.75}>
-						<MainContainer>
-							<BoardFrame layer="nameplate" />
-						</MainContainer>
-					</Container>
-
 					<Container zIndex={-0.5}>
 						<MainContainer>
 							<BoardIdleBounceLayer />
 							<BoardPawCoinLayer />
+						</MainContainer>
+					</Container>
+
+					<!-- SW curtain above reels/rails; under nameplate so the WIN plate covers curtain feet. -->
+					<Container zIndex={-0.25}>
+						<MainContainer>
+							<BoardContainer>
+								<SuperWildCurtainPixi />
+							</BoardContainer>
+						</MainContainer>
+					</Container>
+
+					<!-- WIN sum plate — above SW curtains (slot `below`), under paylines / WIN $. -->
+					<Container zIndex={-0.1}>
+						<MainContainer>
+							<BoardFrame layer="nameplate" />
 						</MainContainer>
 					</Container>
 
@@ -253,7 +265,6 @@
 <BuyBonusModalShell />
 <div class="html-underlays">
 	<RevolverDrumPlaceholder />
-	<SuperWildCurtainOverlay />
 </div>
 <!-- Duel HTML chrome (pick / counters / outro). Desks + mascots + paw coins are Pixi. -->
 <DuelModeOverlay />

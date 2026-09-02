@@ -47,6 +47,15 @@ export default {
 			scale: 1,
 		},
 	},
+	/** Super Wild column curtain (`open` → `idle` + wheel). Pixi, not HTML SpinePlayer. */
+	superWildCurtain: {
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/superWild/WILD_F_1.atlas'),
+			skeleton: assetUrl('assets/spines/superWild/WILD_F_1.json'),
+			scale: 1,
+		},
+	},
 	// Designer-handoff `designer_assets/Symbols/export` — combined skeleton
 	// with all symbol slots + bounce/win/explosion animations. Split into
 	// per-symbol skeletons by `scripts/splitSymbolsSpine.py` so each ReelSymbol
@@ -219,6 +228,11 @@ export default {
 	WImg: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/symbols/Special_2.webp'),
+	},
+	/** Super Wild lying tile — first frame of designer curtain open (WILD square). */
+	SWImg: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/symbols/SW.webp'),
 	},
 	babloFont: {
 		type: 'font',

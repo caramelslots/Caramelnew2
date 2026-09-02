@@ -1,7 +1,7 @@
 <!--
-	One Duel desk layer. Game.svelte mounts base → board → overlay → nameplate →
-	idleBounce → paylines → win for both sides so cat's desk never paints over
-	dog's reels.
+	One Duel desk layer. Game.svelte mounts base → board → overlay →
+	idleBounce → superWild → nameplate → paylines → win for both sides so
+	cat's desk never paints over dog's reels.
 -->
 <script lang="ts" module>
 	import type { Position } from '../game/types';
@@ -18,6 +18,7 @@
 		| 'overlay'
 		| 'nameplate'
 		| 'idleBounce'
+		| 'superWild'
 		| 'paylines'
 		| 'win';
 </script>
@@ -48,6 +49,7 @@
 	import PaylineOverlay from './PaylineOverlay.svelte';
 	import PaylineWinAmounts from './PaylineWinAmounts.svelte';
 	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
+	import SuperWildCurtainPixi from './SuperWildCurtainPixi.svelte';
 
 	type Props = {
 		side: DuelSide;
@@ -189,6 +191,12 @@
 	<MainContainer>
 		<BoardContainer {layout} disableCatZoom>
 			<BoardBase board={stack.board} duelSide={props.side} idleBounce />
+		</BoardContainer>
+	</MainContainer>
+{:else if props.layer === 'superWild'}
+	<MainContainer>
+		<BoardContainer {layout} disableCatZoom>
+			<SuperWildCurtainPixi duelSide={props.side} />
 		</BoardContainer>
 	</MainContainer>
 {:else if props.layer === 'paylines'}

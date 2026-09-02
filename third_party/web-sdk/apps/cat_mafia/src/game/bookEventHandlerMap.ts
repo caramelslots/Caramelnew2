@@ -21,6 +21,7 @@ import {
 import {
 	BOARD_DIMENSIONS,
 	WIN_INFO_PRE_DELAY_MS,
+	SW_OPEN_SETTLE_MS,
 	SW_PHASE1_HOLD_MS,
 	SW_PHASE2_PRE_MS,
 	SW_SECOND_WIN_PRE_DELAY_MS,
@@ -38,6 +39,7 @@ import {
 	WIN_SPOTLIGHT_CLEAR_DELAY_MS,
 	TRANSITION_THEME_SWITCH_DELAY_MS,
 } from './constants';
+import { SUPER_WILD_PRESENT_MS } from './superWildHtmlSpine';
 import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
 import { waitForTimeout } from 'utils-shared/wait';
 import {
@@ -225,6 +227,37 @@ const stickySwProductFromState = (byReel: Record<number, number | undefined>) =>
 	return mults.reduce((acc, m) => acc * m, 1);
 };
 
+/** Upsert a base-game Super Wild curtain so prior columns keep their idle art. */
+const setBaseSuperWildCurtain = (
+	reel: number,
+	mult: number,
+	phase: 'expanding' | 'done',
+	originRow: number,
+) => {
+	const list = stateGame.superWildCurtains.slice();
+	const i = list.findIndex((c) => c.reel === reel);
+	const next = { reel, mult, phase, originRow };
+	if (i >= 0) list[i] = next;
+	else list.push(next);
+	stateGame.superWildCurtains = list;
+};
+
+/** Upsert a duel-desk Super Wild curtain (per side). */
+const setDuelSuperWildCurtain = (
+	side: 'cat' | 'dog',
+	reel: number,
+	mult: number,
+	phase: 'expanding' | 'done',
+	originRow: number,
+) => {
+	const list = stateDuel.superWildCurtains.slice();
+	const i = list.findIndex((c) => c.side === side && c.reel === reel);
+	const next = { side, reel, mult, phase, originRow };
+	if (i >= 0) list[i] = next;
+	else list.push(next);
+	stateDuel.superWildCurtains = list;
+};
+
 /**
  * winInfo amounts are evaluated with SW mults neutralized.
  * Lying SW = plain wild → show raw totalWin on phase-1 (no upcoming product).
@@ -326,7 +359,13 @@ const applyStickySwPreExpanded = async () => {
 	}
 	if (stickyReels.length) {
 		await waitForGameSpeed(120, stateGame.gameSpeed);
-		stateGame.superWildCurtain = null;
+		// Sticky columns keep the opened curtain art (idle) between FS spins.
+		stateGame.superWildCurtains = stickyReels.map((reel) => ({
+			reel,
+			mult: stateGame.stickySwByReel[reel] || 2,
+			phase: 'done' as const,
+			originRow: Math.floor(BOARD_DIMENSIONS.y / 2) + 1,
+		}));
 	}
 };
 
@@ -650,7 +689,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.pawCoinTotal = 0;
 		stateGame.pawCoinBagVisible = false;
 		stateGame.pawCoinFlying = false;
-		stateGame.superWildCurtain = null;
+		stateGame.superWildCurtains = [];
 		// Лапа остаётся горящей во время фазы-1 линий, если следом идёт
 		// конверсия в монетки (исключение из димминга — см. ReelSymbol).
 		// Снимается в конце pawCoinResolve.
@@ -1160,13 +1199,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 					sticky[expand.reel] != null;
 
 				if (!alreadyOpen) {
-					stateDuel.superWildCurtain = {
+					setDuelSuperWildCurtain(
 						side,
-						reel: expand.reel,
-						mult: expand.mult,
-						phase: 'expanding',
-					};
-					await waitForGameSpeed(450, stateGame.gameSpeed);
+						expand.reel,
+						expand.mult,
+						'expanding',
+						expand.row,
+					);
+					await waitForGameSpeed(SUPER_WILD_PRESENT_MS, stateGame.gameSpeed);
 				}
 				expandDuelSuperWildColumn(getDuelBoardStack(side), expand.reel, expand.mult);
 				const stack = getDuelBoardStack(side);
@@ -1177,18 +1217,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				sticky[expand.reel] = expand.mult;
 				stateDuel.stickySwOpened[side] = true;
 				if (!alreadyOpen) {
-					stateDuel.superWildCurtain = {
-						side,
-						reel: expand.reel,
-						mult: expand.mult,
-						phase: 'done',
-					};
+					setDuelSuperWildCurtain(side, expand.reel, expand.mult, 'done', expand.row);
 				}
 			}
 
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
-			await waitForGameSpeed(400, stateGame.gameSpeed);
-			stateDuel.superWildCurtain = null;
+			await waitForGameSpeed(SW_OPEN_SETTLE_MS, stateGame.gameSpeed);
+			// Keep opened curtain spine visible (idle) until the next reveal.
 			if (willShowCurtain) {
 				await waitForGameSpeed(SW_PHASE2_PRE_MS, stateGame.gameSpeed);
 			}
@@ -1253,12 +1288,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				swRows >= BOARD_DIMENSIONS.y || stateGame.stickySwByReel[expand.reel] != null;
 
 			if (!alreadyOpen) {
-				stateGame.superWildCurtain = {
-					reel: expand.reel,
-					mult: expand.mult,
-					phase: 'expanding',
-				};
-				await waitForGameSpeed(450, stateGame.gameSpeed);
+				setBaseSuperWildCurtain(expand.reel, expand.mult, 'expanding', expand.row);
+				await waitForGameSpeed(SUPER_WILD_PRESENT_MS, stateGame.gameSpeed);
 			}
 			expandSuperWildColumn(expand.reel, expand.mult);
 			// Keep column lit without entering awaiting `win` anim — phase-2 winInfo
@@ -1271,18 +1302,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			stateGame.stickySwByReel[expand.reel] = expand.mult;
 			stateGame.stickySwOpened = true;
 			if (!alreadyOpen) {
-				stateGame.superWildCurtain = {
-					reel: expand.reel,
-					mult: expand.mult,
-					phase: 'done',
-				};
+				setBaseSuperWildCurtain(expand.reel, expand.mult, 'done', expand.row);
 			}
 		}
 
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
-		await waitForGameSpeed(400, stateGame.gameSpeed);
-		stateGame.superWildCurtain = null;
-		// Beat before phase-2 winInfo (post-expand lines × product).
+		await waitForGameSpeed(SW_OPEN_SETTLE_MS, stateGame.gameSpeed);
+		// Keep opened curtain spine visible (idle) until the next reveal.
 		if (willShowCurtain) {
 			await waitForGameSpeed(SW_PHASE2_PRE_MS, stateGame.gameSpeed);
 		}
@@ -1570,6 +1596,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		eventEmitter.broadcast({ type: 'paylineClearAll', side });
 		stateDuel.winSpotlightSide = null;
+		// Drop this side's curtains for the spin; sticky restore re-applies idle art.
+		stateDuel.superWildCurtains = stateDuel.superWildCurtains.filter((c) => c.side !== side);
 
 		const paddingBoard = getDuelPaddingBoard(config.paddingReels.basegame);
 		// Same as bonus_normal reveal: chain from Pixi state (keeps sticky SW painted
@@ -1593,6 +1621,19 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		await applyDuelStickySwPreExpanded(side, sticky, (ms) =>
 			waitForGameSpeed(ms, stateGame.gameSpeed),
 		);
+		// Keep idle curtains on already-open sticky columns for this side.
+		const otherSideCurtains = stateDuel.superWildCurtains.filter((c) => c.side !== side);
+		const stickyReels = Object.keys(sticky).map(Number);
+		stateDuel.superWildCurtains = [
+			...otherSideCurtains,
+			...stickyReels.map((reel) => ({
+				side,
+				reel,
+				mult: sticky[reel] || 2,
+				phase: 'done' as const,
+				originRow: Math.floor(BOARD_DIMENSIONS.y / 2) + 1,
+			})),
+		];
 
 		const board = bookEvent.board.map((reel) => reel.map((s) => ({ name: s.name })));
 		if (side === 'cat') {
@@ -1627,7 +1668,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 	duelSpinWin: async (bookEvent: BookEventOfType<'duelSpinWin'>) => {
 		const side = bookEvent.side;
-		const expandPending = stateDuel.superWildCurtain != null;
+		const expandPending = stateDuel.superWildCurtains.some(
+			(c) => c.side === side && c.phase === 'expanding',
+		);
 		if (!expandPending) {
 			await waitForGameSpeed(SW_SECOND_WIN_PRE_DELAY_MS, stateGame.gameSpeed);
 		}

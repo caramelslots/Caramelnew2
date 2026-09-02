@@ -51,12 +51,15 @@ export const stateDuel = $state({
 		dog: {} as Record<number, number>,
 	},
 	stickySwOpened: { cat: false, dog: false },
-	superWildCurtain: null as {
+	/** One curtain per opened SW column per side — stays until next reveal. */
+	superWildCurtains: [] as {
 		side: DuelSide;
 		reel: number;
 		mult: number;
 		phase: 'expanding' | 'done';
-	} | null,
+		/** Padded board row of the lying SW the curtain grows from (upward). */
+		originRow: number;
+	}[],
 });
 
 export const resetDuelState = () => {
@@ -83,7 +86,7 @@ export const resetDuelState = () => {
 	stateDuel.winSpotlightSide = null;
 	stateDuel.stickySwByReel = { cat: {}, dog: {} };
 	stateDuel.stickySwOpened = { cat: false, dog: false };
-	stateDuel.superWildCurtain = null;
+	stateDuel.superWildCurtains = [];
 };
 
 export const isDuelActive = () => stateDuel.active;

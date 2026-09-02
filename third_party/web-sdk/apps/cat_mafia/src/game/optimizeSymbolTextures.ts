@@ -24,6 +24,7 @@ export const SYMBOL_TEXTURE_KEYS = [
 	'BImg',
 	'BTImg',
 	'WImg',
+	'SWImg',
 ] as const;
 
 const optimizeTexture = (texture: SymbolTexture): SymbolTexture => {
