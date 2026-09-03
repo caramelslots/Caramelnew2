@@ -51,4 +51,8 @@ export const devPreview = $state({
 	 * Pixi wood + HTML seats — art / seat layout QA.
 	 */
 	forceShowTargetShoot: false,
+	/**
+	 * Pin `assets/spines/bonusReel` (`outlineReel`) on every board column — layout / VFX QA.
+	 */
+	forceShowBonusReelAllColumns: false,
 });

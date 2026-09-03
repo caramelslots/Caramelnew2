@@ -163,8 +163,7 @@ export const countVisibleBonusesOnBoard = (board: RawSymbol[][]) =>
 export const boardHasVisibleDuelBonus = (board: RawSymbol[][]) =>
 	board.some((reel) =>
 		reel.some(
-			(symbol, index) =>
-				isVisibleBoardSymbolIndex(index, reel.length) && symbol.name === 'BD',
+			(symbol, index) => isVisibleBoardSymbolIndex(index, reel.length) && symbol.name === 'BD',
 		),
 	);
 

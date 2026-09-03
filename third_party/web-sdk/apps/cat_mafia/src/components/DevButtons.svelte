@@ -1495,6 +1495,27 @@
 			</section>
 
 			<section>
+				<h4>Bonus Reel</h4>
+				<p class="subhint">
+					Spine <code>assets/spines/bonusReel</code> — outline VFX on every column (in → idle).
+				</p>
+				<div class="grid">
+					<button
+						type="button"
+						class:active={devPreview.forceShowBonusReelAllColumns}
+						title="Pin bonusReel outline on all 5 columns for layout / VFX QA"
+						onclick={() =>
+							(devPreview.forceShowBonusReelAllColumns =
+								!devPreview.forceShowBonusReelAllColumns)}
+					>
+						{devPreview.forceShowBonusReelAllColumns
+							? 'Hide All Columns'
+							: 'Show All Columns'}
+					</button>
+				</div>
+			</section>
+
+			<section>
 				<h4>Cat Mascot Anims</h4>
 				<div class="grid">
 					{#each MASCOT_DEV_PREVIEW_ITEMS as item (item.id)}
