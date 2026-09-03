@@ -736,14 +736,14 @@ const BONUS_OFFSET_X = Math.round(
 /**
  * Centre of the clear hole between gold rails for reel `reelIndex`.
  * Base = parchment column centre (same math as BoardFrameRailsMask).
- * Fine-tune from board screenshots: cols 2–3 are the reference; 1 / 4 / 5
- * needed a small inward correction after thinning the rail mask.
+ * Positive = right. Col 4 (index 3) must not go negative — that pushed Bonus
+ * into the left divider (hat/whiskers clipped).
  */
 const FULL_COLUMN_BAY_NUDGE_PX: Readonly<Record<number, number>> = {
 	0: 0,
 	1: 0,
 	2: 0,
-	3: -3,
+	3: 0,
 	4: 0,
 };
 

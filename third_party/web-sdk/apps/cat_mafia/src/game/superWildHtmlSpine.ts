@@ -126,8 +126,8 @@ export const SUPER_WILD_COLUMN_OFFSET_X_PX: Readonly<Record<number, number>> = {
 	0: 1,
 	1: 1,
 	2: 0,
-	3: 1.25, // col 4 — right of the shared −12 nudge
-	4: -0.75, // col 5 — left
+	3: 0, // col 4 — right of the shared −12 nudge
+	4: 0, // col 5 — left
 };
 
 /** Wheel sectors under the pointer (8 × 45°). Math mults ×2/×4/×6/×8. */
