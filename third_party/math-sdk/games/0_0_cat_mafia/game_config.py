@@ -93,6 +93,8 @@ class GameConfig(Config):
         self.special_symbols = {
             "wild": ["W", "SW"],
             "scatter": ["B"],
+            # Buy-duel only — never on reelstrips / padding; purchase reveal lands 3× BD.
+            "duel_bonus": ["BD"],
             "multiplier": ["SW"],
             "paw": ["PB", "PS", "PG"],
             "bullet": ["BT"],
@@ -116,13 +118,14 @@ class GameConfig(Config):
         # Medium-vol bonus: mostly ×2/×4; ×6/×8 stay rare spice.
         # (Product of 2 sticky columns still capped by max_sticky_sw.)
         self.sw_mult_weights = {2: 42, 4: 40, 6: 13, 8: 5}
-        # Base/boost curtain mults: ×1 stays the common case, ×8 rare spice.
-        # Curtain rate is floored at 3% by the post-opt LUT fix; RTP/HIT are
-        # held by the same pipeline — the mults are paid for by reshaping
-        # non-feature weights, not by RTP/HIT drift. A lying SW (not on a
-        # winning line) never applies its mult: any line through the SW cell
-        # fires the curtain gate first.
-        self.base_sw_mult_weights = {1: 55, 2: 24, 4: 13, 6: 5, 8: 3}
+        # Base/boost curtain mults: only ×2/×4/×6/×8 (no ×1).
+        # Former ×1 mass (~55%) is folded into ×2 so curtain rate (~3%) and
+        # relative ×4/×6/×8 spice stay; RTP/HIT are re-pinned by the post-opt
+        # LUT enforce (match_sw_mult_mix → match_hit → match_rtp).
+        # A lying SW (not on a winning line) never applies its mult: any line
+        # through the SW cell fires the curtain gate first. Board cells are
+        # still cloaked to multiplier=1 until expand (eval / reveal only).
+        self.base_sw_mult_weights = {2: 79, 4: 13, 6: 5, 8: 3}
         # Paw-coin type split inside the (unchanged) ~3% paw fence quota.
         # Bronze 1 row / silver 2 rows / gold 3 rows — gold is rarest.
         self.paw_tier_weights = {"PB": 60, "PS": 30, "PG": 10}

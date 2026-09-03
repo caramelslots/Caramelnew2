@@ -10,7 +10,7 @@ import { gameSpeedMultFor, scaleMsByGameSpeed, type GameSpeedLevel } from './gam
 import { getSymbolX } from './utils';
 import type { SpinningReelMotion } from 'utils-slots';
 
-/** Scroll speed multiplier for reels after the 2nd cat lands (basegame only). */
+/** Scroll speed multiplier for reels after the 2nd bonus (B/BD) lands (basegame only). */
 export const REEL_SCROLL_SPEED_MULT_CAT = 0.35;
 
 /** Extra padding rows on cat-slow reels (= one visible-grid rotation, 5 symbols). */
@@ -141,25 +141,30 @@ export const getOutlineReelLayout = (reelIndex: number) => {
 	};
 };
 
-/** Bonus (B) symbols on the visible grid only — excludes RGS top/bottom padding rows. */
+/** Scatter bonus symbols that trigger reel slow-down (B = FS, BD = buy-duel). */
+const isSlowTriggerBonus = (name: string) => name === 'B' || name === 'BD';
+
+/** Bonus (B/BD) on the visible grid only — excludes RGS top/bottom padding rows. */
 const countVisibleBonusOnReel = (reel: RawSymbol[]) =>
 	reel.filter(
-		(symbol, index) => isVisibleBoardSymbolIndex(index, reel.length) && symbol.name === 'B',
+		(symbol, index) =>
+			isVisibleBoardSymbolIndex(index, reel.length) && isSlowTriggerBonus(symbol.name),
 	).length;
 
 /**
- * Index of the reel that completes the 2nd visible cat (B) on the result board,
- * or -1 when anticipation should not run (freegame, <2 cats, or no reels left).
+ * Index of the reel that completes the 2nd visible bonus (B or BD) on the result board,
+ * or -1 when anticipation should not run (freegame, <2 bonuses, or no reels left).
+ * Same for natural FS, buy bonus_normal/super (B), and buy duel purchase reveal (BD).
  */
 export const computeCatSlowTriggerReel = (board: RawSymbol[][], gameType: GameType): number => {
 	if (gameType !== 'basegame') return -1;
 
 	const reelCount = board.length;
-	let catsFound = 0;
+	let bonusesFound = 0;
 
 	for (let reelIndex = 0; reelIndex < reelCount; reelIndex++) {
-		catsFound += countVisibleBonusOnReel(board[reelIndex]);
-		if (catsFound >= 2 && reelIndex + 1 < reelCount) return reelIndex;
+		bonusesFound += countVisibleBonusOnReel(board[reelIndex]);
+		if (bonusesFound >= 2 && reelIndex + 1 < reelCount) return reelIndex;
 	}
 
 	return -1;

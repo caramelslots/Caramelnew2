@@ -19,8 +19,7 @@
 		/** Per-seat reward (0–3). Shown after flip. */
 		values: number[];
 		flipped: boolean[];
-		spineSeat?: number | null;
-		spineNonce?: number;
+		spinningSeats?: ReadonlySet<number> | number[];
 		locked?: boolean;
 		onSelect?: (index: number) => void;
 	};
@@ -31,6 +30,11 @@
 	let root = $state<HTMLDivElement | undefined>();
 
 	const locked = $derived(props.locked === true);
+	const spinningSet = $derived.by(() => {
+		const raw = props.spinningSeats;
+		if (!raw) return new Set<number>();
+		return raw instanceof Set ? raw : new Set(raw);
+	});
 	const seatW = `${TARGET_SHOOT_SEAT_WIDTH_FRAC * 100}%`;
 
 	/** Stable plaque size from layout — avoids ResizeObserver first-paint jump. */
@@ -62,8 +66,6 @@
 			`--seat-w:${seatW}`,
 		].join(';'),
 	);
-	const spineSeat = $derived(props.spineSeat ?? null);
-	const spineNonce = $derived(props.spineNonce ?? 0);
 
 	const rewardLabel = (r: number) => (r <= 0 ? '-' : `+${r}`);
 
@@ -106,7 +108,7 @@
 
 	{#each TARGET_SHOOT_SLOTS as slot, i (i)}
 		{@const isFlipped = props.flipped[i] === true}
-		{@const isSpinning = spineSeat === i && spineNonce > 0}
+		{@const isSpinning = spinningSet.has(i)}
 		{@const reward = props.values[i] ?? 0}
 		<button
 			type="button"

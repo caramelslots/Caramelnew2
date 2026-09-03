@@ -40,6 +40,12 @@ ATLAS_REGION_BY_SYMBOL: dict[str, str] = {
 	"L2": "K",
 	"L3": "Q",
 	"L4": "J",
+	"B": "frame_000",
+}
+
+# Spin-sprite filename when it differs from the spine folder key (B → Bonus.webp).
+SPRITE_NAME_BY_SYMBOL: dict[str, str] = {
+	"B": "Bonus",
 }
 
 # Full composed stills when the atlas has no single idle glyph (H2 = crossed
@@ -149,9 +155,10 @@ def fit_square(
 
 
 def save_sprite(sprite: Image.Image, name: str) -> None:
+	out_name = SPRITE_NAME_BY_SYMBOL.get(name, name)
 	for sprite_dir in SPRITE_DIRS:
 		sprite_dir.mkdir(parents=True, exist_ok=True)
-		out_path = sprite_dir / f"{name}.webp"
+		out_path = sprite_dir / f"{out_name}.webp"
 		sprite.save(out_path, "WEBP", lossless=True, method=6)
 		print(f"  wrote {out_path.relative_to(APP_ROOT)} ({sprite.width}x{sprite.height})")
 

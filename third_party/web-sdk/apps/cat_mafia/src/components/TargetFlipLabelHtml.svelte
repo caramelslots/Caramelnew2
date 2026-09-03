@@ -1,17 +1,17 @@
 <!--
-	FS / reward label during Pixi flip — same CSS as TargetFlipSpine / board face
-	so size & position do not jump when the static HTML face takes over.
+	FS / reward labels during Pixi flips — same CSS as board face so size &
+	position do not jump when the static HTML face takes over.
 -->
 <script lang="ts">
 	import { stateGame } from '../game/stateGame.svelte';
 	import { TARGET_PICK_DISC_LIFT_FRAC } from '../game/targetBoardAssets';
 
-	const flip = $derived(stateGame.targetShotFlip);
-	const labelFx = $derived(stateGame.targetShotFlipLabel);
+	const flips = $derived(stateGame.targetShotFlips);
+	const labels = $derived(stateGame.targetShotFlipLabels);
 
-	const wrapStyle = $derived.by(() => {
-		const f = flip;
-		const lab = labelFx;
+	const wrapStyle = (nonce: number) => {
+		const f = flips.find((x) => x.nonce === nonce);
+		const lab = labels[nonce];
 		if (!f || !lab?.visible) return 'opacity:0';
 		const size = f.size;
 		const lift = size * TARGET_PICK_DISC_LIFT_FRAC;
@@ -25,22 +25,21 @@
 			`opacity:1`,
 			`transform:scale(${lab.scaleX},${lab.scaleY})`,
 		].join(';');
-	});
-
-	const text = $derived(flip?.displayText ?? (flip ? String(flip.value) : ''));
-	const showFs = $derived(flip?.showFsLabel !== false);
+	};
 </script>
 
-{#if flip && labelFx?.visible}
-	<div class="flip-fs" style={wrapStyle} aria-hidden="true">
-		<span class="fs">
-			<span class="fs-num">{text}</span>
-			{#if showFs}
-				<span class="fs-label">FS</span>
-			{/if}
-		</span>
-	</div>
-{/if}
+{#each flips as flip (flip.nonce)}
+	{#if labels[flip.nonce]?.visible}
+		<div class="flip-fs" style={wrapStyle(flip.nonce)} aria-hidden="true">
+			<span class="fs">
+				<span class="fs-num">{flip.displayText ?? String(flip.value)}</span>
+				{#if flip.showFsLabel !== false}
+					<span class="fs-label">FS</span>
+				{/if}
+			</span>
+		</div>
+	{/if}
+{/each}
 
 <style lang="scss">
 	.flip-fs {

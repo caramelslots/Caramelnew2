@@ -12,6 +12,8 @@
 		BOARD_DESK_CONTENT,
 		BOARD_DIMENSIONS,
 		BOARD_MASK_OVERFLOW,
+		BOARD_OUTER_MASK_SLACK_PX,
+		BOARD_RAIL_DIVIDER_CONTENT_PX,
 		DESK_BOTTOM_MASK_SLACK_PX,
 		DESK_BOTTOM_PULL_PX,
 		DESK_PARCHMENT,
@@ -29,10 +31,9 @@
 
 	/**
 	 * Gold divider thickness as a fraction of desk content width.
-	 * Slightly wider than the art stroke so every rail fully covers symbols
-	 * (right-hand rails were leaving cord/edges peeking through).
+	 * Matched to painted rails — oversizing ate Bonus/Wild frames.
 	 */
-	const DIVIDER_WIDTH_FRAC = 26 / BOARD_DESK_CONTENT.width;
+	const DIVIDER_WIDTH_FRAC = BOARD_RAIL_DIVIDER_CONTENT_PX / BOARD_DESK_CONTENT.width;
 
 	const props: Props = $props();
 
@@ -58,14 +59,18 @@
 		const cols = BOARD_DIMENSIONS.x;
 		const colW = pfW / cols;
 		const gap = Math.max(2, sw * DIVIDER_WIDTH_FRAC);
+		// Outer columns only — pull frame strips outward so Bonus/Wild frames
+		// in reels 1 & 5 are not clipped. Internal rail centres stay on pfLeft.
+		const holeLeft = pfLeft - BOARD_OUTER_MASK_SLACK_PX;
+		const holeRight = pfRight + BOARD_OUTER_MASK_SLACK_PX;
 
 		g.clear();
 
 		if (variant !== 'rails') {
 			g.rect(-sw / 2, -sh / 2, sw, pfTop + sh / 2);
 			g.rect(-sw / 2, pfBottom, sw, sh / 2 - pfBottom);
-			g.rect(-sw / 2, pfTop, pfLeft + sw / 2, pfH);
-			g.rect(pfRight, pfTop, sw / 2 - pfRight, pfH);
+			g.rect(-sw / 2, pfTop, holeLeft + sw / 2, pfH);
+			g.rect(holeRight, pfTop, sw / 2 - holeRight, pfH);
 		}
 
 		if (variant !== 'frame') {

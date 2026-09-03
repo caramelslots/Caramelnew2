@@ -123,7 +123,7 @@ const onSymbolLand = ({
 }) => {
 	if (!isVisibleBoardSymbolIndex(symbolIndex, activeSymbolCount)) return;
 
-	if (rawSymbol.name === 'B') {
+	if (rawSymbol.name === 'B' || rawSymbol.name === 'BD') {
 		eventEmitter.broadcast({ type: 'soundScatterCounterIncrease' });
 		eventEmitter.broadcast({
 			type: 'soundOnce',
@@ -186,9 +186,9 @@ export const stateGame = $state({
 	gameType: 'basegame' as GameType,
 	multiplierBoard: [] as (MultiplierSymbol | undefined)[][],
 	scatterCounter: 0,
-	/** Reels that slow down after the 2nd cat lands (basegame). Cleared after each spin. */
+	/** Reels that slow down after the 2nd bonus (B/BD) lands (basegame). Cleared after each spin. */
 	catSlowReels: [] as number[],
-	/** Reel whose stop activates cat slow-down (-1 = off). Set before spin, cleared after. */
+	/** Reel whose stop activates bonus slow-down (-1 = off). Set before spin, cleared after. */
 	catSlowTriggerReel: -1 as number,
 	// === Wok Fury specific ===
 	// Bonus-символы, собранные в текущей FS-сессии (drives Progress Ladder).
@@ -264,7 +264,7 @@ export const stateGame = $state({
 	superWildCurtains: [] as {
 		reel: number;
 		mult: number;
-		phase: 'expanding' | 'done';
+		phase: 'expanding' | 'dropIn' | 'dismiss' | 'done';
 		/** Padded board row of the lying SW the curtain grows from (upward). */
 		originRow: number;
 	}[],
@@ -275,15 +275,21 @@ export const stateGame = $state({
 	/** `six` = entry pick (6 seats); `nine` = Stage E extra-FS shoot. */
 	targetPickSeatMode: 'six' as 'six' | 'nine',
 	targetPickFlipped: Array.from({ length: 6 }, () => false),
+	/** Single-seat flip (6-target entry pick). */
 	targetPickSpineSeat: null as number | null,
+	/** Multi-seat flips in progress (Stage E rapid taps). */
+	targetPickSpinningSeats: [] as number[],
 	/** Pixi tir shot FX (replaces HTML TargetShotBulletOverlay). */
 	targetShotFlight: null as null | import('./shotBulletAssets').TargetShotFlight,
 	/** Monotonic flight id — survives `targetShotFlight = null` between shots. */
 	targetShotFlightSeq: 0,
-	/** Pixi tir seat flip (replaces HTML TargetFlipSpine). */
-	targetShotFlip: null as null | import('./targetBoardAssets').TargetShotFlipFx,
-	/** HTML FS label driven by Pixi flip bone (avoids Text size jump). */
-	targetShotFlipLabel: null as null | { visible: boolean; scaleX: number; scaleY: number },
+	/** Pixi tir seat flips — multiple seats can open at once (Stage E rapid taps). */
+	targetShotFlips: [] as import('./targetBoardAssets').TargetShotFlipFx[],
+	/** HTML FS labels keyed by flip nonce (driven by Pixi flip bones). */
+	targetShotFlipLabels: {} as Record<
+		number,
+		import('./targetBoardAssets').TargetShotFlipLabelFx
+	>,
 	// === Cat Mafia Stage D ===
 	/** Normal vs Super bonus rules for Super Wild. */
 	bonusMode: null as null | 'normal' | 'super',
@@ -291,6 +297,17 @@ export const stateGame = $state({
 	stickySwByReel: {} as Record<number, number>,
 	/** True once at least one SW column is open (Super: from start). */
 	stickySwOpened: false,
+	/**
+	 * Super bonus: first FS reveal should slide the pre-open curtain in from
+	 * the top (cleared after that intro).
+	 */
+	stickySwIntroPending: false,
+	/**
+	 * Reels whose board SW tiles stay hidden — Spine curtain is the only art.
+	 * Survives curtain unmount so a 4-high Wild.webp stack never replaces the
+	 * curtain when it parks / clears; cleared when that reel starts spinning.
+	 */
+	swSpineHideReels: {} as Record<number, true>,
 	/** Bullets in revolver drum (0..6). */
 	drumCount: 0,
 	/**

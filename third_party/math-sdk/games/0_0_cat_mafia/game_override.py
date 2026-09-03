@@ -19,6 +19,7 @@ from game_events import (
     duel_spin_win_event,
     duel_bank_update_event,
     duel_end_event,
+    duel_purchase_celebrate_event,
 )
 from game_features import (
     find_paws,
@@ -146,7 +147,8 @@ class GameStateOverride(GameExecutables):
         if mult_map:
             weights = mult_map
         multiplier_value = get_random_outcome(weights)
-        symbol.assign_attribute({"multiplier": int(multiplier_value)})
+        # Curtain mults are only ×2/×4/×6/×8 — never emit ×1 as a paid outcome.
+        symbol.assign_attribute({"multiplier": max(2, int(multiplier_value))})
 
     def check_repeat(self):
         super().check_repeat()
@@ -229,18 +231,18 @@ class GameStateOverride(GameExecutables):
         for h in hits:
             key = (int(h["reel"]), int(h["row"]))
             if key in self._lying_sw_mult_by_pos:
-                h["mult"] = int(self._lying_sw_mult_by_pos[key])
+                h["mult"] = max(2, int(self._lying_sw_mult_by_pos[key]))
             else:
                 # Board cell may still hold sticky mult; prefer hit then cell.
-                h["mult"] = max(1, int(h.get("mult") or 1))
+                h["mult"] = max(2, int(h.get("mult") or 2))
         return hits
 
     def enforce_duel_symbol_rules(self) -> None:
-        """Duel: never land scatter B, paw coins, or bullets."""
+        """Duel: never land scatter B, duel-bonus BD, paw coins, or bullets."""
         conditions = self.get_current_distribution_conditions() or {}
         if not conditions.get("duel_mode") and not self.is_duel_betmode():
             return
-        forbidden = {"B", "BT", "PB", "PS", "PG"}
+        forbidden = {"B", "BD", "BT", "PB", "PS", "PG"}
         self._replace_symbol_name(forbidden, "L2")
         # Strip padding too.
         if not getattr(self.config, "include_padding", False):
@@ -252,6 +254,42 @@ class GameStateOverride(GameExecutables):
             for reel, cell in enumerate(pad):
                 if getattr(cell, "name", None) in forbidden:
                     pad[reel] = self.create_symbol("L2")
+
+    def emit_duel_purchase_reveal(self) -> None:
+        """Buy-duel only: dead basegame board with exactly 3× BD, then celebrate.
+
+        BD is registered in math (`special_symbols.duel_bonus`) but never appears
+        on reelstrips or padding — so it cannot flash as a fake scroll symbol.
+        """
+        fillers = ["L1", "L2", "L3", "L4", "H1", "H2", "H3", "H4"]
+
+        # Dead visible board: alternate H/L by reel so no 3-oak L→R on paylines.
+        visible: list[list[str]] = []
+        for reel in range(self.config.num_reels):
+            pool = ["L1", "L2", "L3", "L4"] if reel % 2 == 0 else ["H1", "H2", "H3", "H4"]
+            visible.append([pool[(row + reel) % 4] for row in range(self.config.num_rows[reel])])
+
+        bonus_reels = list(range(self.config.num_reels))
+        random.shuffle(bonus_reels)
+        bonus_reels = sorted(bonus_reels[:3])
+        positions: list[dict] = []
+        for reel in bonus_reels:
+            row = random.randrange(self.config.num_rows[reel])
+            visible[reel][row] = "BD"
+            positions.append({"reel": int(reel), "row": int(row)})
+
+        self.gametype = self.config.basegame_type
+        self.board = [[self.create_symbol(name) for name in col] for col in visible]
+        self.top_symbols = [
+            self.create_symbol(random.choice(fillers)) for _ in range(self.config.num_reels)
+        ]
+        self.bottom_symbols = [
+            self.create_symbol(random.choice(fillers)) for _ in range(self.config.num_reels)
+        ]
+        self.reel_positions = [10, 20, 5, 15, 8]
+        self.anticipation = [0] * self.config.num_reels
+        reveal_event(self)
+        duel_purchase_celebrate_event(self, positions)
 
     def duel_visible_board(self) -> list:
         """5×4 board payload for duelSpin (no padding rows)."""

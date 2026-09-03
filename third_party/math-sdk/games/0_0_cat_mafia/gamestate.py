@@ -4,6 +4,7 @@ from src.events.events import reveal_event
 
 from game_override import GameStateOverride
 from game_events import duel_start_event, duel_bank_update_event, duel_end_event
+from src.events.events import set_total_event
 
 
 class GameState(GameStateOverride):
@@ -50,6 +51,10 @@ class GameState(GameStateOverride):
             self.duel_player_won = False
             self.wincap_triggered = False
             self.duel_sticky_sw = {"cat": {}, "dog": {}}
+
+            # Purchase spin: exactly 3× BD (math symbol), never B / never on strips.
+            self.emit_duel_purchase_reveal()
+            set_total_event(self)
 
             duel_start_event(
                 self,

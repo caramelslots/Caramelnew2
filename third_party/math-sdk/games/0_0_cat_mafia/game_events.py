@@ -117,6 +117,18 @@ DUEL_SPIN = "duelSpin"
 DUEL_SPIN_WIN = "duelSpinWin"
 DUEL_BANK_UPDATE = "duelBankUpdate"
 DUEL_END = "duelEnd"
+DUEL_PURCHASE_CELEBRATE = "duelPurchaseCelebrate"
+
+
+def duel_purchase_celebrate_event(gamestate, positions: list[dict]) -> None:
+    """Celebrate 3× BD land after buy-duel purchase reveal (padded rows)."""
+    gamestate.book.add_event(
+        {
+            "index": len(gamestate.book.events),
+            "type": DUEL_PURCHASE_CELEBRATE,
+            "positions": _pad_positions(gamestate, positions),
+        }
+    )
 
 
 def _format_duel_wins(gamestate, wins: list, total_win: float) -> tuple[list, int]:

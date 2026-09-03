@@ -165,7 +165,7 @@ def expand_sw_columns(board, create_symbol, sw_hits: list[dict]) -> tuple[list[d
     expands = []
     product = 1
     for reel, h in sorted(by_reel.items()):
-        mult = max(1, int(h.get("mult") or 2))
+        mult = max(2, int(h.get("mult") or 2))
         product *= mult
         stamp_expanded_sw_column(board, create_symbol, reel, mult, row=h["row"])
         expands.append({"reel": reel, "row": h["row"], "mult": mult})
@@ -208,7 +208,7 @@ def stamp_expanded_sw_column(
     row: int = 0,
 ) -> dict:
     """Paint a full reel as expanded Super Wild."""
-    mult = max(1, int(mult))
+    mult = max(2, int(mult))
     for r in range(len(board[reel])):
         board[reel][r] = create_symbol("SW")
         board[reel][r].assign_attribute({"multiplier": mult})

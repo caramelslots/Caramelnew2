@@ -126,33 +126,12 @@ export default {
 			scale: 1,
 		},
 	},
-	// Wild — `Special_2` skeleton holds the bounce/idle clip (no text), so
-	// the spinning/landing reels never accidentally render the W/I/L/D
-	// letters from default-skin attachments.
-	W: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
-			skeleton: assetUrl('assets/spines/symbolsNew/Special_2.json'),
-			scale: 1,
-		},
-	},
-	// Win-only Wild skeleton — used during line-win celebration so each
-	// letter (W/I/L/D) drops in via the spine's rgba/scale timelines.
-	WWin: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
-			skeleton: assetUrl('assets/spines/symbolsNew/Special_2_win.json'),
-			scale: 1,
-		},
-	},
-	// Bonus — `Special_1` skeleton (body + paw) for idle/spin and `wave` win.
+	// Bonus — designer `export_cat` (idle / land / activate).
 	B: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
-			skeleton: assetUrl('assets/spines/symbolsNew/Special_1.json'),
+			atlas: assetUrl('assets/spines/symbols/B/B.atlas'),
+			skeleton: assetUrl('assets/spines/symbols/B/B.json'),
 			scale: 1,
 		},
 	},
@@ -165,25 +144,7 @@ export default {
 			scale: 1,
 		},
 	},
-	// BONUS-letter skeleton — `Special_1/win` plays on reel landing.
-	BWin: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
-			skeleton: assetUrl('assets/spines/symbolsNew/Special_1_win.json'),
-			scale: 1,
-		},
-	},
-	M: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('assets/spines/symbolsNew/symbols.atlas'),
-			skeleton: assetUrl('assets/spines/symbolsNew/Mystery.json'),
-			scale: 1,
-		},
-	},
-	// Static sprites for spinning / resting cells. H/L/BT are designer
-	// WebPs; W/B are cut from the packed symbolsNew atlas.
+	// Static sprites for spinning / resting cells.
 	H1Img: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/symbols/H1.webp'),
@@ -218,8 +179,13 @@ export default {
 	},
 	BImg: {
 		type: 'sprite',
-		// Designer autoplay bonus icon (padded 196²).
+		// Bonus static/spin — designer `кот статика` (normal + super).
 		src: assetUrl('assets/sprites/symbols/Bonus.webp'),
+	},
+	/** Duel Bonus (BD) — designer `котопес статика`; math buy-duel only. */
+	BDuelImg: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/symbols/BonusDuel.webp'),
 	},
 	BTImg: {
 		type: 'sprite',
@@ -227,12 +193,12 @@ export default {
 	},
 	WImg: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbols/Special_2.webp'),
+		src: assetUrl('assets/sprites/symbols/Wild.webp'),
 	},
-	/** Super Wild lying tile — first frame of designer curtain open (WILD square). */
+	/** Super Wild board tile — same art as regular Wild. */
 	SWImg: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/symbols/SW.webp'),
+		src: assetUrl('assets/sprites/symbols/Wild.webp'),
 	},
 	babloFont: {
 		type: 'font',

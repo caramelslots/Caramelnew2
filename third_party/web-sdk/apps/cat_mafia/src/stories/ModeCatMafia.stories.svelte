@@ -194,6 +194,8 @@
 			stateGame.gameType = 'freegame';
 			stateGame.stickySwByReel = {};
 			stateGame.stickySwOpened = false;
+			stateGame.stickySwIntroPending = false;
+			stateGame.swSpineHideReels = {};
 			stateBet.winBookEventAmount = 0;
 			const phase1Win = {
 				type: 'winInfo' as const,

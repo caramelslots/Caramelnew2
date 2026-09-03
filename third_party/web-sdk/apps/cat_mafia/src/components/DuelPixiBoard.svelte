@@ -101,12 +101,11 @@
 
 	/** Place WIN on the desk nameplate (same idea as base UiCashStacksLayout). */
 	const isPopoutSmall = $derived(isPopoutSmallViewport(context.stateLayoutDerived.canvasSizes()));
-	const winBelowBoardGap = $derived(
-		isPopoutSmall ? 37 : context.stateLayoutDerived.layoutType() === 'portrait' ? 37 : 37,
-	);
+	/** Gap under playfield center → nameplate WIN (lower = higher on plate). */
+	const WIN_BELOW_BOARD_GAP = 30;
 	const winHudPos = $derived({
 		x: layout.x,
-		y: layout.y + layout.height * 0.5 * layout.scale + winBelowBoardGap * layout.scale,
+		y: layout.y + layout.height * 0.5 * layout.scale + WIN_BELOW_BOARD_GAP * layout.scale,
 	});
 	/**
 	 * Popout S uses a much smaller mainLayout.scale — keep game-space font large
@@ -185,12 +184,13 @@
 		<BoardFrame layer="nameplate" {layout} disableCatZoom side={props.side} />
 	</MainContainer>
 {:else if props.layer === 'idleBounce'}
-	<!-- Win / idle pops above gold rails (same split as BoardIdleBounceLayer).
+	<!-- Win / idle pops + resting B/W/SW above gold rails (same split as base game).
 	     Without this, `symbolState === 'win'` unmounts from the masked board
 	     and nothing remounts — symbols vanish and duelBoardAnimateSymbols hangs. -->
 	<MainContainer>
 		<BoardContainer {layout} disableCatZoom>
 			<BoardBase board={stack.board} duelSide={props.side} idleBounce />
+			<BoardBase board={stack.board} duelSide={props.side} fullColumn />
 		</BoardContainer>
 	</MainContainer>
 {:else if props.layer === 'superWild'}

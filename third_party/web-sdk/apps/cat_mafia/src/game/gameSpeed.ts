@@ -4,7 +4,8 @@ export type GameSpeedLevel = 1 | 2 | 3;
 
 /**
  * Turbo 1 = normal, Turbo 2 = 1.5×, Turbo 3 = 2×.
- * Applies to waits + reel scroll only — board symbol / mascot Spine stay at 1×.
+ * Applies to waits + reel scroll only — board symbol / mascot / Super Wild
+ * curtain Spine stay at 1×.
  */
 const GAME_SPEED_MULT: Record<GameSpeedLevel, number> = {
 	1: 1,

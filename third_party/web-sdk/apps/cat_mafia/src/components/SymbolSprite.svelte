@@ -23,6 +23,11 @@
 		props.oncomplete?.();
 	});
 
+	const offsetX = $derived(
+		'offsetX' in props.symbolInfo && typeof props.symbolInfo.offsetX === 'number'
+			? props.symbolInfo.offsetX
+			: 0,
+	);
 	const offsetY = $derived(
 		'offsetY' in props.symbolInfo && typeof props.symbolInfo.offsetY === 'number'
 			? props.symbolInfo.offsetY
@@ -31,7 +36,7 @@
 </script>
 
 <Sprite
-	x={props.x}
+	x={(props.x ?? 0) + offsetX}
 	y={(props.y ?? 0) + offsetY}
 	anchor={0.5}
 	key={props.symbolInfo.assetKey}

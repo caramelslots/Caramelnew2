@@ -15,8 +15,12 @@ from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 APP_ROOT = SCRIPT_DIR.parent
-SPINE_DIR = APP_ROOT / "static/assets/spines/symbolsNew"
+# `symbolsNew` atlas was retired. Wild lives under `spines/symbols/W`.
+# Mystery spine pack was removed from Cat Mafia.
+# Re-run only if a new combined designer export is dropped in and paths updated.
+SPINE_DIR = APP_ROOT / "static/assets/spines/symbols/W"
 SOURCE = SPINE_DIR / "symbols_full.json"
+
 
 
 def load_combined() -> dict:

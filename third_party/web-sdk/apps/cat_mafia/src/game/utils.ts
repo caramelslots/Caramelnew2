@@ -7,10 +7,10 @@ import {
 	SYMBOL_SIZE,
 	REEL_PADDING,
 	REEL_SYMBOL_X_NUDGE_PX,
+	FULL_COLUMN_SYMBOL_NAMES,
+	getFullColumnBayCenterX,
 	SYMBOL_INFO_MAP,
 	BOARD_DIMENSIONS,
-	MYSTERY_REVEAL_ANIMATION,
-	MYSTERY_REVEAL_SYNC_ANIMATION,
 	MYSTERY_COLLAPSE_SPINE,
 	M_SIZE,
 } from './constants';
@@ -55,7 +55,7 @@ export const playBookEvents = async (
 
 export const playBet = async (bet: Bet) => {
 	stateBet.winBookEventAmount = 0;
-	// Buy Duel: cosmetic basegame spin with 3× B before duelStart (math books omit it).
+	// Buy Duel: ensure purchase reveal lands 3× BD (math emits it; client pads old books).
 	const events = ensureDuelPurchaseReveal(bet.state);
 	await playBookEvents(events);
 	eventEmitter.broadcast({ type: 'stopButtonEnable' });
@@ -94,26 +94,30 @@ export const convertTorResumableBet = (betToResume: Bet) => {
 };
 
 // other utils
-export const getSymbolX = (reelIndex: number) =>
-	SYMBOL_SIZE * (reelIndex + REEL_PADDING) + (REEL_SYMBOL_X_NUDGE_PX[reelIndex] ?? 0);
+/** Geometric centre of a reel column (no rail nudge). */
+export const getReelCenterX = (reelIndex: number) => SYMBOL_SIZE * (reelIndex + REEL_PADDING);
+
+/**
+ * Symbol X on the board. Full-column specials (B/W/SW) sit on the parchment
+ * bay centres (same math as the rail mask). Other symbols use the flat
+ * 5×100 grid plus the small right-rail nudge.
+ */
+export const getSymbolX = (reelIndex: number, symbolName?: SymbolName | string) =>
+	symbolName && FULL_COLUMN_SYMBOL_NAMES.has(symbolName)
+		? getFullColumnBayCenterX(reelIndex)
+		: getReelCenterX(reelIndex) + (REEL_SYMBOL_X_NUDGE_PX[reelIndex] ?? 0);
 export const getSymbolY = (symbolIndexOfBoard: number) => (symbolIndexOfBoard + 0.5) * SYMBOL_SIZE;
 
 export const getMysteryRevealSymbolInfo = (
 	revealedSymbol: SymbolName,
 	options?: { syncAnimation?: boolean },
 ) => {
-	// Designer combined skeleton ships a single `Mystery/explosion` track
-	// that handles every reveal — `revealedSymbol` is no longer used to
-	// pick a tier-specific animation. We still take it as a parameter so
-	// the caller signature stays stable for math-emitted reveal events.
 	void revealedSymbol;
-	const animationName = options?.syncAnimation
-		? MYSTERY_REVEAL_SYNC_ANIMATION
-		: MYSTERY_REVEAL_ANIMATION;
+	void options;
 	return {
-		type: 'spine' as const,
-		assetKey: 'M' as const,
-		animationName,
+		type: 'placeholder' as const,
+		assetKey: 'mystery' as const,
+		label: 'M',
 		sizeRatios: { width: M_SIZE, height: M_SIZE },
 	};
 };
@@ -140,16 +144,28 @@ export const getSymbolInfo = ({
 	if (preview && rawSymbol.name === preview.groupId) {
 		const resolved = resolveSymbolDevPreview(preview);
 		if (resolved) {
-			const base = SYMBOL_INFO_MAP[rawSymbol.name].static;
+			const mapEntry = SYMBOL_INFO_MAP[rawSymbol.name];
+			// Static may be a WebP (B / BT) with 1:1 bay ratios. Spine still needs
+			// inflated skeleton sizeRatios + offsets from land/win — otherwise the
+			// visible frame shrinks to ~half a cell (Bonus idle preview bug).
+			const spineSizing =
+				mapEntry.land.type === 'spine'
+					? mapEntry.land
+					: mapEntry.win.type === 'spine'
+						? mapEntry.win
+						: mapEntry.static;
 			return {
 				type: 'spine' as const,
 				assetKey: resolved.assetKey,
 				animationName: resolved.animationName,
-				sizeRatios: base.sizeRatios,
+				sizeRatios: spineSizing.sizeRatios,
 				loop: resolved.loop,
 				devNonce: preview.nonce,
-				...('offsetY' in base && typeof base.offsetY === 'number'
-					? { offsetY: base.offsetY }
+				...('offsetX' in spineSizing && typeof spineSizing.offsetX === 'number'
+					? { offsetX: spineSizing.offsetX }
+					: {}),
+				...('offsetY' in spineSizing && typeof spineSizing.offsetY === 'number'
+					? { offsetY: spineSizing.offsetY }
 					: {}),
 			};
 		}

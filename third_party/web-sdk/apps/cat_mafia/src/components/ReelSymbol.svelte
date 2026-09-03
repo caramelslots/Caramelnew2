@@ -20,8 +20,13 @@
 	} from '../game/constants';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
-	import { gameSpeedMultFor } from '../game/gameSpeed';
-	import { SUPER_WILD_DROP_DIST, SUPER_WILD_DROP_MS } from '../game/superWildHtmlSpine';
+	import { getDuelBoardStack } from '../game/stateDuelBoards.svelte';
+	import { countVisibleSwOnReel, shouldHideBoardSwTile } from '../game/swCurtainGuard';
+	import {
+		SUPER_WILD_DROP_DIST,
+		SUPER_WILD_DROP_MS,
+		SUPER_WILD_STICKY_DROP_IN_MS,
+	} from '../game/superWildHtmlSpine';
 	import type { ReelSymbol } from '../game/stateGame.svelte';
 
 	type Props = {
@@ -45,33 +50,17 @@
 		getSymbolInfo({ rawSymbol: props.reelSymbol.rawSymbol, state: props.reelSymbol.symbolState }),
 	);
 
-	/** ×N only on opened sticky / post-curtain SW columns — not on lying SW.
-	 *  Curtain overlay owns the mult readout (drum) while it's up. */
-	const showMultiplier = $derived.by(() => {
-		if (props.reelSymbol.rawSymbol.name !== 'SW') return false;
-		if (props.duelSide) {
-			if (
-				stateDuel.superWildCurtains.some(
-					(c) => c.side === props.duelSide && c.reel === props.reelIndex,
-				)
-			) {
-				return false;
-			}
-			return stateDuel.stickySwByReel[props.duelSide][props.reelIndex] != null;
-		}
-		if (stateGame.superWildCurtains.some((c) => c.reel === props.reelIndex)) return false;
-		return stateGame.stickySwByReel[props.reelIndex] != null;
-	});
+	/** Open SW is covered by the curtain spine — never draw board ×N badges. */
+	const showMultiplier = $derived(false);
 
 	// Per-symbol win bounce. Runs for symbols whose win state shows a frozen
-	// idle spine + container scale tween (M). W (`Special_2/win`),
-	// B (`Special_1/wave` legacy), H1 diamond (`activation`), H2 revolver / H3
-	// lighter / H4 telephone / letter lows (`win`) drive their own spine
-	// celebration — skip the bounce. Bonus B is a static sprite now.
+	// idle spine + container scale tween (M). B (`activate`), H1 diamond
+	// (`activation`), H2 revolver / H3 lighter / H4 telephone / letter lows
+	// (`win`) drive their own spine celebration — skip the bounce.
 	const usesDedicatedSpineWin = $derived(
-		symbolInfo.animationName === 'Special_2/win' ||
-			symbolInfo.animationName === 'win' ||
-			symbolInfo.animationName === 'activation',
+		symbolInfo.animationName === 'win' ||
+			symbolInfo.animationName === 'activation' ||
+			symbolInfo.animationName === 'activate',
 	);
 	const isIdleBouncing = $derived(props.reelSymbol.symbolState === 'idleBounce');
 	const winScale = new Tween(1);
@@ -90,9 +79,7 @@
 	);
 	/** Base uses global flag; duel dims only the desk that just hit a line. */
 	const winSpotlightActive = $derived(
-		props.duelSide
-			? stateDuel.winSpotlightSide === props.duelSide
-			: stateGame.winSpotlightActive,
+		props.duelSide ? stateDuel.winSpotlightSide === props.duelSide : stateGame.winSpotlightActive,
 	);
 	const isPawCovered = $derived(
 		stateGame.pawCoinCells.some(
@@ -148,10 +135,12 @@
 	/** SW curtain open — slide this reel's symbols down under the board mask. */
 	const swDropY = new Tween(0);
 
-	/** H3/H4 idle spines use additive glow slots — container alpha makes them
+	/** H3/H4/B idle spines use additive glow slots — container alpha makes them
 	 *  see-through over the board. Dim via tint multiply instead (keep alpha 1). */
 	const dimViaTint = $derived(
-		props.reelSymbol.rawSymbol.name === 'H3' || props.reelSymbol.rawSymbol.name === 'H4',
+		props.reelSymbol.rawSymbol.name === 'H3' ||
+			props.reelSymbol.rawSymbol.name === 'H4' ||
+			props.reelSymbol.rawSymbol.name === 'B',
 	);
 	const dimTintFromFactor = (factor: number) => {
 		const c = Math.max(0, Math.min(255, Math.round(factor * 255)));
@@ -159,17 +148,19 @@
 	};
 
 	const wrapYOffset = $derived(
-		stateGame.targetPickOpen
+		(stateGame.targetPickOpen
 			? 0
 			: (applyWinPresentation ? winYOffset.current : 0) +
-				(applyIdleBouncePresentation ? idleYOffset.current : 0) +
-				swDropY.current,
+				(applyIdleBouncePresentation ? idleYOffset.current : 0)) +
+			// Keep SW-column drop under the mask while target-pick parks — do not
+			// snap Wild.webp tiles back into the hole when the curtain slides down.
+			swDropY.current,
 	);
 	const wrapScale = $derived(
 		stateGame.targetPickOpen
 			? 1
 			: (applyWinPresentation ? winScale.current : 1) *
-				(applyIdleBouncePresentation ? idleScale.current : 1),
+					(applyIdleBouncePresentation ? idleScale.current : 1),
 	);
 
 	$effect(() => {
@@ -186,8 +177,12 @@
 						? stateDuel.superWildCurtains.some(
 								(c) => c.side === props.duelSide && c.reel === props.reelIndex,
 							)
-						: stateGame.superWildCurtains.some((c) => c.reel === props.reelIndex);
+						: stateGame.superWildCurtains.some((c) => c.reel === props.reelIndex) ||
+							stateGame.swSpineHideReels[props.reelIndex] === true;
 					if (!covered) swDropY.set(0, { duration: 0 });
+					// Do NOT clear swSpineHideReels here — that flashed Wild.webp on
+					// cols 1/5 as soon as the reel entered `spin`. Base reveal clears
+					// hide after the whole board has landed.
 				}
 			});
 		}
@@ -199,13 +194,20 @@
 					(c) => c.side === props.duelSide && c.reel === props.reelIndex,
 				) ?? null)
 			: (stateGame.superWildCurtains.find((c) => c.reel === props.reelIndex) ?? null);
-		// Keep the whole reel (incl. painted SW) under the board while the curtain
-		// covers this column — nothing should peek through the overlay.
-		const covered = curtain != null;
-		const dropping = covered && curtain.phase === 'expanding';
-		// Clear the reel under the curtain — SW is replaced by Spine open_0;
-		// other symbols drop away so they don't show through transparent spine.
-		const duration = dropping ? SUPER_WILD_DROP_MS / gameSpeedMultFor(stateGame.gameSpeed) : 0;
+		const hideAfterCurtain =
+			!props.duelSide && stateGame.swSpineHideReels[props.reelIndex] === true;
+		const isDismissing = curtain?.phase === 'dismiss';
+		// During dismiss the Spine slides away on its own layer — reel symbols must
+		// scroll normally (no swDropY). Otherwise the strip gaps / culls / looks masked.
+		const covered =
+			!isDismissing && (curtain != null || hideAfterCurtain);
+		const dropping =
+			curtain != null &&
+			(curtain.phase === 'expanding' || curtain.phase === 'dropIn');
+		const dropMs =
+			curtain?.phase === 'dropIn' ? SUPER_WILD_STICKY_DROP_IN_MS : SUPER_WILD_DROP_MS;
+		// Match curtain 1× open/dropIn — turbo must not yank symbols out early.
+		const duration = dropping ? dropMs : 0;
 		untrack(() => {
 			void swDropY.set(covered ? SUPER_WILD_DROP_DIST : 0, {
 				duration,
@@ -215,17 +217,22 @@
 	});
 
 	/**
-	 * Board SW is replaced by Spine `open` frame-0 (curtain foot) — hide it
-	 * immediately so we don't see a double WILD under the curtain.
+	 * Board SW tiles: only a single lying SW may paint (Wild.webp).
+	 * Expanded / sticky / curtained columns NEVER mount tile art — Spine only.
+	 * Do not use alpha=0 here: win sparks / land FX must not exist at all.
 	 */
 	const swReplacedByCurtain = $derived.by(() => {
 		if (props.reelSymbol.rawSymbol.name !== 'SW') return false;
-		const curtain = props.duelSide
-			? stateDuel.superWildCurtains.some(
-					(c) => c.side === props.duelSide && c.reel === props.reelIndex,
-				)
-			: stateGame.superWildCurtains.some((c) => c.reel === props.reelIndex);
-		return curtain;
+		if (props.duelSide) {
+			const side = props.duelSide;
+			if (stateDuel.superWildCurtains.some((c) => c.side === side && c.reel === props.reelIndex)) {
+				return true;
+			}
+			if (stateDuel.stickySwByReel[side][props.reelIndex] != null) return true;
+			const stack = getDuelBoardStack(side);
+			return countVisibleSwOnReel(props.reelIndex, stack.board) >= BOARD_DIMENSIONS.y;
+		}
+		return shouldHideBoardSwTile(props.reelIndex);
 	});
 
 	$effect(() => {
@@ -358,39 +365,39 @@
 	const showBgSymbol = $derived(
 		props.reelSymbol.symbolState === 'mysteryReveal' && revealedRawSymbol !== null,
 	);
+	const symbolX = $derived(getSymbolX(props.reelIndex, props.reelSymbol.rawSymbol.name));
+	const bgSymbolX = $derived(
+		getSymbolX(props.reelIndex, revealedRawSymbol?.name ?? props.reelSymbol.rawSymbol.name),
+	);
 </script>
 
 {#if showBgSymbol && revealedRawSymbol && !hideOffGridSymbol}
 	<SymbolWrap
-		x={getSymbolX(props.reelIndex)}
+		x={bgSymbolX}
 		y={props.reelSymbol.symbolY()}
 		spinActive={maskRunwayActive}
 		alpha={bgAlphaTween.current}
 	>
-			<Symbol
-				state={bgSymbolState}
-				rawSymbol={revealedRawSymbol}
-				showMultiplier={showMultiplier}
-				duelSide={props.duelSide}
-				oncomplete={() => {
-					bgSymbolState = 'static';
-				}}
-			/>
+		<Symbol
+			state={bgSymbolState}
+			rawSymbol={revealedRawSymbol}
+			{showMultiplier}
+			duelSide={props.duelSide}
+			oncomplete={() => {
+				bgSymbolState = 'static';
+			}}
+		/>
 	</SymbolWrap>
 {/if}
 
-{#if !hideOffGridSymbol}
+{#if !hideOffGridSymbol && !swReplacedByCurtain}
 	<SymbolWrap
-		x={getSymbolX(props.reelIndex)}
+		x={symbolX}
 		y={props.reelSymbol.symbolY() + wrapYOffset}
 		spinActive={maskRunwayActive}
 		scaleX={props.reelSymbol.landScaleX() * wrapScale}
 		scaleY={props.reelSymbol.landScaleY() * wrapScale}
-		alpha={swReplacedByCurtain
-			? 0
-			: dimViaTint || isSpinningSymbol
-				? 1
-				: dimAlphaTween.current}
+		alpha={dimViaTint || isSpinningSymbol ? 1 : dimAlphaTween.current}
 		tint={dimViaTint && !isSpinningSymbol && dimAlphaTween.current < 1
 			? dimTintFromFactor(dimAlphaTween.current)
 			: 0xffffff}
@@ -401,16 +408,12 @@
 		     Spines: key by asset + clip + loop so win (one-shot) → postWinStatic
 		     (looping) remounts and keeps celebrating instead of freezing on the
 		     last bright frame. -->
-		{#key symbolInfo.type === 'sprite'
-			? `sprite:${symbolInfo.assetKey}`
-			: symbolInfo.type === 'coinPaw'
-				? `coinPaw:${'skin' in symbolInfo ? symbolInfo.skin : ''}:${'clip' in symbolInfo ? symbolInfo.clip : ''}`
-				: `spine:${symbolInfo.assetKey}:${symbolInfo.animationName ?? ''}:${'loop' in symbolInfo && symbolInfo.loop ? 'L' : '1'}:${'devNonce' in symbolInfo ? symbolInfo.devNonce : ''}`}
+		{#key symbolInfo.type === 'sprite' ? `sprite:${symbolInfo.assetKey}` : symbolInfo.type === 'coinPaw' ? `coinPaw:${'skin' in symbolInfo ? symbolInfo.skin : ''}:${'clip' in symbolInfo ? symbolInfo.clip : ''}` : `spine:${symbolInfo.assetKey}:${symbolInfo.animationName ?? ''}:${'loop' in symbolInfo && symbolInfo.loop ? 'L' : '1'}:${'devNonce' in symbolInfo ? symbolInfo.devNonce : ''}`}
 			<Symbol
 				state={symbolRenderState}
 				rawSymbol={props.reelSymbol.rawSymbol}
-				inViewport={inViewport}
-				showMultiplier={showMultiplier}
+				{inViewport}
+				{showMultiplier}
 				duelSide={props.duelSide}
 				oncomplete={() => {
 					const state = props.reelSymbol.symbolState;

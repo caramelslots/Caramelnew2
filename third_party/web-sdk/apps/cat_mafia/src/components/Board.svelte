@@ -43,6 +43,7 @@
 	import { getContext } from '../game/context';
 	import { MYSTERY_EXPLOSION_DURATION_S } from '../game/constants';
 	import { freezeMysteryReel, trackMysteryCollapse } from '../game/mysteryReel';
+	import { shouldHideBoardSwTile } from '../game/swCurtainGuard';
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardMask from './BoardMask.svelte';
 	import BoardBase from './BoardBase.svelte';
@@ -147,6 +148,15 @@
 			const getPromises = () =>
 				symbolPositions.map(async (position) => {
 					const reelSymbol = context.stateGame.board[position.reel].reelState.symbols[position.row];
+					// Expanded / sticky SW is Spine-curtain only — never run tile win FX
+					// (and never await oncomplete from an unmounted Symbol).
+					if (
+						reelSymbol.rawSymbol.name === 'SW' &&
+						shouldHideBoardSwTile(position.reel)
+					) {
+						reelSymbol.symbolState = 'postWinStatic';
+						return;
+					}
 					// SW expand (and sticky paint) may leave cells in `win` / `postWinStatic`.
 					// Re-assigning `win` without a state edge does not re-fire ReelSymbol's
 					// $effect, so oncomplete never runs and the book pipeline hangs.

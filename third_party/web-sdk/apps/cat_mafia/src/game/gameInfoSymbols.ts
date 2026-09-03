@@ -15,7 +15,7 @@ export const GAME_INFO_SYMBOL_IMAGES: Record<GameInfoImageSymbolId, string> = {
 	L2: symbolAssetUrl('L2.webp'),
 	L3: symbolAssetUrl('L3.webp'),
 	L4: symbolAssetUrl('L4.webp'),
-	W: symbolAssetUrl('Special_2.webp'),
+	W: symbolAssetUrl('Wild.webp'),
 	B: symbolAssetUrl('Bonus.webp'),
 };
 

@@ -56,7 +56,7 @@ const onSymbolLand = ({
 };
 
 /** Symbols that never land in Duel — also strip from fake spin padding. */
-const DUEL_FORBIDDEN_PADDING = new Set(['B', 'BT', 'PB', 'PS', 'PG']);
+const DUEL_FORBIDDEN_PADDING = new Set(['B', 'BD', 'BT', 'PB', 'PS', 'PG']);
 
 const createDuelSideBoard = () => {
 	const initialBoard = createInitialBoard({ exclude: DUEL_FORBIDDEN_PADDING });
@@ -99,8 +99,8 @@ export const stateDuelBoards = $state({
 
 export const getDuelBoardStack = (side: DuelSide) => stateDuelBoards[side];
 
-/** Bonus scatter never lands during Normal / Super FS — strip from scroll padding. */
-const FS_FORBIDDEN_PADDING = new Set(['B']);
+/** Bonus / Duel Bonus never land during Normal / Super FS — strip from scroll padding. */
+const FS_FORBIDDEN_PADDING = new Set(['B', 'BD']);
 
 /** basegame padding reels with Bonus / Paw / Bullet replaced (same as math). */
 export const getDuelPaddingBoard = (paddingReels: { name: string }[][]) =>

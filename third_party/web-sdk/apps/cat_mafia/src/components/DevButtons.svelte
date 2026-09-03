@@ -543,6 +543,8 @@
 			stateGame.gameType = 'basegame';
 			stateGame.stickySwByReel = {};
 			stateGame.stickySwOpened = false;
+			stateGame.stickySwIntroPending = false;
+			stateGame.swSpineHideReels = {};
 			stateGame.bonusMode = null;
 			const resolveEvent = asEvent(resolve);
 			const total =
@@ -637,6 +639,8 @@
 			stateGame.gameType = 'basegame';
 			stateGame.stickySwByReel = {};
 			stateGame.stickySwOpened = false;
+			stateGame.stickySwIntroPending = false;
+			stateGame.swSpineHideReels = {};
 			stateGame.bonusMode = null;
 			stateBet.winBookEventAmount = 0;
 
@@ -1002,6 +1006,8 @@
 			stateGame.gameType = 'basegame';
 			stateGame.stickySwByReel = {};
 			stateGame.stickySwOpened = false;
+			stateGame.stickySwIntroPending = false;
+			stateGame.swSpineHideReels = {};
 			stateGame.bonusMode = null;
 			stateBet.winBookEventAmount = 0;
 

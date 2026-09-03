@@ -1,5 +1,7 @@
 /** Duel bonus state — amounts stored as book cents (×100). */
 
+import { stateBet } from 'state-shared';
+
 import { createInitialBoard } from './constants';
 
 export type DuelSide = 'cat' | 'dog';
@@ -90,6 +92,12 @@ export const resetDuelState = () => {
 };
 
 export const isDuelActive = () => stateDuel.active;
+
+/** Buy-duel bet modes (purchase reveal runs before `stateDuel.active`). */
+export const isDuelBetMode = (modeKey = stateBet.activeBetModeKey) =>
+	modeKey === 'bonus_duel' ||
+	modeKey === 'bonus_duel_cat' ||
+	modeKey === 'bonus_duel_dog';
 
 /** Player wins when their chosen side finishes ahead → both banks. */
 export const resolveDuelPlayerPayout = (opts: {

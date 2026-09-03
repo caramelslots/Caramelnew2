@@ -39,6 +39,7 @@
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardIdleBounceLayer from './BoardIdleBounceLayer.svelte';
 	import BoardPawCoinLayer from './BoardPawCoinLayer.svelte';
+	import BoardFullColumnLayer from './BoardFullColumnLayer.svelte';
 	import PaylineLayer from './PaylineLayer.svelte';
 	import SuperWildCurtainPixi from './SuperWildCurtainPixi.svelte';
 	import Win from './Win.svelte';
@@ -74,6 +75,15 @@
 	import { FadeContainer } from 'components-pixi';
 
 	const context = getContext();
+
+	/**
+	 * SW curtain normally sits above gold rails. While the board parks under the
+	 * desk for target-pick, tuck it under BoardFrame overlay + target cabinet
+	 * (same stack as reel symbols) so it does not slide over the фон.
+	 */
+	const superWildCurtainZ = $derived(
+		stateGame.targetPickOpen || stateGame.targetPickSlide > 0 ? -2 : -0.25,
+	);
 
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
 
@@ -189,11 +199,13 @@
 						<MainContainer>
 							<BoardIdleBounceLayer />
 							<BoardPawCoinLayer />
+							<BoardFullColumnLayer />
 						</MainContainer>
 					</Container>
 
-					<!-- SW curtain above reels/rails; under nameplate so the WIN plate covers curtain feet. -->
-					<Container zIndex={-0.25}>
+					<!-- SW curtain above reels/rails; under nameplate so the WIN plate covers curtain feet.
+					     During target-pick drop → z -2 (under desk overlay / фон). -->
+					<Container zIndex={superWildCurtainZ}>
 						<MainContainer>
 							<BoardContainer>
 								<SuperWildCurtainPixi />

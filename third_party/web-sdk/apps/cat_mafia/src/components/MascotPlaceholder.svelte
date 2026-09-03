@@ -372,8 +372,12 @@
 	/** Same beats as pawCoinResolve: hat out → hold → hat on (loops in DEV). */
 	const playForceIdle3Sequence = () => {
 		forceIdle3Phase = 'catch';
+		const current = player?.animationState?.getCurrent(0)?.animation?.name;
+		const soft =
+			current === 'idle' || current === 'idle_blink' || current === 'idle_ears';
 		// Short mix — hand_palm fade-in in hat is ~0.45s and must stay visible.
-		playClip('hat', false, { holdEnd: true, soft: true, mix: 0.08 });
+		// Hard-cut from idle_gyn: gun slots would otherwise wipe the hand before hat keys in.
+		playClip('hat', false, { holdEnd: true, soft, mix: soft ? 0.08 : undefined });
 	};
 
 	const applyForceAnimation = (animation: MascotDevPreview) => {
@@ -404,13 +408,18 @@
 		resetIdleVariants();
 
 		const playback = MASCOT_POSE_PLAYBACK[next];
-		const fromIdleToHat = prev === 'idle' && next === 'hatCatch';
+		const current = player.animationState?.getCurrent(0)?.animation?.name;
+		const fromSafeIdle =
+			prev === 'idle' &&
+			(current === 'idle' || current === 'idle_blink' || current === 'idle_ears');
+		const fromIdleToHat = fromSafeIdle && next === 'hatCatch';
 		const fromHatToIdle = prev === 'hatOn' && next === 'idle';
 		playClip(playback.animation, playback.loop, {
 			reverse: playback.reverse,
 			holdEnd: playback.holdEnd,
 			// Keep pose so hat's hand/hat intro (and reverse outro) can play.
 			// Short mix on hatCatch — longer mix ate the hand fade-in (hand "popped" in).
+			// Never soft-mix from idle_gyn (gun hand) into hat.
 			soft: fromIdleToHat || fromHatToIdle,
 			mix: fromIdleToHat ? 0.08 : fromHatToIdle ? 0.18 : undefined,
 		});

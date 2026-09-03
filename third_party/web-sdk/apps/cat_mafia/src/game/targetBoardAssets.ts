@@ -127,6 +127,12 @@ export const TARGET_PICK_BOTTOM_TUCK = 2;
 export const TARGET_PICK_SIDE_INSET = 5;
 /** Drop the top of the plate so it sits under the upper gold bar. */
 export const TARGET_PICK_TOP_INSET = 3;
+/**
+ * Extra playfield height for the cabinet after DESK_BOTTOM_PULL shrinks the
+ * hole. Bump when the desk bottom rail is pulled up so the target board
+ * still fills the visible window.
+ */
+export const TARGET_PICK_HEIGHT_EXTRA = 15;
 
 /**
  * Inner window of the slot gold frame in board-local px (top-left of the 5×4).
@@ -153,7 +159,12 @@ export const targetPickInnerClip = () => {
 		x: slotCenterX + pfLeft + TARGET_PICK_SIDE_INSET,
 		y: slotCenterY + pfTop + TARGET_PICK_TOP_INSET,
 		width: pfW - TARGET_PICK_SIDE_INSET * 2,
-		height: playH - TARGET_PICK_TOP_INSET - DESK_BOTTOM_PULL_PX + TARGET_PICK_BOTTOM_TUCK + 13,
+		height:
+			playH -
+			TARGET_PICK_TOP_INSET -
+			DESK_BOTTOM_PULL_PX +
+			TARGET_PICK_BOTTOM_TUCK +
+			TARGET_PICK_HEIGHT_EXTRA,
 	};
 };
 
@@ -176,6 +187,8 @@ export const TARGET_BOARD_FLIP_VIEWPORT = {
 /** Pixi tir flip — one seat disc at screen position. */
 export type TargetShotFlipFx = {
 	nonce: number;
+	/** Seat index — used when several flips run in parallel. */
+	seatIndex?: number;
 	anim: TargetBoardPickFlipAnim;
 	value: number;
 	displayText?: string;
@@ -185,6 +198,12 @@ export type TargetShotFlipFx = {
 	y: number;
 	/** Seat box size (px) — disc fills this. */
 	size: number;
+};
+
+export type TargetShotFlipLabelFx = {
+	visible: boolean;
+	scaleX: number;
+	scaleY: number;
 };
 
 /**
@@ -252,10 +271,7 @@ export const targetBoardSlotPoint = (
 	content: BoardContent = TARGET_BOARD_CONTENT,
 ) => ({
 	x: box.x + ((slot.x - content.left) / content.width) * box.width,
-	y:
-		box.y +
-		((slot.y - content.top) / content.height) * box.height +
-		TARGET_PICK_SEAT_Y_NUDGE,
+	y: box.y + ((slot.y - content.top) / content.height) * box.height + TARGET_PICK_SEAT_Y_NUDGE,
 });
 
 /** Sample FS faces for DEV pick preview (matches freeSpinTargetPickDemo). */

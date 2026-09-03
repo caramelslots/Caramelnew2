@@ -1,7 +1,10 @@
 /**
- * Cosmetic purchase spin before Duel starts.
- * Lands exactly 3 Bonus (B) symbols on a dead basegame board (no line wins /
- * wilds / feature symbols) so the buy feels like a natural bonus trigger.
+ * Buy-duel purchase spin before Duel starts.
+ * Lands exactly 3× BD (math `duel_bonus` symbol) on a dead basegame board.
+ * BD never appears on reelstrips / padding — only this purchase reveal.
+ *
+ * Newer math books already emit reveal + duelPurchaseCelebrate; this helper
+ * only pads older books that jump straight to `duelStart`.
  */
 
 import config from './config';
@@ -11,7 +14,7 @@ import type { Position, RawSymbol, SymbolName } from './types';
 const REELS = 5;
 const VISIBLE_ROWS = 4;
 
-/** Paying fillers only — no W / SW / paws / bullets / mystery. */
+/** Paying fillers only — no W / SW / paws / bullets / mystery / B / BD. */
 const FILLER_POOL = [
 	'L1',
 	'L2',
@@ -88,11 +91,11 @@ const fillVisibleDead = (): SymbolName[][] => {
 export type DuelPurchaseRevealBoard = {
 	/** Padded 5×6 board for `reveal`. */
 	board: RawSymbol[][];
-	/** Padded scatter positions for celebrate anim. */
+	/** Padded duel-bonus positions for celebrate anim. */
 	positions: Position[];
 };
 
-/** Build a random dead board with exactly one B on each of three reels. */
+/** Build a random dead board with exactly one BD on each of three reels. */
 export const buildDuelPurchaseRevealBoard = (): DuelPurchaseRevealBoard => {
 	const visible = fillVisibleDead();
 	const bonusReels = shuffle([0, 1, 2, 3, 4]).slice(0, 3).sort((a, b) => a - b);
@@ -100,15 +103,13 @@ export const buildDuelPurchaseRevealBoard = (): DuelPurchaseRevealBoard => {
 
 	for (const reel of bonusReels) {
 		const visibleRow = rand(VISIBLE_ROWS);
-		visible[reel]![visibleRow] = 'B';
+		visible[reel]![visibleRow] = 'BD';
 		positions.push({ reel, row: padTop(visibleRow) });
 	}
 
 	const board: RawSymbol[][] = visible.map((column) => [
 		{ name: pick(FILLER_POOL) },
-		...column.map((name) =>
-			name === 'B' ? ({ name: 'B', scatter: true } as RawSymbol) : ({ name } as RawSymbol),
-		),
+		...column.map((name) => ({ name } as RawSymbol)),
 		{ name: pick(FILLER_POOL) },
 	]);
 
@@ -140,9 +141,11 @@ export const buildDuelPurchaseRevealEvents = (startIndex = 0): BookEvent[] => {
 	];
 };
 
+const isDuelBonusCell = (name: string) => name === 'BD';
+
 /**
- * Prepend cosmetic 3×B purchase spin when a duel book jumps straight to `duelStart`.
- * No-op if a basegame `reveal` already precedes duel (future math books).
+ * Prepend 3× BD purchase spin when a duel book jumps straight to `duelStart`.
+ * No-op if math already emitted basegame reveal + celebrate with BD.
  */
 export const ensureDuelPurchaseReveal = (events: BookEvent[]): BookEvent[] => {
 	const duelStartIdx = events.findIndex((e) => e.type === 'duelStart');
@@ -153,13 +156,12 @@ export const ensureDuelPurchaseReveal = (events: BookEvent[]): BookEvent[] => {
 	const hasCelebrate = prior.some((e) => e.type === 'duelPurchaseCelebrate');
 	if (hasBaseReveal && hasCelebrate) return events;
 	if (hasBaseReveal && !hasCelebrate) {
-		// Reveal already present — only add celebrate using B positions from that board.
 		const reveal = prior.find((e) => e.type === 'reveal' && e.gameType === 'basegame');
 		if (!reveal || reveal.type !== 'reveal') return events;
 		const positions: Position[] = [];
 		reveal.board.forEach((reel, reelIndex) => {
 			reel.forEach((cell, row) => {
-				if (cell.name === 'B' && row >= 1 && row <= VISIBLE_ROWS) {
+				if (isDuelBonusCell(cell.name) && row >= 1 && row <= VISIBLE_ROWS) {
 					positions.push({ reel: reelIndex, row });
 				}
 			});

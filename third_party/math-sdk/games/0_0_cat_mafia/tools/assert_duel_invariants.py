@@ -1,4 +1,4 @@
-"""Assert Duel book invariants (no B/paw/BT, no ties, playerSide payout rule)."""
+"""Assert Duel book invariants (no B/BD/paw/BT on duelSpin, buy reveal = 3× BD, no ties)."""
 
 from __future__ import annotations
 
@@ -14,7 +14,8 @@ except ImportError:  # noqa: BLE001
     zstd = None
 
 
-FORBIDDEN = {"B", "BT", "PB", "PS", "PG"}
+# Never on duelSpin boards. BD is buy-purchase only (basegame reveal before duelStart).
+FORBIDDEN = {"B", "BD", "BT", "PB", "PS", "PG"}
 HERE = Path(__file__).resolve().parents[1]
 PUBLISH = HERE / "library" / "publish_files"
 BOOKS = HERE / "library" / "books"
@@ -57,6 +58,16 @@ def _board_names(board) -> set[str]:
     return names
 
 
+def _count_symbol(board, symbol: str) -> int:
+    count = 0
+    for reel in board or []:
+        for cell in reel:
+            name = cell.get("name") if isinstance(cell, dict) else getattr(cell, "name", None)
+            if name == symbol:
+                count += 1
+    return count
+
+
 def check_book(book: dict) -> list[str]:
     errors = []
     events = book.get("events") or []
@@ -70,6 +81,36 @@ def check_book(book: dict) -> list[str]:
     player_side = (start or {}).get("playerSide") or "cat"
     if player_side not in {"cat", "dog"}:
         errors.append(f"bad playerSide {player_side!r}")
+
+    # Buy purchase: basegame reveal before duelStart must land BD (not B).
+    duel_start_idx = next(
+        (i for i, e in enumerate(events) if isinstance(e, dict) and e.get("type") == "duelStart"),
+        -1,
+    )
+    if duel_start_idx >= 0:
+        prior = events[:duel_start_idx]
+        purchase_reveal = next(
+            (
+                e
+                for e in prior
+                if isinstance(e, dict)
+                and e.get("type") == "reveal"
+                and e.get("gameType") == "basegame"
+            ),
+            None,
+        )
+        if purchase_reveal is None:
+            errors.append("missing buy-duel BD reveal before duelStart")
+        else:
+            bd_count = _count_symbol(purchase_reveal.get("board"), "BD")
+            if bd_count != 3:
+                errors.append(f"buy-duel reveal expected 3× BD, got {bd_count}")
+            if "B" in _board_names(purchase_reveal.get("board")):
+                errors.append("buy-duel reveal must use BD, not B")
+        if not any(
+            isinstance(e, dict) and e.get("type") == "duelPurchaseCelebrate" for e in prior
+        ):
+            errors.append("missing duelPurchaseCelebrate before duelStart")
 
     for e in events:
         if not isinstance(e, dict):

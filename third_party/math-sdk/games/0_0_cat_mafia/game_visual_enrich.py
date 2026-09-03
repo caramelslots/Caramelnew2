@@ -25,7 +25,7 @@ from game_features import (
 
 LOW_SYMBOLS = ("L1", "L2", "L3", "L4")
 HIGH_SYMBOLS = ("H1", "H2", "H3", "H4")
-PROTECTED_SYMBOLS = frozenset({"W", "SW", "PB", "PS", "PG", "B", "BT", "M"})
+PROTECTED_SYMBOLS = frozenset({"W", "SW", "PB", "PS", "PG", "B", "BD", "BT", "M"})
 
 # Target share of highs among L+H on the visible board (Hell Hot ref ≈ 48%).
 TARGET_HIGH_SHARE = 0.48

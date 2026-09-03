@@ -215,12 +215,23 @@
 		return false;
 	};
 
+	/**
+	 * Soft-mix into `hat` only from rest idle (blink/ears ok).
+	 * Mid-`idle_gyn` leaves gun finger slots on / left-hand off — soft mix into
+	 * hat clears gun attachments before hat fingers key in (~0.5s) → missing hand.
+	 */
+	const canSoftMixIntoHat = () => {
+		const name = spine.state?.getCurrent(0)?.animation?.name;
+		return name === 'idle' || name === 'idle_blink' || name === 'idle_ears';
+	};
+
 	const playForceHatSequence = () => {
 		forceIdle3Phase = 'catch';
+		const soft = canSoftMixIntoHat();
 		playClip('hat', false, {
 			holdEnd: true,
-			soft: true,
-			mix: 0.08,
+			soft,
+			mix: soft ? 0.08 : undefined,
 			animationEnd: MASCOT_HAT_HOLD_TIME_S,
 		});
 	};
@@ -262,10 +273,12 @@
 
 		// Hat: pause at hold, then resume the SAME track forward (no reverse / restart).
 		if (next === 'hatCatch') {
+			// Hard-cut from idle_gyn (gun hand) so hat finger attachments apply cleanly.
+			const soft = prev === 'idle' && canSoftMixIntoHat();
 			playClip('hat', false, {
 				holdEnd: true,
-				soft: prev === 'idle',
-				mix: prev === 'idle' ? 0.08 : undefined,
+				soft,
+				mix: soft ? 0.08 : undefined,
 				animationEnd: MASCOT_HAT_HOLD_TIME_S,
 			});
 			return;

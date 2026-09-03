@@ -228,14 +228,17 @@
 		) as HTMLElement | null;
 		const seatBox = seatEl?.getBoundingClientRect();
 		const size = seatBox ? Math.min(seatBox.width, seatBox.height) : 80;
-		stateGame.targetShotFlip = {
-			nonce: spineNonce,
-			anim: flipAnim,
-			value: faceValues[index] ?? awardedFs,
-			x: seatCx || pickBoard?.getSeatCenter(index)?.x || 0,
-			y: seatCy || pickBoard?.getSeatCenter(index)?.y || 0,
-			size,
-		};
+		stateGame.targetShotFlips = [
+			{
+				nonce: spineNonce,
+				seatIndex: index,
+				anim: flipAnim,
+				value: faceValues[index] ?? awardedFs,
+				x: seatCx || pickBoard?.getSeatCenter(index)?.x || 0,
+				y: seatCy || pickBoard?.getSeatCenter(index)?.y || 0,
+				size,
+			},
+		];
 
 		const flipMs = TARGET_BOARD_PICK_FLIP_MS_BY_ANIM[flipAnim];
 		await waitForResolve((resolve) => {
@@ -246,8 +249,8 @@
 
 		flipped = flipped.map((v, i) => (i === index ? true : v));
 		spineSeat = null;
-		stateGame.targetShotFlip = null;
-		stateGame.targetShotFlipLabel = null;
+		stateGame.targetShotFlips = [];
+		stateGame.targetShotFlipLabels = {};
 
 		await mascotAfterShot;
 		stateGame.mascotPose = 'idle';
@@ -260,8 +263,8 @@
 	context.eventEmitter.subscribeOnMount({
 		targetPickDismiss: () => {
 			stateGame.targetShotFlight = null;
-			stateGame.targetShotFlip = null;
-			stateGame.targetShotFlipLabel = null;
+			stateGame.targetShotFlips = [];
+			stateGame.targetShotFlipLabels = {};
 			stateGame.targetPickSlide = 0;
 			stateGame.targetPickOpen = false;
 			show = false;
@@ -279,8 +282,8 @@
 			spineNonce = 0;
 			flipAnim = 'v4';
 			stateGame.targetShotFlight = null;
-			stateGame.targetShotFlip = null;
-			stateGame.targetShotFlipLabel = null;
+			stateGame.targetShotFlips = [];
+			stateGame.targetShotFlipLabels = {};
 			onSpineResolve = null;
 			phase = 'prep';
 			stateGame.targetPickSeatMode = 'six';

@@ -496,6 +496,11 @@ export default {
 			paytable: null,
 			special_properties: ['bonus_trigger', 'collectible'],
 		},
+		// Duel Bonus — buy-duel purchase only (3× BD). Never on reelstrips / padding.
+		BD: {
+			paytable: null,
+			special_properties: ['duel_bonus'],
+		},
 		// Mystery — sticky reel mask, раскрывается через mysteryReveal book-event
 		M: {
 			paytable: null,

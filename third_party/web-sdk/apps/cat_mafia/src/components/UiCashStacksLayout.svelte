@@ -46,7 +46,7 @@
 
 	const WIN_BELOW_BOARD_GAP = 80;
 	/** PC / laptop only — sit below the gold nameplate, slightly left of screen center. */
-	const WIN_HUD_DESKTOP_NUDGE = { x: -28, y: 10 } as const;
+	const WIN_HUD_DESKTOP_NUDGE = { x: -28, y: 4 } as const;
 	/** Popout L / S — raise WIN off the nameplate (S uses a larger game-px lift: scale is half of L). */
 	const WIN_HUD_POPOUT_L_NUDGE = { x: 0, y: -5 } as const;
 	const WIN_HUD_POPOUT_S_NUDGE = { x: 0, y: -5 } as const;

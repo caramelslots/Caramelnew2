@@ -33,6 +33,7 @@ import random
 #   - H1..H4 — high pays (H1 редкий, H4 чаще)
 #   - W — Wild, ~3-5% веса в base, ~6-10% в FS
 #   - B — Bonus / scatter (FS trigger). Чем больше, тем чаще FS.
+#   - BD — Duel Bonus: НЕ на лентах. Только buy-duel purchase reveal (3× BD).
 #   - M — **на лентах НЕ присутствует** (ни base, ни FS).
 #     M появляется на доске исключительно через `apply_mystery_reels()`
 #     (sticky mystery columns), затем раскрывается book-event'ом

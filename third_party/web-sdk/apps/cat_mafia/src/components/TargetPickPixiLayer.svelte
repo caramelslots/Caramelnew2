@@ -61,7 +61,10 @@
 				content,
 			);
 			const flipped = stateGame.targetPickFlipped[i] === true;
-			const spinning = stateGame.targetPickSpineSeat === i;
+			const spinning =
+				stateGame.targetPickSpineSeat === i ||
+				stateGame.targetPickSpinningSeats.includes(i) ||
+				stateGame.targetShotFlips.some((f) => f.seatIndex === i);
 			return {
 				holderX: p.x - holderW / 2,
 				holderY: p.y - size / 2 + size * TARGET_PICK_HOLDER_TOP_FRAC - holderH / 2,
@@ -70,6 +73,8 @@
 				discX: p.x - size / 2,
 				discY: p.y - size / 2 - size * TARGET_PICK_DISC_LIFT_FRAC,
 				size,
+				// Hide idle front while this seat flips or already shows the back face —
+				// otherwise the Pixi disc sits under the flip / HTML back (double target).
 				showDisc: !flipped && !spinning,
 			};
 		});

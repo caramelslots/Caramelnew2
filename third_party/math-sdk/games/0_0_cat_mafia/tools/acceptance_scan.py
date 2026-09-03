@@ -13,7 +13,7 @@ Checks (base / bonus_boost):
   - SW curtain event rate (base part) == 3% ±0.3pp
   - XOR: 0 books with both pawCoinResolve and superWildExpand
   - max 1 SW on the base reveal board (visible rows); no SW in padding
-  - base curtain mult histogram ≈ base_sw_mult_weights (55/24/13/5/3 for ×1/×2/×4/×6/×8)
+  - base curtain mult histogram ≈ base_sw_mult_weights (79/13/5/3 for ×2/×4/×6/×8)
 Checks (bonus_normal / bonus_super):
   - publish books byte-identical to library/publish_files_backup_baseline
     (FS logic untouched — M5 must not re-run buy modes)
@@ -51,7 +51,7 @@ FEATURE_TOL = 0.003
 # curtains. Tolerance ±3pp per bucket: the LUT fix pins the mix to ±0.5pp, but
 # the 100k-book resample adds binomial noise — ~3k curtain books ⇒ σ≈0.9pp per
 # bucket, so ±2pp (≈2.2σ) flakes at the edge; ±3pp ≈ 3.3σ is the honest gate.
-BASE_SW_MULT_TARGET = {1: 0.55, 2: 0.24, 4: 0.13, 6: 0.05, 8: 0.03}
+BASE_SW_MULT_TARGET = {2: 0.79, 4: 0.13, 6: 0.05, 8: 0.03}
 MULT_TOL = 0.03
 
 

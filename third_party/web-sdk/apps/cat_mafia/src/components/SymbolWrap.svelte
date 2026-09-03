@@ -29,7 +29,7 @@
 		 */
 		alpha?: number;
 		/**
-		 * Multiply tint (Pixi). Used instead of alpha for H3/H4 dim so additive
+		 * Multiply tint (Pixi). Used instead of alpha for H3/H4/B dim so additive
 		 * spine glows darken without becoming see-through over the board.
 		 */
 		tint?: number;

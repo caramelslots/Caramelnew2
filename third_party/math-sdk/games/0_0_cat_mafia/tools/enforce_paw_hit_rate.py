@@ -51,7 +51,7 @@ FS_MARKERS = {"enterFreeSpin", "freeSpinTrigger", "freeSpinTargetPick", "startFr
 
 # Fallback if game_config import fails — keep in sync with
 # game_config.base_sw_mult_weights.
-_DEFAULT_BASE_SW_MULTS = {1: 55, 2: 24, 4: 13, 6: 5, 8: 3}
+_DEFAULT_BASE_SW_MULTS = {2: 79, 4: 13, 6: 5, 8: 3}
 
 
 def _base_sw_mult_shares() -> dict[int, float]:

@@ -30,8 +30,6 @@ const TELEPHONE_PREVIEW_HEIGHT = 520;
 const LIGHTER_PREVIEW_HEIGHT = 480;
 const DIAMOND_PREVIEW_HEIGHT = 460;
 const REVOLVER_PREVIEW_HEIGHT = 480;
-const STANDARD_PREVIEW_HEIGHT = 220;
-const MYSTERY_PREVIEW_HEIGHT = 260;
 
 const renderClips = (
 	assetKey: string,
@@ -109,81 +107,44 @@ export const SYMBOL_DEV_PREVIEW_GROUPS: readonly SymbolDevGroup[] = [
 		],
 	},
 	{
-		id: 'W',
-		label: 'W',
-		title: 'Wild — idle / bounce / win',
-		previewHeight: STANDARD_PREVIEW_HEIGHT,
-		clips: [
-			{
-				id: 'idle',
-				label: 'idle',
-				assetKey: 'W',
-				animationName: 'Special_2/idle',
-				loop: true,
-			},
-			{
-				id: 'bounce',
-				label: 'bounce',
-				assetKey: 'W',
-				animationName: 'Special_2/bounce',
-				loop: false,
-			},
-			{
-				id: 'win',
-				label: 'win',
-				assetKey: 'WWin',
-				animationName: 'Special_2/win',
-				loop: false,
-			},
-		],
-	},
-	{
 		id: 'B',
 		label: 'B',
-		title: 'Bonus — idle / land(win letters) / wave',
-		previewHeight: STANDARD_PREVIEW_HEIGHT,
+		title: 'Bonus — idle / land / activate',
+		previewHeight: 460,
 		clips: [
 			{
 				id: 'idle',
 				label: 'idle',
 				assetKey: 'B',
-				animationName: 'Special_1/idle',
+				animationName: 'idle',
 				loop: true,
 			},
 			{
 				id: 'land',
 				label: 'land',
-				assetKey: 'BWin',
-				animationName: 'Special_1/win',
-				loop: false,
-			},
-			{
-				id: 'wave',
-				label: 'wave',
 				assetKey: 'B',
-				animationName: 'Special_1/wave',
+				animationName: 'land',
 				loop: false,
 			},
-		],
-	},
-	{
-		id: 'M',
-		label: 'M',
-		title: 'Mystery — idle / explosion',
-		previewHeight: MYSTERY_PREVIEW_HEIGHT,
-		clips: [
 			{
-				id: 'idle',
-				label: 'idle',
-				assetKey: 'M',
-				animationName: 'Mystery/idle',
-				loop: true,
+				id: 'activate',
+				label: 'activate',
+				assetKey: 'B',
+				animationName: 'activate',
+				loop: false,
 			},
 			{
-				id: 'explosion',
-				label: 'explode',
-				assetKey: 'M',
-				animationName: 'Mystery/explosion',
+				id: 'idle_blink',
+				label: 'blink',
+				assetKey: 'B',
+				animationName: 'idle_blink',
+				loop: false,
+			},
+			{
+				id: 'idle_ears',
+				label: 'ears',
+				assetKey: 'B',
+				animationName: 'idle_ears',
 				loop: false,
 			},
 		],

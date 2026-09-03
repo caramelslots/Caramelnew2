@@ -27,15 +27,14 @@ export const LOADER_BATCH_2_KEYS = [
 	'L2',
 	'L3',
 	'L4',
-	'W',
 	'B',
 	'BT',
-	'M',
 	'L1Img',
 	'L2Img',
 	'L3Img',
 	'L4Img',
 	'BImg',
+	'BDuelImg',
 	'BTImg',
 	'WImg',
 	'SWImg',
@@ -80,8 +79,6 @@ export const getLocaleSpecificFontKeys = (locale: string): readonly (keyof typeo
  * "Press to continue".
  */
 export const LOADER_BATCH_3_KEYS = [
-	'WWin',
-	'BWin',
 	'outlineReel',
 	...LOCALE_FONT_KEYS,
 	'coins',
