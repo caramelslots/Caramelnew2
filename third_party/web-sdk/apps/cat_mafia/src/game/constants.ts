@@ -527,8 +527,8 @@ const CARTRIDGE_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * CARTRIDGE_SKELETON_HEIGHT) / C
 /**
  * Bonus (B) — designer `export_cat`. Visible gold frame (`frame` att 1225 ×
  * bone scale ~1.551 → ~1900 world) is smaller than the skeleton AABB (~3551),
- * so sizeRatios inflate like H/L (skeleton/art). Target fill is full column
- * width (SPECIAL_SYMBOL_SIZE), not the 0.85 prop/letter fill.
+ * so sizeRatios inflate like H/L (skeleton/art). Target fill is the full bay
+ * between rails (`BONUS_BAY_FILL`); frame is drawn above the clip at runtime.
  *
  * AABB is also shifted (`skeleton.x` ≈ −1954 → centre ≈ −109; `skeleton.y`
  * ≈ −510 → centre ≈ +1266). spine-pixi draws that off-cell — BONUS_OFFSET_X/Y
@@ -713,13 +713,18 @@ export const BOARD_RAIL_GAP_PX = Math.max(
  */
 const SPECIAL_SYMBOL_SIZE = (FULL_COLUMN_COL_W - BOARD_RAIL_GAP_PX) / SYMBOL_SIZE;
 /**
+ * Bonus fill — full bay. `BonusUnclipFrame` draws the gold frame above the
+ * clip so rails / BONUS banner match the art; the spine mask still holds the cat.
+ */
+const BONUS_BAY_FILL = SPECIAL_SYMBOL_SIZE;
+/**
  * Wild / Super Wild sprites — lock to the same bay fill as Bonus.
  * Bonus spine height-fits the skeleton (`BONUS_SYMBOL_SIZE`); visible frame
- * ≈ SPECIAL. Sprites use that fill 1:1. Slight bump to full parchment column
- * so Wild reads the same width as Bonus (glow/frame presence).
+ * ≈ BONUS_BAY_FILL. Slight bump to full parchment column so Wild reads with
+ * glow/frame presence.
  */
 const WILD_SYMBOL_SIZE = FULL_COLUMN_COL_W / SYMBOL_SIZE;
-const BONUS_SYMBOL_SIZE = (SPECIAL_SYMBOL_SIZE * BONUS_SKELETON_HEIGHT) / BONUS_ART_SPAN;
+const BONUS_SYMBOL_SIZE = (BONUS_BAY_FILL * BONUS_SKELETON_HEIGHT) / BONUS_ART_SPAN;
 const BONUS_SPINE_SCALE = (SYMBOL_SIZE * BONUS_SYMBOL_SIZE) / BONUS_SKELETON_HEIGHT;
 const BONUS_OFFSET_Y = Math.round(
 	(BONUS_SKELETON_Y + BONUS_SKELETON_HEIGHT / 2) * BONUS_SPINE_SCALE,
@@ -1288,8 +1293,9 @@ const l4PostWin = makeRenderPostWin('L4', letterSizeRatios);
 // the sprite much larger than the idle/land spine and pop on bounce.
 const letterSpinSizeRatios = { width: CELL_SYMBOL_SIZE, height: CELL_SYMBOL_SIZE };
 const propSpinSizeRatios = { width: CELL_SYMBOL_SIZE, height: CELL_SYMBOL_SIZE };
-/** Wild / Super Wild / Bonus spin — same bay fill as Bonus spine art. */
+/** Wild / Super Wild — full parchment column. Bonus spin matches inset spine. */
 const wildSizeRatios = { width: WILD_SYMBOL_SIZE, height: WILD_SYMBOL_SIZE };
+const bonusSpinSizeRatios = { width: BONUS_BAY_FILL, height: BONUS_BAY_FILL };
 const h1Spin = makeRenderSpinSprite('H1Img', propSpinSizeRatios);
 const h2Spin = makeRenderSpinSprite('H2Img', propSpinSizeRatios);
 const h3Spin = makeRenderSpinSprite('H3Img', propSpinSizeRatios, lighterOpts);
@@ -1301,14 +1307,14 @@ const l4Spin = makeRenderSpinSprite('L4Img', letterSpinSizeRatios);
 const wSpin = makeRenderSpinSprite('WImg', wildSizeRatios);
 // Wild — static Wild.webp for all states until a new spine lands.
 const wSprite = wSpin;
-// Super Wild board tile — same size as Bonus / Wild.
+// Super Wild board tile — same size as Wild.
 const swSprite = makeRenderSpinSprite('SWImg', wildSizeRatios);
 /**
  * Bonus — WebP while scrolling; spine `idle` (+ blink/ears) at rest.
  * `activate` is one-shot only (`bWin`); post-win holds idle (no activate loop).
  * Duel Bonus (`BD`) is a separate math symbol — static cat+dog WebP only.
  */
-const bSpin = makeRenderSpinSprite('BImg', wildSizeRatios);
+const bSpin = makeRenderSpinSprite('BImg', bonusSpinSizeRatios);
 const bdSprite = makeRenderSpinSprite('BDuelImg', wildSizeRatios);
 const bStatic = makeRenderStatic('B', bonusSizeRatios, bonusOpts);
 const bLand = makeRenderLand('B', bonusSizeRatios, bonusOpts);

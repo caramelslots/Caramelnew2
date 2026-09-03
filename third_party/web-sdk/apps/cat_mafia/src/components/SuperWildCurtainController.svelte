@@ -13,6 +13,10 @@
 		SUPER_WILD_OPEN_ANIM,
 		SUPER_WILD_OPEN_MS,
 		SUPER_WILD_OPEN_NATIVE_MS,
+		SUPER_WILD_POINTER_SCALE,
+		SUPER_WILD_POINTER_SHAKE_DEG,
+		SUPER_WILD_POINTER_SHAKE_HZ,
+		SUPER_WILD_POINTER_Y_NUDGE,
 		SUPER_WILD_STICKY_DROP_IN_MS,
 		SUPER_WILD_WHEEL_SECTORS,
 		SUPER_WILD_WHEEL_SPIN_MS,
@@ -45,6 +49,11 @@
 	/** Cat `win` clip playing — drum held at startDeg until mid-clip spin. */
 	let catWinding = $state(false);
 	let wheelSpinning = $state(false);
+	/** 0→1 progress through drum spin (matches easeOutCubic wall clock). */
+	let wheelSpinT = 0;
+	/** Accumulated shake phase (rad) — advances slower as the wheel eases out. */
+	let pointerShakePhase = 0;
+	let pointerShakeLastMs = 0;
 	/** True while designer `open` is on track 0. */
 	let opening = $state(false);
 	/** Guard so complete-listener + early-land don't double-fire win. */
@@ -95,6 +104,49 @@
 		bone.updateWorldTransform();
 	};
 
+	/**
+	 * Apply pointer tune from authored setup (NOT per-frame for y/scale).
+	 * Idle/win leave main17 unkeyed — per-frame `+=` / `*=` would stack.
+	 * Always derive from the Spine JSON setup so HMR / prior mutates don't drift.
+	 */
+	const POINTER_SETUP = { y: -1780.92, scaleX: 1, scaleY: 1, rotation: -90.29 } as const;
+	const ensurePointerTune = () => {
+		const bone = spine.skeleton?.findBone('main17');
+		const data = bone?.data;
+		if (!bone || !data) return;
+		data.y = POINTER_SETUP.y + SUPER_WILD_POINTER_Y_NUDGE;
+		data.scaleX = POINTER_SETUP.scaleX * SUPER_WILD_POINTER_SCALE;
+		data.scaleY = POINTER_SETUP.scaleY * SUPER_WILD_POINTER_SCALE;
+		data.rotation = POINTER_SETUP.rotation;
+		bone.y = data.y;
+		bone.scaleX = data.scaleX;
+		bone.scaleY = data.scaleY;
+		bone.rotation = data.rotation;
+	};
+
+	/**
+	 * Override Spine `win` pointer keys. Shake only while the drum spins;
+	 * frequency + amplitude follow easeOut speed (fast at start, slow to stop).
+	 */
+	const applyPointerRotation = (s: typeof spine, spinning: boolean) => {
+		const bone = s.skeleton?.findBone('main17');
+		if (!bone) return;
+		let kick = 0;
+		if (spinning && SUPER_WILD_POINTER_SHAKE_DEG > 0) {
+			const now = performance.now();
+			const dt = pointerShakeLastMs ? Math.min(0.05, (now - pointerShakeLastMs) / 1000) : 0;
+			pointerShakeLastMs = now;
+			// Softer than easeOutCubic' (1-t)^2 — shake decelerates more gradually.
+			const speed = Math.max(0, 1 - wheelSpinT) ** 0.75;
+			pointerShakePhase += dt * Math.PI * 2 * SUPER_WILD_POINTER_SHAKE_HZ * speed;
+			kick = SUPER_WILD_POINTER_SHAKE_DEG * speed * Math.sin(pointerShakePhase);
+		} else {
+			pointerShakeLastMs = 0;
+		}
+		bone.rotation = POINTER_SETUP.rotation + kick;
+		bone.updateWorldTransform();
+	};
+
 	const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
 
 	const holdIdlePose = () => {
@@ -112,6 +164,9 @@
 		clearWheelStartTimer();
 		catWinding = false;
 		wheelSpinning = true;
+		wheelSpinT = 0;
+		pointerShakePhase = 0;
+		pointerShakeLastMs = 0;
 		pendingWheelMult = null;
 		const end = superWildWheelEndDeg(mult);
 		const start = superWildWheelStartDeg(end);
@@ -126,6 +181,7 @@
 
 		const tick = (now: number) => {
 			const t = Math.min(1, (now - t0) / durationMs);
+			wheelSpinT = t;
 			const deg = start + (end - start) * easeOutCubic(t);
 			props.onWheelDeg(deg);
 			applyWheelBone(deg);
@@ -135,6 +191,7 @@
 			}
 			props.onWheelDeg(end);
 			applyWheelBone(end);
+			wheelSpinT = 1;
 			wheelSpinning = false;
 			props.onWheelLanded(true, sectorIndex, mult);
 			wheelRaf = 0;
@@ -257,6 +314,7 @@
 	};
 
 	$effect(() => {
+		ensurePointerTune();
 		prevAfter = spine.afterUpdateWorldTransforms;
 		spine.afterUpdateWorldTransforms = (s) => {
 			prevAfter?.(s);
@@ -278,6 +336,8 @@
 			if (catWinding || wheelSpinning || props.wheelLanded || pendingWheelMult != null) {
 				applyWheelBone(props.wheelDeg);
 			}
+			// Replace Spine `win` shake with a plain spin-time wiggle.
+			applyPointerRotation(s, wheelSpinning);
 		};
 		return () => {
 			clearAllTimers();

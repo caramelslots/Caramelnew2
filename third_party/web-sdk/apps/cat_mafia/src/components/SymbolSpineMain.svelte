@@ -7,6 +7,7 @@
 	import { stateGame } from '../game/stateGame.svelte';
 	import { getAutoCellFitRatio } from '../game/symbolCellFit.svelte';
 	import type { SymbolName } from '../game/types';
+	import BonusUnclipFrame from './BonusUnclipFrame.svelte';
 
 	type Props = {
 		symbolInfo: ReturnType<typeof getSymbolInfo>;
@@ -148,6 +149,9 @@
 	height={fitHeight}
 	{autoUpdate}
 >
+	{#if props.symbolName === 'B'}
+		<BonusUnclipFrame />
+	{/if}
 	{#key `${trackAnimationName}:${bonusIdleNonce}`}
 		<SpineTrack
 			{loop}

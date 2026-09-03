@@ -149,6 +149,20 @@ export const SUPER_WILD_DRUM_LABEL_FONT_FRAC = 0.135;
  * 0 = cell centered under the pointer; 22.5 = spoke under the pointer.
  */
 export const SUPER_WILD_DRUM_SECTOR_OFFSET_DEG = 22.5;
+/**
+ * Drum pointer (Spine bone `main17`) — one-shot setup-pose scale.
+ * Applied once to BoneData (not per-frame — idle leaves the bone unkeyed).
+ */
+export const SUPER_WILD_POINTER_SCALE = 0.86;
+/**
+ * One-shot setup-pose Y nudge on `main17` (~2–3 screen px at curtain fit).
+ * Positive = toward the arch.
+ */
+export const SUPER_WILD_POINTER_Y_NUDGE = 50;
+/** Pointer shake amplitude (deg) while the drum is spinning. */
+export const SUPER_WILD_POINTER_SHAKE_DEG = 8;
+/** Pointer shake frequency (Hz) at full drum speed. */
+export const SUPER_WILD_POINTER_SHAKE_HZ = 7;
 
 /**
  * Landed mult badge — fraction of curtain height from the TOP of the column
