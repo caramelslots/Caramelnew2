@@ -10,6 +10,8 @@ export type SymbolDevClip = {
 	animationName: string;
 	/** Idle / rest clips loop; land/win/bounce play once (re-click to replay). */
 	loop: boolean;
+	/** Default spine — sprite for spin WebP previews (B / BD). */
+	renderType?: 'spine' | 'sprite';
 };
 
 export type SymbolDevGroup = {
@@ -113,6 +115,14 @@ export const SYMBOL_DEV_PREVIEW_GROUPS: readonly SymbolDevGroup[] = [
 		previewHeight: 460,
 		clips: [
 			{
+				id: 'spin',
+				label: 'spin',
+				assetKey: 'BImg',
+				animationName: '',
+				loop: false,
+				renderType: 'sprite',
+			},
+			{
 				id: 'idle',
 				label: 'idle',
 				assetKey: 'B',
@@ -145,6 +155,43 @@ export const SYMBOL_DEV_PREVIEW_GROUPS: readonly SymbolDevGroup[] = [
 				label: 'ears',
 				assetKey: 'B',
 				animationName: 'idle_ears',
+				loop: false,
+			},
+		],
+	},
+	{
+		id: 'BD',
+		label: 'BD Duel',
+		title: 'Duel Bonus (BD) — spin WebP + idle / land / activate',
+		previewHeight: 460,
+		clips: [
+			{
+				id: 'spin',
+				label: 'spin',
+				assetKey: 'BDuelImg',
+				animationName: '',
+				loop: false,
+				renderType: 'sprite',
+			},
+			{
+				id: 'idle',
+				label: 'idle',
+				assetKey: 'BD',
+				animationName: 'idle',
+				loop: true,
+			},
+			{
+				id: 'land',
+				label: 'land',
+				assetKey: 'BD',
+				animationName: 'land',
+				loop: false,
+			},
+			{
+				id: 'activate',
+				label: 'activate',
+				assetKey: 'BD',
+				animationName: 'activate',
 				loop: false,
 			},
 		],

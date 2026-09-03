@@ -208,4 +208,20 @@
 		letter-spacing: 0.06em;
 		color: rgba(255, 255, 255, 0.75);
 	}
+
+	@media (max-width: 768px) and (orientation: portrait) {
+		.progress-wrap {
+			width: min(340px, 78vw);
+			gap: 0.6rem;
+		}
+
+		.progress-track {
+			height: 14px;
+			border-width: 1.5px;
+		}
+
+		.progress-label {
+			font-size: 1.05rem;
+		}
+	}
 </style>

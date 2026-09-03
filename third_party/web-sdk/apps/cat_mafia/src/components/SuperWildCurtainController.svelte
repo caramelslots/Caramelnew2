@@ -18,14 +18,15 @@
 		SUPER_WILD_POINTER_SHAKE_HZ,
 		SUPER_WILD_POINTER_Y_NUDGE,
 		SUPER_WILD_STICKY_DROP_IN_MS,
-		SUPER_WILD_WHEEL_SECTORS,
 		SUPER_WILD_WHEEL_SPIN_MS,
 		SUPER_WILD_WIN_ANIM,
 		SUPER_WILD_WIN_MS,
 		SUPER_WILD_WIN_NATIVE_MS,
 		SUPER_WILD_WIN_WHEEL_START_FRAC,
 		superWildWheelEndDeg,
+		superWildWheelSectorIndex,
 		superWildWheelStartDeg,
+		prepareSuperWildDrumSpin,
 	} from '../game/superWildHtmlSpine';
 
 	type Props = {
@@ -36,7 +37,7 @@
 		wheelDeg: number;
 		wheelLanded: boolean;
 		onWheelDeg: (deg: number) => void;
-		onWheelLanded: (landed: boolean, sectorIndex: number, targetMult: number) => void;
+		onWheelLanded: (landed: boolean, sectorIndex: number, targetMult: number, labels?: number[]) => void;
 		/** Fires when Spine `open` completes — snap column align. */
 		onOpenComplete?: () => void;
 	};
@@ -168,11 +169,10 @@
 		pointerShakePhase = 0;
 		pointerShakeLastMs = 0;
 		pendingWheelMult = null;
-		const end = superWildWheelEndDeg(mult);
-		const start = superWildWheelStartDeg(end);
-		const sectors = SUPER_WILD_WHEEL_SECTORS as readonly number[];
-		const sectorIndex = Math.max(0, sectors.indexOf(mult === 1 ? 2 : mult));
-		props.onWheelLanded(false, sectorIndex, mult);
+		const targetMult = Math.round(mult);
+		const { labels, landSectorIndex, endDeg: end, startDeg: start } =
+			prepareSuperWildDrumSpin(targetMult);
+		props.onWheelLanded(false, landSectorIndex, targetMult, labels);
 		props.onWheelDeg(start);
 		applyWheelBone(start);
 		// Let `win` keep playing through the rest of the gesture while we drive the drum.
@@ -193,7 +193,7 @@
 			applyWheelBone(end);
 			wheelSpinT = 1;
 			wheelSpinning = false;
-			props.onWheelLanded(true, sectorIndex, mult);
+			props.onWheelLanded(true, landSectorIndex, targetMult);
 			wheelRaf = 0;
 			holdIdlePose();
 		};
@@ -304,8 +304,7 @@
 		if (catWinding || wheelSpinning) return;
 		holdIdlePose();
 		if (!props.wheelLanded && pendingWheelMult == null) {
-			const sectors = SUPER_WILD_WHEEL_SECTORS as readonly number[];
-			const sectorIndex = Math.max(0, sectors.indexOf(mult === 1 ? 2 : mult));
+			const sectorIndex = superWildWheelSectorIndex(mult);
 			const deg = superWildWheelEndDeg(mult);
 			props.onWheelDeg(deg);
 			applyWheelBone(deg);

@@ -33,6 +33,7 @@ from game_features import (
     run_target_shoot,
     stamp_expanded_sw_column,
     keep_one_sw_per_reel,
+    cap_lying_sw_on_board,
     pick_sticky_sw_column,
     product_of_mults,
 )
@@ -147,7 +148,7 @@ class GameStateOverride(GameExecutables):
         if mult_map:
             weights = mult_map
         multiplier_value = get_random_outcome(weights)
-        # Curtain mults are only ×2/×4/×6/×8 — never emit ×1 as a paid outcome.
+        # Paid curtain mults: ×2–×8 plus ultra-rare ×25/×50/×75 — never emit ×1.
         symbol.assign_attribute({"multiplier": max(2, int(multiplier_value))})
 
     def check_repeat(self):
@@ -808,10 +809,18 @@ class GameStateOverride(GameExecutables):
             return True
         return self.gametype == self.config.freegame_type
 
+    def _sw_sticky_room(self) -> int:
+        """How many more sticky SW columns may open this session."""
+        return max(0, self.max_sticky_sw - len(self.sticky_sw))
+
+    def _sw_new_per_spin_cap(self) -> int:
+        """Max new lying SW cells allowed on this spin (1 when session room > 0)."""
+        return min(1, self._sw_sticky_room())
+
     def _collect_new_lying_sw_hits(self) -> list[dict]:
-        """Lying SW on non-sticky reels, capped by max_sticky_sw room (drops extras → L2)."""
+        """Lying SW on non-sticky reels — at most one new cell per spin (drops extras → L2)."""
         sticky_reels = set(self.sticky_sw.keys())
-        room = max(0, self.max_sticky_sw - len(self.sticky_sw))
+        room = self._sw_new_per_spin_cap()
         new_by_reel: dict[int, dict] = {}
         for h in find_super_wilds(self.board):
             if h["reel"] in sticky_reels:
@@ -833,7 +842,7 @@ class GameStateOverride(GameExecutables):
     def _peek_new_lying_sw_hits(self) -> list[dict]:
         """Non-mutating cap preview for duel two-beat routing (board unchanged)."""
         sticky_reels = set(self.sticky_sw.keys())
-        room = max(0, self.max_sticky_sw - len(self.sticky_sw))
+        room = self._sw_new_per_spin_cap()
         new_by_reel: dict[int, dict] = {}
         for h in find_super_wilds(self.board):
             if int(h["reel"]) in sticky_reels:
@@ -950,17 +959,23 @@ class GameStateOverride(GameExecutables):
             )
 
         sticky_reels = set(self.sticky_sw.keys())
-        if len(self.sticky_sw) >= self.max_sticky_sw:
-            # At cap: no new lying SW (would inflate line eval before resolve).
+        if self._sw_sticky_room() <= 0:
+            # Session cap: no new lying SW on board or padding (sticky columns only).
             for h in find_super_wilds(self.board):
                 if h["reel"] not in sticky_reels:
                     self.board[h["reel"]][h["row"]] = self.create_symbol("L2")
         else:
-            # New lands: at most one lying SW per non-sticky reel.
+            # At most one lying SW per non-sticky reel, and one new SW total per spin.
             keep_one_sw_per_reel(
                 self.board,
                 self.create_symbol,
                 skip_reels=sticky_reels,
+            )
+            cap_lying_sw_on_board(
+                self.board,
+                self.create_symbol,
+                skip_reels=sticky_reels,
+                max_count=1,
             )
         self._sync_sw_padding()
 

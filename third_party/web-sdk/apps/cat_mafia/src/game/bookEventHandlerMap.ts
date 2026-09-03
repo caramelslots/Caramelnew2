@@ -42,6 +42,8 @@ import {
 import { SUPER_WILD_PRESENT_MS, SUPER_WILD_STICKY_PRESENT_MS } from './superWildHtmlSpine';
 import { ensureSwCurtainsForBoard } from './swCurtainGuard';
 import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
+import { preloadHtmlImages } from './preloadHtmlImages';
+import { FS_CONG_IMAGE_URLS } from './uiHtmlAssetManifest';
 import { waitForTimeout } from 'utils-shared/wait';
 import {
 	getDrumLastFilledChamberIndex,
@@ -71,6 +73,8 @@ import type { DuelSide } from './stateDuel.svelte';
 import {
 	computeCatSlowTriggerReel,
 	catSlowReelsAfterTrigger,
+	shouldSkipCatSlowForBoard,
+	getCatSlowMaxBonusCount,
 	CAT_SLOW_EXTRA_SYMBOL_ROWS,
 } from './catAnticipation';
 import {
@@ -828,14 +832,21 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			revealEvent.board,
 			revealEvent.gameType,
 		);
+		if (
+			shouldSkipCatSlowForBoard(revealEvent.board, stateGame.catSlowTriggerReel)
+		) {
+			stateGame.catSlowTriggerReel = -1;
+		}
 		stateGame.catSlowReels = [];
+		stateGame.catSlowBonusLandCount = 0;
+		stateGame.catSlowMaxBonusCount = getCatSlowMaxBonusCount(revealEvent.board);
 		const catSlowReelIndices = catSlowReelsAfterTrigger(
 			stateGame.catSlowTriggerReel,
 			revealEvent.board.length,
 		);
 		const paddingBoard =
 			revealEvent.gameType === 'freegame'
-				? getFreegamePaddingBoard(config.paddingReels.freegame)
+				? getFreegamePaddingBoard(config.paddingReels.freegame, stateGame.stickySwByReel)
 				: config.paddingReels[revealEvent.gameType];
 		// Sticky SW: lock + curtain BEFORE other reels spin so the column
 		// never flashes as a bare 4-high Wild stack.
@@ -1103,12 +1114,21 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (!hadTargetPick) {
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		}
+
+		// Warm fsCong while bonus celebrate / HUD hide runs.
+		void preloadHtmlImages(FS_CONG_IMAGE_URLS);
+
 		// Hide HUD for steam / intro (gallery kept HUD visible during pick).
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
+		await preloadHtmlImages(FS_CONG_IMAGE_URLS);
+		// Mount congrats under the cloud (HTML z70 < transition z100) so it appears
+		// the instant steam clears — no empty-board beat after the spine completes.
+		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
+		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin', withIntro: true });
 		await eventEmitter.broadcastAsync({ type: 'transition', gameType: 'freegame' });
 		// Safety: if theme-switch dismiss missed, snap gallery off before intro.
 		eventEmitter.broadcast({ type: 'targetPickDismiss' });
-		// Left counter appears with fsCong intro (right after transition).
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 		stateUi.freeSpinCounterShow = true;
 		eventEmitter.broadcast({
@@ -1118,9 +1138,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 		stateUi.freeSpinCounterCurrent = 0;
 		stateUi.freeSpinCounterTotal = bookEvent.totalFs;
-		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
-		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin', withIntro: true });
 		await eventEmitter.broadcastAsync({
 			type: 'freeSpinIntroUpdate',
 			totalFreeSpins: bookEvent.totalFs,
@@ -1620,12 +1637,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 
 	// === Duel Stage C (math books — amounts in book cents) ===
-	/** 3× BD after buy-duel reveal — math duel_bonus symbol (cat+dog WebP). */
+	/** 3× BD after buy-duel reveal — math duel_bonus symbol (cat+dog spine). */
 	duelPurchaseCelebrate: async (bookEvent: BookEventOfType<'duelPurchaseCelebrate'>) => {
 		clearWinSpotlight();
 		if (!bookEvent.positions?.length) return;
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
-		await waitForGameSpeed(BONUS_WIN_PRE_DELAY_MS + BONUS_WIN_POST_DELAY_MS, stateGame.gameSpeed);
+		await animateBonusSymbols({ positions: bookEvent.positions });
 	},
 
 	duelStart: async (bookEvent: BookEventOfType<'duelStart'>) => {
@@ -1706,7 +1722,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			(c) => c.side !== side || stickyReelSet.has(c.reel),
 		);
 
-		const paddingBoard = getDuelPaddingBoard(config.paddingReels.basegame);
+		const paddingBoard = getDuelPaddingBoard(config.paddingReels.basegame, sticky);
 		// Same as bonus_normal reveal: chain from Pixi state (keeps sticky SW painted
 		// after two-beat expand). HTML duelBoard snapshots can lag behind Pixi.
 		settleDuelBoardFromPixi(side);

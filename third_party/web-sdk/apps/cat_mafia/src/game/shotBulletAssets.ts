@@ -322,6 +322,8 @@ export const SHOT_BULLET_IMPACT_DISPLAY = SHOT_BULLET_FLY_DISPLAY;
 /** Flight payload shared by HTML (legacy) and Pixi tir FX layers. */
 export type TargetShotFlight = {
 	nonce: number;
+	/** Gallery seat being shot — hides holder/disc under the impact burst. */
+	seatIndex: number;
 	startX: number;
 	startY: number;
 	endX: number;

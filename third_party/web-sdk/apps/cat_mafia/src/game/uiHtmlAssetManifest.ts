@@ -1,4 +1,5 @@
 import { preloadHtmlImages } from './preloadHtmlImages';
+import assets from './assets';
 import { GAME_INFO_SYMBOL_IMAGE_URLS, GAME_INFO_SYMBOL_IMAGES } from './gameInfoSymbols';
 import {
 	MASCOT_SPINE_IMAGE_URL,
@@ -94,6 +95,14 @@ export const MASCOT_ASSETS = {
 } as const;
 
 const dedupeUrls = (urls: readonly string[]) => [...new Set(urls)];
+
+/** FreeSpinIntro HTML layers (`assets/sprites/fsCong/`). */
+export const FS_CONG_IMAGE_URLS = dedupeUrls([
+	assets.fsCongRays.src,
+	assets.fsCongBg.src,
+	assets.fsCongFrame.src,
+	assets.fsCongBoard.src,
+]);
 
 /** HUD + settings + autoplay + buy bonus sprites shown soon after entering the game. */
 export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([

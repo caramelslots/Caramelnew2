@@ -1118,12 +1118,12 @@ export const DESKTOP_UI_LAYOUT = {
 export const PORTRAIT_UI_LAYOUT = {
 	refWidth: 800,
 	refHeight: 1422,
-	/** WIN text under board (ref px). */
-	winBelowBoardGap: 62,
+	/** Gap from live desk bottom → WIN centre (ref px, + = down). Primary portrait tune. */
+	winBelowBoardGap: 42,
 	/** Buy/boost row top offset from board bottom (ref px, independent of WIN). */
 	buyPanelBelowBoard: 112,
-	/** Extra WIN nudge on portrait (ref px, + = down). Negative raises toward the nameplate. */
-	winNudgeDown: -76,
+	/** Fine WIN nudge after winBelowBoardGap (ref px, + = down, − = up). */
+	winNudgeDown: 0,
 	/** Spin stack anchor below board when buy/boost hidden (free spins). */
 	freeSpinsSpinBelowBoard: 48,
 	/** Util-row center offset from screen bottom (ref px; ≈ iconRadius + 12px margin). */
@@ -1145,8 +1145,8 @@ export const PORTRAIT_UI_LAYOUT = {
 	/** Ref px (800×1422 mockup) — scaled in UiCashStacksPortraitLayout. */
 	buttons: {
 		spinDiam: 172,
-		spinBetDiam: 66,
-		spinBetGap: 12,
+		spinBetDiam: 96,
+		spinBetGap: 16,
 		/** Только Spin выше −/+ (ref px, отрицательный Y). */
 		spinRaiseY: -16,
 		utilIconDiam: 76,
@@ -1312,13 +1312,16 @@ const swSprite = makeRenderSpinSprite('SWImg', wildSizeRatios);
 /**
  * Bonus — WebP while scrolling; spine `idle` (+ blink/ears) at rest.
  * `activate` is one-shot only (`bWin`); post-win holds idle (no activate loop).
- * Duel Bonus (`BD`) is a separate math symbol — static cat+dog WebP only.
+ * Duel Bonus (BD) — same spine flow from `export_cat&dog` (no blink/ears clips).
  */
 const bSpin = makeRenderSpinSprite('BImg', bonusSpinSizeRatios);
-const bdSprite = makeRenderSpinSprite('BDuelImg', wildSizeRatios);
+const bdSpin = makeRenderSpinSprite('BDuelImg', bonusSpinSizeRatios);
 const bStatic = makeRenderStatic('B', bonusSizeRatios, bonusOpts);
 const bLand = makeRenderLand('B', bonusSizeRatios, bonusOpts);
 const bWin = makeRenderWin('B', bonusSizeRatios, bonusOpts);
+const bdStatic = makeRenderStatic('BD', bonusSizeRatios, bonusOpts);
+const bdLand = makeRenderLand('BD', bonusSizeRatios, bonusOpts);
+const bdWin = makeRenderWin('BD', bonusSizeRatios, bonusOpts);
 /** Cartridge has no `idle` — sprite for rest/spin; spine `stop` on land. */
 const btSprite = makeRenderSpinSprite('BTImg', propSpinSizeRatios);
 const btLand = makeRenderLand('BT', cartridgeSizeRatios);
@@ -1702,13 +1705,13 @@ export const SYMBOL_INFO_MAP = {
 		win: bWin,
 		land: bLand,
 	},
-	// Duel Bonus (BD) — math buy-duel symbol; cat+dog WebP, all states.
+	// Duel Bonus (BD) — spin WebP; rest/land/win same as Bonus (cat+dog spine).
 	BD: {
-		postWinStatic: bdSprite,
-		static: bdSprite,
-		spin: bdSprite,
-		win: bdSprite,
-		land: bdSprite,
+		postWinStatic: bdStatic,
+		static: bdStatic,
+		spin: bdSpin,
+		win: bdWin,
+		land: bdLand,
 	},
 	// Mystery — placeholder (no spine asset).
 	M: {

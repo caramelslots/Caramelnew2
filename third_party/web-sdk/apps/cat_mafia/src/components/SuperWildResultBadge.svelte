@@ -10,8 +10,8 @@
 
 	import {
 		SUPER_WILD_RESULT_BADGE_FADE_MS,
-		SUPER_WILD_RESULT_BADGE_FONT_FRAC,
 		SUPER_WILD_RESULT_BADGE_Y_FRAC,
+		superWildResultBadgeFontFrac,
 	} from '../game/superWildHtmlSpine';
 
 	type Props = {
@@ -25,7 +25,7 @@
 
 	const props: Props = $props();
 
-	const fontSize = $derived(Math.round(props.boxW * SUPER_WILD_RESULT_BADGE_FONT_FRAC));
+	const fontSize = $derived(Math.round(props.boxW * superWildResultBadgeFontFrac(props.mult)));
 	const strokeWidth = $derived(Math.max(4, Math.round(fontSize * 0.1)));
 	/** From column center: top of box + fraction down into the wood arch. */
 	const badgeY = $derived(-props.boxH * 0.5 + props.boxH * SUPER_WILD_RESULT_BADGE_Y_FRAC);

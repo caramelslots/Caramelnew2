@@ -13,7 +13,7 @@ Checks (base / bonus_boost):
   - SW curtain event rate (base part) == 3% ±0.3pp
   - XOR: 0 books with both pawCoinResolve and superWildExpand
   - max 1 SW on the base reveal board (visible rows); no SW in padding
-  - base curtain mult histogram ≈ base_sw_mult_weights (79/13/5/3 for ×2/×4/×6/×8)
+  - base curtain mult histogram ≈ base_sw_mult_weights (×2–×8 + ultra ×25/×50/×75)
 Checks (bonus_normal / bonus_super):
   - publish books byte-identical to library/publish_files_backup_baseline
     (FS logic untouched — M5 must not re-run buy modes)
@@ -48,11 +48,26 @@ HIT_TOL = 0.005
 FEATURE_TOL = 0.003
 
 # Base curtain mult split (game_config.base_sw_mult_weights) — share of base
-# curtains. Tolerance ±3pp per bucket: the LUT fix pins the mix to ±0.5pp, but
-# the 100k-book resample adds binomial noise — ~3k curtain books ⇒ σ≈0.9pp per
-# bucket, so ±2pp (≈2.2σ) flakes at the edge; ±3pp ≈ 3.3σ is the honest gate.
-BASE_SW_MULT_TARGET = {2: 0.79, 4: 0.13, 6: 0.05, 8: 0.03}
+# curtains. Tolerance ±3pp per core bucket; ultra-rare ±1.5pp (low counts).
+# The LUT fix pins the mix to ±0.5pp, but the 100k-book resample adds noise.
+_DEFAULT_BASE_SW_MULT_WEIGHTS = {2: 790, 4: 130, 6: 50, 8: 30, 25: 20, 50: 10, 75: 5}
+BASE_SW_MULT_CORE = (2, 4, 6, 8)
+BASE_SW_MULT_ULTRA = (25, 50, 75)
+
+
+def _base_sw_mult_targets() -> dict[int, float]:
+    try:
+        from game_config import GameConfig
+
+        weights = GameConfig().base_sw_mult_weights
+    except Exception:
+        weights = _DEFAULT_BASE_SW_MULT_WEIGHTS
+    total = sum(weights.values())
+    return {int(m): w / total for m, w in weights.items()}
+
+
 MULT_TOL = 0.03
+MULT_TOL_ULTRA = 0.015
 
 
 def scan_mode(mode: str) -> dict:
@@ -124,6 +139,7 @@ def sha256(path: Path) -> str:
 
 def main() -> int:
     failures = 0
+    mult_targets = _base_sw_mult_targets()
     for mode, (cost, base_rtp, base_hit, paw_t, sw_t) in BASELINES.items():
         s = scan_mode(mode)
         n = max(s["books"], 1)
@@ -141,8 +157,8 @@ def main() -> int:
         n_mult = sum(s["sw_mults"].values())
         if n_mult:
             hist = "  ".join(
-                f"x{m} {100 * s['sw_mults'].get(m, 0) / n_mult:.1f}%/{100 * t:.0f}%"
-                for m, t in sorted(BASE_SW_MULT_TARGET.items())
+                f"x{m} {100 * s['sw_mults'].get(m, 0) / n_mult:.1f}%/{100 * mult_targets[m]:.1f}%"
+                for m in sorted(mult_targets)
             )
             print(f"  sw mults (share of base curtains, actual/target): {hist}")
 
@@ -161,11 +177,23 @@ def main() -> int:
         check(s["sw_padding"] == 0, "SW in base padding")
         n_mult = sum(s["sw_mults"].values())
         check(n_mult > 0, "no base curtain expands found (mult histogram empty)")
-        for m, t in BASE_SW_MULT_TARGET.items():
+        for m in BASE_SW_MULT_CORE:
+            t = mult_targets[m]
             share = s["sw_mults"].get(m, 0) / n_mult if n_mult else 0.0
             check(
                 abs(share - t) <= MULT_TOL,
-                f"sw mult x{m} share {100 * share:.1f}% outside {100 * t:.0f}%±{100 * MULT_TOL:.0f}pp",
+                f"sw mult x{m} share {100 * share:.1f}% outside {100 * t:.1f}%±{100 * MULT_TOL:.0f}pp",
+            )
+        for m in BASE_SW_MULT_ULTRA:
+            t = mult_targets[m]
+            share = s["sw_mults"].get(m, 0) / n_mult if n_mult else 0.0
+            check(
+                s["sw_mults"].get(m, 0) > 0,
+                f"sw mult x{m} never appeared in base curtains (expected ultra-rare)",
+            )
+            check(
+                abs(share - t) <= MULT_TOL_ULTRA,
+                f"sw mult x{m} share {100 * share:.2f}% outside {100 * t:.2f}%±{100 * MULT_TOL_ULTRA:.1f}pp",
             )
 
     for mode in BUY_MODES:

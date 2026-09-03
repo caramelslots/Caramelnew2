@@ -145,6 +145,21 @@ export const getSymbolInfo = ({
 		const resolved = resolveSymbolDevPreview(preview);
 		if (resolved) {
 			const mapEntry = SYMBOL_INFO_MAP[rawSymbol.name];
+			if (resolved.renderType === 'sprite') {
+				const spriteSizing = mapEntry.spin;
+				return {
+					type: 'sprite' as const,
+					assetKey: resolved.assetKey,
+					sizeRatios: spriteSizing.sizeRatios,
+					devNonce: preview.nonce,
+					...('offsetX' in spriteSizing && typeof spriteSizing.offsetX === 'number'
+						? { offsetX: spriteSizing.offsetX }
+						: {}),
+					...('offsetY' in spriteSizing && typeof spriteSizing.offsetY === 'number'
+						? { offsetY: spriteSizing.offsetY }
+						: {}),
+				};
+			}
 			// Static may be a WebP (B / BT) with 1:1 bay ratios. Spine still needs
 			// inflated skeleton sizeRatios + offsets from land/win — otherwise the
 			// visible frame shrinks to ~half a cell (Bonus idle preview bug).

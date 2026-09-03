@@ -222,8 +222,8 @@ export const getTargetFlipPixiTransform = (seatSize: number) => {
 	};
 };
 
-/** Slots kept visible during seat flip (disc only). */
-export const TARGET_BOARD_FLIP_VISIBLE_SLOTS = ['front', 'back'] as const;
+/** Slots kept visible during seat flip (disc + volumetric edge strip). */
+export const TARGET_BOARD_FLIP_VISIBLE_SLOTS = ['front', 'back', 'edge'] as const;
 
 /**
  * Six target seats on the wooden shelves (fractions of background plate).

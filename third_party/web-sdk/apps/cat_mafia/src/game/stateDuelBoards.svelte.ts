@@ -102,21 +102,46 @@ export const getDuelBoardStack = (side: DuelSide) => stateDuelBoards[side];
 /** Bonus / Duel Bonus never land during Normal / Super FS — strip from scroll padding. */
 const FS_FORBIDDEN_PADDING = new Set(['B', 'BD']);
 
+/** Match math `max_sticky_sw` — no SW scroll art on non-sticky reels once at cap. */
+export const MAX_STICKY_SW = 2;
+
+const stripSwPaddingWhenAtCap = (
+	reel: { name: string }[],
+	reelIndex: number,
+	stickySwByReel: Record<number, number | undefined> | undefined,
+) => {
+	const stickyReels = new Set(Object.keys(stickySwByReel ?? {}).map(Number));
+	if (stickyReels.size < MAX_STICKY_SW || stickyReels.has(reelIndex)) return reel;
+	return reel.map((cell) => (cell.name === 'SW' ? { name: 'L2' } : { ...cell }));
+};
+
 /** basegame padding reels with Bonus / Paw / Bullet replaced (same as math). */
-export const getDuelPaddingBoard = (paddingReels: { name: string }[][]) =>
-	paddingReels.map((reel) =>
-		reel.map((cell) =>
-			DUEL_FORBIDDEN_PADDING.has(cell.name) ? { name: 'L2' } : { ...cell },
-		),
-	);
+export const getDuelPaddingBoard = (
+	paddingReels: { name: string }[][],
+	stickySwByReel?: Record<number, number | undefined>,
+) =>
+	paddingReels.map((reel, reelIndex) => {
+		const stripped = stripSwPaddingWhenAtCap(
+			reel.map((cell) =>
+				DUEL_FORBIDDEN_PADDING.has(cell.name) ? { name: 'L2' } : { ...cell },
+			),
+			reelIndex,
+			stickySwByReel,
+		);
+		return stripped;
+	});
 
 /** freegame padding reels with Bonus removed (B cannot land in FS). */
-export const getFreegamePaddingBoard = (paddingReels: { name: string }[][]) =>
-	paddingReels.map((reel) =>
-		reel.map((cell) =>
+export const getFreegamePaddingBoard = (
+	paddingReels: { name: string }[][],
+	stickySwByReel?: Record<number, number | undefined>,
+) =>
+	paddingReels.map((reel, reelIndex) => {
+		const stripped = reel.map((cell) =>
 			FS_FORBIDDEN_PADDING.has(cell.name) ? { name: 'L2' } : { ...cell },
-		),
-	);
+		);
+		return stripSwPaddingWhenAtCap(stripped, reelIndex, stickySwByReel);
+	});
 
 /** Pad visible 5×4 duel board to Pixi [top, rows…, bottom]. */
 export const padDuelBoardForPixi = (

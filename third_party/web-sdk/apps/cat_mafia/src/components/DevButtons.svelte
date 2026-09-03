@@ -122,6 +122,14 @@
 		paintBoardWithSymbol(groupId as SymbolName);
 	};
 
+	/** Pick symbol group and auto-play its first clip on the board. */
+	const selectSymbolGroup = (groupId: string) => {
+		symbolAnimGroupId = groupId;
+		const group = SYMBOL_DEV_PREVIEW_GROUPS.find((g) => g.id === groupId);
+		const firstClip = group?.clips[0];
+		if (firstClip) playSymbolClip(groupId, firstClip.id);
+	};
+
 	const closeSymbolAnimPreview = () => {
 		devPreview.symbolAnim = null;
 	};
@@ -610,7 +618,8 @@
 	 * `cols1` = 1-based column numbers (any subset of 1..BOARD_DIMENSIONS.x).
 	 */
 	const SW_DEMO_POOL: SymbolName[] = ['L1', 'L2', 'L3', 'L4', 'H1', 'H2', 'H3', 'H4'];
-	const SW_DEMO_MULTS = [2, 4, 6, 8] as const;
+	const SW_DEMO_MULTS = [2, 4, 6, 8, 25, 50, 75] as const;
+	const SW_DEMO_WHEEL_COL = 3;
 	const SW_DEMO_SINGLE_COLS = Array.from({ length: BOARD_DIMENSIONS.x }, (_, i) => i + 1);
 	const SW_DEMO_PRESETS: { label: string; cols: number[] }[] = [
 		{ label: '2 3', cols: [2, 3] },
@@ -633,7 +642,7 @@
 		return Array.from({ length: count }, (_, i) => start + i);
 	};
 
-	const playSwDrop = (cols1: number[]) =>
+	const playSwDrop = (cols1: number[], forcedMult?: (typeof SW_DEMO_MULTS)[number]) =>
 		guard(async () => {
 			applyBetMode('BASE');
 			stateGame.gameType = 'basegame';
@@ -645,7 +654,8 @@
 			stateBet.winBookEventAmount = 0;
 
 			const unit = 100;
-			const mult = SW_DEMO_MULTS[Math.floor(Math.random() * SW_DEMO_MULTS.length)];
+			const mult =
+				forcedMult ?? SW_DEMO_MULTS[Math.floor(Math.random() * SW_DEMO_MULTS.length)];
 			const swReels = [
 				...new Set(
 					cols1
@@ -1453,6 +1463,21 @@
 						</button>
 					{/each}
 				</div>
+				<p class="subhint" style="margin-top: 6px">
+					Drum spin — column {SW_DEMO_WHEEL_COL}, fixed mult (×2…×75).
+				</p>
+				<div class="grid grid--3">
+					{#each SW_DEMO_MULTS as mult}
+						<button
+							type="button"
+							disabled={busy}
+							title={`SW column ${SW_DEMO_WHEEL_COL} → curtain → drum ×${mult}`}
+							onclick={() => playSwDrop([SW_DEMO_WHEEL_COL], mult)}
+						>
+							×{mult}
+						</button>
+					{/each}
+				</div>
 			</section>
 
 			<section>
@@ -1539,9 +1564,7 @@
 							type="button"
 							class:active={symbolAnimGroupId === group.id}
 							title={group.title}
-							onclick={() => {
-								symbolAnimGroupId = group.id;
-							}}
+							onclick={() => selectSymbolGroup(group.id)}
 						>
 							{group.label}
 						</button>

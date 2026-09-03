@@ -222,6 +222,27 @@ def strip_all_sw(board, create_symbol, filler: str = "L2") -> None:
                 board[reel][row] = create_symbol(filler)
 
 
+def cap_lying_sw_on_board(
+    board,
+    create_symbol,
+    *,
+    skip_reels: set[int] | None = None,
+    max_count: int = 1,
+    rng: random.Random | None = None,
+) -> list[dict]:
+    """Keep at most max_count lying SW cells on non-skipped reels."""
+    rng = rng or random
+    skip = skip_reels or set()
+    hits = [h for h in find_super_wilds(board) if int(h["reel"]) not in skip]
+    if len(hits) <= max_count:
+        return hits
+    rng.shuffle(hits)
+    keep = hits[:max_count]
+    for h in hits[max_count:]:
+        board[h["reel"]][h["row"]] = create_symbol("L2")
+    return keep
+
+
 def keep_single_sw(
     board,
     create_symbol,

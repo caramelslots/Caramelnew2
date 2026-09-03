@@ -144,12 +144,58 @@ export const getOutlineReelLayout = (reelIndex: number) => {
 /** Scatter bonus symbols that trigger reel slow-down (B = FS, BD = buy-duel). */
 const isSlowTriggerBonus = (name: string) => name === 'B' || name === 'BD';
 
+/** Max B scatters on one natural / buy-FS basegame spin. */
+export const CAT_SLOW_MAX_BONUS_COUNT = 4;
+
+/** Max BD scatters — buy-duel purchase only (exactly 3× on the board). */
+export const CAT_SLOW_MAX_DUEL_BONUS_COUNT = 3;
+
 /** Bonus (B/BD) on the visible grid only — excludes RGS top/bottom padding rows. */
-const countVisibleBonusOnReel = (reel: RawSymbol[]) =>
+export const countVisibleBonusOnReel = (reel: RawSymbol[]) =>
 	reel.filter(
 		(symbol, index) =>
 			isVisibleBoardSymbolIndex(index, reel.length) && isSlowTriggerBonus(symbol.name),
 	).length;
+
+export const countVisibleBonusesOnBoard = (board: RawSymbol[][]) =>
+	board.reduce((sum, reel) => sum + countVisibleBonusOnReel(reel), 0);
+
+export const boardHasVisibleDuelBonus = (board: RawSymbol[][]) =>
+	board.some((reel) =>
+		reel.some(
+			(symbol, index) =>
+				isVisibleBoardSymbolIndex(index, reel.length) && symbol.name === 'BD',
+		),
+	);
+
+/** B → 4; buy-duel BD purchase reveal → 3 (BD never appears on reelstrips). */
+export const getCatSlowMaxBonusCount = (board: RawSymbol[][]) =>
+	boardHasVisibleDuelBonus(board) ? CAT_SLOW_MAX_DUEL_BONUS_COUNT : CAT_SLOW_MAX_BONUS_COUNT;
+
+/** Reel where the Nth visible bonus (1-based) finishes, or -1 if fewer than N on the board. */
+export const findReelIndexOfNthBonus = (board: RawSymbol[][], n: number): number => {
+	let found = 0;
+	for (let reelIndex = 0; reelIndex < board.length; reelIndex++) {
+		found += countVisibleBonusOnReel(board[reelIndex]);
+		if (found >= n) return reelIndex;
+	}
+	return -1;
+};
+
+/**
+ * Skip cat slow-down when all max bonuses land on or before the trigger reel
+ * (remaining reels cannot add another bonus).
+ */
+export const shouldSkipCatSlowForBoard = (
+	board: RawSymbol[][],
+	triggerReelIndex: number,
+): boolean => {
+	if (triggerReelIndex < 0) return true;
+	const maxBonusCount = getCatSlowMaxBonusCount(board);
+	if (countVisibleBonusesOnBoard(board) < maxBonusCount) return false;
+	const maxBonusReel = findReelIndexOfNthBonus(board, maxBonusCount);
+	return maxBonusReel >= 0 && maxBonusReel <= triggerReelIndex;
+};
 
 /**
  * Index of the reel that completes the 2nd visible bonus (B or BD) on the result board,

@@ -240,6 +240,7 @@
 			});
 			shotFlight = {
 				nonce: (shotFlight?.nonce ?? 0) + 1,
+				seatIndex: index,
 				startX: muzzle.x,
 				startY: muzzle.y,
 				endX,

@@ -34,7 +34,7 @@
 		getSuperWildPixiTransform,
 		superWildWheelEndDeg,
 		superWildWheelStartDeg,
-		SUPER_WILD_WHEEL_SECTORS,
+		prepareSuperWildDrumSpin,
 	} from '../game/superWildHtmlSpine';
 	import SuperWildCurtainController from './SuperWildCurtainController.svelte';
 	import SuperWildDrumLabels from './SuperWildDrumLabels.svelte';
@@ -59,20 +59,16 @@
 	const transform = $derived(getSuperWildPixiTransform(props.boxW, props.boxH));
 	const colX = $derived(getSuperWildColumnX(props.reel, getSymbolX(props.reel, 'SW')));
 
+	const initialPrepared = prepareSuperWildDrumSpin(props.mult);
 	const initialLanded = props.phase === 'done' || props.phase === 'dismiss';
-	const initialSector = (() => {
-		const sectors = SUPER_WILD_WHEEL_SECTORS as readonly number[];
-		return Math.max(0, sectors.indexOf(props.mult === 1 ? 2 : props.mult));
-	})();
 
 	let wheelDeg = $state(
-		initialLanded
-			? superWildWheelEndDeg(props.mult)
-			: superWildWheelStartDeg(superWildWheelEndDeg(props.mult)),
+		initialLanded ? initialPrepared.endDeg : initialPrepared.startDeg,
 	);
 	let wheelLanded = $state(initialLanded);
-	let landedSectorIndex = $state(initialLanded ? initialSector : 0);
+	let landedSectorIndex = $state(initialPrepared.landSectorIndex);
 	let wheelTargetMult = $state(props.mult);
+	let drumSpinLabels = $state<number[]>(initialPrepared.labels);
 	let badgePinned = $state(initialLanded);
 	let prevPhase: Phase | null = null;
 
@@ -183,17 +179,27 @@
 				onWheelDeg={(deg) => {
 					wheelDeg = deg;
 				}}
-				onWheelLanded={(landed, sectorIndex, targetMult) => {
+				onWheelLanded={(landed, sectorIndex, targetMult, labels) => {
 					wheelLanded = landed;
-					landedSectorIndex = sectorIndex;
 					wheelTargetMult = targetMult;
-					if (landed) badgePinned = true;
+					if (!landed) {
+						landedSectorIndex = sectorIndex;
+						if (labels) drumSpinLabels = labels;
+					} else {
+						landedSectorIndex = sectorIndex;
+						badgePinned = true;
+					}
 				}}
 				onOpenComplete={() => {
 					alignT.set(1, { duration: 0 });
 				}}
 			/>
-			<SuperWildDrumLabels {wheelLanded} {landedSectorIndex} {wheelTargetMult} />
+			<SuperWildDrumLabels
+				{wheelLanded}
+				wheelDeg={wheelDeg}
+				{landedSectorIndex}
+				spinLabels={drumSpinLabels}
+			/>
 		</SpineProvider>
 	</Container>
 	<SuperWildResultBadge

@@ -135,6 +135,15 @@ export default {
 			scale: 1,
 		},
 	},
+	// Duel Bonus (BD) — designer `export_cat&dog` (idle / land / activate).
+	BD: {
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/symbols/BD/BD.atlas'),
+			skeleton: assetUrl('assets/spines/symbols/BD/BD.json'),
+			scale: 1,
+		},
+	},
 	// Bullet / cartridge — `designer_assets/render_cartridge` (land `stop` only).
 	BT: {
 		type: 'spine',

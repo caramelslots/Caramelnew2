@@ -116,16 +116,21 @@ class GameConfig(Config):
         self.target_pick_count = 6
         self.drum_max = 6
         # Medium-vol bonus: mostly ×2/×4; ×6/×8 stay rare spice.
-        # (Product of 2 sticky columns still capped by max_sticky_sw.)
-        self.sw_mult_weights = {2: 42, 4: 40, 6: 13, 8: 5}
-        # Base/boost curtain mults: only ×2/×4/×6/×8 (no ×1).
+        # Ultra-rare ×25/×50/×75 at 4:2:1 (20:10:5). Table ×10 so ×25 (20) stays
+        # below ×8 (30) — integer {4,2,1} on the old scale made ×25 beat ×8.
+        self.sw_mult_weights = {
+            2: 420, 4: 400, 6: 130, 8: 50, 25: 20, 50: 10, 75: 5,
+        }
+        # Base/boost curtain mults: ×2–×8 plus ultra-rare ×25/×50/×75 (no ×1).
         # Former ×1 mass (~55%) is folded into ×2 so curtain rate (~3%) and
         # relative ×4/×6/×8 spice stay; RTP/HIT are re-pinned by the post-opt
         # LUT enforce (match_sw_mult_mix → match_hit → match_rtp).
         # A lying SW (not on a winning line) never applies its mult: any line
         # through the SW cell fires the curtain gate first. Board cells are
         # still cloaked to multiplier=1 until expand (eval / reveal only).
-        self.base_sw_mult_weights = {2: 79, 4: 13, 6: 5, 8: 3}
+        self.base_sw_mult_weights = {
+            2: 790, 4: 130, 6: 50, 8: 30, 25: 20, 50: 10, 75: 5,
+        }
         # Paw-coin type split inside the (unchanged) ~3% paw fence quota.
         # Bronze 1 row / silver 2 rows / gold 3 rows — gold is rarest.
         self.paw_tier_weights = {"PB": 60, "PS": 30, "PG": 10}
@@ -258,7 +263,9 @@ class GameConfig(Config):
             "mult_values": {
                 self.basegame_type: dict(self.base_sw_mult_weights),
                 # Medium-vol Super: still richer than Normal, but not ×6/×8-heavy.
-                self.freegame_type: {2: 35, 4: 40, 6: 18, 8: 7},
+                self.freegame_type: {
+                    2: 350, 4: 400, 6: 180, 8: 70, 25: 20, 50: 10, 75: 5,
+                },
             },
             "force_wincap": False,
             "force_freegame": True,

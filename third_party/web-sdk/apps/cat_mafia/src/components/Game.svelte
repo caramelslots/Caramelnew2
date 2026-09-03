@@ -243,8 +243,8 @@
 				{#if stateDuel.active}
 					<MascotPixi variant="duelDog" zIndex={6} />
 				{/if}
-				<!-- Tir FX above board HTML while flight/flip runs (stage lifted). -->
-				<TargetShotBulletPixiLayer zIndex={90} />
+				<!-- Tir FX above target holders + flip discs. -->
+				<TargetShotBulletPixiLayer zIndex={93} />
 				<TargetFlipPixiLayer zIndex={91} />
 				<!-- Under Transition (100) + FS outro / Win coins (10); above board. -->
 				<RevolverDrumPixi

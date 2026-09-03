@@ -91,7 +91,7 @@ import {
 } from './constants';
 import { devPreview } from './devPreview.svelte';
 import { gameSpeedMultFor } from './gameSpeed';
-import { REEL_SCROLL_SPEED_MULT_CAT, catSlowReelsAfterTrigger } from './catAnticipation';
+import { REEL_SCROLL_SPEED_MULT_CAT, catSlowReelsAfterTrigger, CAT_SLOW_MAX_BONUS_COUNT } from './catAnticipation';
 import { targetPickInnerClip } from './targetBoardAssets';
 
 const REEL_SCROLL_SPEED_MULT_SLOW = 0.5;
@@ -129,6 +129,8 @@ const onSymbolLand = ({
 			type: 'soundOnce',
 			name: SCATTER_LAND_SOUND_MAP[scatterLandIndex()],
 		});
+		stateGame.catSlowBonusLandCount += 1;
+		cancelCatSlowIfMaxBonusesReached();
 	}
 
 	if (rawSymbol.name === 'W') {
@@ -136,6 +138,22 @@ const onSymbolLand = ({
 			type: 'soundOnce',
 			name: 'sfx_multiplier_landing',
 		});
+	}
+};
+
+/** End slow-down / zoom once the spin's max bonus count has landed; snap remaining slow reels. */
+const cancelCatSlowIfMaxBonusesReached = () => {
+	if (stateGame.catSlowBonusLandCount < stateGame.catSlowMaxBonusCount) return;
+	if (stateGame.catSlowReels.length === 0) return;
+
+	const slowReels = [...stateGame.catSlowReels];
+	stateGame.catSlowReels = [];
+
+	for (const reelIndex of slowReels) {
+		const motion = stateGame.board[reelIndex]?.reelState.motion;
+		if (motion === 'spinning' || motion === 'bouncing') {
+			stateGame.board[reelIndex].stop();
+		}
 	}
 };
 
@@ -152,7 +170,11 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 				forcePlay: !stateBet.isTurbo,
 			});
 			if (stateGame.catSlowTriggerReel === reelIndex) {
-				stateGame.catSlowReels = catSlowReelsAfterTrigger(reelIndex, stateGame.board.length);
+				if (stateGame.catSlowBonusLandCount >= stateGame.catSlowMaxBonusCount) {
+					stateGame.catSlowReels = [];
+				} else {
+					stateGame.catSlowReels = catSlowReelsAfterTrigger(reelIndex, stateGame.board.length);
+				}
 			}
 		},
 		onSymbolLand,
@@ -186,6 +208,10 @@ export const stateGame = $state({
 	gameType: 'basegame' as GameType,
 	multiplierBoard: [] as (MultiplierSymbol | undefined)[][],
 	scatterCounter: 0,
+	/** Visible B/BD landed this spin — drives early cat-slow cancel at spin max. */
+	catSlowBonusLandCount: 0,
+	/** 4 for B (FS), 3 for buy-duel BD purchase reveal. */
+	catSlowMaxBonusCount: CAT_SLOW_MAX_BONUS_COUNT,
 	/** Reels that slow down after the 2nd bonus (B/BD) lands (basegame). Cleared after each spin. */
 	catSlowReels: [] as number[],
 	/** Reel whose stop activates bonus slow-down (-1 = off). Set before spin, cleared after. */

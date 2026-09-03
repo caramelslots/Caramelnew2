@@ -140,7 +140,8 @@
 	const dimViaTint = $derived(
 		props.reelSymbol.rawSymbol.name === 'H3' ||
 			props.reelSymbol.rawSymbol.name === 'H4' ||
-			props.reelSymbol.rawSymbol.name === 'B',
+			props.reelSymbol.rawSymbol.name === 'B' ||
+			props.reelSymbol.rawSymbol.name === 'BD',
 	);
 	const dimTintFromFactor = (factor: number) => {
 		const c = Math.max(0, Math.min(255, Math.round(factor * 255)));

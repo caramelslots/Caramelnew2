@@ -1,6 +1,7 @@
 <!--
-	Keep only front/back slots; drive FS label visibility from the `front` bone
-	(same windows as HTML TargetFlipSpine).
+	Keep front/back/edge slots; drive FS label visibility from the `front` bone
+	(same windows as HTML TargetFlipSpine). `edge` is the side strip — without it
+	flips look like a flat scaleY squash.
 -->
 <script lang="ts">
 	import { onDestroy } from 'svelte';

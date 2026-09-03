@@ -130,9 +130,11 @@ export const SUPER_WILD_COLUMN_OFFSET_X_PX: Readonly<Record<number, number>> = {
 	4: 0, // col 5 — left
 };
 
-/** Wheel sectors under the pointer (8 × 45°). Math mults ×2/×4/×6/×8. */
-export const SUPER_WILD_WHEEL_SECTORS = [2, 4, 6, 8, 2, 4, 6, 8] as const;
+/** Wheel sectors (8 × 45° — must match Spine `wheel` art). High tier ×25/×50/×75. */
+export const SUPER_WILD_WHEEL_SECTORS = [2, 4, 6, 8, 25, 50, 75, 2] as const;
 export const SUPER_WILD_WHEEL_SECTOR_DEG = 45;
+/** All distinct mult values on the drum (dev + docs). */
+export const SUPER_WILD_WHEEL_MULTS = [2, 4, 6, 8, 25, 50, 75] as const;
 /** Extra full turns before landing on the math mult. */
 export const SUPER_WILD_WHEEL_SPINS = 5;
 
@@ -146,9 +148,18 @@ export const SUPER_WILD_DRUM_LABEL_RADIUS = 0.3;
 export const SUPER_WILD_DRUM_LABEL_FONT_FRAC = 0.135;
 /**
  * Angular offset (deg) from bone-local 0° to the center of sector 0.
- * 0 = cell centered under the pointer; 22.5 = spoke under the pointer.
+ * 22.5° = half of 45° — first cell center on the wheel attachment.
  */
 export const SUPER_WILD_DRUM_SECTOR_OFFSET_DEG = 22.5;
+/**
+ * Fixed drum pointer angle in wheel-bone space (deg).
+ * spine-pixi Y-flip renders bone-local 180° at the visual top arch pointer.
+ */
+export const SUPER_WILD_DRUM_POINTER_DEG = 180;
+/** Drum label for ×25 / ×50 / ×75 — slightly smaller than ×2…×8. */
+export const SUPER_WILD_DRUM_LABEL_FONT_FRAC_HIGH = 0.122;
+/** Top badge for high-tier mults. */
+export const SUPER_WILD_RESULT_BADGE_FONT_FRAC_HIGH = 0.28;
 /**
  * Drum pointer (Spine bone `main17`) — one-shot setup-pose scale.
  * Applied once to BoneData (not per-frame — idle leaves the bone unkeyed).
@@ -174,19 +185,91 @@ export const SUPER_WILD_RESULT_BADGE_FONT_FRAC = 0.32;
 /** Fade / pop-in duration for the landed top × badge. */
 export const SUPER_WILD_RESULT_BADGE_FADE_MS = 420;
 
-export const superWildWheelEndDeg = (mult: number, spins = SUPER_WILD_WHEEL_SPINS) => {
+export const superWildDrumLabelFontFrac = (mult: number) =>
+	mult >= 25 ? SUPER_WILD_DRUM_LABEL_FONT_FRAC_HIGH : SUPER_WILD_DRUM_LABEL_FONT_FRAC;
+
+export const superWildResultBadgeFontFrac = (mult: number) =>
+	mult >= 25 ? SUPER_WILD_RESULT_BADGE_FONT_FRAC_HIGH : SUPER_WILD_RESULT_BADGE_FONT_FRAC;
+
+/** Sector index for landing — first match for duplicated ×2…×8 cells. */
+export const superWildWheelSectorIndex = (mult: number) => {
+	const target = mult === 1 ? 2 : mult;
 	const sectors = SUPER_WILD_WHEEL_SECTORS as readonly number[];
-	let idx = sectors.indexOf(mult);
-	if (idx < 0) {
-		// Unknown / legacy ×1 — land on first ×2 sector.
-		idx = 0;
-	}
-	// Rotate so sector idx's mid-angle (idx×45 + offset) sits under the pointer.
-	return -(spins * 360 + idx * SUPER_WILD_WHEEL_SECTOR_DEG + SUPER_WILD_DRUM_SECTOR_OFFSET_DEG);
+	const idx = sectors.indexOf(target);
+	return idx < 0 ? 0 : idx;
 };
+
+/** Randomize drum face labels for one spin (8 cells — same multiset as `SUPER_WILD_WHEEL_SECTORS`). */
+export const shuffleSuperWildDrumLabels = (): number[] => {
+	const pool = [...SUPER_WILD_WHEEL_SECTORS];
+	for (let i = pool.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		const tmp = pool[i];
+		pool[i] = pool[j];
+		pool[j] = tmp;
+	}
+	return pool;
+};
+
+/** Which physical sector holds the math mult after a shuffle (first match for duplicate ×2). */
+export const superWildDrumLandSectorIndex = (
+	labels: readonly number[],
+	targetMult: number,
+): number => {
+	const target = targetMult === 1 ? 2 : targetMult;
+	const idx = labels.indexOf(target);
+	return idx < 0 ? superWildWheelSectorIndex(targetMult) : idx;
+};
+
+/** Mid-angle (deg) of sector `idx` on the wheel bone. */
+export const superWildWheelSectorMidDeg = (idx: number) =>
+	idx * SUPER_WILD_WHEEL_SECTOR_DEG + SUPER_WILD_DRUM_SECTOR_OFFSET_DEG;
 
 export const superWildWheelStartDeg = (endDeg: number, spins = SUPER_WILD_WHEEL_SPINS) =>
 	endDeg - spins * 360;
+
+/** Final bone rotation so physical sector `sectorIdx` sits under the fixed pointer. */
+export const superWildWheelEndDegForSector = (
+	sectorIdx: number,
+	spins = SUPER_WILD_WHEEL_SPINS,
+) => {
+	const sectorMid = superWildWheelSectorMidDeg(sectorIdx);
+	const landOffset = ((sectorMid - SUPER_WILD_DRUM_POINTER_DEG) % 360 + 360) % 360;
+	return -(spins * 360 + landOffset);
+};
+
+/** Legacy helper — canonical sector for mult (sticky / pre-shuffle). Prefer `prepareSuperWildDrumSpin`. */
+export const superWildWheelEndDeg = (mult: number, spins = SUPER_WILD_WHEEL_SPINS) =>
+	superWildWheelEndDegForSector(superWildWheelSectorIndex(mult), spins);
+
+/** Sector label physically nearest the fixed drum pointer after `wheelDeg` rotation. */
+export const superWildPointerSectorIndex = (wheelDeg: number): number => {
+	const n = SUPER_WILD_WHEEL_SECTORS.length;
+	let best = 0;
+	let bestDist = Infinity;
+	for (let i = 0; i < n; i++) {
+		const angle = superWildWheelSectorMidDeg(i) + wheelDeg;
+		const norm = ((angle - SUPER_WILD_DRUM_POINTER_DEG) % 360 + 360) % 360;
+		const dist = Math.min(norm, 360 - norm);
+		if (dist < bestDist) {
+			bestDist = dist;
+			best = i;
+		}
+	}
+	return best;
+};
+
+/**
+ * Shuffle drum labels, then derive the landing sector + wheel angles for a known math mult.
+ * The wheel stops on the shuffled cell that already shows the target — no post-stop label swap.
+ */
+export const prepareSuperWildDrumSpin = (targetMult: number) => {
+	const labels = shuffleSuperWildDrumLabels();
+	const landSectorIndex = superWildDrumLandSectorIndex(labels, targetMult);
+	const endDeg = superWildWheelEndDegForSector(landSectorIndex);
+	const startDeg = superWildWheelStartDeg(endDeg);
+	return { labels, landSectorIndex, endDeg, startDeg };
+};
 
 /**
  * Fit the SW viewport into a board-local column box.

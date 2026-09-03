@@ -13,7 +13,6 @@
 </script>
 
 <script lang="ts">
-	import { fade } from 'svelte/transition';
 	import { OnHotkey } from 'components-shared';
 	import { stateUrlDerived } from 'state-shared';
 	import { waitForResolve } from 'utils-shared/wait';
@@ -214,7 +213,6 @@
 	<div
 		class="overlay"
 		data-test="free-spin-intro-overlay"
-		transition:fade={{ duration: 200 }}
 		onclick={dismiss}
 		onkeydown={(e) => e.key === 'Enter' && dismiss()}
 		role="button"

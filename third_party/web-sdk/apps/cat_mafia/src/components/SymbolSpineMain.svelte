@@ -149,7 +149,7 @@
 	height={fitHeight}
 	{autoUpdate}
 >
-	{#if props.symbolName === 'B'}
+	{#if props.symbolName === 'B' || props.symbolName === 'BD'}
 		<BonusUnclipFrame />
 	{/if}
 	{#key `${trackAnimationName}:${bonusIdleNonce}`}

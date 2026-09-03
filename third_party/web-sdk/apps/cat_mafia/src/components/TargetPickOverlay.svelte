@@ -195,6 +195,7 @@
 			});
 			const nextFlight: TargetShotFlight = {
 				nonce: (stateGame.targetShotFlightSeq += 1),
+				seatIndex: index,
 				startX: muzzle.x,
 				startY: muzzle.y,
 				endX,

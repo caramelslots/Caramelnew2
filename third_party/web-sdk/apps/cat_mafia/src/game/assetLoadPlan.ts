@@ -28,6 +28,7 @@ export const LOADER_BATCH_2_KEYS = [
 	'L3',
 	'L4',
 	'B',
+	'BD',
 	'BT',
 	'L1Img',
 	'L2Img',
@@ -75,8 +76,8 @@ export const getLocaleSpecificFontKeys = (locale: string): readonly (keyof typeo
 
 /**
  * Cards screen — win variants, cat-slow outline, locale fonts
- * (all declared for count check), coins, HUD sprites. Must finish before
- * "Press to continue".
+ * (all declared for count check), coins, HUD sprites, fsCong layers.
+ * Must finish before "Press to continue".
  */
 export const LOADER_BATCH_3_KEYS = [
 	'outlineReel',
@@ -102,6 +103,10 @@ export const LOADER_BATCH_3_KEYS = [
 	'revolverBullet1',
 	'revolverBullet2',
 	'revolverOverlay',
+	'fsCongRays',
+	'fsCongBg',
+	'fsCongFrame',
+	'fsCongBoard',
 ] as const satisfies readonly (keyof typeof assets)[];
 
 /**
@@ -113,10 +118,6 @@ export const LOADER_BATCH_3_KEYS = [
 export const LOADER_BATCH_4_KEYS = [
 	'bigwin',
 	'fsPopup',
-	'fsCongRays',
-	'fsCongBg',
-	'fsCongFrame',
-	'fsCongBoard',
 	'fsLeftCounter',
 	'fsLeftCounterSpinboard',
 	/** Tir FX (entry pick + Stage E) — Pixi spine, not HTML SpinePlayer. */
