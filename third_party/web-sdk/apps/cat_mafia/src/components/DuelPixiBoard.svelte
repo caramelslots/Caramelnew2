@@ -101,11 +101,12 @@
 
 	/** Place WIN on the desk nameplate (same idea as base UiCashStacksLayout). */
 	const isPopoutSmall = $derived(isPopoutSmallViewport(context.stateLayoutDerived.canvasSizes()));
-	/** Gap under playfield center → nameplate WIN (lower = higher on plate). */
-	const WIN_BELOW_BOARD_GAP = 30;
+	const isPortrait = $derived(context.stateLayoutDerived.layoutType() === 'portrait');
+	/** Gap under playfield center → nameplate WIN (larger = lower on plate). */
+	const winBelowBoardGap = $derived(isPortrait ? 34 : 30);
 	const winHudPos = $derived({
 		x: layout.x,
-		y: layout.y + layout.height * 0.5 * layout.scale + WIN_BELOW_BOARD_GAP * layout.scale,
+		y: layout.y + layout.height * 0.5 * layout.scale + winBelowBoardGap * layout.scale,
 	});
 	/**
 	 * Popout S uses a much smaller mainLayout.scale — keep game-space font large
