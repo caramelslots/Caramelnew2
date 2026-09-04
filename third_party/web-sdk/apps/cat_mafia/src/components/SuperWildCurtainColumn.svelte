@@ -28,6 +28,7 @@
 		SUPER_WILD_DISMISS_DIST,
 		SUPER_WILD_STICKY_DROP_IN_DIST,
 		SUPER_WILD_STICKY_DROP_IN_MS,
+		drawSuperWildColumnMask,
 		getSuperWildColumnX,
 		getSuperWildOpen0TileCenterLocalY,
 		getSuperWildOriginCellY,
@@ -98,10 +99,7 @@
 	 *  Keep mounted for the whole lifecycle: toggling `{#if}` destroys the
 	 *  Graphics while Pixi still references it as a stencil → uid crash. */
 	const drawColumnMask = $derived((g: PIXI.Graphics) => {
-		const w = props.boxW * 1.08;
-		const h = props.boxH;
-		g.rect(-w * 0.5, -h * 0.5, w, h);
-		g.fill(0xffffff);
+		drawSuperWildColumnMask(g, props.boxW * 1.08, props.boxH, props.reel);
 	});
 
 	$effect(() => {

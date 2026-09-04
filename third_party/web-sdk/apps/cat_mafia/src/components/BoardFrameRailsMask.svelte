@@ -9,6 +9,7 @@
 	import type * as PIXI from 'pixi.js';
 
 	import {
+		BOARD_COLUMN_45_RAIL_SHAVE_PX,
 		BOARD_DESK_CONTENT,
 		BOARD_DIMENSIONS,
 		BOARD_MASK_OVERFLOW,
@@ -59,6 +60,12 @@
 		const cols = BOARD_DIMENSIONS.x;
 		const colW = pfW / cols;
 		const gap = Math.max(2, sw * DIVIDER_WIDTH_FRAC);
+		const railGap = (railIndex: number) => {
+			if (railIndex === 3 || railIndex === 4) {
+				return Math.max(2, gap - BOARD_COLUMN_45_RAIL_SHAVE_PX);
+			}
+			return gap;
+		};
 		// Outer columns only — pull frame strips outward so Bonus/Wild frames
 		// in reels 1 & 5 are not clipped. Internal rail centres stay on pfLeft.
 		const holeLeft = pfLeft - BOARD_OUTER_MASK_SLACK_PX;
@@ -76,7 +83,8 @@
 		if (variant !== 'frame') {
 			for (let i = 1; i < cols; i++) {
 				const cx = pfLeft + i * colW;
-				g.rect(cx - gap / 2, pfTop, gap, pfH);
+				const w = railGap(i);
+				g.rect(cx - w / 2, pfTop, w, pfH);
 			}
 		}
 

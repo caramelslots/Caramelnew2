@@ -25,6 +25,7 @@
 
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
+	import { Tween } from 'svelte/motion';
 	import { Container, Graphics } from 'pixi-svelte';
 	import type * as PIXI from 'pixi.js';
 	import { MainContainer } from 'components-layout';
@@ -35,14 +36,17 @@
 		BITMAP_FONT_SCALE,
 		BOARD_MASK_SPIN_OVERFLOW,
 		SYMBOL_SIZE,
+		WIN_HUD_COUNT_UP_MS,
 		WIN_HUD_FONT_SIZE,
 		isPopoutSmallViewport,
+		isPopoutViewport,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
 	import { computeDuelScreenLayout, getDuelPixiBoardLayout } from '../game/duelLayout';
+	import { scaleMsByGameSpeed } from '../game/gameSpeed';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
 	import { getDuelBoardStack } from '../game/stateDuelBoards.svelte';
-	import type { ReelSymbol } from '../game/stateGame.svelte';
+	import { stateGame, type ReelSymbol } from '../game/stateGame.svelte';
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardFrame from './BoardFrame.svelte';
 	import BoardBase from './BoardBase.svelte';
@@ -99,11 +103,61 @@
 	// Persist side bank under the desk (WIN $…) for the whole duel — do not clear between spins.
 	const showWin = $derived(stateDuel.active);
 
+	/**
+	 * Under-desk bank count-up — ONLY on the `win` layer.
+	 * Game.svelte mounts ~9 DuelPixiBoard instances per side; if every layer ran
+	 * this effect, the first one would clear `winHudCountUpPendingBySide` and the
+	 * actual WIN label would snap instead of tweening.
+	 *
+	 * IMPORTANT: never reassign `winHudCountUpPendingBySide` on every run when
+	 * banks are 0 — that caused an infinite $effect loop and killed the tab.
+	 */
+	const bankTween = new Tween(0);
+	let bankTweenTarget: number | null = null;
+	$effect(() => {
+		if (props.layer !== 'win') return;
+
+		const target = sideTotal;
+		const wantCountUp = stateDuel.winHudCountUpPendingBySide[props.side];
+		const from = bankTween.current;
+
+		const clearCountUpFlag = () => {
+			if (!stateDuel.winHudCountUpPendingBySide[props.side]) return;
+			stateDuel.winHudCountUpPendingBySide[props.side] = false;
+		};
+
+		if (target <= 0 || target + 0.01 < from) {
+			clearCountUpFlag();
+			bankTweenTarget = null;
+			bankTween.set(target, { duration: 0 });
+			return;
+		}
+
+		if (wantCountUp && target > from + 0.01) {
+			clearCountUpFlag();
+			bankTweenTarget = target;
+			bankTween.set(target, {
+				duration: scaleMsByGameSpeed(WIN_HUD_COUNT_UP_MS, stateGame.gameSpeed),
+			});
+			return;
+		}
+
+		if (bankTweenTarget != null && Math.abs(target - bankTweenTarget) < 0.01) {
+			return;
+		}
+
+		bankTweenTarget = null;
+		bankTween.set(target, { duration: 0 });
+	});
+	const displayBankAmount = $derived(Math.round(bankTween.current));
+
 	/** Place WIN on the desk nameplate (same idea as base UiCashStacksLayout). */
-	const isPopoutSmall = $derived(isPopoutSmallViewport(context.stateLayoutDerived.canvasSizes()));
+	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
+	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
+	const isPopout = $derived(isPopoutViewport(canvasSizes));
 	const isPortrait = $derived(context.stateLayoutDerived.layoutType() === 'portrait');
-	/** Gap under playfield center → nameplate WIN (larger = lower on plate). */
-	const winBelowBoardGap = $derived(isPortrait ? 34 : 30);
+	/** Gap under playfield center → nameplate WIN (larger = lower on plate). PC only nudge. */
+	const winBelowBoardGap = $derived(isPortrait ? 34 : 34);
 	const winHudPos = $derived({
 		x: layout.x,
 		y: layout.y + layout.height * 0.5 * layout.scale + winBelowBoardGap * layout.scale,
@@ -216,7 +270,7 @@
 				bodyFontVariant="prostoi"
 				eventMode="none"
 				prefix={context.i18nDerived.win().toUpperCase()}
-				amount={sideTotal}
+				amount={displayBankAmount}
 				bookEvent
 				maxWidth={layout.width * layout.scale * 0.96}
 				minScale={0.5}

@@ -7,6 +7,7 @@
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { Tween } from 'svelte/motion';
 
 	import { stateBet } from 'state-shared';
 	import { MainContainer } from 'components-layout';
@@ -22,10 +23,13 @@
 		isPopoutSmallViewport,
 		isPopoutViewport,
 		POPOUT_S_SCALE,
+		WIN_HUD_COUNT_UP_MS,
 		WIN_HUD_FONT_SIZE,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
+	import { scaleMsByGameSpeed } from '../game/gameSpeed';
 	import { isAnyMenuOpen } from '../game/isAnyMenuOpen';
+	import { stateGame } from '../game/stateGame.svelte';
 	import { getContextLayout } from 'utils-layout';
 
 	type Props = {
@@ -65,7 +69,46 @@
 		x: ml.width * 0.5 + winHudNudge.x,
 		y: boardLayout.y + boardLayout.height * 0.5 + WIN_BELOW_BOARD_GAP + winHudNudge.y,
 	});
-	const showWin = $derived(stateBet.winBookEventAmount > 0);
+
+	/**
+	 * Under-board WIN: snap by default. Book handlers set `winHudCountUpPending`
+	 * for bonus FS (any increase) or base post-SW — we tween that increase, then
+	 * ignore follow-up writes to the same target so setTotalWin cannot kill the tween.
+	 */
+	const winAmountTween = new Tween(stateBet.winBookEventAmount);
+	let hudTweenTarget: number | null = null;
+	$effect(() => {
+		const target = stateBet.winBookEventAmount;
+		const wantCountUp = stateGame.winHudCountUpPending;
+		const from = winAmountTween.current;
+
+		if (target <= 0 || target + 0.01 < from) {
+			if (stateGame.winHudCountUpPending) stateGame.winHudCountUpPending = false;
+			hudTweenTarget = null;
+			winAmountTween.set(target, { duration: 0 });
+			return;
+		}
+
+		if (wantCountUp && target > from + 0.01) {
+			stateGame.winHudCountUpPending = false;
+			hudTweenTarget = target;
+			winAmountTween.set(target, {
+				duration: scaleMsByGameSpeed(WIN_HUD_COUNT_UP_MS, stateGame.gameSpeed),
+			});
+			return;
+		}
+
+		// Same cumulative write (setWin then setTotalWin) or flag-clear re-entry —
+		// do not snap over an in-flight post-SW count-up.
+		if (hudTweenTarget != null && Math.abs(target - hudTweenTarget) < 0.01) {
+			return;
+		}
+
+		hudTweenTarget = null;
+		winAmountTween.set(target, { duration: 0 });
+	});
+	const displayWinAmount = $derived(Math.round(winAmountTween.current));
+	const showWin = $derived(stateBet.winBookEventAmount > 0 || displayWinAmount > 0);
 
 	const WIN_TEXT_STYLE = {
 		fontSize: WIN_HUD_FONT_SIZE * BITMAP_FONT_SCALE,
@@ -99,7 +142,7 @@
 						bodyFontVariant="prostoi"
 						eventMode="none"
 						prefix={context.i18nDerived.win().toUpperCase()}
-						amount={stateBet.winBookEventAmount}
+						amount={displayWinAmount}
 						bookEvent
 						maxWidth={boardLayout.width * 0.96}
 						minScale={0.5}

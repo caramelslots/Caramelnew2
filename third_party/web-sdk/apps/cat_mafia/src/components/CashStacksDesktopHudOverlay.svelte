@@ -1,6 +1,6 @@
 <!--
 	CashStacksDesktopHudOverlay.svelte — desktop + tablet + landscape + popout HUD.
-	Single bottom row: [i][☰][BUY BONUS] [−][SPIN][+] [AUTO][⚡] BALANCE/BET
+	Single bottom row: [i][☰][BUY BONUS] BALANCE/BET [AUTO][⚡][SPIN][−][+]
 -->
 <script lang="ts">
 	import {

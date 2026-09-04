@@ -62,6 +62,13 @@ export const stateDuel = $state({
 		/** Padded board row of the lying SW the curtain grows from (upward). */
 		originRow: number;
 	}[],
+	/**
+	 * After two-beat SW: bank update should tween once (phase1 → full spin).
+	 * Cleared when the under-desk WIN HUD consumes it.
+	 */
+	winHudCountUpPendingBySide: { cat: false, dog: false },
+	/** Side waiting for post-curtain bank count-up (set on duelSpin swTwoBeat). */
+	pendingSwBankCountUpSide: null as DuelSide | null,
 });
 
 export const resetDuelState = () => {
@@ -89,6 +96,8 @@ export const resetDuelState = () => {
 	stateDuel.stickySwByReel = { cat: {}, dog: {} };
 	stateDuel.stickySwOpened = { cat: false, dog: false };
 	stateDuel.superWildCurtains = [];
+	stateDuel.winHudCountUpPendingBySide = { cat: false, dog: false };
+	stateDuel.pendingSwBankCountUpSide = null;
 };
 
 export const isDuelActive = () => stateDuel.active;

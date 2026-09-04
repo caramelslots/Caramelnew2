@@ -6,6 +6,7 @@
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { Tween } from 'svelte/motion';
 
 	import { stateBet } from 'state-shared';
 	import { MainContainer } from 'components-layout';
@@ -13,9 +14,11 @@
 	import UiFadeContainer from 'components-ui-pixi/src/components/UiFadeContainer.svelte';
 	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
 
-	import { BITMAP_FONT_SCALE, WIN_HUD_FONT_SIZE } from '../game/constants';
+	import { BITMAP_FONT_SCALE, WIN_HUD_COUNT_UP_MS, WIN_HUD_FONT_SIZE } from '../game/constants';
 	import { portraitScaleY, portraitWinHudLocalY } from '../game/portraitHudLayout';
 	import { getContext } from '../game/context';
+	import { scaleMsByGameSpeed } from '../game/gameSpeed';
+	import { stateGame } from '../game/stateGame.svelte';
 	import { getContextLayout } from 'utils-layout';
 
 	type Props = {
@@ -40,7 +43,38 @@
 		y: portraitWinHudLocalY(stateLayoutDerived, boardLayout),
 	});
 
-	const showWin = $derived(stateBet.winBookEventAmount > 0);
+	const winAmountTween = new Tween(stateBet.winBookEventAmount);
+	let hudTweenTarget: number | null = null;
+	$effect(() => {
+		const target = stateBet.winBookEventAmount;
+		const wantCountUp = stateGame.winHudCountUpPending;
+		const from = winAmountTween.current;
+
+		if (target <= 0 || target + 0.01 < from) {
+			if (stateGame.winHudCountUpPending) stateGame.winHudCountUpPending = false;
+			hudTweenTarget = null;
+			winAmountTween.set(target, { duration: 0 });
+			return;
+		}
+
+		if (wantCountUp && target > from + 0.01) {
+			stateGame.winHudCountUpPending = false;
+			hudTweenTarget = target;
+			winAmountTween.set(target, {
+				duration: scaleMsByGameSpeed(WIN_HUD_COUNT_UP_MS, stateGame.gameSpeed),
+			});
+			return;
+		}
+
+		if (hudTweenTarget != null && Math.abs(target - hudTweenTarget) < 0.01) {
+			return;
+		}
+
+		hudTweenTarget = null;
+		winAmountTween.set(target, { duration: 0 });
+	});
+	const displayWinAmount = $derived(Math.round(winAmountTween.current));
+	const showWin = $derived(stateBet.winBookEventAmount > 0 || displayWinAmount > 0);
 
 	const winHudFontSize = $derived(portraitScaleY(WIN_HUD_FONT_SIZE, H) * BITMAP_FONT_SCALE);
 
@@ -69,7 +103,7 @@
 					bodyFontVariant="prostoi"
 					eventMode="none"
 					prefix={context.i18nDerived.win().toUpperCase()}
-					amount={stateBet.winBookEventAmount}
+					amount={displayWinAmount}
 					bookEvent
 					maxWidth={W * 0.9}
 					minScale={0.5}

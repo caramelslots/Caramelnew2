@@ -1123,14 +1123,16 @@ class GameStateOverride(GameExecutables):
         phase1_wins: list | None = None,
         phase1_total: float | None = None,
     ) -> None:
-        """Re-eval after SW expand; emit full winInfo (same lines may replay + new).
+        """Re-eval after SW expand; emit phase-2 winInfo (same lines may replay + new).
 
-        Final spin_win = full post-expand total × sticky product (once).
-        phase1_* kept for call-site compatibility / future UX; not used to filter lines.
+        winInfo + setWin celebrate phase2_total only (raw × sticky product).
+        spin_win / setTotalWin / RGS = phase1_total + phase2_total (additive).
         """
-        from src.events.events import set_total_event
+        from src.events.event_constants import EventConstants
+        from src.events.events import set_total_event, win_info_event
 
-        _ = phase1_wins, phase1_total
+        _ = phase1_wins  # lines already emitted in phase 1; not filtered here
+        p1 = max(0.0, float(phase1_total or 0))
 
         saved = self._neutralize_board_sw_mults()
         try:
@@ -1144,17 +1146,37 @@ class GameStateOverride(GameExecutables):
 
         raw_total = float(self.win_data.get("totalWin") or 0)
         prod = max(1, int(product))
-        new_total = round(raw_total * prod, 2)
+        phase2_total = round(raw_total * prod, 2)
         if prod > 1 and raw_total > 0:
-            self.win_data["totalWin"] = new_total
+            self.win_data["totalWin"] = phase2_total
             for win in self.win_data.get("wins") or []:
                 win["win"] = round(float(win.get("win") or 0) * prod, 2)
 
-        self.win_manager.set_spin_win(new_total)
-        if new_total > 0:
+        cap = self._fence_win_cap()
+        spin_payout = round(min(p1 + phase2_total, cap), 2)
+        self.win_manager.set_spin_win(spin_payout)
+        if phase2_total > 0:
             Lines.record_lines_wins(self)
-            Lines.emit_linewin_events(self)
+            win_info_event(self)
+            self.evaluate_wincap()
+            # Big-win / setWin = this beat only (phase 2), not cumulative spin.
+            if not self.wincap_triggered:
+                self.book.add_event(
+                    {
+                        "index": len(self.book.events),
+                        "type": EventConstants.SET_WIN.value,
+                        "amount": int(
+                            min(
+                                round(phase2_total * 100, 0),
+                                self.config.wincap * 100,
+                            )
+                        ),
+                        "winLevel": self.config.get_win_level(phase2_total),
+                    }
+                )
+            set_total_event(self)
         else:
+            # Expand happened but phase 2 empty — keep phase-1 credit on spin_win / total.
             set_total_event(self)
 
     def _emit_duel_sw_reeval_wins(
@@ -1163,8 +1185,9 @@ class GameStateOverride(GameExecutables):
         phase1_wins: list | None = None,
         phase1_total: float | None = None,
     ) -> None:
-        """Re-eval after SW expand for duel — full line set (same lines may replay + new)."""
-        _ = phase1_wins, phase1_total
+        """Re-eval after SW expand for duel — additive spin_win, phase-2 lines only in win_data."""
+        _ = phase1_wins
+        p1 = max(0.0, float(phase1_total or 0))
 
         saved = self._neutralize_board_sw_mults()
         try:
@@ -1178,14 +1201,16 @@ class GameStateOverride(GameExecutables):
 
         raw_total = float(self.win_data.get("totalWin") or 0)
         prod = max(1, int(product))
-        new_total = round(raw_total * prod, 2)
+        phase2_total = round(raw_total * prod, 2)
         if prod > 1 and raw_total > 0:
-            self.win_data["totalWin"] = new_total
+            self.win_data["totalWin"] = phase2_total
             for win in self.win_data.get("wins") or []:
                 win["win"] = round(float(win.get("win") or 0) * prod, 2)
 
-        self.win_manager.set_spin_win(new_total)
-        if new_total <= 0:
+        cap = self._fence_win_cap()
+        spin_payout = round(min(p1 + phase2_total, cap), 2)
+        self.win_manager.set_spin_win(spin_payout)
+        if phase2_total <= 0:
             self.win_data = {"totalWin": 0.0, "wins": []}
 
     def _apply_super_wild_expand(self, sw_hits, re_eval: bool = True) -> None:

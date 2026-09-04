@@ -324,6 +324,11 @@ export const stateGame = $state({
 	/** True once at least one SW column is open (Super: from start). */
 	stickySwOpened: false,
 	/**
+	 * One-shot: under-board WIN should tween this amount increase (post-SW
+	 * additive beat). Cleared after the HUD consumes it — later bonus wins snap.
+	 */
+	winHudCountUpPending: false,
+	/**
 	 * Super bonus: first FS reveal should slide the pre-open curtain in from
 	 * the top (cleared after that intro).
 	 */

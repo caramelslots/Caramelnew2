@@ -136,8 +136,10 @@ class GameConfig(Config):
         self.paw_tier_weights = {"PB": 60, "PS": 30, "PG": 10}
         # Cap sticky SW columns in bonus (product of mults grows very fast).
         self.max_sticky_sw = 2
-        # Shoot rewards: empty / +1 / +2 / +3 FS (weights)
-        self.shoot_reward_weights = {0: 45, 1: 30, 2: 18, 3: 7}
+        # Shoot rewards: empty / +1 / +2 / +3 FS (weights).
+        # 2026-09 BT rebalance: empty ×0.5 with bullet drop (45→22), E[FS] ×2
+        # (~0.87→~1.74) so E[drum]×E[FS/shot] stays RTP-neutral.
+        self.shoot_reward_weights = {0: 22, 1: 10, 2: 40, 3: 28}
         self.dead_cluster_fraction = 0.19
         self.fs_cluster_on_dead_fraction = 0.25
 

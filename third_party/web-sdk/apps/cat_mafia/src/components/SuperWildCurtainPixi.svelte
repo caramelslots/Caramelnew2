@@ -7,23 +7,14 @@
 	Do not use Sprite BoardMask here — extra sprite masks corrupt the reels.
 -->
 <script lang="ts">
-	import type * as PIXI from 'pixi.js';
 	import { Container, Graphics } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import {
-		BOARD_MASK_OVERFLOW,
-		BOARD_SIZES,
-		DESK_BOTTOM_MASK_SLACK_PX,
-		DESK_BOTTOM_PULL_PX,
-		SYMBOL_SIZE,
-	} from '../game/constants';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
 	import {
-		SUPER_WILD_COLUMN_COVER_X,
-		SUPER_WILD_COLUMN_COVER_Y,
-		SUPER_WILD_OFFSET_Y_PX,
+		drawSuperWildBoardClipMask,
+		getSuperWildColumnBoxMetrics,
 	} from '../game/superWildHtmlSpine';
 	import { ensureSwCurtainsForBoard } from '../game/swCurtainGuard';
 	import SuperWildCurtainColumn from './SuperWildCurtainColumn.svelte';
@@ -54,32 +45,17 @@
 		ensureSwCurtainsForBoard();
 	});
 
-	const boxW = $derived(SYMBOL_SIZE * SUPER_WILD_COLUMN_COVER_X);
-	const boxH = $derived(BOARD_SIZES.height * SUPER_WILD_COLUMN_COVER_Y);
-	const colY = $derived(SUPER_WILD_OFFSET_Y_PX + boxH * 0.5);
+	const columnBox = $derived(getSuperWildColumnBoxMetrics());
+	const boxW = $derived(columnBox.boxW);
+	const boxH = $derived(columnBox.boxH);
+	const colY = $derived(columnBox.colY);
 	/** Same park-under-mask travel as Board symbols when the target slides in. */
 	const slideY = $derived(context.stateGameDerived.targetPickBoardY());
-
-	/** Stopped-reel BoardMask geometry (board-local px). */
-	const maskTop = BOARD_MASK_OVERFLOW.top;
-	const maskBottom = Math.max(
-		0,
-		BOARD_MASK_OVERFLOW.bottom - DESK_BOTTOM_PULL_PX + DESK_BOTTOM_MASK_SLACK_PX,
-	);
-	const drawBoardClip = $derived((g: PIXI.Graphics) => {
-		g.rect(
-			-SYMBOL_SIZE,
-			-maskTop,
-			BOARD_SIZES.width + SYMBOL_SIZE * 2,
-			BOARD_SIZES.height + maskTop + maskBottom,
-		);
-		g.fill(0xffffff);
-	});
 </script>
 
 {#if show}
 	<Container>
-		<Graphics isMask draw={drawBoardClip} />
+		<Graphics isMask draw={drawSuperWildBoardClipMask} />
 		<Container y={slideY}>
 			{#each curtains as curtain (curtain.reel)}
 				<SuperWildCurtainColumn

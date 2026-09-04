@@ -38,6 +38,7 @@ import {
 	MYSTERY_REVEAL_POST_DELAY_MS,
 	WIN_SPOTLIGHT_CLEAR_DELAY_MS,
 	TRANSITION_THEME_SWITCH_DELAY_MS,
+	WIN_HUD_COUNT_UP_MS,
 } from './constants';
 import { SUPER_WILD_PRESENT_MS, SUPER_WILD_STICKY_PRESENT_MS } from './superWildHtmlSpine';
 import { ensureSwCurtainsForBoard } from './swCurtainGuard';
@@ -60,6 +61,7 @@ import {
 import {
 	getDuelBoardStack,
 	getDuelPaddingBoard,
+	getBasegamePaddingBoard,
 	getFreegamePaddingBoard,
 	padDuelBoardForPixi,
 } from './stateDuelBoards.svelte';
@@ -294,6 +296,18 @@ const paylineAmountWithStickyProduct = ({
 	// Already-open sticky product (not the lying SW that will open this spin).
 	if (stickyProduct > 1) return Math.round(totalWin * stickyProduct);
 	return totalWin;
+};
+
+/**
+ * Under-board WIN count-up:
+ * - Bonus FS: any HUD increase (each spin / feature top-up).
+ * - Base: only when `force` (right after SW curtain).
+ */
+const maybeRequestWinHudCountUp = (nextAmount: number, force = false) => {
+	if (nextAmount <= stateBet.winBookEventAmount + 0.01) return;
+	if (force || stateGame.gameType === 'freegame') {
+		stateGame.winHudCountUpPending = true;
+	}
 };
 
 /** Fill a reel column with Super Wild (padded visible rows). Always hide tiles. */
@@ -748,6 +762,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.pawCoinTotal = 0;
 		stateGame.pawCoinBagVisible = false;
 		stateGame.pawCoinFlying = false;
+		stateGame.winHudCountUpPending = false;
 		// Drop non-sticky curtains on every reveal. Sticky FS columns keep their
 		// open curtain through the spin so the column never flashes as 4 Wild tiles.
 		// Base: also keep curtains while swSpineHideReels is set — clearing them
@@ -847,7 +862,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const paddingBoard =
 			revealEvent.gameType === 'freegame'
 				? getFreegamePaddingBoard(config.paddingReels.freegame, stateGame.stickySwByReel)
-				: config.paddingReels[revealEvent.gameType];
+				: getBasegamePaddingBoard(config.paddingReels[revealEvent.gameType]);
 		// Sticky SW: lock + curtain BEFORE other reels spin so the column
 		// never flashes as a bare 4-high Wild stack.
 		const stickyFrozenReels =
@@ -999,7 +1014,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				!spinHasSuperWildExpand(bookEvents, bookEvent) &&
 				stickyProduct <= 1
 			) {
-				stateBet.winBookEventAmount = stateBet.winBookEventAmount + bookEvent.totalWin;
+				const nextHud = stateBet.winBookEventAmount + bookEvent.totalWin;
+				maybeRequestWinHudCountUp(nextHud);
+				stateBet.winBookEventAmount = nextHud;
 			}
 		}
 
@@ -1037,12 +1054,24 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		bookEvent: BookEventOfType<'setTotalWin'>,
 		{ bookEvents }: BookEventContext,
 	) => {
-		// Intermediate totals before SW product / phase-2 / paw — skip so HUD only
-		// jumps once to the final cumulative (avoids up→down→up flicker).
-		if (findNextSetTotalWin(bookEvents, bookEvent)) {
+		// Intermediate totals before a later setTotalWin: still paint phase-1 /
+		// pre-feature amounts so the under-board WIN can count up to the final
+		// cumulative (additive SW / paw). Skip only when the next total is lower
+		// (legacy replace would flicker up→down→up).
+		const nextTotal = findNextSetTotalWin(bookEvents, bookEvent);
+		if (nextTotal && nextTotal.amount < bookEvent.amount) {
 			return;
 		}
+		const eventIndex = bookEvents.indexOf(bookEvent);
+		const expandIndex = findExpandIndexInSpin(bookEvents, bookEvent);
+		const isPostSwExpand = expandIndex >= 0 && eventIndex > expandIndex;
+		// FS: count-up on every total increase. Base: only right after SW curtain.
+		maybeRequestWinHudCountUp(bookEvent.amount, isPostSwExpand);
+		const willCountUp = stateGame.winHudCountUpPending;
 		stateBet.winBookEventAmount = bookEvent.amount;
+		if (willCountUp) {
+			await waitForGameSpeed(WIN_HUD_COUNT_UP_MS, stateGame.gameSpeed);
+		}
 	},
 	// Cat Mafia Stage C — gallery on base (HUD stays, spin-dimmed) → cloud + intro.
 	freeSpinTargetPick: async (
@@ -1170,6 +1199,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const outroAmount =
 			finalWinEvent?.amount ??
 			(stateBet.winBookEventAmount > 0 ? stateBet.winBookEventAmount : bookEvent.amount);
+		maybeRequestWinHudCountUp(outroAmount);
 		stateBet.winBookEventAmount = outroAmount;
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
 
@@ -1234,14 +1264,20 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Like / applause only when the Big Win+ overlay actually runs.
 		triggerMascotWinReaction(winLevelData);
 
-		// Big-win HUD before celebration. Prefer the setTotalWin that belongs to
-		// this beat (next in segment); final segment total still lands via setTotalWin.
+		// Two-beat SW/paw may show Big Win twice in one spin:
+		//   before curtain → setWin.amount = phase1 only
+		//   after curtain  → setWin.amount = phase2 only
+		// Overlay always celebrates THIS beat's amount (never phase1+phase2).
+		// Under-board WIN follows the next setTotalWin (cumulative for the round).
 		const nextTotal = findNextSetTotalWin(bookEvents, bookEvent);
-		if (nextTotal) {
-			stateBet.winBookEventAmount = nextTotal.amount;
-		} else {
-			stateBet.winBookEventAmount = stateBet.winBookEventAmount + bookEvent.amount;
-		}
+		const hudTarget = nextTotal
+			? nextTotal.amount
+			: stateBet.winBookEventAmount + bookEvent.amount;
+		const expandIndex = findExpandIndexInSpin(bookEvents, bookEvent);
+		const eventIndex = bookEvents.indexOf(bookEvent);
+		const isPostSwExpand = expandIndex >= 0 && eventIndex > expandIndex;
+		maybeRequestWinHudCountUp(hudTarget, isPostSwExpand);
+		stateBet.winBookEventAmount = hudTarget;
 
 		// For big wins above level 6, the visual ladder starts at Big Win and
 		// advances upward. Start BGM from the first ladder tier (Big Win) so the
@@ -1258,6 +1294,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		winLevelSoundsPlay({ winLevelData: firstTierData });
 		await eventEmitter.broadcastAsync({
 			type: 'winUpdate',
+			// Beat-local amount from the book (phase1 or phase2) — not spin total.
 			amount: bookEvent.amount,
 			winLevelData,
 		});
@@ -1377,8 +1414,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			return;
 		}
 
-		// Base (and new FS opens): hold phase-1 paylines, then clear before curtain so
-		// the post-expand winInfo reads as a distinct second interaction.
+		// Base / Super new open: hold phase-1 paylines (or empty beat), then clear
+		// before curtain so the post-expand winInfo reads as a distinct second beat.
+		// Super opens even when phase-1 winInfo is missing (no line-gate).
 		const willShowCurtain = bookEvent.expands.some((expand) => {
 			const reel = stateGame.board[expand.reel];
 			let swRows = 0;
@@ -1782,10 +1820,23 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		}
 		stateDuel.spinning = false;
 
-		if (twoBeat && bookEvent.phase1Wins && (bookEvent.phase1TotalWin ?? 0) > 0) {
-			// Phase-1 through lying SW: plain wild amount — no upcoming product.
-			await playDuelWinLines(side, bookEvent.phase1Wins, bookEvent.phase1TotalWin ?? 0);
-			await waitForGameSpeed(DUEL_POST_SPIN_MS, stateGame.gameSpeed);
+		if (twoBeat) {
+			// Phase-1 into the under-desk bank with count-up; full spin after curtain
+			// via duelBankUpdate (same донабор as bonus FS).
+			const phase1 = bookEvent.phase1TotalWin ?? 0;
+			if (phase1 > 0) {
+				stateDuel.winHudCountUpPendingBySide[side] = true;
+				if (side === 'cat') stateDuel.catTotal += phase1;
+				else stateDuel.dogTotal += phase1;
+			}
+			if (bookEvent.phase1Wins && phase1 > 0) {
+				await playDuelWinLines(side, bookEvent.phase1Wins, phase1);
+			}
+			if (phase1 > 0) {
+				await waitForGameSpeed(WIN_HUD_COUNT_UP_MS, stateGame.gameSpeed);
+			} else {
+				await waitForGameSpeed(DUEL_POST_SPIN_MS, stateGame.gameSpeed);
+			}
 			return;
 		}
 
@@ -1840,14 +1891,30 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			await waitForGameSpeed(DUEL_BANK_FLOW_MS, stateGame.gameSpeed);
 		}
 
+		const side = bookEvent.side;
+		const current = side === 'cat' ? stateDuel.catTotal : stateDuel.dogTotal;
+		const next = side === 'cat' ? bookEvent.catTotal : bookEvent.dogTotal;
+		// Duel: smooth bank top-up on every increase (same as bonus FS HUD).
+		const didCountUp = next > current + 0.01;
+		if (didCountUp) {
+			stateDuel.winHudCountUpPendingBySide[side] = true;
+		}
+		stateDuel.pendingSwBankCountUpSide = null;
+
 		stateDuel.dogTotal = bookEvent.dogTotal;
 		stateDuel.catTotal = bookEvent.catTotal;
-		await waitForGameSpeed(DUEL_BETWEEN_SPINS_MS, stateGame.gameSpeed);
+		// Wait for count-up so the next spin does not cut the tween short.
+		await waitForGameSpeed(
+			didCountUp ? WIN_HUD_COUNT_UP_MS : DUEL_BETWEEN_SPINS_MS,
+			stateGame.gameSpeed,
+		);
 	},
 
 	duelEnd: async (bookEvent: BookEventOfType<'duelEnd'>) => {
 		stateDuel.phase = 'outro';
 		stateDuel.activeSide = null;
+		stateDuel.pendingSwBankCountUpSide = null;
+		stateDuel.winHudCountUpPendingBySide = { cat: false, dog: false };
 		stateDuel.dogTotal = bookEvent.dogTotal;
 		stateDuel.catTotal = bookEvent.catTotal;
 		stateDuel.winner = bookEvent.winner;

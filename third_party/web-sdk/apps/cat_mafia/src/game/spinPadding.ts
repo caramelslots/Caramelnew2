@@ -1,7 +1,7 @@
 import { stateBet } from 'state-shared';
 
 import config from './config';
-import { getFreegamePaddingBoard } from './stateDuelBoards.svelte';
+import { getBasegamePaddingBoard, getFreegamePaddingBoard } from './stateDuelBoards.svelte';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
 import { stateXstateDerived } from './stateXstate';
 import type { GameType } from './types';
@@ -20,7 +20,7 @@ export const runPreSpin = async (gameType: GameType) => {
 	const paddingBoard =
 		gameType === 'freegame'
 			? getFreegamePaddingBoard(config.paddingReels.freegame, stateGame.stickySwByReel)
-			: config.paddingReels[gameType];
+			: getBasegamePaddingBoard(config.paddingReels[gameType]);
 
 	await stateGameDerived.enhancedBoard.preSpin({
 		paddingBoard,

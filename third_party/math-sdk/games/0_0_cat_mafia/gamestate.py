@@ -134,10 +134,20 @@ class GameState(GameStateOverride):
         while self.fs < self.tot_fs and not self.wincap_triggered:
             self.update_freespin()
             if self.is_super_bonus():
-                # Super: unchanged book order (reveal → lines → expand).
-                self.draw_board()
-                self.evaluate_lines_board()
-                self.resolve_fs_spin_features()
+                # Super + new lying SW: same two-beat book order as Normal
+                # (reveal → phase-1 winInfo → expand → phase-2), but never strip
+                # non-winning SW — curtain always opens on a new hit.
+                self.draw_board(emit_event=False)
+                if self._peek_new_lying_sw_hits():
+                    self.evaluate_lines_board(emit=False)
+                    reveal_event(self)
+                    self.emit_line_wins_after_reveal()
+                    self.resolve_fs_spin_features()
+                else:
+                    # Sticky-only / no new SW: reveal then lines + product (no strip).
+                    reveal_event(self)
+                    self.evaluate_lines_board()
+                    self.resolve_fs_spin_features()
             else:
                 # Normal: eval + strip non-winning SW before reveal, then
                 # reveal → phase-1 winInfo → expand (only if SW was in a line).

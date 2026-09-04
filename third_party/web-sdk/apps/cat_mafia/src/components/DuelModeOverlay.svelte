@@ -44,6 +44,7 @@
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import PressToContinueHtml from './PressToContinueHtml.svelte';
 	import DuelPickMascot from './DuelPickMascot.svelte';
+	import DuelBankTotalBitmapHtml from './DuelBankTotalBitmapHtml.svelte';
 
 	const context = getContext();
 
@@ -95,7 +96,7 @@
 		if (sum <= 0) return 0.5;
 		return dog / sum;
 	});
-	/** Combined dog+cat bank (book cents) — plaque uses same WIN $… format as under-board HUD. */
+	/** Combined dog+cat bank (book cents) — plaque WIN $… (same copy as under-desk HUD). */
 	const combinedBankCents = $derived(stateDuel.dogTotal + stateDuel.catTotal);
 	const combinedBankAmount = $derived(money(combinedBankCents));
 	const combinedBankWinPrefix = $derived(context.i18nDerived.win().toUpperCase());
@@ -125,6 +126,9 @@
 	const bankRatioCenteredLeft = $derived(
 		bankRatioLeft + (bankRatioFullWidth - bankRatioWidth) * 0.5,
 	);
+	const bankScaleHeight = $derived(bankRatioWidth / DUEL_BANK_SCALE.aspect);
+	const bankTotalMaxWidth = $derived(bankRatioWidth * DUEL_BANK_SCALE.plaqueWidth * 0.92);
+	const bankTotalMaxHeight = $derived(bankScaleHeight * DUEL_BANK_SCALE.plaqueHeight * 0.9);
 	/**
 	 * Anchor to desk bottoms (not HUD reserve) so the scale keeps the same
 	 * relative spot on every landscape / tablet size. Popout L clamps above
@@ -336,8 +340,14 @@
 					style:left="{(bankPawLeftFrac * 100).toFixed(3)}%"
 				/>
 				<span class="bank-ratio-total" data-test="duel-bank-total">
-					<span class="bank-ratio-total-label">{combinedBankWinPrefix}</span>
-					<span class="bank-ratio-total-amount">{combinedBankAmount}</span>
+					{#if !underCloud}
+						<DuelBankTotalBitmapHtml
+							amount={combinedBankCents}
+							prefix={combinedBankWinPrefix}
+							maxWidth={bankTotalMaxWidth}
+							maxHeight={bankTotalMaxHeight}
+						/>
+					{/if}
 				</span>
 			</div>
 		{/if}
@@ -673,7 +683,7 @@
 		justify-content: center;
 		gap: 0.38em;
 		margin: 0;
-		padding: 0 0.2em;
+		padding: 0 0.15em;
 		box-sizing: border-box;
 		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
 		font-weight: 400;
@@ -687,7 +697,10 @@
 			0 0 8px rgba(255, 196, 48, 0.45),
 			0 1px 0 rgba(92, 58, 8, 0.75),
 			0 2px 6px rgba(0, 0, 0, 0.7);
+		pointer-events: none;
 		user-select: none;
+		/* Nudge WIN label slightly up into the plaque center. */
+		transform: translateY(-18%);
 	}
 
 	.bank-ratio-total-label {

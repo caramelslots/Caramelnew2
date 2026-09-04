@@ -616,6 +616,12 @@
 	/**
 	 * SW demos: lying Super Wilds on chosen column(s) → phase-1 line → curtain.
 	 * `cols1` = 1-based column numbers (any subset of 1..BOARD_DIMENSIONS.x).
+	 *
+	 * Additive payout (matches math):
+	 *   reveal (lying SW cloaked ×1) → winInfo(p1) → setWin(p1) → setTotalWin(p1)
+	 *   → superWildExpand → winInfo(p2) → setWin(p2) → setTotalWin(p1+p2) → finalWin
+	 * HUD ends on cumulative; phase-2 payline label stays phase2-only.
+	 * Works in BASE / bonus_normal / bonus_super (same under-board WIN count-up).
 	 */
 	const SW_DEMO_POOL: SymbolName[] = ['L1', 'L2', 'L3', 'L4', 'H1', 'H2', 'H3', 'H4'];
 	const SW_DEMO_MULTS = [2, 4, 6, 8, 25, 50, 75] as const;
@@ -642,16 +648,22 @@
 		return Array.from({ length: count }, (_, i) => start + i);
 	};
 
-	const playSwDrop = (cols1: number[], forcedMult?: (typeof SW_DEMO_MULTS)[number]) =>
+	const playSwDrop = (
+		cols1: number[],
+		forcedMult?: (typeof SW_DEMO_MULTS)[number],
+		mode: BetModeKey = 'BASE',
+	) =>
 		guard(async () => {
-			applyBetMode('BASE');
-			stateGame.gameType = 'basegame';
+			applyBetMode(mode);
+			const isFs = mode === 'bonus_normal' || mode === 'bonus_super';
+			stateGame.gameType = isFs ? 'freegame' : 'basegame';
 			stateGame.stickySwByReel = {};
-			stateGame.stickySwOpened = false;
+			stateGame.stickySwOpened = mode === 'bonus_super';
 			stateGame.stickySwIntroPending = false;
 			stateGame.swSpineHideReels = {};
-			stateGame.bonusMode = null;
-			stateBet.winBookEventAmount = 0;
+			if (!isFs) stateGame.bonusMode = null;
+			// Keep cumulative FS HUD when demoing mid-bonus; reset only on base.
+			if (!isFs) stateBet.winBookEventAmount = 0;
 
 			const unit = 100;
 			const mult =
@@ -675,7 +687,8 @@
 			const board = Array.from({ length: BOARD_DIMENSIONS.x }, (_, reel) =>
 				Array.from({ length: BOARD_DIMENSIONS.y }, (_, row) => {
 					if (swReels.includes(reel) && rows.includes(row)) {
-						return { name: 'SW' as const, wild: true as const, multiplier: mult };
+						// Lying SW is a plain wild until the curtain (math cloaks ×N).
+						return { name: 'SW' as const, wild: true as const, multiplier: 1 };
 					}
 					// Fill the payline with H2 so phase-1 lights the lying SW.
 					if (row === lineRow) return { name: 'H2' as const };
@@ -685,6 +698,10 @@
 
 			const phase1Amount = 5 * unit;
 			const phase2Amount = phase1Amount * mult;
+			const spinPayout = phase1Amount + phase2Amount;
+			const hudBefore = stateBet.winBookEventAmount;
+			const phase1Hud = hudBefore + phase1Amount;
+			const spinHud = hudBefore + spinPayout;
 			const linePositions = Array.from({ length: BOARD_DIMENSIONS.x }, (_, reel) => ({
 				reel,
 				row: lineRow + ROW_PAD,
@@ -742,22 +759,29 @@
 			};
 
 			const colLabel = swReels.map((r) => r + 1).join('+');
+			const modeLabel =
+				mode === 'bonus_super' ? 'Super FS' : mode === 'bonus_normal' ? 'Normal FS' : 'Base';
 			// eslint-disable-next-line no-console
-			console.log(`[DEV] SW cols=[${colLabel}] rows=[${rows.join(',')}] mult=×${mult}`);
+			console.log(
+				`[DEV] ${modeLabel} SW additive cols=[${colLabel}] ×${mult}: ` +
+					`phase1=${phase1Amount} → curtain → phase2=${phase2Amount} → ` +
+					`spin_payout=${spinPayout} (HUD ${hudBefore}→${spinHud})`,
+			);
 			const events = [
-				reveal(board),
+				reveal(board, isFs ? 'freegame' : 'basegame'),
 				asEvent(phase1Win),
 				asEvent({ type: 'setWin', amount: phase1Amount, winLevel: 5 }),
-				asEvent({ type: 'setTotalWin', amount: phase1Amount }),
+				asEvent({ type: 'setTotalWin', amount: phase1Hud }),
 				asEvent(expand),
 				asEvent(phase2Win),
+				// setWin / Big Win = phase-2 beat only; HUD / finalWin = cumulative.
 				asEvent({ type: 'setWin', amount: phase2Amount, winLevel: 6 }),
-				asEvent({ type: 'setTotalWin', amount: phase2Amount }),
-				asEvent({ type: 'finalWin', amount: phase2Amount }),
+				asEvent({ type: 'setTotalWin', amount: spinHud }),
+				asEvent({ type: 'finalWin', amount: spinHud }),
 			];
 			await playBet({
 				id: -1,
-				payoutMultiplier: phase2Amount,
+				payoutMultiplier: spinHud,
 				events,
 				state: events,
 			} as Parameters<typeof playBet>[0]);
@@ -772,6 +796,21 @@
 			),
 			'SW base book',
 			'BASE',
+		);
+
+	const playDuelSwBook = () =>
+		playMathBook(
+			pickBook(
+				duelPool,
+				(b) =>
+					bookHas(b, 'superWildExpand') ||
+					(b.events ?? []).some(
+						(e) => e && typeof e === 'object' && (e as { swTwoBeat?: boolean }).swTwoBeat,
+					),
+				'Duel SW',
+			),
+			'Duel SW book',
+			'bonus_duel',
 		);
 
 	const playNaturalFsBook = () =>
@@ -1010,7 +1049,7 @@
 			});
 		});
 
-	/** Base SW two-beat: board + BIG → curtain expand → SUPER on re-eval. */
+	/** Base SW two-beat additive: board + BIG → curtain → SUPER; HUD = p1+p2. */
 	const playSwDoubleBigWin = () =>
 		guard(async () => {
 			stateGame.gameType = 'basegame';
@@ -1023,9 +1062,14 @@
 
 			const phase1Amount = 30 * x;
 			const phase2Amount = 75 * x;
-			const swBoard = [...SW_DEMO_VISIBLE_BOARD].map((r) => r.map((s) => ({ ...s }))) as {
-				name: string;
-			}[][];
+			const spinPayout = phase1Amount + phase2Amount;
+			const swBoard = [...SW_DEMO_VISIBLE_BOARD].map((r) =>
+				r.map((s) =>
+					s.name === 'SW'
+						? { name: 'SW', wild: true as const, multiplier: 1 }
+						: { ...s },
+				),
+			) as { name: string }[][];
 
 			const phase1Win = {
 				type: 'winInfo' as const,
@@ -1099,18 +1143,26 @@
 			};
 
 			// eslint-disable-next-line no-console
-			console.log('[DEV] SW double big: BIG → curtain → SUPER');
+			console.log(
+				`[DEV] SW dual Big Win: phase1 BIG ${phase1Amount} → curtain → phase2 SUPER ${phase2Amount} → HUD ${spinPayout}`,
+			);
 			await playBookEvents([
 				reveal(swBoard),
 				asEvent(phase1Win),
+				// Before curtain: Big Win shows phase1 only.
 				asEvent({ type: 'setWin', amount: phase1Amount, winLevel: 6 }),
 				asEvent({ type: 'setTotalWin', amount: phase1Amount }),
 				asEvent(superWildExpandDemo),
 				asEvent(phase2Win),
+				// After curtain: Super Win shows phase2 only (not phase1+phase2).
 				asEvent({ type: 'setWin', amount: phase2Amount, winLevel: 7 }),
-				asEvent({ type: 'setTotalWin', amount: phase2Amount }),
+				asEvent({ type: 'setTotalWin', amount: spinPayout }),
+				asEvent({ type: 'finalWin', amount: spinPayout }),
 			]);
 		});
+
+	/** Dual Big Win: BIG phase1 → curtain → SUPER phase2 (different overlay amounts). */
+	const playBaseSwAdditiveDemo = () => playSwDoubleBigWin();
 
 	// === FS UI previews (not full books) ===
 	const playFsEnd = (winLevel: WinLevel, amount: number) =>
@@ -1437,14 +1489,59 @@
 			<section>
 				<h4>Super Wild</h4>
 				<p class="subhint">
-					Columns (1-based). Singles · presets · <b>All 1–{BOARD_DIMENSIONS.x}</b> opens a curtain on every reel.
+					Two-beat additive: phase1 snap → curtain → phase2 count-up on HUD (base + FS). Duel banks do the same under each desk.
+				</p>
+				<div class="grid">
+					<button
+						type="button"
+						disabled={busy}
+						title="BIG phase1 → curtain → SUPER phase2 (разные суммы); HUD = сумма"
+						onclick={playBaseSwAdditiveDemo}
+					>
+						Base SW · 2× Big Win
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="Col 3 ×2: phase1 5.00 → curtain → phase2 10.00 → HUD 15.00"
+						onclick={() => playSwDrop([SW_DEMO_WHEEL_COL], 2)}
+					>
+						Base SW · pay both
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="Same additive SW demo inside Normal FS (HUD count-up after curtain)"
+						onclick={() => playSwDrop([SW_DEMO_WHEEL_COL], 2, 'bonus_normal')}
+					>
+						Normal FS · SW
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="Same additive SW demo inside Super FS (HUD count-up after curtain)"
+						onclick={() => playSwDrop([SW_DEMO_WHEEL_COL], 2, 'bonus_super')}
+					>
+						Super FS · SW
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="Math duel book with Super Wild expand / two-beat"
+						onclick={playDuelSwBook}
+					>
+						Duel · SW book
+					</button>
+				</div>
+				<p class="subhint" style="margin-top: 6px">
+					Columns (1-based). Singles · presets · <b>All 1–{BOARD_DIMENSIONS.x}</b> — same additive payout.
 				</p>
 				<div class="grid grid--5">
 					{#each SW_DEMO_SINGLE_COLS as col}
 						<button
 							type="button"
 							disabled={busy}
-							title={`SW column ${col} → curtain expand`}
+							title={`SW column ${col} → curtain expand (additive HUD)`}
 							onclick={() => playSwDrop([col])}
 						>
 							{col}
@@ -1456,7 +1553,7 @@
 						<button
 							type="button"
 							disabled={busy}
-							title={`SW columns ${preset.cols.join(', ')} → curtain expand`}
+							title={`SW columns ${preset.cols.join(', ')} → curtain (additive HUD)`}
 							onclick={() => playSwDrop(preset.cols)}
 						>
 							{preset.label}
@@ -1464,14 +1561,14 @@
 					{/each}
 				</div>
 				<p class="subhint" style="margin-top: 6px">
-					Drum spin — column {SW_DEMO_WHEEL_COL}, fixed mult (×2…×75).
+					Drum spin — column {SW_DEMO_WHEEL_COL}, fixed mult (×2…×75), additive HUD.
 				</p>
 				<div class="grid grid--3">
 					{#each SW_DEMO_MULTS as mult}
 						<button
 							type="button"
 							disabled={busy}
-							title={`SW column ${SW_DEMO_WHEEL_COL} → curtain → drum ×${mult}`}
+							title={`SW column ${SW_DEMO_WHEEL_COL} → curtain → drum ×${mult} → HUD p1+p2`}
 							onclick={() => playSwDrop([SW_DEMO_WHEEL_COL], mult)}
 						>
 							×{mult}
@@ -1817,14 +1914,6 @@
 						onclick={() => playBoardWithCoins(9, 1000 * x)}
 					>
 						Board + Coin Rain
-					</button>
-					<button
-						type="button"
-						disabled={busy}
-						title="Доска с SW×4: BIG WIN → штора → SUPER WIN (re-eval)"
-						onclick={playSwDoubleBigWin}
-					>
-						SW ×2 Big Wins
 					</button>
 				</div>
 			</section>

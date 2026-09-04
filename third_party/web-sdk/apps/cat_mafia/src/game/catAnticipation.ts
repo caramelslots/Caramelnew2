@@ -1,13 +1,14 @@
 import type { GameType, RawSymbol } from './types';
 import {
 	BOARD_DIMENSIONS,
+	BOARD_MASK_OVERFLOW,
 	INITIAL_BOARD,
 	isVisibleBoardSymbolIndex,
 	SPIN_OPTIONS_DEFAULT,
 	SYMBOL_SIZE,
 } from './constants';
 import { gameSpeedMultFor, scaleMsByGameSpeed, type GameSpeedLevel } from './gameSpeed';
-import { getSymbolX } from './utils';
+import { getSuperWildColumnAnchorX, getSuperWildColumnBoxMetrics } from './superWildHtmlSpine';
 import type { SpinningReelMotion } from 'utils-slots';
 
 /** Scroll speed multiplier for reels after the 2nd bonus (B/BD) lands (basegame only). */
@@ -106,35 +107,33 @@ export const OUTLINE_REEL_EFFECT = {
 	height: 510,
 } as const;
 
-/** Fine-tune outline reel spine placement (canvas px). Negative offsetY = up. */
-export const OUTLINE_REEL_TUNING = {
-	offsetX: 0,
-	offsetY: -110,
-	widthExtra: 7,
-	heightExtra: 10,
-} as const;
+/**
+ * Extra height beyond the SW column box — legacy outline runway
+ * (BOARD_MASK_OVERFLOW top/bottom + heightExtra 20).
+ */
+export const OUTLINE_REEL_HEIGHT_EXTRA_PX =
+	BOARD_MASK_OVERFLOW.top + BOARD_MASK_OVERFLOW.bottom + 260;
 
-/** Target size for one slow reel column on the board. */
-export const getOutlineReelColumnMetrics = () => {
-	const visibleHeight = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
-	const height = visibleHeight + OUTLINE_REEL_TUNING.heightExtra;
-	return {
-		width: SYMBOL_SIZE + OUTLINE_REEL_TUNING.widthExtra,
-		height,
-		/** Center of visible row centers (y = 0.5..4.5 × symbol size). */
-		centerY: visibleHeight / 2,
-	};
-};
+/** Extra width beyond the SW column box — all reels (board-local px). */
+export const OUTLINE_REEL_WIDTH_EXTRA_PX = 8;
 
-/** Layout for one slow-reel outline instance (board-local coordinates). */
+/**
+ * Layout for one bonusReel column — SW anchor; wider / taller column box.
+ */
 export const getOutlineReelLayout = (reelIndex: number) => {
-	const column = getOutlineReelColumnMetrics();
-	const scaleX = column.width / OUTLINE_REEL_EFFECT.width;
-	const scaleY = column.height / OUTLINE_REEL_EFFECT.height;
+	const { boxW: swBoxW, boxH: swBoxH, colY } = getSuperWildColumnBoxMetrics();
+	const boxW = swBoxW + OUTLINE_REEL_WIDTH_EXTRA_PX;
+	const boxH = swBoxH + OUTLINE_REEL_HEIGHT_EXTRA_PX;
+	const maskW = boxW * 1.08;
+	const scaleX = boxW / OUTLINE_REEL_EFFECT.width;
+	const scaleY = boxH / OUTLINE_REEL_EFFECT.height;
 
 	return {
-		x: getSymbolX(reelIndex) + OUTLINE_REEL_TUNING.offsetX,
-		y: column.centerY + OUTLINE_REEL_TUNING.offsetY,
+		x: getSuperWildColumnAnchorX(reelIndex),
+		y: colY,
+		boxW,
+		boxH,
+		maskW,
 		spineX: -OUTLINE_REEL_MAIN_EFFECT.x * scaleX,
 		spineY: -OUTLINE_REEL_MAIN_EFFECT.y * scaleY,
 		scale: { x: scaleX, y: scaleY },

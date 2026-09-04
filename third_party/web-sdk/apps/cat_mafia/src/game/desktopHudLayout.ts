@@ -62,11 +62,9 @@ const utilBarOrigin = (layoutWidth: number, layoutHeight: number) => ({
 });
 
 /**
- * Single-row desktop HUD — three packed groups, same proportions on every
- * non-phone canvas:
- *   [i][☰][BUY BONUS]   [−][SPIN][+]   BALANCE/BET [AUTO][⚡]
- * When `hideAutoplay` (bonus / duel / replay), AUTO drops and BALANCE/BET
- * pack against turbo: BALANCE/BET [⚡]
+ * Single-row desktop HUD — two packed groups on every non-phone canvas:
+ *   [i][☰][BUY BONUS]   BALANCE/BET [AUTO][⚡][SPIN][−][+]
+ * When `hideAutoplay`: BALANCE/BET [⚡][SPIN][−][+].
  */
 export const computeDesktopHudLayout = (
 	layoutDerived: LayoutDerived,
@@ -127,10 +125,27 @@ export const computeDesktopHudLayout = (
 	const autoplayHalfW = autoplayWidth / 2;
 	const turboHalf = turboSize / 2;
 
-	/** Center group — Spin X as canvas fraction (slightly left of true center). */
-	const spinX = canvas.width * cluster.clusterCenterXFrac;
-	const decreaseX = spinX - spinHalf - betGap - smallHalf;
-	const increaseX = spinX + spinHalf + betGap + smallHalf;
+	/**
+	 * Right group — packed from the right margin inward:
+	 * [−][+] ← SPIN ← Turbo ← Auto ← Balance/Bet
+	 */
+	const betRowW = smallSize + betGap + smallSize;
+	const rightPackW = hideAutoplay
+		? balanceBlockW + gap + turboSize + gap + spinSize + gap + betRowW
+		: balanceBlockW + gap + autoplayWidth + gap + turboSize + gap + spinSize + gap + betRowW;
+	const rightPackLeft = canvas.width - sideMargin - rightPackW;
+
+	const increaseX = canvas.width - sideMargin - smallHalf;
+	const decreaseX = increaseX - smallHalf - betGap - smallHalf;
+	const spinX = decreaseX - smallHalf - betGap - spinHalf;
+	const turbX = spinX - spinHalf - betGap - turboHalf;
+	const autoX = hideAutoplay
+		? turbX
+		: turbX - turboHalf - betGap - autoplayHalfW;
+	/** balanceAnchorX = right edge of text (CSS translateX(-100%)). */
+	const balanceAnchorX = hideAutoplay
+		? turbX - turboHalf - gap
+		: autoX - autoplayHalfW - gap;
 
 	/** Left group — packed from the left margin: i → ☰ → BUY BONUS. */
 	const infoX = sideMargin + iconHalf;
@@ -139,11 +154,10 @@ export const computeDesktopHudLayout = (
 	let buyH = buyBonusH;
 	let buyBonusX = menuX + iconHalf + gap + buyW / 2;
 
-	const centerLeft = decreaseX - smallHalf;
-	if (buyBonusX + buyW / 2 + gap > centerLeft) {
+	if (buyBonusX + buyW / 2 + gap > rightPackLeft) {
 		const maxBuyW = Math.max(
 			BUY_BONUS_MIN_WIDTH_PX,
-			centerLeft - gap - (menuX + iconHalf + gap),
+			rightPackLeft - gap - (menuX + iconHalf + gap),
 		);
 		buyW = Math.min(buyBonusW, maxBuyW);
 		buyH = buyW / BUY_PANEL_ASPECT;
@@ -153,26 +167,6 @@ export const computeDesktopHudLayout = (
 		}
 		buyBonusX = menuX + iconHalf + gap + buyW / 2;
 	}
-
-	/**
-	 * Right group as one rigid pack ending at the right margin:
-	 * Balance/Bet → Auto → Turbo  (or Balance/Bet → Turbo when autoplay is gone)
-	 */
-	const rightPackW = hideAutoplay
-		? balanceBlockW + gap + turboSize
-		: balanceBlockW + gap + autoplayWidth + gap + turboSize;
-	const centerRight = increaseX + smallHalf;
-	const rightPackLeftIdeal = canvas.width - sideMargin - rightPackW;
-	const rightPackLeft = Math.max(centerRight + gap, rightPackLeftIdeal);
-
-	/** balanceAnchorX = right edge of text (CSS translateX(-100%)). */
-	const balanceAnchorX = rightPackLeft + balanceBlockW;
-	const autoX = hideAutoplay
-		? balanceAnchorX
-		: balanceAnchorX + gap + autoplayHalfW;
-	const turbX = hideAutoplay
-		? balanceAnchorX + gap + turboHalf
-		: autoX + autoplayHalfW + gap + turboHalf;
 
 	return {
 		info: { x: infoX, y: barY, size: iconSize },
@@ -185,9 +179,9 @@ export const computeDesktopHudLayout = (
 			/** Direct fraction of button height — no px floor (it deadened Popout S knobs). */
 			fontSize: buyH * config.panelLabelFontFrac,
 		},
-		decrease: { x: decreaseX, y: barY, size: smallSize },
-		spin: { x: spinX, y: barY + spinRaiseY, size: spinSize },
-		increase: { x: increaseX, y: barY, size: smallSize },
+		decrease: { x: decreaseX, y: rightGroupY, size: smallSize },
+		spin: { x: spinX, y: rightGroupY + spinRaiseY, size: spinSize },
+		increase: { x: increaseX, y: rightGroupY, size: smallSize },
 		autoplay: {
 			x: autoX,
 			y: rightGroupY,

@@ -115,6 +115,9 @@ export const BITMAP_FONT_SCALE = 65 / 105;
 /** Prostoi bitmap size for WIN label under the board (ref px before BITMAP_FONT_SCALE). */
 export const WIN_HUD_FONT_SIZE = 52;
 
+/** Under-board WIN / duel bank count-up duration (FS any increase; base post-SW). */
+export const WIN_HUD_COUNT_UP_MS = 1100;
+
 /** Prostoi bitmap size for per-line small-win amounts (ref px before BITMAP_FONT_SCALE). */
 export const PAYLINE_WIN_AMOUNT_FONT_SIZE = 42;
 /** Vertical offset above the payline center (ref px). */
@@ -174,55 +177,79 @@ const INITIAL_BOARD_LOWS = ['L1', 'L2', 'L3', 'L4'] as const;
  * to echo the edge cells.
  */
 const INITIAL_BOARD_TEMPLATES: ReadonlyArray<ReadonlyArray<ReadonlyArray<RawSymbol['name']>>> = [
-	// Almost-mid H1 line + stacked H2 tease on top.
+	// Almost-mid H1 line + one wild bridge on reel 0.
 	[
 		['H2', 'H1', 'W', 'L4'],
 		['H2', 'H1', 'H3', 'H4'],
 		['H2', 'H1', 'L2', 'H4'],
-		['L3', 'L4', 'H3', 'W'],
+		['L3', 'L4', 'H3', 'H2'],
 		['H4', 'H1', 'H3', 'L1'],
 	],
-	// Diagonal-ish H3 run + H4 pair on the bottom-left.
+	// Diagonal-ish H3 run + single wild on reel 1.
 	[
 		['H3', 'L1', 'H2', 'H4'],
 		['W', 'H3', 'L4', 'H4'],
 		['L2', 'H1', 'H3', 'L3'],
-		['H2', 'H2', 'W', 'H1'],
+		['H2', 'H2', 'L4', 'H1'],
 		['H4', 'H2', 'L1', 'H3'],
 	],
 	// Wild bridge across a near H2 four-of-kind (broken on reel 3).
 	[
-		['H2', 'L3', 'H1', 'W'],
+		['H2', 'L3', 'H1', 'L2'],
 		['H2', 'H4', 'H1', 'L2'],
 		['H2', 'W', 'H1', 'H4'],
 		['L4', 'H3', 'L1', 'H3'],
 		['H2', 'H3', 'H4', 'L3'],
 	],
-	// Two short stacks (H4 / H1) with a soft H3 band.
+	// Two short stacks (H4 / H1) with one wild on reel 1.
 	[
 		['H4', 'H4', 'L2', 'H3'],
 		['W', 'H1', 'H3', 'L4'],
 		['H2', 'H1', 'H3', 'H2'],
-		['L1', 'H1', 'W', 'H2'],
+		['L1', 'H1', 'L4', 'H2'],
 		['H4', 'L3', 'H3', 'H4'],
 	],
-	// Premium top row tease + revolver (H2) column on reel 1.
+	// Premium top row tease + one wild on reel 4.
 	[
-		['H1', 'L4', 'H4', 'W'],
+		['H1', 'L4', 'H4', 'L3'],
 		['H1', 'H2', 'H2', 'H2'],
 		['H1', 'L1', 'H3', 'L3'],
 		['L2', 'H4', 'H3', 'H4'],
 		['W', 'H3', 'L4', 'H1'],
 	],
-	// Soft V of highs meeting mid-board with wilds as glue.
+	// Soft V of highs meeting mid-board with a single wild glue cell.
 	[
 		['H4', 'L3', 'H2', 'H1'],
 		['H3', 'H4', 'W', 'L2'],
 		['H1', 'H1', 'H1', 'H3'],
-		['W', 'H2', 'L4', 'H2'],
+		['L4', 'H2', 'L4', 'H2'],
 		['L1', 'H3', 'H4', 'H2'],
 	],
 ];
+
+/** Wild-like symbols on the idle / fake desk (W preview + SW if ever injected). */
+const INITIAL_BOARD_WILD_NAMES = new Set<RawSymbol['name']>(['W', 'SW']);
+
+const stripWildName = (
+	name: RawSymbol['name'],
+	fallback: RawSymbol['name'],
+): RawSymbol['name'] => (INITIAL_BOARD_WILD_NAMES.has(name) ? fallback : name);
+
+/** Keep at most one wild across the visible 5×4 grid (matches math: 1 SW per spin). */
+const capVisibleWilds = (
+	visible: RawSymbol['name'][][],
+	fallback: RawSymbol['name'],
+	maxWild = 1,
+): RawSymbol['name'][][] => {
+	let kept = 0;
+	return visible.map((column) =>
+		column.map((name) => {
+			if (!INITIAL_BOARD_WILD_NAMES.has(name)) return name;
+			kept += 1;
+			return kept <= maxWild ? name : fallback;
+		}),
+	);
+};
 
 const shuffleInPlace = <T>(items: T[]): T[] => {
 	for (let i = items.length - 1; i > 0; i--) {
@@ -271,22 +298,31 @@ export const createInitialBoard = (opts?: { exclude?: ReadonlySet<string> }): Ra
 	);
 	const fallbackLow = applyExclude('L2', opts?.exclude, fallbackHigh);
 
-	const visible = template.map((column) =>
-		column.map((name) => {
-			const remapped = remap[name] ?? name;
-			return applyExclude(remapped, opts?.exclude, fallbackLow);
-		}),
+	const visible = capVisibleWilds(
+		template.map((column) =>
+			column.map((name) => {
+				const remapped = remap[name] ?? name;
+				return applyExclude(remapped, opts?.exclude, fallbackLow);
+			}),
+		),
+		fallbackLow,
 	);
 
 	return visible.map((column) => {
-		const topPad = applyExclude(
-			pickOne([column[0]!, column[1]!, fallbackHigh]),
-			opts?.exclude,
+		const topPad = stripWildName(
+			applyExclude(
+				pickOne([column[0]!, column[1]!, fallbackHigh]),
+				opts?.exclude,
+				fallbackHigh,
+			),
 			fallbackHigh,
 		);
-		const bottomPad = applyExclude(
-			pickOne([column[column.length - 1]!, column[column.length - 2]!, fallbackHigh]),
-			opts?.exclude,
+		const bottomPad = stripWildName(
+			applyExclude(
+				pickOne([column[column.length - 1]!, column[column.length - 2]!, fallbackHigh]),
+				opts?.exclude,
+				fallbackHigh,
+			),
 			fallbackHigh,
 		);
 		return [{ name: topPad }, ...column.map((name) => ({ name })), { name: bottomPad }];
@@ -698,6 +734,12 @@ export const BOARD_RAIL_DIVIDER_CONTENT_PX = 14;
  */
 export const BOARD_OUTER_MASK_SLACK_PX = 16;
 
+/**
+ * Shave gold rails between cols 3|4 and 4|5 so holes for cols 4–5 match the
+ * outer-column slack — symbols / VFX were clipping early on the right pair.
+ */
+export const BOARD_COLUMN_45_RAIL_SHAVE_PX = 3;
+
 /** Parchment width in board space (BoardFrameRailsMask `pfW`). */
 const FULL_COLUMN_PF_W = BOARD_SIZES.width * DESK_PARCHMENT_PADDING.width;
 const FULL_COLUMN_COL_W = FULL_COLUMN_PF_W / BOARD_DIMENSIONS.x;
@@ -740,11 +782,11 @@ const BONUS_OFFSET_X = Math.round(
  * into the left divider (hat/whiskers clipped).
  */
 const FULL_COLUMN_BAY_NUDGE_PX: Readonly<Record<number, number>> = {
-	0: 0,
-	1: 0,
-	2: 0,
-	3: 0,
-	4: 0,
+	0: 1.5,
+	1: 0.5,
+	2: -0.5,
+	3: -1.5,
+	4: -2,
 };
 
 export const getFullColumnBayCenterX = (reelIndex: number) => {
@@ -1092,8 +1134,7 @@ export const DESKTOP_UI_LAYOUT = {
 	/** Buy Bonus / Auto label size as fraction of button height (PC / Laptop / Popout L). */
 	panelLabelFontFrac: 0.22,
 	spinCluster: {
-		/** Spin X as fraction of canvas width (0.5 = true center). */
-		clusterCenterXFrac: 0.495,
+		/** Horizontal gap between adjacent controls in the spin cluster (layout px). */
 		betControlsGap: 14,
 		spinScale: 1.08,
 		spinRaiseY: 0,

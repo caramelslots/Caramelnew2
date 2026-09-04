@@ -4,7 +4,13 @@
 	export type EmitterEventWin =
 		| { type: 'winShow' }
 		| { type: 'winHide' }
-		| { type: 'winUpdate'; amount: number; winLevelData: WinLevelData };
+		| {
+				type: 'winUpdate';
+				amount: number;
+				winLevelData: WinLevelData;
+				/** When set, count-up starts here (e.g. phase-1 total before additive phase-2). */
+				fromAmount?: number;
+		  };
 </script>
 
 <script lang="ts">
@@ -34,6 +40,7 @@
 
 	let show = $state(false);
 	let amount = $state(0);
+	let fromAmount = $state(0);
 	let winLevelData = $state<WinLevelData>();
 	let oncomplete = $state(() => {});
 	let onCountUpComplete = $state(() => {});
@@ -164,6 +171,7 @@
 		},
 		winUpdate: async (emitterEvent) => {
 			amount = emitterEvent.amount;
+			fromAmount = Math.max(0, Math.min(emitterEvent.fromAmount ?? 0, emitterEvent.amount));
 			winLevelData = emitterEvent.winLevelData;
 			const isBig = emitterEvent.winLevelData.type === 'big';
 			stateGame.winOverlayActive = isBig;
@@ -180,7 +188,7 @@
 	{#if winLevelData}
 		{@const isBigWin = winLevelData.type === 'big'}
 		{@const duration = winLevelData.presentDuration}
-		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
+		<WinCountUpProvider {amount} from={fromAmount} {duration} oncomplete={() => onCountUpComplete()}>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
 				{#if isBigWin}
 					<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={BIG_WIN_DIM_ALPHA} />

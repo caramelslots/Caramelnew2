@@ -105,6 +105,27 @@ const FS_FORBIDDEN_PADDING = new Set(['B', 'BD']);
 /** Match math `max_sticky_sw` — no SW scroll art on non-sticky reels once at cap. */
 export const MAX_STICKY_SW = 2;
 
+/** Scroll padding: at most one W/SW across the whole strip (matches 1 SW per spin). */
+const SCROLL_WILD_PADDING = new Set(['W', 'SW']);
+
+export const capWildsInScrollPadding = (
+	paddingReels: { name: string }[][],
+	maxWild = 1,
+) => {
+	let kept = 0;
+	return paddingReels.map((reel) =>
+		reel.map((cell) => {
+			if (!SCROLL_WILD_PADDING.has(cell.name)) return { ...cell };
+			kept += 1;
+			return kept <= maxWild ? { ...cell } : { name: 'L2' };
+		}),
+	);
+};
+
+/** Basegame scroll padding — one wild in the entire mock strip. */
+export const getBasegamePaddingBoard = (paddingReels: { name: string }[][]) =>
+	capWildsInScrollPadding(paddingReels);
+
 const stripSwPaddingWhenAtCap = (
 	reel: { name: string }[],
 	reelIndex: number,

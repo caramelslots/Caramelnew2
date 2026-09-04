@@ -13,6 +13,8 @@
 </script>
 
 <script lang="ts">
+	import { fade } from 'svelte/transition';
+	import { onMount } from 'svelte';
 	import { OnHotkey } from 'components-shared';
 	import { stateUrlDerived } from 'state-shared';
 	import { waitForResolve } from 'utils-shared/wait';
@@ -189,6 +191,36 @@
 		});
 	});
 
+	/** Fade in after cloud clears (FS entry) or one frame after mount (extra spins). */
+	let overlayRevealed = $state(false);
+	let revealRaf = 0;
+
+	const scheduleOverlayReveal = () => {
+		cancelAnimationFrame(revealRaf);
+		revealRaf = requestAnimationFrame(() => {
+			revealRaf = requestAnimationFrame(() => {
+				if (show && !stateGame.transitionActive) overlayRevealed = true;
+			});
+		});
+	};
+
+	$effect(() => {
+		if (!show || stateGame.transitionActive) {
+			cancelAnimationFrame(revealRaf);
+			revealRaf = 0;
+			overlayRevealed = false;
+			return;
+		}
+
+		scheduleOverlayReveal();
+		return () => {
+			cancelAnimationFrame(revealRaf);
+			revealRaf = 0;
+		};
+	});
+
+	onMount(() => () => cancelAnimationFrame(revealRaf));
+
 	const dismiss = () => oncomplete();
 
 	context.eventEmitter.subscribeOnMount({
@@ -197,6 +229,9 @@
 			stateGame.freeSpinIntroActive = true;
 		},
 		freeSpinIntroHide: () => {
+			cancelAnimationFrame(revealRaf);
+			revealRaf = 0;
+			overlayRevealed = false;
 			show = false;
 			stateGame.freeSpinIntroActive = false;
 			introMode = 'award';
@@ -212,7 +247,9 @@
 {#if show}
 	<div
 		class="overlay"
+		class:overlay--visible={overlayRevealed}
 		data-test="free-spin-intro-overlay"
+		out:fade={{ duration: 220 }}
 		onclick={dismiss}
 		onkeydown={(e) => e.key === 'Enter' && dismiss()}
 		role="button"
@@ -272,7 +309,7 @@
 	</div>
 {/if}
 
-<OnHotkey hotkey="Space" disabled={!show} onpress={dismiss} />
+<OnHotkey hotkey="Space" disabled={!overlayRevealed} onpress={dismiss} />
 
 <style lang="scss">
 	.overlay {
@@ -282,12 +319,25 @@
 		z-index: 70;
 		cursor: pointer;
 		background: rgba(0, 0, 0, 0.5);
+		opacity: 0;
+		transition: opacity 320ms ease-out;
+		pointer-events: none;
+
+		&.overlay--visible {
+			opacity: 1;
+			pointer-events: auto;
+		}
 	}
 
 	.panel {
 		position: fixed;
-		transform: translate(-50%, -50%);
+		transform: translate(-50%, -50%) scale(0.94);
+		transition: transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
 		pointer-events: none;
+
+		.overlay--visible & {
+			transform: translate(-50%, -50%) scale(1);
+		}
 	}
 
 	.layer {

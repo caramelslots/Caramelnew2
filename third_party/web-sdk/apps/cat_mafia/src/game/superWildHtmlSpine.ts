@@ -1,6 +1,16 @@
 /** designer_assets/wild_files/wild_render — Super Wild column open (Pixi Spine). */
 
-import { BOARD_DIMENSIONS, SYMBOL_SIZE } from './constants';
+import type * as PIXI from 'pixi.js';
+
+import {
+	BOARD_DIMENSIONS,
+	BOARD_MASK_OVERFLOW,
+	BOARD_SIZES,
+	DESK_BOTTOM_MASK_SLACK_PX,
+	DESK_BOTTOM_PULL_PX,
+	SYMBOL_SIZE,
+} from './constants';
+import { getSymbolX } from './utils';
 
 /**
  * Spine camera over the export (same AABB as the HTML SpinePlayer framing).
@@ -113,6 +123,8 @@ export const getSuperWildOriginCellY = (paddedRow: number) => (paddedRow - 0.5) 
  */
 export const SUPER_WILD_COLUMN_COVER_X = 1.0;
 export const SUPER_WILD_COLUMN_COVER_Y = 1.0057;
+/** Bottom outer-corner radius for SW curtains on cols 1 & 5 (board-local px). */
+export const SUPER_WILD_OUTER_COLUMN_BOTTOM_RADIUS_PX = 15.5;
 /**
  * Extra board-local Y shift of the column box.
  * Positive = DOWN, negative = UP.
@@ -234,7 +246,7 @@ export const superWildWheelEndDegForSector = (
 	spins = SUPER_WILD_WHEEL_SPINS,
 ) => {
 	const sectorMid = superWildWheelSectorMidDeg(sectorIdx);
-	const landOffset = ((sectorMid - SUPER_WILD_DRUM_POINTER_DEG) % 360 + 360) % 360;
+	const landOffset = (((sectorMid - SUPER_WILD_DRUM_POINTER_DEG) % 360) + 360) % 360;
 	return -(spins * 360 + landOffset);
 };
 
@@ -249,7 +261,7 @@ export const superWildPointerSectorIndex = (wheelDeg: number): number => {
 	let bestDist = Infinity;
 	for (let i = 0; i < n; i++) {
 		const angle = superWildWheelSectorMidDeg(i) + wheelDeg;
-		const norm = ((angle - SUPER_WILD_DRUM_POINTER_DEG) % 360 + 360) % 360;
+		const norm = (((angle - SUPER_WILD_DRUM_POINTER_DEG) % 360) + 360) % 360;
 		const dist = Math.min(norm, 360 - norm);
 		if (dist < bestDist) {
 			bestDist = dist;
@@ -292,3 +304,75 @@ export const getSuperWildPixiTransform = (boxWidth: number, boxHeight: number) =
 /** Curtain column center X — symbol center + per-reel curtain nudge (not rail nudge). */
 export const getSuperWildColumnX = (reelIndex: number, symbolCenterX: number) =>
 	symbolCenterX + (SUPER_WILD_COLUMN_OFFSET_X_PX[reelIndex] ?? 0);
+
+/** Shared SW / bonusReel column box — board-local px. */
+export const getSuperWildColumnBoxMetrics = () => {
+	const boxW = SYMBOL_SIZE * SUPER_WILD_COLUMN_COVER_X;
+	const boxH = BOARD_SIZES.height * SUPER_WILD_COLUMN_COVER_Y;
+	return {
+		boxW,
+		boxH,
+		colY: SUPER_WILD_OFFSET_Y_PX + boxH * 0.5,
+		maskW: boxW * 1.08,
+	};
+};
+
+/** Column anchor X — same nudge as SW curtain (cols 1 & 5 included). */
+export const getSuperWildColumnAnchorX = (reelIndex: number) =>
+	getSuperWildColumnX(reelIndex, getSymbolX(reelIndex, 'SW'));
+
+/** Board hole clip — matches SuperWildCurtainPixi / BoardMask stopped geometry. */
+export const drawSuperWildBoardClipMask = (g: PIXI.Graphics) => {
+	const maskTop = BOARD_MASK_OVERFLOW.top;
+	const maskBottom = Math.max(
+		0,
+		BOARD_MASK_OVERFLOW.bottom - DESK_BOTTOM_PULL_PX + DESK_BOTTOM_MASK_SLACK_PX,
+	);
+	g.rect(
+		-SYMBOL_SIZE,
+		-maskTop,
+		BOARD_SIZES.width + SYMBOL_SIZE * 2,
+		BOARD_SIZES.height + maskTop + maskBottom,
+	);
+	g.fill(0xffffff);
+};
+
+/**
+ * Full-column clip for one SW curtain.
+ * Col 1 rounds bottom-left; col 5 rounds bottom-right (desk outer corners).
+ */
+export const drawSuperWildColumnMask = (
+	g: PIXI.Graphics,
+	width: number,
+	height: number,
+	reelIndex: number,
+) => {
+	const left = -width * 0.5;
+	const top = -height * 0.5;
+	const right = width * 0.5;
+	const bottom = height * 0.5;
+	const lastCol = BOARD_DIMENSIONS.x - 1;
+	const r = Math.min(SUPER_WILD_OUTER_COLUMN_BOTTOM_RADIUS_PX, width * 0.5, height * 0.5);
+
+	g.clear();
+
+	if (reelIndex === 0) {
+		g.moveTo(left, top);
+		g.lineTo(right, top);
+		g.lineTo(right, bottom);
+		g.lineTo(left + r, bottom);
+		g.arcTo(left, bottom, left, top, r);
+	} else if (reelIndex === lastCol) {
+		g.moveTo(left, top);
+		g.lineTo(right, top);
+		g.lineTo(right, bottom - r);
+		g.arcTo(right, bottom, left, bottom, r);
+		g.lineTo(left, bottom);
+		g.lineTo(left, top);
+	} else {
+		g.rect(left, top, width, height);
+	}
+
+	g.closePath();
+	g.fill(0xffffff);
+};
