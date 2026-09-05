@@ -191,13 +191,14 @@
 	});
 
 	const contentWidth = $derived(Math.max(titleSizes.width, counterSizes.width, 1));
+	const textCenterX = $derived(contentWidth / 2);
 	const textScale = $derived(Math.min(Math.max(maxTextWidth / contentWidth, minTextScale), 1));
 
 	const textContainerSizes = $derived({
-		width: titleSizes.width,
+		width: contentWidth,
 		height: titleSizes.height + counterSizes.height,
 	});
-	const counterPosition = $derived({ x: titleSizes.width / 2, y: titleSizes.height });
+	const counterPosition = $derived({ x: textCenterX, y: titleSizes.height });
 
 	context.eventEmitter.subscribeOnMount({
 		freeSpinCounterShow: () => (show = true),
@@ -223,6 +224,8 @@
 		>
 			<LocaleGlyph
 				text={titleText}
+				x={textCenterX}
+				anchor={{ x: 0.5, y: 0 }}
 				fallbackFill={LOCALE_TEXT_FILL_GOLD}
 				style={{
 					fontFamily: labelFont,
