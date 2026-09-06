@@ -370,7 +370,7 @@ type PosePlayback = {
 /**
  * Pose → Spine mapping (`designer_assets/cat_render`):
  * - like (`react`) = Big / Super Win celebration (one-shot → idle)
- * - applause (`clap`) = Epic / Sensational celebration (play once)
+ * - applause (`clap`) = Epic / Sensational celebration (one-shot → idle)
  * - hat = paw coin catch
  * - gun_start = catch BT fly at the hand; load / gun_end_load seat the drum after
  * - gun_shot_* = FS target pick (stat_idle → aim loop → shoot on tap → end)
@@ -388,8 +388,8 @@ export const MASCOT_POSE_PLAYBACK: Record<MascotPose, PosePlayback> = {
 	gunStatLoad: { animation: 'gun_shot_stat_load', loop: false, holdEnd: true },
 	react: { animation: 'like', loop: false, returnTo: 'idle' },
 	/** @deprecated Prefer `clap` for big wins — kept as applause once for safety. */
-	wow: { animation: 'applause', loop: false, holdEnd: true },
-	clap: { animation: 'applause', loop: false, holdEnd: true },
+	wow: { animation: 'applause', loop: false, returnTo: 'idle' },
+	clap: { animation: 'applause', loop: false, returnTo: 'idle' },
 	hatCatch: { animation: 'hat', loop: false, holdEnd: true },
 	/** Resume `hat` forward from the pause (no reverse). */
 	hatOn: { animation: 'hat', loop: false, returnTo: 'idle' },

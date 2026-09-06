@@ -484,11 +484,9 @@ const findNextSetWin = (bookEvents: BookEvent[], fromEvent: BookEvent) => {
  * Mascot win beat — only on full-screen Big Win+ banners:
  * `like` for big/super, `applause` for epic/sensational.
  * Bumps `mascotAnimToken` so a second setWin can re-fire the same pose.
- * Portrait phone skips — keep idle looping under the banner.
  */
 const triggerMascotWinReaction = (winLevelData: WinLevelData | undefined) => {
 	if (!winLevelData || winLevelData.type !== 'big') return;
-	if (stateLayoutDerived.layoutType() === 'portrait') return;
 	const pose =
 		winLevelData.alias === 'epic' || winLevelData.alias === 'sensational' ? 'clap' : 'react';
 	stateGame.mascotAnimToken += 1;
@@ -1976,7 +1974,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'duelOutroHide' });
 		if (bigWinShown) {
 			// Same order as setWin: hide overlay first so Win.svelte won't re-force
-			// clap/react, then restore looping idle (clap uses holdEnd without returnTo).
+			// clap/react, then restore looping idle.
 			eventEmitter.broadcast({ type: 'winHide' });
 			stateGame.mascotPose = 'idle';
 		}

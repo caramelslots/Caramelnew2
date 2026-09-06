@@ -1113,13 +1113,17 @@ export const DESKTOP_UI_LAYOUT = {
 	/** Buy Bonus width as fraction of canvas width. */
 	buyBonusWidthFrac: 0.118,
 	/** Balance/Bet font size in layout px. */
-	balanceFontSize: 22,
+	balanceFontSize: 28,
 	/** Gap between stacked balance / bet lines (layout px). */
-	balanceLineGap: 15,
+	balanceLineGap: 17,
 	/** Estimated balance line width in “em” for right-group packing. */
 	balanceTextEm: 11.5,
-	/** Lower Balance/Bet + Auto + Turbo only (layout px, + = down). */
+	/** Lower spin cluster only (layout px, + = down). Balance/Bet stay on icon row. */
 	rightGroupDropY: 10,
+	/** Gap from menu icon → balance/bet text (layout px). */
+	balanceMenuGap: 10,
+	/** Gap from icon row top → buy bonus panel bottom (layout px). */
+	buyBonusAboveGap: 44,
 	/** Buy Bonus / Auto label size as fraction of button height (PC / Laptop / Popout L). */
 	panelLabelFontFrac: 0.22,
 	spinCluster: {
@@ -1128,8 +1132,10 @@ export const DESKTOP_UI_LAYOUT = {
 		spinScale: 1.08,
 		spinRaiseY: 0,
 		smallScale: 0.7,
-		/** Auto width vs Buy Bonus width (same panel art; L shows Auto narrower). */
-		autoplayScale: 0.72,
+		/** Auto width vs Buy Bonus width (same panel art). */
+		autoplayScale: 1.0,
+		/** Max autoplay pill height vs UI_BASE_SIZE (layout px, before canvas scale). */
+		autoplayMaxHeightScale: 0.62,
 		turboScale: 0.56,
 	},
 	/**

@@ -120,11 +120,10 @@ export const computePortraitHudCanvas = (
 	const spinHalf = spinSize / 2;
 	const smallSize = refLen(btn.spinBetDiam);
 	const smallHalf = smallSize / 2;
-	const iconSize = refLen(btn.utilIconDiam);
-	const betControlOffsetX = spinHalf + refLen(btn.spinBetGap) + smallHalf;
 	const spinClusterCenterX =
 		canvas.width * 0.5 +
 		(PORTRAIT_UI_LAYOUT.spinClusterShiftX / PORTRAIT_UI_LAYOUT.refWidth) * canvas.width;
+	const betControlOffsetX = spinHalf + refLen(btn.spinBetGap) + smallHalf;
 
 	const buyPanelTopCanvas = portraitBuyPanelCanvasTop(layoutDerived);
 	const buyPanelBottomCanvas =
@@ -132,7 +131,7 @@ export const computePortraitHudCanvas = (
 		buyPanelTopCanvas + portraitBuyPanelHeightCanvas(layoutDerived);
 
 	const utilCenterY = portraitCanvasYFromBottom(PORTRAIT_UI_LAYOUT.utilFromBottom, layoutDerived);
-	const utilTopCanvas = utilCenterY - iconSize / 2;
+	const utilTopCanvas = utilCenterY - smallSize / 2;
 	// Центр spin-кластера (−/+ якорь) — ровно между низом buy/boost и верхом util-ряда.
 	const spinCenterY = (buyPanelBottomCanvas + utilTopCanvas) / 2;
 
@@ -143,7 +142,7 @@ export const computePortraitHudCanvas = (
 		);
 
 	const spreadIconPair = (leftX: number, rightX: number) => {
-		const minStep = iconSize + refLen(PORTRAIT_UI_LAYOUT.utilIconGap);
+		const minStep = smallSize + refLen(PORTRAIT_UI_LAYOUT.utilIconGap);
 		if (rightX - leftX >= minStep) return [leftX, rightX] as const;
 		const mid = (leftX + rightX) / 2;
 		return [mid - minStep / 2, mid + minStep / 2] as const;
@@ -159,10 +158,8 @@ export const computePortraitHudCanvas = (
 	);
 
 	const balanceTextGap = refLen(PORTRAIT_UI_LAYOUT.utilBalanceTextGap);
-	const menuRight = menuX + iconSize / 2;
-	const rightIconLeft = opts?.hideAutoplay
-		? turboX - iconSize / 2
-		: autoplayX - iconSize / 2;
+	const menuRight = menuX + smallSize / 2;
+	const rightIconLeft = opts?.hideAutoplay ? turboX - smallSize / 2 : autoplayX - smallSize / 2;
 	const balanceLeft = menuRight + balanceTextGap;
 	const balanceRight = rightIconLeft - balanceTextGap;
 	const balanceMaxWidth = Math.max(0, balanceRight - balanceLeft);
@@ -180,7 +177,7 @@ export const computePortraitHudCanvas = (
 		},
 		util: {
 			centerY: utilCenterY,
-			iconSize,
+			iconSize: smallSize,
 			fontSize: refLen(PORTRAIT_UI_LAYOUT.utilBalanceFontSize),
 			x: {
 				info: infoX,

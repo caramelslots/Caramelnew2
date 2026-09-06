@@ -1,6 +1,6 @@
 <!--
 	CashStacksPortraitHudOverlay.svelte — portrait HUD в HTML/CSS:
-	− | Spin | + под buy/boost; i | ☰ | balance/bet | autoplay | turbo у низа экрана.
+	[−][SPIN][+] под buy/boost; i | ☰ | balance/bet | autoplay | turbo у низа экрана.
 -->
 <script lang="ts">
 	import {

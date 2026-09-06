@@ -19,6 +19,8 @@ export type DesktopHudLayoutConfig = {
 	balanceLineGap: number;
 	balanceTextEm: number;
 	rightGroupDropY: number;
+	balanceMenuGap: number;
+	buyBonusAboveGap: number;
 	panelLabelFontFrac: number;
 	spinCluster: (typeof DESKTOP_UI_LAYOUT)['spinCluster'];
 };
@@ -62,9 +64,10 @@ const utilBarOrigin = (layoutWidth: number, layoutHeight: number) => ({
 });
 
 /**
- * Single-row desktop HUD — two packed groups on every non-phone canvas:
- *   [i][☰][BUY BONUS]   BALANCE/BET [AUTO][⚡][SPIN][−][+]
- * When `hideAutoplay`: BALANCE/BET [⚡][SPIN][−][+].
+ * Desktop HUD layout:
+ *        [BUY BONUS]
+ *   [i][☰] BALANCE/BET          [AUTO][−][SPIN][+][⚡]
+ * When `hideAutoplay`: BALANCE/BET [−][SPIN][+][⚡].
  */
 export const computeDesktopHudLayout = (
 	layoutDerived: LayoutDerived,
@@ -85,28 +88,25 @@ export const computeDesktopHudLayout = (
 	const sideMargin = canvas.width * config.sideMarginFrac;
 	const gap = Math.max(6, canvas.width * config.itemGapFrac);
 
-	const iconSize = toSize(UI_BASE_SIZE * 0.72 * config.utilScale);
 	const spinSize = toSize(UI_BASE_SIZE * cluster.spinScale);
 	const smallSize = toSize(UI_BASE_SIZE * cluster.smallScale);
-	const turboSize = toSize(UI_BASE_SIZE * cluster.turboScale);
 	const betGap = toSize(cluster.betControlsGap);
 	const spinRaiseY = toSize(cluster.spinRaiseY ?? 0);
 
-	/**
-	 * Buy Bonus + Auto are separate panel sprites; keep each aspect correct.
-	 * If height would exceed the HUD row, shrink width too so buttons don’t stretch.
-	 */
-	const panelHMax = iconSize * 1.05;
+	/** Buy Bonus panel height cap — independent of HUD icon size. */
+	const buyPanelHMax = toSize(UI_BASE_SIZE * 0.72 * config.utilScale) * 1.05;
 	let buyBonusW = Math.max(BUY_BONUS_MIN_WIDTH_PX, canvas.width * config.buyBonusWidthFrac);
 	let buyBonusH = buyBonusW / BUY_PANEL_ASPECT;
-	if (buyBonusH > panelHMax) {
-		buyBonusH = panelHMax;
+	if (buyBonusH > buyPanelHMax) {
+		buyBonusH = buyPanelHMax;
 		buyBonusW = buyBonusH * BUY_PANEL_ASPECT;
 	}
+
 	let autoplayWidth = buyBonusW * cluster.autoplayScale;
 	let autoplayHeight = autoplayWidth / AUTOPLAY_PILL_ASPECT;
-	if (autoplayHeight > panelHMax) {
-		autoplayHeight = panelHMax;
+	const autoplayHMax = toSize(UI_BASE_SIZE * cluster.autoplayMaxHeightScale);
+	if (autoplayHeight > autoplayHMax) {
+		autoplayHeight = autoplayHMax;
 		autoplayWidth = autoplayHeight * AUTOPLAY_PILL_ASPECT;
 	}
 	if (hideAutoplay) {
@@ -116,64 +116,55 @@ export const computeDesktopHudLayout = (
 
 	const balanceFontSize = toSize(config.balanceFontSize);
 	const balanceLineGap = toSize(config.balanceLineGap);
-	const balanceBlockW = balanceFontSize * config.balanceTextEm;
+	const balanceMenuGap = toSize(config.balanceMenuGap);
+	const buyBonusAboveGap = toSize(config.buyBonusAboveGap);
 	const rightGroupY = barY + toSize(config.rightGroupDropY);
 
-	const iconHalf = iconSize / 2;
-	const spinHalf = spinSize / 2;
 	const smallHalf = smallSize / 2;
+	const spinHalf = spinSize / 2;
 	const autoplayHalfW = autoplayWidth / 2;
-	const turboHalf = turboSize / 2;
 
 	/**
 	 * Right group — packed from the right margin inward:
-	 * [−][+] ← SPIN ← Turbo ← Auto ← Balance/Bet
+	 * Turbo ← [+] ← SPIN ← [−] ← Auto (pill)
 	 */
-	const betRowW = smallSize + betGap + smallSize;
-	const rightPackW = hideAutoplay
-		? balanceBlockW + gap + turboSize + gap + spinSize + gap + betRowW
-		: balanceBlockW + gap + autoplayWidth + gap + turboSize + gap + spinSize + gap + betRowW;
-	const rightPackLeft = canvas.width - sideMargin - rightPackW;
+	const spinClusterW = smallSize * 3 + betGap * 3 + spinSize;
 
-	const increaseX = canvas.width - sideMargin - smallHalf;
-	const decreaseX = increaseX - smallHalf - betGap - smallHalf;
-	const spinX = decreaseX - smallHalf - betGap - spinHalf;
-	const turbX = spinX - spinHalf - betGap - turboHalf;
+	const turbX = canvas.width - sideMargin - smallHalf;
+	const increaseX = turbX - smallHalf - betGap - smallHalf;
+	const spinX = increaseX - smallHalf - betGap - spinHalf;
+	const decreaseX = spinX - spinHalf - betGap - smallHalf;
 	const autoX = hideAutoplay
-		? turbX
-		: turbX - turboHalf - betGap - autoplayHalfW;
-	/** balanceAnchorX = right edge of text (CSS translateX(-100%)). */
-	const balanceAnchorX = hideAutoplay
-		? turbX - turboHalf - gap
-		: autoX - autoplayHalfW - gap;
+		? decreaseX - smallHalf - gap
+		: decreaseX - smallHalf - betGap - autoplayHalfW;
 
-	/** Left group — packed from the left margin: i → ☰ → BUY BONUS. */
-	const infoX = sideMargin + iconHalf;
-	const menuX = infoX + iconHalf + gap + iconHalf;
+	/** Left group — bottom row: i → ☰; balance/bet hug menu on the right. */
+	const infoX = sideMargin + smallHalf;
+	const menuX = infoX + smallHalf + gap + smallHalf;
+	const balanceLeftX = menuX + smallHalf + balanceMenuGap;
+
+	/** Buy Bonus stacked above info + menu, centered on the icon pair. */
+	const buyBonusCenterX = (infoX + menuX) / 2;
 	let buyW = buyBonusW;
 	let buyH = buyBonusH;
-	let buyBonusX = menuX + iconHalf + gap + buyW / 2;
-
-	if (buyBonusX + buyW / 2 + gap > rightPackLeft) {
-		const maxBuyW = Math.max(
-			BUY_BONUS_MIN_WIDTH_PX,
-			rightPackLeft - gap - (menuX + iconHalf + gap),
-		);
-		buyW = Math.min(buyBonusW, maxBuyW);
-		buyH = buyW / BUY_PANEL_ASPECT;
-		if (buyH > panelHMax) {
-			buyH = panelHMax;
-			buyW = buyH * BUY_PANEL_ASPECT;
-		}
-		buyBonusX = menuX + iconHalf + gap + buyW / 2;
+	const maxBuyW = Math.max(
+		BUY_BONUS_MIN_WIDTH_PX,
+		(menuX + smallHalf - (infoX - smallHalf)) * 1.35,
+	);
+	buyW = Math.min(buyW, maxBuyW);
+	buyH = buyW / BUY_PANEL_ASPECT;
+	if (buyH > buyPanelHMax) {
+		buyH = buyPanelHMax;
+		buyW = buyH * BUY_PANEL_ASPECT;
 	}
+	const buyBonusY = barY - smallHalf - buyBonusAboveGap - buyH / 2;
 
 	return {
-		info: { x: infoX, y: barY, size: iconSize },
-		menu: { x: menuX, y: barY, size: iconSize },
+		info: { x: infoX, y: barY, size: smallSize },
+		menu: { x: menuX, y: barY, size: smallSize },
 		buyBonus: {
-			x: buyBonusX,
-			y: barY,
+			x: buyBonusCenterX,
+			y: buyBonusY,
 			width: buyW,
 			height: buyH,
 			/** Direct fraction of button height — no px floor (it deadened Popout S knobs). */
@@ -189,15 +180,15 @@ export const computeDesktopHudLayout = (
 			height: autoplayHeight,
 			fontSize: autoplayHeight * config.panelLabelFontFrac,
 		},
-		turbo: { x: turbX, y: rightGroupY, size: turboSize },
+		turbo: { x: turbX, y: rightGroupY, size: smallSize },
 		balance: {
-			x: balanceAnchorX,
-			y: rightGroupY - balanceLineGap,
+			x: balanceLeftX,
+			y: barY - balanceLineGap,
 			fontSize: balanceFontSize,
 		},
 		bet: {
-			x: balanceAnchorX,
-			y: rightGroupY + balanceLineGap,
+			x: balanceLeftX,
+			y: barY + balanceLineGap,
 			fontSize: balanceFontSize,
 		},
 	};
@@ -214,6 +205,8 @@ export const resolveDesktopHudConfig = (isPopoutSmall = false): DesktopHudLayout
 	balanceLineGap: DESKTOP_UI_LAYOUT.balanceLineGap,
 	balanceTextEm: DESKTOP_UI_LAYOUT.balanceTextEm,
 	rightGroupDropY: DESKTOP_UI_LAYOUT.rightGroupDropY,
+	balanceMenuGap: DESKTOP_UI_LAYOUT.balanceMenuGap,
+	buyBonusAboveGap: DESKTOP_UI_LAYOUT.buyBonusAboveGap,
 	panelLabelFontFrac: isPopoutSmall
 		? DESKTOP_UI_LAYOUT.popoutSmall.panelLabelFontFrac
 		: DESKTOP_UI_LAYOUT.panelLabelFontFrac,

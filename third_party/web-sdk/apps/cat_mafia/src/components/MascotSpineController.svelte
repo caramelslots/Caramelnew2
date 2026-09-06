@@ -39,6 +39,8 @@
 	let idleVariantPlaying = false;
 	let forceIdle3Phase: 'catch' | 'hold' | 'on' | null = null;
 	let forceIdle3HoldTimer: ReturnType<typeof setTimeout> | undefined;
+	/** Win like/applause already played for this pose — don't restart after idle return. */
+	let settledWinReaction: MascotPose | undefined;
 
 	const hideSmileSlot = () => {
 		const skeleton = spine.skeleton;
@@ -182,6 +184,27 @@
 		}, nextMascotIdleVariantDelayMs());
 	};
 
+	const isWinReactionPose = (pose: MascotPose | undefined): pose is 'react' | 'wow' | 'clap' =>
+		pose === 'react' || pose === 'wow' || pose === 'clap';
+
+	const settleWinReactionToIdle = (from: MascotPose) => {
+		settledWinReaction = from;
+		activePose = 'idle';
+		scheduleIdleVariant();
+	};
+
+	const queueIdleAfterWinReaction = () => {
+		const idleEntry = spine.state?.addAnimation(0, 'idle', true, 0);
+		if (!idleEntry) return;
+		idleEntry.mixDuration = 0.18;
+		idleEntry.listener = {
+			start: () => {
+				if (activeForceAnim || !isWinReactionPose(activePose)) return;
+				settleWinReactionToIdle(activePose);
+			},
+		};
+	};
+
 	const playArmedIdleVariant = () => {
 		if (!idleVariantArmed || idleVariantPlaying) return;
 		if (activeForceAnim || activePose !== 'idle') return;
@@ -240,6 +263,7 @@
 		if (animation === activeForceAnim) return;
 		activeForceAnim = animation;
 		activePose = undefined;
+		settledWinReaction = undefined;
 		resetIdleVariants();
 		clearForceIdle3();
 		if (animation === 'hat') {
@@ -255,7 +279,11 @@
 		const playback = MASCOT_POSE_PLAYBACK[next];
 		// Looping poses: never re-fire — Spine loop handles repeats.
 		if (next === activePose && playback.loop) return;
-		// Same one-shot applause under wow ↔ clap — keep the held end pose.
+		// Already returned to idle after this like/applause — keep idle flavour.
+		if (isWinReactionPose(next) && settledWinReaction === next && activePose === 'idle') {
+			return;
+		}
+		// Same one-shot applause under wow ↔ clap — don't restart the clip.
 		if (
 			prev &&
 			next !== prev &&
@@ -265,10 +293,11 @@
 			activePose = next;
 			return;
 		}
-		// Same pose already playing/held (e.g. clap during win ladder) — don't restart.
+		// Same pose already playing (e.g. clap during win ladder) — don't restart.
 		if (next === activePose && playback.animation === 'applause') return;
 
 		activePose = next;
+		if (next === 'idle') settledWinReaction = undefined;
 		resetIdleVariants();
 
 		// Hat: pause at hold, then resume the SAME track forward (no reverse / restart).
@@ -295,6 +324,9 @@
 			soft: fromHatToIdle,
 			mix: fromHatToIdle ? 0.18 : undefined,
 		});
+		if (isWinReactionPose(next) && playback.returnTo === 'idle') {
+			queueIdleAfterWinReaction();
+		}
 		if (playback.loop && next === 'idle') {
 			scheduleIdleVariant();
 		}
@@ -332,11 +364,18 @@
 		}
 		if (playback.returnTo) {
 			const back = playback.returnTo;
-			activePose = back === 'idle' ? 'idle' : activePose;
-			playClip(back, true, {
-				soft: activePose === 'idle' || back === 'idle',
-				mix: 0.18,
-			});
+			const currentName = spine.state?.getCurrent(0)?.animation?.name;
+			if (back === 'idle' && isWinReactionPose(activePose)) {
+				settleWinReactionToIdle(activePose);
+			} else {
+				activePose = back === 'idle' ? 'idle' : activePose;
+			}
+			if (currentName !== back) {
+				playClip(back, true, {
+					soft: activePose === 'idle' || back === 'idle',
+					mix: 0.18,
+				});
+			}
 			if (back === 'idle') {
 				scheduleIdleVariant();
 			}
@@ -389,11 +428,13 @@
 			resetIdleVariants();
 			activeForceAnim = null;
 			activePose = undefined;
+			settledWinReaction = undefined;
 		}
 		// Same pose again (gun_shot×N): clear so applyPose re-fires the one-shot.
 		if (token !== lastAnimToken) {
 			lastAnimToken = token;
 			activePose = undefined;
+			settledWinReaction = undefined;
 		}
 		applyPose(props.pose);
 	});

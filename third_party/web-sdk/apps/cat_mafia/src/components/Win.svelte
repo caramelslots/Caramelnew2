@@ -140,12 +140,11 @@
 
 	/**
 	 * Big Win overlay only: like for Big/Super, applause for Epic/Sensational.
-	 * Portrait phone keeps looping idle — clap holdEnd reads as a freeze under the banner.
+	 * After the one-shot the mascot returns to idle (desktop and phone).
 	 */
 	$effect(() => {
 		winUpdateCount;
 		if (!show || !winLevelData || winLevelData.type !== 'big') return;
-		if (context.stateLayoutDerived.layoutType() === 'portrait') return;
 		if (winLevelData.alias === 'epic' || winLevelData.alias === 'sensational') {
 			if (stateGame.mascotPose !== 'clap') {
 				stateGame.mascotAnimToken += 1;

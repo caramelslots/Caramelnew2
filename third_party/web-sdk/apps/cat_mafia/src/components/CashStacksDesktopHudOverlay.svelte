@@ -1,6 +1,7 @@
 <!--
 	CashStacksDesktopHudOverlay.svelte — desktop + tablet + landscape + popout HUD.
-	Single bottom row: [i][☰][BUY BONUS] BALANCE/BET [AUTO][⚡][SPIN][−][+]
+	      [BUY BONUS]
+	[i][☰] BALANCE/BET          [AUTO][−][SPIN][+][⚡]
 -->
 <script lang="ts">
 	import {
@@ -280,7 +281,7 @@
 
 			{#if !isReplay}
 				<p
-					class="hud-balance-bet hud-balance-bet--right"
+					class="hud-balance-bet"
 					style:left="{pos.balance.x}px"
 					style:top="{pos.balance.y}px"
 					style:font-size="{pos.balance.fontSize}px"
@@ -292,7 +293,7 @@
 				</p>
 			{/if}
 			<p
-				class="hud-balance-bet hud-balance-bet--right"
+				class="hud-balance-bet"
 				style:left="{pos.bet.x}px"
 				style:top="{pos.bet.y}px"
 				style:font-size="{pos.bet.fontSize}px"
