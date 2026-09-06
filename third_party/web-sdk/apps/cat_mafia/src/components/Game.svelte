@@ -59,6 +59,7 @@
 	import TargetFlipLabelHtml from './TargetFlipLabelHtml.svelte';
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
+	import FreeSpinCounterPortraitHtml from './FreeSpinCounterPortraitHtml.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
 	import DuelModeOverlay from './DuelModeOverlay.svelte';
@@ -278,6 +279,7 @@
 <div class="html-underlays">
 	<RevolverDrumPlaceholder />
 </div>
+<FreeSpinCounterPortraitHtml />
 <!-- Duel HTML chrome (pick / counters / outro). Desks + mascots + paw coins are Pixi. -->
 <DuelModeOverlay />
 <DuelIntro />

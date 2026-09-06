@@ -1738,7 +1738,7 @@
 
 			<section>
 				<h4>FS Board Chrome</h4>
-				<p class="subhint">Desktop: spinboard (left) + barrel rim/drum (right) on the board.</p>
+				<p class="subhint">Desktop: spinboard (left) + barrel rim/drum (right). Phone: duel-style FS pill top-right, drum bottom-left.</p>
 				<div class="grid">
 					<button
 						type="button"

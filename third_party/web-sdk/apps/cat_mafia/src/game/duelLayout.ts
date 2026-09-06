@@ -67,6 +67,8 @@ type BoardLayoutLike = {
 	width: number;
 	height: number;
 	scale: number;
+	visualWidth?: number;
+	visualHeight?: number;
 };
 
 /** On-screen size of the normal single desk (Pixi BoardFrame). */
@@ -235,21 +237,48 @@ const duelMascotSize = (layout: DuelScreenLayout) => {
 };
 
 /** Spin-counter pill — top-left of each desk; fractions so phones stay aligned. */
-export const getDuelSpinCounterPos = (
-	layout: DuelScreenLayout,
-	side: 'cat' | 'dog',
-) => {
+export const getDuelSpinCounterPos = (layout: DuelScreenLayout, side: 'cat' | 'dog') => {
 	const center = side === 'cat' ? layout.catCenter : layout.dogCenter;
 	const deskLeft = center.x - layout.boardWidth * 0.5;
 	const deskTop = center.y - layout.boardHeight * 0.5;
 	// Anchor on the top gold rail (not a fixed px inset — that drifts by phone size).
-	const railY = layout.isPortrait
-		? layout.boardHeight * 0.042
-		: layout.boardHeight * 0.06;
+	const railY = layout.isPortrait ? layout.boardHeight * 0.042 : layout.boardHeight * 0.06;
 	const leftNudge = layout.isPortrait ? layout.boardWidth * 0.012 : 4;
 	return {
 		left: deskLeft - leftNudge,
 		top: deskTop + railY,
+	};
+};
+
+/**
+ * Phone FS pill — fractions of the gold desk.
+ * RIGHT_INSET: larger = lefter, smaller = righter (0 = flush with the right pillar).
+ * ABOVE_RAIL: larger = higher, smaller / negative = lower (0 = pill bottom on the rail).
+ */
+export const PORTRAIT_FS_COUNTER_RIGHT_INSET_FRAC = 0.03;
+export const PORTRAIT_FS_COUNTER_ABOVE_RAIL_FRAC = -0.06;
+
+/**
+ * Bonus normal / super FS pill on phone — same gold-rail sit as duel,
+ * mirrored to the top-right of the single desk.
+ */
+export const getPortraitFsCounterScreenPos = (opts: {
+	mainLayout: MainLayoutLike;
+	boardLayout: BoardLayoutLike;
+}) => {
+	const ml = opts.mainLayout;
+	const board = opts.boardLayout;
+	const visualW = board.visualWidth ?? board.width * board.scale;
+	const visualH = board.visualHeight ?? board.height * board.scale;
+	const boardCenterX = ml.x + (board.x - ml.width * 0.5) * ml.scale;
+	const boardCenterY = ml.y + (board.y - ml.height * 0.5) * ml.scale;
+	const slotW = (visualW * ml.scale) / DESK_PARCHMENT.widthFrac;
+	const slotH = (visualH * ml.scale) / DESK_PARCHMENT.heightFrac;
+	const deskRight = boardCenterX - DESK_PARCHMENT.offsetXFrac * slotW + slotW * 0.5;
+	const deskTop = boardCenterY - DESK_PARCHMENT.offsetYFrac * slotH - slotH * 0.5;
+	return {
+		left: deskRight - slotW * PORTRAIT_FS_COUNTER_RIGHT_INSET_FRAC,
+		top: deskTop - slotH * PORTRAIT_FS_COUNTER_ABOVE_RAIL_FRAC,
 	};
 };
 
@@ -307,8 +336,7 @@ export const getDuelPixiBoardLayout = (opts: {
 	};
 }) => {
 	const center = opts.side === 'cat' ? opts.duel.catCenter : opts.duel.dogCenter;
-	const deskLocalW =
-		(opts.base.width * DESK_PARCHMENT_PADDING.width) / DESK_PARCHMENT.widthFrac;
+	const deskLocalW = (opts.base.width * DESK_PARCHMENT_PADDING.width) / DESK_PARCHMENT.widthFrac;
 	const scale = opts.duel.boardWidth / (deskLocalW * Math.max(1e-6, opts.mainLayout.scale));
 	return {
 		...opts.base,

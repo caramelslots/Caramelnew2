@@ -11,9 +11,7 @@
 
 	import { getContext } from '../game/context';
 	import { getContextLayout } from 'utils-layout';
-	import { computePortraitHudCanvas } from '../game/portraitHudLayout';
 	import { devPreview } from '../game/devPreview.svelte';
-	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
 	import {
 		BITMAP_FONT_SCALE,
 		FONT_PROSTOI,
@@ -24,11 +22,7 @@
 		fontForLocale,
 		isArabicLocale,
 		LOCALE_TEXT_FILL_GOLD,
-		PORTRAIT_FS_COUNTER_PHONE_SCALE,
-		PORTRAIT_FS_COUNTER_WIDTH_FRAC,
-		PORTRAIT_FS_COUNTER_Y_GAP,
 		SYMBOL_SIZE,
-		getPortraitMobileTier,
 	} from '../game/constants';
 	import LocaleGlyph from './LocaleGlyph.svelte';
 	import { anchorToPivot, BitmapText, Container, Sprite, type Sizes } from 'pixi-svelte';
@@ -58,22 +52,12 @@
 	const DESKTOP_PANEL_WIDTH_FRAC = (SYMBOL_SIZE * 1.75) / 500;
 
 	const isPortrait = $derived(stateLayoutDerived.layoutType() === 'portrait');
-	const canvasSizeType = $derived(stateLayoutDerived.canvasSizeType());
 	/**
-	 * Side plaques on Desktop / Laptop / Popout / tablet — only phone portrait
-	 * (Mobile L/M/S) keeps the neon counter. Popout S/L are landscape with a
-	 * short side ≤480, so canvasSizeType looks "phone" — do NOT use that here.
+	 * Side plaques on Desktop / Laptop / Popout / tablet. Phone portrait uses
+	 * the duel-style HTML pill (FreeSpinCounterPortraitHtml) instead.
 	 */
 	const useSideChrome = $derived(!isPortrait);
-	const isPortraitPhone = $derived(isPortrait && isPhoneCanvasSizeType(canvasSizeType));
-	const portraitPhoneScale = $derived.by(() => {
-		if (!isPortraitPhone) return 1;
-		const { width, height } = stateLayoutDerived.canvasSizes();
-		const tier = getPortraitMobileTier(canvasSizeType, Math.min(width, height));
-		return PORTRAIT_FS_COUNTER_PHONE_SCALE[tier];
-	});
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
-	const ml = $derived(stateLayoutDerived.mainLayout());
 
 	// Side chrome: size + mount against visual board so Popout scales like PC.
 	const desktopPanelWidth = $derived(boardLayout.visualWidth * DESKTOP_PANEL_WIDTH_FRAC);
@@ -103,36 +87,8 @@
 		y: boardLayout.y - boardLayout.height * 0.5,
 	});
 
-	// Phone portrait: panel centered at the same Y as where "− Spin +" normally appears.
-	// spinCenterY from computePortraitHudCanvas is in canvas CSS px; invert
-	// portraitLocalToCanvasY → localY = ml.height/2 + (canvasY − ml.y) / ml.scale
-	const portraitPanelWidth = $derived(
-		boardLayout.visualWidth * PORTRAIT_FS_COUNTER_WIDTH_FRAC * portraitPhoneScale,
-	);
-	const portraitPanelSizes = $derived({
-		width: portraitPanelWidth,
-		height: portraitPanelWidth / PORTRAIT_PANEL_RATIO,
-	});
-	const portraitPosition = $derived(() => {
-		const hud = computePortraitHudCanvas(stateLayoutDerived, { hideAutoplay: true });
-		// spinCenterY is in canvas CSS px — invert portraitLocalToCanvasY to get local layout Y
-		const spinLocalCenterY = ml.height / 2 + (hud.spin.centerY - ml.y) / ml.scale;
-		// spinClusterCenterX = canvas.width * 0.5 = ml.width / 2 in local coords (spinClusterShiftX = 0)
-		return {
-			x: ml.width / 2 - portraitPanelWidth * 0.5,
-			y:
-				spinLocalCenterY -
-				portraitPanelSizes.height / 2 -
-				PORTRAIT_FS_COUNTER_Y_GAP * portraitPhoneScale,
-		};
-	});
-
-	const panelSizes = $derived(
-		useSideChrome ? desktopPanelSizes : isPortrait ? portraitPanelSizes : landscapePanelSizes,
-	);
-	const position = $derived(
-		useSideChrome ? desktopPosition : isPortrait ? portraitPosition() : landscapePosition,
-	);
+	const panelSizes = $derived(useSideChrome ? desktopPanelSizes : landscapePanelSizes);
+	const position = $derived(useSideChrome ? desktopPosition : landscapePosition);
 	const panelSpriteKey = $derived(useSideChrome ? 'fsLeftCounterSpinboard' : 'fsLeftCounter');
 	const textAnchor = $derived(
 		useSideChrome
@@ -150,9 +106,7 @@
 	const fontSize = $derived(
 		useSideChrome
 			? desktopPanelWidth * (0.24 / 1.75) * BITMAP_FONT_SCALE
-			: isPortrait
-				? (portraitPanelWidth / landscapePanelWidth) * SYMBOL_SIZE * 0.28 * BITMAP_FONT_SCALE
-				: SYMBOL_SIZE * 0.28 * BITMAP_FONT_SCALE,
+			: SYMBOL_SIZE * 0.28 * BITMAP_FONT_SCALE,
 	);
 	const maxTextWidth = $derived(useSideChrome ? panelSizes.width * 0.72 : panelSizes.width * 0.88);
 	const minTextScale = 0.55;
@@ -180,7 +134,7 @@
 	let counterSizes: Sizes = $state({ width: 0, height: 0 });
 
 	const forceShow = $derived(devPreview.forceShowFsBoardChrome);
-	const visible = $derived(show || forceShow);
+	const visible = $derived((show || forceShow) && !isPortrait);
 
 	$effect(() => {
 		if (!forceShow) return;

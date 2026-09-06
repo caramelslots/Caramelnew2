@@ -861,17 +861,6 @@ export const DESK_BOTTOM_MASK_SLACK_PX = 5.5;
  */
 export const PORTRAIT_BONUS_BAR_WIDTH_PX = 340;
 
-/** FS left counter width as a fraction of portrait board visual width. */
-export const PORTRAIT_FS_COUNTER_WIDTH_FRAC = 0.55;
-/** Extra shrink on phone portrait — panel width and bitmap text scale together. */
-export const PORTRAIT_FS_COUNTER_PHONE_SCALE = {
-	small: 0.87,
-	medium: 0.93,
-	large: 0.96,
-} as const;
-/** Vertical gap above spin cluster (game px at phone scale 1). */
-export const PORTRAIT_FS_COUNTER_Y_GAP = 100;
-
 /**
  * Stake embed viewport presets (reference).
  * Desktop 1200×675 · Laptop 1024×576 · Popout L 800×450 · Popout S 400×225
