@@ -2,9 +2,10 @@ import {
 	BOARD_LAYOUT_OFFSETS,
 	BOARD_LAYOUT_SCALE,
 	BOARD_SIZES,
-	PORTRAIT_UI_LAYOUT,
+	DESK_BOTTOM_PULL_PX,
+	DESK_PARCHMENT,
+	DESK_VISUAL_OFFSET_Y,
 } from './constants';
-import { portraitBuyPanelCanvasTop } from './portraitHudLayout';
 import type { createLayout } from 'utils-layout';
 
 type LayoutDerived = ReturnType<typeof createLayout>['stateLayoutDerived'];
@@ -66,6 +67,21 @@ const RIM_MOUNT_OVERLAP_FRAC = 20 / (BOARD_SIZES.width * BOARD_LAYOUT_SCALE.desk
  */
 const DESKTOP_CHROME_CENTER_Y_FRAC = 0.12;
 
+/**
+ * Phone portrait: same rim+barrel as PC, rotated so left mounts become top
+ * mounts and the counter hangs under the gold frame (bottom-left).
+ */
+const PORTRAIT_RIM_ANGLE_DEG = 90;
+/** Hole vs on-screen parchment width — a bit larger than PC so it reads on phones. */
+const PORTRAIT_DRUM_HOLE_FRAC = 0.2;
+/** Circle centre as a fraction of desk width from the left gold edge. */
+const PORTRAIT_CHROME_CENTER_X_FRAC = 0.26;
+/**
+ * Mount inset from the visual desk bottom (fraction of desk height).
+ * Negative = overlap the bottom gold rail (higher on screen).
+ */
+const PORTRAIT_MOUNT_OVERLAP_FRAC = -0.045;
+
 /** Chamber hole / bullet size in the desktop drum box. */
 export const CHAMBER_HOLE_AT_DESKTOP = (ART_HOLE_DIAMETER / ART_SIZE) * DESKTOP_DRUM_SIZE;
 
@@ -89,6 +105,64 @@ export const getDrumRimCircleLocal = (rim: { width: number; height: number; scal
 
 /** Barrel sprite size seated inside the rim hole. */
 export const getDrumSizeInRim = (holeSize: number) => holeSize * DRUM_IN_RIM_SCALE;
+
+type DrumRimBox = {
+	left: number;
+	top: number;
+	width: number;
+	height: number;
+	centerX: number;
+	centerY: number;
+	/** CW degrees around the rim sprite centre (0 = PC left-mount). */
+	angle: number;
+};
+
+type DrumChromeBox = {
+	left: number;
+	top: number;
+	size: number;
+	holeSize: number;
+	centerX: number;
+	centerY: number;
+	rim: DrumRimBox;
+};
+
+/** Screen Y-down: 90° CW around (cx, cy). */
+const rotateLocalCw90 = (x: number, y: number, cx: number, cy: number) => ({
+	x: cx - (y - cy),
+	y: cy + (x - cx),
+});
+
+const buildChromeBox = (opts: {
+	holeSize: number;
+	rimLeft: number;
+	rimTop: number;
+	circleX: number;
+	circleY: number;
+	angle?: number;
+}): DrumChromeBox => {
+	const size = getDrumSizeInRim(opts.holeSize);
+	const rim = getDrumRimSize(opts.holeSize);
+	const centerX = opts.rimLeft + opts.circleX;
+	const centerY = opts.rimTop + opts.circleY;
+	return {
+		left: centerX - size * 0.5,
+		top: centerY - size * 0.5,
+		size,
+		holeSize: opts.holeSize,
+		centerX,
+		centerY,
+		rim: {
+			left: opts.rimLeft,
+			top: opts.rimTop,
+			width: rim.width,
+			height: rim.height,
+			centerX: opts.rimLeft + rim.width * 0.5,
+			centerY: opts.rimTop + rim.height * 0.5,
+			angle: opts.angle ?? 0,
+		},
+	};
+};
 
 /**
  * CW cylinder rotation: after each load, spin so the next empty sits at top.
@@ -191,25 +265,60 @@ export const DRUM_LOAD_ATTR = 'data-drum-load';
 export const getDrumSize = (isDesktop: boolean) =>
 	isDesktop ? DESKTOP_DRUM_SIZE : MOBILE_DRUM_SIZE;
 
-/** Portrait buy-bonus button footprint (left cell of the 2-col panel). */
-const getPortraitBuyBonusButtonBox = (layoutDerived: LayoutDerived) => {
-	const canvasW = layoutDerived.canvasSizes().width;
-	const panelW = Math.min(
-		canvasW * PORTRAIT_UI_LAYOUT.buyPanelWidthVw,
-		PORTRAIT_UI_LAYOUT.buyPanelMaxWidth,
-	);
-	const buyBtnW = panelW * 0.5;
-	const buyBtnH = buyBtnW * PORTRAIT_UI_LAYOUT.buyPanelAspect;
-	const panelLeft = canvasW * 0.5 - panelW * 0.5;
-	const top = portraitBuyPanelCanvasTop(layoutDerived);
+/** Gold desk slot in screen px — same geometry as BoardFrame. */
+const getDeskScreenRect = (args: {
+	boardCenterX: number;
+	boardCenterY: number;
+	boardScreenW: number;
+	boardScreenH: number;
+	boardScale: number;
+	mainScale: number;
+}) => {
+	const slotW = args.boardScreenW / DESK_PARCHMENT.widthFrac;
+	const slotH = args.boardScreenH / DESK_PARCHMENT.heightFrac;
+	const centerX = args.boardCenterX - DESK_PARCHMENT.offsetXFrac * slotW;
+	const centerY =
+		args.boardCenterY -
+		DESK_PARCHMENT.offsetYFrac * slotH +
+		DESK_VISUAL_OFFSET_Y * args.boardScale * args.mainScale;
+	const pull = DESK_BOTTOM_PULL_PX * args.boardScale * args.mainScale;
 	return {
-		left: panelLeft,
-		top,
-		width: buyBtnW,
-		height: buyBtnH,
-		centerX: panelLeft + buyBtnW * 0.5,
-		centerY: top + buyBtnH * 0.5,
+		left: centerX - slotW * 0.5,
+		bottom: centerY + slotH * 0.5 - pull,
+		width: slotW,
+		height: slotH - pull,
 	};
+};
+
+/** Phone portrait: rim+barrel hanging from the bottom-left gold rail. */
+const getPortraitHangingDrumBox = (args: {
+	boardCenterX: number;
+	boardCenterY: number;
+	boardScreenW: number;
+	boardScreenH: number;
+	boardScale: number;
+	mainScale: number;
+}): DrumChromeBox => {
+	const holeSize = Math.max(56, args.boardScreenW * PORTRAIT_DRUM_HOLE_FRAC);
+	const rim = getDrumRimSize(holeSize);
+	const circle = getDrumRimCircleLocal(rim);
+	const rcx = rim.width * 0.5;
+	const rcy = rim.height * 0.5;
+	const rotCircle = rotateLocalCw90(circle.x, circle.y, rcx, rcy);
+	const rotMount = rotateLocalCw90(0, rcy, rcx, rcy);
+
+	const desk = getDeskScreenRect(args);
+	const centerX = desk.left + desk.width * PORTRAIT_CHROME_CENTER_X_FRAC;
+	const mountY = desk.bottom + desk.height * PORTRAIT_MOUNT_OVERLAP_FRAC;
+
+	return buildChromeBox({
+		holeSize,
+		rimLeft: centerX - rotCircle.x,
+		rimTop: mountY - rotMount.y,
+		circleX: rotCircle.x,
+		circleY: rotCircle.y,
+		angle: PORTRAIT_RIM_ANGLE_DEG,
+	});
 };
 
 export const getDrumBoxScreenPos = (args: {
@@ -217,24 +326,9 @@ export const getDrumBoxScreenPos = (args: {
 	layoutType: keyof typeof BOARD_LAYOUT_OFFSETS | string;
 	board: { visualWidth: number; visualHeight: number; scale: number };
 	isDesktop: boolean;
-	/** Required for phone portrait — drum sits on the Buy Bonus button. */
+	/** Kept for callers — portrait no longer uses the Buy Bonus slot. */
 	layoutDerived?: LayoutDerived;
 }) => {
-	// Phone portrait (Mobile L/M/S): replace Buy Bonus with the drum (same slot).
-	// Popout S/L are landscape — they use the side rim path below, even when the
-	// short side is ≤480 (canvasSizeType looks "phone").
-	if (args.layoutType === 'portrait' && args.layoutDerived) {
-		const buy = getPortraitBuyBonusButtonBox(args.layoutDerived);
-		const size = Math.min(
-			Math.max(buy.height * 1.08, 72),
-			buy.width * 0.95,
-			MOBILE_DRUM_SIZE * 1.25,
-		);
-		const left = buy.centerX - size * 0.5;
-		const top = buy.centerY - size * 0.5;
-		return { left, top, size, holeSize: size, centerX: buy.centerX, centerY: buy.centerY };
-	}
-
 	const off = BOARD_LAYOUT_OFFSETS[args.layoutType as keyof typeof BOARD_LAYOUT_OFFSETS] ?? {
 		x: 0,
 		y: 0,
@@ -242,46 +336,37 @@ export const getDrumBoxScreenPos = (args: {
 	const boardCenterX = args.mainLayout.x + off.x * args.mainLayout.scale;
 	const boardCenterY = args.mainLayout.y + off.y * args.mainLayout.scale;
 	const boardScreenW = args.board.visualWidth * args.mainLayout.scale;
+	const boardScreenH = args.board.visualHeight * args.mainLayout.scale;
 	const halfW = boardScreenW * 0.5;
-	const halfH = (args.board.visualHeight / 2) * args.mainLayout.scale;
-	// Desktop / Laptop / Popout / tablet — side rim beside the board.
-	const useSideChrome = args.layoutType !== 'portrait';
+	const halfH = boardScreenH * 0.5;
 
-	if (useSideChrome) {
-		const holeSize = getSideChromeDrumHoleSize({
-			board: args.board,
-			mainLayout: args.mainLayout,
+	// Phone portrait (Mobile L/M/S): same chrome as PC, hung under the desk.
+	// Popout S/L are landscape — they use the side rim path below.
+	if (args.layoutType === 'portrait') {
+		return getPortraitHangingDrumBox({
+			boardCenterX,
+			boardCenterY,
+			boardScreenW,
+			boardScreenH,
+			boardScale: args.board.scale,
+			mainScale: args.mainLayout.scale,
 		});
-		const rim = getDrumRimSize(holeSize);
-		const circle = getDrumRimCircleLocal(rim);
-		const size = getDrumSizeInRim(holeSize);
-		const rimLeft = boardCenterX + halfW + boardScreenW * RIM_MOUNT_OVERLAP_FRAC;
-		const chromeCenterY = boardCenterY - halfH + halfH * 2 * DESKTOP_CHROME_CENTER_Y_FRAC;
-		const rimTop = chromeCenterY - circle.y;
-		const centerX = rimLeft + circle.x;
-		const centerY = chromeCenterY;
-		return {
-			left: centerX - size * 0.5,
-			top: centerY - size * 0.5,
-			size,
-			holeSize,
-			centerX,
-			centerY,
-			rim: {
-				left: rimLeft,
-				top: rimTop,
-				width: rim.width,
-				height: rim.height,
-				centerX: rimLeft + rim.width * 0.5,
-				centerY: rimTop + rim.height * 0.5,
-			},
-		};
 	}
 
-	const size = getDrumSize(args.isDesktop);
-	const left = boardCenterX + halfW + 16;
-	const top = boardCenterY - halfH - size * 0.35;
-	return { left, top, size, holeSize: size, centerX: left + size * 0.5, centerY: top + size * 0.5 };
+	const holeSize = getSideChromeDrumHoleSize({
+		board: args.board,
+		mainLayout: args.mainLayout,
+	});
+	const circle = getDrumRimCircleLocal(getDrumRimSize(holeSize));
+	const rimLeft = boardCenterX + halfW + boardScreenW * RIM_MOUNT_OVERLAP_FRAC;
+	const chromeCenterY = boardCenterY - halfH + halfH * 2 * DESKTOP_CHROME_CENTER_Y_FRAC;
+	return buildChromeBox({
+		holeSize,
+		rimLeft,
+		rimTop: chromeCenterY - circle.y,
+		circleX: circle.x,
+		circleY: circle.y,
+	});
 };
 
 /** Screen pos of a chamber using art fractions + current cylinder rotation. */

@@ -49,12 +49,6 @@
 	});
 
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
-	const isPortrait = $derived(layoutType === 'portrait');
-	/**
-	 * Side rim on Desktop / Laptop / Popout / tablet. Phone portrait only uses
-	 * the Buy Bonus drum slot. Popouts are landscape + short side ≤480 — not phones.
-	 */
-	const useSideChrome = $derived(!isPortrait);
 	const showOnLayout = $derived(true);
 
 	const box = $derived(
@@ -62,10 +56,11 @@
 			mainLayout: context.stateLayoutDerived.mainLayout(),
 			layoutType,
 			board: context.stateGameDerived.boardLayout(),
-			isDesktop: useSideChrome,
+			isDesktop: layoutType !== 'portrait',
 			layoutDerived: context.stateLayoutDerived,
 		}),
 	);
+	const useSideChrome = $derived(!!box.rim);
 
 	const holePx = $derived(CHAMBER_HOLE_AT_DESKTOP * (box.size / getDrumSize(true)));
 
@@ -183,6 +178,7 @@
 				width={rim.width}
 				height={rim.height}
 				anchor={0.5}
+				angle={rim.angle ?? 0}
 			/>
 		{/if}
 	</Container>

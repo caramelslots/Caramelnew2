@@ -59,8 +59,6 @@
 	});
 
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
-	const isPortrait = $derived(layoutType === 'portrait');
-	const useSideChrome = $derived(!isPortrait);
 	const showOnLayout = $derived(true);
 
 	const box = $derived(
@@ -68,7 +66,7 @@
 			mainLayout: context.stateLayoutDerived.mainLayout(),
 			layoutType,
 			board: context.stateGameDerived.boardLayout(),
-			isDesktop: useSideChrome,
+			isDesktop: layoutType !== 'portrait',
 			layoutDerived: context.stateLayoutDerived,
 		}),
 	);
@@ -76,15 +74,16 @@
 	const style = $derived.by(() => {
 		const z = elevate ? 65 : 42;
 		const rim = box.rim;
-		if (useSideChrome && rim) {
+		if (rim) {
 			// Expand the fixed box to the rim so mounts stay aligned; cylinder stays centred on the hole.
 			const padL = box.left - rim.left;
 			const padT = box.top - rim.top;
-			return `left:${rim.left}px;top:${rim.top}px;width:${rim.width}px;height:${rim.height}px;z-index:${z};--drum-size:${box.size}px;--drum-pad-l:${padL}px;--drum-pad-t:${padT}px;`;
+			const angle = rim.angle ?? 0;
+			return `left:${rim.left}px;top:${rim.top}px;width:${rim.width}px;height:${rim.height}px;z-index:${z};--drum-size:${box.size}px;--drum-pad-l:${padL}px;--drum-pad-t:${padT}px;--rim-angle:${angle}deg;`;
 		}
 		return `left:${box.left}px;top:${box.top}px;width:${box.size}px;z-index:${z};`;
 	});
-	const withRim = $derived(useSideChrome && !!box.rim);
+	const withRim = $derived(!!box.rim);
 
 	const holePx = $derived(CHAMBER_HOLE_AT_DESKTOP * (box.size / getDrumSize(true)));
 
@@ -191,6 +190,8 @@
 		pointer-events: none;
 		user-select: none;
 		z-index: 4;
+		transform: rotate(var(--rim-angle, 0deg));
+		transform-origin: center;
 	}
 
 	.cylinder {
