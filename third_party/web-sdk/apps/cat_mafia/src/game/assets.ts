@@ -295,10 +295,6 @@ export default {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/fsCong/fs_board.webp'),
 	},
-	fsLeftCounter: {
-		type: 'sprite',
-		src: assetUrl('assets/sprites/fsLeftCounter/fs_left_counter.webp'),
-	},
 	/** Desktop FS plaque (Bonus / Super Bonus) — mounts to the left of the board. */
 	fsLeftCounterSpinboard: {
 		type: 'sprite',
@@ -393,15 +389,15 @@ export default {
 	},
 	turbo1: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/ui/turbo/turbo_1.webp'),
+		src: assetUrl('assets/sprites/ui/settings/turbo_1.webp'),
 	},
 	turbo2: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/ui/turbo/turbo_2.webp'),
+		src: assetUrl('assets/sprites/ui/settings/turbo_2.webp'),
 	},
 	turbo3: {
 		type: 'sprite',
-		src: assetUrl('assets/sprites/ui/turbo/turbo_3.webp'),
+		src: assetUrl('assets/sprites/ui/settings/turbo_3.webp'),
 	},
 	revolverBarrel: {
 		type: 'sprite',

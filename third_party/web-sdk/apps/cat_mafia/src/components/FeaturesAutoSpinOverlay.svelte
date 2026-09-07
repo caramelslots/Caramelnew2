@@ -24,7 +24,7 @@
 		launchCashStacksAutoplay,
 	} from '../game/autoplay';
 	import { computeAutoplayPanelAnchor } from '../game/popupHudLayout';
-	import { AUTOSPIN_ASSETS, HUD_ASSETS } from '../game/uiHtmlAssetManifest';
+	import { AUTOSPIN_ASSETS, HUD_ASSETS, SETTINGS_ASSETS } from '../game/uiHtmlAssetManifest';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
@@ -32,9 +32,9 @@
 	const bgUrl = AUTOSPIN_ASSETS.bg;
 	const closeIconUrl = AUTOSPIN_ASSETS.close;
 	const pawIconUrl = AUTOSPIN_ASSETS.pawIcon;
-	const sliderFullUrl = AUTOSPIN_ASSETS.sliderFull;
-	const sliderButtonUrl = AUTOSPIN_ASSETS.sliderButton;
-	const sliderEmptyUrl = AUTOSPIN_ASSETS.sliderEmpty;
+	const sliderFullUrl = SETTINGS_ASSETS.sliderFull;
+	const sliderButtonUrl = SETTINGS_ASSETS.sliderKnob;
+	const sliderEmptyUrl = SETTINGS_ASSETS.sliderEmpty;
 	const minusUrl = HUD_ASSETS.betMinus;
 	const plusUrl = HUD_ASSETS.betPlus;
 	const startButtonUrl = AUTOSPIN_ASSETS.startButton;

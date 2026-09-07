@@ -31,8 +31,6 @@
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 
-	/** Portrait neon plaque art (`fs_left_counter.webp`). */
-	const PORTRAIT_PANEL_RATIO = 1233 / 613;
 	/** Desktop spinboard art (`spinboard.webp`) — brackets on the right. */
 	const DESKTOP_PANEL_RATIO = 582 / 334;
 	/**
@@ -52,11 +50,6 @@
 	const DESKTOP_PANEL_WIDTH_FRAC = (SYMBOL_SIZE * 1.75) / 500;
 
 	const isPortrait = $derived(stateLayoutDerived.layoutType() === 'portrait');
-	/**
-	 * Side plaques on Desktop / Laptop / Popout / tablet. Phone portrait uses
-	 * the duel-style HTML pill (FreeSpinCounterPortraitHtml) instead.
-	 */
-	const useSideChrome = $derived(!isPortrait);
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
 
 	// Side chrome: size + mount against visual board so Popout scales like PC.
@@ -76,39 +69,16 @@
 			desktopPanelSizes.height * 0.5,
 	});
 
-	// Phone landscape: neon plaque left of board (no spinboard mounts).
-	const landscapePanelWidth = SYMBOL_SIZE * 2;
-	const landscapePanelSizes = {
-		width: landscapePanelWidth,
-		height: landscapePanelWidth / PORTRAIT_PANEL_RATIO,
-	};
-	const landscapePosition = $derived({
-		x: boardLayout.x - boardLayout.width * 0.5 - landscapePanelSizes.width - SYMBOL_SIZE * 0.7,
-		y: boardLayout.y - boardLayout.height * 0.5,
+	const panelSizes = $derived(desktopPanelSizes);
+	const position = $derived(desktopPosition);
+	const textAnchor = $derived({
+		x: panelSizes.width * DESKTOP_TEXT_X_FRAC,
+		y: panelSizes.height * DESKTOP_TEXT_Y_FRAC,
 	});
-
-	const panelSizes = $derived(useSideChrome ? desktopPanelSizes : landscapePanelSizes);
-	const position = $derived(useSideChrome ? desktopPosition : landscapePosition);
-	const panelSpriteKey = $derived(useSideChrome ? 'fsLeftCounterSpinboard' : 'fsLeftCounter');
-	const textAnchor = $derived(
-		useSideChrome
-			? {
-					x: panelSizes.width * DESKTOP_TEXT_X_FRAC,
-					y: panelSizes.height * DESKTOP_TEXT_Y_FRAC,
-				}
-			: {
-					x: panelSizes.width * 0.5,
-					y: panelSizes.height * 0.45,
-				},
-	);
 	const scale = 1;
 
-	const fontSize = $derived(
-		useSideChrome
-			? desktopPanelWidth * (0.24 / 1.75) * BITMAP_FONT_SCALE
-			: SYMBOL_SIZE * 0.28 * BITMAP_FONT_SCALE,
-	);
-	const maxTextWidth = $derived(useSideChrome ? panelSizes.width * 0.72 : panelSizes.width * 0.88);
+	const fontSize = $derived(desktopPanelWidth * (0.24 / 1.75) * BITMAP_FONT_SCALE);
+	const maxTextWidth = $derived(panelSizes.width * 0.72);
 	const minTextScale = 0.55;
 	const counterText = $derived(context.i18nDerived.fsCounterText(current, total));
 	const titleText = $derived(context.i18nDerived.fsCounterLabel());
@@ -166,7 +136,7 @@
 
 <MainContainer>
 	<FadeContainer show={visible} {...position} {scale}>
-		<Sprite key={panelSpriteKey} {...panelSizes} />
+		<Sprite key="fsLeftCounterSpinboard" {...panelSizes} />
 		<Container
 			x={textAnchor.x}
 			y={textAnchor.y}

@@ -7,17 +7,26 @@ import {
 	startMascotSpinePreload,
 } from './mascotHtmlSpine';
 import { COIN_PAW_SPINE_WEBP_URL } from './coinHtmlSpine';
-import {
-	SPIN_BUTTON_SPINE_WEBP_URL,
-	startSpinButtonSpinePreload,
-} from './spinButtonHtmlSpine';
+import { SPIN_BUTTON_SPINE_WEBP_URL, startSpinButtonSpinePreload } from './spinButtonHtmlSpine';
 import { startTargetBoardPreload, TARGET_BOARD_SPRITES } from './targetBoardAssets';
 import { startShotBulletPreload, SHOT_BULLET_SPRITES } from './shotBulletAssets';
 
 const UI_ASSET_BASE = `${import.meta.env.BASE_URL}assets/sprites/ui`;
 
-export const uiHtmlAssetUrl = (path: string) =>
-	`${UI_ASSET_BASE}/${path.replace(/^\//, '')}`;
+export const uiHtmlAssetUrl = (path: string) => `${UI_ASSET_BASE}/${path.replace(/^\//, '')}`;
+
+/** Shared turbo speed icons — `static/assets/sprites/ui/settings/turbo_*.webp`. */
+export const TURBO_ICON_ASSETS = {
+	turbo1: uiHtmlAssetUrl('settings/turbo_1.webp'),
+	turbo2: uiHtmlAssetUrl('settings/turbo_2.webp'),
+	turbo3: uiHtmlAssetUrl('settings/turbo_3.webp'),
+} as const;
+
+export const SETTINGS_TURBO_URLS = [
+	TURBO_ICON_ASSETS.turbo1,
+	TURBO_ICON_ASSETS.turbo2,
+	TURBO_ICON_ASSETS.turbo3,
+] as const;
 
 export const HUD_ASSETS = {
 	info: uiHtmlAssetUrl('info/info.webp'),
@@ -28,9 +37,7 @@ export const HUD_ASSETS = {
 	spin2: uiHtmlAssetUrl('spin/spin_2.webp'),
 	autoplay: uiHtmlAssetUrl('autoplay/autoplay.webp'),
 	autoplayMobile: uiHtmlAssetUrl('autoplay/autoplay_mobile.webp'),
-	turbo1: uiHtmlAssetUrl('turbo/turbo_1.webp'),
-	turbo2: uiHtmlAssetUrl('turbo/turbo_2.webp'),
-	turbo3: uiHtmlAssetUrl('turbo/turbo_3.webp'),
+	...TURBO_ICON_ASSETS,
 	buyBonusPanel: uiHtmlAssetUrl('buy_bonus/buy_bonus.webp'),
 } as const;
 
@@ -59,16 +66,8 @@ export const SETTINGS_ASSETS = {
 	frameVolume: uiHtmlAssetUrl('settings/frame_volume.webp'),
 	musicOn: uiHtmlAssetUrl('settings/music_on.webp'),
 	musicOff: uiHtmlAssetUrl('settings/music_off.webp'),
-	turbo1: uiHtmlAssetUrl('settings/turbo_1.webp'),
-	turbo2: uiHtmlAssetUrl('settings/turbo_2.webp'),
-	turbo3: uiHtmlAssetUrl('settings/turbo_3.webp'),
+	...TURBO_ICON_ASSETS,
 } as const;
-
-export const SETTINGS_TURBO_URLS = [
-	SETTINGS_ASSETS.turbo1,
-	SETTINGS_ASSETS.turbo2,
-	SETTINGS_ASSETS.turbo3,
-] as const;
 
 /** Autoplay menu panel textures — `static/assets/sprites/ui/autoplay_menu/`. */
 export const AUTOSPIN_ASSETS = {
@@ -78,14 +77,10 @@ export const AUTOSPIN_ASSETS = {
 	messageOkBg: uiHtmlAssetUrl('autoplay/autoplay_message_ok_bg.webp'),
 	pawIcon: uiHtmlAssetUrl('autoplay_menu/paw.webp'),
 	bonusIcon: uiHtmlAssetUrl('autoplay_menu/bonus.webp'),
-	sliderFull: uiHtmlAssetUrl('autoplay_menu/slider_full.webp'),
-	sliderButton: uiHtmlAssetUrl('autoplay_menu/slider_knob.webp'),
-	sliderEmpty: uiHtmlAssetUrl('autoplay_menu/slider_empty.webp'),
 	startButton: uiHtmlAssetUrl('autoplay_menu/start.webp'),
 } as const;
 
 export const FEATURE_TOGGLE_ASSETS = {
-	bonusSwitchBg: uiHtmlAssetUrl('bonus_switch/bonus_switch.webp'),
 	/** Bonus symbol — Bonus Boost icon in game info, autoplay, and buy bonus. */
 	menuCatIcon: GAME_INFO_SYMBOL_IMAGES.B,
 } as const;
@@ -139,11 +134,7 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	AUTOSPIN_ASSETS.messageOkBg,
 	AUTOSPIN_ASSETS.pawIcon,
 	AUTOSPIN_ASSETS.bonusIcon,
-	AUTOSPIN_ASSETS.sliderFull,
-	AUTOSPIN_ASSETS.sliderButton,
-	AUTOSPIN_ASSETS.sliderEmpty,
 	AUTOSPIN_ASSETS.startButton,
-	FEATURE_TOGGLE_ASSETS.bonusSwitchBg,
 	FEATURE_TOGGLE_ASSETS.menuCatIcon,
 	MASCOT_ASSETS.body,
 	MASCOT_SPINE_GRAY_IMAGE_URL,

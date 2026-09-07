@@ -62,6 +62,10 @@
 			title: () => context.i18nDerived.gameInfoBonusSymbolTitle(),
 			body: () => context.i18nDerived.gameInfoFsBody(),
 		},
+		BD: {
+			title: () => context.i18nDerived.gameInfoDuelBonusTitle(),
+			body: () => context.i18nDerived.gameInfoDuelBonusBody(),
+		},
 		SW: {
 			title: () => context.i18nDerived.gameInfoSuperWildTitle(),
 			body: () => context.i18nDerived.gameInfoSuperWildBody(),

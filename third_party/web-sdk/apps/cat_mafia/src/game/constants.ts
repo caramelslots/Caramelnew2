@@ -938,7 +938,7 @@ export type BuyPanelLayoutKey =
 
 export type BuyPanelTextPx = { buyBonus: number; boostName: number; boostCost: number };
 
-/** Общий aspect-ratio фона buy_bonus.png / bonus_switch.png (legacy wide pill). */
+/** Общий aspect-ratio legacy wide pill (unused — kept for layout reference). */
 export const BUY_PANEL_ASPECT = 1233 / 613;
 
 /** HUD Buy Bonus octagon button — designer_assets/bonus_button_final. */

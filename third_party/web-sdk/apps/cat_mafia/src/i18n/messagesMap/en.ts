@@ -99,6 +99,9 @@ export default {
 	GAME_INFO_FS_TITLE: 'FREE SPINS',
 	GAME_INFO_FS_BODY:
 		'Land 3 or more Bonus symbols in the base game to trigger free spins. Pick one of six targets to reveal 8, 10, or 12 free spins. Three Bonus symbols start Normal Bonus; four or more start Super Bonus with one sticky Super Wild column from the first spin. Bonus symbols do not appear during free spins and cannot retrigger the feature. After the main free spins, bullets collected in the revolver drum may award extra free spins through the target-shooting round.',
+	GAME_INFO_DUEL_BONUS_TITLE: 'DUEL BONUS',
+	GAME_INFO_DUEL_BONUS_BODY:
+		'The Duel Bonus symbol appears only when you buy Duel for 150× your base bet. Three Duel Bonus symbols land on the purchase reveal and start the feature — pick Cat or Dog, then two boards spin for 10 rounds each. Beat the other side\'s total win to take both banks. Duel mode has no free spins, Paw coins, or Bullets.',
 	GAME_INFO_SUPER_WILD_TITLE: 'SUPER WILD',
 	GAME_INFO_SUPER_WILD_BODY:
 		'Super Wild is separate from the regular Wild and may show multipliers ×2, ×4, ×6, ×8, or rarely ×25, ×50, or ×75. In the base game it expands its column only when it is part of a winning line, then multiplies the spin win. In free spins it can expand without a line win and may become sticky on up to two columns; Super Bonus starts with one sticky column already open. Multiple Super Wild multipliers on one spin are multiplied together.',
@@ -171,6 +174,8 @@ export default {
 		'All 20 winlines are always active. Prizes are awarded from left to right on adjacent reels, starting from the leftmost reel. A minimum of 3 matching symbols on adjacent reels is required to create a valid winning line.',
 	GAME_INFO_WILD_BODY_SOCIAL:
 		'The Wild symbol substitutes for all winning symbols except the Bonus symbol. Wild wins 225× play for 5 of a kind.',
+	GAME_INFO_DUEL_BONUS_BODY_SOCIAL:
+		'The Duel Bonus symbol appears only when you play Duel for 150× your base play. Three Duel Bonus symbols land on the purchase reveal and start the feature — pick Cat or Dog, then two boards spin for 10 rounds each. Beat the other side\'s total prize to take both banks. Duel mode has no free spins, Paw coins, or Bullets.',
 	GAME_INFO_SUPER_WILD_BODY_SOCIAL:
 		'Super Wild is separate from the regular Wild and may show multipliers ×2, ×4, ×6, ×8, or rarely ×25, ×50, or ×75. In the base game it expands its column only when it is part of a winning line, then multiplies the spin prize. In free spins it can expand without a line win and may become sticky on up to two columns; Super Bonus starts with one sticky column already open. Multiple Super Wild multipliers on one spin are multiplied together.',
 	GAME_INFO_PAW_BODY_SOCIAL:

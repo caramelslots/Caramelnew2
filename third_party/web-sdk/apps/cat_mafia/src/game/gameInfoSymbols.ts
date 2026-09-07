@@ -11,11 +11,12 @@ export type GameInfoSymbolId =
 	| 'L4'
 	| 'W'
 	| 'B'
+	| 'BD'
 	| 'SW'
 	| 'Paw'
 	| 'BT';
 export type GameInfoImageSymbolId = Exclude<GameInfoSymbolId, never>;
-export type GameInfoSpecialSymbolId = 'W' | 'B' | 'SW' | 'Paw' | 'BT';
+export type GameInfoSpecialSymbolId = 'W' | 'B' | 'BD' | 'SW' | 'Paw' | 'BT';
 
 const symbolAssetUrl = (file: string) =>
 	`${import.meta.env.BASE_URL}assets/sprites/symbols/${file}`;
@@ -31,6 +32,7 @@ export const GAME_INFO_SYMBOL_IMAGES: Record<GameInfoImageSymbolId, string> = {
 	L4: symbolAssetUrl('L4.webp'),
 	W: symbolAssetUrl('Wild.webp'),
 	B: symbolAssetUrl('Bonus.webp'),
+	BD: symbolAssetUrl('BonusDuel.webp'),
 	SW: symbolAssetUrl('Wild.webp'),
 	Paw: `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay_menu/paw.webp`,
 	BT: symbolAssetUrl('Cartridge.webp'),
@@ -39,6 +41,7 @@ export const GAME_INFO_SYMBOL_IMAGES: Record<GameInfoImageSymbolId, string> = {
 export const GAME_INFO_SPECIAL_SYMBOL_ENTRIES = [
 	{ id: 'W' as const, titleKey: 'GAME_INFO_WILD_TITLE', bodyKey: 'GAME_INFO_WILD_BODY' },
 	{ id: 'B' as const, titleKey: 'GAME_INFO_BONUS_SYMBOL_TITLE', bodyKey: 'GAME_INFO_FS_BODY' },
+	{ id: 'BD' as const, titleKey: 'GAME_INFO_DUEL_BONUS_TITLE', bodyKey: 'GAME_INFO_DUEL_BONUS_BODY' },
 	{ id: 'SW' as const, titleKey: 'GAME_INFO_SUPER_WILD_TITLE', bodyKey: 'GAME_INFO_SUPER_WILD_BODY' },
 	{ id: 'Paw' as const, titleKey: 'GAME_INFO_PAW_TITLE', bodyKey: 'GAME_INFO_PAW_BODY' },
 	{ id: 'BT' as const, titleKey: 'GAME_INFO_BULLET_TITLE', bodyKey: 'GAME_INFO_BULLET_BODY' },

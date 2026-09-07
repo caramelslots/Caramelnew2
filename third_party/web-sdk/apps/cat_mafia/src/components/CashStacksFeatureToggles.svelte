@@ -26,8 +26,6 @@
 		compact?: boolean;
 		/** Подпись как на портретной панели (BONUS_BOOST_PANEL_DESC). */
 		panelDesc?: boolean;
-		/** Фон designer_assets/bonus_switch.png (панель под Buy Bonus). */
-		usePanelBg?: boolean;
 		/** Inline font-size для portrait buy panel (перебивает scoped CSS). */
 		panelNameFontSize?: string;
 		panelCostFontSize?: string;
@@ -35,7 +33,7 @@
 		disabled?: boolean;
 		/** Не менять фон при hover (карточки в BuyBonusOverlay). */
 		noHoverBg?: boolean;
-		/** Иконка кота слева (меню buy bonus / wok frame). */
+		/** Иконка Bonus слева (Buy Bonus / Autoplay). */
 		showMenuCatIcon?: boolean;
 		/** Override иконки слева (например autopay bonus в меню автоигры). */
 		menuCatIconSrc?: string;
@@ -46,7 +44,6 @@
 		features = ['bonus_boost'],
 		compact = false,
 		panelDesc = false,
-		usePanelBg = false,
 		panelNameFontSize,
 		panelCostFontSize,
 		disabled = false,
@@ -55,7 +52,6 @@
 		menuCatIconSrc,
 	}: Props = $props();
 
-	const bonusSwitchBgUrl = FEATURE_TOGGLE_ASSETS.bonusSwitchBg;
 	const menuCatIconUrl = $derived(menuCatIconSrc ?? FEATURE_TOGGLE_ASSETS.menuCatIcon);
 
 	const context = getContext();
@@ -89,15 +85,12 @@
 		type="button"
 		class="feature-row bonus-boost"
 		class:compact
-		class:panel-bg={usePanelBg}
-		class:panel-sprite-btn={usePanelBg}
 		class:no-hover-bg={noHoverBg}
 		class:menu-cat={showMenuCatIcon}
 		class:active={bonusBoostActive}
 		disabled={bonusBoostDisabled}
 		onclick={() => onToggle('bonus_boost')}
 		data-test="feature-bonus-boost"
-		style:background-image={usePanelBg ? `url("${bonusSwitchBgUrl}")` : undefined}
 	>
 		{#if showMenuCatIcon}
 			<img class="feature-cat-icon" src={menuCatIconUrl} alt="" draggable="false" />
@@ -177,11 +170,11 @@
 		font-family: inherit;
 		transition: background-color 0.15s, border-color 0.15s, transform 0.1s, filter 0.1s;
 
-		&:hover:not(:disabled):not(.panel-sprite-btn):not(.no-hover-bg) {
+		&:hover:not(:disabled):not(.no-hover-bg) {
 			background-color: rgba(0, 0, 0, 0.36);
 		}
 
-		&:not(.panel-sprite-btn):active:not(:disabled) {
+		&:active:not(:disabled) {
 			transform: scale(0.98);
 			filter: brightness(0.9);
 		}
@@ -207,75 +200,8 @@
 		line-height: 1.25;
 	}
 
-	.feature-row.bonus-boost:not(.panel-bg):hover:not(:disabled):not(.no-hover-bg) {
-		background-color: rgba(0, 0, 0, 0.28);
-		filter: none;
-	}
-
-	.feature-row.bonus-boost:not(.panel-sprite-btn):active:not(:disabled) {
-		transform: scale(0.97);
-		filter: brightness(0.9);
-	}
-
-	.feature-row.panel-bg.panel-sprite-btn {
-		box-sizing: border-box;
-		transition: filter 0.15s, opacity 0.15s, transform 0.1s;
-
-		&:hover:not(:disabled):not(:active) {
-			background-color: transparent;
-			filter: none;
-			transform: none;
-		}
-
-		&:active:not(:disabled) {
-			transform: scale(0.97);
-			filter: brightness(0.9);
-		}
-	}
-
-	.feature-row.panel-bg {
-		aspect-ratio: 1233 / 613;
-		padding: 0 12%;
-		background-color: transparent;
-		background-repeat: no-repeat;
-		background-position: center;
-		background-size: 100% 100%;
-		border: 0;
-		border-radius: 0;
-
-		&:disabled {
-			opacity: 0.45;
-			cursor: not-allowed;
-			pointer-events: none;
-			filter: none;
-		}
-
-		&.active {
-			border-color: transparent;
-		}
-
-		&.compact {
-			padding: 0 8%;
-		}
-	}
-
-	.feature-row.panel-bg .feature-name {
-		font-weight: 800;
-		text-transform: uppercase;
-		letter-spacing: 0.04em;
-		text-shadow:
-			0 0 10px rgba(80, 200, 255, 0.75),
-			0 2px 6px rgba(0, 0, 0, 0.85);
-	}
-
-	.feature-row.panel-bg.compact .feature-name {
-		font-size: 0.48rem;
-		line-height: 1.1;
-		letter-spacing: 0.02em;
-	}
-
-	.feature-row.panel-bg .feature-cost {
-		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+	.feature-row.bonus-boost:not(.no-hover-bg):hover:not(:disabled) {
+		background-color: rgba(0, 0, 0, 0.36);
 	}
 
 	.feature-row.menu-cat {
@@ -299,26 +225,15 @@
 		min-width: 0;
 	}
 
-	.feature-row:not(.panel-bg) .feature-name {
+	.feature-name {
 		font-size: 0.9rem;
 		font-weight: 700;
 		color: #fff;
 	}
 
-	.feature-row:not(.panel-bg) .feature-cost {
+	.feature-cost {
 		font-size: 0.72rem;
 		font-weight: 700;
-		color: #4cd964;
-		letter-spacing: 0.03em;
-	}
-
-	.feature-row.panel-bg .feature-name,
-	.feature-row.panel-bg .feature-cost {
-		font-weight: 700;
-		color: #fff;
-	}
-
-	.feature-row.panel-bg .feature-cost {
 		color: #4cd964;
 		letter-spacing: 0.03em;
 	}

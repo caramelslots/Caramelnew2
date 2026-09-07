@@ -62,17 +62,8 @@
 />
 
 {#if isOpen}
-	<div
-		class="message-overlay"
-		role="presentation"
-		transition:fade={{ duration: 180 }}
-	>
-		<button
-			class="message-backdrop"
-			type="button"
-			aria-label="close"
-			onclick={close}
-		></button>
+	<div class="message-overlay" role="presentation" transition:fade={{ duration: 180 }}>
+		<button class="message-backdrop" type="button" aria-label="close" onclick={close}></button>
 
 		<div
 			class="message-panel"
