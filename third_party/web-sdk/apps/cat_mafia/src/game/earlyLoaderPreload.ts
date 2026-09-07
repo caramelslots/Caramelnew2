@@ -1,15 +1,15 @@
 /** static/ path relative to deployed index.html (Stake CDN subpath-safe). */
 export const resolveGameStaticUrl = (path: string) =>
-	new URL(path.replace(/^\//, ''), typeof window !== 'undefined' ? window.location.href : import.meta.url)
-		.href;
+	new URL(
+		path.replace(/^\//, ''),
+		typeof window !== 'undefined' ? window.location.href : import.meta.url,
+	).href;
 
 /**
  * Static street under the logo/cards loader.
  * 1920×956 — same plate as `night.webp` and LOADER_BG_PX.
  */
-export const LOADER_STATIC_DAY_URL = resolveGameStaticUrl(
-	'assets/sprites/background/day.webp',
-);
+export const LOADER_STATIC_DAY_URL = resolveGameStaticUrl('assets/sprites/background/day.webp');
 
 /** Street background Spine for Pixi `mainBackground` (batch 1 + early HTTP warm). */
 export const LOADER_BG_SPINE_URLS = [

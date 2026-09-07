@@ -36,6 +36,7 @@
 		superWildWheelEndDeg,
 		superWildWheelStartDeg,
 		prepareSuperWildDrumSpin,
+		prepareSuperWildDrumSettled,
 	} from '../game/superWildHtmlSpine';
 	import SuperWildCurtainController from './SuperWildCurtainController.svelte';
 	import SuperWildDrumLabels from './SuperWildDrumLabels.svelte';
@@ -60,8 +61,10 @@
 	const transform = $derived(getSuperWildPixiTransform(props.boxW, props.boxH));
 	const colX = $derived(getSuperWildColumnX(props.reel, getSymbolX(props.reel, 'SW')));
 
-	const initialPrepared = prepareSuperWildDrumSpin(props.mult);
 	const initialLanded = props.phase === 'done' || props.phase === 'dismiss';
+	const initialPrepared = initialLanded
+		? prepareSuperWildDrumSettled(props.mult)
+		: prepareSuperWildDrumSpin(props.mult);
 
 	let wheelDeg = $state(
 		initialLanded ? initialPrepared.endDeg : initialPrepared.startDeg,

@@ -59,13 +59,13 @@
 		class:exit-layer--exiting={props.exiting}
 		style:opacity={props.exiting ? opacity.current : 1}
 	>
-	<img
-		class="street"
-		src={LOADER_STATIC_DAY_URL}
-		alt=""
-		draggable="false"
-		style="{streetStyle}; filter: blur({blur.current}px); transform-origin: center center;"
-	/>
+		<img
+			class="street"
+			src={LOADER_STATIC_DAY_URL}
+			alt=""
+			draggable="false"
+			style="{streetStyle}; filter: blur({blur.current}px); transform-origin: center center;"
+		/>
 	</div>
 {/if}
 

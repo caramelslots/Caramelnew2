@@ -46,9 +46,7 @@
 	};
 
 	const canContinue = $derived(
-		context.stateApp.loaded &&
-			gameEntrance.loadingCardsVisible &&
-			!gameEntrance.loaderExitActive,
+		context.stateApp.loaded && gameEntrance.loadingCardsVisible && !gameEntrance.loaderExitActive,
 	);
 </script>
 

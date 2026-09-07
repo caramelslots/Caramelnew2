@@ -15,9 +15,7 @@
 	let imgReady = $state(false);
 	let imgEl = $state<HTMLImageElement | undefined>();
 
-	const show = $derived(
-		context.stateLayout.showLoadingScreen && !gameEntrance.hideLoaderStreet,
-	);
+	const show = $derived(context.stateLayout.showLoadingScreen && !gameEntrance.hideLoaderStreet);
 
 	const streetStyle = $derived.by(() => {
 		const layout = context.stateLayoutDerived.canvasSizes();

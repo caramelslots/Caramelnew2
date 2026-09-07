@@ -168,8 +168,8 @@ export const BOARD_DIMENSIONS = { x: 5, y: 4 };
 
 /** Central reel for the idle showcase open Super Wild curtain (0-based). */
 export const STARTUP_SW_REEL = 2;
-/** Drum multiplier shown on the idle showcase curtain. */
-export const STARTUP_SW_MULT = 5;
+/** Drum multiplier on the idle showcase curtain — must be a `SUPER_WILD_WHEEL_SECTORS` value (2/4/6/8/25/50/75). */
+export const STARTUP_SW_MULT = 4;
 /** Padded row of the lying SW the curtain grows from. */
 export const STARTUP_SW_ORIGIN_ROW = Math.floor(BOARD_DIMENSIONS.y / 2) + 1;
 
@@ -1189,7 +1189,8 @@ export const DESKTOP_UI_LAYOUT = {
 		/** Horizontal gap between adjacent controls in the spin cluster (layout px). */
 		betControlsGap: 14,
 		spinScale: 1.08,
-		spinRaiseY: 0,
+		/** Raise − | Spin | + cluster (layout px, − = up). Portrait uses PORTRAIT_UI_LAYOUT.buttons.spinRaiseY for Spin only. */
+		spinRaiseY: -40,
 		smallScale: 0.7,
 		/** Auto width vs Buy Bonus width (same panel art). */
 		autoplayScale: 1.0,

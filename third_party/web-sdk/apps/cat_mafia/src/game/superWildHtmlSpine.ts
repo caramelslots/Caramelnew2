@@ -312,6 +312,18 @@ export const prepareSuperWildDrumSpin = (targetMult: number) => {
 };
 
 /**
+ * Deterministic drum for idle / showcase curtains — canonical sector order,
+ * no shuffle. Top × badge and pointer sector always show the same mult.
+ */
+export const prepareSuperWildDrumSettled = (targetMult: number) => {
+	const labels = [...SUPER_WILD_WHEEL_SECTORS];
+	const landSectorIndex = superWildDrumLandSectorIndex(labels, targetMult);
+	const endDeg = superWildWheelEndDegForSector(landSectorIndex);
+	const startDeg = superWildWheelStartDeg(endDeg);
+	return { labels, landSectorIndex, endDeg, startDeg };
+};
+
+/**
  * Fit the SW viewport into a board-local column box.
  * spine-pixi maps skeleton Y-up → Pixi Y-down — same offset convention as mascot.
  */

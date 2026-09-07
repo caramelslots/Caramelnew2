@@ -144,9 +144,9 @@ export const computeDesktopHudLayout = (
 			y: buyBonusY,
 			size: buySize,
 		},
-		decrease: { x: decreaseX, y: rightGroupY, size: smallSize },
+		decrease: { x: decreaseX, y: rightGroupY + spinRaiseY, size: smallSize },
 		spin: { x: spinX, y: rightGroupY + spinRaiseY, size: spinSize },
-		increase: { x: increaseX, y: rightGroupY, size: smallSize },
+		increase: { x: increaseX, y: rightGroupY + spinRaiseY, size: smallSize },
 		autoplay: {
 			x: autoX,
 			y: rightGroupY,
