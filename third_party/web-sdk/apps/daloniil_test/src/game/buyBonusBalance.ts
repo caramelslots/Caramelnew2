@@ -1,9 +1,6 @@
 import { stateBet, stateBetDerived, stateConfig, stateMeta } from 'state-shared';
 
-import {
-	BONUS_BOOST_COST_MULT,
-	SPECIAL_SPINS_COST_MULT,
-} from './activeFeature';
+import { BONUS_BOOST_COST_MULT } from './activeFeature';
 import { stateGame } from './stateGame.svelte';
 
 /** Fallbacks used until authenticate overwrites betModes.costMultiplier. */
@@ -28,9 +25,6 @@ export const buySuperCostMultiplier = () =>
 export const bonusBoostCostMultiplier = () =>
 	modeCostMultiplier('bonus_boost', BONUS_BOOST_COST_MULT);
 
-export const specialSpinsCostMultiplier = () =>
-	modeCostMultiplier('special_spins', SPECIAL_SPINS_COST_MULT);
-
 export const buyBonusCost = (costMultiplier: number) => stateBet.betAmount * costMultiplier;
 
 /** Достаточно ли баланса для покупки бонуса (bet ×100 / ×200). */
@@ -43,12 +37,11 @@ export const canAffordBuyBonusForModeKey = (modeKey: string) => {
 	return false;
 };
 
-/** Множитель стоимости обычного спина (BASE + Bonus Boost / Special Spins). */
+/** Множитель стоимости обычного спина (BASE + Bonus Boost). */
 export const spinCostMultiplier = () => {
 	const mode = stateBetDerived.activeBetMode();
 	if (mode?.type === 'activate') return mode.costMultiplier;
 	if (stateGame.activeFeature === 'bonus_boost') return bonusBoostCostMultiplier();
-	if (stateGame.activeFeature === 'special_spins') return specialSpinsCostMultiplier();
 	return 1;
 };
 

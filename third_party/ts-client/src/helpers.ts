@@ -102,6 +102,7 @@ const DisplayAmount = (
 // | Bahraini Dinar               | BHD          | BD       | BD10.00  |
 // | Stake Gold Coin              | XGC          | GC       | 10.00 GC |
 // | Stake Cash                   | XSC          | SC       | 10.00 SC |
+// | Stake EU Social Cash         | XEC          | SC       | 10.00 SC |
 // Currency metadata: symbol, default decimals, symbol placement
 const CurrencyMeta: Record<
   Currency,
@@ -143,6 +144,7 @@ const CurrencyMeta: Record<
   BHD: { symbol: 'BD', decimals: 2 },
   XGC: { symbol: 'GC', decimals: 0, symbolAfter: true },
   XSC: { symbol: 'SC', decimals: 2, symbolAfter: true },
+  XEC: { symbol: 'SC', decimals: 2, symbolAfter: true },
 };
 
 const API_MULTIPLIER = 1_000_000;

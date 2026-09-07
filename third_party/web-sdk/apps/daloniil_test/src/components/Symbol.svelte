@@ -66,15 +66,15 @@
 	</SpineProvider>
 {/if}
 
-{#if props.rawSymbol.multiplier && props.rawSymbol.name !== 'W'}
+{#if (props.rawSymbol.multiplier ?? 0) > 1}
 	<BitmapText
 		anchor={0.5}
 		x={props.x}
-		y={props.y}
-		text={`${props.rawSymbol.multiplier}X`}
+		y={(props.y ?? 0) + (props.rawSymbol.name === 'W' ? SYMBOL_SIZE * 0.22 : 0)}
+		text={`x${props.rawSymbol.multiplier}`}
 		style={{
 			fontFamily: FONT_PROSTOI,
-			fontSize: 50 * BITMAP_FONT_SCALE,
+			fontSize: (props.rawSymbol.name === 'W' ? 42 : 50) * BITMAP_FONT_SCALE,
 		}}
 	/>
 {/if}

@@ -1,0 +1,176 @@
+<script lang="ts">
+	import { getGameInfoPaylines } from '../game/gameInfoPaylines';
+
+	const paylines = getGameInfoPaylines();
+
+	const GRID = 5;
+	const CELL = 11;
+	const GAP = 2;
+	const size = GRID * CELL + (GRID - 1) * GAP;
+
+	const cellCenter = (reel: number, row: number) => ({
+		x: reel * (CELL + GAP) + CELL / 2,
+		y: row * (CELL + GAP) + CELL / 2,
+	});
+
+	const linePath = (rows: readonly number[]) =>
+		rows
+			.map((row, reel) => {
+				const { x, y } = cellCenter(reel, row);
+				return `${reel === 0 ? 'M' : 'L'} ${x} ${y}`;
+			})
+			.join(' ');
+</script>
+
+<div class="paylines-grid" data-test="game-info-paylines">
+	{#each paylines as payline (payline.lineIndex)}
+		<article class="payline-card">
+			<span class="payline-num">{payline.lineIndex}</span>
+			<div class="payline-board" style:width="{size}px" style:height="{size}px">
+				<svg
+					class="payline-svg"
+					viewBox="0 0 {size} {size}"
+					width={size}
+					height={size}
+					aria-hidden="true"
+				>
+					<path class="payline-glow" d={linePath(payline.rows)} />
+					<path class="payline-path" d={linePath(payline.rows)} />
+					{#each payline.rows as row, reel (payline.lineIndex + '-' + reel)}
+						{@const center = cellCenter(reel, row)}
+						<circle class="payline-node" cx={center.x} cy={center.y} r="3.2" />
+					{/each}
+				</svg>
+				<div class="payline-cells">
+					{#each payline.grid as rowCells, row (payline.lineIndex + '-r' + row)}
+						{#each rowCells as cell, reel (payline.lineIndex + '-c' + row + '-' + reel)}
+							<div
+								class="payline-cell"
+								class:payline-cell--on={cell.active}
+							></div>
+						{/each}
+					{/each}
+				</div>
+			</div>
+		</article>
+	{/each}
+</div>
+
+<style lang="scss">
+	/* Cat Mafia payline palette — aligned with PaylineOverlay energy orange/gold + HUD accents. */
+	$payline-glow-deep: #ff5500;
+	$payline-core: #ff8800;
+	$payline-bright: #ffcc44;
+	$payline-gold: #ffd54a;
+	$payline-cream: #fff8ec;
+
+	.paylines-grid {
+		display: grid;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		gap: 0.55rem;
+	}
+
+	.payline-card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.35rem;
+		padding: 0.5rem 0.35rem 0.55rem;
+		border-radius: 10px;
+		background: rgba(255, 255, 255, 0.06);
+		border: 1px solid rgba(255, 213, 74, 0.22);
+		box-shadow: inset 0 0 12px rgba(255, 136, 0, 0.06);
+	}
+
+	.payline-num {
+		font-size: 0.72rem;
+		font-weight: 800;
+		line-height: 1;
+		color: $payline-gold;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		text-shadow:
+			0 0 8px rgba(255, 196, 48, 0.45),
+			0 1px 0 rgba(92, 58, 8, 0.75),
+			0 2px 6px rgba(0, 0, 0, 0.7);
+	}
+
+	.payline-board {
+		position: relative;
+		flex-shrink: 0;
+	}
+
+	.payline-cells {
+		display: grid;
+		grid-template-columns: repeat(5, 11px);
+		grid-template-rows: repeat(4, 11px);
+		gap: 2px;
+	}
+
+	.payline-cell {
+		border-radius: 2px;
+		background: rgba(255, 255, 255, 0.07);
+		box-shadow: inset 0 0 0 1px rgba(255, 213, 74, 0.08);
+	}
+
+	.payline-cell--on {
+		background: rgba(255, 136, 0, 0.28);
+		box-shadow:
+			inset 0 0 0 1px rgba(255, 204, 68, 0.45),
+			0 0 6px rgba(255, 85, 0, 0.35);
+	}
+
+	.payline-svg {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		overflow: visible;
+	}
+
+	.payline-glow {
+		fill: none;
+		stroke: $payline-glow-deep;
+		stroke-width: 6;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		opacity: 0.28;
+	}
+
+	.payline-path {
+		fill: none;
+		stroke: $payline-core;
+		stroke-width: 2.2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+		filter: drop-shadow(0 0 2px rgba(255, 204, 68, 0.65));
+	}
+
+	.payline-node {
+		fill: $payline-bright;
+		stroke: $payline-cream;
+		stroke-width: 0.6;
+		filter: drop-shadow(0 0 2px rgba(255, 136, 0, 0.85));
+	}
+
+	@media (max-width: 680px) {
+		.paylines-grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+
+	@media (max-width: 560px) {
+		.payline-num {
+			font-size: 0.9rem;
+		}
+	}
+
+	@media (max-width: 420px) {
+		.paylines-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+
+		.payline-card:last-child:nth-child(odd) {
+			grid-column: 1 / -1;
+		}
+	}
+</style>

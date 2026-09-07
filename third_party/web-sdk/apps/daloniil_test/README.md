@@ -1,6 +1,6 @@
 # Wok Fury (`daloniil_test`)
 
-Stake Engine slot app — Wild-West тематика, 5×6 grid, 50 paylines.
+Stake Engine slot app — Japanese food / Maneki-neko тематика, 5×5 grid, 25 paylines.
 
 > **Статус**: Этап 1 (UI) + Этап 2 (math) завершены; Storybook фикстуры подключены к реальным `books_*.json` из math-sdk.
 
@@ -23,14 +23,14 @@ pnpm --filter daloniil_test storybook    # → http://localhost:6007
 | ------------- | ------------------------------------------------------------------------------------------------------ |
 | Provider      | `sample_provider`                                                                                      |
 | Game ID       | `0_0_daloniil_test`                                                                                    |
-| Grid          | 5 reels × 6 rows                                                                                       |
-| Paylines      | 50                                                                                                     |
+| Grid          | 5 reels × 5 rows                                                                                       |
+| Paylines      | 25                                                                                                     |
 | RTP           | 96.01%                                                                                                 |
 | Max Win       | ×50 000                                                                                                |
-| Bet modes     | `base`, `bonus_boost` (×2), `special_spins` (×30), `bonus_normal` (buy ×100), `bonus_super` (buy ×200) |
-| Symbols (Hi)  | H1 (×100/×10/×2), H2 (×50/×5/×1.2), H3 (×30/×3/×0.8), H4 (×20/×2/×0.5)                                 |
-| Symbols (Low) | L1–L4 (×1/×0.2/×0.1)                                                                                   |
-| Wild          | W (×150 for 5)                                                                                         |
+| Bet modes     | `base`, `bonus_boost` (×2), `bonus_normal` (buy ×100), `bonus_super` (buy ×200) |
+| Symbols (Hi)  | H1 (×150/×15/×3), H2 (×75/×7.5/×1.8), H3 (×45/×4.5/×1.2), H4 (×30/×3/×0.7)                             |
+| Symbols (Low) | L1–L4 (×3/×0.5/×0.1)                                                                                   |
+| Wild          | W (×225 for 5)                                                                                         |
 | Bonus         | B (триггер FS, collectible в FS)                                                                       |
 | Mystery       | M (sticky reel в FS, раскрывается в один символ)                                                       |
 
@@ -53,11 +53,11 @@ src/
 │   ├── MysteryReelOverlay.svelte         — подсветка sticky-барабанов (PIXI)
 │   ├── SymbolPlaceholder.svelte          — PIXI placeholder для B и M символов
 │   ├── AssetPlaceholder.svelte           — HTML placeholder (для UI/меню/лого)
-│   ├── FeaturesAutoSpinOverlay.svelte    — Bonus Boost / Special Spins тумблеры в Autoplay
+│   ├── FeaturesAutoSpinOverlay.svelte    — Bonus Boost тумблер в Autoplay
 │   ├── BuyBonusOverlay.svelte            — кастомное меню «Купить функцию» (NORMAL/SUPER)
 │   └── ProgressLadder.svelte             — HTML overlay прогресс-лестницы во FS
 ├── game/
-│   ├── config.ts                         — 50 paylines, 5 bet-modes, paytable
+│   ├── config.ts                         — 25 paylines, bet-modes, paytable
 │   ├── constants.ts                      — INITIAL_BOARD (5×6), SYMBOL_INFO_MAP
 │   ├── stateGame.svelte.ts               — + bonusCollected, ladderTier, mysteryReels, activeFeature
 │   ├── typesBookEvent.ts                 — + bonusCollect, ladderTierUp, mysteryReelActivate, mysteryReveal
@@ -74,7 +74,6 @@ src/
     ├── base_books.ts                     — 100 books mode=base       (auto-gen)
     ├── bonus_books.ts                    — 30 books mode=bonus_normal (auto-gen)
     ├── books_bonus_boost.ts              — 60 books mode=bonus_boost  (auto-gen)
-    ├── books_special_spins.ts            — 30 books mode=special_spins (auto-gen)
     └── books_bonus_super.ts              — 30 books mode=bonus_super  (auto-gen)
 ```
 

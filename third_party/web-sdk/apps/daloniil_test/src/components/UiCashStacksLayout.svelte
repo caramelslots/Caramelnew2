@@ -24,6 +24,7 @@
 		WIN_HUD_FONT_SIZE,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
+	import { isAnyMenuOpen } from '../game/isAnyMenuOpen';
 	import { getContextLayout } from 'utils-layout';
 
 	type Props = {
@@ -38,6 +39,7 @@
 	const isPopoutSmall = $derived(isPopoutSmallViewport(stateLayoutDerived.canvasSizes()));
 	const useDesktopHud = $derived(layoutType !== 'portrait');
 	const gameNameScale = $derived(isPopoutSmall ? POPOUT_S_SCALE : 1);
+	const spaceHoldDisabled = $derived(isAnyMenuOpen());
 
 	const WIN_BELOW_BOARD_GAP = 58;
 	/** Horizontal nudge right from screen center, as a fraction of main layout width. */
@@ -58,7 +60,7 @@
 	const winLabelGap = WIN_HUD_FONT_SIZE * BITMAP_FONT_SCALE * 0.78;
 </script>
 
-<EnableSpaceHold />
+<EnableSpaceHold disabled={spaceHoldDisabled} />
 
 {#if useDesktopHud}
 	<UiFadeContainer>

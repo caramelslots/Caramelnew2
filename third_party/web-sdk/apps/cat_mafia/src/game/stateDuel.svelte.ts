@@ -1,0 +1,123 @@
+/** Duel bonus state — amounts stored as book cents (×100). */
+
+import { stateBet } from 'state-shared';
+
+import { createInitialBoard } from './constants';
+
+export type DuelSide = 'cat' | 'dog';
+export type DuelPhase = 'idle' | 'pick' | 'playing' | 'outro';
+
+export type DuelBoardCell = { name: string };
+
+const DUEL_FORBIDDEN = new Set(['B', 'BT', 'PB', 'PS', 'PG']);
+
+/** Visible 5×4 high-biased preview (no bonus / paw / bullet). */
+export const getDuelInitialVisibleBoard = (): DuelBoardCell[][] =>
+	createInitialBoard({ exclude: DUEL_FORBIDDEN }).map((reel) =>
+		reel.slice(1, -1).map((cell) => ({ name: cell.name })),
+	);
+
+export const stateDuel = $state({
+	active: false,
+	phase: 'idle' as DuelPhase,
+	/** Side the player chose to play as (null until pick). */
+	playerSide: null as DuelSide | null,
+	dogSpinIndex: 0,
+	catSpinIndex: 0,
+	totalSpinsPerSide: 10,
+	dogTotal: 0,
+	catTotal: 0,
+	dogSpinWin: 0,
+	catSpinWin: 0,
+	/** Last spin win flying into the bank meter. */
+	flowAmount: 0,
+	flowSide: null as DuelSide | null,
+	activeSide: null as DuelSide | null,
+	/** Which side currently owns the shared Pixi board (real reel spin). */
+	pixiSide: null as DuelSide | null,
+	spinning: false,
+	/** Independent random previews — cat and dog desks must not look identical. */
+	dogBoard: getDuelInitialVisibleBoard(),
+	catBoard: getDuelInitialVisibleBoard(),
+	winner: null as DuelSide | null,
+	payout: 0,
+	winLevel: 1,
+	/**
+	 * Win dimming only on this desk (other side stays full-bright).
+	 * Null = neither desk in spotlight.
+	 */
+	winSpotlightSide: null as DuelSide | null,
+	/** Per-side sticky SW columns (reel → mult), like bonus_normal FS. */
+	stickySwByReel: {
+		cat: {} as Record<number, number>,
+		dog: {} as Record<number, number>,
+	},
+	stickySwOpened: { cat: false, dog: false },
+	/** One curtain per opened SW column per side — stays until next reveal. */
+	superWildCurtains: [] as {
+		side: DuelSide;
+		reel: number;
+		mult: number;
+		phase: 'expanding' | 'done';
+		/** Padded board row of the lying SW the curtain grows from (upward). */
+		originRow: number;
+	}[],
+	/**
+	 * After two-beat SW: bank update should tween once (phase1 → full spin).
+	 * Cleared when the under-desk WIN HUD consumes it.
+	 */
+	winHudCountUpPendingBySide: { cat: false, dog: false },
+	/** Side waiting for post-curtain bank count-up (set on duelSpin swTwoBeat). */
+	pendingSwBankCountUpSide: null as DuelSide | null,
+});
+
+export const resetDuelState = () => {
+	stateDuel.active = false;
+	stateDuel.phase = 'idle';
+	stateDuel.playerSide = null;
+	stateDuel.dogSpinIndex = 0;
+	stateDuel.catSpinIndex = 0;
+	stateDuel.totalSpinsPerSide = 10;
+	stateDuel.dogTotal = 0;
+	stateDuel.catTotal = 0;
+	stateDuel.dogSpinWin = 0;
+	stateDuel.catSpinWin = 0;
+	stateDuel.flowAmount = 0;
+	stateDuel.flowSide = null;
+	stateDuel.activeSide = null;
+	stateDuel.pixiSide = null;
+	stateDuel.spinning = false;
+	stateDuel.dogBoard = getDuelInitialVisibleBoard();
+	stateDuel.catBoard = getDuelInitialVisibleBoard();
+	stateDuel.winner = null;
+	stateDuel.payout = 0;
+	stateDuel.winLevel = 1;
+	stateDuel.winSpotlightSide = null;
+	stateDuel.stickySwByReel = { cat: {}, dog: {} };
+	stateDuel.stickySwOpened = { cat: false, dog: false };
+	stateDuel.superWildCurtains = [];
+	stateDuel.winHudCountUpPendingBySide = { cat: false, dog: false };
+	stateDuel.pendingSwBankCountUpSide = null;
+};
+
+export const isDuelActive = () => stateDuel.active;
+
+/** Buy-duel bet modes (purchase reveal runs before `stateDuel.active`). */
+export const isDuelBetMode = (modeKey = stateBet.activeBetModeKey) =>
+	modeKey === 'bonus_duel' ||
+	modeKey === 'bonus_duel_cat' ||
+	modeKey === 'bonus_duel_dog';
+
+/** Player wins when their chosen side finishes ahead → both banks. */
+export const resolveDuelPlayerPayout = (opts: {
+	playerSide: DuelSide;
+	boardWinner: DuelSide;
+	dogTotal: number;
+	catTotal: number;
+}) => {
+	const playerWon = opts.boardWinner === opts.playerSide;
+	return {
+		playerWon,
+		payout: playerWon ? opts.dogTotal + opts.catTotal : 0,
+	};
+};

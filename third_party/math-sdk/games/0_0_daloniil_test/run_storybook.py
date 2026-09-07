@@ -80,7 +80,6 @@ if __name__ == "__main__":
     num_sim_args = {
         "base": 100,
         "bonus_boost": 60,
-        "special_spins": 30,
         "bonus_normal": 30,
         "bonus_super": 30,
     }

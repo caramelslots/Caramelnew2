@@ -2,6 +2,8 @@ import type * as PIXI from 'pixi.js';
 import { setContext, getContext, onMount } from 'svelte';
 import * as SPINE_PIXI from '@esotericsoftware/spine-pixi-v8';
 
+import './patchSpinePipe';
+
 import type { App as ContextApp } from './createApp.svelte';
 
 // App context
@@ -22,7 +24,12 @@ export function createContextParent(value: PIXI.Container) {
 			context.parent.sortChildren();
 
 			return () => {
-				if (node) node.destroy(); // Equivalent to onDestroy(); Leave this comment for searching.
+				if (!node || node.destroyed) return;
+				// Drop out of the render group before destroy() so SpinePipe
+				// cannot updateRenderable a half-torn-down skeleton.
+				node.renderable = false;
+				node.removeFromParent();
+				node.destroy(); // Equivalent to onDestroy(); Leave this comment for searching.
 			};
 		});
 	};

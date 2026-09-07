@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
+		<link rel="stylesheet" href="https://use.typekit.net/aba0ebl.css" />
+		<meta name="viewport" content="width=device-width" />
+		<!--
+			Preload the heaviest Batch-1 visual assets so the browser starts
+			fetching them during HTML parse, before any JavaScript executes.
+			Paths are relative to the document so they work at any deploy subpath.
+		-->
+		<link rel="preload" as="image" href="assets/sprites/symbols/Wild.webp" />
+		<link rel="preload" as="image" href="assets/spines/background/skeleton.webp" />
+		<link rel="preload" as="image" href="assets/spines/background/skeleton_2.webp" />
+		<link rel="preload" as="image" href="assets/spines/background/skeleton_3.webp" />
+		<link rel="preload" as="image" href="assets/spines/transition/transition.webp" />
+		%sveltekit.head%
+	</head>
+	<body style="margin: 0; padding: 0; overflow: hidden; background-color: black">
+		<div>%sveltekit.body%</div>
+	</body>
+</html>

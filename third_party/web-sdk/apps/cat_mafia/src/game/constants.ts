@@ -1,0 +1,1800 @@
+import _ from 'lodash';
+
+import type { RawSymbol, SymbolState } from './types';
+
+export const SYMBOL_SIZE = 100;
+
+/** Native symbol sprite edge length (symbols/*.webp). */
+export const SYMBOL_TEXTURE_NATIVE_PX = 196;
+
+/** Cap mainLayout.scale so reel symbols are not upscaled past texture density. */
+export const MAX_LAYOUT_SCALE = SYMBOL_TEXTURE_NATIVE_PX / SYMBOL_SIZE;
+
+/** Bitmap font families (prostoi = default gold text, krutoi = big/super/epic win). */
+export const FONT_PROSTOI = 'Reggae One Regular';
+export const FONT_PROSTOI_WHITE = 'Reggae One White';
+export const FONT_KRUTOI = 'Shojumaru';
+/** Russian (Cyrillic) bitmap font variants. */
+export const FONT_PROSTOI_RU = 'Philosopher Bold';
+export const FONT_PROSTOI_WHITE_RU = 'Philosopher Bold White';
+export const FONT_KRUTOI_RU = 'Russo One';
+/** Hindi (Devanagari) bitmap font variants — krutoi reuses gold prostoi per art handoff. */
+export const FONT_PROSTOI_HI = 'Noto Sans Devanagari Regular';
+export const FONT_PROSTOI_WHITE_HI = 'Noto Sans Devanagari White';
+export const FONT_KRUTOI_HI = FONT_PROSTOI_HI;
+/** Vietnamese bitmap font variants — krutoi reuses gold prostoi per art handoff. */
+export const FONT_PROSTOI_VI = 'Fruktur Regular';
+export const FONT_PROSTOI_WHITE_VI = 'Fruktur Regular White';
+export const FONT_KRUTOI_VI = FONT_PROSTOI_VI;
+/** Bablo — full currency-glyph font (₽ € ₩ ₴ ₫ ₱ ₹ ₦ ₪ ₡ ¥ zł…). Used for all monetary amounts. */
+export const FONT_BABLO = 'Noto Sans SemiCondensed SemiBold';
+
+export type LocaleScript = 'latin' | 'cyrillic' | 'cjk' | 'arabic' | 'devanagari';
+
+const CJK_LOCALES = new Set(['ja', 'ko', 'zh']);
+const ARABIC_LOCALES = new Set(['ar']);
+const DEVANAGARI_LOCALES = new Set(['hi']);
+
+/** CJK (ja / ko / zh) bitmap font variants — krutoi reuses gold prostoi per art handoff. */
+export const FONT_PROSTOI_CJK = 'Asian Y Standard';
+export const FONT_PROSTOI_WHITE_CJK = 'Asian Y White';
+export const FONT_KRUTOI_CJK = FONT_PROSTOI_CJK;
+/** Arabic TTF fonts — prostoi / white share Medium; krutoi uses Black. */
+export const FONT_ARABIC_PROSTOI = 'Cairo Medium';
+export const FONT_ARABIC_KRUTOI = 'Cairo Black';
+
+export const isCjkLocale = (locale: string): boolean => CJK_LOCALES.has(locale);
+export const isArabicLocale = (locale: string): boolean => ARABIC_LOCALES.has(locale);
+
+/** Classify locale script for font / layout decisions. */
+export const localeScriptGroup = (locale: string): LocaleScript => {
+	if (locale === 'ru') return 'cyrillic';
+	if (CJK_LOCALES.has(locale)) return 'cjk';
+	if (ARABIC_LOCALES.has(locale)) return 'arabic';
+	if (DEVANAGARI_LOCALES.has(locale)) return 'devanagari';
+	return 'latin';
+};
+
+/** Prostoi/krutoi bitmap atlases cover Latin, Cyrillic, Hindi, Vietnamese, and CJK. */
+export const supportsBitmapFont = (locale: string): boolean => {
+	if (locale === 'vi' || isCjkLocale(locale)) return true;
+	const script = localeScriptGroup(locale);
+	return script === 'latin' || script === 'cyrillic' || script === 'devanagari';
+};
+
+export const localeTextDirection = (locale: string): 'ltr' | 'rtl' =>
+	locale === 'ar' ? 'rtl' : 'ltr';
+
+/** System font stack for ar fallback (non-bitmap locale). */
+export const SYSTEM_TEXT_FONT_FAMILY =
+	"'proxima-nova', 'Noto Sans', 'Noto Sans Arabic', system-ui, sans-serif";
+
+/** PIXI/HTML system font for locales without bitmap glyphs. */
+export const systemTextFontFamily = (locale: string): string => {
+	if (isArabicLocale(locale)) return FONT_ARABIC_PROSTOI;
+	return SYSTEM_TEXT_FONT_FAMILY;
+};
+
+const isKrutoiBitmapFamily = (fontFamily: string): boolean =>
+	fontFamily === FONT_KRUTOI ||
+	fontFamily === FONT_KRUTOI_RU ||
+	fontFamily === FONT_KRUTOI_HI ||
+	fontFamily === FONT_KRUTOI_VI;
+
+export const LOCALE_TEXT_FILL_GOLD = '#ffcc44';
+export const LOCALE_TEXT_FILL_WHITE = '#ffffff';
+
+/**
+ * Pick the correct bitmap font for the current locale.
+ * `hi` / `vi` / `cjk` — optional locale-specific variants; krutoi on hi/vi/cjk reuses gold prostoi.
+ */
+export const fontForLocale = (
+	latin: string,
+	ru: string,
+	locale: string,
+	hi?: string,
+	vi?: string,
+	cjk?: string,
+): string => {
+	if (locale === 'ru') return ru;
+	if (locale === 'hi' && hi) return hi;
+	if (locale === 'vi' && vi) return vi;
+	if (isCjkLocale(locale) && cjk) return cjk;
+	if (locale === 'ar') {
+		return isKrutoiBitmapFamily(latin) ? FONT_ARABIC_KRUTOI : FONT_ARABIC_PROSTOI;
+	}
+	if (supportsBitmapFont(locale)) return latin;
+	return latin;
+};
+/**
+ * Pixi scales bitmap glyphs as `fontSize / font.info.size`.
+ * Legacy gold used info size 105; prostoi/krutoi use 53 — same fontSize renders ~2× larger without this.
+ */
+export const BITMAP_FONT_SCALE = 65 / 105;
+
+/** Prostoi bitmap size for WIN label under the board (ref px before BITMAP_FONT_SCALE). */
+export const WIN_HUD_FONT_SIZE = 52;
+
+/** Under-board WIN / duel bank count-up duration (FS any increase; base post-SW). */
+export const WIN_HUD_COUNT_UP_MS = 1100;
+
+/** Prostoi bitmap size for per-line small-win amounts (ref px before BITMAP_FONT_SCALE). */
+export const PAYLINE_WIN_AMOUNT_FONT_SIZE = 42;
+/** Vertical offset above the payline center (ref px). */
+export const PAYLINE_WIN_AMOUNT_ABOVE_LINE_OFFSET = 36;
+
+/** Prostoi white bitmap size for "Press to continue" (ref px before BITMAP_FONT_SCALE). */
+export const PRESS_TO_CONTINUE_FONT_SIZE = 38;
+/** Distance from bottom of main layout (ref px). */
+export const PRESS_TO_CONTINUE_BOTTOM_OFFSET = 18;
+
+/** HTML HUD balance/bet — system/web font stack (not bitmap). */
+export const HUD_BALANCE_BET_FONT_FAMILY = "'Reggae One', 'Philosopher', Georgia, serif";
+/** Buy-bonus card display font (Latin script only; digits always). */
+export const FONT_KNEWAVE = 'Knewave';
+export const BUY_BONUS_CARD_KNEWAVE_FONT_FAMILY = `'${FONT_KNEWAVE}'`;
+/** True for locales whose UI script is Latin (en, de, es, … — not ru / ar / ja / hi). */
+export const isLatinScriptLocale = (locale: string): boolean =>
+	localeScriptGroup(locale) === 'latin';
+/** Gold label color for HUD balance/bet lines. */
+export const HUD_BALANCE_BET_LABEL_COLOR = '#ffd54a';
+/** Amount color for HUD balance/bet lines. */
+export const HUD_BALANCE_BET_VALUE_COLOR = '#fff8ec';
+
+/** Half-cell inset so reel centers sit at 50, 150, … — equal columns in the desk art. */
+export const REEL_PADDING = 0.5;
+
+/**
+ * Extra X (game-space px) for symbols on the rightmost reels — nudges them
+ * under the gold rails so the last dividers fully cover edges (e.g. H4 cord).
+ * Indices 3–4 = last two of five columns.
+ *
+ * Not applied to full-column specials (B / W / SW) — those use
+ * `getFullColumnBayCenterX` (parchment / rail geometry).
+ */
+export const REEL_SYMBOL_X_NUDGE_PX: Readonly<Record<number, number>> = {
+	3: 2,
+	4: 4,
+};
+
+/** Symbols that fill the reel bay between gold rails. */
+export const FULL_COLUMN_SYMBOL_NAMES = new Set(['B', 'BD', 'W', 'SW']);
+
+/**
+ * Cat Mafia grid: 5 reels × 4 visible rows, plus top/bottom padding
+ * (`createInitialBoard` → [pad, row0..row3, pad]).
+ */
+export const BOARD_DIMENSIONS = { x: 5, y: 4 };
+
+/** Highs used when remapping curated preview templates. */
+const INITIAL_BOARD_HIGHS = ['H1', 'H2', 'H3', 'H4'] as const;
+const INITIAL_BOARD_LOWS = ['L1', 'L2', 'L3', 'L4'] as const;
+
+/**
+ * Curated 5×4 visible layouts (column-major: [reel][row]).
+ * Each board stages near-complete clusters — almost-lines, stacked pairs —
+ * so the idle desk looks composed rather than random noise. Padding is filled
+ * to echo the edge cells.
+ */
+const INITIAL_BOARD_TEMPLATES: ReadonlyArray<ReadonlyArray<ReadonlyArray<RawSymbol['name']>>> = [
+	// Almost-mid H1 line + one wild bridge on reel 0.
+	[
+		['H2', 'H1', 'W', 'L4'],
+		['H2', 'H1', 'H3', 'H4'],
+		['H2', 'H1', 'L2', 'H4'],
+		['L3', 'L4', 'H3', 'H2'],
+		['H4', 'H1', 'H3', 'L1'],
+	],
+	// Diagonal-ish H3 run + single wild on reel 1.
+	[
+		['H3', 'L1', 'H2', 'H4'],
+		['W', 'H3', 'L4', 'H4'],
+		['L2', 'H1', 'H3', 'L3'],
+		['H2', 'H2', 'L4', 'H1'],
+		['H4', 'H2', 'L1', 'H3'],
+	],
+	// Wild bridge across a near H2 four-of-kind (broken on reel 3).
+	[
+		['H2', 'L3', 'H1', 'L2'],
+		['H2', 'H4', 'H1', 'L2'],
+		['H2', 'W', 'H1', 'H4'],
+		['L4', 'H3', 'L1', 'H3'],
+		['H2', 'H3', 'H4', 'L3'],
+	],
+	// Two short stacks (H4 / H1) with one wild on reel 1.
+	[
+		['H4', 'H4', 'L2', 'H3'],
+		['W', 'H1', 'H3', 'L4'],
+		['H2', 'H1', 'H3', 'H2'],
+		['L1', 'H1', 'L4', 'H2'],
+		['H4', 'L3', 'H3', 'H4'],
+	],
+	// Premium top row tease + one wild on reel 4.
+	[
+		['H1', 'L4', 'H4', 'L3'],
+		['H1', 'H2', 'H2', 'H2'],
+		['H1', 'L1', 'H3', 'L3'],
+		['L2', 'H4', 'H3', 'H4'],
+		['W', 'H3', 'L4', 'H1'],
+	],
+	// Soft V of highs meeting mid-board with a single wild glue cell.
+	[
+		['H4', 'L3', 'H2', 'H1'],
+		['H3', 'H4', 'W', 'L2'],
+		['H1', 'H1', 'H1', 'H3'],
+		['L4', 'H2', 'L4', 'H2'],
+		['L1', 'H3', 'H4', 'H2'],
+	],
+];
+
+/** Wild-like symbols on the idle / fake desk (W preview + SW if ever injected). */
+const INITIAL_BOARD_WILD_NAMES = new Set<RawSymbol['name']>(['W', 'SW']);
+
+const stripWildName = (
+	name: RawSymbol['name'],
+	fallback: RawSymbol['name'],
+): RawSymbol['name'] => (INITIAL_BOARD_WILD_NAMES.has(name) ? fallback : name);
+
+/** Keep at most one wild across the visible 5×4 grid (matches math: 1 SW per spin). */
+const capVisibleWilds = (
+	visible: RawSymbol['name'][][],
+	fallback: RawSymbol['name'],
+	maxWild = 1,
+): RawSymbol['name'][][] => {
+	let kept = 0;
+	return visible.map((column) =>
+		column.map((name) => {
+			if (!INITIAL_BOARD_WILD_NAMES.has(name)) return name;
+			kept += 1;
+			return kept <= maxWild ? name : fallback;
+		}),
+	);
+};
+
+const shuffleInPlace = <T>(items: T[]): T[] => {
+	for (let i = items.length - 1; i > 0; i--) {
+		const j = Math.floor(Math.random() * (i + 1));
+		[items[i], items[j]] = [items[j]!, items[i]!];
+	}
+	return items;
+};
+
+const pickOne = <T>(items: ReadonlyArray<T>): T => items[Math.floor(Math.random() * items.length)]!;
+
+/**
+ * Remap H/L families so the same silhouette pattern can feel fresh each load
+ * without breaking the near-combination structure.
+ */
+const buildSymbolRemap = (): Record<string, RawSymbol['name']> => {
+	const highs = shuffleInPlace([...INITIAL_BOARD_HIGHS]);
+	const lows = shuffleInPlace([...INITIAL_BOARD_LOWS]);
+	const map: Record<string, RawSymbol['name']> = { W: 'W' };
+	INITIAL_BOARD_HIGHS.forEach((name, i) => {
+		map[name] = highs[i]!;
+	});
+	INITIAL_BOARD_LOWS.forEach((name, i) => {
+		map[name] = lows[i]!;
+	});
+	return map;
+};
+
+const applyExclude = (
+	name: RawSymbol['name'],
+	exclude: ReadonlySet<string> | undefined,
+	fallback: RawSymbol['name'],
+): RawSymbol['name'] => (exclude?.has(name) ? fallback : name);
+
+/**
+ * Structured padded 5×6 preview board: pick a curated near-win composition,
+ * optionally remap H/L identities, echo edge cells into padding.
+ */
+export const createInitialBoard = (opts?: { exclude?: ReadonlySet<string> }): RawSymbol[][] => {
+	const template = pickOne(INITIAL_BOARD_TEMPLATES);
+	const remap = buildSymbolRemap();
+	const fallbackHigh = applyExclude(
+		remap.H2 ?? 'H2',
+		opts?.exclude,
+		applyExclude('L2', opts?.exclude, 'L1'),
+	);
+	const fallbackLow = applyExclude('L2', opts?.exclude, fallbackHigh);
+
+	const visible = capVisibleWilds(
+		template.map((column) =>
+			column.map((name) => {
+				const remapped = remap[name] ?? name;
+				return applyExclude(remapped, opts?.exclude, fallbackLow);
+			}),
+		),
+		fallbackLow,
+	);
+
+	return visible.map((column) => {
+		const topPad = stripWildName(
+			applyExclude(
+				pickOne([column[0]!, column[1]!, fallbackHigh]),
+				opts?.exclude,
+				fallbackHigh,
+			),
+			fallbackHigh,
+		);
+		const bottomPad = stripWildName(
+			applyExclude(
+				pickOne([column[column.length - 1]!, column[column.length - 2]!, fallbackHigh]),
+				opts?.exclude,
+				fallbackHigh,
+			),
+			fallbackHigh,
+		);
+		return [{ name: topPad }, ...column.map((name) => ({ name })), { name: bottomPad }];
+	});
+};
+
+/** Module-load sample for the main base desk + length helpers (e.g. anticipation). */
+export const INITIAL_BOARD: RawSymbol[][] = createInitialBoard();
+
+/** Whether a settled reel-pool index is on the visible grid (not top/bottom padding). */
+export const isVisibleBoardSymbolIndex = (
+	symbolIndex: number,
+	activeSymbolCount: number,
+): boolean => {
+	const visibleRows = BOARD_DIMENSIONS.y;
+	if (activeSymbolCount > visibleRows) {
+		// Padded layout: [top_pad, row0..rowN-1, bottom_pad] → indices 1..N.
+		return symbolIndex >= 1 && symbolIndex <= visibleRows;
+	}
+	return symbolIndex >= 0 && symbolIndex < visibleRows;
+};
+
+/**
+ * Cell-center Y fully inside the 5×4 playfield.
+ * Same test as `ReelSymbol` hideOffGrid when reels are stopped.
+ */
+export const isSymbolCenterInPlayfield = (symbolY: number): boolean => {
+	const half = SYMBOL_SIZE / 2;
+	const gridBottom = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
+	return symbolY - half >= 0 && symbolY + half <= gridBottom;
+};
+
+/** Full 5×4 cell grid (no -10 trim) so reel spacing matches equal desk columns. */
+export const BOARD_SIZES = {
+	width: SYMBOL_SIZE * BOARD_DIMENSIONS.x,
+	height: SYMBOL_SIZE * BOARD_DIMENSIONS.y,
+};
+
+/**
+ * Trims the visible board area from specific edges (px).
+ * right  — shrinks the right edge inward.
+ * bottom — shrinks the bottom edge inward.
+ * The board center shifts by half the trim to keep the opposite edge fixed.
+ */
+export const BOARD_SIZE_TRIM = { right: 0, bottom: 0 } as const;
+
+/**
+ * Per-symbol win animation — used when `win` shows a frozen idle spine
+ * (M) with a container scale tween. W, B, H1 (diamond activation),
+ * H2 (revolver), H3 (lighter), H4 (telephone) and letter lows (L1–L4)
+ * play dedicated spine win clips and skip this bounce.
+ *
+ * Flow (ReelSymbol.svelte): on `state === 'win'`
+ *   1. UP: scale 1 → `scalePeak`, y-offset 0 → `−yOffsetPeakPx` over `upMs` (sineOut)
+ *   2. HOLD `holdMs`
+ *   3. DOWN: scale → 1, y-offset → 0 over `downMs` (sineIn)
+ *   4. Fire `reelSymbol.oncomplete()` → Board moves the symbol to `postWinStatic`.
+ *
+ * Both axes scale uniformly (X = Y), so the symbol grows without
+ * deformation, in contrast to the landing squash which is jelly-like.
+ */
+export const WIN_BOUNCE = {
+	scalePeak: 1.18,
+	yOffsetPeakPx: 18,
+	upMs: 220,
+	holdMs: 80,
+	downMs: 280,
+};
+
+/** Idle board tease: first bounce after the board settles with no win. */
+export const IDLE_BOUNCE_INITIAL_DELAY_MS = 10000;
+/** Pause between consecutive idle-bounce cycles on the same settled board. */
+export const IDLE_BOUNCE_CYCLE_DELAY_MS = 2000;
+/** Safety timeout while waiting for an idle-bounce tween to finish. */
+export const IDLE_BOUNCE_ANIMATION_TIMEOUT_MS = 800;
+
+/** Living spine idle plays one symbol type at a time (H1 → H2 → …). */
+export const LIVING_IDLE_SYMBOL_ORDER = ['H1', 'H2', 'H3', 'H4', 'L1', 'L2', 'L3', 'L4'] as const;
+
+/** How long one type keeps looping before the next type. Matches idle clip ~3s. */
+export const LIVING_IDLE_TURN_MS = 3000;
+
+/**
+ * Bonus rest flavour after land / activate — weighted roll each clip end.
+ * idle 50% / blink 30% / ears 20%.
+ */
+export const BONUS_IDLE_VARIANT_WEIGHTS = [
+	{ clip: 'idle' as const, weight: 0.5 },
+	{ clip: 'idle_blink' as const, weight: 0.3 },
+	{ clip: 'idle_ears' as const, weight: 0.2 },
+] as const;
+
+export type BonusIdleClip = (typeof BONUS_IDLE_VARIANT_WEIGHTS)[number]['clip'];
+
+export const pickBonusIdleClip = (): BonusIdleClip => {
+	const total = BONUS_IDLE_VARIANT_WEIGHTS.reduce((sum, item) => sum + item.weight, 0);
+	let roll = Math.random() * total;
+	for (const item of BONUS_IDLE_VARIANT_WEIGHTS) {
+		roll -= item.weight;
+		if (roll <= 0) return item.clip;
+	}
+	return 'idle';
+};
+
+/**
+ * Idle symbol tease — snappy pop up ("pew") then slower settle down.
+ * Applied on the SymbolWrap container in ReelSymbol.svelte.
+ */
+export const IDLE_BOUNCE = {
+	scalePeak: 1.2,
+	yOffsetPeakPx: 10,
+	/** Fast snap to peak — the "pew". */
+	riseMs: 350,
+	/** Slower return to rest. */
+	fallMs: 480,
+} as const;
+
+/** Soft vertical fade at the visible grid edges (symbols + reel VFX). */
+export const BOARD_MASK_FEATHER = 20;
+
+/**
+ * Extra mask coverage above the grid while win symbols bounce — see
+ * BoardMask.svelte (`winSpotlightActive`).
+ */
+export const BOARD_MASK_WIN_BOUNCE_TOP =
+	WIN_BOUNCE.yOffsetPeakPx + Math.ceil(((WIN_BOUNCE.scalePeak - 1) * SYMBOL_SIZE) / 2);
+
+/**
+ * Extra mask above the grid while idle-tease symbols pop — see BoardMask.svelte.
+ * The rise tween uses backOut easing, which overshoots its target by ~10%
+ * (svelte/easing backOut, s = 1.70158) — the peak lift/scale both include it.
+ * BOARD_MASK_FEATHER is added so the symbol at peak still sits inside the
+ * mask's full-alpha zone (the fade occupies the outermost feather px).
+ */
+const BACKOUT_OVERSHOOT = 1.1;
+export const BOARD_MASK_IDLE_BOUNCE_TOP =
+	BOARD_MASK_FEATHER +
+	Math.ceil(IDLE_BOUNCE.yOffsetPeakPx * BACKOUT_OVERSHOOT) +
+	Math.ceil(((IDLE_BOUNCE.scalePeak - 1) * BACKOUT_OVERSHOOT * SYMBOL_SIZE) / 2) +
+	2;
+
+/**
+ * Extra mask coverage (px) beyond the visible board grid.
+ * Bottom runway tucks symbols under the gold bar; keep it short and use a
+ * hard bottom edge (see `BOARD_MASK_BOTTOM_FEATHER`) so soft fade never
+ * leaks past the frame as “ghost” symbols.
+ */
+export const BOARD_MASK_OVERFLOW = { top: 24, bottom: 11 } as const;
+
+/**
+ * Mask runway while reels scroll — see BoardMask.svelte (`boardReelsActive`).
+ * Bottom matches the stopped overflow so spin symbols clip under the frame.
+ */
+export const BOARD_MASK_SPIN_OVERFLOW = { top: 24, bottom: 11 } as const;
+
+/** Soft fade at the top runway only. Bottom is hard so symbols don’t ghost below the desk. */
+export const BOARD_MASK_BOTTOM_FEATHER = 0;
+
+export const BACKGROUND_RATIO = 2039 / 1000;
+export const PORTRAIT_BACKGROUND_RATIO = 1242 / 2208;
+const PORTRAIT_RATIO = 800 / 1422;
+const LANDSCAPE_RATIO = 1600 / 900;
+const DESKTOP_RATIO = 1422 / 800;
+
+const DESKTOP_HEIGHT = 800;
+const LANDSCAPE_HEIGHT = 900;
+const PORTRAIT_HEIGHT = 1422;
+export const DESKTOP_MAIN_SIZES = { width: DESKTOP_HEIGHT * DESKTOP_RATIO, height: DESKTOP_HEIGHT };
+export const LANDSCAPE_MAIN_SIZES = {
+	width: LANDSCAPE_HEIGHT * LANDSCAPE_RATIO,
+	height: LANDSCAPE_HEIGHT,
+};
+export const PORTRAIT_MAIN_SIZES = {
+	width: PORTRAIT_HEIGHT * PORTRAIT_RATIO,
+	height: PORTRAIT_HEIGHT,
+};
+
+export const HIGH_SYMBOLS = ['H1', 'H2', 'H3', 'H4'];
+
+export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
+
+/**
+ * Shared on-cell fill for all paying render symbols (H1–H4, L1–L4, BT).
+ * Designer spines are much taller than the visible glyph/prop — sizeRatios
+ * inflate by skeleton/art so every symbol's *silhouette* lands near this
+ * fraction of the 100px cell (keeps the board reading as one size).
+ */
+export const CELL_SYMBOL_SIZE = 0.85;
+/** Aliases — spin / bounce paths still use the old names. */
+const HIGH_SYMBOL_SIZE = CELL_SYMBOL_SIZE;
+const LOW_SYMBOL_SIZE = CELL_SYMBOL_SIZE;
+/**
+ * Art spans = dominant idle silhouette in skeleton units (atlas offsets /
+ * atlas scale). Exclude full-bleed `Layer 1` / ray discs — those are FX
+ * pads, not the symbol body.
+ *
+ * Letter L1–L4: static fallback only. Runtime `symbolCellFit` remeasures the
+ * idle body AABB and overrides sizeRatios so every letter fills the cell
+ * equally regardless of how large the designer packed the glyph.
+ */
+const LETTER_SKELETON_HEIGHT = 2603.14;
+const LETTER_ART_HEIGHT = 1306; // A/K/Q/J attachment pad (~522 @ scale 0.4)
+const LETTER_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * LETTER_SKELETON_HEIGHT) / LETTER_ART_HEIGHT;
+/** Telephone — handset width is the widest idle silhouette. */
+const TELEPHONE_SKELETON_HEIGHT = 2603.14;
+const TELEPHONE_ART_SPAN = 1286; // handset ~514 @ 0.4
+const TELEPHONE_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * TELEPHONE_SKELETON_HEIGHT) / TELEPHONE_ART_SPAN;
+/**
+ * Lighter — case + closed lid / flame stack taller than `case` alone
+ * (~882); composite span so height matches other symbols.
+ */
+const LIGHTER_SKELETON_HEIGHT = 2104.8;
+const LIGHTER_ART_SPAN = 1000;
+const LIGHTER_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * LIGHTER_SKELETON_HEIGHT) / LIGHTER_ART_SPAN;
+/** No Y nudge — shared cell fill already centers props with letters. */
+/** Lift H3 (lighter) a few px in the cell — rest pose sits slightly low. */
+const LIGHTER_OFFSET_Y = -6;
+/** Drop L3 (Q) a few px — glyph sits slightly high in the cell. */
+const L3_OFFSET_Y = 5;
+/**
+ * Diamond (H1) — fit by outer glow (~752 @ 0.5 → 1504), not body-only;
+ * body-only made the gem read larger than letters on the board.
+ */
+const DIAMOND_SKELETON_HEIGHT = 1915.07;
+const DIAMOND_ART_SPAN = 1504;
+const DIAMOND_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * DIAMOND_SKELETON_HEIGHT) / DIAMOND_ART_SPAN;
+/** Revolver (H2) — paired guns `1` att ~634 @ 0.5 → 1268. */
+const REVOLVER_SKELETON_HEIGHT = 2050.44;
+const REVOLVER_ART_SPAN = 1267;
+const REVOLVER_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * REVOLVER_SKELETON_HEIGHT) / REVOLVER_ART_SPAN;
+/**
+ * Cartridge (BT) — designer spine ~3157 tall; body/glow ~1220–1450 logical.
+ * Only ships a `stop` land clip (no idle/win) — rest/spin use WebP.
+ */
+const CARTRIDGE_SKELETON_HEIGHT = 3157.2;
+const CARTRIDGE_ART_SPAN = 1450;
+const CARTRIDGE_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * CARTRIDGE_SKELETON_HEIGHT) / CARTRIDGE_ART_SPAN;
+/**
+ * Bonus (B) — designer `export_cat`. Visible gold frame (`frame` att 1225 ×
+ * bone scale ~1.551 → ~1900 world) is smaller than the skeleton AABB (~3551),
+ * so sizeRatios inflate like H/L (skeleton/art). Target fill is the full bay
+ * between rails (`BONUS_BAY_FILL`); frame is drawn above the clip at runtime.
+ *
+ * AABB is also shifted (`skeleton.x` ≈ −1954 → centre ≈ −109; `skeleton.y`
+ * ≈ −510 → centre ≈ +1266). spine-pixi draws that off-cell — BONUS_OFFSET_X/Y
+ * nudge back to column centre (same idea as LIGHTER_OFFSET_Y / L3_OFFSET_Y).
+ * Scales with sizeRatio so land/win stay centred.
+ *
+ * SPECIAL_SYMBOL_SIZE / BONUS_*_SIZE / BONUS_OFFSET_* are computed below
+ * after `DESK_PARCHMENT*` (same geometry as BoardFrameRailsMask).
+ */
+const BONUS_SKELETON_HEIGHT = 3551.369;
+const BONUS_SKELETON_Y = -510.1582;
+const BONUS_SKELETON_X = -1954.2445;
+const BONUS_SKELETON_WIDTH = 3689.5376;
+const BONUS_ART_SPAN = 1225 * 1.55057;
+
+/**
+ * Reel timing — padding distance must match scroll (see utils-slots
+ * getMainSpinTargetY). Spin/pre-spin/slide-before-bounce speeds are kept
+ * equal so there's no acceleration discontinuity during the main slide.
+ *
+ * Landing combines a Y-axis inertial drop on the reel with a Y-axis
+ * vertical squash on each symbol — done by `removePaddingAndBounceBack`
+ * in `createReelForSpinning.svelte.ts`:
+ *
+ *   1. Reel snaps to `defaultY + bounceSize` (initial overshoot below
+ *      final position) — this is the "drop landed past the target".
+ *   2. All symbols snap to scaleY = `reelLandSquashY` (vertical squash on
+ *      impact) and ease back to scaleY = 1 over `reelLandSquashRecoveryMs`.
+ *   3. Reel eases UP past `defaultY` to `−bounceSize × reelSettleSecondaryMulti`
+ *      (secondary rebound — the visible inertia kick).
+ *   4. Reel eases DOWN back to `defaultY` at `reelBounceBackSpeed ×
+ *      reelSettleSecondarySpeedMulti` (final settle, sineOut for smoothness).
+ *
+ * Knobs:
+ *   - `reelBounceSizeMulti`: initial overshoot as fraction of symbol
+ *     height (bigger = stronger "drop").
+ *   - `reelBounceBackSpeed`: speed of stage 2 (smaller = weightier).
+ *   - `reelSettleSecondaryMulti`: rebound size as fraction of initial
+ *     overshoot (0 = legacy single-ease behavior).
+ *   - `reelSettleSecondarySpeedMulti`: speed multiplier for stage 3
+ *     (smaller = slower & smoother final settle).
+ *   - `reelLandSquashY`: vertical scale at impact (1 = no squash, 0.68
+ *     = compress to 68% height — strong jelly hit).
+ *   - `reelLandSquashRecoveryMs`: how long the unsquash takes
+ *     (smaller = snappier rebound, bigger = softer recovery).
+ *   - `reelLandSquashStretchMulti`: jelly factor — how much the symbol
+ *     stretches horizontally as it squashes vertically (0 = no stretch,
+ *     0.5 = subtle jelly, 1.0 = true area preservation). Synchronised
+ *     automatically with the squash Tween.
+ *
+ * Same options are used in base game and free spins (spinOptions are
+ * picked by `spinType` only, never by `gameType`, see stateGame.svelte.ts).
+ *
+ * Target: ~2.5 s from Bet click to last reel stopped (instant RGS).
+ * Tuned via REEL_SPEED + reelSpinDelay; pre-spin / main-spin / settle
+ * speeds stay equal (or proportionally linked) so motion stays smooth.
+ *
+ * Speed ↔ duration coupling: the last reel's main slide takes roughly
+ *   t ≈ (728 + 500 × B) / REEL_SPEED   (px/ms, B = reelLength × paddingMult),
+ * so the symbols' visual speed and the total spin time are linked through
+ * the scroll distance B. To make the spin *slower* (symbols travel at a
+ * lower px/ms) WITHOUT dragging past ~2.5 s, we lower REEL_SPEED and shrink
+ * the scroll distance (reelPaddingMultiplierNormal) by a matching amount.
+ * Lowering only the speed would inflate the spin to ~3.4 s.
+ *
+ * Current tuning: REEL_SPEED 2.5 → 1.6 (≈36% slower symbols) with
+ * paddingMult 1.2 → 0.7, which keeps the last reel's main slide at
+ * ~1.97 s (≈2.5 s total incl. stagger + settle).
+ */
+const REEL_SPEED = 1.4;
+const REEL_SETTLE_SPEED = REEL_SPEED * 0.62;
+const SPIN_OPTIONS_SHARED = {
+	reelBounceBackSpeed: REEL_SETTLE_SPEED,
+	reelSpinSpeedBeforeBounce: REEL_SPEED,
+	reelPaddingMultiplierNormal: 0.7,
+	reelPaddingMultiplierAnticipated: 10,
+	// Per-reel START stagger (ms × reelIndex) for the pre-spin launch. A small
+	// 10ms gives a subtle left-to-right cascade at the start without the
+	// "rushing to catch up" look that a larger delay produced at the slower
+	// REEL_SPEED. The left-to-right STOP order is independent of this — it
+	// comes from each reel's accumulated padding distance, so it stays.
+	reelSpinDelay: 60,
+	reelPreSpinSpeed: REEL_SPEED,
+	reelSpinSpeed: REEL_SPEED,
+	// Start at a constant speed (no `backIn` wind-up burst) so the slot doesn't
+	// visibly "surge" to swap symbols at the start of the spin.
+	reelPreSpinWindup: false,
+	reelBounceSizeMulti: 0,
+	reelSettleSecondaryMulti: 0,
+	reelSettleSecondarySpeedMulti: 0,
+	// Fixed total bounce-back time in ms (overrides REEL_SETTLE_SPEED for the
+	// settle). Set the bounce duration directly here. The jelly squash runs in
+	// parallel — match reelLandSquashRecoveryMs to it for one unified duration.
+	reelSettleDurationMs: 0,
+	// 1 = код-сквош выключен. Единственный источник сжатия на приземлении —
+	// дизайнерский bounce-spine (SYMBOL_INFO_MAP.land = *Bounce). Так сжатие
+	// происходит ровно один раз и не «дёргается» от наложения двух анимаций.
+	reelLandSquashY: 1,
+	reelLandSquashRecoveryMs: 110,
+	reelLandSquashStretchMulti: 0.55,
+};
+
+export const SPIN_OPTIONS_DEFAULT = { ...SPIN_OPTIONS_SHARED };
+
+/** Turbo mode keeps the same spin speed (request: "одинаковая скорость")
+ * but still short-circuits the pre-spin hold via `stateBet.isTurbo` in
+ * `generalSpinWith`, so turbo still snaps to result faster. */
+export const SPIN_OPTIONS_FAST = { ...SPIN_OPTIONS_SHARED };
+
+export const MOTION_BLUR_VELOCITY = 52;
+
+export const zIndexes = {
+	background: {
+		backdrop: -3,
+		normal: -2,
+		feature: -1,
+	},
+};
+
+/**
+ * Fixed on-screen desk slot (`DESK_PARCHMENT`).
+ * Any board art — Spine, sprite, next redesign — is fitted into this box.
+ * Reels / UI stay tied to `boardLayout`; only the desk chrome lives in the slot.
+ *
+ *   width/heightFrac — playfield as a fraction of the slot.
+ *   offset*Frac      — playfield-center offset from slot-center (+x right, +y down).
+ */
+export const DESK_PARCHMENT = {
+	widthFrac: 0.8662,
+	heightFrac: 0.6904,
+	offsetXFrac: -0.0005,
+	offsetYFrac: -0.0117,
+} as const;
+
+/**
+ * Current desk art content bounds (Spine `board` attachment, skeleton Y-up).
+ * Fitted into the desk slot via scale = slotSize / contentSize.
+ * `centerY` matches the board attachment's y (board.json) so the dark
+ * playfield sits on the reel grid the same way the old Sprite desk did.
+ * Swap these when the board asset changes — slot size/position stay fixed.
+ */
+export const BOARD_DESK_CONTENT = {
+	width: 2050,
+	height: 1993,
+	/** Content center in skeleton space (Y-up). spine-pixi uses `Skeleton.yDown`. */
+	centerX: 0,
+	centerY: 28.5,
+} as const;
+
+/**
+ * Padding around the 5×4 board for the playfield inside the gold frame.
+ * 1.0 = playfield exactly matches the board; >1.0 grows the desk so symbols
+ * sit inset from the dark-cell edges. Keep tiny (~2% ≈ a few px per side).
+ */
+export const DESK_PARCHMENT_PADDING = { width: 1.02, height: 1.02 } as const;
+
+/**
+ * Gold rail stroke width in desk-content pixels — BoardFrameRailsMask.
+ * Keep close to the painted divider (was 26 and over-ate Bonus/Wild frames).
+ * H/L still tuck via REEL_SYMBOL_X_NUDGE_PX under the visible gold art.
+ */
+export const BOARD_RAIL_DIVIDER_CONTENT_PX = 14;
+
+/**
+ * Widen left/right playfield holes in BoardFrameRailsMask (desk overlay only).
+ * Does NOT affect Bonus whisker clip — that is the spine `mask` slot.
+ */
+export const BOARD_OUTER_MASK_SLACK_PX = 16;
+
+/**
+ * Shave gold rails between cols 3|4 and 4|5 so holes for cols 4–5 match the
+ * outer-column slack — symbols / VFX were clipping early on the right pair.
+ */
+export const BOARD_COLUMN_45_RAIL_SHAVE_PX = 3;
+
+/** Parchment width in board space (BoardFrameRailsMask `pfW`). */
+const FULL_COLUMN_PF_W = BOARD_SIZES.width * DESK_PARCHMENT_PADDING.width;
+const FULL_COLUMN_COL_W = FULL_COLUMN_PF_W / BOARD_DIMENSIONS.x;
+/** Desk slot width used to convert content-px rails into board px. */
+const FULL_COLUMN_SLOT_W = FULL_COLUMN_PF_W / DESK_PARCHMENT.widthFrac;
+/** Rail mask thickness in board space. */
+export const BOARD_RAIL_GAP_PX = Math.max(
+	2,
+	FULL_COLUMN_SLOT_W * (BOARD_RAIL_DIVIDER_CONTENT_PX / BOARD_DESK_CONTENT.width),
+);
+/**
+ * Wild / Bonus / Super Wild — fill the clear bay between rails (full column).
+ */
+const SPECIAL_SYMBOL_SIZE = (FULL_COLUMN_COL_W - BOARD_RAIL_GAP_PX) / SYMBOL_SIZE;
+/**
+ * Bonus fill — full bay. `BonusUnclipFrame` draws the gold frame above the
+ * clip so rails / BONUS banner match the art; the spine mask still holds the cat.
+ */
+const BONUS_BAY_FILL = SPECIAL_SYMBOL_SIZE;
+/**
+ * Wild / Super Wild sprites — lock to the same bay fill as Bonus.
+ * Bonus spine height-fits the skeleton (`BONUS_SYMBOL_SIZE`); visible frame
+ * ≈ BONUS_BAY_FILL. Slight bump to full parchment column so Wild reads with
+ * glow/frame presence.
+ */
+const WILD_SYMBOL_SIZE = FULL_COLUMN_COL_W / SYMBOL_SIZE;
+const BONUS_SYMBOL_SIZE = (BONUS_BAY_FILL * BONUS_SKELETON_HEIGHT) / BONUS_ART_SPAN;
+const BONUS_SPINE_SCALE = (SYMBOL_SIZE * BONUS_SYMBOL_SIZE) / BONUS_SKELETON_HEIGHT;
+const BONUS_OFFSET_Y = Math.round(
+	(BONUS_SKELETON_Y + BONUS_SKELETON_HEIGHT / 2) * BONUS_SPINE_SCALE,
+);
+const BONUS_OFFSET_X = Math.round(
+	-(BONUS_SKELETON_X + BONUS_SKELETON_WIDTH / 2) * BONUS_SPINE_SCALE,
+);
+
+/**
+ * Centre of the clear hole between gold rails for reel `reelIndex`.
+ * Base = parchment column centre (same math as BoardFrameRailsMask).
+ * Positive = right. Col 4 (index 3) must not go negative — that pushed Bonus
+ * into the left divider (hat/whiskers clipped).
+ */
+const FULL_COLUMN_BAY_NUDGE_PX: Readonly<Record<number, number>> = {
+	0: 1.5,
+	1: 0.5,
+	2: -0.5,
+	3: -1.5,
+	4: -2,
+};
+
+export const getFullColumnBayCenterX = (reelIndex: number) => {
+	const pfLeft = BOARD_SIZES.width / 2 + BOARD_FRAME_OFFSET.x - FULL_COLUMN_PF_W / 2;
+	const geo = pfLeft + (reelIndex + 0.5) * FULL_COLUMN_COL_W;
+	return geo + (FULL_COLUMN_BAY_NUDGE_PX[reelIndex] ?? 0);
+};
+
+/**
+ * Per-layout board center offsets (game design-space px, +x right, −y up).
+ * Each value shifts the reel block so it is visually centred inside the
+ * playfield area that remains after subtracting the UI control bar for that
+ * layout type.
+ *
+ * Desktop  (1422×800 game space):  UI bar ~140 px → game-area centre ≈ y 346 → offset -54
+ * Tablet   (1000×1000):            UI bar ~86 px  → game-area centre ≈ y 457 → offset -43
+ * Landscape(1600×900  mobile):     UI bar ~75 px  → game-area centre ≈ y 158 → offset -85
+ * Portrait (800×1422):             drawer ~144 px → game-area centre ≈ y 350 → offset -150
+ */
+export const BOARD_LAYOUT_OFFSETS = {
+	/** Desktop / tablet — board raised; phone portrait/landscape unchanged. */
+	desktop: { x: -20, y: -36 },
+	tablet: { x: -16, y: -26 },
+	landscape: { x: -12, y: -4 },
+	/**
+	 * Portrait x = 0: board is near full-width on phones, any shift reads as
+	 * uneven side margins. y is lifted 60 design px (~28 px on screen) above the
+	 * HUD anchor — portraitHudLayout freezes Buy Bonus / WIN / spin / mascot at
+	 * the pre-lift offset (-222), so only the board assembly (desk, frame,
+	 * reels, overlays) rises. Short height-limited phone viewports already run
+	 * the desk close to the top edge — test before lifting further.
+	 */
+	portrait: { x: 0, y: -282 },
+} as const;
+
+/**
+ * Extra board scale for non-phone layouts (portrait uses getPortraitBoardScale).
+ * Applied in stateGame boardLayout() on top of mainLayout.scale.
+ */
+export const BOARD_LAYOUT_SCALE = {
+	desktop: 1.22,
+	tablet: 1.14,
+	landscape: 1.16,
+} as const;
+/** Frame bezel + glow offset from board center (px): +x right, +y down. */
+export const BOARD_FRAME_OFFSET = { x: 0, y: 0 } as const;
+/** Vertical nudge (game px, +y = down) applied to all desk artwork layers (base / contour)
+ *  without moving the reel grid or UI buttons.
+ *  Keep 0 — same as the pre-Spine Sprite desk. The -13.5 fudge added with the
+ *  animated board lifted the frame and opened the top inset above the symbols.
+ */
+export const DESK_VISUAL_OFFSET_Y = 0;
+
+/**
+ * Pull only the bottom gold rail up toward the reel grid (game px), keeping the
+ * top rail fixed — top-anchored Y compress of desk art in BoardFrame.
+ * Restores the bottom tuck that DESK_VISUAL_OFFSET_Y = -13.5 used to fake,
+ * without reopening the top inset.
+ */
+export const DESK_BOTTOM_PULL_PX = 20;
+
+/**
+ * Extra px to keep mask holes / symbol runway a hair below the pulled gold
+ * rail. Keep in sync with DESK_BOTTOM_PULL_PX — if pull rises and slack stays
+ * high, the overlay hole punches below the gold.
+ */
+export const DESK_BOTTOM_MASK_SLACK_PX = 5.5;
+
+/**
+ * Reference width (px) for portrait board scaling. Parchment on-screen width
+ * is matched to this value minus PORTRAIT_BOARD_WIDTH_TRIM_PX.
+ */
+export const PORTRAIT_BONUS_BAR_WIDTH_PX = 340;
+
+/**
+ * Stake embed viewport presets (reference).
+ * Desktop 1200×675 · Laptop 1024×576 · Popout L 800×450 · Popout S 400×225
+ * Mobile L 425×812 · Mobile M 375×667 · Mobile S 320×568
+ */
+export const STAKE_EMBED_VIEWPORTS = {
+	desktop: { width: 1200, height: 675 },
+	laptop: { width: 1024, height: 576 },
+	popoutL: { width: 800, height: 450 },
+	popoutS: { width: 400, height: 225 },
+	mobileL: { width: 425, height: 812 },
+	mobileM: { width: 375, height: 667 },
+	mobileS: { width: 320, height: 568 },
+} as const;
+
+/**
+ * Phone portrait only: parchment board width as a fraction of the screen's
+ * short edge (uniform — board + bonus bar scale together). Continuous, so
+ * every phone width gets the same relative board size (no S/M/L tier jumps).
+ * The full desk artwork is ~1.154× wider than the parchment
+ * (DESK_PARCHMENT.widthFrac), so keep this ≤ ~0.866 to avoid bleeding off
+ * the screen edges; 0.87 lands the desk at ~100% edge-to-edge.
+ */
+export const PORTRAIT_PHONE_BOARD_WIDTH_FRAC = 0.87;
+
+export type PortraitCanvasSizeType =
+	| 'smallMobile'
+	| 'mobile'
+	| 'tablet'
+	| 'largeTablet'
+	| 'desktop';
+
+export const getPortraitDeviceWidth = (canvasSizes: { width: number; height: number }) =>
+	Math.min(canvasSizes.width, canvasSizes.height);
+
+export const getPortraitPhoneScaleFactor = (
+	canvasSizeType: PortraitCanvasSizeType,
+	deviceWidth: number,
+) => {
+	if (canvasSizeType !== 'smallMobile' && canvasSizeType !== 'mobile') return 1;
+	// factor 1 ⟺ parchment width = bonus-bar width − trim (the original design
+	// reference); scaling the factor scales board + bar uniformly.
+	return (
+		(deviceWidth * PORTRAIT_PHONE_BOARD_WIDTH_FRAC) /
+		(PORTRAIT_BONUS_BAR_WIDTH_PX - PORTRAIT_BOARD_WIDTH_TRIM_PX)
+	);
+};
+
+/** @deprecated use getPortraitPhoneScaleFactor */
+export const getPortraitSmallMobileScaleFactor = (
+	canvasSizeType: PortraitCanvasSizeType,
+	deviceWidth?: number,
+) => {
+	if (canvasSizeType !== 'smallMobile' && canvasSizeType !== 'mobile') return 1;
+	const width =
+		deviceWidth ??
+		(canvasSizeType === 'smallMobile'
+			? PORTRAIT_MOBILE_BREAKPOINT_M
+			: PORTRAIT_MOBILE_BREAKPOINT_L);
+	return getPortraitPhoneScaleFactor(canvasSizeType, width);
+};
+
+/** Portrait width tiers (px, short edge) — aligned with Stake Mobile S/M/L presets. */
+export const PORTRAIT_MOBILE_BREAKPOINT_M = 374;
+export const PORTRAIT_MOBILE_BREAKPOINT_L = 424;
+
+export type PortraitMobileTier = 'small' | 'medium' | 'large';
+export type BuyPanelLayoutKey =
+	| 'portrait-small'
+	| 'portrait-medium'
+	| 'portrait-large'
+	| 'desktop'
+	| 'popout-l'
+	| 'popout-s';
+
+export type BuyPanelTextPx = { buyBonus: number; boostName: number; boostCost: number };
+
+/** Общий aspect-ratio legacy wide pill (unused — kept for layout reference). */
+export const BUY_PANEL_ASPECT = 1233 / 613;
+
+/** HUD Buy Bonus octagon button — designer_assets/bonus_button_final. */
+export const BUY_BONUS_BUTTON_ASPECT = 1073 / 1043;
+
+/** Buy bonus edge vs HUD bet/+/- icon size (desktop + portrait). */
+export const BUY_BONUS_BUTTON_SCALE = 1.5;
+
+/** Пропорции текста Bonus Boost относительно Buy Bonus (стабильный масштаб). */
+export const BUY_PANEL_BOOST_TEXT_RATIO = {
+	name: 0.62,
+	cost: 0.5,
+} as const;
+
+const buyPanelText = (buyBonus: number): BuyPanelTextPx => ({
+	buyBonus,
+	boostName: Math.round(buyBonus * BUY_PANEL_BOOST_TEXT_RATIO.name),
+	boostCost: Math.max(7, Math.round(buyBonus * BUY_PANEL_BOOST_TEXT_RATIO.cost)),
+});
+
+/** Popout L (800×450) / Popout S (400×225) — единый масштаб панели Buy Bonus. */
+export const POPOUT_L_PANEL_WIDTH = 124;
+export const POPOUT_S_PANEL_WIDTH = 70;
+export const POPOUT_S_SCALE = POPOUT_S_PANEL_WIDTH / POPOUT_L_PANEL_WIDTH;
+
+export const scalePopoutPx = (px: number, min = 1) =>
+	Math.max(min, Math.round(px * POPOUT_S_SCALE));
+
+const popoutLText = buyPanelText(13);
+
+/**
+ * Размеры текста Buy Bonus / Bonus Boost (px).
+ * Меняй buyBonus — boostName/boostCost пересчитаются автоматически.
+ */
+export const BUY_PANEL_TEXT_PX = {
+	portrait: {
+		small: buyPanelText(14),
+		medium: buyPanelText(16),
+		large: buyPanelText(18),
+	},
+	desktop: buyPanelText(17),
+	popoutL: popoutLText,
+	/** Popout S — те же пропорции, что popout L, × POPOUT_S_SCALE. boostName чуть меньше, чтобы «BONUS BOOST» влезал в одну строку. */
+	popoutS: {
+		buyBonus: scalePopoutPx(popoutLText.buyBonus),
+		boostName: Math.max(3, scalePopoutPx(popoutLText.boostName) - 1),
+		boostCost: scalePopoutPx(popoutLText.boostCost, 4),
+	},
+} as const satisfies Record<string, BuyPanelTextPx | Record<PortraitMobileTier, BuyPanelTextPx>>;
+
+/** Bonus Boost toggle — popout L эталон, popout S пропорционально уменьшен. */
+export const POPOUT_BOOST_TOGGLE = {
+	l: { width: 30, height: 17, knob: 13, inset: 2, onLeft: 15 },
+	s: {
+		width: scalePopoutPx(30),
+		height: scalePopoutPx(17),
+		knob: scalePopoutPx(13),
+		inset: scalePopoutPx(2, 1),
+		onLeft: scalePopoutPx(15),
+	},
+} as const;
+
+export const getPortraitMobileTier = (
+	_canvasSizeType: PortraitCanvasSizeType,
+	deviceWidth: number,
+): PortraitMobileTier => {
+	if (deviceWidth <= PORTRAIT_MOBILE_BREAKPOINT_M) return 'small';
+	if (deviceWidth <= PORTRAIT_MOBILE_BREAKPOINT_L) return 'medium';
+	return 'large';
+};
+
+const toPx = (n: number) => `${n}px`;
+
+export const resolveBuyPanelText = (options: {
+	layoutType: string;
+	isPopout: boolean;
+	isPopoutSmall: boolean;
+	deviceWidth: number;
+	canvasSizeType: PortraitCanvasSizeType;
+}): { key: BuyPanelLayoutKey; buyBonus: string; boostName: string; boostCost: string } => {
+	const { layoutType, isPopout, isPopoutSmall, deviceWidth, canvasSizeType } = options;
+
+	if (layoutType === 'portrait') {
+		const tier = getPortraitMobileTier(canvasSizeType, deviceWidth);
+		const sizes = BUY_PANEL_TEXT_PX.portrait[tier];
+		return {
+			key: `portrait-${tier}` as BuyPanelLayoutKey,
+			buyBonus: toPx(sizes.buyBonus),
+			boostName: toPx(sizes.boostName),
+			boostCost: toPx(sizes.boostCost),
+		};
+	}
+	if (isPopoutSmall) {
+		const sizes = BUY_PANEL_TEXT_PX.popoutS;
+		return {
+			key: 'popout-s',
+			buyBonus: toPx(sizes.buyBonus),
+			boostName: toPx(sizes.boostName),
+			boostCost: toPx(sizes.boostCost),
+		};
+	}
+	if (isPopout) {
+		const sizes = BUY_PANEL_TEXT_PX.popoutL;
+		return {
+			key: 'popout-l',
+			buyBonus: toPx(sizes.buyBonus),
+			boostName: toPx(sizes.boostName),
+			boostCost: toPx(sizes.boostCost),
+		};
+	}
+	const sizes = BUY_PANEL_TEXT_PX.desktop;
+	return {
+		key: 'desktop',
+		buyBonus: toPx(sizes.buyBonus),
+		boostName: toPx(sizes.boostName),
+		boostCost: toPx(sizes.boostCost),
+	};
+};
+
+/** @deprecated use BUY_PANEL_TEXT_PX.portrait */
+export const PORTRAIT_BUY_PANEL_TEXT = BUY_PANEL_TEXT_PX.portrait;
+
+/** Portrait board parchment trim vs reference width (screen px). */
+export const PORTRAIT_BOARD_WIDTH_TRIM_PX = 14;
+
+/** Visible parchment + neon frame (game coords), not full desk texture asset size. */
+export const getPortraitParchmentSize = () => ({
+	width: BOARD_SIZES.width * DESK_PARCHMENT_PADDING.width,
+	height: BOARD_SIZES.height * DESK_PARCHMENT_PADDING.height,
+});
+
+/** Uniform board scale for portrait: parchment width on screen ≈ bonus bar − trim. */
+export const getPortraitBoardTargetWidthPx = (
+	canvasSizeType: PortraitCanvasSizeType,
+	deviceWidth: number,
+) =>
+	(PORTRAIT_BONUS_BAR_WIDTH_PX - PORTRAIT_BOARD_WIDTH_TRIM_PX) *
+	getPortraitPhoneScaleFactor(canvasSizeType, deviceWidth);
+
+export const getPortraitBoardScale = (
+	mainLayoutScale: number,
+	canvasSizeType: PortraitCanvasSizeType,
+	deviceWidth: number,
+) =>
+	getPortraitBoardTargetWidthPx(canvasSizeType, deviceWidth) /
+	(getPortraitParchmentSize().width * mainLayoutScale);
+
+/** Stake popout embed — 400×225 (mini) or 800×450 (expanded). Not phone portrait. */
+export const isPopoutViewport = (sizes: { width: number; height: number }, tolerance = 12) => {
+	const { width, height } = sizes;
+	const match = (ew: number, eh: number) =>
+		Math.abs(width - ew) <= tolerance && Math.abs(height - eh) <= tolerance;
+	return match(400, 225) || match(800, 450);
+};
+
+/** Popout S only — stake mini player 400×225. */
+export const isPopoutSmallViewport = (sizes: { width: number; height: number }, tolerance = 12) => {
+	const { width, height } = sizes;
+	return Math.abs(width - 400) <= tolerance && Math.abs(height - 225) <= tolerance;
+};
+
+/**
+ * Desktop / tablet / landscape / Popout HUD — single bottom row:
+ * [i][☰][BUY BONUS]   [−][SPIN][+]   BALANCE/BET [AUTO][⚡]
+ *
+ * Three packed groups with equal side margins (canvas %). Scales the same
+ * on every non-phone viewport. Portrait uses PORTRAIT_UI_LAYOUT.
+ */
+export const DESKTOP_UI_LAYOUT = {
+	/** Util icon scale vs UI_BASE_SIZE. */
+	utilScale: 0.72,
+	/** Raise entire HUD row (layout px, + = up). */
+	barRaiseY: 16,
+	/** Outer margin from canvas left/right edges (fraction of canvas width). */
+	sideMarginFrac: 0.028,
+	/** Gap between adjacent controls inside a group (fraction of canvas width). */
+	itemGapFrac: 0.01,
+	/** Balance/Bet font size in layout px. */
+	balanceFontSize: 28,
+	/** Gap between stacked balance / bet lines (layout px). */
+	balanceLineGap: 17,
+	/** Estimated balance line width in “em” for right-group packing. */
+	balanceTextEm: 11.5,
+	/** Lower spin cluster only (layout px, + = down). Balance/Bet stay on icon row. */
+	rightGroupDropY: 10,
+	/** Gap from menu icon → balance/bet text (layout px). */
+	balanceMenuGap: 10,
+	/** Gap from icon row top → buy bonus panel bottom (layout px). */
+	buyBonusAboveGap: 44,
+	/** Buy Bonus / Auto label size as fraction of button height (PC / Laptop / Popout L). */
+	panelLabelFontFrac: 0.22,
+	spinCluster: {
+		/** Horizontal gap between adjacent controls in the spin cluster (layout px). */
+		betControlsGap: 14,
+		spinScale: 1.08,
+		spinRaiseY: 0,
+		smallScale: 0.7,
+		/** Auto width vs Buy Bonus width (same panel art). */
+		autoplayScale: 1.0,
+		/** Max autoplay pill height vs UI_BASE_SIZE (layout px, before canvas scale). */
+		autoplayMaxHeightScale: 0.62,
+		turboScale: 0.56,
+	},
+	/**
+	 * Popout S (400×225) only — label vs button height.
+	 * Only applied when canvas is ~400×225 (`isPopoutSmallViewport`).
+	 */
+	popoutSmall: {
+		panelLabelFontFrac: 0.25,
+	},
+} as const;
+
+/**
+ * Portrait mobile HUD (ref. designer_assets/IMAGE 2026-06-02 13:11:58, 800×1422).
+ * Distances in ref px; components scale by mainLayoutStandard width/height.
+ */
+export const PORTRAIT_UI_LAYOUT = {
+	refWidth: 800,
+	refHeight: 1422,
+	/** Gap from live desk bottom → WIN centre (ref px, + = down). Primary portrait tune. */
+	winBelowBoardGap: 42,
+	/** Buy/boost row top offset from board bottom (ref px, independent of WIN). */
+	buyPanelBelowBoard: 112,
+	/** Fine WIN nudge after winBelowBoardGap (ref px, + = down, − = up). */
+	winNudgeDown: 0,
+	/** Spin stack anchor below board when buy/boost hidden (free spins). */
+	freeSpinsSpinBelowBoard: 48,
+	/** Util-row center offset from screen bottom (ref px; ≈ iconRadius + 12px margin). */
+	utilFromBottom: 50,
+	/**
+	 * Layout-only buy panel footprint (mascot / fly-to-hat anchors).
+	 * Kept at the pre-redesign wide panel size — independent of HUD button art.
+	 */
+	buyPanelLayoutWidthVw: 0.76,
+	buyPanelLayoutMaxWidth: 360,
+	buyPanelLayoutAspect: 613 / 1233,
+	utilNudgeDown: 0,
+	/** Min gap between menu/autoplay icons and balance/bet text (ref px, each side). */
+	utilBalanceTextGap: 12,
+	/** Min gap between util icon edges (ref px). */
+	utilIconGap: 16,
+	/** Balance/bet footer font (ref px). */
+	utilBalanceFontSize: 26,
+	utilX: { info: 68, menu: 172, autoplay: 608, turbo: 712 },
+	/** Сдвиг − | Spin | + вправо (ref px). */
+	spinClusterShiftX: 0,
+	/** Visible buy bonus center X on 800×1422 mockup (400 = screen center). */
+	buyPanelCenterRefX: 210,
+	/** Buy bonus vs `spinBetDiam` on portrait (desktop: BUY_BONUS_BUTTON_SCALE). */
+	buyBonusButtonScale: 2,
+	/** Ref px (800×1422 mockup) — scaled in UiCashStacksPortraitLayout. */
+	buttons: {
+		spinDiam: 172,
+		spinBetDiam: 96,
+		spinBetGap: 16,
+		/** Только Spin выше −/+ (ref px, отрицательный Y). */
+		spinRaiseY: -16,
+		utilIconDiam: 76,
+		autoplayW: 285,
+		autoplayH: 70,
+	},
+} as const;
+
+/** Base Pixi sizes for portrait util buttons (before container scale), ref UI_BASE_SIZE 150. */
+/** Designer autoplay pill — ref AUTO_PC (993×515 after crop). */
+export const AUTOPLAY_PILL_ASPECT = 993 / 515;
+export const AUTOPLAY_PILL_BASE = {
+	width: Math.round(68 * AUTOPLAY_PILL_ASPECT),
+	height: 68,
+} as const;
+export const PORTRAIT_UTIL_ICON_BASE = 108;
+export const PORTRAIT_AUTOPLAY_PILL_BASE = AUTOPLAY_PILL_BASE;
+export const PORTRAIT_TURBO_ICON_BASE = 108;
+
+// New designer artwork comes from `designer_assets/Symbols/export/` — a
+// single combined spine with bounce/win/explosion animations + per-symbol
+// images. Rest/spin/static frames render via zero-movement `*/idle` spine
+// clips (frozen with autoUpdate=false) so they match bounce/win quality from
+// the same atlas textures. `land` plays the per-symbol bounce spine; dedicated
+// celebrate clips (`win` / `activation` / `activate`) drive W/B/H celebration.
+
+// Legacy bounce size for W/B land clips.
+const bounceSizeRatios = { width: HIGH_SYMBOL_SIZE, height: HIGH_SYMBOL_SIZE };
+
+/**
+ * Perf: scrolling cells use WebP sprites (H1Img…), not frozen spines.
+ * Spine recreate on every padding swap was hitching phones mid-spin.
+ * Land/win stay on spine for bounce/celebration.
+ */
+const letterSizeRatios = { width: LETTER_SYMBOL_SIZE, height: LETTER_SYMBOL_SIZE };
+const telephoneSizeRatios = { width: TELEPHONE_SYMBOL_SIZE, height: TELEPHONE_SYMBOL_SIZE };
+const lighterSizeRatios = { width: LIGHTER_SYMBOL_SIZE, height: LIGHTER_SYMBOL_SIZE };
+const diamondSizeRatios = { width: DIAMOND_SYMBOL_SIZE, height: DIAMOND_SYMBOL_SIZE };
+const revolverSizeRatios = { width: REVOLVER_SYMBOL_SIZE, height: REVOLVER_SYMBOL_SIZE };
+const cartridgeSizeRatios = { width: CARTRIDGE_SYMBOL_SIZE, height: CARTRIDGE_SYMBOL_SIZE };
+const bonusSizeRatios = { width: BONUS_SYMBOL_SIZE, height: BONUS_SYMBOL_SIZE };
+
+type RenderSizeRatios = { width: number; height: number };
+type RenderOpts = {
+	offsetX?: number;
+	offsetY?: number;
+	winAnimationName?: string;
+	landAnimationName?: string;
+	loop?: boolean;
+};
+
+/** Designer render clips — flat names idle / stop / win (or activation). */
+const makeRenderStatic = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) => ({
+	type: 'spine' as const,
+	assetKey,
+	animationName: 'idle',
+	sizeRatios,
+	...(opts?.offsetX !== undefined ? { offsetX: opts.offsetX } : {}),
+	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
+});
+const makeRenderLand = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) => ({
+	type: 'spine' as const,
+	assetKey,
+	animationName: opts?.landAnimationName ?? 'stop',
+	sizeRatios,
+	...(opts?.offsetX !== undefined ? { offsetX: opts.offsetX } : {}),
+	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
+});
+/**
+ * One-shot celebrate for `win` — `loop: false` so Spine `complete` resolves
+ * boardWithAnimateSymbols. Spotlight hold uses `makeRenderPostWin` (looping).
+ */
+const makeRenderWin = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) => ({
+	type: 'spine' as const,
+	assetKey,
+	animationName: opts?.winAnimationName ?? 'win',
+	sizeRatios,
+	loop: opts?.loop ?? false,
+	...(opts?.offsetX !== undefined ? { offsetX: opts.offsetX } : {}),
+	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
+});
+/** Looping celebrate for `postWinStatic` during payline spotlight hold. */
+const makeRenderPostWin = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) =>
+	makeRenderWin(assetKey, sizeRatios, { ...opts, loop: true });
+const makeRenderSpinSprite = (imgKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) => ({
+	type: 'sprite' as const,
+	assetKey: imgKey,
+	sizeRatios,
+	...(opts?.offsetX !== undefined ? { offsetX: opts.offsetX } : {}),
+	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
+});
+
+const lighterOpts = { offsetY: LIGHTER_OFFSET_Y };
+const l3Opts = { offsetY: L3_OFFSET_Y };
+/** Diamond celebrate clip is named `activation` (no `win` track). */
+const diamondOpts = { winAnimationName: 'activation' };
+/** Bonus — designer clips are `land` / `activate`; XY nudge centres the AABB. */
+const bonusOpts = {
+	landAnimationName: 'land',
+	winAnimationName: 'activate',
+	offsetX: BONUS_OFFSET_X,
+	offsetY: BONUS_OFFSET_Y,
+};
+
+const h1Static = makeRenderStatic('H1', diamondSizeRatios);
+const h1Land = makeRenderLand('H1', diamondSizeRatios);
+const h1Win = makeRenderWin('H1', diamondSizeRatios, diamondOpts);
+const h1PostWin = makeRenderPostWin('H1', diamondSizeRatios, diamondOpts);
+
+const h2Static = makeRenderStatic('H2', revolverSizeRatios);
+const h2Land = makeRenderLand('H2', revolverSizeRatios);
+const h2Win = makeRenderWin('H2', revolverSizeRatios);
+const h2PostWin = makeRenderPostWin('H2', revolverSizeRatios);
+
+const h3Static = makeRenderStatic('H3', lighterSizeRatios, lighterOpts);
+const h3Land = makeRenderLand('H3', lighterSizeRatios, lighterOpts);
+const h3Win = makeRenderWin('H3', lighterSizeRatios, lighterOpts);
+const h3PostWin = makeRenderPostWin('H3', lighterSizeRatios, lighterOpts);
+
+const h4Static = makeRenderStatic('H4', telephoneSizeRatios);
+const h4Land = makeRenderLand('H4', telephoneSizeRatios);
+const h4Win = makeRenderWin('H4', telephoneSizeRatios);
+const h4PostWin = makeRenderPostWin('H4', telephoneSizeRatios);
+
+const l1Static = makeRenderStatic('L1', letterSizeRatios);
+const l2Static = makeRenderStatic('L2', letterSizeRatios);
+const l3Static = makeRenderStatic('L3', letterSizeRatios, l3Opts);
+const l4Static = makeRenderStatic('L4', letterSizeRatios);
+const l1Land = makeRenderLand('L1', letterSizeRatios);
+const l2Land = makeRenderLand('L2', letterSizeRatios);
+const l3Land = makeRenderLand('L3', letterSizeRatios, l3Opts);
+const l4Land = makeRenderLand('L4', letterSizeRatios);
+const l1Win = makeRenderWin('L1', letterSizeRatios);
+const l2Win = makeRenderWin('L2', letterSizeRatios);
+const l3Win = makeRenderWin('L3', letterSizeRatios, l3Opts);
+const l4Win = makeRenderWin('L4', letterSizeRatios);
+const l1PostWin = makeRenderPostWin('L1', letterSizeRatios);
+const l2PostWin = makeRenderPostWin('L2', letterSizeRatios);
+const l3PostWin = makeRenderPostWin('L3', letterSizeRatios, l3Opts);
+const l4PostWin = makeRenderPostWin('L4', letterSizeRatios);
+
+// Spin WebPs already contain only the glyph/prop in a 196² canvas — use the
+// on-cell fill directly. Inflated spine sizeRatios (skeleton ≫ art) would make
+// the sprite much larger than the idle/land spine and pop on bounce.
+const letterSpinSizeRatios = { width: CELL_SYMBOL_SIZE, height: CELL_SYMBOL_SIZE };
+const propSpinSizeRatios = { width: CELL_SYMBOL_SIZE, height: CELL_SYMBOL_SIZE };
+/** Wild / Super Wild — full parchment column. Bonus spin matches inset spine. */
+const wildSizeRatios = { width: WILD_SYMBOL_SIZE, height: WILD_SYMBOL_SIZE };
+const bonusSpinSizeRatios = { width: BONUS_BAY_FILL, height: BONUS_BAY_FILL };
+const h1Spin = makeRenderSpinSprite('H1Img', propSpinSizeRatios);
+const h2Spin = makeRenderSpinSprite('H2Img', propSpinSizeRatios);
+const h3Spin = makeRenderSpinSprite('H3Img', propSpinSizeRatios, lighterOpts);
+const h4Spin = makeRenderSpinSprite('H4Img', propSpinSizeRatios);
+const l1Spin = makeRenderSpinSprite('L1Img', letterSpinSizeRatios);
+const l2Spin = makeRenderSpinSprite('L2Img', letterSpinSizeRatios);
+const l3Spin = makeRenderSpinSprite('L3Img', letterSpinSizeRatios, l3Opts);
+const l4Spin = makeRenderSpinSprite('L4Img', letterSpinSizeRatios);
+const wSpin = makeRenderSpinSprite('WImg', wildSizeRatios);
+// Wild — static Wild.webp for all states until a new spine lands.
+const wSprite = wSpin;
+// Super Wild board tile — same size as Wild.
+const swSprite = makeRenderSpinSprite('SWImg', wildSizeRatios);
+/**
+ * Bonus — WebP while scrolling; spine `idle` (+ blink/ears) at rest.
+ * `activate` is one-shot only (`bWin`); post-win holds idle (no activate loop).
+ * Duel Bonus (BD) — same spine flow from `export_cat&dog` (no blink/ears clips).
+ */
+const bSpin = makeRenderSpinSprite('BImg', bonusSpinSizeRatios);
+const bdSpin = makeRenderSpinSprite('BDuelImg', bonusSpinSizeRatios);
+const bStatic = makeRenderStatic('B', bonusSizeRatios, bonusOpts);
+const bLand = makeRenderLand('B', bonusSizeRatios, bonusOpts);
+const bWin = makeRenderWin('B', bonusSizeRatios, bonusOpts);
+const bdStatic = makeRenderStatic('BD', bonusSizeRatios, bonusOpts);
+const bdLand = makeRenderLand('BD', bonusSizeRatios, bonusOpts);
+const bdWin = makeRenderWin('BD', bonusSizeRatios, bonusOpts);
+/** Cartridge has no `idle` — sprite for rest/spin; spine `stop` on land. */
+const btSprite = makeRenderSpinSprite('BTImg', propSpinSizeRatios);
+const btLand = makeRenderLand('BT', cartridgeSizeRatios);
+
+/**
+ * Затемнение невыигрышных символов во время win-анимации.
+ * Пока проигрываются paylines, все символы вне `win`/`postWinStatic`
+ * получают пониженный alpha (H3/H4/B — tint, не alpha: additive glow иначе
+ * просвечивает доску). Флаг `winSpotlightActive` также расширяет BoardMask.
+ */
+export const DIM_NON_WINNING = {
+	alpha: 0.35,
+	fadeInMs: 180,
+	fadeOutMs: 240,
+};
+
+/** Mystery spine size — both static `?` (idle clip) and reveal explosion
+ * share the same skeleton, so the size ratio also has to fit `Mystery_bg`
+ * (196² in the atlas) into the 100² cell. SpineProvider scales by
+ * `height / spineData.height` (256), so `M_SIZE = 1.3` → render scale
+ * 1.3 × 100 / 256 ≈ 0.508, which renders Mystery_bg at ≈99 px — almost
+ * exactly the cell. Smaller values left a gap of empty parchment around
+ * the bg; larger values clipped the bg under the reel mask. The
+ * explosion's flying parts naturally inherit the same scale, which is
+ * what we want — they should occupy the same visual footprint as the
+ * resting symbol. */
+export const M_SIZE = 1.3;
+
+/** Peak `Effects`/`Aura` scale in `Mystery/explosion` (see Mystery.json @ 1.7667s). */
+const MYSTERY_EXPLOSION_AURA_PEAK_SCALE = 3;
+
+/**
+ * Extra board mask above/below the grid while M cells play reveal/collapse
+ * with reels stopped (see BoardMask `mysteryMaskActive`). Derived from aura
+ * peak radius minus half a cell — edge-row centers sit one half-cell inset
+ * from the grid border.
+ */
+export const BOARD_MASK_MYSTERY_OVERFLOW = Math.ceil(
+	(SYMBOL_SIZE * M_SIZE * MYSTERY_EXPLOSION_AURA_PEAK_SCALE) / 2 - SYMBOL_SIZE / 2,
+);
+
+export const MYSTERY_REVEAL_TIER: Record<string, 'high' | 'mid' | 'low'> = {
+	H1: 'high',
+	H2: 'high',
+	H3: 'high',
+	H4: 'high',
+	W: 'high',
+	L1: 'low',
+	L2: 'low',
+	L3: 'low',
+	L4: 'low',
+};
+
+/**
+ * Pause between reels finishing landing and mystery reveal animation
+ * starting. Without it, M-cells on the last-stopping reel transition
+ * into the reveal spine in the same tick they enter `land` state, so
+ * the static `?` sprite is invisible to the player. Mirrors the same
+ * idea as `WIN_INFO_PRE_DELAY_MS` for paylines.
+ */
+export const MYSTERY_REVEAL_PRE_DELAY_MS = 200;
+
+/**
+ * Pause after mystery cells finish reveal, before winInfo / next reveal spin
+ * (collapse back to `?` starts with that next spin). At Turbo 3 this wait is
+ * kept unscaled (~2× the usual turbo-shortened pause).
+ */
+export const MYSTERY_REVEAL_POST_DELAY_MS = 500;
+
+/**
+ * Wall-clock offset (ms) into `Mystery/explosion` when the spine drops
+ * the `Mystery_bg` attachment and the revealed pay symbol should appear.
+ * Matches the 1.5333s keyframe in Mystery.json — divide by timeScale in
+ * turbo so the bg layer stays hidden until the cover actually lifts.
+ */
+export const MYSTERY_BG_UNCOVER_MS = 1533;
+
+/** Pause after reels finish landing, before paylines/win animation start. */
+export const WIN_INFO_PRE_DELAY_MS = 100;
+
+/**
+ * Base SW two-beat: hold phase-1 paylines (lying SW) before clearing for curtain.
+ */
+export const SW_PHASE1_HOLD_MS = 550;
+/** Hold after Spine `open` settles before clearing the overlay. */
+export const SW_OPEN_SETTLE_MS = 280;
+/** After curtain settles, beat before phase-2 winInfo (post-expand lines). */
+export const SW_PHASE2_PRE_MS = 320;
+/** Extra pre-delay on the post-expand winInfo so the second interaction reads clearly. */
+export const SW_SECOND_WIN_PRE_DELAY_MS = 280;
+
+/**
+ * Paw two-beat: when line wins played, hold phase-1 paylines before clearing
+ * the win spotlight for the coin conversion (same handoff as the SW curtain).
+ */
+export const PAW_PHASE1_HOLD_MS = 550;
+
+/**
+ * Paw coins pop in as a wave spreading from the paw cell(s): each board ring
+ * (Chebyshev distance from the nearest paw) appears one step later.
+ */
+export const PAW_COIN_WAVE_STEP_MS = 220;
+
+/** Pause after win amount count-up finishes, before the celebration screen auto-dismisses. */
+export const WIN_SCREEN_POST_COUNT_UP_DELAY_MS = 1500;
+
+/** Full-screen dim behind big-win celebration (Win.svelte). */
+export const BIG_WIN_DIM_ALPHA = 0.5;
+/** Full-screen dim behind FS end (FreeSpinOutro) count-up panel. */
+export const FS_OUTRO_DIM_ALPHA = 0.85;
+/** FS end fortune-cookie spine width as a fraction of board width (desktop/tablet). */
+export const FS_OUTRO_SPINE_WIDTH_FRAC = 2.5;
+/** Skeleton bounds height / width from fs_popup export (load-time scale cancels out). */
+export const FS_OUTRO_SPINE_ASPECT = 1023.8 / 1978.27;
+/** Text layout ref as a fraction of board width; compensates for spine slot scaling. */
+export const FS_OUTRO_TEXT_LAYOUT_FRAC = 0.3;
+/** fsPopup skeleton load scale from assets.ts (parser.scale). */
+export const FS_OUTRO_SKELETON_LOAD_SCALE = 2;
+/** fs_popup export bounds (pre-load-scale). */
+const FS_OUTRO_SKELETON_BOUNDS = {
+	x: -983.87,
+	y: -519.42,
+	width: 1978.27,
+	height: 1023.8,
+} as const;
+/** Skeleton data width after load scale — used for SpineProvider width fit. */
+export const FS_OUTRO_SKELETON_DATA_WIDTH =
+	FS_OUTRO_SKELETON_BOUNDS.width * FS_OUTRO_SKELETON_LOAD_SCALE;
+/** Extra shrink for FS end cookie on phones (portrait + landscape). */
+export const FS_OUTRO_PHONE_SCALE = {
+	small: 0.82,
+	medium: 0.86,
+	large: 0.89,
+} as const;
+
+/** FS end popup spine render width in main-layout px. */
+export const getFsOutroSpineWidth = (args: {
+	canvasSizeType: 'smallMobile' | 'mobile' | 'tablet' | 'largeTablet' | 'desktop';
+	canvasSizes: { width: number; height: number };
+}) => {
+	const base = BOARD_SIZES.width * FS_OUTRO_SPINE_WIDTH_FRAC;
+	if (args.canvasSizeType !== 'smallMobile' && args.canvasSizeType !== 'mobile') return base;
+
+	const tier = getPortraitMobileTier(
+		args.canvasSizeType,
+		Math.min(args.canvasSizes.width, args.canvasSizes.height),
+	);
+	return base * FS_OUTRO_PHONE_SCALE[tier];
+};
+
+/** FS end popup visual centre in main-layout coords (screen centre). */
+export const getFsOutroPopupVisualCenter = (mainLayout: { width: number; height: number }) => ({
+	x: mainLayout.width * 0.5,
+	y: mainLayout.height * 0.5,
+});
+
+/**
+ * Pause after reels finish landing, before bonus symbols play `activate`
+ * (freeSpinTrigger / bonusCollect). Lets the land clip finish first.
+ */
+export const BONUS_WIN_PRE_DELAY_MS = 400;
+
+/**
+ * Bullet collect flow:
+ * 1) Fly while idle (lead)
+ * 2) Start `gun_start`
+ * 3) Land toward open palm (~0.30s) and hide ~50ms early so the overlay
+ *    is gone before the fist reads closed (~0.50s+)
+ *
+ * Wall-clock — match mascot 1×.
+ */
+export const BULLET_FLY_LEAD_MS = 380;
+/** Open-palm beat into `gun_start` (keep in sync with MASCOT_GUN_START_CATCH_MS). */
+export const BULLET_FLY_CATCH_MS = 300;
+/** Clear HTML bullet this early vs catch beat (fist closes slightly ahead of wall-clock). */
+export const BULLET_DISAPPEAR_EARLY_MS = 50;
+export const BULLET_FLY_MS = BULLET_FLY_LEAD_MS + BULLET_FLY_CATCH_MS - BULLET_DISAPPEAR_EARLY_MS;
+/** Unused visually when we unmount on clear — kept for overlay CSS defaults. */
+export const BULLET_INSERT_MS = 50;
+/** Full overlay lifetime from fly start → hidden. */
+export const BULLET_FLY_TOTAL_MS = BULLET_FLY_MS + BULLET_INSERT_MS;
+/** Beat after a chamber fills — covers cylinder rotate to next empty at top. */
+export const BULLET_FLY_GAP_MS = 400;
+/** Cylinder step rotation duration (keep in sync with `.rotor` transition). */
+export const DRUM_ROTATE_MS = 380;
+
+/** Pause after bonus activate animation, before the next spin/reveal. */
+export const BONUS_WIN_POST_DELAY_MS = 400;
+
+/** Full cloud transition spine duration. */
+export const TRANSITION_DURATION_MS = 1800;
+
+/** Fade-in for board + UI after the loading-screen cloud transition. */
+export const GAME_ENTRANCE_MS = 400;
+
+/** Mascot fades in on the same frame as the board, slightly behind it. */
+export const MASCOT_ENTRANCE_DELAY_MS = 100;
+
+/**
+ * Mascot fade-out when the FS cloud transition starts (both directions). Must
+ * finish before the cloud closes over the screen (~TRANSITION_THEME_SWITCH_DELAY_MS
+ * + margin); Game.svelte delays the pixi-stage z-flip by the same amount so the
+ * fade is visible instead of a one-frame pop behind the opaque board.
+ */
+export const MASCOT_TRANSITION_FADE_MS = 300;
+
+/** When the cloud transition starts becoming opaque (~0.3s in the 1.5s spine). */
+export const TRANSITION_THEME_SWITCH_DELAY_MS = 193;
+
+/**
+ * Loader still → Pixi street swap under the opening cloud (later than theme
+ * switch so steam is fully covering before the handoff).
+ */
+export const LOADER_STREET_SWAP_DELAY_MS = 480;
+
+/**
+ * Пауза после того, как выигрышные символы полностью отыграли анимацию,
+ * перед снятием затемнения и скрытием paylines.
+ * Даёт игроку момент полюбоваться результатом до следующего этапа.
+ */
+export const WIN_SPOTLIGHT_CLEAR_DELAY_MS = 10_000;
+
+/** Shared Mystery spine clip — designer combined skeleton has a single
+ * explosion track for all reveal types, so synced and independent reveals
+ * use the same animation name. */
+export const MYSTERY_REVEAL_SYNC_ANIMATION = 'Mystery/explosion';
+/** Standalone clip name for one-off reveals (kept distinct so it could be
+ * pointed at a different animation later without touching the sync path). */
+export const MYSTERY_REVEAL_ANIMATION = 'Mystery/explosion';
+
+/**
+ * Paw-coin board symbols — rendered by SymbolCoinPaw.svelte from the LIVE
+ * coins spine (`assets/spines/symbols/coins/coins.*`, skins coin_bronze/silver/gold),
+ * same 60fps source as the HTML paw overlay. `clip: 'loop'` is the frozen
+ * rest face (main_coin_slow frame 0 — no constant motion on the board),
+ * `clip: 'appear'` is the one-shot pop-in flip with flash (appear_flash)
+ * played on land/bounce.
+ * The coin disc occupies ≈272×295 of the 472×485 skeleton (bake viewport
+ * 600×620, disc 116×122 of the 256px canvas), so the box is inflated to
+ * land the disc at the shared on-cell fill (0.85 × 100px).
+ */
+const PAW_COIN_SIZE_RATIOS = { width: 0.85 * (472 / 272), height: 0.85 * (485 / 295) };
+const makePawCoinRender = (skin: 'bronze' | 'silver' | 'gold', clip: 'loop' | 'appear') => ({
+	type: 'coinPaw' as const,
+	skin,
+	clip,
+	sizeRatios: PAW_COIN_SIZE_RATIOS,
+});
+const pawCoinBronze = makePawCoinRender('bronze', 'loop');
+const pawCoinSilver = makePawCoinRender('silver', 'loop');
+const pawCoinGold = makePawCoinRender('gold', 'loop');
+const pawCoinBronzeLand = makePawCoinRender('bronze', 'appear');
+const pawCoinSilverLand = makePawCoinRender('silver', 'appear');
+const pawCoinGoldLand = makePawCoinRender('gold', 'appear');
+
+// Mystery — no spine pack in Cat Mafia; board cells use a colored placeholder.
+const mStatic = {
+	type: 'placeholder' as const,
+	assetKey: 'mystery' as const,
+	label: 'M',
+	sizeRatios: { width: M_SIZE, height: M_SIZE },
+};
+const mRevealSizeRatios = { width: M_SIZE, height: M_SIZE };
+
+export const SYMBOL_INFO_MAP = {
+	// H1 (diamond): idle / stop / activation.
+	// H2 (revolver) / H3 (lighter) / H4 (telephone) / L1..L4 (A/K/Q/J): idle / stop / win.
+	// `win` is one-shot (awaits complete); `postWinStatic` loops the same clip
+	// for the spotlight hold (remount via loop flag in ReelSymbol key).
+	H1: {
+		win: h1Win,
+		postWinStatic: h1PostWin,
+		static: h1Static,
+		spin: h1Spin,
+		land: h1Land,
+	},
+	H2: {
+		win: h2Win,
+		postWinStatic: h2PostWin,
+		static: h2Static,
+		spin: h2Spin,
+		land: h2Land,
+	},
+	H3: {
+		win: h3Win,
+		postWinStatic: h3PostWin,
+		static: h3Static,
+		spin: h3Spin,
+		land: h3Land,
+	},
+	H4: {
+		win: h4Win,
+		postWinStatic: h4PostWin,
+		static: h4Static,
+		spin: h4Spin,
+		land: h4Land,
+	},
+	// L1–L4 = A / K / Q / J letter spines: idle rest, stop on land, win celebrate.
+	L1: {
+		win: l1Win,
+		postWinStatic: l1PostWin,
+		static: l1Static,
+		spin: l1Spin,
+		land: l1Land,
+	},
+	L2: {
+		win: l2Win,
+		postWinStatic: l2PostWin,
+		static: l2Static,
+		spin: l2Spin,
+		land: l2Land,
+	},
+	L3: {
+		win: l3Win,
+		postWinStatic: l3PostWin,
+		static: l3Static,
+		spin: l3Spin,
+		land: l3Land,
+	},
+	L4: {
+		win: l4Win,
+		postWinStatic: l4PostWin,
+		static: l4Static,
+		spin: l4Spin,
+		land: l4Land,
+	},
+	// Wild — static Wild.webp (spine pack deferred).
+	W: {
+		postWinStatic: wSprite,
+		static: wSprite,
+		spin: wSprite,
+		win: wSprite,
+		land: wSprite,
+	},
+	// Super Wild — same Wild tile on the reel; curtain opens up from it.
+	SW: {
+		postWinStatic: swSprite,
+		static: swSprite,
+		spin: swSprite,
+		win: swSprite,
+		land: swSprite,
+	},
+	// Paw coins (rework) — rendered as the designer coin-paw spritesheet
+	// (bronze / silver / gold), see SymbolCoinPaw.svelte. The coin itself
+	// never pays (coinTier 0) and never flies into the mascot hat.
+	PB: {
+		postWinStatic: pawCoinBronze,
+		static: pawCoinBronze,
+		spin: pawCoinBronze,
+		win: pawCoinBronze,
+		land: pawCoinBronzeLand,
+	},
+	PS: {
+		postWinStatic: pawCoinSilver,
+		static: pawCoinSilver,
+		spin: pawCoinSilver,
+		win: pawCoinSilver,
+		land: pawCoinSilverLand,
+	},
+	PG: {
+		postWinStatic: pawCoinGold,
+		static: pawCoinGold,
+		spin: pawCoinGold,
+		win: pawCoinGold,
+		land: pawCoinGoldLand,
+	},
+	// Bullet / cartridge — WebP rest/spin; land plays designer `stop`.
+	BT: {
+		postWinStatic: btSprite,
+		static: btSprite,
+		spin: btSprite,
+		win: btSprite,
+		land: btLand,
+	},
+	// Bonus — spin WebP; rest = spine idle (blink/ears in SymbolSpineMain).
+	// Win = one-shot activate (no loop). Post-win / static hold idle.
+	B: {
+		postWinStatic: bStatic,
+		static: bStatic,
+		spin: bSpin,
+		win: bWin,
+		land: bLand,
+	},
+	// Duel Bonus (BD) — spin WebP; rest/land/win same as Bonus (cat+dog spine).
+	BD: {
+		postWinStatic: bdStatic,
+		static: bdStatic,
+		spin: bdSpin,
+		win: bdWin,
+		land: bdLand,
+	},
+	// Mystery — placeholder (no spine asset).
+	M: {
+		postWinStatic: mStatic,
+		static: mStatic,
+		spin: mStatic,
+		win: mStatic,
+		land: mStatic,
+	},
+} as const;
+
+/** Mystery reveal — placeholder (Cat Mafia has no Mystery spine). */
+export const MYSTERY_REVEAL_SPINE = {
+	type: 'placeholder' as const,
+	assetKey: 'mystery' as const,
+	label: 'M',
+	sizeRatios: mRevealSizeRatios,
+};
+
+/** Full duration of `Mystery/explosion` in seconds — used for reverse (collapse) timing. */
+export const MYSTERY_EXPLOSION_DURATION_S = 2.0;
+
+/**
+ * Collapse-back-to-? — placeholder (no Mystery spine).
+ */
+export const MYSTERY_COLLAPSE_SPINE = {
+	type: 'placeholder' as const,
+	assetKey: 'mystery' as const,
+	label: 'M',
+	sizeRatios: mRevealSizeRatios,
+};
+
+export const SCATTER_LAND_SOUND_MAP = {
+	1: 'sfx_scatter_stop_1',
+	2: 'sfx_scatter_stop_2',
+	3: 'sfx_scatter_stop_3',
+	4: 'sfx_scatter_stop_4',
+	5: 'sfx_scatter_stop_5',
+} as const;

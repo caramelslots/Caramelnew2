@@ -1,0 +1,22 @@
+L4.webp
+size:1238,997
+filter:Linear,Linear
+scale:0.4
+Circle_rays_22
+bounds:2,104,577,577
+offsets:9,7,595,593
+J
+bounds:380,683,312,382
+offsets:34,71,382,523
+rotate:90
+J_glow
+bounds:764,658,337,405
+offsets:41,78,419,560
+rotate:90
+Layer 1
+bounds:581,2,655,654
+offsets:62,62,778,779
+shadow_J
+bounds:2,687,308,376
+offsets:32,71,372,518
+rotate:90

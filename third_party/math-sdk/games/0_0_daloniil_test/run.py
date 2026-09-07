@@ -4,8 +4,7 @@
   cd third_party/math-sdk/games/0_0_daloniil_test
   python3 run.py
 
-Sim counts уменьшены до 1e3 для быстрой проверки. Для production-симуляции
-поднять до 1e6+ в каждом режиме.
+Sim counts: M6 production = 1e6 per mode (~2–4 h). For quick check use 1e5 (M5).
 """
 
 from gamestate import GameState
@@ -26,11 +25,10 @@ if __name__ == "__main__":
     compression = True
     profiling = False
 
-    # M6 production (1e6 sims per mode) — ~2-4 часа. Для dev/M5 верни 1e5.
+    # M6 — production sim (1e6 per mode).
     num_sim_args = {
         "base": int(1e6),
         "bonus_boost": int(1e6),
-        "special_spins": int(1e6),
         "bonus_normal": int(1e6),
         "bonus_super": int(1e6),
     }
