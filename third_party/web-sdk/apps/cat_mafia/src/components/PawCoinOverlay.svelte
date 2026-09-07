@@ -14,7 +14,7 @@
 	} from '../game/constants';
 	import {
 		portraitBuyPanelCanvasTop,
-		portraitBuyPanelHeightCanvas,
+		portraitBuyPanelLayoutHeightCanvas,
 	} from '../game/portraitHudLayout';
 	import {
 		getMascotHatCatchPoint,
@@ -147,7 +147,7 @@
 					boardCenterY: centerY,
 					halfH,
 					buyPanelTop: portraitBuyPanelCanvasTop(context.stateLayoutDerived),
-					buyPanelHeight: portraitBuyPanelHeightCanvas(context.stateLayoutDerived),
+					buyPanelHeight: portraitBuyPanelLayoutHeightCanvas(context.stateLayoutDerived),
 				})
 			: getMascotScreenBox({
 					centerX,

@@ -32,7 +32,6 @@
 	const bgUrl = AUTOSPIN_ASSETS.bg;
 	const closeIconUrl = AUTOSPIN_ASSETS.close;
 	const pawIconUrl = AUTOSPIN_ASSETS.pawIcon;
-	const bonusIconUrl = AUTOSPIN_ASSETS.bonusIcon;
 	const sliderFullUrl = AUTOSPIN_ASSETS.sliderFull;
 	const sliderButtonUrl = AUTOSPIN_ASSETS.sliderButton;
 	const sliderEmptyUrl = AUTOSPIN_ASSETS.sliderEmpty;
@@ -194,7 +193,6 @@
 						disabled={featureTogglesDisabled}
 						noHoverBg
 						showMenuCatIcon
-						menuCatIconSrc={bonusIconUrl}
 					/>
 				</section>
 

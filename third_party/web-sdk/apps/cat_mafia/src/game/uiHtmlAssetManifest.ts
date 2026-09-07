@@ -86,6 +86,7 @@ export const AUTOSPIN_ASSETS = {
 
 export const FEATURE_TOGGLE_ASSETS = {
 	bonusSwitchBg: uiHtmlAssetUrl('bonus_switch/bonus_switch.webp'),
+	/** Bonus symbol — Bonus Boost icon in game info, autoplay, and buy bonus. */
 	menuCatIcon: GAME_INFO_SYMBOL_IMAGES.B,
 } as const;
 

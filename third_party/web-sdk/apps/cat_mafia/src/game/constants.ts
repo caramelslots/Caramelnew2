@@ -938,8 +938,14 @@ export type BuyPanelLayoutKey =
 
 export type BuyPanelTextPx = { buyBonus: number; boostName: number; boostCost: number };
 
-/** Общий aspect-ratio фона buy_bonus.png / bonus_switch.png. */
+/** Общий aspect-ratio фона buy_bonus.png / bonus_switch.png (legacy wide pill). */
 export const BUY_PANEL_ASPECT = 1233 / 613;
+
+/** HUD Buy Bonus octagon button — designer_assets/bonus_button_final. */
+export const BUY_BONUS_BUTTON_ASPECT = 1073 / 1043;
+
+/** Buy bonus edge vs HUD bet/+/- icon size (desktop + portrait). */
+export const BUY_BONUS_BUTTON_SCALE = 1.5;
 
 /** Пропорции текста Bonus Boost относительно Buy Bonus (стабильный масштаб). */
 export const BUY_PANEL_BOOST_TEXT_RATIO = {
@@ -1110,8 +1116,6 @@ export const DESKTOP_UI_LAYOUT = {
 	sideMarginFrac: 0.028,
 	/** Gap between adjacent controls inside a group (fraction of canvas width). */
 	itemGapFrac: 0.01,
-	/** Buy Bonus width as fraction of canvas width. */
-	buyBonusWidthFrac: 0.118,
 	/** Balance/Bet font size in layout px. */
 	balanceFontSize: 28,
 	/** Gap between stacked balance / bet lines (layout px). */
@@ -1164,10 +1168,13 @@ export const PORTRAIT_UI_LAYOUT = {
 	freeSpinsSpinBelowBoard: 48,
 	/** Util-row center offset from screen bottom (ref px; ≈ iconRadius + 12px margin). */
 	utilFromBottom: 50,
-	/** Portrait buy panel CSS: width min(76vw, 360px), aspect 1233×613. */
-	buyPanelWidthVw: 0.76,
-	buyPanelMaxWidth: 360,
-	buyPanelAspect: 613 / 1233,
+	/**
+	 * Layout-only buy panel footprint (mascot / fly-to-hat anchors).
+	 * Kept at the pre-redesign wide panel size — independent of HUD button art.
+	 */
+	buyPanelLayoutWidthVw: 0.76,
+	buyPanelLayoutMaxWidth: 360,
+	buyPanelLayoutAspect: 613 / 1233,
 	utilNudgeDown: 0,
 	/** Min gap between menu/autoplay icons and balance/bet text (ref px, each side). */
 	utilBalanceTextGap: 12,
@@ -1178,6 +1185,10 @@ export const PORTRAIT_UI_LAYOUT = {
 	utilX: { info: 68, menu: 172, autoplay: 608, turbo: 712 },
 	/** Сдвиг − | Spin | + вправо (ref px). */
 	spinClusterShiftX: 0,
+	/** Visible buy bonus center X on 800×1422 mockup (400 = screen center). */
+	buyPanelCenterRefX: 210,
+	/** Buy bonus vs `spinBetDiam` on portrait (desktop: BUY_BONUS_BUTTON_SCALE). */
+	buyBonusButtonScale: 2,
 	/** Ref px (800×1422 mockup) — scaled in UiCashStacksPortraitLayout. */
 	buttons: {
 		spinDiam: 172,

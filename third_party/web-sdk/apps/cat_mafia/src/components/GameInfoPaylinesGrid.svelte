@@ -57,6 +57,13 @@
 </div>
 
 <style lang="scss">
+	/* Cat Mafia payline palette — aligned with PaylineOverlay energy orange/gold + HUD accents. */
+	$payline-glow-deep: #ff5500;
+	$payline-core: #ff8800;
+	$payline-bright: #ffcc44;
+	$payline-gold: #ffd54a;
+	$payline-cream: #fff8ec;
+
 	.paylines-grid {
 		display: grid;
 		grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -71,14 +78,15 @@
 		padding: 0.5rem 0.35rem 0.55rem;
 		border-radius: 10px;
 		background: rgba(255, 255, 255, 0.06);
-		border: 1px solid rgba(185, 54, 255, 0.18);
+		border: 1px solid rgba(255, 213, 74, 0.22);
+		box-shadow: inset 0 0 12px rgba(255, 136, 0, 0.06);
 	}
 
 	.payline-num {
 		font-size: 0.72rem;
 		font-weight: 800;
 		line-height: 1;
-		color: #ffd54a;
+		color: $payline-gold;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		text-shadow:
@@ -95,18 +103,21 @@
 	.payline-cells {
 		display: grid;
 		grid-template-columns: repeat(5, 11px);
-		grid-template-rows: repeat(5, 11px);
+		grid-template-rows: repeat(4, 11px);
 		gap: 2px;
 	}
 
 	.payline-cell {
 		border-radius: 2px;
 		background: rgba(255, 255, 255, 0.07);
+		box-shadow: inset 0 0 0 1px rgba(255, 213, 74, 0.08);
 	}
 
 	.payline-cell--on {
-		background: rgba(185, 54, 255, 0.22);
-		box-shadow: inset 0 0 0 1px rgba(185, 54, 255, 0.35);
+		background: rgba(255, 136, 0, 0.28);
+		box-shadow:
+			inset 0 0 0 1px rgba(255, 204, 68, 0.45),
+			0 0 6px rgba(255, 85, 0, 0.35);
 	}
 
 	.payline-svg {
@@ -118,25 +129,27 @@
 
 	.payline-glow {
 		fill: none;
-		stroke: #b936ff;
+		stroke: $payline-glow-deep;
 		stroke-width: 6;
 		stroke-linecap: round;
 		stroke-linejoin: round;
-		opacity: 0.22;
+		opacity: 0.28;
 	}
 
 	.payline-path {
 		fill: none;
-		stroke: #b936ff;
+		stroke: $payline-core;
 		stroke-width: 2.2;
 		stroke-linecap: round;
 		stroke-linejoin: round;
+		filter: drop-shadow(0 0 2px rgba(255, 204, 68, 0.65));
 	}
 
 	.payline-node {
-		fill: #ffd54a;
-		stroke: #fff8ec;
+		fill: $payline-bright;
+		stroke: $payline-cream;
 		stroke-width: 0.6;
+		filter: drop-shadow(0 0 2px rgba(255, 136, 0, 0.85));
 	}
 
 	@media (max-width: 680px) {

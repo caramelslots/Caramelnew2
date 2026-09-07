@@ -1,18 +1,17 @@
 <!--
 	CashStacksBuyBonusPanel.svelte — Buy Bonus (portrait phone only).
 	Non-phone layouts render Buy Bonus in CashStacksDesktopHudOverlay.
-	Bonus Boost: Autoplay + Buy Bonus menu only (not on this panel).
 -->
 <script lang="ts">
 	import { stateModal, stateUi } from 'state-shared';
 
 	import { isLockedBonusHud } from '../game/activeFeature';
+	import { BUY_BONUS_BUTTON_ASPECT } from '../game/constants';
 	import {
-		isPopoutViewport,
-		isPopoutSmallViewport,
-		resolveBuyPanelText,
-	} from '../game/constants';
-	import { portraitBuyPanelCanvasTop } from '../game/portraitHudLayout';
+		portraitBuyPanelCanvasCenterX,
+		portraitBuyPanelCanvasTop,
+		portraitBuyPanelSizeCanvas,
+	} from '../game/portraitHudLayout';
 	import { portraitHudAnchors } from '../game/portraitHudAnchors.svelte';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
@@ -22,19 +21,7 @@
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 	const layoutType = $derived(stateLayoutDerived.layoutType());
-	const isPopout = $derived(isPopoutViewport(stateLayoutDerived.canvasSizes()));
-	const isPopoutSmall = $derived(isPopoutSmallViewport(stateLayoutDerived.canvasSizes()));
 	const isPortrait = $derived(layoutType === 'portrait');
-	const panelText = $derived.by(() => {
-		const { width, height } = stateLayoutDerived.canvasSizes();
-		return resolveBuyPanelText({
-			layoutType,
-			isPopout,
-			isPopoutSmall,
-			deviceWidth: Math.min(width, height),
-			canvasSizeType: stateLayoutDerived.canvasSizeType(),
-		});
-	});
 	const show = $derived(
 		isPortrait &&
 			gameEntrance.showContent &&
@@ -45,8 +32,9 @@
 	const buyDisabled = $derived(!context.stateXstateDerived.isIdle());
 
 	const panelStyle = $derived.by(() => {
-		const top = portraitBuyPanelCanvasTop(context.stateLayoutDerived);
-		return `left:50%;top:${top}px;transform:translate(-50%,0)`;
+		const top = portraitBuyPanelCanvasTop(stateLayoutDerived);
+		const left = portraitBuyPanelCanvasCenterX(stateLayoutDerived);
+		return `left:${left}px;top:${top}px;transform:translate(-50%,0)`;
 	});
 
 	const onBuyBonusPress = () => {
@@ -57,6 +45,8 @@
 
 	const buyBonusBgUrl = HUD_ASSETS.buyBonusPanel;
 	const buyBonusLabel = $derived(context.i18nDerived.buyBonusPanelButton());
+	const buyBonusSize = $derived(portraitBuyPanelSizeCanvas(stateLayoutDerived));
+	const buyBonusHeight = $derived(buyBonusSize / BUY_BONUS_BUTTON_ASPECT);
 
 	let panelEl = $state<HTMLElement | null>(null);
 
@@ -96,26 +86,21 @@
 		bind:this={panelEl}
 		class="buy-bonus-panel daloniil-ui-enter portrait"
 		data-test="buy-bonus-panel"
-		data-panel-text-key={panelText.key}
 		aria-label="buy bonus"
 		style={panelStyle}
+		style:width="{buyBonusSize}px"
 	>
 		<button
 			type="button"
-			class="buy-bonus-btn panel-sprite-btn"
+			class="buy-bonus-btn"
 			disabled={buyDisabled}
 			onclick={onBuyBonusPress}
 			data-test="buy-bonus-panel-button"
+			style:width="{buyBonusSize}px"
+			style:height="{buyBonusHeight}px"
 			style:background-image={`url("${buyBonusBgUrl}")`}
 			aria-label={buyBonusLabel}
-		>
-			<span
-				class="buy-bonus-label"
-				style:font-size={panelText.buyBonus}
-			>{buyBonusLabel}</span>
-		</button>
-
-		<!-- Stage A: Bonus Boost removed from main panel; remains in Autoplay + Buy Bonus menu. -->
+		></button>
 	</aside>
 {/if}
 
@@ -123,46 +108,30 @@
 	.buy-bonus-panel {
 		position: fixed;
 		z-index: 45;
-		font-family: 'proxima-nova', sans-serif;
 		pointer-events: auto;
 	}
 
 	.buy-bonus-panel.portrait {
-		/* Same footprint as before boost removal: 2-col grid, Buy Bonus in left cell. */
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		align-items: stretch;
-		gap: 0.35rem;
-		width: min(76vw, 360px);
+		display: flex;
+		justify-content: center;
 		padding: 0;
 		background: transparent;
 		border: none;
 	}
 
-	.buy-bonus-panel.portrait .buy-bonus-label {
-		letter-spacing: 0.05em;
-	}
-
-	.buy-bonus-panel.portrait .buy-bonus-btn {
-		height: auto;
-		padding: 12% 10%;
-	}
-
 	.buy-bonus-btn {
 		box-sizing: border-box;
-		width: 100%;
-		aspect-ratio: 1233 / 613;
 		border: 0;
-		padding: 16% 14%;
+		padding: 0;
 		background-color: transparent;
 		background-repeat: no-repeat;
 		background-position: center;
-		background-size: 100% 100%;
+		background-size: contain;
 		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		transition: filter 0.15s, opacity 0.15s, transform 0.1s;
+		transition:
+			filter 0.15s,
+			opacity 0.15s,
+			transform 0.1s;
 
 		&:active:not(:disabled) {
 			transform: scale(0.97);
@@ -174,20 +143,5 @@
 			cursor: not-allowed;
 			pointer-events: none;
 		}
-	}
-
-	.buy-bonus-label {
-		color: #fff;
-		font-family: inherit;
-		font-weight: 800;
-		line-height: 1.1;
-		text-align: center;
-		text-transform: uppercase;
-		letter-spacing: 0.06em;
-		text-shadow:
-			0 0 10px rgba(255, 120, 220, 0.75),
-			0 2px 6px rgba(0, 0, 0, 0.85);
-		pointer-events: none;
-		user-select: none;
 	}
 </style>

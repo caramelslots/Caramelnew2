@@ -2,7 +2,8 @@ import type { createLayout } from 'utils-layout';
 
 import {
 	AUTOPLAY_PILL_ASPECT,
-	BUY_PANEL_ASPECT,
+	BUY_BONUS_BUTTON_ASPECT,
+	BUY_BONUS_BUTTON_SCALE,
 	DESKTOP_UI_LAYOUT,
 } from './constants';
 import { DESKTOP_BASE_SIZE, DESKTOP_BACKGROUND_WIDTH_LIST, UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
@@ -14,7 +15,6 @@ export type DesktopHudLayoutConfig = {
 	barRaiseY: number;
 	sideMarginFrac: number;
 	itemGapFrac: number;
-	buyBonusWidthFrac: number;
 	balanceFontSize: number;
 	balanceLineGap: number;
 	balanceTextEm: number;
@@ -29,7 +29,7 @@ export type DesktopHudPoint = { x: number; y: number };
 export type DesktopHudPositions = {
 	info: DesktopHudPoint & { size: number };
 	menu: DesktopHudPoint & { size: number };
-	buyBonus: DesktopHudPoint & { width: number; height: number; fontSize: number };
+	buyBonus: DesktopHudPoint & { size: number };
 	balance: DesktopHudPoint & { fontSize: number };
 	bet: DesktopHudPoint & { fontSize: number };
 	decrease: DesktopHudPoint & { size: number };
@@ -41,8 +41,6 @@ export type DesktopHudPositions = {
 
 const TOTAL_BAR_WIDTH = DESKTOP_BACKGROUND_WIDTH_LIST.reduce((sum, w) => sum + w, 0);
 const Y_BUTTON = DESKTOP_BASE_SIZE * 0.5;
-/** Floor only — never larger than canvas-fraction width on Popout S. */
-const BUY_BONUS_MIN_WIDTH_PX = 40;
 
 /** Standard mainLayout local → canvas CSS px (MainContainer standard, alignVertical bottom). */
 export const standardLocalToCanvas = (localX: number, localY: number, layoutDerived: LayoutDerived) => {
@@ -93,16 +91,16 @@ export const computeDesktopHudLayout = (
 	const betGap = toSize(cluster.betControlsGap);
 	const spinRaiseY = toSize(cluster.spinRaiseY ?? 0);
 
-	/** Buy Bonus panel height cap — independent of HUD icon size. */
-	const buyPanelHMax = toSize(UI_BASE_SIZE * 0.72 * config.utilScale) * 1.05;
-	let buyBonusW = Math.max(BUY_BONUS_MIN_WIDTH_PX, canvas.width * config.buyBonusWidthFrac);
-	let buyBonusH = buyBonusW / BUY_PANEL_ASPECT;
-	if (buyBonusH > buyPanelHMax) {
-		buyBonusH = buyPanelHMax;
-		buyBonusW = buyBonusH * BUY_PANEL_ASPECT;
-	}
+	const balanceFontSize = toSize(config.balanceFontSize);
+	const balanceLineGap = toSize(config.balanceLineGap);
+	const balanceMenuGap = toSize(config.balanceMenuGap);
+	const buyBonusAboveGap = toSize(config.buyBonusAboveGap);
+	const rightGroupY = barY + toSize(config.rightGroupDropY);
 
-	let autoplayWidth = buyBonusW * cluster.autoplayScale;
+	const smallHalf = smallSize / 2;
+	const spinHalf = spinSize / 2;
+
+	let autoplayWidth = toSize(UI_BASE_SIZE * 1.0) * cluster.autoplayScale;
 	let autoplayHeight = autoplayWidth / AUTOPLAY_PILL_ASPECT;
 	const autoplayHMax = toSize(UI_BASE_SIZE * cluster.autoplayMaxHeightScale);
 	if (autoplayHeight > autoplayHMax) {
@@ -113,23 +111,12 @@ export const computeDesktopHudLayout = (
 		autoplayWidth = 0;
 		autoplayHeight = 0;
 	}
-
-	const balanceFontSize = toSize(config.balanceFontSize);
-	const balanceLineGap = toSize(config.balanceLineGap);
-	const balanceMenuGap = toSize(config.balanceMenuGap);
-	const buyBonusAboveGap = toSize(config.buyBonusAboveGap);
-	const rightGroupY = barY + toSize(config.rightGroupDropY);
-
-	const smallHalf = smallSize / 2;
-	const spinHalf = spinSize / 2;
 	const autoplayHalfW = autoplayWidth / 2;
 
 	/**
 	 * Right group — packed from the right margin inward:
 	 * Turbo ← [+] ← SPIN ← [−] ← Auto (pill)
 	 */
-	const spinClusterW = smallSize * 3 + betGap * 3 + spinSize;
-
 	const turbX = canvas.width - sideMargin - smallHalf;
 	const increaseX = turbX - smallHalf - betGap - smallHalf;
 	const spinX = increaseX - smallHalf - betGap - spinHalf;
@@ -143,21 +130,11 @@ export const computeDesktopHudLayout = (
 	const menuX = infoX + smallHalf + gap + smallHalf;
 	const balanceLeftX = menuX + smallHalf + balanceMenuGap;
 
-	/** Buy Bonus stacked above info + menu, centered on the icon pair. */
+	/** Buy Bonus octagon above info + menu. */
 	const buyBonusCenterX = (infoX + menuX) / 2;
-	let buyW = buyBonusW;
-	let buyH = buyBonusH;
-	const maxBuyW = Math.max(
-		BUY_BONUS_MIN_WIDTH_PX,
-		(menuX + smallHalf - (infoX - smallHalf)) * 1.35,
-	);
-	buyW = Math.min(buyW, maxBuyW);
-	buyH = buyW / BUY_PANEL_ASPECT;
-	if (buyH > buyPanelHMax) {
-		buyH = buyPanelHMax;
-		buyW = buyH * BUY_PANEL_ASPECT;
-	}
-	const buyBonusY = barY - smallHalf - buyBonusAboveGap - buyH / 2;
+	const buySize = smallSize * BUY_BONUS_BUTTON_SCALE;
+	const buyBonusHeight = buySize / BUY_BONUS_BUTTON_ASPECT;
+	const buyBonusY = barY - smallHalf - buyBonusAboveGap - buyBonusHeight / 2;
 
 	return {
 		info: { x: infoX, y: barY, size: smallSize },
@@ -165,10 +142,7 @@ export const computeDesktopHudLayout = (
 		buyBonus: {
 			x: buyBonusCenterX,
 			y: buyBonusY,
-			width: buyW,
-			height: buyH,
-			/** Direct fraction of button height — no px floor (it deadened Popout S knobs). */
-			fontSize: buyH * config.panelLabelFontFrac,
+			size: buySize,
 		},
 		decrease: { x: decreaseX, y: rightGroupY, size: smallSize },
 		spin: { x: spinX, y: rightGroupY + spinRaiseY, size: spinSize },
@@ -200,7 +174,6 @@ export const resolveDesktopHudConfig = (isPopoutSmall = false): DesktopHudLayout
 	barRaiseY: DESKTOP_UI_LAYOUT.barRaiseY,
 	sideMarginFrac: DESKTOP_UI_LAYOUT.sideMarginFrac,
 	itemGapFrac: DESKTOP_UI_LAYOUT.itemGapFrac,
-	buyBonusWidthFrac: DESKTOP_UI_LAYOUT.buyBonusWidthFrac,
 	balanceFontSize: DESKTOP_UI_LAYOUT.balanceFontSize,
 	balanceLineGap: DESKTOP_UI_LAYOUT.balanceLineGap,
 	balanceTextEm: DESKTOP_UI_LAYOUT.balanceTextEm,

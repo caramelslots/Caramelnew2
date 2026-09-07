@@ -3,6 +3,7 @@ import type { createLayout } from 'utils-layout';
 import {
 	BOARD_LAYOUT_OFFSETS,
 	BOARD_SIZES,
+	BUY_BONUS_BUTTON_ASPECT,
 	getPortraitBoardScale,
 	getPortraitDeviceWidth,
 	getPortraitParchmentSize,
@@ -28,15 +29,29 @@ export const portraitRefToCanvasLength = (refPx: number, layoutDerived: LayoutDe
 export const portraitCanvasYFromBottom = (refPx: number, layoutDerived: LayoutDerived) =>
 	layoutDerived.canvasSizes().height - portraitRefToCanvasLength(refPx, layoutDerived);
 
-/** Portrait buy panel height in canvas CSS px (matches CashStacksBuyBonusPanel CSS). */
-export const portraitBuyPanelHeightCanvas = (layoutDerived: LayoutDerived) => {
-	const { width: canvasW } = layoutDerived.canvasSizes();
-	const panelWCanvas = Math.min(
-		canvasW * PORTRAIT_UI_LAYOUT.buyPanelWidthVw,
-		PORTRAIT_UI_LAYOUT.buyPanelMaxWidth,
+/** Visible buy bonus HUD button width in canvas CSS px. */
+export const portraitBuyPanelSizeCanvas = (layoutDerived: LayoutDerived) =>
+	portraitRefToCanvasLength(
+		PORTRAIT_UI_LAYOUT.buttons.spinBetDiam * PORTRAIT_UI_LAYOUT.buyBonusButtonScale,
+		layoutDerived,
 	);
-	return panelWCanvas * PORTRAIT_UI_LAYOUT.buyPanelAspect;
+
+/** Visible buy bonus HUD button height in canvas CSS px. */
+export const portraitBuyPanelHeightCanvas = (layoutDerived: LayoutDerived) =>
+	portraitBuyPanelSizeCanvas(layoutDerived) / BUY_BONUS_BUTTON_ASPECT;
+
+/** Layout-only buy panel width — frozen wide footprint for mascot / coin fly anchors. */
+export const portraitBuyPanelLayoutSizeCanvas = (layoutDerived: LayoutDerived) => {
+	const { width: canvasW } = layoutDerived.canvasSizes();
+	return Math.min(
+		canvasW * PORTRAIT_UI_LAYOUT.buyPanelLayoutWidthVw,
+		PORTRAIT_UI_LAYOUT.buyPanelLayoutMaxWidth,
+	);
 };
+
+/** Layout-only buy panel height — mascot must not shrink when HUD button art does. */
+export const portraitBuyPanelLayoutHeightCanvas = (layoutDerived: LayoutDerived) =>
+	portraitBuyPanelLayoutSizeCanvas(layoutDerived) * PORTRAIT_UI_LAYOUT.buyPanelLayoutAspect;
 
 /**
  * Board offset the portrait HUD is anchored to — frozen at the pre-lift value
@@ -222,3 +237,10 @@ export const portraitBuyPanelCanvasTop = (layoutDerived: LayoutDerived) => {
 		boardBottomLocal + portraitScaleY(PORTRAIT_UI_LAYOUT.buyPanelBelowBoard, H);
 	return portraitLocalToCanvasY(buyPanelTopLocal, layoutDerived);
 };
+
+/** Buy-bonus HTML panel center X in canvas px (left of screen center on phone). */
+export const portraitBuyPanelCanvasCenterX = (layoutDerived: LayoutDerived) =>
+	portraitLocalToCanvasX(
+		portraitRefXToLocal(PORTRAIT_UI_LAYOUT.buyPanelCenterRefX, layoutDerived),
+		layoutDerived,
+	);

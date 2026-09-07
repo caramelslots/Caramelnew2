@@ -16,9 +16,10 @@
 	import { AUTOSPIN_ASSETS } from '../game/uiHtmlAssetManifest';
 	import {
 		GAME_INFO_PAYING_SYMBOL_IDS,
+		GAME_INFO_SPECIAL_SYMBOL_ENTRIES,
 		GAME_INFO_SYMBOL_IMAGES,
 		getSymbolPayRows,
-		type GameInfoSymbolId,
+		type GameInfoSpecialSymbolId,
 	} from '../game/gameInfoSymbols';
 	import {
 		getGameInfoControlRows,
@@ -50,27 +51,35 @@
 	});
 
 	const specialSymbolCopy: Record<
-		Extract<GameInfoSymbolId, 'B' | 'W' | 'M'>,
+		GameInfoSpecialSymbolId,
 		{ title: () => string; body: () => string }
 	> = {
-		B: {
-			title: () => context.i18nDerived.gameInfoBonusSymbolTitle(),
-			body: () => context.i18nDerived.gameInfoFsBody(),
-		},
 		W: {
 			title: () => context.i18nDerived.gameInfoWildTitle(),
 			body: () => context.i18nDerived.gameInfoWildBody(),
 		},
-		M: {
-			title: () => context.i18nDerived.gameInfoMysteryTitle(),
-			body: () => context.i18nDerived.gameInfoMysteryBody(),
+		B: {
+			title: () => context.i18nDerived.gameInfoBonusSymbolTitle(),
+			body: () => context.i18nDerived.gameInfoFsBody(),
+		},
+		SW: {
+			title: () => context.i18nDerived.gameInfoSuperWildTitle(),
+			body: () => context.i18nDerived.gameInfoSuperWildBody(),
+		},
+		Paw: {
+			title: () => context.i18nDerived.gameInfoPawTitle(),
+			body: () => context.i18nDerived.gameInfoPawBody(),
+		},
+		BT: {
+			title: () => context.i18nDerived.gameInfoBulletTitle(),
+			body: () => context.i18nDerived.gameInfoBulletBody(),
 		},
 	};
 
 	const specialSymbols = $derived(
-		(['B', 'W', 'M'] as const).map((id) => ({
+		GAME_INFO_SPECIAL_SYMBOL_ENTRIES.map(({ id }) => ({
 			id,
-			image: id === 'M' ? null : GAME_INFO_SYMBOL_IMAGES[id],
+			image: GAME_INFO_SYMBOL_IMAGES[id],
 			title: specialSymbolCopy[id].title(),
 			body: specialSymbolCopy[id].body(),
 		})),
@@ -113,19 +122,13 @@
 								<div class="special-symbols">
 									{#each specialSymbols as symbol (symbol.id)}
 										<article class="special-card">
-											{#if symbol.id === 'M'}
-												<div class="mystery-symbol" aria-hidden="true">
-													<span class="mystery-mark">?</span>
-												</div>
-											{:else if symbol.image}
-												<img
-													class="symbol-image"
-													src={symbol.image}
-													alt={symbol.title}
-													loading="lazy"
-													decoding="async"
-												/>
-											{/if}
+											<img
+												class="symbol-image"
+												src={symbol.image}
+												alt={symbol.title}
+												loading="lazy"
+												decoding="async"
+											/>
 											<div class="special-copy">
 												<h4>{symbol.title}</h4>
 												{#each symbol.body.split('\n') as line, index (symbol.id + index)}
@@ -453,25 +456,6 @@
 		flex-shrink: 0;
 	}
 
-	.mystery-symbol {
-		position: relative;
-		display: grid;
-		place-items: center;
-		width: 72px;
-		height: 72px;
-		flex-shrink: 0;
-		background: #16101c;
-		clip-path: polygon(50% 6%, 90% 28%, 90% 72%, 50% 94%, 10% 72%, 10% 28%);
-	}
-
-	.mystery-mark {
-		font-family: Georgia, 'Times New Roman', serif;
-		font-size: 2.35rem;
-		font-weight: 700;
-		line-height: 1;
-		color: #e4c36a;
-	}
-
 	.pay-symbol-image {
 		width: 64px;
 		height: 64px;
@@ -541,11 +525,6 @@
 		}
 
 		.symbol-image {
-			width: 84px;
-			height: 84px;
-		}
-
-		.mystery-symbol {
 			width: 84px;
 			height: 84px;
 		}

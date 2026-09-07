@@ -29,7 +29,7 @@
 	} from '../game/mascotHtmlSpine';
 	import {
 		portraitBuyPanelCanvasTop,
-		portraitBuyPanelHeightCanvas,
+		portraitBuyPanelLayoutHeightCanvas,
 	} from '../game/portraitHudLayout';
 	import {
 		TARGET_SHOT_EXPLOSION_START_MS,
@@ -141,7 +141,7 @@
 						boardCenterY: mascotCenterY,
 						halfH,
 						buyPanelTop: portraitBuyPanelCanvasTop(context.stateLayoutDerived),
-						buyPanelHeight: portraitBuyPanelHeightCanvas(context.stateLayoutDerived),
+						buyPanelHeight: portraitBuyPanelLayoutHeightCanvas(context.stateLayoutDerived),
 					})
 				: getMascotScreenBox({
 						centerX: mascotCenterX,

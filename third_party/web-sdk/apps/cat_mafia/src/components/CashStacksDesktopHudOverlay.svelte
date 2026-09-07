@@ -15,7 +15,7 @@
 	} from 'state-shared';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
-	import { isPopoutSmallViewport } from '../game/constants';
+	import { isPopoutSmallViewport, BUY_BONUS_BUTTON_ASPECT } from '../game/constants';
 	import { computeDesktopHudLayout, resolveDesktopHudConfig } from '../game/desktopHudLayout';
 	import { getRoundsCounter } from '../game/autoplay';
 	import { canAffordSpin, canIncreaseBet } from '../game/buyBonusBalance';
@@ -260,23 +260,18 @@
 			{#if showBuyBonus}
 				<button
 					type="button"
-					class="hud-buy-bonus-btn"
+					class="hud-icon-btn"
 					class:dimmed={buyDisabled}
 					style:left="{pos.buyBonus.x}px"
 					style:top="{pos.buyBonus.y}px"
-					style:width="{pos.buyBonus.width}px"
-					style:height="{pos.buyBonus.height}px"
-					style:background-image="url('{buyBonusBgUrl}')"
-					style:font-size="{pos.buyBonus.fontSize}px"
+					style:width="{pos.buyBonus.size}px"
+					style:height="{pos.buyBonus.size / BUY_BONUS_BUTTON_ASPECT}px"
 					disabled={buyDisabled}
 					aria-label={buyBonusLabel}
 					data-test="buy-bonus-panel-button"
+					style:background-image="url('{buyBonusBgUrl}')"
 					onclick={onBuyBonusPress}
-				>
-					<span class="hud-buy-bonus-label" style:font-size="{pos.buyBonus.fontSize}px"
-						>{buyBonusLabel}</span
-					>
-				</button>
+				></button>
 			{/if}
 
 			{#if !isReplay}
