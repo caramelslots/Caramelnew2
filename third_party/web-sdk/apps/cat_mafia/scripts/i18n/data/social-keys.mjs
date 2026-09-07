@@ -15,43 +15,36 @@ const en = {
 	MAX_WIN_SOCIAL: 'MAX PRIZE',
 	PER_SPIN_SUFFIX_SOCIAL: 'per play',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE_SOCIAL: 'Insufficient balance',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'Top up your balance or lower the play amount to continue the game.',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: 'Top up your balance or lower the play amount to continue the game.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'Stop limit reached',
-	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL:
-		'Autoplay has stopped because the stop limit was reached.',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'Autoplay has stopped because the stop limit was reached.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Single prize limit reached',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
-		'Autoplay has stopped because the single prize limit was reached.',
-	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury is a 5-reel, 5-row slot with 25 winlines. Prizes are awarded from left to right on adjacent reels, starting from the leftmost reel. A minimum of 3 matching symbols on a winline is required for a prize. Only the highest prize per line is awarded.',
-	GAME_INFO_PAYLINES_TITLE_SOCIAL: 'WINLINES (25)',
-	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'All 25 winlines are always active. Prizes are awarded from left to right on adjacent reels, starting from the leftmost reel. A minimum of 3 matching symbols on adjacent reels is required to create a valid winning line.',
-	GAME_INFO_WILD_BODY_SOCIAL:
-		'The Wild symbol substitutes for all winning symbols except the Bonus symbol. Wild wins 225× play for 5 of a kind.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: 'Autoplay has stopped because the single prize limit was reached.',
+	GAME_INFO_ABOUT_BODY_SOCIAL: 'Cat Mafia is a 5-reel, 4-row slot with 20 winlines. Prizes are awarded from left to right on adjacent reels, starting from the leftmost reel. A minimum of 3 matching symbols on a winline is required for a prize. Only the highest prize per line is awarded. In the base game, Paw coins and Super Wild can trigger on a spin, but never both on the same spin. Land 3 or more Bonus symbols to enter free spins and pick a target for 8, 10, or 12 free spins.',
+	GAME_INFO_PAYLINES_TITLE_SOCIAL: 'WINLINES (20)',
+	GAME_INFO_PAYLINES_NOTE_SOCIAL: 'All 20 winlines are always active. Prizes are awarded from left to right on adjacent reels, starting from the leftmost reel. A minimum of 3 matching symbols on adjacent reels is required to create a valid winning line.',
+	GAME_INFO_WILD_BODY_SOCIAL: 'The Wild symbol substitutes for all winning symbols except the Bonus symbol. Wild wins 225× play for 5 of a kind.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'PLAY MODES',
-	GAME_INFO_BET_MODES_BODY_SOCIAL:
-		'Base (1×): The default mode. Each spin uses 1× your base play. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All prizes are calculated as multiples of your base play. RTP 96.03%. Maximum prize 2,500× your base play.\nBonus Boost (2×): Enable this mode to play at 2× your base play per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All prizes are calculated as multiples of your base play, not the 2× mode play amount. RTP 96.04%. Maximum prize 2,355.2× your base play.\nSpecial Spins (30×): Enable this mode to play at 30× your base play per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All prizes are calculated as multiples of your base play, not the 30× mode play amount. RTP 96.01%. Maximum prize 2,500× your base play.\nPlay Normal Bonus (100×): Play Normal Bonus for 100× your base play to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base play, not the play amount. RTP 96.01%. Maximum prize 2,500× your base play.\nPlay Super Bonus (200×): Play Super Bonus for 200× your base play to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All prizes are calculated as multiples of your base play, not the play amount. RTP 96.01%. Maximum prize 2,500× your base play.',
+	GAME_INFO_BET_MODES_BODY_SOCIAL: 'Base (1×): The classic Cat Mafia run — winlines, Paw coins, and Super Wild curtains on every spin. Land 3+ Bonus symbols to break into free spins: pick a target for 8, 10, or 12 spins (3 Bonus = Normal Bonus · 4+ = Super Bonus with a sticky Super Wild column from spin one). Prizes are paid as multiples of your base play. RTP 96.01% · Max prize 2,500×.\nBonus Boost (2×): Turn up the pressure — play at 2× and hunt Bonus symbols more aggressively. Free spins trigger more often with the same entry rules as Base. Every prize still pays as a multiple of your base play, not the 2× play amount. RTP 96.01% · Max prize 2,500×.\nPlay Normal Bonus (100×): Cut straight to the action. Play for 100× your base play, pick a target for 8–12 free spins, collect bullets in the revolver, and let the cat shoot for extra rounds — no sticky Super Wild at the start. Prizes are paid as multiples of your base play. RTP 96.01% · Max prize 25,000×.\nPlay Super Bonus (200×): The premium heist. Same target pick and bullet finale, but one Super Wild column is already open from your first spin — sticky wilds, multiplying columns, and bigger bonus upside. Prizes are paid as multiples of your base play. RTP 96.01% · Max prize 25,000×.\nPlay Duel — Cat (150×): Choose your side in a two-board showdown — 10 spins each. Play as the Cat for a steady ~50% chance to finish ahead; beat the Dog and take both banks. Prizes are paid as multiples of your base play. RTP 96.01% · Max prize 25,000×.\nPlay Duel — Dog (150×): High volatility, high ceiling — the Dog wins less often but can deliver heavier prizes when it finishes on top. Same 10+10 duel format; outscore the Cat to claim both banks. Prizes are paid as multiples of your base play. RTP 96.01% · Max prize 25,000×.',
 	GAME_INFO_CONTROLS_TITLE_SOCIAL: 'USER INTERACTION GUIDE',
-	GAME_INFO_CONTROLS_BODY_SOCIAL:
-		'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if balance is insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nPlay amount (−): Use the minus button to decrease your play amount. Amount changes are only available while the game is idle.\nPlay amount (+): Use the plus button to increase your play amount. Amount changes are only available while the game is idle.\nPlay Bonus: Open Play Bonus to play Normal Bonus or Super Bonus. Confirm to start the selected feature immediately.\nBonus Boost: Enable Bonus Boost to play at 2× your base play with more Bonus symbols and a higher chance of triggering free spins. You can turn it on or off from the Play Bonus panel or the Autoplay panel.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance: Shows your current balance. This is informational and is not a button.\nPlay: Shows your selected play amount. This is informational and is not a button.',
+	GAME_INFO_CONTROLS_BODY_SOCIAL: 'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if balance is insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nPlay amount (−): Use the minus button to decrease your play amount. Amount changes are only available while the game is idle.\nPlay amount (+): Use the plus button to increase your play amount. Amount changes are only available while the game is idle.\nPlay Bonus: Open Play Bonus to play Normal Bonus, Super Bonus, or Duel. Confirm to start the selected feature immediately.\nBonus Boost: Enable Bonus Boost to play at 2× your base play with more Bonus symbols and a higher chance of triggering free spins. You can turn it on or off from the Play Bonus panel or the Autoplay panel.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance: Shows your current balance. This is informational and is not a button.\nPlay: Shows your selected play amount. This is informational and is not a button.',
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'WINTABLE (× PLAY)',
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All win values are multiples of the base play.',
-	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Malfunction voids all prizes and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Rewards are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Stake Engine.',
+	GAME_INFO_LEGAL_BODY_SOCIAL: 'Malfunction voids all prizes and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Rewards are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Stake Engine.',
 	REPLAY_TITLE_SOCIAL: 'Play Replay',
 	REPLAY_BASE_BET_SOCIAL: 'Base Play',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Feature Multiplier',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Total Play Amount',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Final Multiplier',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Total Prize',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'This is a replay of a previous play round. No plays will be placed.',
+	REPLAY_DISCLAIMER_SOCIAL: 'This is a replay of a previous play round. No plays will be placed.',
+	GAME_INFO_DUEL_BONUS_BODY_SOCIAL: 'The Duel Bonus symbol appears only when you play Duel for 150× your base play. Three Duel Bonus symbols land on the purchase reveal and start the feature — pick Cat or Dog, then two boards spin for 10 rounds each. Beat the other side\'s total prize to take both banks. Duel mode has no free spins, Paw coins, or Bullets.',
+	GAME_INFO_SUPER_WILD_BODY_SOCIAL: 'Super Wild is separate from the regular Wild and may show multipliers ×2, ×4, ×6, ×8, or rarely ×25, ×50, or ×75. In the base game it expands its column only when it is part of a winning line, then multiplies the spin prize. In free spins it can expand without a line win and may become sticky on up to two columns; Super Bonus starts with one sticky column already open. Multiple Super Wild multipliers on one spin are multiplied together.',
+	GAME_INFO_PAW_BODY_SOCIAL: 'Paw coins appear in the base game only. Bronze converts one row, silver converts two rows, and gold converts three rows into coin prizes after winlines are counted. Low symbols pay ×1 play, mid highs pay ×2, and top symbols, Wild, or Bonus pay ×3. The paw coin itself pays nothing. Paw and Super Wild cannot trigger on the same spin.',
+	GAME_INFO_BULLET_BODY_SOCIAL: 'During the main free spins, Bullet symbols fill the revolver drum (maximum 6). When the main spins end, the cat automatically shoots targets. Each hit may award nothing or +1, +2, or +3 extra free spins. Bullets do not appear on those extra spins and there is no second shooting round.',
 };
 
 const ru = {
-	...en,
 	BET_SOCIAL: 'ИГРА',
 	WIN_SOCIAL: 'ПРИЗ',
 	BUY_BONUS_SOCIAL: 'ИГРАТЬ БОНУС',
@@ -64,36 +57,38 @@ const ru = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: 'Играть бонус',
 	AUTO_BET_SOCIAL: 'Автоигра',
 	MAX_WIN_SOCIAL: 'МАКС. ПРИЗ',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'Пополните баланс или уменьшите сумму play, чтобы продолжить игру.',
+	PER_SPIN_SUFFIX_SOCIAL: 'per play',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE_SOCIAL: 'Insufficient balance',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: 'Пополните баланс или уменьшите сумму play, чтобы продолжить игру.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'Достигнут лимит остановки',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'Автоигра остановлена, так как достигнут лимит остановки.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Достигнут лимит одного приза',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
-		'Автоигра остановлена, так как достигнут лимит одного приза.',
-	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury — слот с 5 барабанами и 5 рядами, 25 линий выплат. Призы начисляются слева направо на соседних барабанах, начиная с крайнего левого. Для приза на линии требуется минимум 3 одинаковых символа. По каждой линии начисляется только наибольший приз.',
-	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Все 25 линий всегда активны. Призы начисляются слева направо на соседних барабанах, начиная с крайнего левого. Для выигрышной линии требуется минимум 3 одинаковых символа на соседних барабанах.',
-	GAME_INFO_WILD_BODY_SOCIAL:
-		'Символ Wild заменяет все оплачиваемые символы, кроме Bonus. Wild платит 225× спина за 5 одинаковых.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: 'Автоигра остановлена, так как достигнут лимит одного приза.',
+	GAME_INFO_ABOUT_BODY_SOCIAL: 'Cat Mafia — слот с 5 барабанами и 4 рядами, 20 линий выплат. Призы начисляются слева направо на соседних барабанах, начиная с крайнего левого. Для приза на линии требуется минимум 3 одинаковых символа. По каждой линии начисляется только наибольший приз. В базовой игре на одном спине может сработать либо лапа, либо Super Wild — но не оба сразу. Соберите 3 или более символов Bonus, чтобы войти во фриспины и выбрать мишень на 8, 10 или 12 спинов.',
+	GAME_INFO_PAYLINES_TITLE_SOCIAL: 'WINLINES (20)',
+	GAME_INFO_PAYLINES_NOTE_SOCIAL: 'Все 20 линий всегда активны. Призы начисляются слева направо на соседних барабанах, начиная с крайнего левого. Для выигрышной линии требуется минимум 3 одинаковых символа на соседних барабанах.',
+	GAME_INFO_WILD_BODY_SOCIAL: 'Символ Wild заменяет все оплачиваемые символы, кроме Bonus. Wild платит 225× спина за 5 одинаковых.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'РЕЖИМЫ ИГРЫ',
+	GAME_INFO_BET_MODES_BODY_SOCIAL: 'Base (1×): Классический забег Cat Mafia — линии, лапы и шторы Super Wild на каждом спине. Соберите 3+ Bonus, чтобы ворваться во фриспины: выберите мишень на 8, 10 или 12 спинов (3 Bonus = Normal Bonus · 4+ = Super Bonus со sticky Super Wild с первого спина). Призы — множители базовой игры. RTP 96,01% · Макс. приз 2 500×.\nBonus Boost (2×): Поднимите ставки — играйте за 2× и чаще ловите Bonus на барабанах. Фриспины выпадают чаще при тех же правилах входа, что в Base. Все призы считаются от базовой игры, а не от суммы режима 2×. RTP 96,01% · Макс. приз 2 500×.\nPlay Normal Bonus (100×): Сразу в дело — без ожидания scatter. За 100× базовой игры: выбор мишени на 8–12 фриспинов, патроны в револьвере и финальная стрельба за доп. раунды — без sticky Super Wild на старте. Призы — множители базовой игры. RTP 96,01% · Макс. приз 25 000×.\nPlay Super Bonus (200×): Премиальный бонус. Тот же выбор мишени и финал с патронами, но одна колонка Super Wild уже открыта с первого спина — sticky wilds, перемножающиеся колонки и более жирный потенциал. Призы — множители базовой игры. RTP 96,01% · Макс. приз 25 000×.\nPlay Duel — Cat (150×): Выберите сторону в дуэли двух досок — по 10 спинов каждой. Играйте за кота: ~50% шанс обойти собаку и забрать оба банка. Призы — множители базовой игры. RTP 96,01% · Макс. приз 25 000×.\nPlay Duel — Dog (150×): Высокая волатильность — собака выигрывает реже, но бьёт сильнее, когда выходит вперёд. Тот же формат 10+10; обойдите кота и заберите оба банка. Призы — множители базовой игры. RTP 96,01% · Макс. приз 25 000×.',
 	GAME_INFO_CONTROLS_TITLE_SOCIAL: 'РУКОВОДСТВО ПО УПРАВЛЕНИЮ',
-	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Неисправность аннулирует все призы и игры. Требуется стабильное интернет-соединение. В случае разрыва соединения перезагрузите игру, чтобы завершить незавершённые раунды. Ожидаемая отдача рассчитывается на большом количестве игр. Отображение игры не является представлением какого-либо физического устройства и предназначено только для иллюстрации. Награды рассчитываются согласно сумме, полученной от Remote Game Server, а не по событиям в веб-браузере. TM и © 2026 Stake Engine.',
+	GAME_INFO_CONTROLS_BODY_SOCIAL: 'Spin: нажмите кнопку Spin, чтобы начать раунд. Во время раунда та же кнопка может остановить барабаны или автоигру. Новый раунд нельзя начать, пока идёт другой раунд или анимация, либо если недостаточно баланса.\nSpacebar: нажмите Space для того же действия, что и кнопка Spin. Удерживайте Space для быстрой игры. Когда открыта панель Autoplay, Space запускает автоигру.\nPlay amount (−): уменьшает сумму игры. Менять можно только в режиме ожидания.\nPlay amount (+): увеличивает сумму игры. Менять можно только в режиме ожидания.\nPlay Bonus: откройте Play Bonus, чтобы играть Normal Bonus, Super Bonus или Duel. Подтвердите, чтобы сразу запустить выбранную функцию.\nBonus Boost: включите Bonus Boost для игры за 2× базовой игры с большим числом Bonus. Включить или выключить можно в панели Play Bonus или Autoplay.\nAutoplay: выберите число раундов и запустите автоигру. Нажмите Autoplay снова, чтобы остановить.\nTurbo: переключайте скорость игры по уровням 1, 2 и 3.\nInfo: открывает этот экран Game Information.\nMenu: открывает Settings.\nBalance: показывает текущий баланс.\nPlay: показывает выбранную сумму игры.',
+	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'WINTABLE (× PLAY)',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All win values are multiples of the base play.',
+	GAME_INFO_LEGAL_BODY_SOCIAL: 'Неисправность аннулирует все призы и игры. Требуется стабильное интернет-соединение. В случае разрыва соединения перезагрузите игру, чтобы завершить незавершённые раунды. Ожидаемая отдача рассчитывается на большом количестве игр. Отображение игры не является представлением какого-либо физического устройства и предназначено только для иллюстрации. Награды рассчитываются согласно сумме, полученной от Remote Game Server, а не по событиям в веб-браузере. TM и © 2026 Stake Engine.',
+	REPLAY_TITLE_SOCIAL: 'Повтор игры',
 	REPLAY_BASE_BET_SOCIAL: 'Базовая игра',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Множитель функции',
-	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Итоговый множитель',
-	REPLAY_TITLE_SOCIAL: 'Повтор игры',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Итоговая сумма игры',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Итоговый множитель',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Общий приз',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'Это повтор предыдущего раунда игры. Новые игры не будут запущены.',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'Это повтор предыдущего раунда игры. Новые игры не будут запущены.',
+	GAME_INFO_DUEL_BONUS_BODY_SOCIAL: 'Символ Duel Bonus появляется только при игре Duel за 150× базовой игры. Три символа Duel Bonus выпадают на reveal покупки и запускают режим — выберите кота или собаку, затем две доски крутятся по 10 раундов. Обойдите сумму противника и заберите оба банка. В Duel нет фриспинов, лап и патронов.',
+	GAME_INFO_SUPER_WILD_BODY_SOCIAL: 'Super Wild — отдельный символ от обычного Wild; на нём могут быть множители ×2, ×4, ×6, ×8 или редко ×25, ×50, ×75. В базовой игре колонка раскрывается только если Super Wild участвует в выигрышной линии, затем умножает приз спина. Во фриспинах может раскрыться без линии и стать sticky на до двух колонок; в Super Bonus одна sticky-колонка уже открыта с первого спина. Несколько множителей Super Wild на одном спине перемножаются.',
+	GAME_INFO_PAW_BODY_SOCIAL: 'Лапа выпадает только в базовой игре. Бронза превращает 1 ряд, серебро — 2 ряда, золото — 3 ряда в монетки после подсчёта линий. Низкие символы платят ×1 play, средние высокие — ×2, топ-символы, Wild и Bonus — ×3. Сама лапа не платит. Лапа и Super Wild не могут сработать на одном спине.',
+	GAME_INFO_BULLET_BODY_SOCIAL: 'Во время основных фриспинов символы Bullet заполняют барабан револьвера (максимум 6). Когда основные спины заканчиваются, кот автоматически стреляет по мишеням. Каждое попадание может дать ничего или +1, +2, +3 дополнительных фриспина. На дополнительных спинах патроны не выпадают, второго раунда стрельбы нет.',
 };
 
 const de = {
-	...en,
 	BET_SOCIAL: 'PLAY',
 	WIN_SOCIAL: 'PREIS',
 	BUY_BONUS_SOCIAL: 'BONUS SPIELEN',
@@ -106,35 +101,38 @@ const de = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: 'Bonus spielen',
 	AUTO_BET_SOCIAL: 'Autospiel',
 	MAX_WIN_SOCIAL: 'MAX. PREIS',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'Lade dein Guthaben auf oder verringere den Play-Betrag, um weiterzuspielen.',
+	PER_SPIN_SUFFIX_SOCIAL: 'per play',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE_SOCIAL: 'Insufficient balance',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: 'Lade dein Guthaben auf oder verringere den Play-Betrag, um weiterzuspielen.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'Stopplimit erreicht',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'Autospiel wurde gestoppt, weil das Stopplimit erreicht wurde.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Einzelpreislimit erreicht',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
-		'Autospiel wurde gestoppt, weil das Einzelpreislimit erreicht wurde.',
-	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury ist ein Slot mit 5 Walzen, 5 Reihen und 25 Gewinnlinien. Preise werden von links nach rechts auf benachbarten Walzen vergeben, beginnend bei der linken Walze. Für einen Preis auf einer Linie sind mindestens 3 übereinstimmende Symbole erforderlich. Pro Linie wird nur der höchste Preis vergeben.',
-	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Alle 25 Gewinnlinien sind immer aktiv. Preise werden von links nach rechts auf benachbarten Walzen vergeben, beginnend bei der linken Walze. Für einen gültigen Gewinn sind mindestens 3 übereinstimmende Symbole auf benachbarten Walzen erforderlich.',
-	GAME_INFO_WILD_BODY_SOCIAL:
-		'Das Wild-Symbol ersetzt alle zahlenden Symbole außer Bonus. Wild zahlt 225× Spin für 5 gleiche.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: 'Autospiel wurde gestoppt, weil das Einzelpreislimit erreicht wurde.',
+	GAME_INFO_ABOUT_BODY_SOCIAL: 'Cat Mafia ist ein Slot mit 5 Walzen und 4 Reihen sowie 20 Gewinnlinien. Preise werden von links nach rechts auf benachbarten Walzen vergeben, beginnend bei der linken Walze. Für einen Preis auf einer Linie sind mindestens 3 übereinstimmende Symbole erforderlich. Pro Linie wird nur der höchste Preis vergeben. In der Basisrunde können Paw-Münzen oder Super Wild in einem Dreh auslösen — aber nie beides gleichzeitig. Erhalte 3 oder mehr Bonus-Symbole, um Freispiele zu starten und ein Ziel für 8, 10 oder 12 Freispiele zu wählen.',
+	GAME_INFO_PAYLINES_TITLE_SOCIAL: 'GEWINNLINIEN (20)',
+	GAME_INFO_PAYLINES_NOTE_SOCIAL: 'Alle 20 Gewinnlinien sind immer aktiv. Preise werden von links nach rechts auf benachbarten Walzen vergeben, beginnend bei der linken Walze. Für eine gültige Linie sind mindestens 3 übereinstimmende Symbole auf benachbarten Walzen erforderlich.',
+	GAME_INFO_WILD_BODY_SOCIAL: 'Das Wild-Symbol ersetzt alle zahlenden Symbole außer Bonus. Wild zahlt 225× Spiel für 5 gleiche.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'SPIELMODI',
-	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Bei Fehlfunktion sind alle Preise und Spiele ungültig. Eine stabile Internetverbindung ist erforderlich. Bei Verbindungsabbruch das Spiel neu laden, um unvollständige Runden abzuschließen. Die erwartete Rendite wird über viele Spiele berechnet. Die Spielanzeige stellt kein physisches Gerät dar und dient nur zur Veranschaulichung. Belohnungen werden gemäß dem vom Remote Game Server erhaltenen Betrag abgerechnet, nicht nach Ereignissen im Webbrowser. TM und © 2026 Stake Engine.',
+	GAME_INFO_BET_MODES_BODY_SOCIAL: 'Base (1×): Der klassische Cat-Mafia-Lauf — Linien, Paw-Münzen und Super-Wild-Vorhänge bei jedem Dreh. Erhalte 3+ Bonus für Freispiele: wähle ein Ziel für 8, 10 oder 12 Drehs (3 Bonus = Normal Bonus · 4+ = Super Bonus mit sticky Super Wild ab Dreh eins). Preise sind Vielfache deines Basisspiels. RTP 96,01% · Max. Preis 2.500×.\nBonus Boost (2×): Mehr Druck — spiele mit 2× und jage Bonus-Symbole aggressiver. Freispiele lösen häufiger mit denselben Regeln wie Base. Jeder Preis zahlt als Vielfaches deines Basisspiels, nicht der 2×-Summe. RTP 96,01% · Max. Preis 2.500×.\nNormal Bonus spielen (100×): Direkt ins Geschehen. Spiele für 100× dein Basisspiel, wähle ein Ziel für 8–12 Freispiele, sammle Kugeln und lass die Katze für Extra-Runden schießen — ohne sticky Super Wild am Start. Preise sind Vielfache deines Basisspiels. RTP 96,01% · Max. Preis 25.000×.\nSuper Bonus spielen (200×): Der Premium-Raubzug. Gleiche Zielwahl und Kugel-Finale, aber eine Super-Wild-Spalte ist ab dem ersten Dreh offen. Preise sind Vielfache deines Basisspiels. RTP 96,01% · Max. Preis 25.000×.\nDuel spielen — Katze (150×): Wähle deine Seite — je 10 Drehs. Spiele als Katze mit ~50% Chance vorn zu liegen; schlage den Hund und nimm beide Banken. Preise sind Vielfache deines Basisspiels. RTP 96,01% · Max. Preis 25.000×.\nDuel spielen — Hund (150×): Hohe Volatilität — der Hund gewinnt seltener, liefert aber stärkere Preise oben. Gleiches 10+10-Format; überhole die Katze und nimm beide Banken. Preise sind Vielfache deines Basisspiels. RTP 96,01% · Max. Preis 25.000×.',
+	GAME_INFO_CONTROLS_TITLE_SOCIAL: 'BENUTZERHANDBUCH',
+	GAME_INFO_CONTROLS_BODY_SOCIAL: 'Spin: Drücke Spin, um eine Runde zu starten. Während einer Runde kann dieselbe Taste die Walzen oder Autoplay stoppen. Eine neue Runde kann nicht starten, solange eine andere Runde läuft oder das Guthaben nicht ausreicht.\nLeertaste: Führt dieselbe Aktion wie Spin aus. Halte Leertaste für schnelles Dauer-Spiel. Wenn Autoplay offen ist, startet Leertaste Autoplay.\nSpielbetrag (−): Verringert den Spielbetrag. Nur im Leerlauf möglich.\nSpielbetrag (+): Erhöht den Spielbetrag. Nur im Leerlauf möglich.\nPlay Bonus: Öffne Play Bonus, um Normal Bonus, Super Bonus oder Duel zu spielen. Bestätige, um das Feature sofort zu starten.\nBonus Boost: Spiele mit 2× Basisspiel und mehr Bonus-Symbolen. Ein-/Ausschalten im Play-Bonus- oder Autoplay-Panel.\nAutoplay: Wähle Rundenanzahl und starte automatisches Spiel. Erneut drücken zum Stoppen.\nTurbo: Schaltet Geschwindigkeit durch Stufen 1, 2 und 3.\nInfo: Öffnet diese Spielinformation.\nMenu: Öffnet Einstellungen.\nBalance: Zeigt dein Guthaben.\nSpiel: Zeigt deinen gewählten Spielbetrag.',
+	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'WINTABLE (× PLAY)',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All win values are multiples of the base play.',
+	GAME_INFO_LEGAL_BODY_SOCIAL: 'Bei Fehlfunktion sind alle Preise und Spiele ungültig. Eine stabile Internetverbindung ist erforderlich. Bei Verbindungsabbruch das Spiel neu laden, um unvollständige Runden abzuschließen. Die erwartete Rendite wird über viele Spiele berechnet. Die Spielanzeige stellt kein physisches Gerät dar und dient nur zur Veranschaulichung. Belohnungen werden gemäß dem vom Remote Game Server erhaltenen Betrag abgerechnet, nicht nach Ereignissen im Webbrowser. TM und © 2026 Stake Engine.',
+	REPLAY_TITLE_SOCIAL: 'Spiel-Wiederholung',
 	REPLAY_BASE_BET_SOCIAL: 'Basis-Spiel',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Feature-Multiplikator',
-	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Endmultiplikator',
-	REPLAY_TITLE_SOCIAL: 'Spiel-Wiederholung',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Gesamter Play-Betrag',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Endmultiplikator',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Gesamtpreis',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'Dies ist die Wiederholung einer vorherigen Spielrunde. Es werden keine neuen Spiele gestartet.',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'Dies ist die Wiederholung einer vorherigen Spielrunde. Es werden keine neuen Spiele gestartet.',
+	GAME_INFO_DUEL_BONUS_BODY_SOCIAL: 'Das Duel-Bonus-Symbol erscheint nur beim Kauf von Duel für 150× deines Basisspieles. Drei Duel-Bonus-Symbole landen beim Kauf-Reveal und starten das Feature — wähle Katze oder Hund, dann drehen zwei Boards je 10 Runden. Schlage die Gesamtsumme der Gegenseite und nimm beide Banken. Im Duel-Modus gibt es keine Freispiele, Paw-Münzen oder Kugeln.',
+	GAME_INFO_SUPER_WILD_BODY_SOCIAL: 'Super Wild ist vom normalen Wild getrennt und kann Multiplikatoren ×2, ×4, ×6, ×8 oder selten ×25, ×50 oder ×75 zeigen. In der Basisrunde expandiert die Spalte nur, wenn Super Wild Teil einer Preislinie ist, und multipliziert dann den Drehpreis. In Freispielen kann es ohne Linienpreis expandieren und auf bis zu zwei Spalten sticky werden; Super Bonus startet mit einer bereits offenen sticky Spalte. Mehrere Super-Wild-Multiplikatoren in einem Dreh werden miteinander multipliziert.',
+	GAME_INFO_PAW_BODY_SOCIAL: 'Paw-Münzen erscheinen nur in der Basisrunde. Bronze wandelt eine Reihe, Silber zwei Reihen und Gold drei Reihen nach dem Zählen der Linienpreise in Münzpreise um. Niedrige Symbole zahlen ×1 Spiel, mittlere hohe ×2 und Top-Symbole, Wild oder Bonus ×3. Die Paw-Münze selbst zahlt nichts. Paw und Super Wild können nicht im selben Dreh auslösen.',
+	GAME_INFO_BULLET_BODY_SOCIAL: 'Während der Haupt-Freispiele füllen Kugel-Symbole die Revolvertrommel (maximal 6). Wenn die Hauptdrehs enden, schießt die Katze automatisch auf Ziele. Jeder Treffer kann nichts oder +1, +2 oder +3 Extra-Freispiele geben. Kugeln erscheinen in diesen Extra-Drehs nicht und es gibt keine zweite Schussrunde.',
 };
 
 const es = {
-	...en,
 	BET_SOCIAL: 'PLAY',
 	WIN_SOCIAL: 'PREMIO',
 	BUY_BONUS_SOCIAL: 'JUGAR BONO',
@@ -147,35 +145,38 @@ const es = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: 'Jugar bono',
 	AUTO_BET_SOCIAL: 'Autojuego',
 	MAX_WIN_SOCIAL: 'PREMIO MÁX.',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'Recarga tu saldo o reduce el importe de play para continuar.',
+	PER_SPIN_SUFFIX_SOCIAL: 'per play',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE_SOCIAL: 'Insufficient balance',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: 'Recarga tu saldo o reduce el importe de play para continuar.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'Límite de parada alcanzado',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'El autojuego se detuvo porque se alcanzó el límite de parada.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Límite de premio único alcanzado',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
-		'El autojuego se detuvo porque se alcanzó el límite de premio único.',
-	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury es una tragamonedas de 5 rodillos y 5 filas con 25 líneas de pago. Los premios se otorgan de izquierda a derecha en rodillos adyacentes, empezando por el rodillo más a la izquierda. Se necesitan al menos 3 símbolos iguales en una línea de pago para obtener un premio. Solo se otorga el premio más alto por línea.',
-	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Las 25 líneas de pago están siempre activas. Los premios se otorgan de izquierda a derecha en rodillos adyacentes, empezando por el rodillo más a la izquierda. Se necesitan al menos 3 símbolos iguales en rodillos adyacentes para crear una línea ganadora válida.',
-	GAME_INFO_WILD_BODY_SOCIAL:
-		'El símbolo Wild sustituye a todos los símbolos de pago excepto Bonus. Wild paga 225× giro por 5 iguales.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: 'El autojuego se detuvo porque se alcanzó el límite de premio único.',
+	GAME_INFO_ABOUT_BODY_SOCIAL: 'Cat Mafia es una tragamonedas de 5 rodillos y 4 filas con 20 líneas de premio. Los premios se otorgan de izquierda a derecha en rodillos adyacentes, empezando por el rodillo más a la izquierda. Se requieren al menos 3 símbolos iguales en una línea para un premio. Solo se otorga el premio más alto por línea. En el juego base, las monedas Paw y Super Wild pueden activarse en un giro, pero nunca ambas en el mismo giro. Consigue 3 o más símbolos Bonus para entrar en giros gratis y elige un objetivo para 8, 10 o 12 giros gratis.',
+	GAME_INFO_PAYLINES_TITLE_SOCIAL: 'LÍNEAS DE PREMIO (20)',
+	GAME_INFO_PAYLINES_NOTE_SOCIAL: 'Las 20 líneas de premio están siempre activas. Los premios se otorgan de izquierda a derecha en rodillos adyacentes, empezando por el rodillo más a la izquierda. Se requieren al menos 3 símbolos iguales en rodillos adyacentes para formar una línea ganadora válida.',
+	GAME_INFO_WILD_BODY_SOCIAL: 'El símbolo Wild sustituye a todos los símbolos de premio excepto Bonus. Wild paga 225× juego por 5 iguales.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'MODOS DE JUEGO',
-	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'El mal funcionamiento anula todos los premios y jugadas. Se requiere conexión a internet estable. Si se pierde la conexión, recarga el juego para completar rondas pendientes. El retorno esperado se calcula en muchas partidas. La pantalla no representa ningún dispositivo físico y es solo ilustrativa. Las recompensas se liquidan según el importe recibido del Remote Game Server y no según eventos del navegador. TM y © 2026 Stake Engine.',
+	GAME_INFO_BET_MODES_BODY_SOCIAL: 'Base (1×): La partida clásica de Cat Mafia — líneas, monedas Paw y cortinas Super Wild en cada giro. Consigue 3+ Bonus para giros gratis: elige un objetivo para 8, 10 o 12 giros (3 Bonus = Normal Bonus · 4+ = Super Bonus con columna sticky Super Wild desde el giro uno). Los premios se pagan como múltiplos de tu juego base. RTP 96,01% · Premio máx. 2.500×.\nBonus Boost (2×): Sube la presión — juega a 2× y caza Bonus con más agresividad. Los giros gratis se activan más a menudo con las mismas reglas que Base. Cada premio sigue pagando como múltiplo de tu juego base, no del importe 2×. RTP 96,01% · Premio máx. 2.500×.\nJugar Normal Bonus (100×): Directo a la acción. Juega por 100× tu juego base, elige un objetivo para 8–12 giros gratis, recoge balas en el revólver y deja que el gato dispare por rondas extra — sin Super Wild sticky al inicio. Los premios se pagan como múltiplos de tu juego base. RTP 96,01% · Premio máx. 25.000×.\nJugar Super Bonus (200×): El atraco premium. Misma elección de objetivo y final con balas, pero una columna Super Wild ya está abierta desde tu primer giro. Los premios se pagan como múltiplos de tu juego base. RTP 96,01% · Premio máx. 25.000×.\nJugar Duel — Gato (150×): Elige tu bando — 10 giros cada uno. Juega como Gato con ~50% de probabilidad de ir por delante; vence al Perro y llévate ambos bancos. Los premios se pagan como múltiplos de tu juego base. RTP 96,01% · Premio máx. 25.000×.\nJugar Duel — Perro (150×): Alta volatilidad — el Perro gana menos a menudo pero puede dar premios más fuertes cuando va por delante. Mismo formato 10+10; supera al Gato y reclama ambos bancos. Los premios se pagan como múltiplos de tu juego base. RTP 96,01% · Premio máx. 25.000×.',
+	GAME_INFO_CONTROLS_TITLE_SOCIAL: 'GUÍA DE INTERACCIÓN',
+	GAME_INFO_CONTROLS_BODY_SOCIAL: 'Spin: Pulsa Spin para iniciar una ronda. Durante una ronda, el mismo botón puede detener los rodillos o el autoplay. No se puede iniciar una nueva ronda mientras otra esté en curso o si no hay saldo suficiente.\nBarra espaciadora: Pulsa Espacio para la misma acción que Spin. Mantén Espacio para juego rápido continuo. Con Autoplay abierto, Espacio inicia autoplay.\nImporte de juego (−): Disminuye tu importe de juego. Solo disponible cuando el juego está inactivo.\nImporte de juego (+): Aumenta tu importe de juego. Solo disponible cuando el juego está inactivo.\nPlay Bonus: Abre Play Bonus para jugar Normal Bonus, Super Bonus o Duel. Confirma para iniciar la función al instante.\nBonus Boost: Activa Bonus Boost para jugar a 2× tu juego base con más símbolos Bonus. Actívalo o desactívalo desde Play Bonus o Autoplay.\nAutoplay: Elige el número de rondas e inicia juego automático. Pulsa Autoplay de nuevo para detenerlo.\nTurbo: Alterna la velocidad del juego entre niveles 1, 2 y 3.\nInfo: Abre esta pantalla de información del juego.\nMenu: Abre Ajustes.\nBalance: Muestra tu saldo actual.\nJuego: Muestra tu importe de juego seleccionado.',
+	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'WINTABLE (× PLAY)',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All win values are multiples of the base play.',
+	GAME_INFO_LEGAL_BODY_SOCIAL: 'El mal funcionamiento anula todos los premios y jugadas. Se requiere conexión a internet estable. Si se pierde la conexión, recarga el juego para completar rondas pendientes. El retorno esperado se calcula en muchas partidas. La pantalla no representa ningún dispositivo físico y es solo ilustrativa. Las recompensas se liquidan según el importe recibido del Remote Game Server y no según eventos del navegador. TM y © 2026 Stake Engine.',
+	REPLAY_TITLE_SOCIAL: 'Repetición de jugada',
 	REPLAY_BASE_BET_SOCIAL: 'Jugada base',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Multiplicador de función',
-	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Multiplicador final',
-	REPLAY_TITLE_SOCIAL: 'Repetición de jugada',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Importe total de jugada',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Multiplicador final',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Premio total',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'Esta es la repetición de una jugada anterior. No se iniciarán nuevas jugadas.',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'Esta es la repetición de una jugada anterior. No se iniciarán nuevas jugadas.',
+	GAME_INFO_DUEL_BONUS_BODY_SOCIAL: 'El símbolo Duel Bonus aparece solo al comprar Duel por 150× tu juego base. Tres símbolos Duel Bonus caen en la revelación de compra e inician la función: elige Gato o Perro, luego dos tableros giran 10 rondas cada uno. Supera el premio total del rival y llévate ambos bancos. El modo Duel no tiene giros gratis, monedas Paw ni balas.',
+	GAME_INFO_SUPER_WILD_BODY_SOCIAL: 'Super Wild es independiente del Wild normal y puede mostrar multiplicadores ×2, ×4, ×6, ×8 o, raramente, ×25, ×50 o ×75. En el juego base expande su columna solo cuando forma parte de una línea ganadora y luego multiplica el premio del giro. En giros gratis puede expandirse sin línea ganadora y volverse sticky en hasta dos columnas; Super Bonus comienza con una columna sticky ya abierta. Varios multiplicadores Super Wild en un giro se multiplican entre sí.',
+	GAME_INFO_PAW_BODY_SOCIAL: 'Las monedas Paw aparecen solo en el juego base. Bronce convierte una fila, plata dos filas y oro tres filas en premios de monedas tras contar las líneas. Símbolos bajos pagan ×1 juego, medios altos ×2 y símbolos top, Wild o Bonus ×3. La moneda Paw en sí no paga. Paw y Super Wild no pueden activarse en el mismo giro.',
+	GAME_INFO_BULLET_BODY_SOCIAL: 'Durante los giros gratis principales, los símbolos Bullet llenan el tambor del revólver (máximo 6). Al terminar los giros principales, el gato dispara automáticamente a los objetivos. Cada impacto puede no dar nada o +1, +2 o +3 giros gratis extra. Las balas no aparecen en esos giros extra y no hay una segunda ronda de disparos.',
 };
 
 const fr = {
-	...en,
 	BET_SOCIAL: 'PLAY',
 	WIN_SOCIAL: 'PRIX',
 	BUY_BONUS_SOCIAL: 'JOUER BONUS',
@@ -188,35 +189,38 @@ const fr = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: 'Jouer bonus',
 	AUTO_BET_SOCIAL: 'Jeu auto',
 	MAX_WIN_SOCIAL: 'PRIX MAX',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'Rechargez votre solde ou réduisez le montant de play pour continuer.',
+	PER_SPIN_SUFFIX_SOCIAL: 'per play',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE_SOCIAL: 'Insufficient balance',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: 'Rechargez votre solde ou réduisez le montant de play pour continuer.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'Limite d’arrêt atteinte',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'Le jeu auto s’est arrêté car la limite d’arrêt a été atteinte.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Limite de prix unique atteinte',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
-		'Le jeu auto s’est arrêté car la limite de prix unique a été atteinte.',
-	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury est une machine à 5 rouleaux et 5 rangées avec 25 lignes de paiement. Les prix sont attribués de gauche à droite sur des rouleaux adjacents, à partir du rouleau le plus à gauche. Un minimum de 3 symboles identiques sur une ligne de paiement est requis pour un prix. Seul le prix le plus élevé par ligne est attribué.',
-	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Les 25 lignes de paiement sont toujours actives. Les prix sont attribués de gauche à droite sur des rouleaux adjacents, à partir du rouleau le plus à gauche. Un minimum de 3 symboles identiques sur des rouleaux adjacents est requis pour une ligne gagnante valide.',
-	GAME_INFO_WILD_BODY_SOCIAL:
-		'Le symbole Wild remplace tous les symboles payants sauf Bonus. Wild paie 225× spin pour 5 identiques.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: 'Le jeu auto s’est arrêté car la limite de prix unique a été atteinte.',
+	GAME_INFO_ABOUT_BODY_SOCIAL: 'Cat Mafia est une machine à sous à 5 rouleaux et 4 rangées avec 20 lignes de prix. Les prix sont attribués de gauche à droite sur des rouleaux adjacents, en commençant par le rouleau le plus à gauche. Il faut au minimum 3 symboles identiques sur une ligne pour un prix. Seul le prix le plus élevé par ligne est attribué. En jeu de base, les pièces Paw et Super Wild peuvent se déclencher lors d\'un tour, mais jamais les deux sur le même tour. Obtenez 3 symboles Bonus ou plus pour entrer dans les free spins et choisissez une cible pour 8, 10 ou 12 free spins.',
+	GAME_INFO_PAYLINES_TITLE_SOCIAL: 'LIGNES DE PRIX (20)',
+	GAME_INFO_PAYLINES_NOTE_SOCIAL: 'Les 20 lignes de prix sont toujours actives. Les prix sont attribués de gauche à droite sur des rouleaux adjacents, en commençant par le rouleau le plus à gauche. Il faut au minimum 3 symboles identiques sur des rouleaux adjacents pour former une ligne gagnante valide.',
+	GAME_INFO_WILD_BODY_SOCIAL: 'Le symbole Wild remplace tous les symboles payants sauf Bonus. Wild paie 225× jeu pour 5 identiques.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'MODES DE JEU',
-	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Un dysfonctionnement annule tous les prix et parties. Une connexion internet stable est requise. En cas de déconnexion, rechargez le jeu pour terminer les manches incomplètes. Le retour attendu est calculé sur de nombreuses parties. L’affichage ne représente aucun appareil physique et est illustratif. Les récompenses sont réglées selon le montant reçu du Remote Game Server et non selon les événements du navigateur. TM et © 2026 Stake Engine.',
+	GAME_INFO_BET_MODES_BODY_SOCIAL: 'Base (1×) : La course classique Cat Mafia — lignes, pièces Paw et rideaux Super Wild à chaque tour. Obtenez 3+ Bonus pour les free spins : choisissez une cible pour 8, 10 ou 12 tours (3 Bonus = Normal Bonus · 4+ = Super Bonus avec colonne sticky Super Wild dès le tour un). Les prix sont payés en multiples de votre jeu de base. RTP 96,01 % · Prix max. 2 500×.\nBonus Boost (2×) : Montez la pression — jouez à 2× et chassez les Bonus plus agressivement. Les free spins se déclenchent plus souvent avec les mêmes règles que Base. Chaque prix reste un multiple de votre jeu de base, pas du montant 2×. RTP 96,01 % · Prix max. 2 500×.\nJouer Normal Bonus (100×) : Directement dans l\'action. Jouez pour 100× votre jeu de base, choisissez une cible pour 8–12 free spins, collectez des balles et laissez le chat tirer pour des tours supplémentaires — sans Super Wild sticky au départ. Les prix sont payés en multiples de votre jeu de base. RTP 96,01 % · Prix max. 25 000×.\nJouer Super Bonus (200×) : Le braquage premium. Même choix de cible et finale à balles, mais une colonne Super Wild est déjà ouverte dès votre premier tour. Les prix sont payés en multiples de votre jeu de base. RTP 96,01 % · Prix max. 25 000×.\nJouer Duel — Chat (150×) : Choisissez votre camp — 10 tours chacun. Jouez le Chat avec ~50 % de chances d\'être en tête ; battez le Chien et empochez les deux banques. Les prix sont payés en multiples de votre jeu de base. RTP 96,01 % · Prix max. 25 000×.\nJouer Duel — Dog (150×) : Haute volatilité — le Chien gagne moins souvent mais peut payer plus fort quand il mène. Même format 10+10 ; dépassez le Chat et réclamez les deux banques. Les prix sont payés en multiples de votre jeu de base. RTP 96,01 % · Prix max. 25 000×.',
+	GAME_INFO_CONTROLS_TITLE_SOCIAL: 'GUIDE D\'INTERACTION',
+	GAME_INFO_CONTROLS_BODY_SOCIAL: 'Spin : Appuyez sur Spin pour démarrer une partie. Pendant une partie, le même bouton peut arrêter les rouleaux ou l\'autoplay. Une nouvelle partie ne peut pas démarrer tant qu\'une autre est en cours ou si le solde est insuffisant.\nBarre d\'espace : Appuyez sur Espace pour la même action que Spin. Maintenez Espace pour un jeu rapide continu. Quand Autoplay est ouvert, Espace lance l\'autoplay.\nMontant de jeu (−) : Diminue votre montant de jeu. Disponible uniquement lorsque le jeu est inactif.\nMontant de jeu (+) : Augmente votre montant de jeu. Disponible uniquement lorsque le jeu est inactif.\nPlay Bonus : Ouvrez Play Bonus pour jouer Normal Bonus, Super Bonus ou Duel. Confirmez pour lancer la fonction immédiatement.\nBonus Boost : Activez Bonus Boost pour jouer à 2× votre jeu de base avec plus de symboles Bonus. Activez ou désactivez depuis Play Bonus ou Autoplay.\nAutoplay : Choisissez le nombre de parties et lancez le jeu automatique. Appuyez à nouveau sur Autoplay pour l\'arrêter.\nTurbo : Alternez la vitesse du jeu entre les niveaux 1, 2 et 3.\nInfo : Ouvre cet écran d\'information sur le jeu.\nMenu : Ouvre les Paramètres.\nBalance : Affiche votre solde actuel.\nJeu : Affiche votre montant de jeu sélectionné.',
+	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'WINTABLE (× PLAY)',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All win values are multiples of the base play.',
+	GAME_INFO_LEGAL_BODY_SOCIAL: 'Un dysfonctionnement annule tous les prix et parties. Une connexion internet stable est requise. En cas de déconnexion, rechargez le jeu pour terminer les manches incomplètes. Le retour attendu est calculé sur de nombreuses parties. L’affichage ne représente aucun appareil physique et est illustratif. Les récompenses sont réglées selon le montant reçu du Remote Game Server et non selon les événements du navigateur. TM et © 2026 Stake Engine.',
+	REPLAY_TITLE_SOCIAL: 'Replay de jeu',
 	REPLAY_BASE_BET_SOCIAL: 'Jeu de base',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Multiplicateur de fonction',
-	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Multiplicateur final',
-	REPLAY_TITLE_SOCIAL: 'Replay de jeu',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Montant total de jeu',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Multiplicateur final',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Prix total',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'Ceci est le replay d’une manche de jeu précédente. Aucune nouvelle partie ne sera lancée.',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'Ceci est le replay d’une manche de jeu précédente. Aucune nouvelle partie ne sera lancée.',
+	GAME_INFO_DUEL_BONUS_BODY_SOCIAL: 'Le symbole Duel Bonus n\'apparaît que lorsque vous achetez Duel pour 150× votre jeu de base. Trois symboles Duel Bonus atterrissent lors de la révélation d\'achat et lancent la fonction — choisissez Chat ou Chien, puis deux plateaux tournent 10 tours chacun. Battez le prix total de l\'adversaire et empochez les deux banques. Le mode Duel n\'a pas de free spins, de pièces Paw ni de balles.',
+	GAME_INFO_SUPER_WILD_BODY_SOCIAL: 'Super Wild est distinct du Wild classique et peut afficher des multiplicateurs ×2, ×4, ×6, ×8 ou, rarement, ×25, ×50 ou ×75. En jeu de base, il n\'étend sa colonne que s\'il fait partie d\'une ligne gagnante, puis multiplie le prix du tour. En free spins, il peut s\'étendre sans ligne gagnante et devenir sticky sur jusqu\'à deux colonnes ; Super Bonus commence avec une colonne sticky déjà ouverte. Plusieurs multiplicateurs Super Wild sur un même tour se multiplient entre eux.',
+	GAME_INFO_PAW_BODY_SOCIAL: 'Les pièces Paw n\'apparaissent qu\'en jeu de base. Le bronze convertit une rangée, l\'argent deux rangées et l\'or trois rangées en prix de pièces après le comptage des lignes. Les symboles bas paient ×1 jeu, les moyens-hauts ×2 et les symboles top, Wild ou Bonus ×3. La pièce Paw elle-même ne paie rien. Paw et Super Wild ne peuvent pas se déclencher sur le même tour.',
+	GAME_INFO_BULLET_BODY_SOCIAL: 'Pendant les free spins principaux, les symboles Bullet remplissent le barillet du revolver (maximum 6). Quand les tours principaux se terminent, le chat tire automatiquement sur les cibles. Chaque impact peut ne rien donner ou +1, +2 ou +3 free spins supplémentaires. Les balles n\'apparaissent pas sur ces tours supplémentaires et il n\'y a pas de seconde ronde de tir.',
 };
 
 const pl = {
-	...en,
 	BET_SOCIAL: 'PLAY',
 	WIN_SOCIAL: 'NAGRODA',
 	BUY_BONUS_SOCIAL: 'GRAJ BONUS',
@@ -229,35 +233,38 @@ const pl = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: 'Graj bonus',
 	AUTO_BET_SOCIAL: 'Autogra',
 	MAX_WIN_SOCIAL: 'MAKS. NAGRODA',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'Doładuj saldo lub zmniejsz kwotę play, aby kontynuować grę.',
+	PER_SPIN_SUFFIX_SOCIAL: 'per play',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE_SOCIAL: 'Insufficient balance',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: 'Doładuj saldo lub zmniejsz kwotę play, aby kontynuować grę.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'Osiągnięto limit zatrzymania',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'Autogra zatrzymana, ponieważ osiągnięto limit zatrzymania.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Osiągnięto limit pojedynczej nagrody',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
-		'Autogra zatrzymana, ponieważ osiągnięto limit pojedynczej nagrody.',
-	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury to slot 5×5 z 25 liniami wypłat. Nagrody są przyznawane od lewej do prawej na sąsiednich bębnach, zaczynając od skrajnie lewego. Do nagrody na linii potrzeba minimum 3 pasujących symboli. Na linii wypłacana jest tylko najwyższa nagroda.',
-	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Wszystkie 25 linii jest zawsze aktywnych. Nagrody są przyznawane od lewej do prawej na sąsiednich bębnach, zaczynając od skrajnie lewego. Do utworzenia ważnej linii wygrywającej potrzeba minimum 3 pasujących symboli na sąsiednich bębnach.',
-	GAME_INFO_WILD_BODY_SOCIAL:
-		'Symbol Wild zastępuje wszystkie płatne symbole oprócz Bonus. Wild płaci 225× spin za 5 takich samych.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: 'Autogra zatrzymana, ponieważ osiągnięto limit pojedynczej nagrody.',
+	GAME_INFO_ABOUT_BODY_SOCIAL: 'Cat Mafia to automat 5-bębnowy i 4-rzędowy z 20 liniami nagrody. Nagrody przyznawane są od lewej do prawej na sąsiednich bębnach, zaczynając od skrajnie lewego. Minimum 3 identyczne symbole na linii daje nagrodę. Tylko najwyższa nagroda na linię jest przyznawana. W grze podstawowej monety Paw lub Super Wild mogą wystąpić w spinie, ale nigdy oba naraz. Traf 3+ symboli Bonus, aby wejść w darmowe spiny i wybrać cel na 8, 10 lub 12 spinów.',
+	GAME_INFO_PAYLINES_TITLE_SOCIAL: 'LINIE NAGRODY (20)',
+	GAME_INFO_PAYLINES_NOTE_SOCIAL: 'Wszystkie 20 linii jest zawsze aktywnych. Nagrody liczone są od lewej do prawej na sąsiednich bębnach, zaczynając od skrajnie lewego. Minimum 3 identyczne symbole na sąsiednich bębnach tworzy linię nagrodową.',
+	GAME_INFO_WILD_BODY_SOCIAL: 'Symbol Wild zastępuje wszystkie płatne symbole oprócz Bonus. Wild płaci 225× gry za 5 identycznych.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'TRYBY GRY',
-	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Awarie unieważniają wszystkie nagrody i gry. Wymagane stabilne połączenie internetowe. Po rozłączeniu przeładuj grę, aby dokończyć niedokończone rundy. Oczekiwany zwrot liczony jest na wielu grach. Wyświetlacz nie przedstawia urządzenia fizycznego i służy wyłącznie ilustracji. Nagrody rozliczane są według kwoty z Remote Game Server, a nie zdarzeń w przeglądarce. TM i © 2026 Stake Engine.',
+	GAME_INFO_BET_MODES_BODY_SOCIAL: 'Base (1×): Klasyczna rozgrywka Cat Mafia — linie, monety Paw i kurtyny Super Wild przy każdym spinie. Traf 3+ Bonus na darmowe spiny: wybierz cel na 8, 10 lub 12 spinów (3 Bonus = Normal Bonus · 4+ = Super Bonus ze sticky Super Wild od spinu jeden). Nagrody jako wielokrotność gry bazowej. RTP 96,01% · Maks. nagroda 2 500×.\nBonus Boost (2×): Graj za 2× i poluj na Bonus częściej. Darmowe spiny częściej z tymi samymi zasadami co Base. Nagrody liczone od gry bazowej, nie kwoty 2×. RTP 96,01% · Maks. nagroda 2 500×.\nGraj Normal Bonus (100×): Od razu do akcji. Graj za 100× gry bazowej, wybierz cel na 8–12 spinów, zbieraj naboje i pozwól kotu strzelać — bez sticky Super Wild na starcie. Nagrody jako wielokrotność gry bazowej. RTP 96,01% · Maks. nagroda 25 000×.\nGraj Super Bonus (200×): Premium napad. Ten sam wybór celu i finał z nabojami, ale kolumna Super Wild jest już otwarta od pierwszego spinu. Nagrody jako wielokrotność gry bazowej. RTP 96,01% · Maks. nagroda 25 000×.\nGraj Duel — Kot (150×): Wybierz stronę — po 10 spinów. Graj Kotem z ~50% szansą na prowadzenie; pokonaj Psa i zgarnij oba banki. Nagrody jako wielokrotność gry bazowej. RTP 96,01% · Maks. nagroda 25 000×.\nGraj Duel — Pies (150×): Wysoka zmienność — Pies wygrywa rzadziej, ale może dać większe nagrody na prowadzeniu. Ten sam format 10+10; pokonaj Kota i zgarnij oba banki. Nagrody jako wielokrotność gry bazowej. RTP 96,01% · Maks. nagroda 25 000×.',
+	GAME_INFO_CONTROLS_TITLE_SOCIAL: 'PRZEWODNIK OBSŁUGI',
+	GAME_INFO_CONTROLS_BODY_SOCIAL: 'Spin: Naciśnij Spin, aby rozpocząć rundę. W trakcie rundy ten sam przycisk może zatrzymać bębny lub autoplay. Nowej rundy nie można rozpocząć, gdy trwa inna runda lub animacja albo gdy brakuje salda.\nSpacja: Naciśnij Spację, aby wykonać tę samą akcję co Spin. Przytrzymaj Spację dla szybkiej gry ciągłej. Gdy panel Autoplay jest otwarty, Spacja uruchamia autoplay.\nKwota gry (−): Zmniejsza stawkę. Dostępne tylko gdy gra jest bezczynna.\nKwota gry (+): Zwiększa stawkę. Dostępne tylko gdy gra jest bezczynna.\nPlay Bonus: Otwórz Play Bonus, aby grać Normal Bonus, Super Bonus lub Duel. Potwierdź , aby natychmiast uruchomić wybraną funkcję.\nBonus Boost: Włącz Bonus Boost, aby grać za 2× gry bazowej z większą liczbą symboli Bonus. Włącz/wyłącz w panelu Play Bonus lub Autoplay.\nAutoplay: Wybierz liczbę rund i uruchom grę automatyczną. Naciśnij Autoplay ponownie, aby zatrzymać.\nTurbo: Przełączaj prędkość gry przez poziomy 1, 2 i 3.\nInfo: Otwiera ten ekran informacji o grze.\nMenu: Otwiera Ustawienia.\nBalance: Pokazuje aktualne saldo.\nGra: Pokazuje wybraną stawkę.',
+	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'WINTABLE (× PLAY)',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All win values are multiples of the base play.',
+	GAME_INFO_LEGAL_BODY_SOCIAL: 'Awarie unieważniają wszystkie nagrody i gry. Wymagane stabilne połączenie internetowe. Po rozłączeniu przeładuj grę, aby dokończyć niedokończone rundy. Oczekiwany zwrot liczony jest na wielu grach. Wyświetlacz nie przedstawia urządzenia fizycznego i służy wyłącznie ilustracji. Nagrody rozliczane są według kwoty z Remote Game Server, a nie zdarzeń w przeglądarce. TM i © 2026 Stake Engine.',
+	REPLAY_TITLE_SOCIAL: 'Powtórka gry',
 	REPLAY_BASE_BET_SOCIAL: 'Gra bazowa',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Mnożnik funkcji',
-	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Mnożnik końcowy',
-	REPLAY_TITLE_SOCIAL: 'Powtórka gry',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Całkowita kwota gry',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Mnożnik końcowy',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Całkowita nagroda',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'To powtórka poprzedniej rundy gry. Żadne nowe gry nie zostaną rozpoczęte.',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'To powtórka poprzedniej rundy gry. Żadne nowe gry nie zostaną rozpoczęte.',
+	GAME_INFO_DUEL_BONUS_BODY_SOCIAL: 'Symbol Duel Bonus pojawia się tylko przy zakupie Duel za 150× gry bazowej. Trzy symbole Duel Bonus lądują przy reveal zakupu i uruchamiają funkcję — wybierz Kota lub Psa, potem dwa plansze kręcą się po 10 rund. Pokonaj sumę przeciwnika i zgarnij oba banki. W Duel nie ma darmowych spinów, monet Paw ani nabojów.',
+	GAME_INFO_SUPER_WILD_BODY_SOCIAL: 'Super Wild jest oddzielny od zwykłego Wild i może pokazywać mnożniki ×2, ×4, ×6, ×8 lub rzadko ×25, ×50, ×75. W grze podstawowej rozszerza kolumnę tylko gdy tworzy linię wygrywającą, potem mnoży wygraną spinu. W darmowych spinach może rozszerzyć się bez linii i stać się sticky na do dwóch kolumn; Super Bonus zaczyna z jedną otwartą sticky kolumną. Wiele mnożników Super Wild na jednym spinie mnoży się.',
+	GAME_INFO_PAW_BODY_SOCIAL: 'Monety Paw pojawiają się tylko w grze podstawowej. Brąz zamienia 1 rząd, srebro 2, złoto 3 w monety po policzeniu linii. Niskie symbole płacą ×1 gry, średnie ×2, top/Wild/Bonus ×3. Sama moneta Paw nie płaci. Paw i Super Wild nie mogą wystąpić w tym samym spinie.',
+	GAME_INFO_BULLET_BODY_SOCIAL: 'W głównych darmowych spinach symbole Bullet wypełniają bęben rewolweru (maks. 6). Po zakończeniu głównych spinów kot automatycznie strzela do celów. Każde trafienie może dać nic lub +1, +2, +3 dodatkowych spinów. Naboje nie pojawiają się w dodatkowych spinach i nie ma drugiej rundy strzelania.',
 };
 
 const pt = {
-	...en,
 	BET_SOCIAL: 'PLAY',
 	WIN_SOCIAL: 'PRÉMIO',
 	BUY_BONUS_SOCIAL: 'JOGAR BÓNUS',
@@ -270,35 +277,38 @@ const pt = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: 'Jogar bónus',
 	AUTO_BET_SOCIAL: 'Jogo auto',
 	MAX_WIN_SOCIAL: 'PRÉMIO MÁX.',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'Carregue o saldo ou reduza o valor de play para continuar.',
+	PER_SPIN_SUFFIX_SOCIAL: 'per play',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE_SOCIAL: 'Insufficient balance',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: 'Carregue o saldo ou reduza o valor de play para continuar.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'Limite de paragem atingido',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'O jogo auto parou porque o limite de paragem foi atingido.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Limite de prémio único atingido',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
-		'O jogo auto parou porque o limite de prémio único foi atingido.',
-	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury é uma slot de 5 rolos e 5 filas com 25 linhas de pagamento. Os prémios são atribuídos da esquerda para a direita em rolos adjacentes, começando no rolos mais à esquerda. É necessário um mínimo de 3 símbolos iguais numa linha de pagamento para um prémio. Apenas o prémio mais alto por linha é atribuído.',
-	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Todas as 25 linhas estão sempre ativas. Os prémios são atribuídos da esquerda para a direita em rolos adjacentes, começando no rolos mais à esquerda. É necessário um mínimo de 3 símbolos iguais em rolos adjacentes para criar uma linha vencedora válida.',
-	GAME_INFO_WILD_BODY_SOCIAL:
-		'O símbolo Wild substitui todos os símbolos pagantes exceto Bonus. Wild paga 225× giro por 5 iguais.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: 'O jogo auto parou porque o limite de prémio único foi atingido.',
+	GAME_INFO_ABOUT_BODY_SOCIAL: 'Cat Mafia é um slot de 5 rolos e 4 filas com 20 linhas de prémio. Os prémios são atribuídos da esquerda para a direita em rolos adjacentes, a partir do rolo mais à esquerda. São necessários pelo menos 3 símbolos iguais numa linha para um prémio. Só é atribuído o prémio mais alto por linha. No jogo base, moedas Paw e Super Wild podem ativar num giro, mas nunca ambos no mesmo giro. Obtenha 3 ou mais símbolos Bonus para entrar em rodadas grátis e escolha um alvo para 8, 10 ou 12 rodadas grátis.',
+	GAME_INFO_PAYLINES_TITLE_SOCIAL: 'LINHAS DE PRÉMIO (20)',
+	GAME_INFO_PAYLINES_NOTE_SOCIAL: 'As 20 linhas de prémio estão sempre ativas. Os prémios são atribuídos da esquerda para a direita em rolos adjacentes, a partir do rolo mais à esquerda. São necessários pelo menos 3 símbolos iguais em rolos adjacentes para formar uma linha vencedora válida.',
+	GAME_INFO_WILD_BODY_SOCIAL: 'O símbolo Wild substitui todos os símbolos de prémio exceto Bonus. Wild paga 225× jogo por 5 iguais.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'MODOS DE JOGO',
-	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Avaria anula todos os prémios e jogadas. É necessária ligação estável à internet. Se a ligação cair, recarregue o jogo para concluir rondas incompletas. O retorno esperado é calculado em muitas jogadas. O ecrã não representa qualquer dispositivo físico e é apenas ilustrativo. As recompensas são liquidadas conforme o montante recebido do Remote Game Server e não eventos no browser. TM e © 2026 Stake Engine.',
+	GAME_INFO_BET_MODES_BODY_SOCIAL: 'Base (1×): A jogabilidade clássica de Cat Mafia — prémios de linha, moedas Paw e cortinas Super Wild em cada giro. Obtenha 3+ Bonus para rodadas grátis: escolha um alvo para 8, 10 ou 12 giros (3 Bonus = Normal Bonus · 4+ = Super Bonus com coluna sticky Super Wild desde o giro um). Os prémios pagam como múltiplos da jogo base. RTP 96,01% · Prémio máx. 2.500×.\nBonus Boost (2×): Aumente a pressão — jogue com aposta 2× e cace Bonus com mais agressividade. As rodadas grátis ativam-se mais vezes com as mesmas regras que Base. Cada prémio continua a pagar como múltiplo da jogo base, não do custo 2× do giro. RTP 96,01% · Prémio máx. 2.500×.\nJogar Normal Bonus (100×): Direto à ação. Jogue por 100× a jogo base, escolha um alvo para 8–12 rodadas grátis, recolha balas no revólver e deixe o gato disparar por rondas extra — sem Super Wild sticky no início. Os prémios pagam como múltiplos da jogo base. RTP 96,01% · Prémio máx. 25.000×.\nJogar Super Bonus (200×): O assalto premium. Mesma escolha de alvo e final com balas, mas uma coluna Super Wild já está aberta desde o primeiro giro — wilds sticky, colunas multiplicadoras e maior potencial de bónus. Os prémios pagam como múltiplos da jogo base. RTP 96,01% · Prémio máx. 25.000×.\nJogar Duel — Gato (150×): Escolha o seu lado num duelo de dois tabuleiros — 10 giros cada. Jogue como Gato com ~50% de probabilidade de ir à frente; vença o Cão e fique com ambos os bancos. Os prémios pagam como múltiplos da jogo base. RTP 96,01% · Prémio máx. 25.000×.\nJogar Duel — Cão (150×): Alta volatilidade, teto elevado — o Cão ganha menos vezes mas pode dar prémios mais fortes quando vai à frente. Mesmo formato 10+10; supere o Gato e reclame ambos os bancos. Os prémios pagam como múltiplos da jogo base. RTP 96,01% · Prémio máx. 25.000×.',
+	GAME_INFO_CONTROLS_TITLE_SOCIAL: 'GUIA DE INTERAÇÃO',
+	GAME_INFO_CONTROLS_BODY_SOCIAL: 'Spin: Prima o botão Spin para iniciar uma ronda. Durante uma ronda, o mesmo botão pode parar os rolos ou o autoplay quando disponível. Não é possível iniciar uma nova ronda enquanto outra ronda ou animação está em curso, ou se não houver saldo suficientes.\nBarra de espaço: Prima Espaço para a mesma ação que Spin. Mantenha Espaço para jogo rápido contínuo. Com o painel Autoplay aberto, Espaço inicia autoplay. Espaço também continua ecrãs Press to Continue.\nValor da jogo (−): Use o botão menos para diminuir a jogo. Disponível apenas quando o jogo está inativo.\nValor da jogo (+): Use o botão mais para aumentar a jogo. Disponível apenas quando o jogo está inativo.\nPlay Bonus: Abra Play Bonus para jogar Normal Bonus, Super Bonus ou Duel. Confirme a  para iniciar a funcionalidade selecionada de imediato.\nBonus Boost: Ative Bonus Boost para jogar a 2× a jogo base com mais símbolos Bonus. Ative ou desative no painel Play Bonus ou Autoplay.\nAutoplay: Abra Autoplay para escolher o número de rondas e iniciar jogo automático. Prima Autoplay novamente para parar.\nTurbo: Prima Turbo para alternar a velocidade do jogo entre níveis 1, 2 e 3.\nInfo: Abre este ecrã de informação do jogo.\nMenu: Abre Definições para velocidade, volume geral e música.\nBalance: Mostra o saldo atual.\nJogo: Mostra a jogo selecionada.',
+	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'WINTABLE (× PLAY)',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All win values are multiples of the base play.',
+	GAME_INFO_LEGAL_BODY_SOCIAL: 'Avaria anula todos os prémios e jogadas. É necessária ligação estável à internet. Se a ligação cair, recarregue o jogo para concluir rondas incompletas. O retorno esperado é calculado em muitas jogadas. O ecrã não representa qualquer dispositivo físico e é apenas ilustrativo. As recompensas são liquidadas conforme o montante recebido do Remote Game Server e não eventos no browser. TM e © 2026 Stake Engine.',
+	REPLAY_TITLE_SOCIAL: 'Replay do jogo',
 	REPLAY_BASE_BET_SOCIAL: 'Jogo base',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Multiplicador de função',
-	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Multiplicador final',
-	REPLAY_TITLE_SOCIAL: 'Replay do jogo',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Valor total do jogo',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Multiplicador final',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Prémio total',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'Isto é um replay de uma jogada anterior. Nenhuma nova jogada será iniciada.',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'Isto é um replay de uma jogada anterior. Nenhuma nova jogada será iniciada.',
+	GAME_INFO_DUEL_BONUS_BODY_SOCIAL: 'O símbolo Duel Bonus aparece apenas ao comprar Duel por 150× a jogo base. Três símbolos Duel Bonus caem na revelação de compra e iniciam a funcionalidade — escolha Gato ou Cão, depois dois tabuleiros rodam 10 rondas cada. Supere o prémio total do rival e fique com ambos os bancos. O modo Duel não tem rodadas grátis, moedas Paw nem balas.',
+	GAME_INFO_SUPER_WILD_BODY_SOCIAL: 'Super Wild é independente do Wild normal e pode mostrar multiplicadores ×2, ×4, ×6, ×8 ou, raramente, ×25, ×50 ou ×75. No jogo base expande a coluna apenas quando faz parte de uma linha vencedora e depois multiplica o prémio do giro. Em rodadas grátis pode expandir sem linha vencedora e tornar-se sticky em até duas colunas; Super Bonus começa com uma coluna sticky já aberta. Vários multiplicadores Super Wild num giro multiplicam-se entre si.',
+	GAME_INFO_PAW_BODY_SOCIAL: 'As moedas Paw aparecem apenas no jogo base. Bronze converte uma fila, prata duas filas e ouro três filas em prémios de moedas após contar as linhas. Símbolos baixos pagam ×1 jogo, médios altos ×2 e top, Wild ou Bonus ×3. A moeda Paw em si não paga. Paw e Super Wild não podem ativar no mesmo giro.',
+	GAME_INFO_BULLET_BODY_SOCIAL: 'Durante as rodadas grátis principais, os símbolos Bullet enchem o tambor do revólver (máximo 6). Quando as rodadas principais terminam, o gato dispara automaticamente aos alvos. Cada acerto pode não dar nada ou +1, +2 ou +3 rodadas grátis extra. As balas não aparecem nessas rodadas extra e não há segunda ronda de disparos.',
 };
 
 const tr = {
-	...en,
 	BET_SOCIAL: 'PLAY',
 	WIN_SOCIAL: 'ÖDÜL',
 	BUY_BONUS_SOCIAL: 'BONUS OYNA',
@@ -311,35 +321,38 @@ const tr = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: 'Bonus oyna',
 	AUTO_BET_SOCIAL: 'Otomatik oyun',
 	MAX_WIN_SOCIAL: 'MAKS. ÖDÜL',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'Bakiyenizi yükleyin veya devam etmek için play miktarını düşürün.',
+	PER_SPIN_SUFFIX_SOCIAL: 'per play',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE_SOCIAL: 'Insufficient balance',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: 'Bakiyenizi yükleyin veya devam etmek için play miktarını düşürün.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'Durdurma limitine ulaşıldı',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'Otomatik oyun durdurma limitine ulaşıldığı için durdu.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Tek ödül limitine ulaşıldı',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
-		'Otomatik oyun tek ödül limitine ulaşıldığı için durdu.',
-	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury, 25 ödeme hattına sahip 5 makaralı, 5 sıralı bir slottur. Ödüller en soldaki makaradan başlayarak bitişik makaralarda soldan sağa verilir. Bir ödül için ödeme hattında en az 3 eşleşen sembol gerekir. Her hatta yalnızca en yüksek ödül verilir.',
-	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'25 hat her zaman aktiftir. Ödüller en soldaki makaradan başlayarak bitişik makaralarda soldan sağa verilir. Geçerli bir kazanç hattı için bitişik makaralarda en az 3 eşleşen sembol gerekir.',
-	GAME_INFO_WILD_BODY_SOCIAL:
-		'Wild sembolü Bonus hariç tüm ödeme sembollerinin yerine geçer. Wild, 5 aynı için 225× spin öder.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: 'Otomatik oyun tek ödül limitine ulaşıldığı için durdu.',
+	GAME_INFO_ABOUT_BODY_SOCIAL: 'Cat Mafia, 20 ödül hattına sahip 5 makaralı ve 4 sıralı bir slottur. Ödüller en soldaki makaradan başlayarak bitişik makaralarda soldan sağa verilir. Bir hatta ödül için en az 3 eşleşen sembol gerekir. Her hatta yalnızca en yüksek ödül verilir. Temel oyunda Paw paraları veya Super Wild bir spinde tetiklenebilir, ancak ikisi aynı spinde asla birlikte olmaz. 3 veya daha fazla Bonus sembolü toplayarak ücretsiz spinlere girin ve 8, 10 veya 12 ücretsiz spin için bir hedef seçin.',
+	GAME_INFO_PAYLINES_TITLE_SOCIAL: 'ÖDÜL HATLARI (20)',
+	GAME_INFO_PAYLINES_NOTE_SOCIAL: '20 hat her zaman aktiftir. Ödüller en soldaki makaradan başlayarak bitişik makaralarda soldan sağa ödenir. Geçerli bir ödül hattı için bitişik makaralarda en az 3 eşleşen sembol gerekir.',
+	GAME_INFO_WILD_BODY_SOCIAL: 'Wild sembolü Bonus hariç tüm ödül sembollerinin yerine geçer. Wild 5\'li için 225× oyun kazanır.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'OYUN MODLARI',
-	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Arıza tüm ödülleri ve oyunları geçersiz kılar. Kararlı internet bağlantısı gerekir. Bağlantı kesilirse tamamlanmamış turları bitirmek için oyunu yeniden yükleyin. Beklenen getiri birçok oyun üzerinden hesaplanır. Oyun ekranı fiziksel bir cihazı temsil etmez ve yalnızca açıklama amaçlıdır. Ödüller web tarayıcısındaki olaylara göre değil, Remote Game Server\'dan alınan tutara göre ödenir. TM ve © 2026 Stake Engine.',
+	GAME_INFO_BET_MODES_BODY_SOCIAL: 'Base (1×): Klasik Cat Mafia koşusu — hat ödülları, Paw paraları ve Super Wild perdeleri her spinde. 3+ Bonus ile ücretsiz spinlere girin: 8, 10 veya 12 spin için hedef seçin (3 Bonus = Normal Bonus · 4+ = Super Bonus, birinci spinden sticky Super Wild sütunu). Ödüllar temel bahsin katları olarak ödenir. RTP %96,01 · Maks. ödül 2.500×.\nBonus Boost (2×): Baskıyı artırın — 2× oyunle oynayın ve Bonus sembollerini daha agresif avlayın. Ücretsiz spinler Base ile aynı giriş kurallarıyla daha sık tetiklenir. Her ödül 2× spin maliyeti değil, temel bahsin katı olarak ödenmeye devam eder. RTP %96,01 · Maks. ödül 2.500×.\nNormal Bonus Oyna (100×): Doğrudan aksiyona. 100× temel oyun ödeyin, 8–12 ücretsiz spin için hedef seçin, revolverde mermi toplayın ve kedi ekstra turlar için ateş etsin — başlangıçta sticky Super Wild yok. Ödüllar temel bahsin katları olarak ödenir. RTP %96,01 · Maks. ödül 25.000×.\nSuper Bonus Oyna (200×): Premium soygun. Aynı hedef seçimi ve mermi finali, ancak bir Super Wild sütunu ilk spinden açık — sticky wilds, çarpan sütunlar ve daha büyük bonus potansiyeli. Ödüllar temel bahsin katları olarak ödenir. RTP %96,01 · Maks. ödül 25.000×.\nDuel Oyna — Kedi (150×): İki tahtalı düelloda tarafınızı seçin — her biri 10 spin. ~%50 önde bitirme şansıyla Kedi olarak oynayın; Köpeği geçin ve her iki bankayı alın. RTP %96,01 · Maks. ödül 25.000×.\nDuel Oyna — Köpek (150×): Yüksek volatilite — Köpek daha az kazanır ama önde bitirdiğinde daha ağır ödemeler verebilir. Aynı 10+10 format; Kediyi geçin ve her iki bankayı alın. RTP %96,01 · Maks. ödül 25.000×.',
+	GAME_INFO_CONTROLS_TITLE_SOCIAL: 'KULLANICI KILAVUZU',
+	GAME_INFO_CONTROLS_BODY_SOCIAL: 'Spin: Bir tur başlatmak için Spin düğmesine basın. Tur sırasında aynı düğme makaraları veya autoplay\'i durdurabilir. Başka bir tur veya animasyon devam ederken veya yetersiz bakiye varken yeni tur başlatılamaz.\nBoşluk: Spin ile aynı eylemi yapmak için Boşluk\'a basın. Sürekli hızlı oyun için basılı tutun. Autoplay paneli açıkken Boşluk autoplay\'i başlatır.\nOyun tutarı (−): Bahsi azaltır. Yalnızca oyun boştayken.\nOyun tutarı (+): Bahsi artırır. Yalnızca oyun boştayken.\nPlay Bonus: Normal Bonus, Super Bonus veya Duel oynamak için Play Bonus\'u açın. Seçilen özelliği hemen başlatmak için onaylayın.\nBonus Boost: Daha fazla Bonus sembolüyle 2× temel oyunte oynamak için Bonus Boost\'u etkinleştirin.\nAutoplay: Tur sayısını seçin ve otomatik oyunu başlatın.\nTurbo: Oyun hızını 1, 2 ve 3 seviyeleri arasında değiştirin.\nInfo: Bu oyun bilgisi ekranını açar.\nMenu: Ayarları açar.\nBalance: Mevcut bakiyeyi gösterir.\nOyun: Seçili bahsi gösterir.',
+	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'WINTABLE (× PLAY)',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All win values are multiples of the base play.',
+	GAME_INFO_LEGAL_BODY_SOCIAL: 'Arıza tüm ödülleri ve oyunları geçersiz kılar. Kararlı internet bağlantısı gerekir. Bağlantı kesilirse tamamlanmamış turları bitirmek için oyunu yeniden yükleyin. Beklenen getiri birçok oyun üzerinden hesaplanır. Oyun ekranı fiziksel bir cihazı temsil etmez ve yalnızca açıklama amaçlıdır. Ödüller web tarayıcısındaki olaylara göre değil, Remote Game Server\'dan alınan tutara göre ödenir. TM ve © 2026 Stake Engine.',
+	REPLAY_TITLE_SOCIAL: 'Oyun Tekrarı',
 	REPLAY_BASE_BET_SOCIAL: 'Temel Oyun',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Özellik Çarpanı',
-	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Son Çarpan',
-	REPLAY_TITLE_SOCIAL: 'Oyun Tekrarı',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Toplam Oyun Tutarı',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Son Çarpan',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Toplam Ödül',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'Bu, önceki bir oyun turunun tekrarıdır. Yeni oyun başlatılmayacaktır.',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'Bu, önceki bir oyun turunun tekrarıdır. Yeni oyun başlatılmayacaktır.',
+	GAME_INFO_DUEL_BONUS_BODY_SOCIAL: 'Duel Bonus sembolü yalnızca Duel\'i 150× temel oyun karşılığında satın aldığınızda görünür. Üç Duel Bonus sembolü satın alma reveal\'ında düşer ve özelliği başlatır — Kedi veya Köpek seçin, ardından iki tahta 10\'ar tur döner. Rakibin toplam kazancını geçin ve her iki bankayı alın. Duel modunda ücretsiz spin, Paw parası veya mermi yoktur.',
+	GAME_INFO_SUPER_WILD_BODY_SOCIAL: 'Super Wild, normal Wild\'dan ayrıdır ve ×2, ×4, ×6, ×8 veya nadiren ×25, ×50, ×75 çarpanları gösterebilir. Temel oyunda yalnızca kazanan bir hattın parçası olduğunda sütununu genişletir ve spin ödülünü çarpar. Ücretsiz spinlerde hatt kazancı olmadan genişleyebilir ve en fazla iki sütunda sticky olabilir; Super Bonus ilk spinden açık bir sticky sütunla başlar. Aynı spindaki birden fazla Super Wild çarpanı birbiriyle çarpılır.',
+	GAME_INFO_PAW_BODY_SOCIAL: 'Paw paraları yalnızca temel oyunda görünür. Bronz bir sırayı, gümüş iki sırayı, altın üç sırayı hat ödülları sayıldıktan sonra coin ödüllerine dönüştürür. Düşük semboller ×1 oyun, orta yüksekler ×2, üst/Wild/Bonus ×3 öder. Paw\'ın kendisi ödeme yapmaz. Paw ve Super Wild aynı spinde tetiklenemez.',
+	GAME_INFO_BULLET_BODY_SOCIAL: 'Ana ücretsiz spinler sırasında Bullet sembolleri revolver tamburunu doldurur (maksimum 6). Ana spinler bittiğinde kedi otomatik olarak hedeflere ateş eder. Her isabet hiçbir şey veya +1, +2, +3 ekstra ücretsiz spin verebilir. Mermiler bu ekstra spinlerde görünmez ve ikinci bir atış turu yoktur.',
 };
 
 const vi = {
-	...en,
 	BET_SOCIAL: 'PLAY',
 	WIN_SOCIAL: 'THƯỞNG',
 	BUY_BONUS_SOCIAL: 'CHƠI BONUS',
@@ -352,34 +365,38 @@ const vi = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: 'Chơi bonus',
 	AUTO_BET_SOCIAL: 'Tự chơi',
 	MAX_WIN_SOCIAL: 'THƯỞNG TỐI ĐA',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'Nạp thêm số dư hoặc giảm mức play để tiếp tục.',
+	PER_SPIN_SUFFIX_SOCIAL: 'per play',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE_SOCIAL: 'Insufficient balance',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: 'Nạp thêm số dư hoặc giảm mức play để tiếp tục.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'Đã đạt giới hạn dừng',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'Tự chơi đã dừng vì đạt giới hạn dừng.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Đã đạt giới hạn thưởng đơn',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: 'Tự chơi đã dừng vì đạt giới hạn thưởng đơn.',
-	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury là slot 5 cuộn, 5 hàng với 25 winline. Thưởng được trao từ trái sang phải trên các cuộn liền kề, bắt đầu từ cuộn ngoài cùng bên trái. Để thắng cần tối thiểu 3 biểu tượng khớp trên một winline. Mỗi line chỉ trao thưởng cao nhất.',
-	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Cả 25 winline luôn hoạt động. Thưởng được trao từ trái sang phải trên các cuộn liền kề, bắt đầu từ cuộn ngoài cùng bên trái. Cần tối thiểu 3 biểu tượng khớp trên các cuộn liền kề để tạo dòng thắng hợp lệ.',
-	GAME_INFO_WILD_BODY_SOCIAL:
-		'Wild thay thế mọi biểu tượng trả thưởng trừ Bonus. Wild trả 225× lượt quay cho 5 giống nhau.',
+	GAME_INFO_ABOUT_BODY_SOCIAL: 'Cat Mafia là slot 5 guồng 4 hàng với 20 dòng thanh toán. Tiền thắng trả từ trái sang phải trên các guồng liền kề, bắt đầu từ guồng ngoài cùng bên trái. Cần tối thiểu 3 biểu tượng giống nhau trên một dòng. Chỉ trả thắng cao nhất mỗi dòng. Trong game cơ bản, Paw và Super Wild có thể kích hoạt trong một vòng quay nhưng không bao giờ cả hai cùng lúc. Thu thập 3+ Bonus để vào vòng quay miễn phí và chọn mục tiêu cho 8, 10 hoặc 12 vòng.',
+	GAME_INFO_PAYLINES_TITLE_SOCIAL: 'DÒNG THANH TOÁN (20)',
+	GAME_INFO_PAYLINES_NOTE_SOCIAL: 'Cả 20 dòng luôn hoạt động. Thưởng trả từ trái sang phải trên guồng liền kề, bắt đầu từ guồng trái nhất. Cần tối thiểu 3 biểu tượng giống nhau trên guồng liền kề.',
+	GAME_INFO_WILD_BODY_SOCIAL: 'Wild thay thế mọi biểu tượng trả thưởng trừ Bonus. Wild trả 225× chơi cho 5 giống nhau.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'CHẾ ĐỘ CHƠI',
-	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Sự cố vô hiệu mọi thưởng và lượt chơi. Cần kết nối internet ổn định. Nếu mất kết nối, tải lại game để hoàn tất vòng chưa xong. Lợi nhuận kỳ vọng tính trên nhiều lượt chơi. Màn hình không đại diện thiết bị thật và chỉ mang tính minh họa. Phần thưởng được thanh toán theo số tiền từ Remote Game Server, không theo sự kiện trình duyệt. TM và © 2026 Stake Engine.',
+	GAME_INFO_BET_MODES_BODY_SOCIAL: 'Base (1×): Cat Mafia cổ điển — thắng dòng, Paw và rèm Super Wild mỗi vòng. 3+ Bonus vào free spin: chọn mục tiêu 8/10/12 vòng (3 Bonus = Normal · 4+ = Super với cột sticky Super Wild). Thưởng trả theo bội số chơi cơ bản. RTP 96,01% · Tối đa 2.500×.\nBonus Boost (2×): Chơi 2× và săn Bonus mạnh hơn. Free spin thường xuyên hơn với cùng quy tắc Base. Thưởng vẫn theo chơi cơ bản, không theo chi phí 2×. RTP 96,01% · Tối đa 2.500×.\nMua Normal Bonus (100×): Vào thẳng hành động — 100× chơi, chọn mục tiêu 8–12 FS, thu đạn, mèo bắn thêm vòng — không sticky Super Wild lúc đầu. RTP 96,01% · Tối đa 25.000×.\nMua Super Bonus (200×): Heist cao cấp — cột Super Wild mở từ vòng đầu. RTP 96,01% · Tối đa 25.000×.\nMua Duel — Mèo (150×): Hai bảng, 10 vòng mỗi bên. ~50% cơ hội vượt Chó và lấy cả hai ngân hàng. RTP 96,01% · Tối đa 25.000×.\nMua Duel — Chó (150×): Biến động cao — Chó thắng ít hơn nhưng payout nặng khi dẫn. RTP 96,01% · Tối đa 25.000×.',
+	GAME_INFO_CONTROLS_TITLE_SOCIAL: 'HƯỚNG DẪN THAO TÁC',
+	GAME_INFO_CONTROLS_BODY_SOCIAL: 'Spin: Bấm Spin để bắt đầu vòng.\nPlay amount (−/+): Giảm/tăng mức chơi khi rảnh.\nPlay Bonus: Chơi Normal, Super hoặc Duel.\nBonus Boost: Bật 2× mức chơi cơ bản.\nAutoplay/Turbo/Info/Menu/Balance/Play: theo hướng dẫn chuẩn.',
+	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'WINTABLE (× PLAY)',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All win values are multiples of the base play.',
+	GAME_INFO_LEGAL_BODY_SOCIAL: 'Sự cố vô hiệu mọi thưởng và lượt chơi. Cần kết nối internet ổn định. Nếu mất kết nối, tải lại game để hoàn tất vòng chưa xong. Lợi nhuận kỳ vọng tính trên nhiều lượt chơi. Màn hình không đại diện thiết bị thật và chỉ mang tính minh họa. Phần thưởng được thanh toán theo số tiền từ Remote Game Server, không theo sự kiện trình duyệt. TM và © 2026 Stake Engine.',
+	REPLAY_TITLE_SOCIAL: 'Phát lại lượt chơi',
 	REPLAY_BASE_BET_SOCIAL: 'Lượt chơi cơ bản',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Hệ số tính năng',
-	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Hệ số cuối',
-	REPLAY_TITLE_SOCIAL: 'Phát lại lượt chơi',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Tổng số tiền chơi',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Hệ số cuối',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Tổng thưởng',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'Đây là phát lại lượt chơi trước. Không có lượt chơi mới nào được bắt đầu.',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'Đây là phát lại lượt chơi trước. Không có lượt chơi mới nào được bắt đầu.',
+	GAME_INFO_DUEL_BONUS_BODY_SOCIAL: 'Biểu tượng Duel Bonus chỉ xuất hiện khi mua Duel với 150× chơi cơ bản. Ba Duel Bonus rơi ở reveal mua và bắt đầu tính năng — chọn Mèo hoặc Chó, hai bảng quay 10 vòng mỗi bên. Vượt tổng thưởng đối thủ và lấy cả hai ngân hàng. Duel không có free spin, Paw hay đạn.',
+	GAME_INFO_SUPER_WILD_BODY_SOCIAL: 'Super Wild tách khỏi Wild thường, có thể hiện hệ số ×2, ×4, ×6, ×8 hoặc hiếm ×25, ×50, ×75. Ở game cơ bản chỉ mở rộng cột khi nằm trong dòng thưởng rồi nhân thưởng vòng. Trong free spin có thể mở rộng không cần dòng thưởng và sticky tối đa hai cột; Super Bonus bắt đầu với một cột sticky mở sẵn. Nhiều hệ số Super Wild trên một vòng được nhân với nhau.',
+	GAME_INFO_PAW_BODY_SOCIAL: 'Đồng Paw chỉ ở game cơ bản. Đồng chuyển 1 hàng, bạc 2 hàng, vàng 3 hàng thành thưởng xu sau khi tính dòng. Biểu tượng thấp ×1 chơi, cao trung ×2, top/Wild/Bonus ×3. Paw không trả thưởng. Paw và Super Wild không cùng kích hoạt một vòng.',
+	GAME_INFO_BULLET_BODY_SOCIAL: 'Trong free spin chính, Bullet lấp trống revolver (tối đa 6). Hết vòng chính, mèo tự bắn mục tiêu. Mỗi trúng có thể không có gì hoặc +1/+2/+3 vòng thêm. Đạn không xuất hiện ở vòng thêm và không có vòng bắn thứ hai.',
 };
 
 const id = {
-	...en,
 	BET_SOCIAL: 'PLAY',
 	WIN_SOCIAL: 'HADIAH',
 	BUY_BONUS_SOCIAL: 'MAIN BONUS',
@@ -392,35 +409,38 @@ const id = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: 'Main bonus',
 	AUTO_BET_SOCIAL: 'Main otomatis',
 	MAX_WIN_SOCIAL: 'HADIAH MAKS',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'Isi saldo atau turunkan jumlah play untuk melanjutkan.',
+	PER_SPIN_SUFFIX_SOCIAL: 'per play',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE_SOCIAL: 'Insufficient balance',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: 'Isi saldo atau turunkan jumlah play untuk melanjutkan.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'Batas berhenti tercapai',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'Main otomatis berhenti karena batas berhenti tercapai.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Batas hadiah tunggal tercapai',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
-		'Main otomatis berhenti karena batas hadiah tunggal tercapai.',
-	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury adalah slot 5 reel, 5 baris dengan 25 winline. Hadiah diberikan kiri ke kanan pada reel bersebelahan, mulai dari reel paling kiri. Minimal 3 simbol yang cocok pada winline diperlukan untuk hadiah. Hanya hadiah tertinggi per line yang diberikan.',
-	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Semua 25 winline selalu aktif. Hadiah diberikan kiri ke kanan pada reel bersebelahan, mulai dari reel paling kiri. Minimal 3 simbol cocok pada reel bersebelahan diperlukan untuk garis kemenangan yang valid.',
-	GAME_INFO_WILD_BODY_SOCIAL:
-		'Simbol Wild menggantikan semua simbol berbayar kecuali Bonus. Wild membayar 225× spin untuk 5 sama.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: 'Main otomatis berhenti karena batas hadiah tunggal tercapai.',
+	GAME_INFO_ABOUT_BODY_SOCIAL: 'Cat Mafia adalah slot 5 reel 4 baris dengan 20 garis prize. Kemenangan dibayar kiri ke kanan pada reel bersebelahan, mulai dari reel paling kiri. Minimal 3 simbol cocok diperlukan per garis. Hanya kemenangan tertinggi per garis yang dibayar. Di game dasar, koin Paw dan Super Wild dapat memicu pada satu putaran, tetapi tidak keduanya pada putaran yang sama. Dapatkan 3+ simbol Bonus untuk masuk free spin dan pilih target untuk 8, 10, atau 12 free spin.',
+	GAME_INFO_PAYLINES_TITLE_SOCIAL: 'GARIS HADIAH (20)',
+	GAME_INFO_PAYLINES_NOTE_SOCIAL: 'Semua 20 garis selalu aktif. Hadiah dibayar kiri ke kanan pada reel bersebelahan, mulai dari reel paling kiri. Minimal 3 simbol cocok pada reel bersebelahan diperlukan untuk garis hadiah valid.',
+	GAME_INFO_WILD_BODY_SOCIAL: 'Wild menggantikan semua simbol hadiah kecuali Bonus. Wild membayar 225× play untuk 5 sama.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'MODE MAIN',
-	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Kerusakan membatalkan semua hadiah dan permainan. Koneksi internet stabil diperlukan. Jika terputus, muat ulang game untuk menyelesaikan ronde yang belum selesai. Return yang diharapkan dihitung dari banyak permainan. Tampilan game tidak mewakili perangkat fisik dan hanya ilustrasi. Hadiah diselesaikan menurut jumlah dari Remote Game Server, bukan peristiwa browser. TM dan © 2026 Stake Engine.',
+	GAME_INFO_BET_MODES_BODY_SOCIAL: 'Base (1×): Lari Cat Mafia klasik — kemenangan garis, koin Paw, tirai Super Wild tiap spin. 3+ Bonus masuk free spin: pilih target 8/10/12 (3 Bonus = Normal · 4+ = Super dengan kolom sticky Super Wild). Hadiah kelipatan play dasar. RTP 96,01% · Maks. 2.500×.\nBonus Boost (2×): Main 2× dan buru Bonus lebih agresif. Free spin lebih sering dengan aturan masuk yang sama. Hadiah tetap kelipatan play dasar. RTP 96,01% · Maks. 2.500×.\nBeli Normal Bonus (100×): Langsung aksi — 100× play, pilih target 8–12 FS, kumpul peluru, kucing tembak extra — tanpa sticky Super Wild awal. RTP 96,01% · Maks. 25.000×.\nBeli Super Bonus (200×): Heist premium — kolom Super Wild terbuka dari spin pertama. RTP 96,01% · Maks. 25.000×.\nBeli Duel — Kucing (150×): Dua papan, 10 spin masing-masing. ~50% peluang unggul Anjing. RTP 96,01% · Maks. 25.000×.\nBeli Duel — Anjing (150×): Volatilitas tinggi. RTP 96,01% · Maks. 25.000×.',
+	GAME_INFO_CONTROLS_TITLE_SOCIAL: 'PANDUAN PENGGUNA',
+	GAME_INFO_CONTROLS_BODY_SOCIAL: 'Spin: Tekan Spin untuk memulai ronde.\nPlay amount (−/+): Ubah jumlah play saat idle.\nPlay Bonus: Main Normal, Super, atau Duel.\nBonus Boost: Main 2× play dasar.\nAutoplay/Turbo/Info/Menu/Balance/Play: sesuai panduan.',
+	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'WINTABLE (× PLAY)',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All win values are multiples of the base play.',
+	GAME_INFO_LEGAL_BODY_SOCIAL: 'Kerusakan membatalkan semua hadiah dan permainan. Koneksi internet stabil diperlukan. Jika terputus, muat ulang game untuk menyelesaikan ronde yang belum selesai. Return yang diharapkan dihitung dari banyak permainan. Tampilan game tidak mewakili perangkat fisik dan hanya ilustrasi. Hadiah diselesaikan menurut jumlah dari Remote Game Server, bukan peristiwa browser. TM dan © 2026 Stake Engine.',
+	REPLAY_TITLE_SOCIAL: 'Ulang Main',
 	REPLAY_BASE_BET_SOCIAL: 'Main Dasar',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Pengali Fitur',
-	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Pengali Akhir',
-	REPLAY_TITLE_SOCIAL: 'Ulang Main',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Total Jumlah Main',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Pengali Akhir',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Total Hadiah',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'Ini adalah ulang dari putaran main sebelumnya. Tidak ada permainan baru yang akan dimulai.',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'Ini adalah ulang dari putaran main sebelumnya. Tidak ada permainan baru yang akan dimulai.',
+	GAME_INFO_DUEL_BONUS_BODY_SOCIAL: 'Simbol Duel Bonus hanya muncul saat membeli Duel seharga 150× play dasar. Tiga Duel Bonus muncul di reveal pembelian — pilih Kucing atau Anjing, dua papan berputar 10 ronde masing-masing. Kalahkan total hadiah lawan dan ambil kedua bank. Mode Duel tanpa free spin, Paw, atau peluru.',
+	GAME_INFO_SUPER_WILD_BODY_SOCIAL: 'Super Wild terpisah dari Wild biasa dan dapat menampilkan pengali ×2, ×4, ×6, ×8, atau jarang ×25, ×50, ×75. Di game dasar kolom hanya meluas jika bagian dari garis hadiah, lalu mengalikan hadiah spin. Di free spin dapat meluas tanpa garis hadiah dan sticky hingga dua kolom; Super Bonus mulai dengan satu kolom sticky terbuka. Beberapa pengali Super Wild pada satu spin dikalikan bersama.',
+	GAME_INFO_PAW_BODY_SOCIAL: 'Koin Paw hanya di game dasar. Perunggu ubah 1 baris, perak 2 baris, emas 3 baris jadi hadiah koin setelah hitung garis. Simbol rendah ×1 play, menengah ×2, top/Wild/Bonus ×3. Paw sendiri tidak bayar. Paw dan Super Wild tidak bisa bersamaan pada satu spin.',
+	GAME_INFO_BULLET_BODY_SOCIAL: 'Selama free spin utama, simbol Bullet mengisi drum revolver (maks. 6). Setelah spin utama selesai, kucing otomatis menembak target. Setiap kena bisa nol atau +1/+2/+3 free spin extra. Peluru tidak muncul di spin extra dan tidak ada ronde tembak kedua.',
 };
 
 const fi = {
-	...en,
 	BET_SOCIAL: 'PLAY',
 	WIN_SOCIAL: 'PALKINTO',
 	BUY_BONUS_SOCIAL: 'PELAA BONUS',
@@ -433,35 +453,38 @@ const fi = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: 'Pelaa bonus',
 	AUTO_BET_SOCIAL: 'Automaattipeli',
 	MAX_WIN_SOCIAL: 'MAKS. PALKINTO',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'Täydennä saldoa tai pienennä play-summaa jatkaaksesi.',
+	PER_SPIN_SUFFIX_SOCIAL: 'per play',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE_SOCIAL: 'Insufficient balance',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: 'Täydennä saldoa tai pienennä play-summaa jatkaaksesi.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'Pysäytysraja saavutettu',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'Automaattipeli pysähtyi, koska pysäytysraja saavutettiin.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Yksittäisen palkinnon raja saavutettu',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
-		'Automaattipeli pysähtyi, koska yksittäisen palkinnon raja saavutettiin.',
-	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury on 5 rullan ja 5 rivin slotti, 25 voittolinjalla. Palkinnot myönnetään vasemmalta oikealle vierekkäisillä rullilla, alkaen vasemmanpuoleisimmasta. Palkintoon tarvitaan vähintään 3 samaa symbolia voittolinjan varrella. Linjaa kohden maksetaan vain korkein palkinto.',
-	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'Kaikki 25 linjaa ovat aina aktiivisia. Palkinnot myönnetään vasemmalta oikealle vierekkäisillä rullilla, alkaen vasemmanpuoleisimmasta. Voittavan linjan muodostamiseen tarvitaan vähintään 3 samaa symbolia vierekkäisillä rullilla.',
-	GAME_INFO_WILD_BODY_SOCIAL:
-		'Wild korvaa kaikki maksavat symbolit paitsi Bonus. Wild maksaa 225× spin viidestä samasta.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: 'Automaattipeli pysähtyi, koska yksittäisen palkinnon raja saavutettiin.',
+	GAME_INFO_ABOUT_BODY_SOCIAL: 'Cat Mafia on 5-rullainen, 4-rivinen kolikkopeli 20 prize. Voitot maksetaan vasemmalta oikealle vierekkäisillä rullilla. Voittolinjalla tarvitaan vähintään 3 samaa symbolia. Vain korkein voitto per linja maksetaan. Peruspelissä Paw-kolikot tai Super Wild voivat aktivoitua yhdellä kierroksella, mutta eivät koskaan molemmat samalla kierroksella. Saat 3+ Bonus-symbolia päästäksesi ilmaiskierroksille ja valitse kohde 8, 10 tai 12 kierrokselle.',
+	GAME_INFO_PAYLINES_TITLE_SOCIAL: 'VOITTOLINJAT (20)',
+	GAME_INFO_PAYLINES_NOTE_SOCIAL: 'Kaikki 20 linjaa ovat aina aktiivisia. Voitot maksetaan vasemmalta oikealle vierekkäisillä rullilla, alkaen vasemmanpuoleisimmasta rullasta. Kelvolliseen voittolinjaan tarvitaan vähintään 3 samaa symbolia vierekkäisillä rullilla.',
+	GAME_INFO_WILD_BODY_SOCIAL: 'Wild sembolü Bonus hariç tüm ödül sembollerinin yerine geçer. Wild 5\'li için 225× oyun kazanır.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'PELI TILAT',
-	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Toimintahäiriö mitätöi kaikki palkinnot ja pelit. Vakaa internetyhteys vaaditaan. Yhteyden katketessa lataa peli uudelleen viimeistelläksesi keskeneräiset kierrokset. Odotettu tuotto lasketaan monista peleistä. Näyttö ei edusta fyysistä laitetta ja on vain havainnollistava. Palkinnot maksetaan Remote Game Serveriltä saadun summan mukaan, ei selaimen tapahtumien perusteella. TM ja © 2026 Stake Engine.',
+	GAME_INFO_BET_MODES_BODY_SOCIAL: 'Base (1×): Klassinen Cat Mafia -juoksu — linjavoitot, Paw-kolikot ja Super Wild -verhot joka kierroksella. 3+ Bonus ilmaiskierroksille: valitse kohde 8, 10 tai 12 kierrokselle (3 Bonus = Normal Bonus · 4+ = Super Bonus sticky Super Wild -sarakkeella). Palkinnot peruspanoksen kertoimina. RTP 96,01% · Maks. palkinto 2 500×.\nBonus Boost (2×): Pelaa 2× panoksella ja metsästä Bonus-symbolia aggressiivisemmin. Ilmaiskierrokset laukeavat useammin samoilla säännöillä. Palkinnot lasketaan peruspanoksesta, ei 2×-kierroksen hinnasta. RTP 96,01% · Maks. palkinto 2 500×.\nOsta Normal Bonus (100×): Suoraan toimintaan — 100× play, kohde 8–12 FS, kerää luoteja, kissa ampuu extra-kierroksia — ei sticky Super Wildia alussa. RTP 96,01% · Maks. palkinto 25 000×.\nOsta Super Bonus (200×): Premium-ryöstö — Super Wild -sarake auki ensimmäisestä kierroksesta. RTP 96,01% · Maks. palkinto 25 000×.\nOsta Duel — Kissa (150×): Kaksialueinen kaksintaistelu, 10 kierrosta kumpikin. ~50% mahdollisuus voittaa Koira ja nappaa molemmat pankit. RTP 96,01% · Maks. palkinto 25 000×.\nOsta Duel — Koira (150×): Korkea volatiliteetti. RTP 96,01% · Maks. palkinto 25 000×.',
+	GAME_INFO_CONTROLS_TITLE_SOCIAL: 'KULLANICI KILAVUZU',
+	GAME_INFO_CONTROLS_BODY_SOCIAL: 'Spin: Bir tur başlatmak için Spin düğmesine basın. Tur sırasında aynı düğme makaraları veya autoplay\'i durdurabilir. Başka bir tur veya animasyon devam ederken veya yetersiz bakiye varken yeni tur başlatılamaz.\nBoşluk: Spin ile aynı eylemi yapmak için Boşluk\'a basın. Sürekli hızlı oyun için basılı tutun. Autoplay paneli açıkken Boşluk autoplay\'i başlatır.\nOyun tutarı (−): Bahsi azaltır. Yalnızca oyun boştayken.\nOyun tutarı (+): Bahsi artırır. Yalnızca oyun boştayken.\nPlay Bonus: Normal Bonus, Super Bonus veya Duel oynamak için Play Bonus\'u açın. Seçilen özelliği hemen başlatmak için onaylayın.\nBonus Boost: Daha fazla Bonus sembolüyle 2× temel oyunte oynamak için Bonus Boost\'u etkinleştirin.\nAutoplay: Tur sayısını seçin ve otomatik oyunu başlatın.\nTurbo: Oyun hızını 1, 2 ve 3 seviyeleri arasında değiştirin.\nInfo: Bu oyun bilgisi ekranını açar.\nMenu: Ayarları açar.\nBalance: Mevcut bakiyeyi gösterir.\nOyun: Seçili bahsi gösterir.',
+	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'WINTABLE (× PLAY)',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All win values are multiples of the base play.',
+	GAME_INFO_LEGAL_BODY_SOCIAL: 'Toimintahäiriö mitätöi kaikki palkinnot ja pelit. Vakaa internetyhteys vaaditaan. Yhteyden katketessa lataa peli uudelleen viimeistelläksesi keskeneräiset kierrokset. Odotettu tuotto lasketaan monista peleistä. Näyttö ei edusta fyysistä laitetta ja on vain havainnollistava. Palkinnot maksetaan Remote Game Serveriltä saadun summan mukaan, ei selaimen tapahtumien perusteella. TM ja © 2026 Stake Engine.',
+	REPLAY_TITLE_SOCIAL: 'Pelin toisto',
 	REPLAY_BASE_BET_SOCIAL: 'Peruspeli',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Ominaisuuskerroin',
-		REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Loppukerroin',
-	REPLAY_TITLE_SOCIAL: 'Pelin toisto',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Kokonaispelimäärä',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Loppukerroin',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Kokonaispalkinto',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'Tämä on edellisen pelikierroksen toisto. Uusia pelejä ei aloiteta.',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'Tämä on edellisen pelikierroksen toisto. Uusia pelejä ei aloiteta.',
+	GAME_INFO_DUEL_BONUS_BODY_SOCIAL: 'Duel Bonus -symboli ilmestyy vain ostaessasi Duelin 150× peruspanoksella. Kolme Duel Bonus -symbolia laskeutuu ostorevealissa ja käynnistää ominaisuuden — valitse Kissa tai Koira, sitten kaksi pelialuetta pyörii 10 kierrosta kumpikin. Voita vastustajan kokonaisvoitto ja nappaa molemmat pankit. Duel-tilassa ei ole ilmaiskierroksia, Paw-kolikoita tai luoteja.',
+	GAME_INFO_SUPER_WILD_BODY_SOCIAL: 'Super Wild on erillinen tavallisesta Wildista ja voi näyttää kertoimia ×2, ×4, ×6, ×8 tai harvoin ×25, ×50, ×75. Peruspelissä se laajentaa sarakkeensa vain palkintolinjalla ollessaan ja kertoo sitten kierrosvoiton. Ilmaiskierroksilla se voi laajentua ilman linjapalkintoa ja tulla stickyksi jopa kahdelle sarakkeelle; Super Bonus alkaa yhdellä jo avoimella sticky-sarakkeella. Useat Super Wild -kertoimet samalla kierroksella kerrotaan yhteen.',
+	GAME_INFO_PAW_BODY_SOCIAL: 'Paw-kolikot ilmestyvät vain peruspelissä. Pronssi muuttaa yhden rivin, hopea kaksi riviä ja kulta kolme riviä kolikkopalkinnoiksi linjavoittojen jälkeen. Matalat symbolit maksavat ×1 play, keskitason korkeat ×2 ja huippu/Wild/Bonus ×3. Paw itse ei maksa. Paw ja Super Wild eivät voi laueta samalla kierroksella.',
+	GAME_INFO_BULLET_BODY_SOCIAL: 'Pääilmaiskierrosten aikana Bullet-symbolit täyttävät revolverin rummun (enintään 6). Pääkierrosten päätyttyä kissa ampuu automaattisesti kohteita. Jokainen osuma voi antaa ei mitään tai +1, +2, +3 extra-ilmaiskierrosta. Luodit eivät ilmesty näillä extrakierroksilla eikä toista ammuntakierrosta ole.',
 };
 
 const ar = {
-	...en,
 	BET_SOCIAL: 'لعب',
 	WIN_SOCIAL: 'جائزة',
 	BUY_BONUS_SOCIAL: 'العب مكافأة',
@@ -474,35 +497,38 @@ const ar = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: 'العب مكافأة',
 	AUTO_BET_SOCIAL: 'لعب تلقائي',
 	MAX_WIN_SOCIAL: 'الحد الأقصى للجائزة',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'أضف رصيداً أو خفّض مبلغ اللعب للمتابعة.',
+	PER_SPIN_SUFFIX_SOCIAL: 'per play',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE_SOCIAL: 'Insufficient balance',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: 'أضف رصيداً أو خفّض مبلغ اللعب للمتابعة.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'تم الوصول لحد الإيقاف',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'توقف اللعب التلقائي لأنه تم الوصول إلى حد الإيقاف.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'تم الوصول لحد الجائزة الواحدة',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
-		'توقف اللعب التلقائي لأنه تم الوصول إلى حد الجائزة الواحدة.',
-	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury سلوت بـ 5 بكرات و5 صفوف و25 خط دفع. تُمنح الجوائز من اليسار إلى اليمين على البكرات المجاورة، بدءاً من أقصى اليسار. يلزم حد أدنى 3 رموز متطابقة على خط الدفع للحصول على جائزة. تُمنح أعلى جائزة فقط لكل خط.',
-	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'جميع خطوط الـ 25 نشطة دائماً. تُمنح الجوائز من اليسار إلى اليمين على البكرات المجاورة، بدءاً من أقصى اليسار. يلزم حد أدنى 3 رموز متطابقة على البكرات المجاورة لإنشاء خط فوز صالح.',
-	GAME_INFO_WILD_BODY_SOCIAL:
-		'رمز Wild يستبدل جميع الرموز المدفوعة ما عدا Bonus. Wild يدفع 225× اللفة لـ 5 متطابقة.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: 'توقف اللعب التلقائي لأنه تم الوصول إلى حد الجائزة الواحدة.',
+	GAME_INFO_ABOUT_BODY_SOCIAL: 'Cat Mafia هي سلوت بـ 5 بكرات و4 صفوف و20 prize. تُدفع الأرباح من اليسار إلى اليمين على البكرات المجاورة، بدءًا من أقصى اليسار. يلزم 3 رموز متطابقة على الأقل لكل خط. يُدفع أعلى ربح فقط لكل خط. في اللعبة الأساسية، قد تُفعّل عملات Paw أو Super Wild في لفة واحدة، لكن ليس كلاهما في نفس اللفة. احصل على 3+ رموز Bonus لدخول اللفات المجانية واختر هدفًا لـ 8 أو 10 أو 12 لفة.',
+	GAME_INFO_PAYLINES_TITLE_SOCIAL: 'خطوط الجائزة (20)',
+	GAME_INFO_PAYLINES_NOTE_SOCIAL: 'جميع الخطوط الـ20 نشطة دائمًا. تُدفع الجوائز من اليسار إلى اليمين على البكرات المجاورة، بدءًا من أقصى اليسار. يلزم 3 رموز متطابقة على الأقل على بكرات مجاورة لتكوين خط فائز صالح.',
+	GAME_INFO_WILD_BODY_SOCIAL: 'Wild sembolü Bonus hariç tüm ödül sembollerinin yerine geçer. Wild 5\'li için 225× oyun kazanır.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'أوضاع اللعب',
-	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'العطل يلغي جميع الجوائز والجولات. يلزم اتصال إنترنت مستقر. في حال انقطاع الاتصال، أعد تحميل اللعبة لإكمال أي جولات غير مكتملة. يُحسب العائد المتوقع على مدى عدد كبير من الجولات. عرض اللعبة لا يمثل أي جهاز فعلي وهو لأغراض توضيحية فقط. تُسوَّى المكافآت وفق المبلغ المستلم من Remote Game Server وليس وفق الأحداث داخل متصفح الويب. TM و© 2026 Stake Engine.',
+	GAME_INFO_BET_MODES_BODY_SOCIAL: 'Base (1×): جولة Cat Mafia الكلاسيكية — أرباح الخطوط وPaw وستائر Super Wild في كل لفة. 3+ Bonus للدخول في لفات مجانية: اختر هدفًا لـ 8 أو 10 أو 12 لفة (3 Bonus = Normal Bonus · 4+ = Super Bonus مع عمود sticky Super Wild). الجوائز مضاعفات اللعب الأساسي. RTP 96.01% · أقصى جائزة 2,500×.\nBonus Boost (2×): العب بـ 2× واصطد Bonus بقوة أكبر. RTP 96.01% · أقصى 2,500×.\nشراء Normal Bonus (100×): مباشرة إلى الحركة — 100× اللعب، هدف 8–12 FS، جمع الرصاص، القطة تطلق للجولات الإضافية. RTP 96.01% · أقصى 25,000×.\nشراء Super Bonus (200×): السطو المميز — عمود Super Wild مفتوح من اللفة الأولى. RTP 96.01% · أقصى 25,000×.\nشراء Duel — Cat (150×): مواجهة لوحتين، 10 لفات لكل منهما. ~50% فرصة التفوق على Dog. RTP 96.01% · أقصى 25,000×.\nشراء Duel — Dog (150×): تقلب عالٍ. RTP 96.01% · أقصى 25,000×.',
+	GAME_INFO_CONTROLS_TITLE_SOCIAL: 'KULLANICI KILAVUZU',
+	GAME_INFO_CONTROLS_BODY_SOCIAL: 'Spin: Bir tur başlatmak için Spin düğmesine basın. Tur sırasında aynı düğme makaraları veya autoplay\'i durdurabilir. Başka bir tur veya animasyon devam ederken veya yetersiz bakiye varken yeni tur başlatılamaz.\nBoşluk: Spin ile aynı eylemi yapmak için Boşluk\'a basın. Sürekli hızlı oyun için basılı tutun. Autoplay paneli açıkken Boşluk autoplay\'i başlatır.\nOyun tutarı (−): Bahsi azaltır. Yalnızca oyun boştayken.\nOyun tutarı (+): Bahsi artırır. Yalnızca oyun boştayken.\nPlay Bonus: Normal Bonus, Super Bonus veya Duel oynamak için Play Bonus\'u açın. Seçilen özelliği hemen başlatmak için onaylayın.\nBonus Boost: Daha fazla Bonus sembolüyle 2× temel oyunte oynamak için Bonus Boost\'u etkinleştirin.\nAutoplay: Tur sayısını seçin ve otomatik oyunu başlatın.\nTurbo: Oyun hızını 1, 2 ve 3 seviyeleri arasında değiştirin.\nInfo: Bu oyun bilgisi ekranını açar.\nMenu: Ayarları açar.\nBalance: Mevcut bakiyeyi gösterir.\nOyun: Seçili bahsi gösterir.',
+	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'WINTABLE (× PLAY)',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All win values are multiples of the base play.',
+	GAME_INFO_LEGAL_BODY_SOCIAL: 'العطل يلغي جميع الجوائز والجولات. يلزم اتصال إنترنت مستقر. في حال انقطاع الاتصال، أعد تحميل اللعبة لإكمال أي جولات غير مكتملة. يُحسب العائد المتوقع على مدى عدد كبير من الجولات. عرض اللعبة لا يمثل أي جهاز فعلي وهو لأغراض توضيحية فقط. تُسوَّى المكافآت وفق المبلغ المستلم من Remote Game Server وليس وفق الأحداث داخل متصفح الويب. TM و© 2026 Stake Engine.',
+	REPLAY_TITLE_SOCIAL: 'إعادة اللعب',
 	REPLAY_BASE_BET_SOCIAL: 'اللعب الأساسي',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'مضاعف الميزة',
-	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'المضاعف النهائي',
-	REPLAY_TITLE_SOCIAL: 'إعادة اللعب',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'إجمالي مبلغ اللعب',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'المضاعف النهائي',
 	REPLAY_TOTAL_WIN_SOCIAL: 'إجمالي الجائزة',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'هذه إعادة لجولة لعب سابقة. لن يتم بدء أي لعب جديد.',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'هذه إعادة لجولة لعب سابقة. لن يتم بدء أي لعب جديد.',
+	GAME_INFO_DUEL_BONUS_BODY_SOCIAL: 'يظهر رمز Duel Bonus فقط عند شراء Duel بـ 150× اللعب الأساسي. تسقط ثلاثة رموز Duel Bonus في reveal الشراء وتبدأ الميزة — اختر القطة أو الكلب، ثم تدور لوحتان 10 جولات لكل منهما. تغلب على إجمالي جائزة الخصم وخذ كلا البنكين. وضع Duel بلا لفات مجانية أو Paw أو رصاص.',
+	GAME_INFO_SUPER_WILD_BODY_SOCIAL: 'Super Wild منفصل عن Wild العادي وقد يظهر مضاعفات ×2 أو ×4 أو ×6 أو ×8 أو نادرًا ×25 أو ×50 أو ×75. في اللعبة الأساسية يوسّع عموده فقط عند كونه جزءًا من خط فائز ثم يضرب جائزة اللفة. في اللفات المجانية قد يتوسع بلا خط فائز ويصبح sticky على ما يصل إلى عمودين؛ Super Bonus يبدأ بعمود sticky مفتوح مسبقًا. تُضرب عدة مضاعفات Super Wild في لفة واحدة معًا.',
+	GAME_INFO_PAW_BODY_SOCIAL: 'تظهر عملات Paw في اللعبة الأساسية فقط. البرونز يحوّل صفًا واحدًا، الفضة صفين، والذهب ثلاثة صفوف إلى جوائز عملات بعد احتساب خطوط الربح. الرموز المنخفضة تدفع ×1 اللعب، المتوسطة ×2، والعليا/Wild/Bonus ×3. Paw نفسها لا تدفع. Paw و Super Wild لا يمكن أن يتفعلا في نفس اللفة.',
+	GAME_INFO_BULLET_BODY_SOCIAL: 'أثناء اللفات المجانية الرئيسية، تملأ رموز Bullet أسطوانة المسدس (حد أقصى 6). عند انتهاء اللفات الرئيسية، تطلق القطة تلقائيًا على الأهداف. كل إصابة قد لا تمنح شيئًا أو +1 أو +2 أو +3 لفات مجانية إضافية. لا يظهر الرصاص في تلك اللفات الإضافية ولا توجد جولة إطلاق ثانية.',
 };
 
 const hi = {
-	...en,
 	BET_SOCIAL: 'प्ले',
 	WIN_SOCIAL: 'पुरस्कार',
 	BUY_BONUS_SOCIAL: 'बोनस खेलें',
@@ -515,35 +541,38 @@ const hi = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: 'बोनस खेलें',
 	AUTO_BET_SOCIAL: 'ऑटोप्ले',
 	MAX_WIN_SOCIAL: 'अधिकतम पुरस्कार',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'जारी रखने के लिए बैलेंस बढ़ाएँ या प्ले राशि घटाएँ।',
+	PER_SPIN_SUFFIX_SOCIAL: 'per play',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE_SOCIAL: 'Insufficient balance',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: 'जारी रखने के लिए बैलेंस बढ़ाएँ या प्ले राशि घटाएँ।',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'रोक सीमा पहुँची',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'ऑटोप्ले रुका क्योंकि रोक सीमा पहुँच गई।',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'एकल पुरस्कार सीमा पहुँची',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
-		'ऑटोप्ले रुका क्योंकि एकल पुरस्कार सीमा पहुँच गई।',
-	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury 5 रील, 5 पंक्ति स्लॉट है, 25 पेलाइन के साथ। पुरस्कार बाएँ से दाएँ, सटे हुए रीलों पर, सबसे बाएँ रील से शुरू होकर दिए जाते हैं। पुरस्कार के लिए पेलाइन पर न्यूनतम 3 समान प्रतीक आवश्यक हैं। प्रति लाइन केवल सबसे बड़ा पुरस्कार दिया जाता है।',
-	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'सभी 25 पेलाइन हमेशा सक्रिय हैं। पुरस्कार बाएँ से दाएँ, सटे हुए रीलों पर, सबसे बाएँ रील से शुरू होकर दिए जाते हैं। वैध विनिंग लाइन के लिए सटे रीलों पर न्यूनतम 3 समान प्रतीक आवश्यक हैं।',
-	GAME_INFO_WILD_BODY_SOCIAL:
-		'Wild प्रतीक Bonus को छोड़कर सभी भुगतान प्रतीकों की जगह लेता है। Wild 5 एक जैसे के लिए 225× स्पिन देता है।',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: 'ऑटोप्ले रुका क्योंकि एकल पुरस्कार सीमा पहुँच गई।',
+	GAME_INFO_ABOUT_BODY_SOCIAL: 'Cat Mafia एक 5-रील, 4-पंक्ति स्लॉट है जिसमें 20 prize हैं। जीत बाएँ से दाएँ सAdjacent रीलों पर, सबसे बाएँ रील से शुरू होकर भुगतान होती है। एक लाइन पर जीत के लिए कम से कम 3 मेल खाते सिंबल चाहिए। प्रति लाइन केवल सबसे अधिक जीत भुगतान होती है। बेस गेम में Paw सिक्के और Super Wild एक स्पिन में ट्रिगर हो सकते हैं, लेकिन एक ही स्पिन में दोनों कभी नहीं। 3+ Bonus सिंबल लैंड करें, 8, 10 या 12 फ्री स्पिन के लिए लक्ष्य चुनें।',
+	GAME_INFO_PAYLINES_TITLE_SOCIAL: 'जीत लाइनें (20)',
+	GAME_INFO_PAYLINES_NOTE_SOCIAL: 'सभी 20 लाइनें हमेशा सक्रिय हैं। पुरस्कार बाएँ से दाएँ आसन्न रीलों पर, सबसे बाएँ रील से शुरू होकर भुगतान होती है। वैध पुरस्कार लाइन के लिए आसन्न रीलों पर कम से कम 3 मेल खाते सिंबल चाहिए।',
+	GAME_INFO_WILD_BODY_SOCIAL: 'Wild sembolü Bonus hariç tüm ödül sembollerinin yerine geçer. Wild 5\'li için 225× oyun kazanır.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'खेल मोड',
-	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'खराबी सभी पुरस्कार और खेल रद्द कर देती है। स्थिर इंटरनेट कनेक्शन आवश्यक है। डिस्कनेक्शन पर अधूरे राउंड पूरे करने के लिए गेम रीलोड करें। अपेक्षित रिटर्न कई खेलों पर गणना की जाती है। डिस्प्ले किसी भौतिक उपकरण का प्रतिनिधित्व नहीं करता। पुरस्कार Remote Game Server से प्राप्त राशि के अनुसार तय होते हैं, ब्राउज़र घटनाओं के अनुसार नहीं। TM और © 2026 Stake Engine.',
+	GAME_INFO_BET_MODES_BODY_SOCIAL: 'Base (1×): क्लासिक Cat Mafia — हर स्पिन पर लाइन पुरस्कार, Paw, Super Wild पर्दे। 3+ Bonus से फ्री स्पिन: 8/10/12 के लिए लक्ष्य (3 Bonus = Normal · 4+ = Super sticky Super Wild)। पुरस्कार बेस प्ले के गुणक। RTP 96.01% · अधिकतम 2,500×.\nBonus Boost (2×): 2× दांव पर Bonus का शिकार। RTP 96.01% · अधिकतम 2,500×.\nNormal Bonus खरीदें (100×): 100× प्ले, 8–12 FS, गोली इकट्ठा, बिल्ली extra राउंड। RTP 96.01% · अधिकतम 25,000×.\nSuper Bonus खरीदें (200×): प्रीमियम — पहले स्पिन से Super Wild कॉलम खुला। RTP 96.01% · अधिकतम 25,000×.\nDuel खरीदें — Cat (150×): दो बोर्ड, 10-10 स्पिन। ~50% Dog से आगे। RTP 96.01% · अधिकतम 25,000×.\nDuel खरीदें — Dog (150×): उच्च volatility। RTP 96.01% · अधिकतम 25,000×.',
+	GAME_INFO_CONTROLS_TITLE_SOCIAL: 'KULLANICI KILAVUZU',
+	GAME_INFO_CONTROLS_BODY_SOCIAL: 'Spin: Bir tur başlatmak için Spin düğmesine basın. Tur sırasında aynı düğme makaraları veya autoplay\'i durdurabilir. Başka bir tur veya animasyon devam ederken veya yetersiz bakiye varken yeni tur başlatılamaz.\nBoşluk: Spin ile aynı eylemi yapmak için Boşluk\'a basın. Sürekli hızlı oyun için basılı tutun. Autoplay paneli açıkken Boşluk autoplay\'i başlatır.\nOyun tutarı (−): Bahsi azaltır. Yalnızca oyun boştayken.\nOyun tutarı (+): Bahsi artırır. Yalnızca oyun boştayken.\nPlay Bonus: Normal Bonus, Super Bonus veya Duel oynamak için Play Bonus\'u açın. Seçilen özelliği hemen başlatmak için onaylayın.\nBonus Boost: Daha fazla Bonus sembolüyle 2× temel oyunte oynamak için Bonus Boost\'u etkinleştirin.\nAutoplay: Tur sayısını seçin ve otomatik oyunu başlatın.\nTurbo: Oyun hızını 1, 2 ve 3 seviyeleri arasında değiştirin.\nInfo: Bu oyun bilgisi ekranını açar.\nMenu: Ayarları açar.\nBalance: Mevcut bakiyeyi gösterir.\nOyun: Seçili bahsi gösterir.',
+	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'WINTABLE (× PLAY)',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All win values are multiples of the base play.',
+	GAME_INFO_LEGAL_BODY_SOCIAL: 'खराबी सभी पुरस्कार और खेल रद्द कर देती है। स्थिर इंटरनेट कनेक्शन आवश्यक है। डिस्कनेक्शन पर अधूरे राउंड पूरे करने के लिए गेम रीलोड करें। अपेक्षित रिटर्न कई खेलों पर गणना की जाती है। डिस्प्ले किसी भौतिक उपकरण का प्रतिनिधित्व नहीं करता। पुरस्कार Remote Game Server से प्राप्त राशि के अनुसार तय होते हैं, ब्राउज़र घटनाओं के अनुसार नहीं। TM और © 2026 Stake Engine.',
+	REPLAY_TITLE_SOCIAL: 'प्ले रीप्ले',
 	REPLAY_BASE_BET_SOCIAL: 'बेस प्ले',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'फ़ीचर गुणक',
-	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'अंतिम गुणक',
-	REPLAY_TITLE_SOCIAL: 'प्ले रीप्ले',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'कुल प्ले राशि',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'अंतिम गुणक',
 	REPLAY_TOTAL_WIN_SOCIAL: 'कुल पुरस्कार',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'यह पिछले प्ले राउंड का रीप्ले है। कोई नया प्ले शुरू नहीं होगा।',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'यह पिछले प्ले राउंड का रीप्ले है। कोई नया प्ले शुरू नहीं होगा।',
+	GAME_INFO_DUEL_BONUS_BODY_SOCIAL: 'Duel Bonus सिंबल केवल Duel को 150× बेस प्ले पर खरीदने पर दिखता है। तीन Duel Bonus खरीद reveal पर गिरते हैं — बिल्ली या कुत्ता चुनें, फिर दो बोर्ड 10-10 राउंड घूमते हैं। प्रतिद्वंद्वी के कुल पुरस्कार को पीछे छोड़ें और दोनों बैंक लें। Duel में फ्री स्पिन, Paw या गोली नहीं।',
+	GAME_INFO_SUPER_WILD_BODY_SOCIAL: 'Super Wild सामान्य Wild से अलग है और ×2, ×4, ×6, ×8 या कभी-कभी ×25, ×50, ×75 गुणक दिखा सकता है। बेस गेम में यह केवल पुरस्कार लाइन का हिस्सा होने पर कॉलम expand करता है और स्पिन पुरस्कार गुणा करता है। फ्री स्पिन में बिना लाइन पुरस्कार expand हो सकता है और दो कॉलमों तक sticky; Super Bonus पहले स्पिन से एक sticky कॉलम खुले साथ शुरू। एक स्पिन पर कई Super Wild गुणक गुणा होते हैं।',
+	GAME_INFO_PAW_BODY_SOCIAL: 'Paw सिक्के केवल बेस गेम में। कांस्य 1 पंक्ति, चांदी 2, सोना 3 पंक्तियाँ लाइन जीत गिनने के बाद सिक्का पुरस्कार में बदलता है। निम्न ×1 प्ले, मध्य ×2, शीर्ष/Wild/Bonus ×3। Paw स्वयं भुगतान नहीं। Paw और Super Wild एक स्पिन में साथ नहीं।',
+	GAME_INFO_BULLET_BODY_SOCIAL: 'मुख्य फ्री स्पिन के दौरान Bullet सिंबल रेवॉल्वर ड्रम भरते हैं (अधिकतम 6)। मुख्य स्पिन समाप्त होने पर बिल्ली स्वचालित रूप से लक्ष्यों पर गोली चलाती है। प्रत्येक हिट कुछ नहीं या +1/+2/+3 extra FS दे सकती है। extra स्पिन पर गोली नहीं और दूसरा शूटिंग राउंड नहीं।',
 };
 
 const ja = {
-	...en,
 	BET_SOCIAL: 'プレイ',
 	WIN_SOCIAL: '賞',
 	BUY_BONUS_SOCIAL: 'ボーナスをプレイ',
@@ -556,34 +585,38 @@ const ja = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: 'ボーナスをプレイ',
 	AUTO_BET_SOCIAL: 'オートプレイ',
 	MAX_WIN_SOCIAL: '最大賞',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'残高を追加するか、プレイ額を下げて続行してください。',
+	PER_SPIN_SUFFIX_SOCIAL: 'per play',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE_SOCIAL: 'Insufficient balance',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: '残高を追加するか、プレイ額を下げて続行してください。',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: '停止上限に到達',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: '停止上限に達したため、オートプレイを停止しました。',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: '単一賞上限に到達',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: '単一賞上限に達したため、オートプレイを停止しました。',
-	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Furyは5リール5行25ウィンラインのスロットです。賞は最左リールから隣接リール上で左から右に付与されます。有効な配当ラインには、一致するシンボルが最低3つ必要です。ラインごとに最高賞のみが付与されます。',
-	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'25ウィンラインは常に有効です。賞は最左リールから隣接リール上で左から右に付与されます。有効な配当ラインには、隣接リール上で一致するシンボルが最低3つ必要です。',
-	GAME_INFO_WILD_BODY_SOCIAL:
-		'WildシンボルはBonusを除くすべての配当シンボルの代わりになります。Wildは5一致で225×スピンを払います。',
+	GAME_INFO_ABOUT_BODY_SOCIAL: 'Cat Mafiaは5リール4段の20賞金ラインスロットです。賞金は最左リールから隣接リール上で左から右に付与われます。ライン上に最低3つの一致シンボルが必要です。各ラインで最も高い賞金のみが付与われます。ベースゲームではPawコインとSuper Wildがスピンで発動することがありますが、同じスピンで両方は発動しません。Bonusシンボル3つ以上でフリースピンに入り、8、10、12フリースピンのターゲットを選びます。',
+	GAME_INFO_PAYLINES_TITLE_SOCIAL: '賞金ライン (20)',
+	GAME_INFO_PAYLINES_NOTE_SOCIAL: '20ラインは常にアクティブです。賞金は最左リールから隣接リール上で左から右に支払われます。有効な当たりラインには隣接リール上に最低3つの一致シンボルが必要です。',
+	GAME_INFO_WILD_BODY_SOCIAL: 'WildはBonus以外の全賞金シンボル代用。5一致で225×プレイ。',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'プレイモード',
-	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'故障時はすべての賞とプレイが無効になります。安定したインターネット接続が必要です。切断時は未完了ラウンドを完了するためゲームを再読み込みしてください。期待リターンは多数のプレイに基づき計算されます。表示は物理デバイスを表しません。賞はRemote Game Serverから受け取った金額に基づき精算され、ブラウザ内イベントではありません。TM and © 2026 Stake Engine.',
+	GAME_INFO_BET_MODES_BODY_SOCIAL: 'Base (1×): クラシックCat Mafia — ライン賞金、Pawコイン、Super Wildカーテン毎スピン。Bonus3+でFS突入：8/10/12スピンのターゲット選択（3 Bonus=Normal Bonus · 4+=Super Bonus sticky Super Wild列）。賞金はベースプレイ倍数。RTP 96.01% · 最大賞金2,500×。\nBonus Boost (2×): 2×ステークでBonusを積極的に狙う。Baseと同じ突入条件でFS頻度UP。賞金は2×コストではなくベースプレイ倍数。RTP 96.01% · 最大2,500×。\nNormal Bonusプレイ (100×): 100×ベースプレイで8–12 FS、弾丸収集、猫の追加射撃 — 開始時sticky Super Wildなし。RTP 96.01% · 最大25,000×。\nSuper Bonusプレイ (200×): プレミアム。最初のスピンからSuper Wild列開放。RTP 96.01% · 最大25,000×。\nDuelプレイ — 猫 (150×): 2ボード対決各10スピン。猫で~50%先行確率。RTP 96.01% · 最大25,000×。\nDuelプレイ — 犬 (150×): 高ボラ。犬は勝率低いが上振れ大。RTP 96.01% · 最大25,000×。',
+	GAME_INFO_CONTROLS_TITLE_SOCIAL: '操作ガイド',
+	GAME_INFO_CONTROLS_BODY_SOCIAL: 'Spin: Spinボタンでラウンド開始。進行中は同ボタンでリール/autoplay停止。残高不足や他ラウンド中は新規開始不可。\nSpace: Spinと同操作。長押しで連続高速。Autoplayパネル開時Spaceでautoplay開始。\nプレイ額(−): プレイ減少。アイドル時のみ。\nプレイ額(+): プレイ増加。アイドル時のみ。\nPlay Bonus: Normal/Super/Duel購入。\nBonus Boost: 2×ベースプレイでBonus増。\nAutoplay: ラウンド数選択。\nTurbo: 速度1/2/3切替。\nInfo: 本画面。\nMenu: 設定。\nBalance: 残高表示。\nPlay: 選択プレイ表示。',
+	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'WINTABLE (× PLAY)',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All win values are multiples of the base play.',
+	GAME_INFO_LEGAL_BODY_SOCIAL: '故障時はすべての賞とプレイが無効になります。安定したインターネット接続が必要です。切断時は未完了ラウンドを完了するためゲームを再読み込みしてください。期待リターンは多数のプレイに基づき計算されます。表示は物理デバイスを表しません。賞はRemote Game Serverから受け取った金額に基づき精算され、ブラウザ内イベントではありません。TM and © 2026 Stake Engine.',
+	REPLAY_TITLE_SOCIAL: 'プレイリプレイ',
 	REPLAY_BASE_BET_SOCIAL: 'ベースプレイ',
 	REPLAY_COST_MULTIPLIER_SOCIAL: '機能倍率',
-	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: '最終倍率',
-	REPLAY_TITLE_SOCIAL: 'プレイリプレイ',
 	REPLAY_TOTAL_BET_COST_SOCIAL: '合計プレイ額',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: '最終倍率',
 	REPLAY_TOTAL_WIN_SOCIAL: '合計賞',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'これは過去のプレイラウンドのリプレイです。新しいプレイは行われません。',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'これは過去のプレイラウンドのリプレイです。新しいプレイは行われません。',
+	GAME_INFO_DUEL_BONUS_BODY_SOCIAL: 'Duel BonusシンボルはDuelを150×ベースプレイで購入した場合のみ出現。3つのDuel Bonusが購入revealに出現し機能開始 — 猫か犬を選び、2ボードが各10ラウンド。相手の合計配当を上回り両方のバンクを獲得。Duelモードにフリースピン、Paw、弾丸はありません。',
+	GAME_INFO_SUPER_WILD_BODY_SOCIAL: 'Super Wildは通常Wildとは別で、×2/×4/×6/×8、稀に×25/×50/×75のマルチプライヤーを表示。ベースゲームでは当たりラインに含まれる場合のみ列を展開しスピン賞金を乗算。フリースピンではライン当たりなしでも展開し最大2列sticky可能。Super Bonusは最初から1列sticky。同一スピン複数Super Wildは乗算。',
+	GAME_INFO_PAW_BODY_SOCIAL: 'Pawコインはベースゲームのみ。ブロンズ1段、シルバー2段、ゴールド3段をライン配当後にコイン賞へ変換。低配当×1プレイ、中配当×2、高配当/Wild/Bonus×3。Paw自体は配当なし。PawとSuper Wildは同一スピン不可。',
+	GAME_INFO_BULLET_BODY_SOCIAL: 'メインフリースピン中、Bulletシンボルがリボルバー筒を満たす（最大6）。メインスピン終了後、猫が自動でターゲットを射撃。各命中でなしまたは+1/+2/+3追加FS。追加スピンに弾丸は出ず第二射撃ラウンドなし。',
 };
 
 const ko = {
-	...en,
 	BET_SOCIAL: '플레이',
 	WIN_SOCIAL: '상금',
 	BUY_BONUS_SOCIAL: '보너스 플레이',
@@ -596,35 +629,38 @@ const ko = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: '보너스 플레이',
 	AUTO_BET_SOCIAL: '자동 플레이',
 	MAX_WIN_SOCIAL: '최대 상금',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'계속하려면 잔액을 충전하거나 플레이 금액을 낮추세요.',
+	PER_SPIN_SUFFIX_SOCIAL: 'per play',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE_SOCIAL: 'Insufficient balance',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: '계속하려면 잔액을 충전하거나 플레이 금액을 낮추세요.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: '중지 한도 도달',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: '중지 한도에 도달하여 자동 플레이가 중지되었습니다.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: '단일 상금 한도 도달',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
-		'단일 상금 한도에 도달하여 자동 플레이가 중지되었습니다.',
-	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury는 5릴 5행 25윈라인 슬롯입니다. 상금은 가장 왼쪽 릴부터 인접 릴에서 왼쪽에서 오른쪽으로 지급됩니다. 유효한 당첨 라인을 만들려면 일치하는 심볼이 최소 3개 필요합니다. 라인당 가장 높은 상금만 지급됩니다.',
-	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'25개 윈라인은 항상 활성입니다. 상금은 가장 왼쪽 릴부터 인접 릴에서 왼쪽에서 오른쪽으로 지급됩니다. 유효한 당첨 라인을 만들려면 인접 릴에서 일치하는 심볼이 최소 3개 필요합니다.',
-	GAME_INFO_WILD_BODY_SOCIAL:
-		'Wild 심볼은 Bonus를 제외한 모든 유료 심볼을 대체합니다. Wild는 5개 일치 시 225× 스핀을 지급합니다.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: '단일 상금 한도에 도달하여 자동 플레이가 중지되었습니다.',
+	GAME_INFO_ABOUT_BODY_SOCIAL: 'Cat Mafia는 5릴 4행 20상금 라인 슬롯입니다. 상금금은 가장 왼쪽 릴부터 인접 릴에서 왼쪽에서 오른쪽으로 부여됩니다. 라인당 최소 3개의 일치 심볼이 필요합니다. 라인당 가장 높은 상금금만 부여됩니다. 기본 게임에서 Paw 코인과 Super Wild가 스핀에 발동할 수 있지만 같은 스핀에서 둘 다는 불가합니다. Bonus 심볼 3개 이상으로 프리 스핀에 진입해 8, 10, 12 프리 스핀 목표를 선택하세요.',
+	GAME_INFO_PAYLINES_TITLE_SOCIAL: '상금 라인 (20)',
+	GAME_INFO_PAYLINES_NOTE_SOCIAL: '20개 라인은 항상 활성입니다. 상금은 가장 왼쪽 릴부터 인접 릴에서 왼쪽에서 오른쪽으로 부여됩니다. 유효 당첨 라인에는 인접 릴에 최소 3개 일치 심볼이 필요합니다.',
+	GAME_INFO_WILD_BODY_SOCIAL: 'Wild는 Bonus 제외 모든 상금 심볼 대체. 5개 일치 225× 플레이.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: '플레이 모드',
-	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'오작동 시 모든 상금과 플레이가 무효화됩니다. 안정적인 인터넷 연결이 필요합니다. 연결이 끊기면 미완료 라운드를 마치려면 게임을 다시 로드하세요. 기대 수익은 많은 플레이를 기준으로 계산됩니다. 화면은 실제 기기를 나타내지 않으며 설명용입니다. 상금은 브라우저 이벤트가 아니라 Remote Game Server에서 받은 금액 기준으로 정산됩니다. TM and © 2026 Stake Engine.',
+	GAME_INFO_BET_MODES_BODY_SOCIAL: 'Base (1×): 클래식 Cat Mafia — 라인 상금, Paw, Super Wild 커튼 매 스핀. Bonus 3+로 FS 진입: 8/10/12 스핀 목표 선택(3 Bonus=Normal · 4+=Super Bonus sticky Super Wild). 상금은 기본 플레이 배수. RTP 96.01% · 최대 2,500×.\nBonus Boost (2×): 2× 스테이크로 Bonus 적극 사냥. Base와 동일 진입 규칙으로 FS 더 자주. 상금은 2× 비용이 아닌 기본 플레이 배수. RTP 96.01% · 최대 2,500×.\nNormal Bonus 플레이 (100×): 100× 기본 플레이, 8–12 FS, 총알 수집, 고양이 추가 사격 — 시작 sticky Super Wild 없음. RTP 96.01% · 최대 25,000×.\nSuper Bonus 플레이 (200×): 프리미엄. 첫 스핀부터 Super Wild 열 개방. RTP 96.01% · 최대 25,000×.\nDuel 플레이 — 고양이 (150×): 2보드 대결 각 10스핀. ~50% 선두 확률. RTP 96.01% · 최대 25,000×.\nDuel 플레이 — 개 (150×): 고변동성. RTP 96.01% · 최대 25,000×.',
+	GAME_INFO_CONTROLS_TITLE_SOCIAL: '조작 가이드',
+	GAME_INFO_CONTROLS_BODY_SOCIAL: 'Spin: Spin 버튼으로 라운드 시작. 진행 중 같은 버튼으로 릴/autoplay 정지. 자금 부족/다른 라운드 중 새 라운드 불가.\nSpace: Spin과 동일. 길게 눌러 연속 고속.\n플레이 금액(−): 플레이 감소. 대기 중만.\n플레이 금액(+): 플레이 증가.\nPlay Bonus: Normal/Super/Duel 구매.\nBonus Boost: 2× 기본 플레이.\nAutoplay: 라운드 수 선택.\nTurbo: 속도 1/2/3.\nInfo: 본 화면.\nMenu: 설정.\nBalance: 잔액.\nPlay: 선택 플레이.',
+	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'WINTABLE (× PLAY)',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All win values are multiples of the base play.',
+	GAME_INFO_LEGAL_BODY_SOCIAL: '오작동 시 모든 상금과 플레이가 무효화됩니다. 안정적인 인터넷 연결이 필요합니다. 연결이 끊기면 미완료 라운드를 마치려면 게임을 다시 로드하세요. 기대 수익은 많은 플레이를 기준으로 계산됩니다. 화면은 실제 기기를 나타내지 않으며 설명용입니다. 상금은 브라우저 이벤트가 아니라 Remote Game Server에서 받은 금액 기준으로 정산됩니다. TM and © 2026 Stake Engine.',
+	REPLAY_TITLE_SOCIAL: '플레이 리플레이',
 	REPLAY_BASE_BET_SOCIAL: '기본 플레이',
 	REPLAY_COST_MULTIPLIER_SOCIAL: '기능 배율',
-	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: '최종 배율',
-	REPLAY_TITLE_SOCIAL: '플레이 리플레이',
 	REPLAY_TOTAL_BET_COST_SOCIAL: '총 플레이 금액',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: '최종 배율',
 	REPLAY_TOTAL_WIN_SOCIAL: '총 상금',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'이전 플레이 라운드의 리플레이입니다. 새로운 플레이는 시작되지 않습니다.',
-
+	REPLAY_DISCLAIMER_SOCIAL: '이전 플레이 라운드의 리플레이입니다. 새로운 플레이는 시작되지 않습니다.',
+	GAME_INFO_DUEL_BONUS_BODY_SOCIAL: 'Duel Bonus는 Duel을 150× 기본 플레이으로 구매할 때만 등장. 3개 Duel Bonus가 구매 reveal에 등장해 기능 시작 — 고양이/개 선택, 두 보드 각 10라운드. 상대 총 당첨을 이기고 두 뱅크 획득. Duel 모드에 프리 스핀, Paw, 총알 없음.',
+	GAME_INFO_SUPER_WILD_BODY_SOCIAL: 'Super Wild는 일반 Wild와 별개이며 ×2, ×4, ×6, ×8 또는 드물게 ×25, ×50, ×75 배수를 표시합니다. 기본 게임에서는 당첨 라인에 포함될 때만 열을 확장하고 스핀 상금을 곱합니다. 프리 스핀에서는 라인 당첨 없이도 확장해 최대 2열 sticky 가능. Super Bonus는 첫 스핀부터 sticky 열 1개. 한 스핀의 여러 Super Wild 배수는 곱해집니다.',
+	GAME_INFO_PAW_BODY_SOCIAL: 'Paw 코인은 기본 게임만. 브론즈 1행, 실버 2행, 골드 3행을 라인 당첨 후 코인 상금으로 변환. 저심볼 ×1 플레이, 중간 ×2, 상위/Wild/Bonus ×3. Paw 자체는 무당첨. Paw와 Super Wild 동시 불가.',
+	GAME_INFO_BULLET_BODY_SOCIAL: '메인 프리 스핀 중 Bullet이 리볼버 드럼 채움(최대 6). 메인 스핀 종료 후 고양이가 자동 사격. 각 명중은 없음 또는 +1/+2/+3 추가 FS. 추가 스핀에 총알 없음, 두 번째 사격 라운드 없음.',
 };
 
 const zh = {
-	...en,
 	BET_SOCIAL: '游玩',
 	WIN_SOCIAL: '奖励',
 	BUY_BONUS_SOCIAL: '玩奖金',
@@ -637,30 +673,35 @@ const zh = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: '玩奖金',
 	AUTO_BET_SOCIAL: '自动游戏',
 	MAX_WIN_SOCIAL: '最大奖励',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'请充值或降低游玩金额以继续游戏。',
+	PER_SPIN_SUFFIX_SOCIAL: 'per play',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE_SOCIAL: 'Insufficient balance',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: '请充值或降低游玩金额以继续游戏。',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: '已达停止上限',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: '自动游戏已停止，因为已达停止上限。',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: '已达单次奖励上限',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: '自动游戏已停止，因为已达单次奖励上限。',
-	GAME_INFO_ABOUT_BODY_SOCIAL:
-		'Wok Fury 是一款 5 轴 5 行、25 条中奖线的老虎机。奖励从最左轴开始，在相邻轴上从左到右发放。一条有效中奖线至少需要 3 个相同符号。每条线只发放最高奖励。',
-	GAME_INFO_PAYLINES_NOTE_SOCIAL:
-		'25 条中奖线始终有效。奖励从最左轴开始，在相邻轴上从左到右发放。一条有效中奖线至少需要相邻轴上 3 个相同符号。',
-	GAME_INFO_WILD_BODY_SOCIAL:
-		'Wild 符号可替代除 Bonus 外的所有付费符号。Wild 在 5 连时支付 225× 旋转。',
+	GAME_INFO_ABOUT_BODY_SOCIAL: 'Cat Mafia 是一款 5 轴 4 行、20 条奖励线的老虎机。奖金从最左轴开始在相邻轴上从左到右发放。每条线至少需要 3 个相同符号才能奖励。每条线只发放最高奖励。在基础游戏中，Paw 金币和 Super Wild 可在一次旋转中触发，但同一旋转不会同时触发。收集 3 个或更多 Bonus 符号进入免费旋转，并选择目标获得 8、10 或 12 次免费旋转。',
+	GAME_INFO_PAYLINES_TITLE_SOCIAL: '奖励线 (20)',
+	GAME_INFO_PAYLINES_NOTE_SOCIAL: '20 条奖励线始终激活。奖励从最左轴开始在相邻轴上从左到右发放。有效赢奖线需要在相邻轴上至少 3 个相同符号。',
+	GAME_INFO_WILD_BODY_SOCIAL: 'Wild 替代除 Bonus 外所有奖励符号。5 连 225× 游戏。',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: '游戏模式',
-	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'故障将使所有奖励和游戏无效。需要稳定的网络连接。如发生断线，请重新加载游戏以完成未结束的回合。预期回报基于大量游戏计算。游戏画面不代表任何物理设备，仅供参考。奖励根据从 Remote Game Server 收到的金额结算，而非浏览器内事件。TM 和 © 2026 Stake Engine.',
+	GAME_INFO_BET_MODES_BODY_SOCIAL: 'Base (1×)：经典 Cat Mafia — 每转线路奖励、Paw 金币和 Super Wild 幕帘。收集 3+ Bonus 进入免费旋转：选择 8/10/12 次目标（3 Bonus=Normal Bonus · 4+=Super Bonus 首转 sticky Super Wild 列）。奖励按基础游戏倍数支付。RTP 96.01% · 最大奖励 2,500×。\nBonus Boost (2×)：以 2× 游戏更积极 hunt Bonus。免费旋转更频繁，进入规则与 Base 相同。奖励仍按基础游戏倍数，而非 2× 成本。RTP 96.01% · 最大 2,500×。\n游玩 Normal Bonus (100×)：100× 基础游戏，8–12 免费旋转，收集子弹，猫射击额外回合 — 开始无 sticky Super Wild。RTP 96.01% · 最大 25,000×。\n游玩 Super Bonus (200×)：高级抢劫。首转 Super Wild 列已开放。RTP 96.01% · 最大 25,000×。\n游玩 Duel — 猫 (150×)：双面板对决各 10 转。RTP 96.01% · 最大 25,000×。\n游玩 Duel — 狗 (150×)：高波动。RTP 96.01% · 最大 25,000×。',
+	GAME_INFO_CONTROLS_TITLE_SOCIAL: '操作指南',
+	GAME_INFO_CONTROLS_BODY_SOCIAL: 'Spin：按 Spin 开始回合。进行中同一按钮可停止转轴或 autoplay。资金不足或其他回合进行中无法开始新回合。\n空格：与 Spin 相同。按住连续快速游戏。\n游戏金额(−)：减少游戏。仅空闲时。\n游戏金额(+)：增加游戏。\nPlay Bonus：购买 Normal/Super/Duel。\nBonus Boost：2× 基础游戏。\nAutoplay：选择回合数。\nTurbo：速度 1/2/3。\nInfo：本信息屏。\nMenu：设置。\nBalance：余额。\nPlay：所选游戏。',
+	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'WINTABLE (× PLAY)',
+	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All win values are multiples of the base play.',
+	GAME_INFO_LEGAL_BODY_SOCIAL: '故障将使所有奖励和游戏无效。需要稳定的网络连接。如发生断线，请重新加载游戏以完成未结束的回合。预期回报基于大量游戏计算。游戏画面不代表任何物理设备，仅供参考。奖励根据从 Remote Game Server 收到的金额结算，而非浏览器内事件。TM 和 © 2026 Stake Engine.',
+	REPLAY_TITLE_SOCIAL: '游玩回放',
 	REPLAY_BASE_BET_SOCIAL: '基础游玩',
 	REPLAY_COST_MULTIPLIER_SOCIAL: '功能倍数',
-	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: '最终倍数',
-	REPLAY_TITLE_SOCIAL: '游玩回放',
 	REPLAY_TOTAL_BET_COST_SOCIAL: '总游玩金额',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: '最终倍数',
 	REPLAY_TOTAL_WIN_SOCIAL: '总奖励',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'这是上一轮游玩的回放。不会开始任何新的游玩。',
-
+	REPLAY_DISCLAIMER_SOCIAL: '这是上一轮游玩的回放。不会开始任何新的游玩。',
+	GAME_INFO_DUEL_BONUS_BODY_SOCIAL: 'Duel Bonus 符号仅在你以 150× 基础游戏购买 Duel 时出现。三个 Duel Bonus 符号在购买 reveal 中落地并启动功能 — 选择猫或狗，然后两个面板各旋转 10 轮。击败对手总奖励并拿走两边奖金。Duel 模式没有免费旋转、Paw 金币或子弹。',
+	GAME_INFO_SUPER_WILD_BODY_SOCIAL: 'Super Wild 与普通 Wild 分开，可显示 ×2、×4、×6、×8，或罕见的 ×25、×50、×75 倍数。基础游戏中仅当它属于奖励线时才扩展列并乘以旋转奖励。免费旋转中可无线路奖励扩展，最多两列 sticky；Super Bonus 从第一转起就有一列 sticky 已开放。同一旋转多个 Super Wild 倍数相乘。',
+	GAME_INFO_PAW_BODY_SOCIAL: 'Paw 金币仅在基础游戏中出现。铜转换 1 行、银 2 行、金 3 行为金币奖励（在线路奖励计数后）。低符号 ×1 游戏，中高 ×2，顶级/Wild/Bonus ×3。Paw 本身无支付。Paw 与 Super Wild 不能在同一次旋转触发。',
+	GAME_INFO_BULLET_BODY_SOCIAL: '主要免费旋转期间，Bullet 符号填充左轮弹仓（最多 6）。主要旋转结束后，猫自动射击目标。每次命中可能无奖励或 +1、+2、+3 额外免费旋转。额外旋转不出现子弹，也没有第二轮射击。',
 };
 
 export default {

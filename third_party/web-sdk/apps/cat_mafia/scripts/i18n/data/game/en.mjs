@@ -51,8 +51,7 @@ export default {
 	LOADER_CARD_1_LINE_3: 'BUY NORMAL ×100 OR SUPER ×200',
 	LOADER_CARD_1_LINE_4: 'SAME TARGET PICK SCENE',
 	LOADER_CARD_2_TITLE: 'PAW & SUPER WILD',
-	LOADER_CARD_2_BODY:
-		'PAW TURNS A ROW INTO COINS. SUPER WILD EXPANDS A COLUMN WITH ×2 / ×4 / ×6 / ×8. NEVER BOTH ON ONE SPIN.',
+	LOADER_CARD_2_BODY: 'PAW TURNS A ROW INTO COINS. SUPER WILD EXPANDS A COLUMN WITH ×2 / ×4 / ×6 / ×8. NEVER BOTH ON ONE SPIN.',
 	LOADER_CARD_3_TITLE: 'BULLETS & REVOLVER',
 	LOADER_CARD_3_LINE_1: 'COLLECT BULLETS IN FREE SPINS (MAX 6). AFTER THE MAIN SPINS',
 	LOADER_CARD_3_LINE_2: 'THE CAT SHOOTS TARGETS FOR +1 / +2 / +3 EXTRA FS',
@@ -67,45 +66,30 @@ export default {
 	TARGET_SHOOT_HINT_NONE: 'No extra spins',
 	GAME_INFO_TITLE: 'GAME INFORMATION',
 	GAME_INFO_ABOUT_TITLE: 'ABOUT THE GAME',
-	GAME_INFO_ABOUT_BODY:
-		'Wok Fury is a 5-reel, 5-row slot with 25 paylines. Wins are paid from left to right on adjacent reels, starting from the leftmost reel. A minimum of 3 matching symbols on a payline is required for a win. Only the highest win per line is paid.',
-	GAME_INFO_PAYLINES_TITLE: 'PAYLINES (25)',
-	GAME_INFO_PAYLINES_NOTE:
-		'All 25 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel. A minimum of 3 matching symbols on adjacent reels is required to create a valid winning line.',
+	GAME_INFO_ABOUT_BODY: 'Cat Mafia is a 5-reel, 4-row slot with 20 paylines. Wins are paid from left to right on adjacent reels, starting from the leftmost reel. A minimum of 3 matching symbols on a payline is required for a win. Only the highest win per line is paid. In the base game, Paw coins and Super Wild can trigger on a spin, but never both on the same spin. Land 3 or more Bonus symbols to enter free spins and pick a target for 8, 10, or 12 free spins.',
+	GAME_INFO_PAYLINES_TITLE: 'PAYLINES (20)',
+	GAME_INFO_PAYLINES_NOTE: 'All 20 paylines are always active. Wins are paid from left to right on adjacent reels, starting from the leftmost reel. A minimum of 3 matching symbols on adjacent reels is required to create a valid winning line.',
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'WILD SYMBOL',
-	GAME_INFO_WILD_BODY:
-		'The Wild symbol substitutes for all paying symbols except the Bonus symbol. Wild pays 225× bet for 5 of a kind.',
+	GAME_INFO_WILD_BODY: 'The Wild symbol substitutes for all paying symbols except the Bonus symbol. Wild pays 225× bet for 5 of a kind.',
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'FREE SPINS',
-	GAME_INFO_FS_BODY:
-		'Land 3 Bonus symbols in the base game to trigger Normal Bonus with 10 free spins. Land 4 Bonus symbols to trigger Super Bonus with 10 free spins and 1 Sticky Mystery Reel from the start. Free spins cannot be retriggered by landing Bonus symbols during the feature. Extra free spins are awarded only through the Progress Ladder.',
-	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
-	GAME_INFO_MYSTERY_BODY: 'Mystery reels stay in place and reveal the same symbol on every spin.',
-	GAME_INFO_PROGRESS_LADDER_TITLE: 'PROGRESS LADDER',
-	GAME_INFO_PROGRESS_LADDER_BODY:
-		'During free spins, every Bonus symbol that lands is collected toward the Progress Ladder. Every 4 Bonus symbols collected advance one tier. Each tier awards 3 extra free spins and unlocks 1 additional Sticky Mystery Reel, up to a maximum of 5 tiers (15 extra free spins).',
+	GAME_INFO_FS_BODY: 'Land 3 or more Bonus symbols in the base game to trigger free spins. Pick one of six targets to reveal 8, 10, or 12 free spins. Three Bonus symbols start Normal Bonus; four or more start Super Bonus with one sticky Super Wild column from the first spin. Bonus symbols do not appear during free spins and cannot retrigger the feature. After the main free spins, bullets collected in the revolver drum may award extra free spins through the target-shooting round.',
 	GAME_INFO_BET_MODES_TITLE: 'BET MODES',
-	GAME_INFO_BET_MODES_BODY:
-		'Base (1×): The default mode. Each spin costs 1× your base bet. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All wins are calculated as multiples of your base bet. RTP 96.03%. Maximum win 2,500× your base bet.\nBonus Boost (2×): Enable this mode to play at 2× your base bet per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All wins are calculated as multiples of your base bet, not the 2× mode cost. RTP 96.04%. Maximum win 2,355.2× your base bet.\nSpecial Spins (30×): Enable this mode to play at 30× your base bet per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All wins are calculated as multiples of your base bet, not the 30× mode cost. RTP 96.01%. Maximum win 2,500× your base bet.\nBuy Normal Bonus (100×): Purchase Normal Bonus for 100× your base bet to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.\nBuy Super Bonus (200×): Purchase Super Bonus for 200× your base bet to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.',
+	GAME_INFO_BET_MODES_BODY: 'Base (1×): The classic Cat Mafia run — line wins, Paw coins, and Super Wild curtains on every spin. Land 3+ Bonus symbols to break into free spins: pick a target for 8, 10, or 12 spins (3 Bonus = Normal Bonus · 4+ = Super Bonus with a sticky Super Wild column from spin one). Wins are paid as multiples of your base bet. RTP 96.01% · Max win 2,500×.\nBonus Boost (2×): Turn up the pressure — play at 2× stake and hunt Bonus symbols more aggressively. Free spins trigger more often with the same entry rules as Base. Every win still pays as a multiple of your base bet, not the 2× spin cost. RTP 96.01% · Max win 2,500×.\nBuy Normal Bonus (100×): Cut straight to the action. Pay 100× your base bet, pick a target for 8–12 free spins, collect bullets in the revolver, and let the cat shoot for extra rounds — no sticky Super Wild at the start. Wins are paid as multiples of your base bet. RTP 96.01% · Max win 25,000×.\nBuy Super Bonus (200×): The premium heist. Same target pick and bullet finale, but one Super Wild column is already open from your first spin — sticky wilds, multiplying columns, and bigger bonus upside. Wins are paid as multiples of your base bet. RTP 96.01% · Max win 25,000×.\nBuy Duel — Cat (150×): Choose your side in a two-board showdown — 10 spins each. Play as the Cat for a steady ~50% chance to finish ahead; beat the Dog and take both banks. Wins are paid as multiples of your base bet. RTP 96.01% · Max win 25,000×.\nBuy Duel — Dog (150×): High volatility, high ceiling — the Dog wins less often but can deliver heavier payouts when it finishes on top. Same 10+10 duel format; outscore the Cat to claim both banks. Wins are paid as multiples of your base bet. RTP 96.01% · Max win 25,000×.',
 	GAME_INFO_PAYTABLE_TITLE: 'PAYTABLE (× BET)',
 	GAME_INFO_PAYTABLE_NOTE: 'All payout values are multiples of the base bet.',
-	GAME_INFO_PAYTABLE_BODY:
-		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
+	GAME_INFO_PAYTABLE_BODY: 'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
 	GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
-	GAME_INFO_CONTROLS_BODY:
-		'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nBet amount (−): Use the minus button to decrease your bet amount. Bet changes are only available while the game is idle.\nBet amount (+): Use the plus button to increase your bet amount. Bet changes are only available while the game is idle.\nBuy Bonus: Open Buy Bonus to purchase Normal Bonus or Super Bonus. Confirm a purchase to start the selected feature immediately.\nBonus Boost: Enable Bonus Boost to play at 2× your base bet with more Bonus symbols and a higher chance of triggering free spins. You can turn it on or off from the Buy Bonus panel or the Autoplay panel.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance: Shows your current balance. This is informational and is not a button.\nBet: Shows your selected bet amount. This is informational and is not a button.',
+	GAME_INFO_CONTROLS_BODY: 'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nBet amount (−): Use the minus button to decrease your bet amount. Bet changes are only available while the game is idle.\nBet amount (+): Use the plus button to increase your bet amount. Bet changes are only available while the game is idle.\nBuy Bonus: Open Buy Bonus to purchase Normal Bonus, Super Bonus, or Duel. Confirm a purchase to start the selected feature immediately.\nBonus Boost: Enable Bonus Boost to play at 2× your base bet with more Bonus symbols and a higher chance of triggering free spins. You can turn it on or off from the Buy Bonus panel or the Autoplay panel.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance: Shows your current balance. This is informational and is not a button.\nBet: Shows your selected bet amount. This is informational and is not a button.',
 	GAME_INFO_LEGAL_TITLE: 'GENERAL GAME DISCLAIMER',
-	GAME_INFO_LEGAL_BODY:
-		'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Stake Engine.',
+	GAME_INFO_LEGAL_BODY: 'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Stake Engine.',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Insufficient funds',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY:
-		'Top up your balance or decrease the bet to continue the game.',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Top up your balance or decrease the bet to continue the game.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Loss limit reached',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'Auto play has stopped because the loss limit was reached.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'Single win limit reached',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY:
-		'Auto play has stopped because the single win limit was reached.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'Auto play has stopped because the single win limit was reached.',
 	AUTOPLAY_MSG_OK: 'OK',
 	REPLAY_BADGE: 'REPLAY',
 	REPLAY_TITLE: 'Bet Replay',
@@ -120,4 +104,12 @@ export default {
 	REPLAY_AGAIN: 'Replay Again',
 	REPLAY_COMPLETE_TITLE: 'Replay Complete',
 	REPLAY_DISCLAIMER: 'This is a replay of a previous bet round. No bets will be placed.',
+	GAME_INFO_DUEL_BONUS_TITLE: 'DUEL BONUS',
+	GAME_INFO_DUEL_BONUS_BODY: 'The Duel Bonus symbol appears only when you buy Duel for 150× your base bet. Three Duel Bonus symbols land on the purchase reveal and start the feature — pick Cat or Dog, then two boards spin for 10 rounds each. Beat the other side\'s total win to take both banks. Duel mode has no free spins, Paw coins, or Bullets.',
+	GAME_INFO_SUPER_WILD_TITLE: 'SUPER WILD',
+	GAME_INFO_SUPER_WILD_BODY: 'Super Wild is separate from the regular Wild and may show multipliers ×2, ×4, ×6, ×8, or rarely ×25, ×50, or ×75. In the base game it expands its column only when it is part of a winning line, then multiplies the spin win. In free spins it can expand without a line win and may become sticky on up to two columns; Super Bonus starts with one sticky column already open. Multiple Super Wild multipliers on one spin are multiplied together.',
+	GAME_INFO_PAW_TITLE: 'PAW COIN',
+	GAME_INFO_PAW_BODY: 'Paw coins appear in the base game only. Bronze converts one row, silver converts two rows, and gold converts three rows into coin prizes after line wins are counted. Low symbols pay ×1 bet, mid highs pay ×2, and top symbols, Wild, or Bonus pay ×3. The paw coin itself pays nothing. Paw and Super Wild cannot trigger on the same spin.',
+	GAME_INFO_BULLET_TITLE: 'BULLET',
+	GAME_INFO_BULLET_BODY: 'During the main free spins, Bullet symbols fill the revolver drum (maximum 6). When the main spins end, the cat automatically shoots targets. Each hit may award nothing or +1, +2, or +3 extra free spins. Bullets do not appear on those extra spins and there is no second shooting round.',
 };
