@@ -85,7 +85,7 @@
 	});
 
 	const overlayStyle = $derived(
-		`left:${canvasSizes.width * 0.5}px;top:${anchor.y + (logoMetrics.height + logoMetrics.gap) / 2}px;transform:${overlayTransform};opacity:${exitOpacity.current};`,
+		`left:${anchor.x}px;top:${anchor.y + (logoMetrics.height + logoMetrics.gap) / 2}px;transform:${overlayTransform};opacity:${exitOpacity.current};`,
 	);
 
 	const snapToIndex = (index: number, animate = true) => {

@@ -10,7 +10,7 @@
 	import { getContext } from '../game/context';
 	import { LOADER_STATIC_DAY_URL } from '../game/earlyLoaderPreload';
 	import { LOADER_EXIT_BG_BLUR_PX, LOADER_EXIT_BG_DURATION_MS } from '../game/constants';
-	import { getBackgroundCoverScreenBox } from '../game/neonBackgroundLayout';
+	import { getBackgroundHtmlStillStyle } from '../game/neonBackgroundLayout';
 
 	type Props = {
 		/** Exit animation is running. */
@@ -31,13 +31,7 @@
 			layout.width > 0 && layout.height > 0
 				? layout
 				: { width: window.innerWidth, height: window.innerHeight };
-		const box = getBackgroundCoverScreenBox(canvas);
-		return [
-			`left:${box.left}px`,
-			`top:${box.top}px`,
-			`width:${box.width}px`,
-			`height:${box.height}px`,
-		].join(';');
+		return getBackgroundHtmlStillStyle(canvas);
 	});
 
 	$effect(() => {
@@ -70,7 +64,7 @@
 		src={LOADER_STATIC_DAY_URL}
 		alt=""
 		draggable="false"
-		style="{streetStyle}; filter: blur({blur.current}px);"
+		style="{streetStyle}; filter: blur({blur.current}px); transform-origin: center center;"
 	/>
 	</div>
 {/if}

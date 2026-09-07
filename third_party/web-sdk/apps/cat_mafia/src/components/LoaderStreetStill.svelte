@@ -1,13 +1,12 @@
 <!--
 	Static street under bootstrap / cards.
-	Cover box from getBackgroundCoverScreenBox; Pixi uses getBackgroundPixiScale
-	(+BG_STILL_MATCH_SCALE) so the animated street matches this tighter day.webp frame.
+	Same plate box as Pixi, zoomed out via BG_HTML_STILL_FOV_SCALE (HTML only).
 -->
 <script lang="ts">
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { LOADER_STATIC_DAY_URL } from '../game/earlyLoaderPreload';
-	import { getBackgroundCoverScreenBox } from '../game/neonBackgroundLayout';
+	import { getBackgroundHtmlStillStyle } from '../game/neonBackgroundLayout';
 
 	const STREET_FADE_MS = 700;
 
@@ -26,13 +25,7 @@
 			layout.width > 0 && layout.height > 0
 				? layout
 				: { width: window.innerWidth, height: window.innerHeight };
-		const box = getBackgroundCoverScreenBox(canvas);
-		return [
-			`left:${box.left}px`,
-			`top:${box.top}px`,
-			`width:${box.width}px`,
-			`height:${box.height}px`,
-		].join(';');
+		return getBackgroundHtmlStillStyle(canvas);
 	});
 
 	$effect(() => {

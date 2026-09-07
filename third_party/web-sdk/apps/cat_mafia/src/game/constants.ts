@@ -1637,6 +1637,18 @@ export const LOADER_EXIT_BG_BLUR_PX = 10;
 /** Cards slide down by this fraction of viewport height. */
 export const LOADER_EXIT_CARDS_SLIDE_VH = 55;
 
+/**
+ * HTML loader still (front bg) scale vs Pixi plate — CSS transform from center.
+ * 1 = same size as Pixi plate. <1 = zoom out (more L/R detail). >1 = zoom in.
+ * Auto reference (plate ÷ spine bounds) ≈ 0.937 — start ~0.95–0.97 if 0.937 shows too much.
+ */
+export const LOADER_HTML_BG_SCALE_X = 0.988;
+export const LOADER_HTML_BG_SCALE_Y = 1;
+
+/** Fine nudge in screen px after scale (HTML still only). */
+export const LOADER_HTML_BG_OFFSET_X = 0;
+export const LOADER_HTML_BG_OFFSET_Y = 0;
+
 /** Fade-in for board + UI — synced with front-bg dissolve. */
 export const GAME_ENTRANCE_MS = LOADER_EXIT_BG_DURATION_MS;
 
