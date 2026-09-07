@@ -1,4 +1,4 @@
-/** designer_assets/wild_files/wild_render — Super Wild column open (Pixi Spine). */
+/** designer_assets/wild_render — Super Wild column open (Pixi Spine). */
 
 import type * as PIXI from 'pixi.js';
 
@@ -15,11 +15,15 @@ import { getSymbolX } from './utils';
 /**
  * Spine camera over the export (same AABB as the HTML SpinePlayer framing).
  */
+/**
+ * Content clip in world space. `main` is authored at scale 0.5 vs the previous
+ * export — same local curtain, half the world AABB.
+ */
 export const SUPER_WILD_SPINE_VIEWPORT = {
-	x: -501,
-	y: -3579.53,
-	width: 1002,
-	height: 4090.69,
+	x: -250.5,
+	y: -1789.765,
+	width: 501,
+	height: 2045.345,
 	padLeft: '0%',
 	padRight: '0%',
 	padTop: '0%',
@@ -30,12 +34,35 @@ export const SUPER_WILD_OPEN_ANIM = 'open';
 export const SUPER_WILD_IDLE_ANIM = 'idle';
 /** Designer clip: cat turns the drum after the curtain opens. */
 export const SUPER_WILD_WIN_ANIM = 'win';
-/** Native Spine `open` clip length at 1×. */
-export const SUPER_WILD_OPEN_NATIVE_MS = 670;
+/** Native Spine `open` clip length at 1× (`wild_render` ~1.533s). */
+export const SUPER_WILD_OPEN_NATIVE_MS = 1533;
 /** Native Spine `win` (cat + drum) length at 1×. */
 export const SUPER_WILD_WIN_NATIVE_MS = 2133;
-/** Wall-clock Spine `open` (lying WILD foot falls / curtain opens up) + symbol drop. */
-export const SUPER_WILD_OPEN_MS = 1500;
+/**
+ * Native time when the curtain foot lands (`main18` / arch / clip at 0.4667s).
+ * The rest of `open` is the cat — keep that at 1×.
+ */
+export const SUPER_WILD_OPEN_LAND_NATIVE_MS = 467;
+/**
+ * Wall-clock for the fall to the column edge. Slightly slower than native so
+ * the unfurl reads; column align must use this or leftover `alignShift0`
+ * keeps the settled foot under the desk.
+ */
+export const SUPER_WILD_OPEN_LAND_MS = 720;
+/**
+ * Native time when useful `open` motion is done (fall + bounce / cat settle).
+ * Clip keeps going to 1.533s with ~1s of hold — cut here, then idle → win.
+ */
+export const SUPER_WILD_OPEN_END_NATIVE_MS = 667;
+/**
+ * Living curtain `idle` after `open` (including bounce), before cat `win`.
+ */
+export const SUPER_WILD_OPEN_IDLE_MS = 200;
+/**
+ * Wall-clock of `open` until the early end (stretched fall + native-speed bounce).
+ */
+export const SUPER_WILD_OPEN_MS =
+	SUPER_WILD_OPEN_LAND_MS + (SUPER_WILD_OPEN_END_NATIVE_MS - SUPER_WILD_OPEN_LAND_NATIVE_MS);
 /**
  * Spine `open` frame-0: lying WILD replaces the board SW and is the curtain foot.
  * It falls to the column bottom while the rest of the curtain opens upward.
@@ -53,9 +80,10 @@ export const SUPER_WILD_WIN_MS = 1800;
  * ~0.5 = mid gesture — cat has grabbed the wheel, then the drum takes over.
  */
 export const SUPER_WILD_WIN_WHEEL_START_FRAC = 0.5;
-/** Total expanding wait: open → cat mid-win → wheel land (win overlaps spin). */
+/** Total expanding wait: full open → idle → cat mid-win → wheel land. */
 export const SUPER_WILD_PRESENT_MS =
 	SUPER_WILD_OPEN_MS +
+	SUPER_WILD_OPEN_IDLE_MS +
 	SUPER_WILD_WIN_MS * SUPER_WILD_WIN_WHEEL_START_FRAC +
 	SUPER_WILD_WHEEL_SPIN_MS;
 /**

@@ -82,6 +82,9 @@ import {
 	getPortraitDeviceWidth,
 	getPortraitParchmentSize,
 	INITIAL_BOARD,
+	STARTUP_SW_REEL,
+	STARTUP_SW_MULT,
+	STARTUP_SW_ORIGIN_ROW,
 	BOARD_DIMENSIONS,
 	isVisibleBoardSymbolIndex,
 	SPIN_OPTIONS_DEFAULT,
@@ -287,13 +290,14 @@ export const stateGame = $state({
 	/** Bumps each paw resolve so appear_flash remounts from the start. */
 	pawCoinPlayId: 0,
 	/** One curtain per opened SW column — stays until next reveal. */
-	superWildCurtains: [] as {
-		reel: number;
-		mult: number;
-		phase: 'expanding' | 'dropIn' | 'dismiss' | 'done';
-		/** Padded board row of the lying SW the curtain grows from (upward). */
-		originRow: number;
-	}[],
+	superWildCurtains: [
+		{
+			reel: STARTUP_SW_REEL,
+			mult: STARTUP_SW_MULT,
+			phase: 'done' as const,
+			originRow: STARTUP_SW_ORIGIN_ROW,
+		},
+	],
 	/** 0 = symbols in playfield; 1 = symbols parked below the mask (target board in). */
 	targetPickSlide: 0,
 	/** Target-pick cabinet is mounted (Pixi plate under the desk frame). */
@@ -338,7 +342,7 @@ export const stateGame = $state({
 	 * Survives curtain unmount so a 4-high Wild.webp stack never replaces the
 	 * curtain when it parks / clears; cleared when that reel starts spinning.
 	 */
-	swSpineHideReels: {} as Record<number, true>,
+	swSpineHideReels: { [STARTUP_SW_REEL]: true } as Record<number, true>,
 	/** Bullets in revolver drum (0..6). */
 	drumCount: 0,
 	/**

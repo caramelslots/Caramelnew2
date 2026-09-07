@@ -8,6 +8,8 @@
 	import Symbol from './Symbol.svelte';
 	import SymbolWrap from './SymbolWrap.svelte';
 	import { getSymbolInfo, getSymbolX, toRevealedRawSymbol } from '../game/utils';
+	import { devPreview } from '../game/devPreview.svelte';
+	import { resolveSymbolDevPreview } from '../game/symbolDevPreview';
 	import {
 		WIN_BOUNCE,
 		IDLE_BOUNCE,
@@ -56,11 +58,12 @@
 	// Per-symbol win bounce. Runs for symbols whose win state shows a frozen
 	// idle spine + container scale tween (M). B (`activate`), H1 diamond
 	// (`activation`), H2 revolver / H3 lighter / H4 telephone / letter lows
-	// (`win`) drive their own spine celebration — skip the bounce.
+	// (`win`), W (`land` bounce) drive their own spine celebration — skip the bounce.
 	const usesDedicatedSpineWin = $derived(
 		symbolInfo.animationName === 'win' ||
 			symbolInfo.animationName === 'activation' ||
-			symbolInfo.animationName === 'activate',
+			symbolInfo.animationName === 'activate' ||
+			symbolInfo.animationName === 'land',
 	);
 	const isIdleBouncing = $derived(props.reelSymbol.symbolState === 'idleBounce');
 	const winScale = new Tween(1);
@@ -417,6 +420,18 @@
 				{showMultiplier}
 				duelSide={props.duelSide}
 				oncomplete={() => {
+					const preview = devPreview.symbolAnim;
+					if (preview && props.reelSymbol.rawSymbol.name === preview.groupId) {
+						const resolved = resolveSymbolDevPreview(preview);
+						if (resolved?.followUpId && preview.clipId === resolved.id) {
+							devPreview.symbolAnim = {
+								groupId: preview.groupId,
+								clipId: resolved.followUpId,
+								nonce: preview.nonce + 1,
+							};
+						}
+						return;
+					}
 					const state = props.reelSymbol.symbolState;
 					if (state === 'idleBounce') return;
 					if (state === 'win' && !usesDedicatedSpineWin) return;

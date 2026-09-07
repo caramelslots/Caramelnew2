@@ -1,9 +1,10 @@
 <!--
 	Drives Super Wild Spine:
-	1) `open` — lying WILD foot falls / curtain opens up
-	2) `win` — cat winds the drum (wheel bone held still at first)
-	3) ~mid-win → programmatic main16 spin → math mult (cat clip keeps playing)
-	4) `idle`
+	1) `open` — full clip (fall + bounce); column align settles when the foot lands
+	2) `idle` — living curtain after bounce
+	3) `win` — cat winds the drum (wheel bone held still at first)
+	4) ~mid-win → programmatic main16 spin → math mult (cat clip keeps playing)
+	5) `idle`
 -->
 <script lang="ts">
 	import { getContextSpine } from 'pixi-svelte';
@@ -11,8 +12,10 @@
 	import {
 		SUPER_WILD_IDLE_ANIM,
 		SUPER_WILD_OPEN_ANIM,
-		SUPER_WILD_OPEN_MS,
-		SUPER_WILD_OPEN_NATIVE_MS,
+		SUPER_WILD_OPEN_END_NATIVE_MS,
+		SUPER_WILD_OPEN_IDLE_MS,
+		SUPER_WILD_OPEN_LAND_MS,
+		SUPER_WILD_OPEN_LAND_NATIVE_MS,
 		SUPER_WILD_POINTER_SCALE,
 		SUPER_WILD_POINTER_SHAKE_DEG,
 		SUPER_WILD_POINTER_SHAKE_HZ,
@@ -57,26 +60,24 @@
 	let pointerShakeLastMs = 0;
 	/** True while designer `open` is on track 0. */
 	let opening = $state(false);
-	/** Guard so complete-listener + early-land don't double-fire win. */
+	/** Guard so complete-listener + idle-hold don't double-fire win. */
 	let openFinished = false;
+	/** Foot landed — restore 1× so the rest of `open` (bounce) plays in full. */
+	let openLanded = false;
+	/** Full `open` finished — living idle is on, `win` is scheduled. */
+	let openIdleStarted = false;
 	let wheelRaf = 0;
 	let wheelStartTimer: ReturnType<typeof setTimeout> | undefined;
 	let prevAfter: ((s: typeof spine) => void) | undefined;
 
 	/**
-	 * Designer `open` overshoots then springs back (bounce) in the last ~15%.
-	 * After the foot has fallen, snap to the final open pose and cut into `win`
-	 * — do NOT clamp bones mid-flight (that broke the fall / slid the tile).
-	 * Native open duration ≈ 0.6667s; peak overshoot ≈ 0.33s.
-	 */
-	const OPEN_LAND_BEFORE_BOUNCE = 0.55;
-
-	/**
 	 * Curtain Spine + drum always run at 1× — turbo must not shorten open/win/spin
 	 * (same rule as mascot). Wall-clock constants below are absolute.
 	 */
-	/** Stretch native ~0.67s `open` to SUPER_WILD_OPEN_MS wall-clock. */
-	const openTimeScale = () => SUPER_WILD_OPEN_NATIVE_MS / SUPER_WILD_OPEN_MS;
+	/** Stretch only the fall to SUPER_WILD_OPEN_LAND_MS; bounce + rest of `open` stay 1×. */
+	const openFallTimeScale = () => SUPER_WILD_OPEN_LAND_NATIVE_MS / SUPER_WILD_OPEN_LAND_MS;
+	const OPEN_LAND_NATIVE_S = SUPER_WILD_OPEN_LAND_NATIVE_MS / 1000;
+	const OPEN_END_NATIVE_S = SUPER_WILD_OPEN_END_NATIVE_MS / 1000;
 
 	/** Stretch designer `win` (cat winds drum) to SUPER_WILD_WIN_MS. */
 	const winTimeScale = () => SUPER_WILD_WIN_NATIVE_MS / SUPER_WILD_WIN_MS;
@@ -150,11 +151,12 @@
 
 	const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
 
-	const holdIdlePose = () => {
+	const holdIdlePose = (mixDuration = 0) => {
 		spine.state.timeScale = 1;
 		const cur = spine.state.getCurrent(0)?.animation?.name;
 		if (cur !== SUPER_WILD_IDLE_ANIM) {
-			spine.state.setAnimation(0, SUPER_WILD_IDLE_ANIM, true);
+			const idleEntry = spine.state.setAnimation(0, SUPER_WILD_IDLE_ANIM, true);
+			if (idleEntry) idleEntry.mixDuration = mixDuration;
 			spine.update(0);
 			spine.spineAttachmentsDirty = true;
 		}
@@ -218,10 +220,8 @@
 		wheelSpinning = false;
 		clearWheelStartTimer();
 		spine.state.timeScale = winTimeScale();
-		spine.state.clearTracks();
 		const winEntry = spine.state.setAnimation(0, SUPER_WILD_WIN_ANIM, false);
-		if (winEntry) winEntry.mixDuration = 0;
-		spine.update(0);
+		if (winEntry) winEntry.mixDuration = 0.2;
 		spine.spineAttachmentsDirty = true;
 		applyWheelBone(startDeg);
 
@@ -233,10 +233,28 @@
 		}, delayMs);
 	};
 
+	/** Full `open` (including bounce) is done — living idle, then `win`. */
+	const playIdleThenWin = (mult: number) => {
+		if (openIdleStarted || openFinished) return;
+		openIdleStarted = true;
+		opening = false;
+		holdIdlePose(0.2);
+		props.onOpenComplete?.();
+		clearWheelStartTimer();
+		if (SUPER_WILD_OPEN_IDLE_MS <= 0) {
+			finishOpen(mult);
+			return;
+		}
+		wheelStartTimer = setTimeout(() => {
+			wheelStartTimer = undefined;
+			finishOpen(mult);
+		}, SUPER_WILD_OPEN_IDLE_MS);
+	};
+
 	/**
 	 * Designer `open`: frame-0 lying WILD is the curtain foot (replaces board SW).
 	 * Tile falls to the column bottom while the rest of the curtain opens upward.
-	 * Play the fall as authored — no mid-flight bone clamps.
+	 * Play the whole clip — bounce lives in the tail; idle starts after complete.
 	 */
 	const playOpen = (key: string, mult: number) => {
 		pendingWheelMult = mult;
@@ -244,13 +262,15 @@
 		wheelSpinning = false;
 		opening = true;
 		openFinished = false;
+		openLanded = false;
+		openIdleStarted = false;
 		clearAllTimers();
 		props.onWheelLanded(false, 0, mult);
 		const startDeg = superWildWheelStartDeg(superWildWheelEndDeg(mult));
 		props.onWheelDeg(startDeg);
 		applyWheelBone(startDeg);
 
-		spine.state.timeScale = openTimeScale();
+		spine.state.timeScale = openFallTimeScale();
 		spine.state.clearTracks();
 		const entry = spine.state.setAnimation(0, SUPER_WILD_OPEN_ANIM, false);
 		if (entry) {
@@ -262,11 +282,11 @@
 		if (entry) {
 			entry.listener = {
 				complete: () => {
-					finishOpen(mult);
+					playIdleThenWin(mult);
 				},
 			};
 		} else {
-			finishOpen(mult);
+			playIdleThenWin(mult);
 		}
 
 		playedKey = key;
@@ -283,6 +303,8 @@
 		opening = false;
 		// Allow finishOpen after drop-in (same guard as expand complete).
 		openFinished = false;
+		openLanded = false;
+		openIdleStarted = false;
 		clearAllTimers();
 		props.onWheelLanded(false, 0, mult);
 		const startDeg = superWildWheelStartDeg(superWildWheelEndDeg(mult));
@@ -317,18 +339,22 @@
 		prevAfter = spine.afterUpdateWorldTransforms;
 		spine.afterUpdateWorldTransforms = (s) => {
 			prevAfter?.(s);
-			// Skip designer end-bounce: after the fall, jump to final open pose → win.
-			// Defer finishOpen — never mutate AnimationState inside afterUpdate.
-			if (opening && !openFinished) {
+			if (opening && !openFinished && !openIdleStarted) {
 				const entry = s.state?.getCurrent?.(0);
-				if (
-					entry?.animation?.name === SUPER_WILD_OPEN_ANIM &&
-					(entry.trackTime ?? 0) >= OPEN_LAND_BEFORE_BOUNCE
-				) {
-					const end = entry.animationEnd ?? entry.animation?.duration ?? OPEN_LAND_BEFORE_BOUNCE;
-					entry.trackTime = end;
-					const m = pendingWheelMult ?? props.mult;
-					queueMicrotask(() => finishOpen(m));
+				if (entry?.animation?.name === SUPER_WILD_OPEN_ANIM) {
+					const trackTime = entry.trackTime ?? 0;
+					// Fall is stretched; restore 1× for the authored bounce / tail.
+					// Do not interrupt `open` — idle starts on complete.
+					if (trackTime >= OPEN_LAND_NATIVE_S && !openLanded) {
+						openLanded = true;
+						s.state.timeScale = 1;
+						queueMicrotask(() => props.onOpenComplete?.());
+					}
+					// Skip the ~1s empty tail of `open` — bounce is already done.
+					if (trackTime >= OPEN_END_NATIVE_S) {
+						const m = pendingWheelMult ?? props.mult;
+						queueMicrotask(() => playIdleThenWin(m));
+					}
 				}
 			}
 			// Freeze drum during early cat wind-up; drive it during/after our spin.
@@ -357,6 +383,8 @@
 			wheelSpinning = false;
 			opening = false;
 			openFinished = false;
+			openLanded = false;
+			openIdleStarted = false;
 			clearAllTimers();
 			return;
 		}

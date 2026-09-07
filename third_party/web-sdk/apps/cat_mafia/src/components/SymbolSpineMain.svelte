@@ -1,13 +1,20 @@
 <script lang="ts">
-	import { SpineProvider, SpineTrack, type SpineTrackProps } from 'pixi-svelte';
+	import type * as PIXI from 'pixi.js';
+	import { Container, Graphics, SpineProvider, SpineTrack, type SpineTrackProps } from 'pixi-svelte';
 
 	import { getSymbolInfo } from '../game/utils';
-	import { pickBonusIdleClip, SYMBOL_SIZE, type BonusIdleClip } from '../game/constants';
+	import {
+		pickBonusIdleClip,
+		SYMBOL_SIZE,
+		WILD_TILE_FILL,
+		type BonusIdleClip,
+	} from '../game/constants';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { getAutoCellFitRatio } from '../game/symbolCellFit.svelte';
 	import type { SymbolName } from '../game/types';
 	import BonusUnclipFrame from './BonusUnclipFrame.svelte';
+	import Wild1x1SlotFilter from './Wild1x1SlotFilter.svelte';
 
 	type Props = {
 		symbolInfo: ReturnType<typeof getSymbolInfo>;
@@ -30,10 +37,13 @@
 	const SYMBOL_SPINE_TIME_SCALE = 1;
 
 	// Namespaced rest poses (`*/idle`) are frozen. One-shot celebrate clips
-	// (`win` / `activation` / `activate` / W) await complete; postWinStatic
+	// (`win` / `activation` / `activate` / W `land`) await complete; postWinStatic
 	// descriptors set `loop: true` so the hold keeps playing at 1×.
 	const animationName = $derived(props.symbolInfo.animationName);
-	const isLivingIdle = $derived(animationName === 'idle');
+	const isLivingIdle = $derived(
+		animationName === 'idle' ||
+			((props.symbolName === 'W' || props.symbolName === 'SW') && animationName === 'static'),
+	);
 	/** Bonus rest after land / activate — looping idle + one-shot blink/ears. */
 	const usesBonusIdleVariants = $derived(props.symbolName === 'B' && isLivingIdle);
 	let bonusIdleClip = $state<BonusIdleClip>('idle');
@@ -69,6 +79,13 @@
 	const autoUpdate = $derived.by(() => {
 		const name = animationName;
 		if (!name) return true;
+		if ((props.symbolName === 'W' || props.symbolName === 'SW') && name === 'static') {
+			if (props.inViewport === false) return false;
+			if (props.duelSide && stateDuel.winSpotlightSide === props.duelSide) return false;
+			// Combined curtain skeleton must keep ticking `static` so the clip
+			// stays on the 1×1 deform — freezing leaves the setup-pose column quad.
+			return true;
+		}
 		if (name === 'idle') {
 			if (usesBonusIdleVariants) return bonusIdleAutoUpdate;
 			if (props.inViewport === false) return false;
@@ -140,27 +157,55 @@
 			},
 		};
 	});
+
+	const isWild1x1 = $derived(
+		(props.symbolName === 'W' || props.symbolName === 'SW') &&
+			(trackAnimationName === 'static' || trackAnimationName === 'land'),
+	);
+	const spineX = $derived((props.x ?? 0) + offsetX);
+	const spineY = $derived((props.y ?? 0) + offsetY);
+	const wildTilePx = $derived(SYMBOL_SIZE * WILD_TILE_FILL);
+	const drawWildTileMask = $derived((g: PIXI.Graphics) => {
+		g.clear();
+		const s = wildTilePx;
+		g.rect(-s * 0.5, -s * 0.5, s, s);
+		g.fill(0xffffff);
+	});
 </script>
 
-<SpineProvider
-	x={(props.x ?? 0) + offsetX}
-	y={(props.y ?? 0) + offsetY}
-	key={props.symbolInfo.assetKey}
-	height={fitHeight}
-	{autoUpdate}
->
-	{#if props.symbolName === 'B' || props.symbolName === 'BD'}
-		<BonusUnclipFrame />
-	{/if}
-	{#key `${trackAnimationName}:${bonusIdleNonce}`}
-		<SpineTrack
-			{loop}
-			trackIndex={0}
-			animationName={trackAnimationName}
-			timeScale={SYMBOL_SPINE_TIME_SCALE}
-			reverse={reverseAnimation}
-			animationEnd={animationEnd}
-			{listener}
-		/>
-	{/key}
-</SpineProvider>
+{#snippet wildSpine(px: number, py: number)}
+	<SpineProvider
+		x={px}
+		y={py}
+		key={props.symbolInfo.assetKey}
+		height={fitHeight}
+		{autoUpdate}
+	>
+		{#if props.symbolName === 'B' || props.symbolName === 'BD'}
+			<BonusUnclipFrame />
+		{/if}
+		{#if isWild1x1}
+			<Wild1x1SlotFilter />
+		{/if}
+		{#key `${trackAnimationName}:${bonusIdleNonce}`}
+			<SpineTrack
+				{loop}
+				trackIndex={0}
+				animationName={trackAnimationName}
+				timeScale={SYMBOL_SPINE_TIME_SCALE}
+				reverse={reverseAnimation}
+				animationEnd={animationEnd}
+				{listener}
+			/>
+		{/key}
+	</SpineProvider>
+{/snippet}
+
+{#if isWild1x1}
+	<Container x={spineX} y={spineY}>
+		<Graphics isMask draw={drawWildTileMask} eventMode="none" />
+		{@render wildSpine(0, 0)}
+	</Container>
+{:else}
+	{@render wildSpine(spineX, spineY)}
+{/if}

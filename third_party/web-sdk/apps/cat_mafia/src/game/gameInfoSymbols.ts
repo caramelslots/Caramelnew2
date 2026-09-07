@@ -34,7 +34,7 @@ export const GAME_INFO_SYMBOL_IMAGES: Record<GameInfoImageSymbolId, string> = {
 	B: symbolAssetUrl('Bonus.webp'),
 	BD: symbolAssetUrl('BonusDuel.webp'),
 	SW: symbolAssetUrl('Wild.webp'),
-	Paw: `${import.meta.env.BASE_URL}assets/sprites/ui/autoplay_menu/paw.webp`,
+	Paw: symbolAssetUrl('PawCoin.webp'),
 	BT: symbolAssetUrl('Cartridge.webp'),
 };
 

@@ -3,6 +3,7 @@
 	import { getContextSpine } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
 
 	type Props = {
@@ -32,10 +33,11 @@
 
 	// Spine.autoUpdate=true adds a Pixi ticker listener with no duplicate guard.
 	// Passing it as a SpineProvider prop would register a second listener (2× speed).
-	// Phones + loading screen: keep the street static (no idle spine tick).
+	// Phones + bootstrap logo: static street. Animate under HTML still once board preloads.
 	$effect(() => {
 		const phone = isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType());
-		const loading = context.stateLayout.showLoadingScreen;
+		const loading =
+			context.stateLayout.showLoadingScreen && !gameEntrance.preloadContent;
 		const next = !phone && !loading && !context.stateGame.winOverlayActive;
 		if (spine.autoUpdate !== next) spine.autoUpdate = next;
 		if (phone || loading) {

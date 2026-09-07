@@ -10,6 +10,8 @@ export type SymbolDevClip = {
 	animationName: string;
 	/** Idle / rest clips loop; land/win/bounce play once (re-click to replay). */
 	loop: boolean;
+	/** After a one-shot, switch the preview to this clip id (usually idle). */
+	followUpId?: string;
 	/** Default spine — sprite for spin WebP previews (B / BD). */
 	renderType?: 'spine' | 'sprite';
 };
@@ -192,6 +194,89 @@ export const SYMBOL_DEV_PREVIEW_GROUPS: readonly SymbolDevGroup[] = [
 				label: 'activate',
 				assetKey: 'BD',
 				animationName: 'activate',
+				loop: false,
+			},
+		],
+	},
+	{
+		id: 'W',
+		label: 'W Wild',
+		title: 'Wild — idle (`static`) / bounce (`land`)',
+		previewHeight: 460,
+		clips: [
+			{
+				id: 'idle',
+				label: 'idle',
+				assetKey: 'W',
+				animationName: 'static',
+				loop: true,
+			},
+			{
+				id: 'bounce',
+				label: 'bounce',
+				assetKey: 'W',
+				animationName: 'land',
+				loop: false,
+				followUpId: 'idle',
+			},
+			{
+				id: 'spin',
+				label: 'spin',
+				assetKey: 'WImg',
+				animationName: '',
+				loop: false,
+				renderType: 'sprite',
+			},
+		],
+	},
+	{
+		id: 'SW',
+		label: 'SW Super',
+		title: 'Super Wild — idle / bounce / open / win (wild_render)',
+		previewHeight: 460,
+		clips: [
+			{
+				id: 'idle',
+				label: 'idle',
+				assetKey: 'W',
+				animationName: 'static',
+				loop: true,
+			},
+			{
+				id: 'bounce',
+				label: 'bounce',
+				assetKey: 'W',
+				animationName: 'land',
+				loop: false,
+				followUpId: 'idle',
+			},
+			{
+				id: 'open',
+				label: 'open',
+				assetKey: 'superWildCurtain',
+				animationName: 'open',
+				loop: false,
+				followUpId: 'curtainIdle',
+			},
+			{
+				id: 'win',
+				label: 'win',
+				assetKey: 'superWildCurtain',
+				animationName: 'win',
+				loop: false,
+			},
+			{
+				id: 'curtainIdle',
+				label: 'curtain idle',
+				assetKey: 'superWildCurtain',
+				animationName: 'idle',
+				loop: true,
+			},
+			{
+				id: 'activation',
+				label: 'activation',
+				assetKey: 'superWildCurtain',
+				animationName: 'activation',
 				loop: false,
 			},
 		],

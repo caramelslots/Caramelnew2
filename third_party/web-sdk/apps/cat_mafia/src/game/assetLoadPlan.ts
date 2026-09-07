@@ -30,6 +30,7 @@ export const LOADER_BATCH_2_KEYS = [
 	'B',
 	'BD',
 	'BT',
+	'W',
 	'L1Img',
 	'L2Img',
 	'L3Img',

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { backOut } from 'svelte/easing';
+	import { backOut, cubicIn } from 'svelte/easing';
 	import { Tween } from 'svelte/motion';
 	import { untrack } from 'svelte';
 
@@ -8,6 +8,7 @@
 	import PressToContinueHtml from './PressToContinueHtml.svelte';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { LOADER_EXIT_CARDS_DURATION_MS, LOADER_EXIT_CARDS_SLIDE_VH } from '../game/constants';
 	import { LOADER_NEON_LOGO_URL, LOADER_SCREEN_IMAGE_URLS } from '../game/loaderCardAssets';
 	import {
 		LOADER_CARD_COUNT,
@@ -25,11 +26,11 @@
 
 	const context = getContext();
 
-	// Cards only after assets are loaded (logo+progress shows first).
+	// Cards after assets load; stay mounted during exit slide.
 	const show = $derived(
 		context.stateLayout.showLoadingScreen &&
-			gameEntrance.loadingCardsVisible &&
-			context.stateApp.loaded,
+			context.stateApp.loaded &&
+			(gameEntrance.loadingCardsVisible || gameEntrance.loaderExitActive),
 	);
 	const assetsReady = $derived(context.stateApp.loaded);
 	const useCarousel = $derived(shouldUseLoaderCarousel(context.stateLayoutDerived));
@@ -48,17 +49,22 @@
 
 	const logoMetrics = $derived(computeLoaderLogoMetrics(context.stateLayoutDerived));
 
-	const overlayStyle = $derived(
-		`left:${canvasSizes.width * 0.5}px;top:${anchor.y + (logoMetrics.height + logoMetrics.gap) / 2}px;transform:translate(-50%,-50%);`,
-	);
 	const logoStyle = $derived(
 		`width:${logoMetrics.width}px;height:${logoMetrics.height}px;margin-bottom:${logoMetrics.gap}px;transform:translateX(-50%) translateY(${logoMetrics.dropOffset}px);`,
 	);
 
 	let activeIndex = $state(0);
 	let autoAdvanceTimer: ReturnType<typeof setTimeout> | undefined;
+	let exitAnimStarted = $state(false);
 
 	const trackOffset = new Tween(0);
+	const exitSlideY = new Tween(0);
+	const exitOpacity = new Tween(1);
+
+	const exitSlidePx = $derived(
+		(typeof window !== 'undefined' ? window.innerHeight : canvasSizes.height) *
+			(LOADER_EXIT_CARDS_SLIDE_VH / 100),
+	);
 
 	const trackX = $derived.by(() => {
 		if (!useCarousel) return 0;
@@ -71,6 +77,16 @@
 	});
 
 	const clampIndex = (index: number) => Math.max(0, Math.min(LOADER_CARD_COUNT - 1, index));
+
+	const overlayTransform = $derived.by(() => {
+		const base = 'translate(-50%,-50%)';
+		if (!gameEntrance.loaderExitActive) return base;
+		return `${base} translateY(${exitSlideY.current}px)`;
+	});
+
+	const overlayStyle = $derived(
+		`left:${canvasSizes.width * 0.5}px;top:${anchor.y + (logoMetrics.height + logoMetrics.gap) / 2}px;transform:${overlayTransform};opacity:${exitOpacity.current};`,
+	);
 
 	const snapToIndex = (index: number, animate = true) => {
 		const nextIndex = clampIndex(index);
@@ -130,7 +146,7 @@
 	});
 
 	$effect(() => {
-		if (!show || !useCarousel || !assetsReady) {
+		if (!show || !useCarousel || !assetsReady || gameEntrance.loaderExitActive) {
 			clearAutoAdvance();
 			return;
 		}
@@ -140,10 +156,38 @@
 		scheduleAutoAdvance(AUTO_START_DELAY_MS);
 		return clearAutoAdvance;
 	});
+
+	$effect(() => {
+		if (!gameEntrance.loaderExitActive) {
+			exitAnimStarted = false;
+			void exitSlideY.set(0, { duration: 0 });
+			void exitOpacity.set(1, { duration: 0 });
+			return;
+		}
+		if (exitAnimStarted) return;
+
+		exitAnimStarted = true;
+		clearAutoAdvance();
+		const slidePx = exitSlidePx;
+		untrack(() => {
+			void exitSlideY.set(0, { duration: 0 });
+			void exitOpacity.set(1, { duration: 0 });
+		});
+
+		void Promise.all([
+			exitSlideY.set(slidePx, { duration: LOADER_EXIT_CARDS_DURATION_MS, easing: cubicIn }),
+			exitOpacity.set(0, { duration: LOADER_EXIT_CARDS_DURATION_MS, easing: cubicIn }),
+		]);
+	});
 </script>
 
 {#if show}
-	<div class="loader-cards-overlay" style={overlayStyle} aria-hidden={!show}>
+	<div
+		class="loader-cards-overlay"
+		class:exiting={gameEntrance.loaderExitActive}
+		style={overlayStyle}
+		aria-hidden={!show}
+	>
 		<div class="loader-cards-stack">
 			<!-- Loader logo slot (layout only). -->
 			<div class="loader-neon-logo-placeholder" style={logoStyle}></div>
@@ -187,7 +231,9 @@
 		Space / tap handlers live in LoadingScreen.
 	-->
 	<div class="loader-press-to-continue">
-		<PressToContinueHtml />
+		{#if gameEntrance.loadingCardsVisible}
+			<PressToContinueHtml />
+		{/if}
 	</div>
 {/if}
 
@@ -213,6 +259,11 @@
 		pointer-events: none;
 		user-select: none;
 		overflow: visible;
+		will-change: transform, opacity;
+	}
+
+	.loader-cards-overlay.exiting {
+		z-index: 49;
 	}
 
 	.loader-press-to-continue {

@@ -153,6 +153,15 @@ export default {
 			scale: 1,
 		},
 	},
+	/** Wild 1×1 — same `wild_render` skeleton as the Super Wild curtain (`static` / `land`). */
+	W: {
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/superWild/WILD_F_1.atlas'),
+			skeleton: assetUrl('assets/spines/superWild/WILD_F_1.json'),
+			scale: 1,
+		},
+	},
 	// Static sprites for spinning / resting cells.
 	H1Img: {
 		type: 'sprite',

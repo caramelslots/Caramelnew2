@@ -24,7 +24,7 @@
 	import { stateGame } from '../game/stateGame.svelte';
 	import {
 		SUPER_WILD_OPEN0_ALIGN_Y_PX,
-		SUPER_WILD_OPEN_MS,
+		SUPER_WILD_OPEN_LAND_MS,
 		SUPER_WILD_DISMISS_DIST,
 		SUPER_WILD_STICKY_DROP_IN_DIST,
 		SUPER_WILD_STICKY_DROP_IN_MS,
@@ -107,8 +107,8 @@
 		if (phase === 'expanding' && prevPhase !== 'expanding') {
 			badgePinned = false;
 			wheelLanded = false;
-			// Curtain open always 1× — turbo must not shorten (matches Spine controller).
-			const duration = SUPER_WILD_OPEN_MS;
+			// Align with the foot landing, not the full `open` clip (cat after).
+			const duration = SUPER_WILD_OPEN_LAND_MS;
 			untrack(() => {
 				dropInY.set(0, { duration: 0 });
 				alignT.set(0, { duration: 0 });

@@ -173,43 +173,61 @@ const hasUnfrozenTargets = (runtime: SkinRuntime) => {
 	return false;
 };
 
-/** One WebGL player per skin. Each overlay coin seeks its own appear_flash time. */
-const poseAndBlitAll = (runtime: SkinRuntime) => {
+const renderPose = (
+	runtime: SkinRuntime,
+	trackTime: number,
+	targets: Iterable<CoinPawSpineTarget>,
+	freezeAfterBlit: boolean,
+) => {
 	const player = runtime.player;
 	const skeleton = player.skeleton;
 	const state = player.animationState;
 	const renderer = player.sceneRenderer;
 	const gl = player.context?.gl;
 	const source = player.canvas;
-	if (!skeleton || !state || !renderer || !gl || !source || runtime.targets.size === 0) return;
+	if (!skeleton || !state || !renderer || !gl || !source) return;
 	if (isHtmlWebglPaused()) return;
 	const entry = state.getCurrent(0);
 	if (!entry) return;
 
-	const now = performance.now();
-	const end = entry.animationEnd;
 	const bg = player.bg;
 	const pma = false;
-	// Coin skeleton has no physics / IK — `none` skips the constraint pass.
 	const physics = Physics.none;
 
-	for (const target of runtime.targets) {
+	entry.trackTime = trackTime;
+	state.apply(skeleton);
+	skeleton.updateWorldTransform(physics);
+
+	for (const target of targets) {
 		if (frozenTargets.has(target)) continue;
-		const started = clipStartedAt.get(target);
-		if (started == null) continue;
-		const trackTime = Math.min(end, Math.max(0, ((now - started) / 1000) * target.getSpeed()));
-		entry.trackTime = trackTime;
-		state.apply(skeleton);
-		skeleton.updateWorldTransform(physics);
 		gl.clearColor(bg.r, bg.g, bg.b, bg.a);
 		gl.clear(gl.COLOR_BUFFER_BIT);
 		renderer.begin();
 		renderer.drawSkeleton(skeleton, pma);
 		renderer.end();
 		if (!blitOne(runtime, target)) continue;
-		// Last pose is the reverse face (x1 / x2 / x3). Hold it on the 2D
-		// canvas — fly is CSS from here, no more WebGL readback.
-		if (trackTime >= end) frozenTargets.add(target);
+		if (freezeAfterBlit) frozenTargets.add(target);
+	}
+};
+
+/** One WebGL player per skin. Each overlay coin seeks its own appear_flash time. */
+const poseAndBlitAll = (runtime: SkinRuntime) => {
+	const player = runtime.player;
+	const skeleton = player.skeleton;
+	const state = player.animationState;
+	if (!skeleton || !state || runtime.targets.size === 0) return;
+	const entry = state.getCurrent(0);
+	if (!entry) return;
+
+	const now = performance.now();
+	const end = entry.animationEnd;
+
+	for (const target of runtime.targets) {
+		if (frozenTargets.has(target)) continue;
+		const started = clipStartedAt.get(target);
+		if (started == null) continue;
+		const trackTime = Math.min(end, Math.max(0, ((now - started) / 1000) * target.getSpeed()));
+		renderPose(runtime, trackTime, [target], trackTime >= end);
 	}
 };
 

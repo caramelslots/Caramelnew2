@@ -111,8 +111,7 @@
 <div
 	class="pixi-stage"
 	class:above-html-ui={context.stateGame.transitionActive ||
-		context.stateGame.winOverlayActive ||
-		gameEntrance.loadingCloudActive}
+		context.stateGame.winOverlayActive}
 >
 	<GameApp maxResolution={3} tuneForMobilePortrait webglOnIosAndroid>
 		<EnableSound />

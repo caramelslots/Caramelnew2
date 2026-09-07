@@ -32,12 +32,11 @@
 	});
 
 	/**
-	 * While the HTML loader still is up, keep Pixi street + black clear so
-	 * loading clouds can draw over the still on a transparent canvas.
-	 * Street mounts under cover when hideLoaderStreet flips at theme-switch.
+	 * Keep Pixi street under the HTML still while cards are up.
+	 * Mount + animate as soon as board assets are preloading (invisible under layer 1).
 	 */
 	const hidePixiStreet = $derived(
-		context.stateLayout.showLoadingScreen && !gameEntrance.hideLoaderStreet,
+		context.stateLayout.showLoadingScreen && !gameEntrance.preloadContent,
 	);
 
 	/** Duel night street — same timing as FS (after cloud cover, not on pick screen). */
@@ -49,11 +48,13 @@
 		(context.stateGame.gameType === 'freegame' || showDuelBackground) && !hidePixiStreet,
 	);
 	const isPhone = $derived(isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType()));
-	/** Freeze street while bootstrap / cards / press-to-continue are up. */
-	const loaderActive = $derived(context.stateLayout.showLoadingScreen);
+	/** Freeze street only until board preload starts (bootstrap logo phase). */
+	const loaderActive = $derived(
+		context.stateLayout.showLoadingScreen && !gameEntrance.preloadContent,
+	);
 	const playStreetIdle = $derived(!isPhone && !loaderActive);
-	/** Instant under loading clouds; normal fade for in-game day/night swaps. */
-	const bgFadeMs = $derived(loaderActive ? 0 : SECOND);
+	/** Full alpha under HTML cover; normal fade for in-game day/night swaps. */
+	const bgFadeMs = $derived(context.stateLayout.showLoadingScreen ? 0 : SECOND);
 
 	const canvasCenter = $derived.by(() => {
 		const canvas = context.stateLayoutDerived.canvasSizes();

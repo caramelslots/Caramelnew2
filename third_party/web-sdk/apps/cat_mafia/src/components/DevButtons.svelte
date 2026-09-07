@@ -1205,6 +1205,7 @@
 		stopLoaderProgressTimer();
 		stateLayout.showLoadingScreen = false;
 		gameEntrance.loadingCardsVisible = false;
+		gameEntrance.loaderExitActive = false;
 		gameEntrance.preloadContent = true;
 		gameEntrance.showContent = false;
 		devPreview.loaderProgress = true;
@@ -1225,6 +1226,7 @@
 		devPreview.loaderProgressValue = 0;
 		gameEntrance.showContent = false;
 		gameEntrance.loadingCardsVisible = true;
+		gameEntrance.loaderExitActive = false;
 		gameEntrance.hideLoaderStreet = false;
 		gameEntrance.preloadContent = true;
 		stateLayout.showLoadingScreen = true;
@@ -1237,6 +1239,7 @@
 		gameEntrance.preloadContent = true;
 		gameEntrance.showContent = true;
 		gameEntrance.loadingCardsVisible = false;
+		gameEntrance.loaderExitActive = false;
 		stateLayout.showLoadingScreen = false;
 	};
 

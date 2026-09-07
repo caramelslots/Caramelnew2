@@ -166,6 +166,29 @@ export const FULL_COLUMN_SYMBOL_NAMES = new Set(['B', 'BD', 'W', 'SW']);
  */
 export const BOARD_DIMENSIONS = { x: 5, y: 4 };
 
+/** Central reel for the idle showcase open Super Wild curtain (0-based). */
+export const STARTUP_SW_REEL = 2;
+/** Drum multiplier shown on the idle showcase curtain. */
+export const STARTUP_SW_MULT = 5;
+/** Padded row of the lying SW the curtain grows from. */
+export const STARTUP_SW_ORIGIN_ROW = Math.floor(BOARD_DIMENSIONS.y / 2) + 1;
+
+/**
+ * Fixed 5×4 visible grid for the first screen before any spin.
+ * Column-major: [reel][row], row 0 = top visible row.
+ *
+ * Edit this table to try different compositions — reel `STARTUP_SW_REEL`
+ * must stay a full SW column (open curtain).
+ */
+export const STARTUP_BOARD_VISIBLE: ReadonlyArray<ReadonlyArray<RawSymbol['name']>> = [
+	// Symmetric frame around the central open curtain; H2 stack on cols 1/3.
+	['L4', 'H2', 'H3', 'L1'],
+	['H4', 'H2', 'L3', 'H1'],
+	['SW', 'SW', 'SW', 'SW'],
+	['H4', 'H2', 'L3', 'H1'],
+	['L4', 'H2', 'H3', 'L1'],
+];
+
 /** Highs used when remapping curated preview templates. */
 const INITIAL_BOARD_HIGHS = ['H1', 'H2', 'H3', 'H4'] as const;
 const INITIAL_BOARD_LOWS = ['L1', 'L2', 'L3', 'L4'] as const;
@@ -230,10 +253,8 @@ const INITIAL_BOARD_TEMPLATES: ReadonlyArray<ReadonlyArray<ReadonlyArray<RawSymb
 /** Wild-like symbols on the idle / fake desk (W preview + SW if ever injected). */
 const INITIAL_BOARD_WILD_NAMES = new Set<RawSymbol['name']>(['W', 'SW']);
 
-const stripWildName = (
-	name: RawSymbol['name'],
-	fallback: RawSymbol['name'],
-): RawSymbol['name'] => (INITIAL_BOARD_WILD_NAMES.has(name) ? fallback : name);
+const stripWildName = (name: RawSymbol['name'], fallback: RawSymbol['name']): RawSymbol['name'] =>
+	INITIAL_BOARD_WILD_NAMES.has(name) ? fallback : name;
 
 /** Keep at most one wild across the visible 5×4 grid (matches math: 1 SW per spin). */
 const capVisibleWilds = (
@@ -310,11 +331,7 @@ export const createInitialBoard = (opts?: { exclude?: ReadonlySet<string> }): Ra
 
 	return visible.map((column) => {
 		const topPad = stripWildName(
-			applyExclude(
-				pickOne([column[0]!, column[1]!, fallbackHigh]),
-				opts?.exclude,
-				fallbackHigh,
-			),
+			applyExclude(pickOne([column[0]!, column[1]!, fallbackHigh]), opts?.exclude, fallbackHigh),
 			fallbackHigh,
 		);
 		const bottomPad = stripWildName(
@@ -329,8 +346,27 @@ export const createInitialBoard = (opts?: { exclude?: ReadonlySet<string> }): Ra
 	});
 };
 
+/**
+ * Fixed padded board for the main base desk before the first spin.
+ * Duel previews still use `createInitialBoard()` for variety.
+ */
+export const createStartupBoard = (): RawSymbol[][] => {
+	const swCell = (): RawSymbol => ({ name: 'SW', multiplier: STARTUP_SW_MULT });
+	return STARTUP_BOARD_VISIBLE.map((column, reelIndex) => {
+		const visible: RawSymbol[] =
+			reelIndex === STARTUP_SW_REEL ? column.map(() => swCell()) : column.map((name) => ({ name }));
+		const padName = (cell: RawSymbol) =>
+			cell.name === 'SW' || cell.name === 'W' ? ('H2' as RawSymbol['name']) : cell.name;
+		return [
+			{ name: padName(visible[0]!) },
+			...visible,
+			{ name: padName(visible[visible.length - 1]!) },
+		];
+	});
+};
+
 /** Module-load sample for the main base desk + length helpers (e.g. anticipation). */
-export const INITIAL_BOARD: RawSymbol[][] = createInitialBoard();
+export const INITIAL_BOARD: RawSymbol[][] = createStartupBoard();
 
 /** Whether a settled reel-pool index is on the visible grid (not top/bottom padding). */
 export const isVisibleBoardSymbolIndex = (
@@ -399,8 +435,18 @@ export const IDLE_BOUNCE_CYCLE_DELAY_MS = 2000;
 /** Safety timeout while waiting for an idle-bounce tween to finish. */
 export const IDLE_BOUNCE_ANIMATION_TIMEOUT_MS = 800;
 
-/** Living spine idle plays one symbol type at a time (H1 → H2 → …). */
-export const LIVING_IDLE_SYMBOL_ORDER = ['H1', 'H2', 'H3', 'H4', 'L1', 'L2', 'L3', 'L4'] as const;
+/** Living spine idle plays one symbol type at a time (H1 → H2 → … → W). */
+export const LIVING_IDLE_SYMBOL_ORDER = [
+	'H1',
+	'H2',
+	'H3',
+	'H4',
+	'L1',
+	'L2',
+	'L3',
+	'L4',
+	'W',
+] as const;
 
 /** How long one type keeps looping before the next type. Matches idle clip ~3s. */
 export const LIVING_IDLE_TURN_MS = 3000;
@@ -766,6 +812,15 @@ const BONUS_BAY_FILL = SPECIAL_SYMBOL_SIZE;
  * glow/frame presence.
  */
 const WILD_SYMBOL_SIZE = FULL_COLUMN_COL_W / SYMBOL_SIZE;
+/** On-board 1×1 Wild mask — same bay as the tile, not the full curtain AABB. */
+export const WILD_TILE_FILL = WILD_SYMBOL_SIZE;
+/**
+ * Wild 1×1 spine (`static` / `land`) — `background_1x1` ±516 on `main` scale 0.5
+ * → world span 516. Inflate like Bonus so the tile fills the parchment bay.
+ */
+const WILD_SPINE_SKELETON_HEIGHT = 2227.9185;
+const WILD_1X1_ART_SPAN = 516;
+const WILD_SPINE_SIZE = (WILD_SYMBOL_SIZE * WILD_SPINE_SKELETON_HEIGHT) / WILD_1X1_ART_SPAN;
 const BONUS_SYMBOL_SIZE = (BONUS_BAY_FILL * BONUS_SKELETON_HEIGHT) / BONUS_ART_SPAN;
 const BONUS_SPINE_SCALE = (SYMBOL_SIZE * BONUS_SYMBOL_SIZE) / BONUS_SKELETON_HEIGHT;
 const BONUS_OFFSET_Y = Math.round(
@@ -1240,6 +1295,7 @@ type RenderSizeRatios = { width: number; height: number };
 type RenderOpts = {
 	offsetX?: number;
 	offsetY?: number;
+	idleAnimationName?: string;
 	winAnimationName?: string;
 	landAnimationName?: string;
 	loop?: boolean;
@@ -1249,7 +1305,7 @@ type RenderOpts = {
 const makeRenderStatic = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) => ({
 	type: 'spine' as const,
 	assetKey,
-	animationName: 'idle',
+	animationName: opts?.idleAnimationName ?? 'idle',
 	sizeRatios,
 	...(opts?.offsetX !== undefined ? { offsetX: opts.offsetX } : {}),
 	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
@@ -1352,9 +1408,20 @@ const l2Spin = makeRenderSpinSprite('L2Img', letterSpinSizeRatios);
 const l3Spin = makeRenderSpinSprite('L3Img', letterSpinSizeRatios, l3Opts);
 const l4Spin = makeRenderSpinSprite('L4Img', letterSpinSizeRatios);
 const wSpin = makeRenderSpinSprite('WImg', wildSizeRatios);
-// Wild — static Wild.webp for all states until a new spine lands.
-const wSprite = wSpin;
-// Super Wild board tile — same size as Wild.
+/**
+ * Wild — WebP while scrolling; spine `static` idle at rest; spine `land` bounce
+ * on land/win. Super Wild lying tile uses the same 1×1 clips until the curtain
+ * opens. Clip-quad stripping lives in Wild1x1SlotFilter.
+ */
+const wildSpineSizeRatios = { width: WILD_SPINE_SIZE, height: WILD_SPINE_SIZE };
+const wildOpts = {
+	idleAnimationName: 'static',
+	landAnimationName: 'land',
+	winAnimationName: 'land',
+};
+const wStatic = makeRenderStatic('W', wildSpineSizeRatios, wildOpts);
+const wLand = makeRenderLand('W', wildSpineSizeRatios, wildOpts);
+const wWin = makeRenderWin('W', wildSpineSizeRatios, wildOpts);
 const swSprite = makeRenderSpinSprite('SWImg', wildSizeRatios);
 /**
  * Bonus — WebP while scrolling; spine `idle` (+ blink/ears) at rest.
@@ -1561,8 +1628,17 @@ export const BONUS_WIN_POST_DELAY_MS = 400;
 /** Full cloud transition spine duration. */
 export const TRANSITION_DURATION_MS = 1800;
 
-/** Fade-in for board + UI after the loading-screen cloud transition. */
-export const GAME_ENTRANCE_MS = 400;
+/** Duplicate street plate dissolve (front loader bg). */
+export const LOADER_EXIT_BG_DURATION_MS = 500;
+/** Info cards slide-down duration. */
+export const LOADER_EXIT_CARDS_DURATION_MS = 700;
+/** Peak blur on the duplicate street plate during dissolve. */
+export const LOADER_EXIT_BG_BLUR_PX = 10;
+/** Cards slide down by this fraction of viewport height. */
+export const LOADER_EXIT_CARDS_SLIDE_VH = 55;
+
+/** Fade-in for board + UI — synced with front-bg dissolve. */
+export const GAME_ENTRANCE_MS = LOADER_EXIT_BG_DURATION_MS;
 
 /** Mascot fades in on the same frame as the board, slightly behind it. */
 export const MASCOT_ENTRANCE_DELAY_MS = 100;
@@ -1695,21 +1771,21 @@ export const SYMBOL_INFO_MAP = {
 		spin: l4Spin,
 		land: l4Land,
 	},
-	// Wild — static Wild.webp (spine pack deferred).
+	// Wild — spin WebP; rest = spine `static`; land/win = spine `land`.
 	W: {
-		postWinStatic: wSprite,
-		static: wSprite,
-		spin: wSprite,
-		win: wSprite,
-		land: wSprite,
+		postWinStatic: wStatic,
+		static: wStatic,
+		spin: wSpin,
+		win: wWin,
+		land: wLand,
 	},
-	// Super Wild — same Wild tile on the reel; curtain opens up from it.
+	// Super Wild — same 1×1 spine as Wild until the curtain opens.
 	SW: {
-		postWinStatic: swSprite,
-		static: swSprite,
+		postWinStatic: wStatic,
+		static: wStatic,
 		spin: swSprite,
-		win: swSprite,
-		land: swSprite,
+		win: wWin,
+		land: wLand,
 	},
 	// Paw coins (rework) — rendered as the designer coin-paw spritesheet
 	// (bronze / silver / gold), see SymbolCoinPaw.svelte. The coin itself
