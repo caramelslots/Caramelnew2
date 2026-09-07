@@ -15,6 +15,7 @@
 	import { canAffordSpin } from '../game/buyBonusBalance';
 	import { isLockedBonusHud } from '../game/activeFeature';
 	import { isAnyMenuOpen } from '../game/isAnyMenuOpen';
+	import { isLoaderScreenBlockingSpin } from '../game/isLoaderScreenBlockingSpin';
 	import CashStacksButtonBetProvider from './CashStacksButtonBetProvider.svelte';
 	import { UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
 	import { getContext } from '../game/context';
@@ -24,7 +25,11 @@
 	const context = getContext();
 	const hudLocked = $derived(isLockedBonusHud());
 	const disabled = $derived(!canAffordSpin());
-	const spaceDisabled = $derived(disabled || isAnyMenuOpen());
+	const spaceDisabled = $derived(
+		disabled ||
+			isAnyMenuOpen() ||
+			isLoaderScreenBlockingSpin(context.stateLayout.showLoadingScreen),
+	);
 	const hasCounter = $derived(stateBetDerived.hasAutoBetCounter());
 	let manualSpinHeld = $state(false);
 	let reelsWereSpinning = $state(false);

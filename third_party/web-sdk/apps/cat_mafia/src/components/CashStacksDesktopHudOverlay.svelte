@@ -27,6 +27,7 @@
 	import { getContextLayout } from 'utils-layout';
 	import { OnHotkey } from 'components-shared';
 	import { isAnyMenuOpen } from '../game/isAnyMenuOpen';
+	import { isLoaderScreenBlockingSpin } from '../game/isLoaderScreenBlockingSpin';
 	import { isFreeSpinsActive, isLockedBonusHud } from '../game/activeFeature';
 
 	import HudBalanceBetLine from './HudBalanceBetLine.svelte';
@@ -90,6 +91,9 @@
 
 	const isAutoSpinModalOpen = $derived(stateModal.modal?.name === 'autoSpin');
 	const menuBlocksSpaceSpin = $derived(isAnyMenuOpen());
+	const loaderBlocksSpaceSpin = $derived(
+		isLoaderScreenBlockingSpin(context.stateLayout.showLoadingScreen),
+	);
 	const hasAutoBetCounter = $derived(stateBetDerived.hasAutoBetCounter());
 	const hasCounter = $derived(stateBetDerived.hasAutoBetCounter());
 	const spinCounterText = $derived(
@@ -366,7 +370,7 @@
 		{#if !hudLocked && !isReplay}
 			<OnHotkey
 				hotkey="Space"
-				disabled={spinDisabled || !show || menuBlocksSpaceSpin}
+				disabled={spinDisabled || !show || menuBlocksSpaceSpin || loaderBlocksSpaceSpin}
 				onpress={onSpinPress}
 			/>
 			<SpinHudButton

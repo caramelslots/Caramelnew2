@@ -1629,7 +1629,7 @@ export const BONUS_WIN_POST_DELAY_MS = 400;
 export const TRANSITION_DURATION_MS = 1800;
 
 /** Duplicate street plate dissolve (front loader bg). */
-export const LOADER_EXIT_BG_DURATION_MS = 500;
+export const LOADER_EXIT_BG_DURATION_MS = 300;
 /** Info cards slide-down duration. */
 export const LOADER_EXIT_CARDS_DURATION_MS = 700;
 /** Peak blur on the duplicate street plate during dissolve. */

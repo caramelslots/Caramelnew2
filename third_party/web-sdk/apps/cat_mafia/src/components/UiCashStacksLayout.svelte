@@ -29,6 +29,7 @@
 	import { getContext } from '../game/context';
 	import { scaleMsByGameSpeed } from '../game/gameSpeed';
 	import { isAnyMenuOpen } from '../game/isAnyMenuOpen';
+	import { isLoaderScreenBlockingSpin } from '../game/isLoaderScreenBlockingSpin';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { getContextLayout } from 'utils-layout';
 
@@ -46,7 +47,9 @@
 	const isPopout = $derived(isPopoutViewport(canvasSizes));
 	const useDesktopHud = $derived(layoutType !== 'portrait');
 	const gameNameScale = $derived(isPopoutSmall ? POPOUT_S_SCALE : 1);
-	const spaceHoldDisabled = $derived(isAnyMenuOpen());
+	const spaceHoldDisabled = $derived(
+		isAnyMenuOpen() || isLoaderScreenBlockingSpin(context.stateLayout.showLoadingScreen),
+	);
 
 	const WIN_BELOW_BOARD_GAP = 80;
 	/** PC / laptop only — sit below the gold nameplate, slightly left of screen center. */
