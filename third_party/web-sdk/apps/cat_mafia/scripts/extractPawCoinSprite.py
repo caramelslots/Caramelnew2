@@ -18,7 +18,7 @@ OUT_DIRS = (
 	APP_ROOT / "assets/sprites/symbols",
 )
 SYMBOL_SIZE = 196
-FIT_PADDING = 0.08
+FIT_PADDING = 0.04
 RENDER_PAD = 24
 
 
