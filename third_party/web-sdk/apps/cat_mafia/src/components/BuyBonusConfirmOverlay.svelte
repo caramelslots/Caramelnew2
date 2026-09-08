@@ -154,7 +154,11 @@
 						/>
 					</div>
 					<div class="card-price-wrap">
-						<span class="card-price" data-test="buy-bonus-confirm-price">{price}</span>
+						<span
+							class="card-price"
+							data-test="buy-bonus-confirm-price"
+							x-apple-data-detectors="false">{price}</span
+						>
 					</div>
 				</div>
 			</article>
@@ -522,13 +526,17 @@
 		line-height: 1;
 		display: block;
 		width: auto;
+		color: #1a1208;
+		-webkit-text-fill-color: #1a1208;
+		text-shadow: 0 1px 0 rgba(255, 236, 190, 0.45);
+		text-decoration: none;
 		transform: translate(0.14em, 0.14em);
 	}
 
-	.card-normal .card-price,
-	.card-super .card-price {
-		color: #1a1208;
-		text-shadow: 0 1px 0 rgba(255, 236, 190, 0.45);
+	.card-price :global(a) {
+		color: inherit;
+		-webkit-text-fill-color: inherit;
+		text-decoration: none;
 	}
 
 	.confirm-actions {
