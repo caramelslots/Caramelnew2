@@ -4,6 +4,7 @@ export default {
 	BUY_BONUS_TITLE: 'КУПИТЬ ФУНКЦИЮ',
 	NORMAL_BONUS: 'ОБЫЧНЫЙ БОНУС',
 	SUPER_BONUS: 'СУПЕР БОНУС',
+	DUEL_BONUS: 'DUEL',
 	BUY_NORMAL_COST: '×100',
 	BUY_SUPER_COST: '×200',
 	BUY_NORMAL_DESC_COUNT: '10',

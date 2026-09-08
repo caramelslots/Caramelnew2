@@ -1,10 +1,10 @@
 <!--
-	BuyBonusOverlay.svelte — меню «Купить функцию» по designer_assets/bg wok menu.png.
+	BuyBonusOverlay.svelte — меню «Купить функцию» по designer_assets/bonus_buy_board.png.
 	Открывается при stateModal.modal?.name === 'buyBonus'. Масштабируется через
 	--panel-width для desktop, portrait, popout L (800×450) и popout S (400×225).
 -->
 <script lang="ts">
-	import { stateModal, stateBet, stateBetDerived, stateConfig, stateI18n } from 'state-shared';
+	import { stateModal, stateBet, stateBetDerived, stateConfig } from 'state-shared';
 	import { stateBonus } from 'components-ui-html/src/stateBonus.svelte';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
@@ -19,29 +19,23 @@
 		isPopoutSmallViewport,
 		isPopoutViewport,
 		HUD_BALANCE_BET_FONT_FAMILY,
-		isLatinScriptLocale,
 	} from '../game/constants';
 	import { ensureKnewaveFontLoaded } from '../game/knewaveFont';
 	import { getContext } from '../game/context';
 	import { getContextLayout } from 'utils-layout';
 	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS, HUD_ASSETS } from '../game/uiHtmlAssetManifest';
+	import ArchedRibbonTitle from './ArchedRibbonTitle.svelte';
+	import BuyBonusCardSpine from './BuyBonusCardSpine.svelte';
 	import CashStacksFeatureToggles from './CashStacksFeatureToggles.svelte';
 	import FitCardText from './FitCardText.svelte';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 
-	const locale = $derived(stateI18n.i18n.locale);
-	const useLatinKnewave = $derived(isLatinScriptLocale(locale));
 	let knewaveFontReady = $state(false);
 
 	const bgUrl = BUY_BONUS_ASSETS.menuBg;
-	const normalCardUrl = BUY_BONUS_ASSETS.normalCard;
-	const superCardUrl = BUY_BONUS_ASSETS.superCard;
 	const closeIconUrl = AUTOSPIN_ASSETS.close;
-	const deskLUrl = BUY_BONUS_ASSETS.deskL;
-	const deskRUrl = BUY_BONUS_ASSETS.deskR;
-	const buyButtonBgUrl = BUY_BONUS_ASSETS.buyButtonBg;
 	const minusUrl = HUD_ASSETS.betMinus;
 	const plusUrl = HUD_ASSETS.betPlus;
 
@@ -56,8 +50,6 @@
 			cancelled = true;
 		};
 	});
-
-	const showKnewaveLabels = $derived(useLatinKnewave && knewaveFontReady);
 
 	const layoutType = $derived(stateLayoutDerived.layoutType());
 	const isPortrait = $derived(layoutType === 'portrait');
@@ -81,9 +73,7 @@
 	const featureTogglesDisabled = $derived(!context.stateXstateDerived.isIdle());
 
 	const betOptions = $derived([...stateConfig.betAmountOptions].sort((a, b) => a - b));
-	const minBet = $derived(
-		stateConfig.minBet > 0 ? stateConfig.minBet : betOptions[0],
-	);
+	const minBet = $derived(stateConfig.minBet > 0 ? stateConfig.minBet : betOptions[0]);
 	const maxBet = $derived(
 		stateConfig.maxBet > 0 ? stateConfig.maxBet : betOptions[betOptions.length - 1],
 	);
@@ -120,8 +110,7 @@
 			context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 			return;
 		}
-		stateBonus.selectedBetModeKey =
-			variant === 'normal' ? 'bonus_normal' : 'bonus_super';
+		stateBonus.selectedBetModeKey = variant === 'normal' ? 'bonus_normal' : 'bonus_super';
 		stateModal.modal = { name: 'buyBonusConfirm' };
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 	};
@@ -155,7 +144,9 @@
 			</button>
 		</header>
 
-		<p class="panel-subtitle" data-test="buy-bonus-title">{context.i18nDerived.buyBonusTitle()}</p>
+		<p class="panel-subtitle" data-test="buy-bonus-title" hidden>
+			{context.i18nDerived.buyBonusTitle()}
+		</p>
 
 		<section class="cards-section" aria-label="bonus options">
 			<button
@@ -164,11 +155,12 @@
 				data-test="bonus-card-normal"
 				disabled={!canBuyNormal}
 				onclick={() => onBuy('normal')}
+				aria-label={context.i18nDerived.normalBonus()}
 			>
-				<img class="card-bg" src={normalCardUrl} alt="" draggable="false" />
+				<BuyBonusCardSpine variant="normal" active={isOpen} />
 				<div class="card-content">
-					<div class="card-title" class:card-label-knewave={showKnewaveLabels}>
-						{context.i18nDerived.normalBonus()}
+					<div class="card-title">
+						<ArchedRibbonTitle text={context.i18nDerived.normalBonus()} />
 					</div>
 					<div class="card-desc card-desc-stacked">
 						<span class="desc-spin-count" class:card-count-knewave={knewaveFontReady}
@@ -179,17 +171,9 @@
 							text={context.i18nDerived.buyNormalDescSpins()}
 							maxLines={2}
 						/>
-						<FitCardText
-							variant="trigger"
-							text={context.i18nDerived.buyNormalDescTrigger()}
-							maxLines={2}
-						/>
 					</div>
-					<div class="card-price-wrap" style:background-image="url('{deskLUrl}')">
+					<div class="card-price-wrap">
 						<span class="card-price" data-test="bonus-price-normal">{normalPrice}</span>
-					</div>
-					<div class="buy-button" style:background-image="url('{buyButtonBgUrl}')">
-						{context.i18nDerived.buyConfirm()}
 					</div>
 				</div>
 			</button>
@@ -200,11 +184,12 @@
 				data-test="bonus-card-super"
 				disabled={!canBuySuper}
 				onclick={() => onBuy('super')}
+				aria-label={context.i18nDerived.superBonus()}
 			>
-				<img class="card-bg" src={superCardUrl} alt="" draggable="false" />
+				<BuyBonusCardSpine variant="super" active={isOpen} />
 				<div class="card-content">
-					<div class="card-title" class:card-label-knewave={showKnewaveLabels}>
-						{context.i18nDerived.superBonus()}
+					<div class="card-title">
+						<ArchedRibbonTitle text={context.i18nDerived.superBonus()} archDeg={30} />
 					</div>
 					<div class="card-desc card-desc-stacked">
 						<span class="desc-spin-count" class:card-count-knewave={knewaveFontReady}
@@ -215,17 +200,9 @@
 							text={context.i18nDerived.buySuperDescSpins()}
 							maxLines={2}
 						/>
-						<FitCardText
-							variant="trigger"
-							text={context.i18nDerived.buySuperDescFeature()}
-							maxLines={2}
-						/>
 					</div>
-					<div class="card-price-wrap" style:background-image="url('{deskRUrl}')">
+					<div class="card-price-wrap">
 						<span class="card-price" data-test="bonus-price-super">{superPrice}</span>
-					</div>
-					<div class="buy-button" style:background-image="url('{buyButtonBgUrl}')">
-						{context.i18nDerived.buyConfirm()}
 					</div>
 				</div>
 			</button>
@@ -236,32 +213,12 @@
 				data-test="bonus-card-duel"
 				disabled={!canBuyDuel}
 				onclick={() => onBuy('duel')}
+				aria-label={context.i18nDerived.duelBonus()}
 			>
-				<img class="card-bg" src={normalCardUrl} alt="" draggable="false" />
+				<BuyBonusCardSpine variant="duel" active={isOpen} />
 				<div class="card-content">
-					<div class="card-title" class:card-label-knewave={showKnewaveLabels}>
-						{context.i18nDerived.duelBonus()}
-					</div>
-					<div class="card-desc card-desc-stacked">
-						<span class="desc-spin-count" class:card-count-knewave={knewaveFontReady}
-							>{context.i18nDerived.buyDuelDescCount()}</span
-						>
-						<FitCardText
-							variant="spin-label"
-							text={context.i18nDerived.buyDuelDescSpins()}
-							maxLines={2}
-						/>
-						<FitCardText
-							variant="trigger"
-							text={context.i18nDerived.buyDuelDescFeature()}
-							maxLines={2}
-						/>
-					</div>
-					<div class="card-price-wrap" style:background-image="url('{deskLUrl}')">
+					<div class="card-price-wrap">
 						<span class="card-price" data-test="bonus-price-duel">{duelPrice}</span>
-					</div>
-					<div class="buy-button" style:background-image="url('{buyButtonBgUrl}')">
-						{context.i18nDerived.buyConfirm()}
 					</div>
 				</div>
 			</button>
@@ -287,7 +244,6 @@
 				data-test="bet-decrease"
 			></button>
 			<div class="bet-display">
-				<span class="bet-label">{context.i18nDerived.bet().toUpperCase()}</span>
 				<span class="bet-value" data-test="bet-value">{currentBet}</span>
 			</div>
 			<button
@@ -309,14 +265,16 @@
 
 	.buy-bonus-panel {
 		// Declarations before mixin: mixin ends with @media nests (mixed-decls).
-		--bb-card-price-fs: calc(var(--panel-width) * 0.024);
+		--bb-card-price-fs: calc(var(--panel-width) * 0.032);
 		--bb-buy-btn-fs: calc(var(--panel-width) * 0.02);
+		/* Letter density for NORMAL BONUS / GUARANTEED WILD. 1 = natural, 0.55 = tight. */
+		--bb-title-tracking: 1.2;
 		font-family: v-bind(HUD_BALANCE_BET_FONT_FAMILY);
 		position: relative;
 		z-index: 10;
 		pointer-events: auto;
 		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
-		@include buy-bonus-panel-dimensions();
+		@include buy-bonus-panel-dimensions(true);
 	}
 
 	.panel-bg {
@@ -339,11 +297,9 @@
 		top: 0;
 		left: 0;
 		right: 0;
-		height: 18%;
-		display: grid;
-		grid-template-columns: 1fr auto;
-		align-items: start;
-		padding: 0 8% 0 10%;
+		height: 12%;
+		display: block;
+		padding: 0;
 		box-sizing: border-box;
 		pointer-events: none;
 	}
@@ -369,10 +325,11 @@
 	}
 
 	.close-button {
-		position: relative;
-		grid-column: 2;
-		width: calc(var(--panel-width) * 0.1);
-		height: calc(var(--panel-width) * 0.1);
+		position: absolute;
+		top: 45%;
+		right: -1.2%;
+		width: calc(var(--panel-width) * 0.115);
+		height: calc(var(--panel-width) * 0.115);
 		padding: 0;
 		border: 0;
 		background: transparent;
@@ -404,6 +361,7 @@
 	}
 
 	.panel-subtitle {
+		display: none;
 		position: absolute;
 		top: 21.5%;
 		left: 50%;
@@ -431,24 +389,26 @@
 
 	.cards-section {
 		position: absolute;
-		top: 24.2%;
-		left: 49%;
-		width: 80%;
-		height: 46%;
+		top: 10.8%;
+		left: 50%;
+		width: 90%;
+		height: 67.6%;
 		transform: translateX(-50%);
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		gap: calc(var(--panel-width) * 0.01);
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		grid-template-rows: auto auto;
+		justify-items: stretch;
+		align-content: start;
+		column-gap: calc(var(--panel-width) * 0.018);
+		row-gap: calc(var(--panel-width) * 0.016);
 		box-sizing: border-box;
+		overflow: visible;
 	}
 
 	.card {
 		position: relative;
-		height: 88%;
-		width: auto;
-		flex: 0 1 auto;
 		min-width: 0;
+		overflow: visible;
 		filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
 		background: none;
 		border: none;
@@ -476,49 +436,41 @@
 	}
 
 	.card-normal,
-	.card-super,
-	.card-duel {
-		aspect-ratio: 541 / 799;
+	.card-super {
+		grid-row: 1;
+		align-self: start;
+		width: 100%;
+		height: auto;
+		aspect-ratio: 2325 / 3322;
+		container-type: inline-size;
+		container-name: bonus-card;
 	}
 
-	.card-bg {
-		position: absolute;
-		inset: 0;
+	.card-duel {
+		grid-column: 1 / -1;
+		grid-row: 2;
+		align-self: start;
 		width: 100%;
-		height: 100%;
-		object-fit: fill;
-		pointer-events: none;
-		user-select: none;
+		height: auto;
+		aspect-ratio: 4230 / 1436;
 	}
 
 	.card-content {
 		position: absolute;
 		inset: 0;
-		transform: scale(0.83);
-		transform-origin: 50% 60%;
+		z-index: 1;
+		pointer-events: none;
 	}
 
 	.card-title {
 		position: absolute;
-		top: -5%;
-		left: 10%;
-		right: 10%;
-		height: 8%;
+		top: 1.8%;
+		left: 6%;
+		right: 6%;
+		height: 13%;
 		margin: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-family: inherit;
-		--bb-card-title-fs: calc(var(--panel-width) * 0.021);
+		--bb-card-title-fs: calc(var(--panel-width) * 0.028);
 		font-size: var(--bb-card-title-fs);
-		font-weight: 900;
-		font-style: italic;
-		letter-spacing: 0.03em;
-		text-transform: uppercase;
-		line-height: 1;
-		text-align: center;
-		color: #f5e6c8;
-		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 	}
 
 	.card-title.card-label-knewave {
@@ -547,10 +499,10 @@
 
 	.card-desc {
 		position: absolute;
-		top: 57%;
-		left: 12%;
-		right: 12%;
-		height: 11%;
+		top: 56%;
+		left: 10%;
+		right: 10%;
+		height: 16%;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -565,15 +517,17 @@
 	}
 
 	.card .card-desc.card-desc-stacked {
-		top: 58%;
-		height: 26%;
+		top: 66.5%;
+		left: 8%;
+		right: 8%;
+		height: 16%;
 		flex-direction: column;
 		justify-content: flex-start;
 		align-items: center;
-		--bb-desc-count-fs: calc(var(--panel-width) * 0.06);
-		--bb-desc-count-stroke: calc(var(--bb-desc-count-fs) * 0.092);
-		--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.022);
-		--bb-desc-spin-label-stroke: calc(var(--bb-desc-spin-label-fs) * 0.092);
+		--bb-desc-count-fs: 20.5cqw;
+		--bb-desc-count-stroke: calc(var(--bb-desc-count-fs) * 0.08);
+		--bb-desc-spin-label-fs: 9.1cqw;
+		--bb-desc-spin-label-stroke: calc(var(--bb-desc-spin-label-fs) * 0.08);
 		--bb-desc-trigger-fs: calc(var(--panel-width) * 0.013);
 		--bb-desc-trigger-stroke: calc(var(--bb-desc-trigger-fs) * 0.092);
 		--bb-desc-gap-count-label: calc(var(--bb-desc-count-fs) * 0.12);
@@ -600,39 +554,20 @@
 	}
 
 	.card-normal .card-desc.card-desc-stacked .desc-spin-count,
-	.card-duel .card-desc.card-desc-stacked .desc-spin-count {
-		-webkit-text-stroke: var(--bb-desc-count-stroke) rgba(255, 244, 225, 0.96);
-		text-shadow:
-			0 calc(var(--bb-desc-count-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
-			0 calc(var(--bb-desc-count-fs) * 0.055) calc(var(--bb-desc-count-fs) * 0.09)
-				rgba(0, 0, 0, 0.38),
-			0 0 calc(var(--bb-desc-count-fs) * 0.12) rgba(255, 228, 185, 0.42);
-	}
-
 	.card-super .card-desc.card-desc-stacked .desc-spin-count {
-		-webkit-text-stroke: var(--bb-desc-count-stroke) rgba(255, 244, 225, 0.96);
+		-webkit-text-stroke: var(--bb-desc-count-stroke) rgba(48, 22, 6, 0.92);
 		text-shadow:
-			0 calc(var(--bb-desc-count-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
-			0 calc(var(--bb-desc-count-fs) * 0.07) calc(var(--bb-desc-count-fs) * 0.1) rgba(0, 0, 0, 0.66),
-			0 0 calc(var(--bb-desc-count-fs) * 0.12) rgba(255, 228, 185, 0.38);
+			0 calc(var(--bb-desc-count-fs) * 0.04) 0 rgba(48, 22, 6, 0.75),
+			0 calc(var(--bb-desc-count-fs) * 0.07) calc(var(--bb-desc-count-fs) * 0.1) rgba(0, 0, 0, 0.5);
 	}
 
 	.card-normal .card-desc.card-desc-stacked .desc-spin-count.card-count-knewave,
-	.card-duel .card-desc.card-desc-stacked .desc-spin-count.card-count-knewave {
-		-webkit-text-stroke: calc(var(--bb-desc-count-fs) * var(--bb-knewave-count-stroke-weight))
-			rgba(255, 244, 225, 0.96);
-		text-shadow:
-			0 calc(var(--bb-desc-count-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
-			0 calc(var(--bb-desc-count-fs) * 0.055) calc(var(--bb-desc-count-fs) * 0.09)
-				rgba(0, 0, 0, 0.38);
-	}
-
 	.card-super .card-desc.card-desc-stacked .desc-spin-count.card-count-knewave {
 		-webkit-text-stroke: calc(var(--bb-desc-count-fs) * var(--bb-knewave-count-stroke-weight))
-			rgba(45, 12, 6, 0.94);
+			rgba(48, 22, 6, 0.94);
 		text-shadow:
-			0 calc(var(--bb-desc-count-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
-			0 calc(var(--bb-desc-count-fs) * 0.07) calc(var(--bb-desc-count-fs) * 0.1) rgba(0, 0, 0, 0.66);
+			0 calc(var(--bb-desc-count-fs) * 0.04) 0 rgba(48, 22, 6, 0.75),
+			0 calc(var(--bb-desc-count-fs) * 0.07) calc(var(--bb-desc-count-fs) * 0.1) rgba(0, 0, 0, 0.5);
 	}
 
 	.card .card-desc.card-desc-stacked :global(.fit-card-text__inner) {
@@ -643,32 +578,21 @@
 	}
 
 	.card-normal .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-spin-label),
-	.card-duel .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-spin-label) {
-		-webkit-text-stroke: var(--bb-desc-spin-label-stroke) rgba(255, 244, 225, 0.96);
+	.card-super .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-spin-label) {
+		-webkit-text-stroke: var(--bb-desc-spin-label-stroke) rgba(48, 22, 6, 0.92);
 		text-shadow:
-			0 calc(var(--bb-desc-spin-label-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
-			0 calc(var(--bb-desc-spin-label-fs) * 0.055) calc(var(--bb-desc-spin-label-fs) * 0.09)
-				rgba(0, 0, 0, 0.38),
-			0 0 calc(var(--bb-desc-spin-label-fs) * 0.12) rgba(255, 228, 185, 0.42);
+			0 calc(var(--bb-desc-spin-label-fs) * 0.04) 0 rgba(48, 22, 6, 0.75),
+			0 calc(var(--bb-desc-spin-label-fs) * 0.07) calc(var(--bb-desc-spin-label-fs) * 0.1)
+				rgba(0, 0, 0, 0.5);
 	}
 
-	.card-normal .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-trigger),
-	.card-duel .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-trigger) {
+	.card-normal .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-trigger) {
 		-webkit-text-stroke: var(--bb-desc-trigger-stroke) rgba(255, 244, 225, 0.96);
 		text-shadow:
 			0 calc(var(--bb-desc-trigger-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
 			0 calc(var(--bb-desc-trigger-fs) * 0.055) calc(var(--bb-desc-trigger-fs) * 0.09)
 				rgba(0, 0, 0, 0.38),
 			0 0 calc(var(--bb-desc-trigger-fs) * 0.12) rgba(255, 228, 185, 0.42);
-	}
-
-	.card-super .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-spin-label) {
-		-webkit-text-stroke: var(--bb-desc-spin-label-stroke) rgba(255, 244, 225, 0.96);
-		text-shadow:
-			0 calc(var(--bb-desc-spin-label-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
-			0 calc(var(--bb-desc-spin-label-fs) * 0.07) calc(var(--bb-desc-spin-label-fs) * 0.1)
-				rgba(0, 0, 0, 0.66),
-			0 0 calc(var(--bb-desc-spin-label-fs) * 0.12) rgba(255, 228, 185, 0.38);
 	}
 
 	.card-super .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-trigger) {
@@ -683,21 +607,18 @@
 	.card-normal
 		.card-desc.card-desc-stacked
 		:global(.fit-card-text--knewave .fit-card-text__inner.desc-spin-label),
-	.card-duel
+	.card-super
 		.card-desc.card-desc-stacked
 		:global(.fit-card-text--knewave .fit-card-text__inner.desc-spin-label) {
 		-webkit-text-stroke: calc(var(--bb-desc-spin-label-fs) * var(--bb-knewave-count-stroke-weight))
-			rgba(255, 244, 225, 0.96);
+			rgba(48, 22, 6, 0.94);
 		text-shadow:
-			0 calc(var(--bb-desc-spin-label-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
-			0 calc(var(--bb-desc-spin-label-fs) * 0.055) calc(var(--bb-desc-spin-label-fs) * 0.09)
-				rgba(0, 0, 0, 0.38);
+			0 calc(var(--bb-desc-spin-label-fs) * 0.04) 0 rgba(48, 22, 6, 0.75),
+			0 calc(var(--bb-desc-spin-label-fs) * 0.07) calc(var(--bb-desc-spin-label-fs) * 0.1)
+				rgba(0, 0, 0, 0.5);
 	}
 
 	.card-normal
-		.card-desc.card-desc-stacked
-		:global(.fit-card-text--knewave .fit-card-text__inner.desc-trigger),
-	.card-duel
 		.card-desc.card-desc-stacked
 		:global(.fit-card-text--knewave .fit-card-text__inner.desc-trigger) {
 		-webkit-text-stroke: calc(var(--bb-desc-trigger-fs) * var(--bb-knewave-count-stroke-weight))
@@ -706,17 +627,6 @@
 			0 calc(var(--bb-desc-trigger-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
 			0 calc(var(--bb-desc-trigger-fs) * 0.055) calc(var(--bb-desc-trigger-fs) * 0.09)
 				rgba(0, 0, 0, 0.38);
-	}
-
-	.card-super
-		.card-desc.card-desc-stacked
-		:global(.fit-card-text--knewave .fit-card-text__inner.desc-spin-label) {
-		-webkit-text-stroke: calc(var(--bb-desc-spin-label-fs) * var(--bb-knewave-count-stroke-weight))
-			rgba(45, 12, 6, 0.94);
-		text-shadow:
-			0 calc(var(--bb-desc-spin-label-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
-			0 calc(var(--bb-desc-spin-label-fs) * 0.07) calc(var(--bb-desc-spin-label-fs) * 0.1)
-				rgba(0, 0, 0, 0.66);
 	}
 
 	.card-super
@@ -735,103 +645,85 @@
 	}
 
 	.card-normal .card-desc,
-	.card-duel .card-desc {
-		color: #4a3020;
-		text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
-	}
-
 	.card-super .card-desc {
-		color: #f5e0c0;
-		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.75);
+		color: #f3d27a;
+		text-shadow:
+			0 2px 0 rgba(58, 28, 8, 0.88),
+			0 3px 8px rgba(0, 0, 0, 0.55);
 	}
 
 	.card-price-wrap {
 		position: absolute;
-		top: 80%;
 		left: 50%;
-		transform: translateX(-50%);
-		width: 108%;
-		height: 14%;
-		background-size: 100% 100%;
-		background-repeat: no-repeat;
-		background-position: center;
+		bottom: 1.5%;
+		transform: translateX(calc(-50% + var(--panel-width) * 0.006));
+		width: 72%;
+		height: 12.5%;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		padding: 0;
+		box-sizing: border-box;
+	}
+
+	.card-duel .card-title {
+		top: 18%;
+		left: 28%;
+		right: 28%;
+		height: 28%;
+		font-size: calc(var(--panel-width) * 0.042);
+	}
+
+	.card-normal .card-price-wrap,
+	.card-super .card-price-wrap {
+		left: 50%;
+		bottom: 1.5%;
+		width: 72%;
+		height: 12.5%;
+	}
+
+	.card-duel .card-price-wrap {
+		left: 50%;
+		width: 28%;
+		height: 22%;
+		bottom: 5.2%;
+		transform: translateX(calc(-50% + var(--panel-width) * 0.001));
 	}
 
 	.card-price {
 		font-family: inherit;
 		font-size: var(--bb-card-price-fs);
 		font-weight: 900;
-		letter-spacing: 0.01em;
+		letter-spacing: 0;
 		text-align: center;
 		line-height: 1;
+		display: block;
+		width: auto;
+		transform: translateY(0.2em);
+	}
+
+	.card-duel .card-price {
+		transform: translateY(0.32em);
 	}
 
 	.card-normal .card-price,
-	.card-duel .card-price {
-		color: #f5e6c8;
-		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-	}
-
+	.card-duel .card-price,
 	.card-super .card-price {
-		color: #f5e6c8;
-		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-	}
-
-	.buy-button {
-		position: absolute;
-		top: 94%;
-		left: 50%;
-		transform: translateX(-50%);
-		width: 50%;
-		height: 10%;
-		padding: 4.5% 0 0 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-family: inherit;
-		font-size: var(--bb-buy-btn-fs);
-		font-weight: 900;
-		letter-spacing: 0.06em;
-		border: 0;
-		border-radius: 0;
-		cursor: pointer;
-		text-transform: uppercase;
-		background-size: 100% 100%;
-		background-repeat: no-repeat;
-		background-color: transparent;
-		box-shadow: none;
-		transition:
-			transform 0.1s,
-			filter 0.15s;
-		color: #f5e6c8;
-		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
-
-		&:hover:not(:disabled) {
-			filter: brightness(1.1);
-		}
-
-		&:active:not(:disabled) {
-			transform: translateX(-50%) translateY(1px);
-		}
-
-		&:disabled {
-			opacity: 0.45;
-			cursor: not-allowed;
-			pointer-events: none;
-		}
+		color: #1a1208;
+		text-shadow: 0 1px 0 rgba(255, 236, 190, 0.45);
 	}
 
 	.features-section {
 		position: absolute;
-		top: 77.9%;
-		left: 19%;
-		right: 21.5%;
-		height: 5.8%;
+		top: 76.2%;
+		left: 50%;
+		right: auto;
+		width: 82%;
+		height: 11.4%;
+		transform: translateX(-50%);
 		display: flex;
 		align-items: center;
+		justify-content: center;
 		padding: 0;
 		box-sizing: border-box;
 		overflow: visible;
@@ -839,12 +731,14 @@
 
 	.features-section :global(.feature-row) {
 		width: 100%;
+		max-width: 100%;
 		height: 100%;
 		display: grid;
-		grid-template-columns: 14% minmax(0, 1fr) auto;
+		grid-template-columns: auto minmax(0, 1fr) auto;
 		align-items: center;
-		padding: 0 3% 0 2.5%;
-		column-gap: calc(var(--panel-width) * 0.01);
+		justify-content: stretch;
+		padding: 0;
+		column-gap: calc(var(--panel-width) * 0.028);
 		background: transparent;
 		border: 0;
 		border-radius: 0;
@@ -861,11 +755,11 @@
 
 	.features-section :global(.feature-cat-icon) {
 		grid-column: 1;
-		justify-self: center;
+		justify-self: start;
 		align-self: center;
-		width: calc(var(--panel-width) * 0.044);
-		height: calc(var(--panel-width) * 0.044);
-		max-height: 95%;
+		width: calc(var(--panel-width) * 0.096);
+		height: calc(var(--panel-width) * 0.096);
+		max-height: 100%;
 		object-fit: contain;
 		pointer-events: none;
 		user-select: none;
@@ -874,29 +768,29 @@
 
 	.features-section :global(.feature-info) {
 		grid-column: 2;
-		justify-self: start;
+		justify-self: stretch;
 		align-self: center;
+		align-items: center;
+		text-align: center;
 		min-width: 0;
 		max-width: 100%;
-		margin-left: calc(var(--panel-width) * 0.008);
+		margin-left: 0;
 		padding-top: 0;
-		gap: calc(var(--panel-width) * 0.002);
+		gap: calc(var(--panel-width) * 0.006);
 		overflow: visible;
 	}
 
 	.features-section :global(.feature-row.compact .feature-name),
 	.features-section :global(.feature-row .feature-name) {
 		font-family: inherit;
-		font-size: calc(var(--panel-width) * 0.026);
-		font-style: italic;
-		font-weight: 900;
+		font-size: calc(var(--panel-width) * 0.038);
+		font-style: normal;
+		font-weight: 800;
 		text-transform: uppercase;
-		color: #d4b44a;
-		text-shadow:
-			0 1px 0 rgba(0, 0, 0, 0.85),
-			0 2px 6px rgba(0, 0, 0, 0.65);
-		line-height: 1.1;
-		letter-spacing: 0.03em;
+		color: #f4ecd8;
+		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75);
+		line-height: 1.05;
+		letter-spacing: 0.04em;
 		max-width: 100%;
 		overflow: visible;
 		text-overflow: ellipsis;
@@ -905,12 +799,13 @@
 
 	.features-section :global(.feature-cost) {
 		font-family: inherit;
-		font-size: calc(var(--panel-width) * 0.0185);
-		font-weight: 700;
-		color: #4cd964;
-		letter-spacing: 0.02em;
-		line-height: 1.1;
-		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.75);
+		font-size: calc(var(--panel-width) * 0.026);
+		font-weight: 800;
+		color: #4ade80;
+		letter-spacing: 0.03em;
+		line-height: 1.05;
+		text-transform: uppercase;
+		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
 		max-width: 100%;
 		overflow: visible;
 		text-overflow: ellipsis;
@@ -921,40 +816,46 @@
 		grid-column: 3;
 		justify-self: end;
 		align-self: center;
-		width: calc(var(--panel-width) * 0.062);
-		height: calc(var(--panel-width) * 0.033);
+		width: calc(var(--panel-width) * 0.098);
+		height: calc(var(--panel-width) * 0.05);
 		flex-shrink: 0;
-		background: rgba(0, 0, 0, 0.55);
+		background: #2c2c2c;
+		box-shadow:
+			inset 0 2px 4px rgba(0, 0, 0, 0.7),
+			0 1px 0 rgba(255, 255, 255, 0.08);
 		transform: none;
-		margin-right: calc(var(--panel-width) * 0.004);
+		margin-right: 0;
 	}
 
 	.features-section :global(.feature-toggle.on) {
-		background: #4cd964;
+		background: #4ade80;
 	}
 
 	.features-section :global(.feature-toggle .knob) {
-		width: calc(var(--panel-width) * 0.027);
-		height: calc(var(--panel-width) * 0.027);
-		top: calc((var(--panel-width) * 0.033 - var(--panel-width) * 0.027) / 2);
-		left: calc((var(--panel-width) * 0.033 - var(--panel-width) * 0.027) / 2);
-		background: #8a8a8a;
+		width: calc(var(--panel-width) * 0.04);
+		height: calc(var(--panel-width) * 0.04);
+		top: calc((var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2);
+		left: calc((var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2);
+		background: #6a6a6a;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 	}
 
 	.features-section :global(.feature-toggle.on .knob) {
 		left: calc(
-			var(--panel-width) * 0.062 - var(--panel-width) * 0.027 -
-				(var(--panel-width) * 0.033 - var(--panel-width) * 0.027) / 2
+			var(--panel-width) * 0.098 - var(--panel-width) * 0.04 -
+				(var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2
 		);
 		background: #fff;
 	}
 
 	.bet-adjuster {
 		position: absolute;
-		top: calc(85.5% - 2px);
-		left: 14%;
-		right: 14%;
-		height: 10%;
+		top: 83%;
+		left: 50%;
+		right: auto;
+		width: 68%;
+		height: 11%;
+		transform: translateX(-50%);
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -963,8 +864,8 @@
 	}
 
 	.bet-btn {
-		width: calc(var(--panel-width) * 0.118);
-		height: calc(var(--panel-width) * 0.118);
+		width: calc(var(--panel-width) * 0.128);
+		height: calc(var(--panel-width) * 0.128);
 		padding: 0;
 		border: 0;
 		background-color: transparent;
@@ -1014,12 +915,14 @@
 
 	.bet-value {
 		font-family: inherit;
-		font-size: calc(var(--panel-width) * 0.036);
+		font-size: calc(var(--panel-width) * 0.06);
 		font-weight: 900;
 		line-height: 1;
 		margin-top: 0;
-		color: #fff;
-		text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
+		color: #f0d078;
+		text-shadow:
+			0 2px 0 rgba(48, 22, 6, 0.7),
+			0 3px 8px rgba(0, 0, 0, 0.55);
 	}
 
 	/* Desktop — компактные карточки, Bonus Boost в золотой рамке */
@@ -1028,112 +931,105 @@
 			display: none;
 		}
 
-		--bb-card-price-fs: calc(var(--panel-width) * 0.028);
+		--bb-card-price-fs: calc(var(--panel-width) * 0.038);
 		--bb-buy-btn-fs: calc(var(--panel-width) * 0.021);
 
 		.close-button {
-			width: calc(var(--panel-width) * 0.085);
-			height: calc(var(--panel-width) * 0.085);
-			margin-top: calc(var(--panel-width) * 0.06);
-			margin-right: calc(var(--panel-width) * 0.03);
+			top: 45%;
+			right: -1.2%;
+			width: calc(var(--panel-width) * 0.112);
+			height: calc(var(--panel-width) * 0.112);
+			margin: 0;
 		}
 
 		.cards-section {
-			top: 24.5%;
-			left: 49%;
-			width: 79%;
-			height: 46%;
-			gap: calc(var(--panel-width) * 0.012);
-		}
-
-		.card {
-			height: 91%;
-		}
-
-		.card-content {
-			transform: scale(0.8);
-			transform-origin: 50% 61%;
-		}
-
-		.card-super .card-desc.card-desc-stacked {
-			--bb-desc-count-fs: calc(var(--panel-width) * 0.072);
-			--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.028);
-			--bb-desc-trigger-fs: calc(var(--panel-width) * 0.018);
-		}
-
-		.card-normal .card-desc.card-desc-stacked,
-		.card-duel .card-desc.card-desc-stacked {
-			--bb-desc-count-fs: calc(var(--panel-width) * 0.072);
-			--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.028);
-			--bb-desc-trigger-fs: calc(var(--panel-width) * 0.018);
+			top: 10.8%;
+			left: 50%;
+			width: 90%;
+			height: 67.6%;
+			column-gap: calc(var(--panel-width) * 0.018);
+			row-gap: calc(var(--panel-width) * 0.016);
 		}
 
 		.card-price-wrap {
-			top: 99%;
-			height: 18%;
-			width: 110%;
+			left: 50%;
+			bottom: 1.5%;
+			height: 12.5%;
+			width: 72%;
 		}
 
-		.buy-button {
-			top: 112%;
-			width: 68%;
-			height: 18%;
+		.card-normal .card-price-wrap,
+		.card-super .card-price-wrap {
+			left: 50%;
+			bottom: 1.5%;
+			width: 72%;
+			height: 12.5%;
+		}
+
+		.card-duel .card-price-wrap {
+			left: 50%;
+			bottom: 5.2%;
+			height: 22%;
+			width: 28%;
 		}
 
 		.bet-adjuster {
-			top: calc(87% - 2px);
-			left: 49%;
+			top: 83%;
+			left: 50%;
 			right: auto;
-			width: 72%;
+			width: 68%;
 			transform: translateX(-50%);
-			height: 6%;
-			gap: calc(var(--panel-width) * 0.014);
+			height: 11%;
+			gap: calc(var(--panel-width) * 0.022);
 		}
 
 		.bet-btn {
-			width: calc(var(--panel-width) * 0.064);
-			height: calc(var(--panel-width) * 0.064);
+			width: calc(var(--panel-width) * 0.112);
+			height: calc(var(--panel-width) * 0.112);
 		}
 
 		.bet-display {
-			min-width: calc(var(--panel-width) * 0.18);
-		}
-
-		.bet-label {
-			font-size: calc(var(--panel-width) * 0.019);
+			min-width: calc(var(--panel-width) * 0.22);
 		}
 
 		.bet-value {
-			font-size: calc(var(--panel-width) * 0.023);
+			font-size: calc(var(--panel-width) * 0.056);
 		}
 
 		.features-section {
-			top: 79.2%;
-			left: 22%;
-			right: 24.5%;
-			height: 5.4%;
+			top: 76.2%;
+			left: 50%;
+			right: auto;
+			width: 82%;
+			transform: translateX(-50%);
+			height: 11.4%;
 			padding: 0;
 		}
 
 		.features-section :global(.feature-row) {
+			width: 100%;
 			height: 100%;
-			padding: 0 2.5% 0 2%;
-			grid-template-columns: 13% minmax(0, 1fr) auto;
+			padding: 0;
+			grid-template-columns: auto minmax(0, 1fr) auto;
 		}
 
 		.features-section :global(.feature-cat-icon) {
-			width: calc(var(--panel-width) * 0.04);
-			height: calc(var(--panel-width) * 0.04);
+			width: calc(var(--panel-width) * 0.096);
+			height: calc(var(--panel-width) * 0.096);
 		}
 
 		.features-section :global(.feature-info) {
-			margin-left: calc(var(--panel-width) * 0.006);
-			gap: calc(var(--panel-width) * 0.001);
+			margin-left: 0;
+			align-items: center;
+			text-align: center;
+			gap: calc(var(--panel-width) * 0.006);
 		}
 
 		.features-section :global(.feature-row .feature-name) {
-			font-size: calc(var(--panel-width) * 0.021);
-			line-height: 1.08;
+			font-size: calc(var(--panel-width) * 0.038);
+			font-style: normal;
+			color: #f4ecd8;
+			line-height: 1.05;
 		}
 
 		.panel-subtitle {
@@ -1142,43 +1038,44 @@
 		}
 
 		.features-section :global(.feature-cost) {
-			font-size: calc(var(--panel-width) * 0.0165);
-			line-height: 1.08;
+			font-size: calc(var(--panel-width) * 0.026);
+			color: #4ade80;
+			line-height: 1.05;
 		}
 
 		.features-section :global(.feature-toggle) {
-			width: calc(var(--panel-width) * 0.054);
-			height: calc(var(--panel-width) * 0.029);
+			width: calc(var(--panel-width) * 0.098);
+			height: calc(var(--panel-width) * 0.05);
 			margin-right: 0;
 		}
 
 		.features-section :global(.feature-toggle .knob) {
-			width: calc(var(--panel-width) * 0.023);
-			height: calc(var(--panel-width) * 0.023);
-			top: calc((var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2);
-			left: calc((var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2);
+			width: calc(var(--panel-width) * 0.04);
+			height: calc(var(--panel-width) * 0.04);
+			top: calc((var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2);
+			left: calc((var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2);
 		}
 
 		.features-section :global(.feature-toggle.on .knob) {
 			left: calc(
-				var(--panel-width) * 0.054 - var(--panel-width) * 0.023 -
-					(var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2
+				var(--panel-width) * 0.098 - var(--panel-width) * 0.04 -
+					(var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2
 			);
 		}
 	}
 
 	/* Portrait mobile */
 	.buy-bonus-panel.portrait:not(.popout-l):not(.popout-s) {
-		--bb-card-price-fs: calc(var(--panel-width) * 0.036);
+		--bb-card-price-fs: calc(var(--panel-width) * 0.046);
 		--bb-buy-btn-fs: calc(var(--panel-width) * 0.032);
 
 		.panel-bg {
-			width: 130%;
+			width: 100%;
 			top: 0;
 			bottom: 0;
-			left: 50%;
-			right: auto;
-			transform: translateX(-50%);
+			left: 0;
+			right: 0;
+			transform: none;
 		}
 
 		.panel-title {
@@ -1186,120 +1083,112 @@
 		}
 
 		.panel-header {
-			height: 22%;
+			height: 12%;
 		}
 
 		.close-button {
 			position: absolute;
-			top: 35%;
-			right: 7%;
-			width: calc(var(--panel-width) * 0.095);
-			height: calc(var(--panel-width) * 0.095);
+			top: 45%;
+			right: -1.2%;
+			width: calc(var(--panel-width) * 0.116);
+			height: calc(var(--panel-width) * 0.116);
 			margin: 0;
 		}
 
 		.cards-section {
-			top: 24.5%;
-			left: 49%;
-			width: 79%;
-			height: 46%;
-			gap: calc(var(--panel-width) * 0.012);
-		}
-
-		.card {
-			height: 91%;
-		}
-
-		.card-content {
-			transform: scale(0.72);
-			transform-origin: 50% 61%;
-		}
-
-		.card-title {
-			top: -11%;
-			font-size: calc(var(--panel-width) * 0.032);
-		}
-
-		.card .card-desc.card-desc-stacked {
-			top: 66%;
-			height: 24%;
-			--bb-desc-count-fs: calc(var(--panel-width) * 0.094);
-			--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.037);
-			--bb-desc-trigger-fs: calc(var(--panel-width) * 0.021);
+			top: 10.8%;
+			left: 50%;
+			width: 90%;
+			height: 67.6%;
+			column-gap: calc(var(--panel-width) * 0.018);
+			row-gap: calc(var(--panel-width) * 0.016);
 		}
 
 		.card-price-wrap {
-			top: 105%;
-			height: 18%;
-			width: 118%;
+			left: 50%;
+			bottom: 1.5%;
+			height: 12.5%;
+			width: 72%;
 		}
 
-		.buy-button {
-			top: 120%;
-			width: 76%;
-			height: 19%;
+		.card-normal .card-price-wrap,
+		.card-super .card-price-wrap {
+			left: 50%;
+			bottom: 1.5%;
+			width: 72%;
+			height: 12.5%;
+		}
+
+		.card-duel .card-price-wrap {
+			left: 50%;
+			bottom: 5.2%;
+			height: 22%;
+			width: 28%;
 		}
 
 		.bet-adjuster {
-			top: calc(87% - 2px);
-			left: 49%;
+			top: 83%;
+			left: 50%;
 			right: auto;
-			width: 76%;
+			width: 68%;
 			transform: translateX(-50%);
-			height: 7%;
-			gap: calc(var(--panel-width) * 0.02);
+			height: 11%;
+			gap: calc(var(--panel-width) * 0.022);
 		}
 
 		.bet-btn {
-			width: calc(var(--panel-width) * 0.09);
-			height: calc(var(--panel-width) * 0.09);
+			width: calc(var(--panel-width) * 0.12);
+			height: calc(var(--panel-width) * 0.12);
 		}
 
 		.bet-display {
-			min-width: calc(var(--panel-width) * 0.22);
-		}
-
-		.bet-label {
-			font-size: calc(var(--panel-width) * 0.026);
+			min-width: calc(var(--panel-width) * 0.26);
 		}
 
 		.bet-value {
-			font-size: calc(var(--panel-width) * 0.033);
+			font-size: calc(var(--panel-width) * 0.058);
 		}
 
 		.features-section {
-			top: 78.6%;
-			left: 14%;
-			right: 18%;
-			height: 6.5%;
+			top: 76.2%;
+			left: 50%;
+			right: auto;
+			width: 84%;
+			transform: translateX(-50%);
+			height: 11.4%;
 			padding: 0;
 			overflow: visible;
 		}
 
 		.features-section :global(.feature-cat-icon) {
-			width: calc(var(--panel-width) * 0.07) !important;
-			height: calc(var(--panel-width) * 0.07) !important;
-			min-width: calc(var(--panel-width) * 0.07) !important;
-			min-height: calc(var(--panel-width) * 0.07) !important;
-			transform: translateY(5%);
+			width: calc(var(--panel-width) * 0.098) !important;
+			height: calc(var(--panel-width) * 0.098) !important;
+			min-width: calc(var(--panel-width) * 0.098) !important;
+			min-height: calc(var(--panel-width) * 0.098) !important;
+			transform: none;
 			flex-shrink: 0 !important;
 		}
 
 		.features-section :global(.feature-row) {
+			width: 100%;
 			height: 100%;
-			padding: 0 2.5% 0 2%;
-			grid-template-columns: 22% minmax(0, 1fr) auto;
+			padding: 0;
+			grid-template-columns: auto minmax(0, 1fr) auto;
 			overflow: visible;
 		}
 
 		.features-section :global(.feature-info) {
-			margin-left: calc(var(--panel-width) * 0.006);
-			gap: calc(var(--panel-width) * 0.001);
+			margin-left: 0;
+			align-items: center;
+			text-align: center;
+			gap: calc(var(--panel-width) * 0.006);
 		}
 
 		.features-section :global(.feature-row .feature-name) {
-			font-size: calc(var(--panel-width) * 0.03);
-			line-height: 1.08;
+			font-size: calc(var(--panel-width) * 0.04);
+			font-style: normal;
+			color: #f4ecd8;
+			line-height: 1.05;
 		}
 
 		.panel-subtitle {
@@ -1308,27 +1197,28 @@
 		}
 
 		.features-section :global(.feature-cost) {
-			font-size: calc(var(--panel-width) * 0.026);
-			line-height: 1.08;
+			font-size: calc(var(--panel-width) * 0.028);
+			color: #4ade80;
+			line-height: 1.05;
 		}
 
 		.features-section :global(.feature-toggle) {
-			width: calc(var(--panel-width) * 0.072);
-			height: calc(var(--panel-width) * 0.038);
+			width: calc(var(--panel-width) * 0.102);
+			height: calc(var(--panel-width) * 0.052);
 			margin-right: 0;
 		}
 
 		.features-section :global(.feature-toggle .knob) {
-			width: calc(var(--panel-width) * 0.03);
-			height: calc(var(--panel-width) * 0.03);
-			top: calc((var(--panel-width) * 0.038 - var(--panel-width) * 0.03) / 2);
-			left: calc((var(--panel-width) * 0.038 - var(--panel-width) * 0.03) / 2);
+			width: calc(var(--panel-width) * 0.042);
+			height: calc(var(--panel-width) * 0.042);
+			top: calc((var(--panel-width) * 0.052 - var(--panel-width) * 0.042) / 2);
+			left: calc((var(--panel-width) * 0.052 - var(--panel-width) * 0.042) / 2);
 		}
 
 		.features-section :global(.feature-toggle.on .knob) {
 			left: calc(
-				var(--panel-width) * 0.072 - var(--panel-width) * 0.03 -
-					(var(--panel-width) * 0.038 - var(--panel-width) * 0.03) / 2
+				var(--panel-width) * 0.102 - var(--panel-width) * 0.042 -
+					(var(--panel-width) * 0.052 - var(--panel-width) * 0.042) / 2
 			);
 		}
 	}
@@ -1336,7 +1226,7 @@
 	/* Stake popout L — 800×450 (laptop embed) */
 	.buy-bonus-panel.popout-l {
 		filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.6));
-		--bb-card-price-fs: calc(var(--panel-width) * 0.028);
+		--bb-card-price-fs: calc(var(--panel-width) * 0.038);
 		--bb-buy-btn-fs: calc(var(--panel-width) * 0.024);
 
 		.panel-title {
@@ -1344,102 +1234,101 @@
 		}
 
 		.close-button {
-			width: calc(var(--panel-width) * 0.085);
-			height: calc(var(--panel-width) * 0.085);
-			margin-top: calc(var(--panel-width) * 0.06);
-			margin-right: calc(var(--panel-width) * 0.03);
+			top: 45%;
+			right: -1.2%;
+			width: calc(var(--panel-width) * 0.112);
+			height: calc(var(--panel-width) * 0.112);
+			margin: 0;
 		}
 
 		.cards-section {
-			top: 24.5%;
-			left: 49%;
-			width: 79%;
-			height: 46%;
-			gap: calc(var(--panel-width) * 0.012);
-		}
-
-		.card {
-			height: 91%;
-		}
-
-		.card-content {
-			transform: scale(0.8);
-			transform-origin: 50% 61%;
-		}
-
-		.card .card-desc.card-desc-stacked {
-			height: 18%;
-			--bb-desc-count-fs: calc(var(--panel-width) * 0.072);
-			--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.027);
-			--bb-desc-trigger-fs: calc(var(--panel-width) * 0.016);
+			top: 10.8%;
+			left: 50%;
+			width: 90%;
+			height: 67.6%;
+			column-gap: calc(var(--panel-width) * 0.018);
+			row-gap: calc(var(--panel-width) * 0.016);
 		}
 
 		.card-price-wrap {
-			top: 99%;
-			height: 18%;
-			width: 110%;
+			left: 50%;
+			bottom: 1.5%;
+			height: 12.5%;
+			width: 72%;
 		}
 
-		.buy-button {
-			top: 113%;
-			width: 75%;
-			height: 18%;
+		.card-normal .card-price-wrap,
+		.card-super .card-price-wrap {
+			left: 50%;
+			bottom: 1.5%;
+			width: 72%;
+			height: 12.5%;
+		}
+
+		.card-duel .card-price-wrap {
+			left: 50%;
+			bottom: 5.2%;
+			height: 22%;
+			width: 28%;
 		}
 
 		.bet-adjuster {
-			top: calc(87% - 2px);
-			left: 49%;
+			top: 83%;
+			left: 50%;
 			right: auto;
-			width: 72%;
+			width: 68%;
 			transform: translateX(-50%);
-			height: 6%;
-			gap: calc(var(--panel-width) * 0.014);
+			height: 11%;
+			gap: calc(var(--panel-width) * 0.022);
 		}
 
 		.bet-btn {
-			width: calc(var(--panel-width) * 0.064);
-			height: calc(var(--panel-width) * 0.064);
+			width: calc(var(--panel-width) * 0.112);
+			height: calc(var(--panel-width) * 0.112);
 		}
 
 		.bet-display {
-			min-width: calc(var(--panel-width) * 0.18);
-		}
-
-		.bet-label {
-			font-size: calc(var(--panel-width) * 0.019);
+			min-width: calc(var(--panel-width) * 0.2);
 		}
 
 		.bet-value {
-			font-size: calc(var(--panel-width) * 0.023);
+			font-size: calc(var(--panel-width) * 0.054);
 		}
 
 		.features-section {
-			top: 79.2%;
-			left: 22%;
-			right: 24.5%;
-			height: 5.4%;
+			top: 76.2%;
+			left: 50%;
+			right: auto;
+			width: 82%;
+			transform: translateX(-50%);
+			height: 11.4%;
 			padding: 0;
 		}
 
 		.features-section :global(.feature-row) {
+			width: 100%;
 			height: 100%;
-			padding: 0 2.5% 0 2%;
-			grid-template-columns: 13% minmax(0, 1fr) auto;
+			padding: 0;
+			grid-template-columns: auto minmax(0, 1fr) auto;
 		}
 
 		.features-section :global(.feature-cat-icon) {
-			width: calc(var(--panel-width) * 0.04);
-			height: calc(var(--panel-width) * 0.04);
+			width: calc(var(--panel-width) * 0.096);
+			height: calc(var(--panel-width) * 0.096);
 		}
 
 		.features-section :global(.feature-info) {
-			margin-left: calc(var(--panel-width) * 0.006);
-			gap: calc(var(--panel-width) * 0.001);
+			margin-left: 0;
+			align-items: center;
+			text-align: center;
+			gap: calc(var(--panel-width) * 0.006);
 		}
 
 		.features-section :global(.feature-row .feature-name) {
-			font-size: calc(var(--panel-width) * 0.021);
-			line-height: 1.08;
+			font-size: calc(var(--panel-width) * 0.038);
+			font-style: normal;
+			color: #f4ecd8;
+			line-height: 1.05;
 		}
 
 		.panel-subtitle {
@@ -1448,27 +1337,28 @@
 		}
 
 		.features-section :global(.feature-cost) {
-			font-size: calc(var(--panel-width) * 0.0165);
-			line-height: 1.08;
+			font-size: calc(var(--panel-width) * 0.026);
+			color: #4ade80;
+			line-height: 1.05;
 		}
 
 		.features-section :global(.feature-toggle) {
-			width: calc(var(--panel-width) * 0.054);
-			height: calc(var(--panel-width) * 0.029);
+			width: calc(var(--panel-width) * 0.098);
+			height: calc(var(--panel-width) * 0.05);
 			margin-right: 0;
 		}
 
 		.features-section :global(.feature-toggle .knob) {
-			width: calc(var(--panel-width) * 0.023);
-			height: calc(var(--panel-width) * 0.023);
-			top: calc((var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2);
-			left: calc((var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2);
+			width: calc(var(--panel-width) * 0.04);
+			height: calc(var(--panel-width) * 0.04);
+			top: calc((var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2);
+			left: calc((var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2);
 		}
 
 		.features-section :global(.feature-toggle.on .knob) {
 			left: calc(
-				var(--panel-width) * 0.054 - var(--panel-width) * 0.023 -
-					(var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2
+				var(--panel-width) * 0.098 - var(--panel-width) * 0.04 -
+					(var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2
 			);
 		}
 	}
@@ -1478,7 +1368,7 @@
 		filter: drop-shadow(
 			0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.075) rgba(0, 0, 0, 0.55)
 		);
-		--bb-card-price-fs: calc(var(--panel-width) * 0.028);
+		--bb-card-price-fs: calc(var(--panel-width) * 0.038);
 		--bb-buy-btn-fs: calc(var(--panel-width) * 0.024);
 
 		.panel-title {
@@ -1486,102 +1376,101 @@
 		}
 
 		.close-button {
-			width: calc(var(--panel-width) * 0.085);
-			height: calc(var(--panel-width) * 0.085);
-			margin-top: calc(var(--panel-width) * 0.06);
-			margin-right: calc(var(--panel-width) * 0.03);
+			top: 45%;
+			right: -1.2%;
+			width: calc(var(--panel-width) * 0.112);
+			height: calc(var(--panel-width) * 0.112);
+			margin: 0;
 		}
 
 		.cards-section {
-			top: 24.5%;
-			left: 49%;
-			width: 79%;
-			height: 46%;
-			gap: calc(var(--panel-width) * 0.012);
-		}
-
-		.card {
-			height: 91%;
-		}
-
-		.card-content {
-			transform: scale(0.8);
-			transform-origin: 50% 61%;
-		}
-
-		.card .card-desc.card-desc-stacked {
-			height: 18%;
-			--bb-desc-count-fs: calc(var(--panel-width) * 0.062);
-			--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.023);
-			--bb-desc-trigger-fs: calc(var(--panel-width) * 0.013);
+			top: 10.8%;
+			left: 50%;
+			width: 90%;
+			height: 67.6%;
+			column-gap: calc(var(--panel-width) * 0.018);
+			row-gap: calc(var(--panel-width) * 0.016);
 		}
 
 		.card-price-wrap {
-			top: 99%;
-			height: 18%;
-			width: 110%;
+			left: 50%;
+			bottom: 1.5%;
+			height: 12.5%;
+			width: 72%;
 		}
 
-		.buy-button {
-			top: 113%;
-			width: 75%;
-			height: 18%;
+		.card-normal .card-price-wrap,
+		.card-super .card-price-wrap {
+			left: 50%;
+			bottom: 1.5%;
+			width: 72%;
+			height: 12.5%;
+		}
+
+		.card-duel .card-price-wrap {
+			left: 50%;
+			bottom: 5.2%;
+			height: 22%;
+			width: 28%;
 		}
 
 		.bet-adjuster {
-			top: 87%;
-			left: 49%;
+			top: 83%;
+			left: 50%;
 			right: auto;
-			width: 72%;
+			width: 68%;
 			transform: translateX(-50%);
-			height: 6%;
-			gap: calc(var(--panel-width) * 0.014);
+			height: 11%;
+			gap: calc(var(--panel-width) * 0.02);
 		}
 
 		.bet-btn {
-			width: calc(var(--panel-width) * 0.064);
-			height: calc(var(--panel-width) * 0.064);
+			width: calc(var(--panel-width) * 0.112);
+			height: calc(var(--panel-width) * 0.112);
 		}
 
 		.bet-display {
-			min-width: calc(var(--panel-width) * 0.18);
-		}
-
-		.bet-label {
-			font-size: calc(var(--panel-width) * 0.019);
+			min-width: calc(var(--panel-width) * 0.2);
 		}
 
 		.bet-value {
-			font-size: calc(var(--panel-width) * 0.023);
+			font-size: calc(var(--panel-width) * 0.052);
 		}
 
 		.features-section {
-			top: 79.2%;
-			left: 22%;
-			right: 24.5%;
-			height: 5.4%;
+			top: 76.2%;
+			left: 50%;
+			right: auto;
+			width: 82%;
+			transform: translateX(-50%);
+			height: 11.4%;
 			padding: 0;
 		}
 
 		.features-section :global(.feature-row) {
+			width: 100%;
 			height: 100%;
-			padding: 0 2.5% 0 2%;
-			grid-template-columns: 13% minmax(0, 1fr) auto;
+			padding: 0;
+			grid-template-columns: auto minmax(0, 1fr) auto;
 		}
 
 		.features-section :global(.feature-cat-icon) {
-			width: calc(var(--panel-width) * 0.04);
-			height: calc(var(--panel-width) * 0.04);
+			width: calc(var(--panel-width) * 0.096);
+			height: calc(var(--panel-width) * 0.096);
 		}
 
 		.features-section :global(.feature-info) {
-			margin-left: calc(var(--panel-width) * 0.006);
-			gap: calc(var(--panel-width) * 0.001);
+			margin-left: 0;
+			align-items: center;
+			text-align: center;
+			gap: calc(var(--panel-width) * 0.006);
 		}
 
 		.features-section :global(.feature-row .feature-name) {
-			font-size: calc(var(--panel-width) * 0.021);
-			line-height: 1.08;
+			font-size: calc(var(--panel-width) * 0.038);
+			font-style: normal;
+			color: #f4ecd8;
+			line-height: 1.05;
 		}
 
 		.panel-subtitle {
@@ -1590,46 +1479,30 @@
 		}
 
 		.features-section :global(.feature-cost) {
-			font-size: calc(var(--panel-width) * 0.0165);
-			line-height: 1.08;
+			font-size: calc(var(--panel-width) * 0.026);
+			color: #4ade80;
+			line-height: 1.05;
 		}
 
 		.features-section :global(.feature-toggle) {
-			width: calc(var(--panel-width) * 0.054);
-			height: calc(var(--panel-width) * 0.029);
+			width: calc(var(--panel-width) * 0.098);
+			height: calc(var(--panel-width) * 0.05);
 			margin-right: 0;
 		}
 
 		.features-section :global(.feature-toggle .knob) {
-			width: calc(var(--panel-width) * 0.023);
-			height: calc(var(--panel-width) * 0.023);
-			top: calc((var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2);
-			left: calc((var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2);
+			width: calc(var(--panel-width) * 0.04);
+			height: calc(var(--panel-width) * 0.04);
+			top: calc((var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2);
+			left: calc((var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2);
 		}
 
 		.features-section :global(.feature-toggle.on .knob) {
 			left: calc(
-				var(--panel-width) * 0.054 - var(--panel-width) * 0.023 -
-					(var(--panel-width) * 0.029 - var(--panel-width) * 0.023) / 2
+				var(--panel-width) * 0.098 - var(--panel-width) * 0.04 -
+					(var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2
 			);
 		}
 	}
 
-	/* Laptop 1024×576 */
-	@media (max-width: 1024px) and (min-width: 601px) {
-		.buy-bonus-panel:not(.popout-l):not(.popout-s):not(.portrait) {
-			.card-super .card-desc.card-desc-stacked {
-				--bb-desc-count-fs: calc(var(--panel-width) * 0.07);
-				--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.027);
-				--bb-desc-trigger-fs: calc(var(--panel-width) * 0.017);
-			}
-
-			.card-normal .card-desc.card-desc-stacked,
-			.card-duel .card-desc.card-desc-stacked {
-				--bb-desc-count-fs: calc(var(--panel-width) * 0.07);
-				--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.027);
-				--bb-desc-trigger-fs: calc(var(--panel-width) * 0.017);
-			}
-		}
-	}
 </style>

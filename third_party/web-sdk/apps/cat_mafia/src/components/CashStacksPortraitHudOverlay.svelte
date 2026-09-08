@@ -15,6 +15,7 @@
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
 	import { computePortraitHudCanvas } from '../game/portraitHudLayout';
+	import { HUD_TURBO_ICON_BG_FRAC } from '../game/constants';
 	import HudBalanceBetLine from './HudBalanceBetLine.svelte';
 	import SpinHudButton from './SpinHudButton.svelte';
 	import { portraitHudAnchors } from '../game/portraitHudAnchors.svelte';
@@ -344,12 +345,13 @@
 
 			<button
 				type="button"
-				class="hud-icon-btn"
+				class="hud-icon-btn hud-icon-btn--turbo"
 				class:dimmed={turboDisabled}
 				style:left="{hud.util.x.turbo}px"
 				style:top="{hud.util.centerY}px"
 				style:width="{hud.util.iconSize}px"
 				style:height="{hud.util.iconSize}px"
+				style:--hud-turbo-bg-frac={HUD_TURBO_ICON_BG_FRAC}
 				style:background-image="url('{turboUrl}')"
 				disabled={turboDisabled}
 				aria-label="turbo"
@@ -424,6 +426,10 @@
 		&.dimmed {
 			opacity: 0.45;
 		}
+	}
+
+	.hud-icon-btn--turbo {
+		background-size: calc(var(--hud-turbo-bg-frac) * 100%);
 	}
 
 	.hud-balance-bet {

@@ -100,7 +100,9 @@
 			style:height="{buyBonusHeight}px"
 			style:background-image={`url("${buyBonusBgUrl}")`}
 			aria-label={buyBonusLabel}
-		></button>
+		>
+			<span class="buy-bonus-hit" aria-hidden="true"></span>
+		</button>
 	</aside>
 {/if}
 
@@ -120,13 +122,15 @@
 	}
 
 	.buy-bonus-btn {
+		position: relative;
+		display: block;
 		box-sizing: border-box;
 		border: 0;
 		padding: 0;
 		background-color: transparent;
 		background-repeat: no-repeat;
 		background-position: center;
-		background-size: contain;
+		background-size: 100% 100%;
 		cursor: pointer;
 		transition:
 			filter 0.15s,
@@ -143,5 +147,11 @@
 			cursor: not-allowed;
 			pointer-events: none;
 		}
+	}
+
+	.buy-bonus-hit {
+		position: absolute;
+		inset: 0;
+		display: block;
 	}
 </style>

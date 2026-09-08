@@ -1,7 +1,6 @@
 <!--
 	AutoplayMessageOverlay.svelte — сообщение об остановке автоигры (недостаток средств и др.).
-	bg_autoplay_message_panel (поздравление фриспины.png) + autoplay_message_ok_bg (b1.png).
-	Close — AUTOSPIN_ASSETS.close (cross).
+	fsCong board (fs_bg + fs_frame, без fs_rays). OK — fs_board.webp (узкая).
 -->
 <script lang="ts">
 	import { fade, scale } from 'svelte/transition';
@@ -9,16 +8,16 @@
 	import { stateModal } from 'state-shared';
 	import { getContextLayout } from 'utils-layout';
 
+	import assets from '../game/assets';
 	import { getContext } from '../game/context';
 	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
-	import { AUTOSPIN_ASSETS } from '../game/uiHtmlAssetManifest';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 
-	const bgUrl = AUTOSPIN_ASSETS.messageBg;
-	const okButtonBgUrl = AUTOSPIN_ASSETS.messageOkBg;
-	const closeIconUrl = AUTOSPIN_ASSETS.close;
+	const bgUrl = assets.fsCongBg.src;
+	const frameUrl = assets.fsCongFrame.src;
+	const boardUrl = assets.fsCongBoard.src;
 
 	type AutoSpinMessageKey = 'insufficientFunds' | 'lossLimitReached' | 'singleWinLimitReached';
 
@@ -62,7 +61,7 @@
 />
 
 {#if isOpen}
-	<div class="message-overlay" role="presentation" transition:fade={{ duration: 180 }}>
+	<div class="message-overlay" class:portrait={isPortrait} role="presentation" transition:fade={{ duration: 180 }}>
 		<button class="message-backdrop" type="button" aria-label="close" onclick={close}></button>
 
 		<div
@@ -76,39 +75,19 @@
 			in:scale={{ duration: 320, easing: backOut, start: 0.88, opacity: 0 }}
 			out:scale={{ duration: 200, easing: cubicOut, start: 0.95, opacity: 0 }}
 		>
-			<div class="panel-bg-clip">
-				<img class="panel-bg" src={bgUrl} alt="" draggable="false" loading="eager" />
-			</div>
+			<img class="layer layer-bg" src={bgUrl} alt="" draggable="false" loading="eager" />
+			<img class="layer layer-frame" src={frameUrl} alt="" draggable="false" loading="eager" />
 
 			<div class="panel-content">
-				<header class="panel-header">
-					<button
-						type="button"
-						class="close-button"
-						onclick={close}
-						aria-label="close"
-						data-test="autoplay-message-close"
-					>
-						<img class="close-icon" src={closeIconUrl} alt="" draggable="false" />
-					</button>
-				</header>
-
-				<section class="message-body" aria-live="polite">
+				<div class="content-safe">
 					<h2 class="message-title" data-test="auto-spin-stop-content">{copy.title}</h2>
-					<p class="message-text">{copy.body}</p>
-				</section>
+					<p class="message-text" aria-live="polite">{copy.body}</p>
+				</div>
 
-				<footer class="message-actions">
-					<button
-						type="button"
-						class="ok-btn"
-						style:background-image="url('{okButtonBgUrl}')"
-						onclick={close}
-						data-test="autoplay-message-ok"
-					>
-						{context.i18nDerived.autoplayMessageOk()}
-					</button>
-				</footer>
+				<button type="button" class="ok-btn" onclick={close} data-test="autoplay-message-ok">
+					<img class="ok-btn-bg" src={boardUrl} alt="" draggable="false" />
+					<span class="ok-btn-label">{context.i18nDerived.autoplayMessageOk()}</span>
+				</button>
 			</div>
 		</div>
 	</div>
@@ -126,6 +105,11 @@
 		box-sizing: border-box;
 		background: rgba(0, 0, 0, 0.55);
 		pointer-events: auto;
+
+		&.portrait {
+			padding: 0;
+			overflow: visible;
+		}
 	}
 
 	.message-backdrop {
@@ -139,178 +123,108 @@
 		-webkit-tap-highlight-color: transparent;
 	}
 
-	/* Panel background is 1536×1024 (3:2 ratio). */
 	.message-panel {
-		--panel-width: min(620px, 92vw);
-		--panel-aspect: calc(1536 / 1024);
+		--panel-width: min(860px, 98vw);
+		--ok-btn-bottom: 34%;
 		position: relative;
 		width: var(--panel-width);
-		aspect-ratio: var(--panel-aspect);
-		max-height: 92vh;
+		aspect-ratio: calc(2000 / 1500);
+		max-height: 96vh;
 		pointer-events: auto;
 		filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.75));
 		z-index: 1;
 	}
 
-	/* Clip the bg image so transparent edges of the PNG don't show as dark lines. */
-	.panel-bg-clip {
+	.layer {
 		position: absolute;
 		inset: 0;
-		overflow: hidden;
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		user-select: none;
+		pointer-events: none;
 	}
 
-	.panel-bg {
-		display: block;
-		width: 108%;
-		height: 100%;
-		margin: 0 -4%;
-		object-fit: fill;
-		pointer-events: none;
-		user-select: none;
+	.layer-bg {
+		z-index: 0;
+	}
+
+	.layer-frame {
+		z-index: 1;
 	}
 
 	.panel-content {
 		position: absolute;
 		inset: 0;
+		z-index: 2;
 	}
 
-	.panel-header {
+	/* Safe zone inside gold frame — tuned to 2000×1500 fsCong artboard. */
+	.content-safe {
 		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		height: 18%;
-		display: flex;
-		align-items: flex-start;
-		justify-content: flex-end;
-		padding: 0 1% 0 0;
-		box-sizing: border-box;
-		pointer-events: none;
-	}
-
-	.close-button {
-		position: relative;
-		width: calc(var(--panel-width) * 0.082);
-		height: calc(var(--panel-width) * 0.082);
-		margin-top: calc(var(--panel-width) * 0.014);
-		margin-right: calc(var(--panel-width) * -0.048);
-		padding: 0;
-		border: 0;
-		outline: none;
-		background: transparent;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		pointer-events: auto;
-		transition:
-			transform 0.12s,
-			filter 0.12s;
-
-		&:focus-visible {
-			outline: none;
-		}
-
-		&:hover {
-			filter: brightness(1.15);
-			transform: scale(1.07);
-		}
-
-		&:active {
-			transform: scale(0.94);
-		}
-	}
-
-	.close-icon {
-		width: 100%;
-		height: 100%;
-		object-fit: contain;
-		pointer-events: none;
-		user-select: none;
-		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.7));
-	}
-
-	/* Text sits in the wooden board area (below the roof, above the bowl). */
-	.message-body {
-		position: absolute;
-		top: 19%;
-		left: 8%;
-		right: 8%;
-		bottom: 26%;
+		top: 28%;
+		left: 21%;
+		right: 21%;
+		bottom: 23%;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
-		gap: calc(var(--panel-width) * 0.028);
-		text-align: center;
+		justify-content: flex-start;
+		gap: calc(var(--panel-width) * 0.018);
 		box-sizing: border-box;
 	}
 
 	.message-title {
-		margin: 0;
+		margin: calc(var(--panel-width) * 0.004) 0 0;
+		width: 100%;
+		padding-top: 0;
+		text-align: center;
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.054);
-		font-weight: 900;
-		line-height: 1.05;
-		letter-spacing: 0.01em;
-		color: #ffd633;
-		text-shadow:
-			0 2px 0 #3b1a00,
-			0 -1px 0 #3b1a00,
-			1px 0 0 #3b1a00,
-			-1px 0 0 #3b1a00,
-			0 0 12px rgba(255, 160, 0, 0.55);
+		font-size: calc(var(--panel-width) * 0.042);
+		font-weight: 800;
+		line-height: 1.08;
+		letter-spacing: 0.015em;
+		text-transform: uppercase;
+		color: #ffe28a;
+		background: linear-gradient(180deg, #fff6c8 0%, #ffd56a 38%, #e8a020 72%, #b8730f 100%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+		filter: drop-shadow(0 1px 0 #fff3b0) drop-shadow(0 3px 0 #5a3a0e)
+			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
 	}
 
 	.message-text {
-		margin: 0;
-		max-width: 84%;
+		margin: calc(var(--panel-width) * 0.038) 0 0;
+		width: 100%;
+		padding: 0 2%;
+		text-align: center;
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.031);
+		font-size: calc(var(--panel-width) * 0.026);
 		font-weight: 700;
-		line-height: 1.3;
+		line-height: 1.4;
 		color: #f5e0c0;
 		text-shadow:
 			0 1px 0 #000,
 			1px 1px 3px rgba(0, 0, 0, 0.9);
 	}
 
-	/* OK button in the lower portion of the panel. */
-	.message-actions {
-		position: absolute;
-		bottom: 25%;
-		left: 0;
-		right: 0;
-		height: 13%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		box-sizing: border-box;
-	}
-
-	/* Button background is b1.png (343×165). */
 	.ok-btn {
-		width: auto;
-		height: 100%;
-		max-width: 46%;
-		aspect-ratio: 343 / 165;
+		--ok-btn-w: calc(var(--panel-width) * 0.36);
+		--ok-btn-h: calc(var(--panel-width) * 0.076);
+		position: absolute;
+		left: 50%;
+		bottom: var(--ok-btn-bottom);
+		transform: translateX(-50%);
+		width: var(--ok-btn-w);
+		height: var(--ok-btn-h);
 		padding: 0;
 		border: 0;
 		border-radius: 0;
 		cursor: pointer;
 		background-color: transparent;
-		background-repeat: no-repeat;
-		background-position: center;
-		background-size: 100% 100%;
-		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.038);
-		font-weight: 900;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-		color: #f5e6c8;
-		text-shadow:
-			0 1px 0 #3b1a00,
-			0 0 8px rgba(180, 100, 0, 0.6);
+		overflow: hidden;
 		transition:
 			transform 0.1s,
 			filter 0.15s;
@@ -320,57 +234,89 @@
 		}
 
 		&:active {
-			transform: translateY(2px);
+			transform: translateX(-50%) translateY(2px);
 		}
 	}
 
-	/* ── Portrait ──────────────────────────────────────────────────── */
+	/* Banner strip on fs_board artboard (y≈62.5%, 2000×1500). */
+	.ok-btn-bg {
+		position: absolute;
+		left: 0;
+		top: calc(var(--ok-btn-h) * 0.5 - var(--ok-btn-w) * 0.46875);
+		width: 100%;
+		height: auto;
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.ok-btn-label {
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.026);
+		font-weight: 800;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: #ffe28a;
+		text-shadow:
+			0 1px 0 #fff3b0,
+			0 2px 0 #5a3a0e,
+			0 4px 6px rgba(0, 0, 0, 0.55);
+		pointer-events: none;
+	}
+
 	.message-panel.portrait:not(.popout-l):not(.popout-s) {
-		--panel-width: min(660px, 94vw);
+		--panel-width: min(920px, 100vw);
+		--ok-btn-bottom: 35%;
+		transform: scale(1.28);
+		transform-origin: center center;
 
-		.close-button {
-			margin-top: calc(var(--panel-width) * 0.02);
-			margin-right: calc(var(--panel-width) * -0.04);
-		}
-
-		.message-body {
-			top: 17%;
-			bottom: 28%;
+		.content-safe {
+			top: 27%;
+			left: 20%;
+			right: 20%;
+			bottom: 22%;
 		}
 
 		.message-title {
-			font-size: calc(var(--panel-width) * 0.058);
+			margin-top: calc(var(--panel-width) * 0.002);
+		}
+
+		.message-title {
+			font-size: calc(var(--panel-width) * 0.044);
 		}
 
 		.message-text {
-			font-size: calc(var(--panel-width) * 0.034);
-		}
-
-		.message-actions {
-			bottom: 24%;
-			height: 12%;
+			font-size: calc(var(--panel-width) * 0.027);
 		}
 	}
 
-	/* ── Popout large ──────────────────────────────────────────────── */
 	.message-panel.popout-l {
-		--panel-width: min(380px, 88vw);
+		--panel-width: min(520px, 94vw);
 	}
 
-	/* ── Popout small ──────────────────────────────────────────────── */
 	.message-panel.popout-s {
-		--panel-width: min(230px, 72vw);
+		--panel-width: min(480px, 99vw);
+
+		.content-safe {
+			left: 19%;
+			right: 19%;
+		}
 
 		.message-title {
-			font-size: calc(var(--panel-width) * 0.062);
+			font-size: calc(var(--panel-width) * 0.046);
 		}
 
 		.message-text {
-			font-size: calc(var(--panel-width) * 0.036);
+			font-size: calc(var(--panel-width) * 0.029);
 		}
 
-		.ok-btn {
-			font-size: calc(var(--panel-width) * 0.043);
+		.ok-btn-label {
+			font-size: calc(var(--panel-width) * 0.032);
 		}
 	}
 </style>

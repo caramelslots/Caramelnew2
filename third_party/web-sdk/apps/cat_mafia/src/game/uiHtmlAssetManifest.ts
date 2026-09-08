@@ -8,6 +8,7 @@ import {
 } from './mascotHtmlSpine';
 import { COIN_PAW_SPINE_WEBP_URL } from './coinHtmlSpine';
 import { SPIN_BUTTON_SPINE_WEBP_URL, startSpinButtonSpinePreload } from './spinButtonHtmlSpine';
+import { BUY_BONUS_SPINE_IMAGE_URLS, preloadBuyBonusSpines } from './buyBonusHtmlSpine';
 import { startTargetBoardPreload, TARGET_BOARD_SPRITES } from './targetBoardAssets';
 import { startShotBulletPreload, SHOT_BULLET_SPRITES } from './shotBulletAssets';
 
@@ -42,8 +43,8 @@ export const HUD_ASSETS = {
 } as const;
 
 export const BUY_BONUS_ASSETS = {
-	menuBg: uiHtmlAssetUrl('buy_bonus/bg_buy_bonus_panel.webp'),
-	confirmBg: uiHtmlAssetUrl('buy_bonus/bg_buy_bonus_confirm_panel.webp'),
+	menuBg: uiHtmlAssetUrl('buy_bonus/bg_buy_bonus_board.webp'),
+	confirmBg: uiHtmlAssetUrl('buy_bonus/bg_buy_bonus_board.webp'),
 	normalCard: uiHtmlAssetUrl('buy_bonus/normal_bonus_card.webp'),
 	superCard: uiHtmlAssetUrl('buy_bonus/super_bonus_card.webp'),
 	deskL: uiHtmlAssetUrl('buy_bonus/desk_l.webp'),
@@ -73,7 +74,6 @@ export const SETTINGS_ASSETS = {
 export const AUTOSPIN_ASSETS = {
 	bg: uiHtmlAssetUrl('autoplay_menu/board.webp'),
 	close: uiHtmlAssetUrl('autoplay/cross.webp'),
-	messageBg: uiHtmlAssetUrl('autoplay/bg_autoplay_message_panel.webp'),
 	messageOkBg: uiHtmlAssetUrl('autoplay/autoplay_message_ok_bg.webp'),
 	pawIcon: uiHtmlAssetUrl('autoplay_menu/paw.webp'),
 	bonusIcon: uiHtmlAssetUrl('autoplay_menu/bonus.webp'),
@@ -95,6 +95,13 @@ const dedupeUrls = (urls: readonly string[]) => [...new Set(urls)];
 /** FreeSpinIntro HTML layers (`assets/sprites/fsCong/`). */
 export const FS_CONG_IMAGE_URLS = dedupeUrls([
 	assets.fsCongRays.src,
+	assets.fsCongBg.src,
+	assets.fsCongFrame.src,
+	assets.fsCongBoard.src,
+]);
+
+/** fsCong board without rays — AutoplayMessageOverlay + shared preload. */
+export const FS_CONG_BOARD_IMAGE_URLS = dedupeUrls([
 	assets.fsCongBg.src,
 	assets.fsCongFrame.src,
 	assets.fsCongBoard.src,
@@ -130,7 +137,7 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	...SETTINGS_TURBO_URLS,
 	AUTOSPIN_ASSETS.bg,
 	AUTOSPIN_ASSETS.close,
-	AUTOSPIN_ASSETS.messageBg,
+	...FS_CONG_BOARD_IMAGE_URLS,
 	AUTOSPIN_ASSETS.messageOkBg,
 	AUTOSPIN_ASSETS.pawIcon,
 	AUTOSPIN_ASSETS.bonusIcon,
@@ -167,6 +174,7 @@ export const BUY_BONUS_FLOW_IMAGE_URLS = dedupeUrls([
 	BUY_BONUS_ASSETS.buyButtonBg,
 	BUY_BONUS_ASSETS.cancelButtonBg,
 	BUY_BONUS_ASSETS.confirmButtonBg,
+	...BUY_BONUS_SPINE_IMAGE_URLS,
 ]);
 
 const BUY_BONUS_FLOW_PRELOAD_PRIORITY = [
@@ -187,6 +195,7 @@ export const startBuyBonusFlowPreload = () => {
 		priority: BUY_BONUS_FLOW_PRELOAD_PRIORITY,
 		concurrency: 3,
 	});
+	preloadBuyBonusSpines();
 };
 
 const LOADING_IDLE_UI_PRIORITY = [
@@ -220,6 +229,7 @@ export const startLoadingIdleUiPreload = () => {
 	startSpinButtonSpinePreload();
 	startTargetBoardPreload();
 	startShotBulletPreload();
+	startBuyBonusFlowPreload();
 
 	void preloadHtmlImages(LOADING_IDLE_UI_IMAGE_URLS, {
 		priority: LOADING_IDLE_UI_PRIORITY,

@@ -1,9 +1,9 @@
 <!--
-	BuyBonusConfirmOverlay.svelte — подтверждение покупки бонуса (WOK MENU).
-	bg_buy_bonus_confirm_panel + cancel/confirm button bg; карточка, cross — как в BuyBonusOverlay.
+	BuyBonusConfirmOverlay.svelte — подтверждение покупки на той же доске,
+	что и BuyBonusOverlay (bg_buy_bonus_board.webp).
 -->
 <script lang="ts">
-	import { stateModal, stateBet, stateI18n } from 'state-shared';
+	import { stateModal, stateBet } from 'state-shared';
 	import { stateBonus } from 'components-ui-html/src/stateBonus.svelte';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 	import { getContextLayout } from 'utils-layout';
@@ -14,27 +14,23 @@
 		buySuperCostMultiplier,
 		canAffordBuyBonus,
 	} from '../game/buyBonusBalance';
-	import { isPopoutSmallViewport, isPopoutViewport, HUD_BALANCE_BET_FONT_FAMILY, isLatinScriptLocale } from '../game/constants';
+	import { isPopoutSmallViewport, isPopoutViewport, HUD_BALANCE_BET_FONT_FAMILY } from '../game/constants';
 	import { ensureKnewaveFontLoaded } from '../game/knewaveFont';
 	import { getContext } from '../game/context';
 	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS } from '../game/uiHtmlAssetManifest';
+	import ArchedRibbonTitle from './ArchedRibbonTitle.svelte';
+	import BuyBonusCardSpine from './BuyBonusCardSpine.svelte';
 	import FitCardText from './FitCardText.svelte';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 
-	const locale = $derived(stateI18n.i18n.locale);
-	const useLatinKnewave = $derived(isLatinScriptLocale(locale));
 	let knewaveFontReady = $state(false);
 
-	const bgUrl = BUY_BONUS_ASSETS.confirmBg;
-	const normalCardUrl = BUY_BONUS_ASSETS.normalCard;
-	const superCardUrl = BUY_BONUS_ASSETS.superCard;
+	const bgUrl = BUY_BONUS_ASSETS.menuBg;
 	const closeIconUrl = AUTOSPIN_ASSETS.close;
 	const cancelButtonBgUrl = BUY_BONUS_ASSETS.cancelButtonBg;
 	const confirmButtonBgUrl = BUY_BONUS_ASSETS.confirmButtonBg;
-	const deskLUrl = BUY_BONUS_ASSETS.deskL;
-	const deskRUrl = BUY_BONUS_ASSETS.deskR;
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonusConfirm');
 
@@ -48,8 +44,6 @@
 		};
 	});
 
-	const showKnewaveLabels = $derived(useLatinKnewave && knewaveFontReady);
-
 	const layoutType = $derived(stateLayoutDerived.layoutType());
 	const isPortrait = $derived(layoutType === 'portrait');
 	const canvasSizes = $derived(stateLayoutDerived.canvasSizes());
@@ -61,8 +55,6 @@
 	const multiplier = $derived(
 		isSuper ? buySuperCostMultiplier() : buyNormalCostMultiplier(),
 	);
-	const cardUrl = $derived(isSuper ? superCardUrl : normalCardUrl);
-	const deskUrl = $derived(isSuper ? deskRUrl : deskLUrl);
 	const price = $derived(numberToCurrencyString(stateBet.betAmount * multiplier));
 	const canConfirm = $derived(canAffordBuyBonus(multiplier));
 
@@ -122,43 +114,37 @@
 			</button>
 		</header>
 
-		<p class="panel-subtitle" data-test="buy-bonus-title">{context.i18nDerived.buyBonusTitle()}</p>
+		<p class="panel-subtitle" data-test="buy-bonus-title" hidden>
+			{context.i18nDerived.buyBonusTitle()}
+		</p>
 
 		<section class="confirm-card-section" aria-label="selected bonus">
 			<article class="card confirm-card" class:card-normal={!isSuper} class:card-super={isSuper}>
-				<img class="card-bg" src={cardUrl} alt="" draggable="false" />
+				<div class="spine-layer" class:on={!isSuper}>
+					<BuyBonusCardSpine variant="normal" active={isOpen && !isSuper} />
+				</div>
+				<div class="spine-layer" class:on={isSuper}>
+					<BuyBonusCardSpine variant="super" active={isOpen && isSuper} />
+				</div>
 				<div class="card-content">
-					<div class="card-title" class:card-label-knewave={showKnewaveLabels}>{cardTitle}</div>
-					{#if isSuper}
-						<div class="card-desc card-desc-stacked">
-							<span class="desc-spin-count" class:card-count-knewave={knewaveFontReady}>{context.i18nDerived.buySuperDescCount()}</span>
-							<FitCardText
-								variant="spin-label"
-								text={context.i18nDerived.buySuperDescSpins()}
-								maxLines={2}
-							/>
-							<FitCardText
-								variant="trigger"
-								text={context.i18nDerived.buySuperDescFeature()}
-								maxLines={2}
-							/>
-						</div>
-					{:else}
-						<div class="card-desc card-desc-stacked">
-							<span class="desc-spin-count" class:card-count-knewave={knewaveFontReady}>{context.i18nDerived.buyNormalDescCount()}</span>
-							<FitCardText
-								variant="spin-label"
-								text={context.i18nDerived.buyNormalDescSpins()}
-								maxLines={2}
-							/>
-							<FitCardText
-								variant="trigger"
-								text={context.i18nDerived.buyNormalDescTrigger()}
-								maxLines={2}
-							/>
-						</div>
-					{/if}
-					<div class="card-price-wrap" style:background-image="url('{deskUrl}')">
+					<div class="card-title">
+						<ArchedRibbonTitle text={cardTitle} archDeg={isSuper ? 30 : 34} />
+					</div>
+					<div class="card-desc card-desc-stacked">
+						<span class="desc-spin-count" class:card-count-knewave={knewaveFontReady}
+							>{isSuper
+								? context.i18nDerived.buySuperDescCount()
+								: context.i18nDerived.buyNormalDescCount()}</span
+						>
+						<FitCardText
+							variant="spin-label"
+							text={isSuper
+								? context.i18nDerived.buySuperDescSpins()
+								: context.i18nDerived.buyNormalDescSpins()}
+							maxLines={2}
+						/>
+					</div>
+					<div class="card-price-wrap">
 						<span class="card-price" data-test="buy-bonus-confirm-price">{price}</span>
 					</div>
 				</div>
@@ -195,13 +181,15 @@
 
 	.confirm-panel {
 		// Declarations before mixin: mixin ends with @media nests (mixed-decls).
-		--bb-card-price-fs: calc(var(--panel-width) * 0.024);
-		--bb-confirm-action-fs: calc(var(--panel-width) * 0.020);
+		--bb-card-price-fs: calc(var(--panel-width) * 0.042);
+		--bb-confirm-action-fs: calc(var(--panel-width) * 0.028);
+		--bb-title-tracking: 1.2;
 		font-family: v-bind(HUD_BALANCE_BET_FONT_FAMILY);
 		position: relative;
+		z-index: 10;
 		pointer-events: auto;
 		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
-		@include buy-bonus-panel-dimensions();
+		@include buy-bonus-panel-dimensions(true);
 	}
 
 	.panel-bg {
@@ -224,20 +212,19 @@
 		top: 0;
 		left: 0;
 		right: 0;
-		height: 18%;
-		display: grid;
-		grid-template-columns: 1fr auto;
-		align-items: start;
-		padding: 0 8% 0 10%;
+		height: 12%;
+		display: block;
+		padding: 0;
 		box-sizing: border-box;
 		pointer-events: none;
 	}
 
 	.close-button {
-		position: relative;
-		grid-column: 2;
-		width: calc(var(--panel-width) * 0.1);
-		height: calc(var(--panel-width) * 0.1);
+		position: absolute;
+		top: 45%;
+		right: -1.2%;
+		width: calc(var(--panel-width) * 0.115);
+		height: calc(var(--panel-width) * 0.115);
 		padding: 0;
 		border: 0;
 		background: transparent;
@@ -269,6 +256,7 @@
 	}
 
 	.panel-subtitle {
+		display: none;
 		position: absolute;
 		top: 21.5%;
 		left: 50%;
@@ -296,68 +284,60 @@
 
 	.confirm-card-section {
 		position: absolute;
-		top: 25%;
-		left: 49%;
-		width: 79%;
-		height: 52%;
+		top: 10.5%;
+		left: 50%;
+		width: 66%;
+		height: 70%;
 		transform: translateX(-50%);
 		display: flex;
-		align-items: center;
+		align-items: flex-start;
 		justify-content: center;
 		box-sizing: border-box;
 	}
 
 	.confirm-card-section .card {
 		position: relative;
-		height: 100%;
-		width: auto;
+		width: 100%;
+		height: auto;
 		flex: 0 0 auto;
+		overflow: visible;
 		filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
+	}
+
+	.spine-layer {
+		position: absolute;
+		inset: 0;
+		opacity: 0;
+		pointer-events: none;
+
+		&.on {
+			opacity: 1;
+		}
 	}
 
 	.card-normal,
 	.card-super {
-		aspect-ratio: 541 / 799;
-	}
-
-	.card-bg {
-		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
-		object-fit: fill;
-		pointer-events: none;
-		user-select: none;
+		aspect-ratio: 2325 / 3322;
+		container-type: inline-size;
+		container-name: bonus-card;
 	}
 
 	.card-content {
 		position: absolute;
 		inset: 0;
-		transform: scale(0.8);
-		transform-origin: 50% 61%;
+		z-index: 1;
+		pointer-events: none;
 	}
 
 	.card-title {
 		position: absolute;
-		top: -5%;
-		left: 10%;
-		right: 10%;
-		height: 8%;
+		top: 1.2%;
+		left: 4.5%;
+		right: 4.5%;
+		height: 16%;
 		margin: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-family: inherit;
-		--bb-card-title-fs: calc(var(--panel-width) * 0.021);
+		--bb-card-title-fs: calc(var(--panel-width) * 0.04);
 		font-size: var(--bb-card-title-fs);
-		font-weight: 900;
-		font-style: italic;
-		letter-spacing: 0.03em;
-		text-transform: uppercase;
-		line-height: 1;
-		text-align: center;
-		color: #f5e6c8;
-		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 	}
 
 	.card-title.card-label-knewave {
@@ -385,11 +365,10 @@
 
 	.card-desc {
 		position: absolute;
-		top: 57%;
-		left: 12%;
-		right: 12%;
-		height: 11%;
-		margin: 0;
+		top: 56%;
+		left: 10%;
+		right: 10%;
+		height: 16%;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -404,16 +383,18 @@
 	}
 
 	.card .card-desc.card-desc-stacked {
-		top: 58%;
-		height: 26%;
+		top: 66.5%;
+		left: 8%;
+		right: 8%;
+		height: 16%;
 		flex-direction: column;
 		justify-content: flex-start;
 		align-items: center;
-		--bb-desc-count-fs: calc(var(--panel-width) * 0.066);
-		--bb-desc-count-stroke: calc(var(--bb-desc-count-fs) * 0.092);
-		--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.024);
-		--bb-desc-spin-label-stroke: calc(var(--bb-desc-spin-label-fs) * 0.092);
-		--bb-desc-trigger-fs: calc(var(--panel-width) * 0.014);
+		--bb-desc-count-fs: 20.5cqw;
+		--bb-desc-count-stroke: calc(var(--bb-desc-count-fs) * 0.08);
+		--bb-desc-spin-label-fs: 9.1cqw;
+		--bb-desc-spin-label-stroke: calc(var(--bb-desc-spin-label-fs) * 0.08);
+		--bb-desc-trigger-fs: calc(var(--panel-width) * 0.013);
 		--bb-desc-trigger-stroke: calc(var(--bb-desc-trigger-fs) * 0.092);
 		--bb-desc-gap-count-label: calc(var(--bb-desc-count-fs) * 0.12);
 		--bb-desc-gap-label-trigger: calc(var(--bb-desc-spin-label-fs) * 0.28);
@@ -438,40 +419,21 @@
 		-webkit-font-smoothing: antialiased;
 	}
 
-	.card-normal .card-desc.card-desc-stacked .desc-spin-count {
-		-webkit-text-stroke: var(--bb-desc-count-stroke) rgba(255, 244, 225, 0.96);
-		text-shadow:
-			0 calc(var(--bb-desc-count-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
-			0 calc(var(--bb-desc-count-fs) * 0.055) calc(var(--bb-desc-count-fs) * 0.09)
-				rgba(0, 0, 0, 0.38),
-			0 0 calc(var(--bb-desc-count-fs) * 0.12) rgba(255, 228, 185, 0.42);
-	}
-
+	.card-normal .card-desc.card-desc-stacked .desc-spin-count,
 	.card-super .card-desc.card-desc-stacked .desc-spin-count {
-		-webkit-text-stroke: var(--bb-desc-count-stroke) rgba(255, 244, 225, 0.96);
+		-webkit-text-stroke: var(--bb-desc-count-stroke) rgba(48, 22, 6, 0.92);
 		text-shadow:
-			0 calc(var(--bb-desc-count-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
-			0 calc(var(--bb-desc-count-fs) * 0.07) calc(var(--bb-desc-count-fs) * 0.1)
-				rgba(0, 0, 0, 0.66),
-			0 0 calc(var(--bb-desc-count-fs) * 0.12) rgba(255, 228, 185, 0.38);
+			0 calc(var(--bb-desc-count-fs) * 0.04) 0 rgba(48, 22, 6, 0.75),
+			0 calc(var(--bb-desc-count-fs) * 0.07) calc(var(--bb-desc-count-fs) * 0.1) rgba(0, 0, 0, 0.5);
 	}
 
-	.card-normal .card-desc.card-desc-stacked .desc-spin-count.card-count-knewave {
-		-webkit-text-stroke: calc(var(--bb-desc-count-fs) * var(--bb-knewave-count-stroke-weight))
-			rgba(255, 244, 225, 0.96);
-		text-shadow:
-			0 calc(var(--bb-desc-count-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
-			0 calc(var(--bb-desc-count-fs) * 0.055) calc(var(--bb-desc-count-fs) * 0.09)
-				rgba(0, 0, 0, 0.38);
-	}
-
+	.card-normal .card-desc.card-desc-stacked .desc-spin-count.card-count-knewave,
 	.card-super .card-desc.card-desc-stacked .desc-spin-count.card-count-knewave {
 		-webkit-text-stroke: calc(var(--bb-desc-count-fs) * var(--bb-knewave-count-stroke-weight))
-			rgba(45, 12, 6, 0.94);
+			rgba(48, 22, 6, 0.94);
 		text-shadow:
-			0 calc(var(--bb-desc-count-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
-			0 calc(var(--bb-desc-count-fs) * 0.07) calc(var(--bb-desc-count-fs) * 0.1)
-				rgba(0, 0, 0, 0.66);
+			0 calc(var(--bb-desc-count-fs) * 0.04) 0 rgba(48, 22, 6, 0.75),
+			0 calc(var(--bb-desc-count-fs) * 0.07) calc(var(--bb-desc-count-fs) * 0.1) rgba(0, 0, 0, 0.5);
 	}
 
 	.card .card-desc.card-desc-stacked :global(.fit-card-text__inner) {
@@ -481,132 +443,79 @@
 		-webkit-font-smoothing: antialiased;
 	}
 
-	.card-normal .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-spin-label) {
-		-webkit-text-stroke: var(--bb-desc-spin-label-stroke) rgba(255, 244, 225, 0.96);
-		text-shadow:
-			0 calc(var(--bb-desc-spin-label-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
-			0 calc(var(--bb-desc-spin-label-fs) * 0.055) calc(var(--bb-desc-spin-label-fs) * 0.09)
-				rgba(0, 0, 0, 0.38),
-			0 0 calc(var(--bb-desc-spin-label-fs) * 0.12) rgba(255, 228, 185, 0.42);
-	}
-
-	.card-normal .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-trigger) {
-		-webkit-text-stroke: var(--bb-desc-trigger-stroke) rgba(255, 244, 225, 0.96);
-		text-shadow:
-			0 calc(var(--bb-desc-trigger-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
-			0 calc(var(--bb-desc-trigger-fs) * 0.055) calc(var(--bb-desc-trigger-fs) * 0.09)
-				rgba(0, 0, 0, 0.38),
-			0 0 calc(var(--bb-desc-trigger-fs) * 0.12) rgba(255, 228, 185, 0.42);
-	}
-
+	.card-normal .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-spin-label),
 	.card-super .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-spin-label) {
-		-webkit-text-stroke: var(--bb-desc-spin-label-stroke) rgba(255, 244, 225, 0.96);
+		-webkit-text-stroke: var(--bb-desc-spin-label-stroke) rgba(48, 22, 6, 0.92);
 		text-shadow:
-			0 calc(var(--bb-desc-spin-label-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
+			0 calc(var(--bb-desc-spin-label-fs) * 0.04) 0 rgba(48, 22, 6, 0.75),
 			0 calc(var(--bb-desc-spin-label-fs) * 0.07) calc(var(--bb-desc-spin-label-fs) * 0.1)
-				rgba(0, 0, 0, 0.66),
-			0 0 calc(var(--bb-desc-spin-label-fs) * 0.12) rgba(255, 228, 185, 0.38);
+				rgba(0, 0, 0, 0.5);
 	}
 
-	.card-super .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-trigger) {
-		-webkit-text-stroke: var(--bb-desc-trigger-stroke) rgba(255, 244, 225, 0.96);
-		text-shadow:
-			0 calc(var(--bb-desc-trigger-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
-			0 calc(var(--bb-desc-trigger-fs) * 0.07) calc(var(--bb-desc-trigger-fs) * 0.1)
-				rgba(0, 0, 0, 0.66),
-			0 0 calc(var(--bb-desc-trigger-fs) * 0.12) rgba(255, 228, 185, 0.38);
-	}
-
-	.card-normal .card-desc.card-desc-stacked :global(.fit-card-text--knewave .fit-card-text__inner.desc-spin-label) {
+	.card-normal
+		.card-desc.card-desc-stacked
+		:global(.fit-card-text--knewave .fit-card-text__inner.desc-spin-label),
+	.card-super
+		.card-desc.card-desc-stacked
+		:global(.fit-card-text--knewave .fit-card-text__inner.desc-spin-label) {
 		-webkit-text-stroke: calc(var(--bb-desc-spin-label-fs) * var(--bb-knewave-count-stroke-weight))
-			rgba(255, 244, 225, 0.96);
+			rgba(48, 22, 6, 0.94);
 		text-shadow:
-			0 calc(var(--bb-desc-spin-label-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
-			0 calc(var(--bb-desc-spin-label-fs) * 0.055) calc(var(--bb-desc-spin-label-fs) * 0.09)
-				rgba(0, 0, 0, 0.38);
-	}
-
-	.card-normal .card-desc.card-desc-stacked :global(.fit-card-text--knewave .fit-card-text__inner.desc-trigger) {
-		-webkit-text-stroke: calc(var(--bb-desc-trigger-fs) * var(--bb-knewave-count-stroke-weight))
-			rgba(255, 244, 225, 0.96);
-		text-shadow:
-			0 calc(var(--bb-desc-trigger-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
-			0 calc(var(--bb-desc-trigger-fs) * 0.055) calc(var(--bb-desc-trigger-fs) * 0.09)
-				rgba(0, 0, 0, 0.38);
-	}
-
-	.card-super .card-desc.card-desc-stacked :global(.fit-card-text--knewave .fit-card-text__inner.desc-spin-label) {
-		-webkit-text-stroke: calc(var(--bb-desc-spin-label-fs) * var(--bb-knewave-count-stroke-weight))
-			rgba(45, 12, 6, 0.94);
-		text-shadow:
-			0 calc(var(--bb-desc-spin-label-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
+			0 calc(var(--bb-desc-spin-label-fs) * 0.04) 0 rgba(48, 22, 6, 0.75),
 			0 calc(var(--bb-desc-spin-label-fs) * 0.07) calc(var(--bb-desc-spin-label-fs) * 0.1)
-				rgba(0, 0, 0, 0.66);
-	}
-
-	.card-super .card-desc.card-desc-stacked :global(.fit-card-text--knewave .fit-card-text__inner.desc-trigger) {
-		-webkit-text-stroke: calc(var(--bb-desc-trigger-fs) * var(--bb-knewave-count-stroke-weight))
-			rgba(45, 12, 6, 0.94);
-		text-shadow:
-			0 calc(var(--bb-desc-trigger-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
-			0 calc(var(--bb-desc-trigger-fs) * 0.07) calc(var(--bb-desc-trigger-fs) * 0.1)
-				rgba(0, 0, 0, 0.66);
+				rgba(0, 0, 0, 0.5);
 	}
 
 	.card .card-desc.card-desc-stacked :global(.fit-card-text--spin-label) {
 		margin: 0 0 var(--bb-desc-gap-label-trigger);
 	}
 
-	.card-normal .card-desc {
-		color: #4a3020;
-		text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
-	}
-
+	.card-normal .card-desc,
 	.card-super .card-desc {
-		color: #f5e0c0;
-		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.75);
+		color: #f3d27a;
+		text-shadow:
+			0 2px 0 rgba(58, 28, 8, 0.88),
+			0 3px 8px rgba(0, 0, 0, 0.55);
 	}
 
 	.card-price-wrap {
 		position: absolute;
-		top: 99%;
 		left: 50%;
-		transform: translateX(-50%);
-		width: 110%;
-		height: 18%;
-		background-size: 100% 100%;
-		background-repeat: no-repeat;
-		background-position: center;
+		bottom: 1.5%;
+		transform: translateX(calc(-50% + var(--panel-width) * 0.006));
+		width: 72%;
+		height: 12.5%;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		padding: 0;
+		box-sizing: border-box;
 	}
 
 	.card-price {
 		font-family: inherit;
 		font-size: var(--bb-card-price-fs);
 		font-weight: 900;
-		letter-spacing: 0.01em;
+		letter-spacing: 0;
 		text-align: center;
 		line-height: 1;
+		display: block;
+		width: auto;
+		transform: translateY(0.2em);
 	}
 
-	.card-normal .card-price {
-		color: #f5e6c8;
-		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-	}
-
+	.card-normal .card-price,
 	.card-super .card-price {
-		color: #f5e6c8;
-		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+		color: #1a1208;
+		text-shadow: 0 1px 0 rgba(255, 236, 190, 0.45);
 	}
 
 	.confirm-actions {
 		position: absolute;
-		top: 82%;
-		left: 16%;
-		right: 16%;
-		height: 10%;
+		top: 80%;
+		left: 12%;
+		right: 12%;
+		height: 11%;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -671,189 +580,107 @@
 
 	/* Desktop */
 	.confirm-panel:not(.portrait):not(.popout-l):not(.popout-s) {
-		--bb-card-price-fs: calc(var(--panel-width) * 0.028);
-		--bb-confirm-action-fs: calc(var(--panel-width) * 0.021);
+		--bb-card-price-fs: calc(var(--panel-width) * 0.048);
+		--bb-confirm-action-fs: calc(var(--panel-width) * 0.026);
 
 		.close-button {
-			width: calc(var(--panel-width) * 0.085);
-			height: calc(var(--panel-width) * 0.085);
-			margin-top: calc(var(--panel-width) * 0.06);
-			margin-right: calc(var(--panel-width) * 0.03);
+			width: calc(var(--panel-width) * 0.112);
+			height: calc(var(--panel-width) * 0.112);
 		}
 
 		.confirm-card-section {
-			top: 25%;
-			left: 49%;
-			width: 79%;
-			height: 52%;
-		}
-
-		.panel-subtitle {
-			font-size: calc(var(--panel-width) * 0.026);
-			line-height: 1.08;
-		}
-
-		.card {
-			height: 100%;
-		}
-
-		.card-content {
-			transform: scale(0.8);
-			transform-origin: 50% 61%;
-		}
-
-		.card-super .card-desc.card-desc-stacked {
-			--bb-desc-count-fs: calc(var(--panel-width) * 0.079);
-			--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.031);
-			--bb-desc-trigger-fs: calc(var(--panel-width) * 0.020);
-		}
-
-		.card-normal .card-desc.card-desc-stacked {
-			--bb-desc-count-fs: calc(var(--panel-width) * 0.079);
-			--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.031);
-			--bb-desc-trigger-fs: calc(var(--panel-width) * 0.020);
+			top: 10.5%;
+			left: 50%;
+			width: 66%;
+			height: 70%;
 		}
 
 		.card-price-wrap {
-			top: 99%;
-			height: 18%;
-			width: 110%;
+			bottom: 1.5%;
+			height: 12.5%;
+			width: 72%;
 		}
 
 		.confirm-actions {
-			top: 83%;
-			left: 18%;
-			right: 18%;
-			height: 9%;
+			top: 80%;
+			left: 12%;
+			right: 12%;
+			height: 11%;
 		}
 	}
 
 	/* Portrait */
 	.confirm-panel.portrait:not(.popout-l):not(.popout-s) {
-		--bb-card-price-fs: calc(var(--panel-width) * 0.036);
-		--bb-confirm-action-fs: calc(var(--panel-width) * 0.028);
+		--bb-card-price-fs: calc(var(--panel-width) * 0.058);
+		--bb-confirm-action-fs: calc(var(--panel-width) * 0.032);
 
 		.panel-bg {
-			width: 130%;
+			width: 100%;
 			top: 0;
 			bottom: 0;
-			left: 50%;
-			right: auto;
-			transform: translateX(-50%);
-		}
-
-		.panel-header {
-			height: 22%;
+			left: 0;
+			right: 0;
+			transform: none;
 		}
 
 		.close-button {
 			position: absolute;
-			top: 35%;
-			right: 7%;
-			width: calc(var(--panel-width) * 0.095);
-			height: calc(var(--panel-width) * 0.095);
+			top: 45%;
+			right: -1.2%;
+			width: calc(var(--panel-width) * 0.116);
+			height: calc(var(--panel-width) * 0.116);
 			margin: 0;
 		}
 
 		.confirm-card-section {
-			top: 25%;
-			left: 49%;
-			width: 79%;
-			height: 46%;
-		}
-
-		.panel-subtitle {
-			font-size: calc(var(--panel-width) * 0.036);
-			line-height: 1.08;
-		}
-
-		.card {
-			height: 100%;
-		}
-
-		.card-content {
-			transform: scale(0.72);
-			transform-origin: 50% 61%;
-		}
-
-		.card-title {
-			top: -11%;
-			font-size: calc(var(--panel-width) * 0.032);
-		}
-
-		.card .card-desc.card-desc-stacked {
-			top: 66%;
-			height: 24%;
-			--bb-desc-count-fs: calc(var(--panel-width) * 0.103);
-			--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.041);
-			--bb-desc-trigger-fs: calc(var(--panel-width) * 0.023);
+			top: 10.5%;
+			left: 50%;
+			width: 66%;
+			height: 70%;
 		}
 
 		.card-price-wrap {
-			top: 105%;
-			height: 18%;
-			width: 118%;
+			bottom: 1.5%;
+			height: 12.5%;
+			width: 72%;
 		}
 
 		.confirm-actions {
-			top: 81%;
-			left: 14%;
-			right: 14%;
-			height: 10%;
-			gap: calc(var(--panel-width) * 0.08);
+			top: 80%;
+			left: 10%;
+			right: 10%;
+			height: 11%;
+			gap: calc(var(--panel-width) * 0.06);
 		}
 	}
 
 	/* Popout L */
 	.confirm-panel.popout-l {
 		filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.6));
-		--bb-card-price-fs: calc(var(--panel-width) * 0.028);
-		--bb-confirm-action-fs: calc(var(--panel-width) * 0.024);
+		--bb-card-price-fs: calc(var(--panel-width) * 0.048);
+		--bb-confirm-action-fs: calc(var(--panel-width) * 0.026);
 
 		.close-button {
-			width: calc(var(--panel-width) * 0.085);
-			height: calc(var(--panel-width) * 0.085);
-			margin-top: calc(var(--panel-width) * 0.06);
-			margin-right: calc(var(--panel-width) * 0.03);
+			width: calc(var(--panel-width) * 0.112);
+			height: calc(var(--panel-width) * 0.112);
 		}
 
 		.confirm-card-section {
-			top: 25%;
-			left: 49%;
-			width: 79%;
-			height: 52%;
-		}
-
-		.panel-subtitle {
-			font-size: calc(var(--panel-width) * 0.026);
-			line-height: 1.08;
-		}
-
-		.card {
-			height: 100%;
-		}
-
-		.card-content {
-			transform: scale(0.8);
-			transform-origin: 50% 61%;
-		}
-
-		.card .card-desc.card-desc-stacked {
-			height: 18%;
-			--bb-desc-count-fs: calc(var(--panel-width) * 0.079);
-			--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.030);
-			--bb-desc-trigger-fs: calc(var(--panel-width) * 0.018);
+			top: 10.5%;
+			left: 50%;
+			width: 66%;
+			height: 70%;
 		}
 
 		.card-price-wrap {
-			top: 99%;
-			height: 18%;
-			width: 110%;
+			bottom: 1.5%;
+			height: 12.5%;
+			width: 72%;
 		}
 
 		.confirm-actions {
-			top: 82%;
-			height: 10%;
+			top: 80%;
+			height: 11%;
 		}
 	}
 
@@ -862,66 +689,59 @@
 		filter: drop-shadow(
 			0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.075) rgba(0, 0, 0, 0.55)
 		);
-		--bb-card-price-fs: calc(var(--panel-width) * 0.028);
-		--bb-confirm-action-fs: calc(var(--panel-width) * 0.024);
+		--bb-card-price-fs: calc(var(--panel-width) * 0.048);
+		--bb-confirm-action-fs: calc(var(--panel-width) * 0.026);
 
 		.close-button {
-			width: calc(var(--panel-width) * 0.085);
-			height: calc(var(--panel-width) * 0.085);
-			margin-top: calc(var(--panel-width) * 0.06);
-			margin-right: calc(var(--panel-width) * 0.03);
+			width: calc(var(--panel-width) * 0.112);
+			height: calc(var(--panel-width) * 0.112);
 		}
 
 		.confirm-card-section {
-			top: 25%;
-			left: 49%;
-			width: 79%;
-			height: 52%;
-		}
-
-		.panel-subtitle {
-			font-size: calc(var(--panel-width) * 0.026);
-			line-height: 1.08;
-		}
-
-		.card {
-			height: 100%;
-		}
-
-		.card-content {
-			transform: scale(0.8);
-			transform-origin: 50% 61%;
-		}
-
-		.card .card-desc.card-desc-stacked {
-			height: 18%;
-			--bb-desc-count-fs: calc(var(--panel-width) * 0.068);
-			--bb-desc-spin-label-fs: calc(var(--panel-width) * 0.025);
-			--bb-desc-trigger-fs: calc(var(--panel-width) * 0.014);
+			top: 10.5%;
+			left: 50%;
+			width: 66%;
+			height: 70%;
 		}
 
 		.card-price-wrap {
-			top: 99%;
-			height: 18%;
-			width: 110%;
+			bottom: 1.5%;
+			height: 12.5%;
+			width: 72%;
 		}
 
 		.confirm-actions {
-			top: 83%;
-			left: 18%;
-			right: 18%;
-			height: 9%;
+			top: 80%;
+			left: 12%;
+			right: 12%;
+			height: 11%;
 		}
 	}
 
 	@media (max-width: 600px) {
-		.confirm-panel.portrait:not(.popout-l):not(.popout-s) {
+		.confirm-panel:not(.portrait):not(.popout-l):not(.popout-s) {
 			.confirm-card-section {
-				height: 49%;
+				top: 10%;
+				width: 60%;
+				height: 68%;
 			}
 
 			.confirm-actions {
-				height: 9.7%;
+				top: 78%;
+				height: 12%;
+			}
+		}
+
+		.confirm-panel.portrait:not(.popout-l):not(.popout-s) {
+			.confirm-card-section {
+				top: 10%;
+				width: 66%;
+				height: 68%;
+			}
+
+			.confirm-actions {
+				top: 78%;
+				height: 12%;
 			}
 		}
 	}

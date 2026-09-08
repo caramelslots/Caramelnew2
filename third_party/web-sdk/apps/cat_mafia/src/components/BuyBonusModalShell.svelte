@@ -32,15 +32,31 @@
 		class="buy-bonus-modal-shell"
 		class:active={isVisible}
 		aria-hidden={!isVisible}
+		inert={!isVisible}
 		data-test="buy-bonus-modal-shell"
 	>
-		<div class="panel-slot" class:active={showBuyPanel} aria-hidden={!showBuyPanel}>
+		<div
+			class="panel-slot"
+			class:active={showBuyPanel}
+			aria-hidden={!showBuyPanel}
+			inert={!showBuyPanel}
+		>
 			<BuyBonusOverlay />
 		</div>
-		<div class="panel-slot" class:active={showConfirmPanel} aria-hidden={!showConfirmPanel}>
+		<div
+			class="panel-slot"
+			class:active={showConfirmPanel}
+			aria-hidden={!showConfirmPanel}
+			inert={!showConfirmPanel}
+		>
 			<BuyBonusConfirmOverlay />
 		</div>
-		<div class="panel-slot" class:active={showDuelPickPanel} aria-hidden={!showDuelPickPanel}>
+		<div
+			class="panel-slot"
+			class:active={showDuelPickPanel}
+			aria-hidden={!showDuelPickPanel}
+			inert={!showDuelPickPanel}
+		>
 			<BuyDuelPickOverlay />
 		</div>
 	</div>
@@ -51,16 +67,25 @@
 		position: fixed;
 		inset: 0;
 		z-index: 60;
-		background: rgba(0, 0, 0, 0.5);
-		backdrop-filter: blur(30px);
-		-webkit-backdrop-filter: blur(30px);
+		background: transparent;
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
+		opacity: 0;
 		visibility: hidden;
 		pointer-events: none;
-		will-change: backdrop-filter;
 
 		&.active {
+			opacity: 1;
 			visibility: visible;
 			pointer-events: auto;
+			background: rgba(0, 0, 0, 0.5);
+			backdrop-filter: blur(30px);
+			-webkit-backdrop-filter: blur(30px);
+		}
+
+		&:not(.active),
+		&:not(.active) * {
+			pointer-events: none !important;
 		}
 	}
 
@@ -70,14 +95,23 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 1rem;
+		padding: 1.2vh 2vw;
 		box-sizing: border-box;
-		visibility: hidden;
+		container-type: size;
+		container-name: buy-bonus-slot;
+		opacity: 0;
 		pointer-events: none;
+		z-index: 0;
 
 		&.active {
-			visibility: visible;
+			opacity: 1;
 			pointer-events: auto;
+			z-index: 1;
+		}
+
+		&:not(.active),
+		&:not(.active) * {
+			pointer-events: none !important;
 		}
 	}
 </style>

@@ -15,7 +15,7 @@
 	} from 'state-shared';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
-	import { isPopoutSmallViewport, BUY_BONUS_BUTTON_ASPECT } from '../game/constants';
+	import { isPopoutSmallViewport, BUY_BONUS_BUTTON_ASPECT, HUD_TURBO_ICON_BG_FRAC } from '../game/constants';
 	import { computeDesktopHudLayout, resolveDesktopHudConfig } from '../game/desktopHudLayout';
 	import { getRoundsCounter } from '../game/autoplay';
 	import { canAffordSpin, canIncreaseBet } from '../game/buyBonusBalance';
@@ -275,7 +275,9 @@
 					data-test="buy-bonus-panel-button"
 					style:background-image="url('{buyBonusBgUrl}')"
 					onclick={onBuyBonusPress}
-				></button>
+				>
+					<span class="hud-buy-bonus-hit" aria-hidden="true"></span>
+				</button>
 			{/if}
 
 			{#if !isReplay}
@@ -354,12 +356,13 @@
 
 			<button
 				type="button"
-				class="hud-icon-btn"
+				class="hud-icon-btn hud-icon-btn--turbo"
 				class:dimmed={turboDisabled}
 				style:left="{pos.turbo.x}px"
 				style:top="{pos.turbo.y}px"
 				style:width="{pos.turbo.size}px"
 				style:height="{pos.turbo.size}px"
+				style:--hud-turbo-bg-frac={HUD_TURBO_ICON_BG_FRAC}
 				style:background-image="url('{turboUrl}')"
 				disabled={turboDisabled}
 				aria-label="turbo"
@@ -433,6 +436,21 @@
 		&.dimmed {
 			opacity: 0.45;
 		}
+	}
+
+	.hud-icon-btn--turbo {
+		background-size: calc(var(--hud-turbo-bg-frac) * 100%);
+	}
+
+	.hud-icon-btn[data-test='buy-bonus-panel-button'] {
+		background-size: 100% 100%;
+	}
+
+	.hud-buy-bonus-hit {
+		position: absolute;
+		inset: 0;
+		display: block;
+		pointer-events: auto;
 	}
 
 	.hud-buy-bonus-btn {

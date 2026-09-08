@@ -1269,6 +1269,10 @@ export const PORTRAIT_UTIL_ICON_BASE = 108;
 export const PORTRAIT_AUTOPLAY_PILL_BASE = AUTOPLAY_PILL_BASE;
 export const PORTRAIT_TURBO_ICON_BASE = 108;
 
+/** Turbo HUD sprite is denser than info/menu — scale inside the shared icon hit box. */
+export const HUD_TURBO_ICON_BG_FRAC =
+	DESKTOP_UI_LAYOUT.spinCluster.turboScale / DESKTOP_UI_LAYOUT.spinCluster.smallScale;
+
 // New designer artwork comes from `designer_assets/Symbols/export/` — a
 // single combined spine with bounce/win/explosion animations + per-symbol
 // images. Rest/spin/static frames render via zero-movement `*/idle` spine
