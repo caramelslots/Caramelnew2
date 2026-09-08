@@ -8,7 +8,7 @@ import {
 } from './mascotHtmlSpine';
 import { COIN_PAW_SPINE_WEBP_URL } from './coinHtmlSpine';
 import { SPIN_BUTTON_SPINE_WEBP_URL, startSpinButtonSpinePreload } from './spinButtonHtmlSpine';
-import { BUY_BONUS_SPINE_IMAGE_URLS, preloadBuyBonusSpines } from './buyBonusHtmlSpine';
+import { preloadBuyBonusSpines } from './buyBonusHtmlSpine';
 import { startTargetBoardPreload, TARGET_BOARD_SPRITES } from './targetBoardAssets';
 import { startShotBulletPreload, SHOT_BULLET_SPRITES } from './shotBulletAssets';
 
@@ -155,6 +155,7 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	...GAME_INFO_SYMBOL_IMAGE_URLS,
 ]);
 
+/** HTML board / cards / buttons only — Spine webps stay on the fetch-only path. */
 export const BUY_BONUS_FLOW_IMAGE_URLS = dedupeUrls([
 	BUY_BONUS_ASSETS.menuBg,
 	BUY_BONUS_ASSETS.confirmBg,
@@ -165,15 +166,7 @@ export const BUY_BONUS_FLOW_IMAGE_URLS = dedupeUrls([
 	BUY_BONUS_ASSETS.buyButtonBg,
 	BUY_BONUS_ASSETS.cancelButtonBg,
 	BUY_BONUS_ASSETS.confirmButtonBg,
-	...BUY_BONUS_SPINE_IMAGE_URLS,
 ]);
-
-const BUY_BONUS_FLOW_PRELOAD_PRIORITY = [
-	BUY_BONUS_ASSETS.menuBg,
-	BUY_BONUS_ASSETS.confirmBg,
-	BUY_BONUS_ASSETS.normalCard,
-	BUY_BONUS_ASSETS.superCard,
-] as const;
 
 let buyBonusFlowPreload: Promise<void> | null = null;
 
@@ -182,12 +175,8 @@ export const startBuyBonusFlowPreload = (): Promise<void> => {
 	if (buyBonusFlowPreload) return buyBonusFlowPreload;
 
 	buyBonusFlowPreload = Promise.all([
-		preloadHtmlImages(BUY_BONUS_FLOW_IMAGE_URLS, {
-			priority: BUY_BONUS_FLOW_PRELOAD_PRIORITY,
-			concurrency: 3,
-		}),
+		preloadHtmlImages(BUY_BONUS_FLOW_IMAGE_URLS, { concurrency: 6 }),
 		preloadBuyBonusSpines(),
-		import('../components/BuyBonusModalShell.svelte'),
 	]).then(() => undefined);
 
 	return buyBonusFlowPreload;

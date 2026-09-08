@@ -28,6 +28,7 @@
 	import EnableGameActor from './EnableGameActor.svelte';
 	import EnableBoardIdleBounce from './EnableBoardIdleBounce.svelte';
 	import EnableLivingIdle from './EnableLivingIdle.svelte';
+	import EnablePauseMainPixiOnBuyBonus from './EnablePauseMainPixiOnBuyBonus.svelte';
 	import EnableDuelPhoneDpr from './EnableDuelPhoneDpr.svelte';
 	import ResumeBet from './ResumeBet.svelte';
 	import Sound from './Sound.svelte';
@@ -137,6 +138,7 @@
 		<EnableGameActor />
 		<EnableBoardIdleBounce />
 		<EnableLivingIdle />
+		<EnablePauseMainPixiOnBuyBonus />
 		<EnablePixiExtension />
 		<EnableDuelPhoneDpr />
 

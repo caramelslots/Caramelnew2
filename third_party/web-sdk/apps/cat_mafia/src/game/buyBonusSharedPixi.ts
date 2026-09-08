@@ -93,6 +93,7 @@ const ensureApp = () => {
 		next.canvas.setAttribute('aria-hidden', 'true');
 		app = next;
 		if (!tickerBound) {
+			next.ticker.maxFPS = 30;
 			next.ticker.add(syncSharedStage);
 			tickerBound = true;
 		}

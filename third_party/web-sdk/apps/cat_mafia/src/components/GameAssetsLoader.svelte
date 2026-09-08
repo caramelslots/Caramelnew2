@@ -6,8 +6,6 @@
 	import { getProcessed } from '../../../../packages/pixi-svelte/src/lib/assetLoad';
 	import type { LoadedAssets, RawAsset } from 'pixi-svelte';
 
-	import { waitForTimeout } from 'utils-shared/wait';
-
 	import {
 		LOADER_ASSET_BATCHES,
 		getBatch3KeysForLocale,
@@ -103,9 +101,8 @@
 				const batch3Assets = await loadAssetBatch(batch3);
 				mergeLoadedAssets(batch3Assets);
 
-				await startBuyBonusFlowPreload();
 				context.stateApp.loadingProgress = ENTRY_PROGRESS_CAP;
-				await waitForTimeout(360);
+				await startBuyBonusFlowPreload();
 
 				context.stateApp.loaded = true;
 
