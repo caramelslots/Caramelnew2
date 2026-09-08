@@ -233,6 +233,7 @@
 		class="desktop-hud-overlay"
 		class:daloniil-ui-enter={show}
 		class:prewarm={!show}
+		class:in-lift={!gameEntrance.liftComplete}
 		aria-label="game controls"
 		aria-hidden={!show}
 	>
@@ -398,6 +399,11 @@
 		inset: 0;
 		z-index: 44;
 		pointer-events: none;
+
+		/* Ride the game panel during lift — fixed would pin HUD over the intro. */
+		&.in-lift {
+			position: absolute;
+		}
 
 		&.prewarm {
 			visibility: hidden;

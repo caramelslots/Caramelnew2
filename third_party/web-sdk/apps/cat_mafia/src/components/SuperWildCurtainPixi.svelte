@@ -26,7 +26,8 @@
 
 	const props: Props = $props();
 	const context = getContext();
-	const show = $derived(gameEntrance.showContent);
+	/** Same gate as the board — not `showContent`, or the curtain pops in after HUD. */
+	const show = $derived(gameEntrance.preloadContent);
 
 	const curtains = $derived.by(() => {
 		if (props.duelSide) {

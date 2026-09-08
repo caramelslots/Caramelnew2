@@ -249,6 +249,7 @@
 		class="portrait-hud-overlay"
 		class:daloniil-ui-enter={show}
 		class:prewarm={!show}
+		class:in-lift={!gameEntrance.liftComplete}
 		aria-label="game controls"
 		aria-hidden={!show}
 	>
@@ -389,6 +390,10 @@
 		inset: 0;
 		z-index: 44;
 		pointer-events: none;
+
+		&.in-lift {
+			position: absolute;
+		}
 
 		&.prewarm {
 			visibility: hidden;

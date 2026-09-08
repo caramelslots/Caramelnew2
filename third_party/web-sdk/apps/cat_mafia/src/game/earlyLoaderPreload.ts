@@ -5,10 +5,18 @@ export const resolveGameStaticUrl = (path: string) =>
 		typeof window !== 'undefined' ? window.location.href : import.meta.url,
 	).href;
 
-/**
- * Static street under the logo/cards loader.
- * 1920×956 — same plate as `night.webp` and LOADER_BG_PX.
- */
+/** Intro loader sky plate (1950×1339). */
+export const LOADER_INTRO_SKY_URL = resolveGameStaticUrl('assets/sprites/loader/intro_sky.png');
+
+/** Intro loader house roofs plate (1950×1339, alpha). */
+export const LOADER_INTRO_ROOFS_URL = resolveGameStaticUrl('assets/sprites/loader/intro_roofs.png');
+
+/** Intro loader clouds strip (1295×356, alpha) — scrolls over sky, under roofs. */
+export const LOADER_INTRO_CLOUDS_URL = resolveGameStaticUrl(
+	'assets/sprites/loader/intro_clouds.png',
+);
+
+/** @deprecated Replaced by intro sky + roofs — kept for Pixi layout reference. */
 export const LOADER_STATIC_DAY_URL = resolveGameStaticUrl('assets/sprites/background/day.webp');
 
 /** Street background Spine for Pixi `mainBackground` (batch 1 + early HTTP warm). */
@@ -22,14 +30,18 @@ export const LOADER_BG_SPINE_URLS = [
 
 let backgroundPreloadStarted = false;
 
-/**
- * Warm loader still + street Spine bytes during bootstrap.
- */
+/** Warm intro loader plates during bootstrap. */
 export const startEarlyLoaderBackgroundPreload = () => {
 	if (backgroundPreloadStarted || typeof window === 'undefined') return;
 	backgroundPreloadStarted = true;
 
-	void fetch(LOADER_STATIC_DAY_URL).catch(() => {
-		/* Best-effort — img / Pixi will retry. */
+	void fetch(LOADER_INTRO_SKY_URL).catch(() => {
+		/* Best-effort — img will retry. */
+	});
+	void fetch(LOADER_INTRO_ROOFS_URL).catch(() => {
+		/* Best-effort — img will retry. */
+	});
+	void fetch(LOADER_INTRO_CLOUDS_URL).catch(() => {
+		/* Best-effort — img will retry. */
 	});
 };

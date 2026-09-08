@@ -3,11 +3,15 @@
 	import { GlobalStyle } from 'components-ui-html';
 	import { Authenticate, LoadI18n } from 'components-shared';
 	import BootstrapLoader from '../components/BootstrapLoader.svelte';
-	import LoaderStreetStill from '../components/LoaderStreetStill.svelte';
+	import EntranceLiftShell from '../components/EntranceLiftShell.svelte';
+	import LoaderIntroBackground from '../components/LoaderIntroBackground.svelte';
+	import LoaderCardsHtmlOverlay from '../components/LoaderCardsHtmlOverlay.svelte';
+	import LoaderContinueHandlers from '../components/LoaderContinueHandlers.svelte';
 	import { setContext } from '../game/context';
 	import { startEarlyAssetPreload } from '../game/earlyAssetPreload';
 	import { setLoaderStage } from '../game/loaderAssetPipeline.svelte';
 	import { devPreview } from '../game/devPreview.svelte';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
 
 	import messagesMap from '../i18n/messagesMap';
 
@@ -29,24 +33,33 @@
 <GlobalStyle>
 	<Authenticate>
 		<LoadI18n {messagesMap}>
-			{#await gameImport then { default: Game }}
-				<Game />
-			{/await}
+			<EntranceLiftShell>
+				{#snippet intro()}
+					<LoaderIntroBackground />
+
+					{#if showYourLoader}
+						<BootstrapLoader
+							oncomplete={() => setLoaderStage('cards')}
+							ondismissed={() => {
+								showYourLoader = false;
+								gameEntrance.bootstrapDismissed = true;
+							}}
+						/>
+					{/if}
+
+					<LoaderCardsHtmlOverlay />
+					<LoaderContinueHandlers />
+				{/snippet}
+
+				{#snippet game()}
+					{#await gameImport then { default: Game }}
+						<Game />
+					{/await}
+				{/snippet}
+			</EntranceLiftShell>
 		</LoadI18n>
 	</Authenticate>
 </GlobalStyle>
-
-<!-- Static street under logo/cards — same cover box as Pixi Background. -->
-<LoaderStreetStill />
-
-{#if showYourLoader}
-	<BootstrapLoader
-		oncomplete={() => setLoaderStage('cards')}
-		ondismissed={() => {
-			showYourLoader = false;
-		}}
-	/>
-{/if}
 
 {#if devPreview.loaderProgress && !showYourLoader}
 	<BootstrapLoader preview />

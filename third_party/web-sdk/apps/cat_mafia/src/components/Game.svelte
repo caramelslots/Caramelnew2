@@ -33,8 +33,6 @@
 	import ResumeBet from './ResumeBet.svelte';
 	import Sound from './Sound.svelte';
 	import Background from './Background.svelte';
-	import LoaderCardsHtmlOverlay from './LoaderCardsHtmlOverlay.svelte';
-	import LoadingScreen from './LoadingScreen.svelte';
 	import BoardFrame from './BoardFrame.svelte';
 	import Board from './Board.svelte';
 	import BoardContainer from './BoardContainer.svelte';
@@ -104,6 +102,8 @@
 		if (!context.stateLayout.showLoadingScreen) {
 			gameEntrance.preloadContent = true;
 			gameEntrance.showContent = true;
+			gameEntrance.liftComplete = true;
+			gameEntrance.bootstrapDismissed = true;
 		}
 	});
 
@@ -144,13 +144,9 @@
 
 		<Background />
 
-		{#if context.stateLayout.showLoadingScreen}
-			<LoadingScreen onloaded={() => (context.stateLayout.showLoadingScreen = false)} />
-		{/if}
-
 		{#if gameEntrance.preloadContent}
 			<ResumeBet />
-			{#if gameEntrance.showContent}
+			{#if gameEntrance.showContent || gameEntrance.loaderExitActive}
 				<!--
 				Autoplay with sound is allowed after user interaction on the loading screen.
 				Ref: https://developer.chrome.com/blog/autoplay
@@ -159,8 +155,8 @@
 			{/if}
 
 			<FadeContainer
-				show={gameEntrance.showContent}
-				duration={GAME_ENTRANCE_MS}
+				show={gameEntrance.preloadContent}
+				duration={gameEntrance.showContent ? GAME_ENTRANCE_MS : 0}
 				persistent
 				sortableChildren
 			>
@@ -275,8 +271,6 @@
 		{/if}
 	</GameApp>
 </div>
-
-<LoaderCardsHtmlOverlay />
 
 <CashStacksModals>
 	{#snippet version()}

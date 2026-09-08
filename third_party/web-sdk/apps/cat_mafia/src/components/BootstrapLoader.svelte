@@ -108,7 +108,7 @@
 </script>
 
 {#if show}
-	<!-- Transparent wrap: static street lives in LoaderStreetStill underneath. -->
+	<!-- Transparent wrap: intro sky + roofs live in LoaderIntroBackground underneath. -->
 	<div class="wrap" transition:fade>
 		<div class="player" bind:this={playerContainer}></div>
 		<div
@@ -144,7 +144,7 @@
 	.player {
 		position: relative;
 		z-index: 1;
-		/* Clip logo WebGL so it cannot smear over the static street. */
+		/* Clip logo WebGL so it cannot smear over the intro backdrop. */
 		width: min(640px, 90vw);
 		height: min(740px, 85vh);
 		overflow: hidden;

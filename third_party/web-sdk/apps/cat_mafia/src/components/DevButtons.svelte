@@ -1206,6 +1206,8 @@
 		stateLayout.showLoadingScreen = false;
 		gameEntrance.loadingCardsVisible = false;
 		gameEntrance.loaderExitActive = false;
+		gameEntrance.liftComplete = true;
+		gameEntrance.bootstrapDismissed = false;
 		gameEntrance.preloadContent = true;
 		gameEntrance.showContent = false;
 		devPreview.loaderProgress = true;
@@ -1227,7 +1229,8 @@
 		gameEntrance.showContent = false;
 		gameEntrance.loadingCardsVisible = true;
 		gameEntrance.loaderExitActive = false;
-		gameEntrance.hideLoaderStreet = false;
+		gameEntrance.liftComplete = false;
+		gameEntrance.bootstrapDismissed = true;
 		gameEntrance.preloadContent = true;
 		stateLayout.showLoadingScreen = true;
 	};
@@ -1240,6 +1243,8 @@
 		gameEntrance.showContent = true;
 		gameEntrance.loadingCardsVisible = false;
 		gameEntrance.loaderExitActive = false;
+		gameEntrance.liftComplete = true;
+		gameEntrance.bootstrapDismissed = true;
 		stateLayout.showLoadingScreen = false;
 	};
 

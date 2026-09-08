@@ -1,23 +1,17 @@
 <script lang="ts">
-	import { OnPressFullScreen } from 'components-layout';
 	import { OnHotkey } from 'components-shared';
 	import { waitForTimeout } from 'utils-shared/wait';
 
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
-	import { LOADER_EXIT_CARDS_DURATION_MS } from '../game/constants';
-	import LoaderExitOverlay from './LoaderExitOverlay.svelte';
+	import { LOADER_LIFT_DURATION_MS } from '../game/constants';
 
 	type Props = {
-		onloaded: () => void;
+		onloaded?: () => void;
 	};
 
 	const props: Props = $props();
 	const context = getContext();
-
-	const exitOverlayArmed = $derived(
-		context.stateApp.loaded && context.stateLayout.showLoadingScreen,
-	);
 
 	$effect(() => {
 		if (context.stateApp.loaded) {
@@ -28,7 +22,9 @@
 	const onExitComplete = () => {
 		gameEntrance.loaderExitActive = false;
 		gameEntrance.loadingCardsVisible = false;
-		props.onloaded();
+		gameEntrance.liftComplete = true;
+		context.stateLayout.showLoadingScreen = false;
+		props.onloaded?.();
 	};
 
 	const startLoadingTransition = () => {
@@ -36,23 +32,39 @@
 
 		gameEntrance.loadingCardsVisible = false;
 		gameEntrance.loaderExitActive = true;
-		gameEntrance.hideLoaderStreet = true;
 		gameEntrance.showContent = true;
 
-		void waitForTimeout(LOADER_EXIT_CARDS_DURATION_MS).then(onExitComplete);
+		void waitForTimeout(LOADER_LIFT_DURATION_MS).then(onExitComplete);
 	};
 
 	const canContinue = $derived(
-		context.stateApp.loaded && gameEntrance.loadingCardsVisible && !gameEntrance.loaderExitActive,
+		context.stateApp.loaded &&
+			gameEntrance.bootstrapDismissed &&
+			gameEntrance.loadingCardsVisible &&
+			!gameEntrance.loaderExitActive,
 	);
 </script>
 
-<!-- Label is HTML (LoaderCardsHtmlOverlay) so it sits above LoaderStreetStill. -->
 {#if canContinue}
 	<OnHotkey hotkey="Space" onpress={startLoadingTransition} />
-	<OnPressFullScreen onpress={startLoadingTransition} />
+	<!-- HTML hit target — OnPressFullScreen is Pixi-only and does not work in intro panel. -->
+	<button
+		type="button"
+		class="continue-hit"
+		aria-label="Continue"
+		onclick={startLoadingTransition}
+	></button>
 {/if}
 
-{#if exitOverlayArmed}
-	<LoaderExitOverlay exiting={gameEntrance.loaderExitActive} />
-{/if}
+<style lang="scss">
+	.continue-hit {
+		position: absolute;
+		inset: 0;
+		z-index: 50;
+		border: none;
+		padding: 0;
+		margin: 0;
+		cursor: pointer;
+		background: transparent;
+	}
+</style>

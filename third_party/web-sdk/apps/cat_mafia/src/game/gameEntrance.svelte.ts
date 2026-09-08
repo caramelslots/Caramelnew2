@@ -1,13 +1,15 @@
-/** First-open flow: preload Pixi board while loading, dissolve in after card exit. */
+/** First-open flow: slot preloads below intro panel, lift reveals it on continue. */
 export const gameEntrance = $state({
-	/** Mount board/HUD off-screen while assets load or exit overlay plays. */
+	/** Mount board in the lower game panel while assets load. */
 	preloadContent: false,
-	/** Reveal game + HTML controls with a short entrance animation. */
+	/** Reveal HUD + mascot + sound when the user presses continue (lift starts). */
 	showContent: false,
+	/** Logo + progress splash dismissed — unlock cards + press to continue. */
+	bootstrapDismissed: false,
 	/** Loader info cards on the opening screen (hidden once exit starts). */
 	loadingCardsVisible: true,
-	/** Drop HTML street still at press — duplicate overlay covers the handoff. */
-	hideLoaderStreet: false,
-	/** Cards slide down while the duplicate street plate dissolves over the slot. */
+	/** Vertical lift animation is running. */
 	loaderExitActive: false,
+	/** Intro panel removed — game uses normal single-panel layout. */
+	liftComplete: false,
 });

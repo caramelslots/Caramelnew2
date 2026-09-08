@@ -85,6 +85,7 @@
 	<aside
 		bind:this={panelEl}
 		class="buy-bonus-panel daloniil-ui-enter portrait"
+		class:in-lift={!gameEntrance.liftComplete}
 		data-test="buy-bonus-panel"
 		aria-label="buy bonus"
 		style={panelStyle}
@@ -111,6 +112,10 @@
 		position: fixed;
 		z-index: 45;
 		pointer-events: auto;
+
+		&.in-lift {
+			position: absolute;
+		}
 	}
 
 	.buy-bonus-panel.portrait {

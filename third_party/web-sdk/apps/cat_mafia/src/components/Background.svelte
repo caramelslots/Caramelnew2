@@ -7,9 +7,9 @@
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { catBackgroundZoom } from '../game/catAnticipationBoardZoom.svelte';
 	import {
-		BG_Y_OFFSET,
 		BG_IDLE_ANIMATION,
 		getBackgroundPixiScale,
+		getLoaderLiftGameSpineY,
 	} from '../game/neonBackgroundLayout';
 	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
 	import { stateDuel } from '../game/stateDuel.svelte';
@@ -26,7 +26,8 @@
 		const canvas = context.stateLayoutDerived.canvasSizes();
 		return {
 			x: canvas.width / 2,
-			y: canvas.height * (0.5 - BG_Y_OFFSET),
+			// Same Y during lift and after — plate top on the panel (seam + no end snap).
+			y: getLoaderLiftGameSpineY(canvas),
 			scale: getBackgroundPixiScale(canvas),
 		};
 	});

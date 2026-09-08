@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { backOut, cubicIn } from 'svelte/easing';
+	import { backOut } from 'svelte/easing';
 	import { Tween } from 'svelte/motion';
 	import { untrack } from 'svelte';
 
@@ -8,7 +8,6 @@
 	import PressToContinueHtml from './PressToContinueHtml.svelte';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
-	import { LOADER_EXIT_CARDS_DURATION_MS, LOADER_EXIT_CARDS_SLIDE_VH } from '../game/constants';
 	import { LOADER_NEON_LOGO_URL, LOADER_SCREEN_IMAGE_URLS } from '../game/loaderCardAssets';
 	import {
 		LOADER_CARD_COUNT,
@@ -26,10 +25,11 @@
 
 	const context = getContext();
 
-	// Cards after assets load; stay mounted during exit slide.
+	// Cards after bootstrap dismisses + assets load; stay mounted during lift.
 	const show = $derived(
 		context.stateLayout.showLoadingScreen &&
 			context.stateApp.loaded &&
+			gameEntrance.bootstrapDismissed &&
 			(gameEntrance.loadingCardsVisible || gameEntrance.loaderExitActive),
 	);
 	const assetsReady = $derived(context.stateApp.loaded);
@@ -55,16 +55,8 @@
 
 	let activeIndex = $state(0);
 	let autoAdvanceTimer: ReturnType<typeof setTimeout> | undefined;
-	let exitAnimStarted = $state(false);
 
 	const trackOffset = new Tween(0);
-	const exitSlideY = new Tween(0);
-	const exitOpacity = new Tween(1);
-
-	const exitSlidePx = $derived(
-		(typeof window !== 'undefined' ? window.innerHeight : canvasSizes.height) *
-			(LOADER_EXIT_CARDS_SLIDE_VH / 100),
-	);
 
 	const trackX = $derived.by(() => {
 		if (!useCarousel) return 0;
@@ -78,14 +70,10 @@
 
 	const clampIndex = (index: number) => Math.max(0, Math.min(LOADER_CARD_COUNT - 1, index));
 
-	const overlayTransform = $derived.by(() => {
-		const base = 'translate(-50%,-50%)';
-		if (!gameEntrance.loaderExitActive) return base;
-		return `${base} translateY(${exitSlideY.current}px)`;
-	});
+	const overlayTransform = $derived('translate(-50%,-50%)');
 
 	const overlayStyle = $derived(
-		`left:${anchor.x}px;top:${anchor.y + (logoMetrics.height + logoMetrics.gap) / 2}px;transform:${overlayTransform};opacity:${exitOpacity.current};`,
+		`left:${anchor.x}px;top:${anchor.y + (logoMetrics.height + logoMetrics.gap) / 2}px;transform:${overlayTransform};`,
 	);
 
 	const snapToIndex = (index: number, animate = true) => {
@@ -156,38 +144,10 @@
 		scheduleAutoAdvance(AUTO_START_DELAY_MS);
 		return clearAutoAdvance;
 	});
-
-	$effect(() => {
-		if (!gameEntrance.loaderExitActive) {
-			exitAnimStarted = false;
-			void exitSlideY.set(0, { duration: 0 });
-			void exitOpacity.set(1, { duration: 0 });
-			return;
-		}
-		if (exitAnimStarted) return;
-
-		exitAnimStarted = true;
-		clearAutoAdvance();
-		const slidePx = exitSlidePx;
-		untrack(() => {
-			void exitSlideY.set(0, { duration: 0 });
-			void exitOpacity.set(1, { duration: 0 });
-		});
-
-		void Promise.all([
-			exitSlideY.set(slidePx, { duration: LOADER_EXIT_CARDS_DURATION_MS, easing: cubicIn }),
-			exitOpacity.set(0, { duration: LOADER_EXIT_CARDS_DURATION_MS, easing: cubicIn }),
-		]);
-	});
 </script>
 
 {#if show}
-	<div
-		class="loader-cards-overlay"
-		class:exiting={gameEntrance.loaderExitActive}
-		style={overlayStyle}
-		aria-hidden={!show}
-	>
+	<div class="loader-cards-overlay" style={overlayStyle} aria-hidden={!show}>
 		<div class="loader-cards-stack">
 			<!-- Loader logo slot (layout only). -->
 			<div class="loader-neon-logo-placeholder" style={logoStyle}></div>
@@ -226,13 +186,12 @@
 		</div>
 	</div>
 	<!--
-		Sibling of the transformed cards box — fixed label must not sit under a
-		transform ancestor. Above LoaderStreetStill (42) and cards (44).
-		Space / tap handlers live in LoadingScreen.
+		Sibling of the cards box — label must not sit under a transform ancestor.
+		Space / tap handlers live in LoaderContinueHandlers.
 	-->
 	<div class="loader-press-to-continue">
-		{#if gameEntrance.loadingCardsVisible}
-			<PressToContinueHtml />
+		{#if gameEntrance.loadingCardsVisible && assetsReady}
+			<PressToContinueHtml contained />
 		{/if}
 	</div>
 {/if}
@@ -251,7 +210,7 @@
 	}
 
 	.loader-cards-overlay {
-		position: fixed;
+		position: absolute;
 		z-index: 44;
 		display: flex;
 		align-items: center;
@@ -259,17 +218,14 @@
 		pointer-events: none;
 		user-select: none;
 		overflow: visible;
-		will-change: transform, opacity;
-	}
-
-	.loader-cards-overlay.exiting {
-		z-index: 49;
 	}
 
 	.loader-press-to-continue {
-		position: fixed;
-		inset: 0;
-		z-index: 45;
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 46;
 		pointer-events: none;
 	}
 

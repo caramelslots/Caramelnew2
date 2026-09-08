@@ -2,6 +2,7 @@
  * Street background cover-fit (Pixi `mainBackground` + BootstrapLoader).
  */
 import {
+	LOADER_GAME_LIFT_OFFSET_Y,
 	LOADER_HTML_BG_OFFSET_X,
 	LOADER_HTML_BG_OFFSET_Y,
 	LOADER_HTML_BG_SCALE_X,
@@ -78,8 +79,25 @@ export const getBackgroundPixiCoverScreenBox = (canvas: CanvasSize) => {
 	};
 };
 
+/** HTML plate matched 1:1 to Pixi spine — plate box only, no extra CSS scale(). */
+export const getBackgroundPixiMatchedHtmlStyle = (canvas: CanvasSize, topOverride?: number) => {
+	const plate = getBackgroundPixiCoverScreenBox(canvas);
+	const ox = LOADER_HTML_BG_OFFSET_X;
+	const oy = LOADER_HTML_BG_OFFSET_Y;
+	const parts = [
+		`left:${plate.left}px`,
+		`top:${topOverride ?? plate.top}px`,
+		`width:${plate.width}px`,
+		`height:${plate.height}px`,
+	];
+	if (ox !== 0 || oy !== 0) {
+		parts.push(`transform:translate(${ox}px,${oy}px)`, `transform-origin:center center`);
+	}
+	return parts.join(';');
+};
+
 /** HTML loader still — same plate box as Pixi + LOADER_HTML_BG_SCALE_* (constants.ts). */
-export const getBackgroundHtmlStillStyle = (canvas: CanvasSize) => {
+export const getBackgroundHtmlPlateStyle = (canvas: CanvasSize, topOverride?: number) => {
 	const plate = getBackgroundPixiCoverScreenBox(canvas);
 	const sx = LOADER_HTML_BG_SCALE_X;
 	const sy = LOADER_HTML_BG_SCALE_Y;
@@ -93,12 +111,44 @@ export const getBackgroundHtmlStillStyle = (canvas: CanvasSize) => {
 				: `scale(${sx},${sy})`;
 	return [
 		`left:${plate.left}px`,
-		`top:${plate.top}px`,
+		`top:${topOverride ?? plate.top}px`,
 		`width:${plate.width}px`,
 		`height:${plate.height}px`,
 		`transform:${transform}`,
 		`transform-origin:center center`,
 	].join(';');
+};
+
+/** HTML loader still — same plate box as Pixi + LOADER_HTML_BG_SCALE_* (constants.ts). */
+export const getBackgroundHtmlStillStyle = (canvas: CanvasSize) =>
+	getBackgroundHtmlPlateStyle(canvas);
+
+/**
+ * Pixi spine y during lift — same scale as in-game.
+ * Cover-fit makes the plate slightly taller than the canvas (`BG_STILL_MATCH_SCALE`),
+ * so a centered spine clips a few px of street off the top (the stitch row).
+ * Shift down so the plate top sits on the game-panel top.
+ */
+export const getLoaderLiftGameSpineY = (canvas: CanvasSize) => {
+	const plate = getBackgroundPixiCoverScreenBox(canvas);
+	return plate.height * 0.5 + LOADER_GAME_LIFT_OFFSET_Y;
+};
+
+/** @deprecated Use getLoaderLiftGameSpineY */
+export const getIntroPanelPlateTop = (canvas: CanvasSize) => {
+	const plate = getBackgroundPixiCoverScreenBox(canvas);
+	return (2 * canvas.height - plate.height) * 0.5;
+};
+
+/** @deprecated Use getLoaderLiftGameSpineY */
+export const getGamePanelPlateTop = (canvas: CanvasSize) =>
+	getIntroPanelPlateTop(canvas) - canvas.height;
+
+/** @deprecated Use getLoaderLiftGameSpineY */
+export const getLoaderLiftSpineYOffset = (canvas: CanvasSize) => {
+	const plate = getBackgroundPixiCoverScreenBox(canvas);
+	const centeredTop = (canvas.height - plate.height) * 0.5;
+	return getGamePanelPlateTop(canvas) - centeredTop;
 };
 
 /** @deprecated Use getBackgroundHtmlStillStyle — kept for callers expecting a box rect. */

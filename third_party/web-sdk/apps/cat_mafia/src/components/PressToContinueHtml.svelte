@@ -23,6 +23,13 @@
 	} from '../game/constants';
 	import { getContext } from '../game/context';
 
+	type Props = {
+		/** Position inside the intro panel so the label moves with the lift. */
+		contained?: boolean;
+	};
+
+	const props: Props = $props();
+
 	let imgEl = $state<HTMLImageElement | undefined>();
 
 	const context = getContext();
@@ -68,6 +75,8 @@
 	$effect(() => {
 		if (!usePixiRender || !canRender) return;
 
+		// Re-run when Pixi finishes init in the lower game panel.
+		context.stateApp.pixiApplication;
 		const renderer = context.stateApp.pixiApplication?.renderer;
 		if (!renderer || !imgEl) return;
 
@@ -132,10 +141,17 @@
 </script>
 
 {#if usePixiRender && canRender}
-	<img bind:this={imgEl} class="press-label" style={positionStyle} alt="" />
-{:else if !usePixiRender && localeFontReady}
+	<img
+		bind:this={imgEl}
+		class="press-label"
+		class:press-label--contained={props.contained}
+		style={positionStyle}
+		alt=""
+	/>
+{:else if localeFontReady}
 	<p
 		class="press-label press-label--system"
+		class:press-label--contained={props.contained}
 		class:press-label--cjk={isCjkLocale(locale)}
 		class:press-label--arabic={isArabicLocale(locale)}
 		style={positionStyle}
@@ -148,10 +164,18 @@
 
 <style lang="scss">
 	.press-label {
-		position: fixed;
+		z-index: 46;
 		transform: translateX(-50%);
 		pointer-events: none;
 		user-select: none;
+	}
+
+	.press-label--contained {
+		position: absolute;
+	}
+
+	.press-label:not(.press-label--contained) {
+		position: fixed;
 	}
 
 	.press-label--system {
