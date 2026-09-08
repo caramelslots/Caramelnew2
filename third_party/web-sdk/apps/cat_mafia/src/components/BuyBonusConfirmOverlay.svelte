@@ -339,6 +339,7 @@
 		aspect-ratio: 2325 / 3322;
 		container-type: inline-size;
 		container-name: bonus-card;
+		--bb-card-price-fs: 8.9cqw;
 	}
 
 	.card-content {
@@ -355,7 +356,7 @@
 		right: 4.5%;
 		height: 16%;
 		margin: 0;
-		--bb-card-title-fs: calc(var(--panel-width) * 0.04);
+		--bb-card-title-fs: calc(var(--panel-width) * 0.037);
 		font-size: var(--bb-card-title-fs);
 	}
 
@@ -499,16 +500,17 @@
 
 	.card-price-wrap {
 		position: absolute;
-		left: 50%;
+		left: 14%;
+		right: 14%;
 		bottom: 1.5%;
-		transform: translateX(calc(-50% + var(--panel-width) * 0.006));
-		width: 72%;
+		width: auto;
 		height: 12.5%;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		padding: 0;
 		box-sizing: border-box;
+		transform: none;
 	}
 
 	.card-price {
@@ -520,7 +522,7 @@
 		line-height: 1;
 		display: block;
 		width: auto;
-		transform: translateY(0.2em);
+		transform: translate(0.14em, 0.14em);
 	}
 
 	.card-normal .card-price,
@@ -615,9 +617,12 @@
 		}
 
 		.card-price-wrap {
+			left: 14%;
+			right: 14%;
 			bottom: 1.5%;
 			height: 12.5%;
-			width: 72%;
+			width: auto;
+			transform: none;
 		}
 
 		.confirm-actions {
@@ -659,9 +664,12 @@
 		}
 
 		.card-price-wrap {
+			left: 14%;
+			right: 14%;
 			bottom: 1.5%;
 			height: 12.5%;
-			width: 72%;
+			width: auto;
+			transform: none;
 		}
 
 		.confirm-actions {
@@ -692,9 +700,12 @@
 		}
 
 		.card-price-wrap {
+			left: 14%;
+			right: 14%;
 			bottom: 1.5%;
 			height: 12.5%;
-			width: 72%;
+			width: auto;
+			transform: none;
 		}
 
 		.confirm-actions {
@@ -724,9 +735,12 @@
 		}
 
 		.card-price-wrap {
+			left: 14%;
+			right: 14%;
 			bottom: 1.5%;
 			height: 12.5%;
-			width: 72%;
+			width: auto;
+			transform: none;
 		}
 
 		.confirm-actions {

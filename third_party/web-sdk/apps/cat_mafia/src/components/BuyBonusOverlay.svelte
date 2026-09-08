@@ -465,6 +465,7 @@
 		aspect-ratio: 2325 / 3322;
 		container-type: inline-size;
 		container-name: bonus-card;
+		--bb-card-price-fs: 8.9cqw;
 	}
 
 	.card-duel {
@@ -474,6 +475,9 @@
 		width: 100%;
 		height: auto;
 		aspect-ratio: 4230 / 1436;
+		container-type: inline-size;
+		container-name: bonus-card-duel;
+		--bb-card-price-fs: 4.3cqw;
 	}
 
 	.card-content {
@@ -490,7 +494,7 @@
 		right: 6%;
 		height: 13%;
 		margin: 0;
-		--bb-card-title-fs: calc(var(--panel-width) * 0.028);
+		--bb-card-title-fs: calc(var(--panel-width) * 0.026);
 		font-size: var(--bb-card-title-fs);
 	}
 
@@ -675,16 +679,17 @@
 
 	.card-price-wrap {
 		position: absolute;
-		left: 50%;
+		left: 14%;
+		right: 14%;
 		bottom: 1.5%;
-		transform: translateX(calc(-50% + var(--panel-width) * 0.006));
-		width: 72%;
+		width: auto;
 		height: 12.5%;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		padding: 0;
 		box-sizing: border-box;
+		transform: none;
 	}
 
 	.card-duel .card-title {
@@ -692,23 +697,26 @@
 		left: 28%;
 		right: 28%;
 		height: 28%;
-		font-size: calc(var(--panel-width) * 0.042);
+		font-size: calc(var(--panel-width) * 0.039);
 	}
 
 	.card-normal .card-price-wrap,
 	.card-super .card-price-wrap {
-		left: 50%;
+		left: 14%;
+		right: 14%;
 		bottom: 1.5%;
-		width: 72%;
+		width: auto;
 		height: 12.5%;
+		transform: none;
 	}
 
 	.card-duel .card-price-wrap {
-		left: 50%;
-		width: 28%;
+		left: 36%;
+		right: 36%;
+		width: auto;
 		height: 22%;
 		bottom: 5.2%;
-		transform: translateX(calc(-50% + var(--panel-width) * 0.001));
+		transform: none;
 	}
 
 	.card-price {
@@ -720,14 +728,14 @@
 		line-height: 1;
 		display: block;
 		width: auto;
-		transform: translateY(0.2em);
-	}
-
-	.card-duel .card-price {
-		transform: translateY(0.32em);
+		transform: translate(0.14em, 0.14em);
 	}
 
 	.card-normal .card-price,
+	.card-duel .card-price {
+		transform: translate(0.02em, 0.28em);
+	}
+
 	.card-duel .card-price,
 	.card-super .card-price {
 		color: #1a1208;
@@ -973,25 +981,31 @@
 		}
 
 		.card-price-wrap {
-			left: 50%;
+			left: 14%;
+			right: 14%;
 			bottom: 1.5%;
 			height: 12.5%;
-			width: 72%;
+			width: auto;
+			transform: none;
 		}
 
 		.card-normal .card-price-wrap,
 		.card-super .card-price-wrap {
-			left: 50%;
+			left: 14%;
+			right: 14%;
 			bottom: 1.5%;
-			width: 72%;
+			width: auto;
 			height: 12.5%;
+			transform: none;
 		}
 
 		.card-duel .card-price-wrap {
-			left: 50%;
+			left: 36%;
+			right: 36%;
 			bottom: 5.2%;
 			height: 22%;
-			width: 28%;
+			width: auto;
+			transform: none;
 		}
 
 		.bet-adjuster {
@@ -1126,25 +1140,31 @@
 		}
 
 		.card-price-wrap {
-			left: 50%;
+			left: 14%;
+			right: 14%;
 			bottom: 1.5%;
 			height: 12.5%;
-			width: 72%;
+			width: auto;
+			transform: none;
 		}
 
 		.card-normal .card-price-wrap,
 		.card-super .card-price-wrap {
-			left: 50%;
+			left: 14%;
+			right: 14%;
 			bottom: 1.5%;
-			width: 72%;
+			width: auto;
 			height: 12.5%;
+			transform: none;
 		}
 
 		.card-duel .card-price-wrap {
-			left: 50%;
+			left: 36%;
+			right: 36%;
 			bottom: 5.2%;
 			height: 22%;
-			width: 28%;
+			width: auto;
+			transform: none;
 		}
 
 		.bet-adjuster {
@@ -1272,25 +1292,31 @@
 		}
 
 		.card-price-wrap {
-			left: 50%;
+			left: 14%;
+			right: 14%;
 			bottom: 1.5%;
 			height: 12.5%;
-			width: 72%;
+			width: auto;
+			transform: none;
 		}
 
 		.card-normal .card-price-wrap,
 		.card-super .card-price-wrap {
-			left: 50%;
+			left: 14%;
+			right: 14%;
 			bottom: 1.5%;
-			width: 72%;
+			width: auto;
 			height: 12.5%;
+			transform: none;
 		}
 
 		.card-duel .card-price-wrap {
-			left: 50%;
+			left: 36%;
+			right: 36%;
 			bottom: 5.2%;
 			height: 22%;
-			width: 28%;
+			width: auto;
+			transform: none;
 		}
 
 		.bet-adjuster {
@@ -1414,25 +1440,31 @@
 		}
 
 		.card-price-wrap {
-			left: 50%;
+			left: 14%;
+			right: 14%;
 			bottom: 1.5%;
 			height: 12.5%;
-			width: 72%;
+			width: auto;
+			transform: none;
 		}
 
 		.card-normal .card-price-wrap,
 		.card-super .card-price-wrap {
-			left: 50%;
+			left: 14%;
+			right: 14%;
 			bottom: 1.5%;
-			width: 72%;
+			width: auto;
 			height: 12.5%;
+			transform: none;
 		}
 
 		.card-duel .card-price-wrap {
-			left: 50%;
+			left: 36%;
+			right: 36%;
 			bottom: 5.2%;
 			height: 22%;
-			width: 28%;
+			width: auto;
+			transform: none;
 		}
 
 		.bet-adjuster {
