@@ -31,7 +31,9 @@
 
 	const showIntroPanel = $derived(
 		!gameEntrance.liftComplete &&
-			(context.stateLayout.showLoadingScreen || gameEntrance.loaderExitActive),
+			(context.stateLayout.showLoadingScreen ||
+				gameEntrance.loaderExitActive ||
+				gameEntrance.introFading),
 	);
 
 	$effect(() => {
@@ -40,9 +42,9 @@
 			return;
 		}
 
-		if (gameEntrance.loaderExitActive) {
+		if (gameEntrance.loaderExitActive || gameEntrance.introFading) {
 			void liftY.set(-(panelHeight - LOADER_LIFT_SEAM_OVERLAP_PX), {
-				duration: LOADER_LIFT_DURATION_MS,
+				duration: gameEntrance.introFading ? 0 : LOADER_LIFT_DURATION_MS,
 				easing: cubicInOut,
 			});
 			return;
@@ -104,6 +106,8 @@
 
 	.intro-panel {
 		z-index: 1;
+		/* Let roofs blur hang into the game panel. */
+		overflow: visible;
 	}
 
 	.game-panel {

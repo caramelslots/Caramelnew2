@@ -4,7 +4,7 @@
 
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
-	import { LOADER_LIFT_DURATION_MS } from '../game/constants';
+	import { LOADER_INTRO_FADE_MS, LOADER_LIFT_DURATION_MS } from '../game/constants';
 
 	type Props = {
 		onloaded?: () => void;
@@ -21,6 +21,7 @@
 
 	const onExitComplete = () => {
 		gameEntrance.loaderExitActive = false;
+		gameEntrance.introFading = false;
 		gameEntrance.loadingCardsVisible = false;
 		gameEntrance.liftComplete = true;
 		context.stateLayout.showLoadingScreen = false;
@@ -28,13 +29,16 @@
 	};
 
 	const startLoadingTransition = () => {
-		if (gameEntrance.loaderExitActive) return;
+		if (gameEntrance.loaderExitActive || gameEntrance.introFading) return;
 
 		gameEntrance.loadingCardsVisible = false;
 		gameEntrance.loaderExitActive = true;
 		gameEntrance.showContent = true;
 
-		void waitForTimeout(LOADER_LIFT_DURATION_MS).then(onExitComplete);
+		void waitForTimeout(LOADER_LIFT_DURATION_MS).then(() => {
+			gameEntrance.introFading = true;
+			void waitForTimeout(LOADER_INTRO_FADE_MS).then(onExitComplete);
+		});
 	};
 
 	const canContinue = $derived(

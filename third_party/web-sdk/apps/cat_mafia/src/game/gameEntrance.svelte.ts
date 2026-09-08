@@ -10,6 +10,8 @@ export const gameEntrance = $state({
 	loadingCardsVisible: true,
 	/** Vertical lift animation is running. */
 	loaderExitActive: false,
+	/** Lift finished — intro sky/roofs are fading out. */
+	introFading: false,
 	/** Intro panel removed — game uses normal single-panel layout. */
 	liftComplete: false,
 });

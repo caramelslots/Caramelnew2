@@ -11,13 +11,20 @@ import {
 	LOADER_HTML_BG_OFFSET_Y,
 	LOADER_INTRO_PLATE_OFFSET_X,
 	LOADER_INTRO_PLATE_OFFSET_Y,
+	LOADER_INTRO_ROOFS_OVERLAP_PHONE_PX,
+	LOADER_INTRO_ROOFS_OVERLAP_PX,
 } from './constants';
 import { getBackgroundPixiCoverScreenBox } from './neonBackgroundLayout';
+import { isPhoneCanvasSizeType } from './streetOffscreenCull';
 
 type CanvasSize = { width: number; height: number };
 
-/** Designer intro plates (sky + roofs). */
+/** Designer intro plates (sky). */
 export const INTRO_NATIVE = { width: 1950, height: 1339 };
+/** Roofs + bottom blur (`градик.png`) — taller so the fade overlaps the Pixi street. */
+export const INTRO_ROOFS_NATIVE = { width: 1950, height: 2291 };
+/** Last painted row in градик.png (houses + fade). Below this is empty. */
+export const INTRO_ROOFS_CONTENT_BOTTOM = 1423;
 /** Designer clouds strip placed over sky, under roofs. */
 export const INTRO_CLOUDS_NATIVE = { width: 1295, height: 356 };
 /** Opaque spine street plate in source px — intro Y scale is matched to this. */
@@ -40,6 +47,34 @@ export const getLoaderIntroLayerBox = (canvas: CanvasSize): LoaderIntroLayerBox 
 		left: plate.left + LOADER_HTML_BG_OFFSET_X + LOADER_INTRO_PLATE_OFFSET_X,
 		top: canvas.height - height + LOADER_HTML_BG_OFFSET_Y + LOADER_INTRO_PLATE_OFFSET_Y,
 		width,
+		height,
+	};
+};
+
+/**
+ * Width-matched to the sky plate. Content bottom (y=1423) sits on the seam;
+ * the empty 868px + fade hang onto the Pixi street.
+ */
+export const getLoaderIntroRoofsBox = (
+	canvas: CanvasSize,
+	canvasSizeType?: string,
+): LoaderIntroLayerBox => {
+	const box = getLoaderIntroLayerBox(canvas);
+	const height = box.width * (INTRO_ROOFS_NATIVE.height / INTRO_ROOFS_NATIVE.width);
+	const contentBottom = height * (INTRO_ROOFS_CONTENT_BOTTOM / INTRO_ROOFS_NATIVE.height);
+	const overlapPx =
+		canvasSizeType && isPhoneCanvasSizeType(canvasSizeType)
+			? LOADER_INTRO_ROOFS_OVERLAP_PHONE_PX
+			: LOADER_INTRO_ROOFS_OVERLAP_PX;
+	return {
+		left: box.left,
+		top:
+			canvas.height -
+			contentBottom +
+			overlapPx +
+			LOADER_HTML_BG_OFFSET_Y +
+			LOADER_INTRO_PLATE_OFFSET_Y,
+		width: box.width,
 		height,
 	};
 };

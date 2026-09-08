@@ -1637,6 +1637,8 @@ export const TRANSITION_DURATION_MS = 1800;
 export const LOADER_EXIT_BG_DURATION_MS = 300;
 /** Vertical lift: intro panel scrolls up to reveal the slot. */
 export const LOADER_LIFT_DURATION_MS = 800;
+/** Intro sky/roofs fade out after the lift has finished. */
+export const LOADER_INTRO_FADE_MS = 400;
 /** Overlap intro + game panels to hide the subpixel seam during lift. */
 export const LOADER_LIFT_SEAM_OVERLAP_PX = 1;
 /**
@@ -1648,6 +1650,10 @@ export const LOADER_INTRO_COLOR_MATCH = 'saturate(0.92) brightness(1.06)';
 export const LOADER_INTRO_PLATE_OFFSET_Y = 0;
 /** Nudge intro plate right (px) so roofs line up with Pixi street at the seam. */
 export const LOADER_INTRO_PLATE_OFFSET_X = 0;
+/** How far the roofs fade sits below the intro panel bottom (onto the Pixi street). */
+export const LOADER_INTRO_ROOFS_OVERLAP_PX = 60;
+/** Phone-only roofs overlap — lowers the plate so the lift seam stays covered. */
+export const LOADER_INTRO_ROOFS_OVERLAP_PHONE_PX = 65;
 /** Cloud strip Y as fraction of intro plate height (from top). */
 export const LOADER_INTRO_CLOUDS_Y_FRAC = 0.3;
 /** Cloud scroll speed in intro-native px per second (left → right). */
