@@ -4,13 +4,14 @@
 	import { Authenticate, LoadI18n } from 'components-shared';
 	import BootstrapLoader from '../components/BootstrapLoader.svelte';
 	import LoaderStreetStill from '../components/LoaderStreetStill.svelte';
-	import Game from '../components/Game.svelte';
 	import { setContext } from '../game/context';
-	import { startEarlyAssetPreload, startBatch2EarlyPreload, startBatch3EarlyPreload } from '../game/earlyAssetPreload';
+	import { startEarlyAssetPreload } from '../game/earlyAssetPreload';
 	import { setLoaderStage } from '../game/loaderAssetPipeline.svelte';
 	import { devPreview } from '../game/devPreview.svelte';
 
 	import messagesMap from '../i18n/messagesMap';
+
+	const gameImport = import('../components/Game.svelte');
 
 	type Props = { children: Snippet };
 
@@ -22,15 +23,15 @@
 
 	onMount(() => {
 		startEarlyAssetPreload();
-		startBatch2EarlyPreload();
-		startBatch3EarlyPreload();
 	});
 </script>
 
 <GlobalStyle>
 	<Authenticate>
 		<LoadI18n {messagesMap}>
-			<Game />
+			{#await gameImport then { default: Game }}
+				<Game />
+			{/await}
 		</LoadI18n>
 	</Authenticate>
 </GlobalStyle>

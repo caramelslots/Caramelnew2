@@ -20,6 +20,7 @@
 		/** DEV — force a dog clip (loop). When set, pose-driven playback is paused. */
 		forceAnim?: MascotDogSpineAnimation | null;
 		timeScale: number;
+		paused?: boolean;
 	};
 
 	const props: Props = $props();
@@ -70,7 +71,7 @@
 
 	const scheduleIdleVariant = () => {
 		clearIdleVariantTimer();
-		if (activeForceAnim || activePose !== 'idle' || idleVariantPlaying) return;
+		if (props.paused || activeForceAnim || activePose !== 'idle' || idleVariantPlaying) return;
 		idleVariantTimer = setTimeout(() => {
 			if (activeForceAnim || activePose !== 'idle' || idleVariantPlaying) return;
 			idleVariantArmed = true;
@@ -79,7 +80,7 @@
 
 	const playArmedIdleVariant = () => {
 		if (!idleVariantArmed || idleVariantPlaying) return;
-		if (activeForceAnim || activePose !== 'idle') return;
+		if (props.paused || activeForceAnim || activePose !== 'idle') return;
 		const current = spine.state?.getCurrent(0);
 		if (current?.animation?.name !== 'idle') return;
 
@@ -166,6 +167,10 @@
 			activePose = undefined;
 		}
 		applyPose(props.pose);
+	});
+
+	$effect(() => {
+		if (props.paused) resetIdleVariants();
 	});
 
 	$effect(() => {

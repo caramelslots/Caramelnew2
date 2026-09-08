@@ -146,15 +146,6 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	MASCOT_ASSETS.body,
 	MASCOT_SPINE_GRAY_IMAGE_URL,
 	COIN_PAW_SPINE_WEBP_URL,
-	BUY_BONUS_ASSETS.menuBg,
-	BUY_BONUS_ASSETS.confirmBg,
-	BUY_BONUS_ASSETS.normalCard,
-	BUY_BONUS_ASSETS.superCard,
-	BUY_BONUS_ASSETS.deskL,
-	BUY_BONUS_ASSETS.deskR,
-	BUY_BONUS_ASSETS.buyButtonBg,
-	BUY_BONUS_ASSETS.cancelButtonBg,
-	BUY_BONUS_ASSETS.confirmButtonBg,
 	TARGET_BOARD_SPRITES.background,
 	TARGET_BOARD_SPRITES.background9,
 	TARGET_BOARD_SPRITES.front,
@@ -184,18 +175,22 @@ const BUY_BONUS_FLOW_PRELOAD_PRIORITY = [
 	BUY_BONUS_ASSETS.superCard,
 ] as const;
 
-let buyBonusFlowPreloadStarted = false;
+let buyBonusFlowPreload: Promise<void> | null = null;
 
-/** Decode buy-bonus modal sprites before the first open. */
-export const startBuyBonusFlowPreload = () => {
-	if (buyBonusFlowPreloadStarted) return;
-	buyBonusFlowPreloadStarted = true;
+/** Board, buttons, and card spines — awaited before Continue, before batch 4. */
+export const startBuyBonusFlowPreload = (): Promise<void> => {
+	if (buyBonusFlowPreload) return buyBonusFlowPreload;
 
-	void preloadHtmlImages(BUY_BONUS_FLOW_IMAGE_URLS, {
-		priority: BUY_BONUS_FLOW_PRELOAD_PRIORITY,
-		concurrency: 3,
-	});
-	preloadBuyBonusSpines();
+	buyBonusFlowPreload = Promise.all([
+		preloadHtmlImages(BUY_BONUS_FLOW_IMAGE_URLS, {
+			priority: BUY_BONUS_FLOW_PRELOAD_PRIORITY,
+			concurrency: 3,
+		}),
+		preloadBuyBonusSpines(),
+		import('../components/BuyBonusModalShell.svelte'),
+	]).then(() => undefined);
+
+	return buyBonusFlowPreload;
 };
 
 const LOADING_IDLE_UI_PRIORITY = [
@@ -213,13 +208,11 @@ const LOADING_IDLE_UI_PRIORITY = [
 	HUD_ASSETS.turbo3,
 	SETTINGS_ASSETS.bg,
 	AUTOSPIN_ASSETS.bg,
-	BUY_BONUS_ASSETS.menuBg,
-	BUY_BONUS_ASSETS.confirmBg,
 ] as const;
 
 let loadingIdleUiPreloadStarted = false;
 
-/** Warm HUD/settings/autoplay/buy-bonus HTML sprites during the loading-screen idle window. */
+/** Warm HUD/settings/autoplay HTML sprites during the loading-screen idle window. */
 export const startLoadingIdleUiPreload = () => {
 	if (loadingIdleUiPreloadStarted) return;
 	loadingIdleUiPreloadStarted = true;
@@ -229,7 +222,6 @@ export const startLoadingIdleUiPreload = () => {
 	startSpinButtonSpinePreload();
 	startTargetBoardPreload();
 	startShotBulletPreload();
-	startBuyBonusFlowPreload();
 
 	void preloadHtmlImages(LOADING_IDLE_UI_IMAGE_URLS, {
 		priority: LOADING_IDLE_UI_PRIORITY,

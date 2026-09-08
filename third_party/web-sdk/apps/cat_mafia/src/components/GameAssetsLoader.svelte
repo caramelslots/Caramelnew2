@@ -6,13 +6,16 @@
 	import { getProcessed } from '../../../../packages/pixi-svelte/src/lib/assetLoad';
 	import type { LoadedAssets, RawAsset } from 'pixi-svelte';
 
+	import { waitForTimeout } from 'utils-shared/wait';
+
 	import {
 		LOADER_ASSET_BATCHES,
-		LOADER_ASSET_KEY_COUNT,
 		getBatch3KeysForLocale,
+		getEntryLoadKeyCount,
 	} from '../game/assetLoadPlan';
 	import { waitForLoaderStage } from '../game/loaderAssetPipeline.svelte';
 	import { downscalePhoneSpineAtlases } from '../game/phoneSpineAtlasDownscale';
+	import { startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
 	import { stateUrlDerived } from 'state-shared';
 
 	type Props = { children: Snippet };
@@ -23,12 +26,17 @@
 	let preLoaded = $state(false);
 
 	let loadedCount = 0;
+	let entryTotal = 1;
+	/** Pixi 1–3 fill 0–86%; buy-bonus takes the bar to 96% before Continue. */
+	const PIXI_PROGRESS_CAP = 86;
+	const ENTRY_PROGRESS_CAP = 96;
 
 	const bumpProgress = () => {
 		loadedCount += 1;
+		if (context.stateApp.loaded) return;
 		context.stateApp.loadingProgress = Math.min(
-			100,
-			(loadedCount / LOADER_ASSET_KEY_COUNT) * 100,
+			PIXI_PROGRESS_CAP,
+			(loadedCount / entryTotal) * PIXI_PROGRESS_CAP,
 		);
 	};
 
@@ -81,6 +89,7 @@
 				// so the progress bar slightly undershoots 100% before we force it below.
 				const locale = stateUrlDerived.lang();
 				const batch3 = getBatch3KeysForLocale(locale);
+				entryTotal = getEntryLoadKeyCount(locale);
 
 				const batch1Assets = await loadAssetBatch(batch1);
 				mergeLoadedAssets(batch1Assets);
@@ -94,12 +103,13 @@
 				const batch3Assets = await loadAssetBatch(batch3);
 				mergeLoadedAssets(batch3Assets);
 
-				context.stateApp.loadingProgress = 100;
+				await startBuyBonusFlowPreload();
+				context.stateApp.loadingProgress = ENTRY_PROGRESS_CAP;
+				await waitForTimeout(360);
+
 				context.stateApp.loaded = true;
 
-				// Batch 4 contains heavy bonus-event assets (bigwin, fsPopup, etc.)
-				// that are only rendered after the loader exit completes. Load them in the
-				// background while the player reads "Press to continue".
+				// Batch 4 is bonus / duel / FS / tir — after buy-bonus, not blocking Continue.
 				void loadAssetBatch(batch4).then((batch4Assets) => {
 					mergeLoadedAssets(batch4Assets);
 					// Batch 4 may include tir atlases loaded after initial phone downscale.

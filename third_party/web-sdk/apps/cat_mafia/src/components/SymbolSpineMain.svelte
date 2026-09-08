@@ -2,6 +2,8 @@
 	import type * as PIXI from 'pixi.js';
 	import { Container, Graphics, SpineProvider, SpineTrack, type SpineTrackProps } from 'pixi-svelte';
 
+	import { stateModal } from 'state-shared';
+
 	import { getSymbolInfo } from '../game/utils';
 	import {
 		pickBonusIdleClip,
@@ -70,6 +72,7 @@
 	 */
 	const bonusIdleAutoUpdate = $derived.by(() => {
 		if (props.inViewport === false) return false;
+		if (stateModal.modal != null) return false;
 		if (stateGame.transitionActive || stateGame.winOverlayActive) return false;
 		if (props.duelSide) return stateDuel.winSpotlightSide !== props.duelSide;
 		// Keep breathing during payline dim — Bonus is rare and should not stall.

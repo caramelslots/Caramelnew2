@@ -6,7 +6,6 @@
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { LOADER_EXIT_CARDS_DURATION_MS } from '../game/constants';
-	import { startLoadingIdleUiPreload } from '../game/uiHtmlAssetManifest';
 	import LoaderExitOverlay from './LoaderExitOverlay.svelte';
 
 	type Props = {
@@ -20,11 +19,9 @@
 		context.stateApp.loaded && context.stateLayout.showLoadingScreen,
 	);
 
-	// Warm up board symbols / frame textures while the player reads "press to continue".
 	$effect(() => {
 		if (context.stateApp.loaded) {
 			gameEntrance.preloadContent = true;
-			startLoadingIdleUiPreload();
 		}
 	});
 

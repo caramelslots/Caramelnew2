@@ -33,6 +33,11 @@
 	const confirmButtonBgUrl = BUY_BONUS_ASSETS.confirmButtonBg;
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonusConfirm');
+	let spinesMounted = $state(false);
+
+	$effect(() => {
+		if (isOpen) spinesMounted = true;
+	});
 
 	$effect(() => {
 		let cancelled = false;
@@ -118,13 +123,17 @@
 			{context.i18nDerived.buyBonusTitle()}
 		</p>
 
-		<section class="confirm-card-section" aria-label="selected bonus">
+		<section class="confirm-card-section" data-buy-bonus-spine-layer aria-label="selected bonus">
 			<article class="card confirm-card" class:card-normal={!isSuper} class:card-super={isSuper}>
 				<div class="spine-layer" class:on={!isSuper}>
-					<BuyBonusCardSpine variant="normal" active={isOpen && !isSuper} />
+					{#if spinesMounted}
+						<BuyBonusCardSpine variant="normal" active={isOpen && !isSuper} />
+					{/if}
 				</div>
 				<div class="spine-layer" class:on={isSuper}>
-					<BuyBonusCardSpine variant="super" active={isOpen && isSuper} />
+					{#if spinesMounted}
+						<BuyBonusCardSpine variant="super" active={isOpen && isSuper} />
+					{/if}
 				</div>
 				<div class="card-content">
 					<div class="card-title">
@@ -293,15 +302,25 @@
 		align-items: flex-start;
 		justify-content: center;
 		box-sizing: border-box;
+
+		:global(.buy-bonus-shared-spine-canvas) {
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			pointer-events: none;
+			z-index: 0;
+			filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
+		}
 	}
 
 	.confirm-card-section .card {
 		position: relative;
+		z-index: 1;
 		width: 100%;
 		height: auto;
 		flex: 0 0 auto;
 		overflow: visible;
-		filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
 	}
 
 	.spine-layer {

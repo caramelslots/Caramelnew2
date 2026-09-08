@@ -21,23 +21,19 @@ export const LOADER_BATCH_1_KEYS = [
 	'H4Img',
 ] as const satisfies readonly (keyof typeof assets)[];
 
-/** Bootstrap splash — low/wild/bonus/mystery symbols, core game fonts. */
+/** Bootstrap splash — low/wild/bonus symbols, core game fonts. */
 export const LOADER_BATCH_2_KEYS = [
 	'L1',
 	'L2',
 	'L3',
 	'L4',
 	'B',
-	'BD',
-	'BT',
 	'W',
 	'L1Img',
 	'L2Img',
 	'L3Img',
 	'L4Img',
 	'BImg',
-	'BDuelImg',
-	'BTImg',
 	'WImg',
 	'SWImg',
 	'prostoiFont',
@@ -76,18 +72,12 @@ export const getLocaleSpecificFontKeys = (locale: string): readonly (keyof typeo
 };
 
 /**
- * Cards screen — win variants, cat-slow outline, locale fonts
- * (all declared for count check), coins, HUD sprites, fsCong layers.
+ * Cards screen — locale fonts + HUD needed right after Continue.
  * Must finish before "Press to continue".
  */
 export const LOADER_BATCH_3_KEYS = [
-	'outlineReel',
 	...LOCALE_FONT_KEYS,
-	'coins',
-	'coinsPaw',
-	'mascotCat',
 	'mascotCatGray',
-	'mascotDog',
 	'betPlus',
 	'betMinus',
 	'autoplayButton',
@@ -99,6 +89,24 @@ export const LOADER_BATCH_3_KEYS = [
 	'turbo1',
 	'turbo2',
 	'turbo3',
+	'superWildCurtain',
+] as const satisfies readonly (keyof typeof assets)[];
+
+/**
+ * Post-entry deferred batch — bonus / duel / FS / tir. Loads in the background
+ * after `loaded` while the player reads "Press to continue".
+ * Night street is a skin on `mainBackground` (batch 1), not a separate key.
+ */
+export const LOADER_BATCH_4_KEYS = [
+	'BD',
+	'BT',
+	'BDuelImg',
+	'BTImg',
+	'outlineReel',
+	'coins',
+	'coinsPaw',
+	'mascotCat',
+	'mascotDog',
 	'revolverBarrel',
 	'revolverBarrelRim',
 	'revolverBullet1',
@@ -108,23 +116,11 @@ export const LOADER_BATCH_3_KEYS = [
 	'fsCongBg',
 	'fsCongFrame',
 	'fsCongBoard',
-] as const satisfies readonly (keyof typeof assets)[];
-
-/**
- * Post-entry deferred batch — heavy Spine animations only needed for bonus
- * events (big win, free-spin intro/outro). These assets are never rendered
- * until after the cloud transition completes, so they load in the background
- * while the player reads "Press to continue".
- */
-export const LOADER_BATCH_4_KEYS = [
 	'bigwin',
 	'fsPopup',
 	'fsLeftCounterSpinboard',
-	/** Tir FX (entry pick + Stage E) — Pixi spine, not HTML SpinePlayer. */
 	'shotBullet',
 	'targetBoardFlip',
-	/** Super Wild column curtain — needed once play starts. */
-	'superWildCurtain',
 ] as const satisfies readonly (keyof typeof assets)[];
 
 export const LOADER_ASSET_BATCHES = [
@@ -174,6 +170,10 @@ export const getBatch3KeysForLocale = (locale: string): readonly string[] => {
 	const localeFontSet = new Set<string>(LOCALE_FONT_KEYS);
 	return LOADER_BATCH_3_KEYS.filter((key) => !localeFontSet.has(key) || activeFontKeys.has(key));
 };
+
+/** Pixi keys that must finish before Continue (excludes batch 4). */
+export const getEntryLoadKeyCount = (locale: string) =>
+	LOADER_BATCH_1_KEYS.length + LOADER_BATCH_2_KEYS.length + getBatch3KeysForLocale(locale).length;
 
 /** HTTP warm-up during the Stake GIF (before Pixi / auth may be ready). */
 export const collectBatch1EarlyPreloadUrls = (): string[] => {

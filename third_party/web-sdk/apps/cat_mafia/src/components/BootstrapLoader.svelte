@@ -199,7 +199,7 @@
 		height: 100%;
 		border-radius: inherit;
 		background: linear-gradient(90deg, #c9a24a, #f0d78c);
-		transition: width 120ms linear;
+		transition: width 360ms cubic-bezier(0.22, 1, 0.36, 1);
 	}
 
 	.progress-label {

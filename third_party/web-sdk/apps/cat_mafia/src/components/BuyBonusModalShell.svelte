@@ -1,7 +1,7 @@
 <!--
 	Shared blur backdrop for buy-bonus menu + confirm.
-	Shell stays mounted after game enter (hidden) so backdrop + PNGs are warm
-	before the first open; only visibility toggles on show/hide and panel swap.
+	Shell JS loads after the bootstrap loader; card Pixi apps wait for first open
+	so they do not compete with slot startup.
 -->
 <script lang="ts">
 	import { stateModal } from 'state-shared';
@@ -23,7 +23,7 @@
 	const showDuelPickPanel = $derived(stateModal.modal?.name === 'buyDuelPick');
 
 	$effect(() => {
-		if (shellMounted) startBuyBonusFlowPreload();
+		if (isVisible) startBuyBonusFlowPreload();
 	});
 </script>
 

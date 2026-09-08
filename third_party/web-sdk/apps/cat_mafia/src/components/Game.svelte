@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, type Component } from 'svelte';
 
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
@@ -67,7 +67,6 @@
 	import DuelPixiBoard from './DuelPixiBoard.svelte';
 	import FeaturesAutoSpinOverlay from './FeaturesAutoSpinOverlay.svelte';
 	import CashStacksMenuOverlay from './CashStacksMenuOverlay.svelte';
-	import BuyBonusModalShell from './BuyBonusModalShell.svelte';
 	import CashStacksBuyBonusPanel from './CashStacksBuyBonusPanel.svelte';
 	import CashStacksDesktopHudOverlay from './CashStacksDesktopHudOverlay.svelte';
 	import CashStacksPortraitHudOverlay from './CashStacksPortraitHudOverlay.svelte';
@@ -76,6 +75,19 @@
 	import { FadeContainer } from 'components-pixi';
 
 	const context = getContext();
+
+	let BuyBonusModalShell = $state<Component | null>(null);
+
+	onMount(() => {
+		context.stateLayout.showLoadingScreen = true;
+	});
+
+	$effect(() => {
+		if (!context.stateApp.loaded || BuyBonusModalShell) return;
+		void import('./BuyBonusModalShell.svelte').then((mod) => {
+			BuyBonusModalShell = mod.default;
+		});
+	});
 
 	/**
 	 * SW curtain normally sits above gold rails. While the board parks under the
@@ -86,15 +98,16 @@
 		stateGame.targetPickOpen || stateGame.targetPickSlide > 0 ? -2 : -0.25,
 	);
 
-	onMount(() => (context.stateLayout.showLoadingScreen = true));
-
 	// Storybook / skipLoadingScreen: reveal game without the loading flow.
 	$effect(() => {
 		if (!context.stateLayout.showLoadingScreen) {
 			gameEntrance.preloadContent = true;
 			gameEntrance.showContent = true;
-			startLoadingIdleUiPreload();
 		}
+	});
+
+	$effect(() => {
+		if (gameEntrance.showContent) startLoadingIdleUiPreload();
 	});
 
 	context.eventEmitter.subscribeOnMount({
@@ -274,7 +287,9 @@
 <CashStacksDesktopHudOverlay />
 <CashStacksPortraitHudOverlay />
 <CashStacksMenuOverlay />
-<BuyBonusModalShell />
+{#if BuyBonusModalShell}
+	<BuyBonusModalShell />
+{/if}
 <div class="html-underlays">
 	<RevolverDrumPlaceholder />
 </div>

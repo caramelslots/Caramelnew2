@@ -40,6 +40,11 @@
 	const plusUrl = HUD_ASSETS.betPlus;
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonus');
+	let spinesMounted = $state(false);
+
+	$effect(() => {
+		if (isOpen) spinesMounted = true;
+	});
 
 	$effect(() => {
 		let cancelled = false;
@@ -148,7 +153,7 @@
 			{context.i18nDerived.buyBonusTitle()}
 		</p>
 
-		<section class="cards-section" aria-label="bonus options">
+		<section class="cards-section" data-buy-bonus-spine-layer aria-label="bonus options">
 			<button
 				type="button"
 				class="card card-normal"
@@ -157,7 +162,9 @@
 				onclick={() => onBuy('normal')}
 				aria-label={context.i18nDerived.normalBonus()}
 			>
-				<BuyBonusCardSpine variant="normal" active={isOpen} />
+				{#if spinesMounted}
+					<BuyBonusCardSpine variant="normal" active={isOpen} />
+				{/if}
 				<div class="card-content">
 					<div class="card-title">
 						<ArchedRibbonTitle text={context.i18nDerived.normalBonus()} />
@@ -186,7 +193,9 @@
 				onclick={() => onBuy('super')}
 				aria-label={context.i18nDerived.superBonus()}
 			>
-				<BuyBonusCardSpine variant="super" active={isOpen} />
+				{#if spinesMounted}
+					<BuyBonusCardSpine variant="super" active={isOpen} />
+				{/if}
 				<div class="card-content">
 					<div class="card-title">
 						<ArchedRibbonTitle text={context.i18nDerived.superBonus()} archDeg={30} />
@@ -215,7 +224,9 @@
 				onclick={() => onBuy('duel')}
 				aria-label={context.i18nDerived.duelBonus()}
 			>
-				<BuyBonusCardSpine variant="duel" active={isOpen} />
+				{#if spinesMounted}
+					<BuyBonusCardSpine variant="duel" active={isOpen} />
+				{/if}
 				<div class="card-content">
 					<div class="card-price-wrap">
 						<span class="card-price" data-test="bonus-price-duel">{duelPrice}</span>
@@ -403,13 +414,23 @@
 		row-gap: calc(var(--panel-width) * 0.016);
 		box-sizing: border-box;
 		overflow: visible;
+
+		:global(.buy-bonus-shared-spine-canvas) {
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			pointer-events: none;
+			z-index: 0;
+			filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
+		}
 	}
 
 	.card {
 		position: relative;
+		z-index: 1;
 		min-width: 0;
 		overflow: visible;
-		filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
 		background: none;
 		border: none;
 		padding: 0;
@@ -421,7 +442,7 @@
 			transform 0.1s;
 
 		&:hover:not(:disabled) {
-			filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45)) brightness(1.08);
+			filter: brightness(1.06);
 		}
 
 		&:active:not(:disabled) {

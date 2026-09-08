@@ -5,7 +5,7 @@ import {
 	getBatch3KeysForLocale,
 } from './assetLoadPlan';
 import { knewaveFontUrl } from './knewaveFont';
-import { LOADER_BG_SPINE_URLS, startEarlyLoaderBackgroundPreload } from './earlyLoaderPreload';
+import { startEarlyLoaderBackgroundPreload } from './earlyLoaderPreload';
 import { resolveLanguage } from 'state-shared';
 
 const warmHttpCache = async (urls: readonly string[], concurrency: number) => {
@@ -34,15 +34,15 @@ let batch1Started = false;
 let batch2Started = false;
 
 /**
- * Start downloading batch-1 bytes during bootstrap, before Pixi / RGS auth.
- * Includes loader card PNGs so the cards screen can paint immediately.
+ * Warm only batch 1 + loader still during splash.
+ * Do not start batch 2/3 here — parallel fetches starve Pixi batch 1.
  */
 export const startEarlyAssetPreload = () => {
 	if (batch1Started || typeof window === 'undefined') return;
 	batch1Started = true;
 
 	startEarlyLoaderBackgroundPreload();
-	void warmHttpCache([...collectBatch1EarlyPreloadUrls(), ...LOADER_BG_SPINE_URLS], 8);
+	void warmHttpCache(collectBatch1EarlyPreloadUrls(), 4);
 	void warmHttpCache([knewaveFontUrl()], 1);
 };
 

@@ -8,6 +8,7 @@
 
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { isBuyBonusFlowOpen } from '../game/isAnyMenuOpen';
 	import {
 		isPopoutViewport,
 		GAME_ENTRANCE_MS,
@@ -98,6 +99,9 @@
 	});
 	/** Always 1× — turbo must not speed up mascot clips. */
 	const spineTimeScale = 1;
+	const idlePaused = $derived(isBuyBonusFlowOpen());
+	const mascotAutoUpdate = $derived(!idlePaused);
+	const mascotTimeScale = $derived(idlePaused ? 0 : spineTimeScale);
 
 	const box = $derived.by((): MascotScreenBox | null => {
 		if (!mounted || !showMascotLayout) {
@@ -217,19 +221,22 @@
 			y={transform.spineY}
 			scale={transform.scale}
 			zIndex={0}
+			autoUpdate={mascotAutoUpdate}
 		>
 			{#if useDogSpine}
 				<MascotDogSpineController
 					pose={pose}
 					forceAnim={forceDogAnim}
-					timeScale={spineTimeScale}
+					timeScale={mascotTimeScale}
+					paused={idlePaused}
 				/>
 			{:else}
 				<MascotSpineController
 					pose={pose}
 					forceAnim={forceCatAnim}
-					timeScale={spineTimeScale}
+					timeScale={mascotTimeScale}
 					animToken={mascotAnimToken}
+					paused={idlePaused}
 				/>
 				{#if box}
 					<MascotGunMuzzleTracker {box} />

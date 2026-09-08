@@ -34,7 +34,7 @@
 		stateModal.modal == null;
 
 	$effect(() => {
-		if (stateGame.targetPickOpen) resetIdleBounceSymbols();
+		if (stateGame.targetPickOpen || stateModal.modal != null) resetIdleBounceSymbols();
 	});
 
 	const sleep = (ms: number, cancelled: () => boolean) =>

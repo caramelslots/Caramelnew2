@@ -29,9 +29,7 @@ export const startEarlyLoaderBackgroundPreload = () => {
 	if (backgroundPreloadStarted || typeof window === 'undefined') return;
 	backgroundPreloadStarted = true;
 
-	for (const url of [LOADER_STATIC_DAY_URL, ...LOADER_BG_SPINE_URLS]) {
-		void fetch(url).catch(() => {
-			/* Best-effort — img / Pixi will retry. */
-		});
-	}
+	void fetch(LOADER_STATIC_DAY_URL).catch(() => {
+		/* Best-effort — img / Pixi will retry. */
+	});
 };
