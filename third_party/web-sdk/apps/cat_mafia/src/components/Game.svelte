@@ -7,7 +7,6 @@
 	import GameApp from './GameApp.svelte';
 	import { stateModal } from 'state-shared';
 
-	import { UiGameName } from 'components-ui-pixi';
 	import { GameVersion } from 'components-ui-html';
 	import { Container } from 'pixi-svelte';
 	import UiCashStacksLayout from './UiCashStacksLayout.svelte';
@@ -239,11 +238,7 @@
 
 					<!-- WIN $ text above the nameplate art. -->
 					<Container zIndex={1}>
-						<UiCashStacksLayout>
-							{#snippet gameName()}
-								<UiGameName name="Cat Mafia" />
-							{/snippet}
-						</UiCashStacksLayout>
+						<UiCashStacksLayout />
 					</Container>
 				{/if}
 				<!-- Paw coins under mascot so the hat / hand occlude the fly. -->

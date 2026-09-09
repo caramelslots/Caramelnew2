@@ -4,12 +4,14 @@
 	2) `idle` — living curtain after bounce
 	3) `win` — cat winds the drum (wheel bone held still at first)
 	4) ~mid-win → programmatic main16 spin → math mult (cat clip keeps playing)
-	5) `idle`
+	5) `activation` — thumb-up finger gesture after the drum lands
+	6) `idle`
 -->
 <script lang="ts">
 	import { getContextSpine } from 'pixi-svelte';
 
 	import {
+		SUPER_WILD_ACTIVATION_ANIM,
 		SUPER_WILD_IDLE_ANIM,
 		SUPER_WILD_OPEN_ANIM,
 		SUPER_WILD_OPEN_END_NATIVE_MS,
@@ -53,6 +55,8 @@
 	/** Cat `win` clip playing — drum held at startDeg until mid-clip spin. */
 	let catWinding = $state(false);
 	let wheelSpinning = $state(false);
+	/** Thumb-up `activation` after the mult drum lands. */
+	let activating = $state(false);
 	/** 0→1 progress through drum spin (matches easeOutCubic wall clock). */
 	let wheelSpinT = 0;
 	/** Accumulated shake phase (rad) — advances slower as the wheel eases out. */
@@ -162,6 +166,26 @@
 		}
 	};
 
+	/** Finger like after the wheel stops — then living idle. */
+	const playActivationThenIdle = () => {
+		activating = true;
+		spine.state.timeScale = 1;
+		const entry = spine.state.setAnimation(0, SUPER_WILD_ACTIVATION_ANIM, false);
+		if (entry) entry.mixDuration = 0.2;
+		spine.spineAttachmentsDirty = true;
+		if (entry) {
+			entry.listener = {
+				complete: () => {
+					activating = false;
+					holdIdlePose(0.2);
+				},
+			};
+		} else {
+			activating = false;
+			holdIdlePose();
+		}
+	};
+
 	const startWheelSpin = (mult: number) => {
 		clearWheelRaf();
 		clearWheelStartTimer();
@@ -197,7 +221,7 @@
 			wheelSpinning = false;
 			props.onWheelLanded(true, landSectorIndex, targetMult);
 			wheelRaf = 0;
-			holdIdlePose();
+			playActivationThenIdle();
 		};
 		wheelRaf = requestAnimationFrame(tick);
 	};
@@ -322,8 +346,8 @@
 	};
 
 	const holdIdle = (mult: number) => {
-		// Don't interrupt cat wind-up or drum land.
-		if (catWinding || wheelSpinning) return;
+		// Don't interrupt cat wind-up, drum land, or thumb-up gesture.
+		if (catWinding || wheelSpinning || activating) return;
 		holdIdlePose();
 		if (!props.wheelLanded && pendingWheelMult == null) {
 			const sectorIndex = superWildWheelSectorIndex(mult);
@@ -381,6 +405,7 @@
 			pendingWheelMult = null;
 			catWinding = false;
 			wheelSpinning = false;
+			activating = false;
 			opening = false;
 			openFinished = false;
 			openLanded = false;

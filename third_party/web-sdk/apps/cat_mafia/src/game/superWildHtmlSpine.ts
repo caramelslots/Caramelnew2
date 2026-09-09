@@ -34,6 +34,10 @@ export const SUPER_WILD_OPEN_ANIM = 'open';
 export const SUPER_WILD_IDLE_ANIM = 'idle';
 /** Designer clip: cat turns the drum after the curtain opens. */
 export const SUPER_WILD_WIN_ANIM = 'win';
+/** Thumb-up finger gesture after the mult drum lands. */
+export const SUPER_WILD_ACTIVATION_ANIM = 'activation';
+/** Native Spine `activation` (finger like) length at 1×. */
+export const SUPER_WILD_ACTIVATION_NATIVE_MS = 1233;
 /** Native Spine `open` clip length at 1× (`wild_render` ~1.533s). */
 export const SUPER_WILD_OPEN_NATIVE_MS = 1533;
 /** Native Spine `win` (cat + drum) length at 1×. */
@@ -80,12 +84,13 @@ export const SUPER_WILD_WIN_MS = 1800;
  * ~0.5 = mid gesture — cat has grabbed the wheel, then the drum takes over.
  */
 export const SUPER_WILD_WIN_WHEEL_START_FRAC = 0.5;
-/** Total expanding wait: full open → idle → cat mid-win → wheel land. */
+/** Total expanding wait: full open → idle → cat mid-win → wheel land → activation. */
 export const SUPER_WILD_PRESENT_MS =
 	SUPER_WILD_OPEN_MS +
 	SUPER_WILD_OPEN_IDLE_MS +
 	SUPER_WILD_WIN_MS * SUPER_WILD_WIN_WHEEL_START_FRAC +
-	SUPER_WILD_WHEEL_SPIN_MS;
+	SUPER_WILD_WHEEL_SPIN_MS +
+	SUPER_WILD_ACTIVATION_NATIVE_MS;
 /**
  * Other reel symbols slide under the board during `open` (SW itself is hidden —
  * replaced by the Spine lying tile).
@@ -107,7 +112,8 @@ export const SUPER_WILD_STICKY_DROP_IN_DIST = SYMBOL_SIZE * (BOARD_DIMENSIONS.y 
 export const SUPER_WILD_STICKY_PRESENT_MS =
 	SUPER_WILD_STICKY_DROP_IN_MS +
 	SUPER_WILD_WIN_MS * SUPER_WILD_WIN_WHEEL_START_FRAC +
-	SUPER_WILD_WHEEL_SPIN_MS;
+	SUPER_WILD_WHEEL_SPIN_MS +
+	SUPER_WILD_ACTIVATION_NATIVE_MS;
 /**
  * Base next-spin: idle curtain slides under the board mask while reels scroll
  * (solid Spine art — never swaps to a 4-tile Wild.webp stack).

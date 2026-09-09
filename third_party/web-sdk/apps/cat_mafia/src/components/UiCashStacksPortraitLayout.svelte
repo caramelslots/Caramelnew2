@@ -22,7 +22,6 @@
 	import { getContextLayout } from 'utils-layout';
 
 	type Props = {
-		gameName?: Snippet;
 		logo?: Snippet;
 	};
 
@@ -87,10 +86,6 @@
 </script>
 
 <UiFadeContainer>
-	<Container x={20}>
-		{#if props.gameName}{@render props.gameName()}{/if}
-	</Container>
-
 	<Container x={W - 20}>
 		{#if props.logo}{@render props.logo()}{/if}
 	</Container>

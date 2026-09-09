@@ -22,7 +22,6 @@
 		BITMAP_FONT_SCALE,
 		isPopoutSmallViewport,
 		isPopoutViewport,
-		POPOUT_S_SCALE,
 		WIN_HUD_COUNT_UP_MS,
 		WIN_HUD_FONT_SIZE,
 	} from '../game/constants';
@@ -34,7 +33,6 @@
 	import { getContextLayout } from 'utils-layout';
 
 	type Props = {
-		gameName?: Snippet;
 		logo?: Snippet;
 	};
 
@@ -46,7 +44,6 @@
 	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
 	const isPopout = $derived(isPopoutViewport(canvasSizes));
 	const useDesktopHud = $derived(layoutType !== 'portrait');
-	const gameNameScale = $derived(isPopoutSmall ? POPOUT_S_SCALE : 1);
 	const spaceHoldDisabled = $derived(
 		isAnyMenuOpen() || isLoaderScreenBlockingSpin(context.stateLayout.showLoadingScreen),
 	);
@@ -125,12 +122,6 @@
 
 {#if useDesktopHud}
 	<UiFadeContainer>
-		<Container x={20} scale={gameNameScale}>
-			{#if props.gameName}
-				{@render props.gameName()}
-			{/if}
-		</Container>
-
 		<Container x={20} y={70}>
 			{#if props.logo}
 				{@render props.logo()}
@@ -158,9 +149,6 @@
 	</UiFadeContainer>
 {:else if layoutType === 'portrait'}
 	<UiCashStacksPortraitLayout>
-		{#snippet gameName()}
-			{#if props.gameName}{@render props.gameName()}{/if}
-		{/snippet}
 		{#snippet logo()}
 			{#if props.logo}{@render props.logo()}{/if}
 		{/snippet}

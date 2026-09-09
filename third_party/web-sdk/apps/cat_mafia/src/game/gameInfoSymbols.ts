@@ -21,15 +21,19 @@ export type GameInfoSpecialSymbolId = 'W' | 'B' | 'BD' | 'SW' | 'Paw' | 'BT';
 const symbolAssetUrl = (file: string) =>
 	`${import.meta.env.BASE_URL}assets/sprites/symbols/${file}`;
 
+/** Paytable / info cards — transparent letterbox (reel spin sprites keep opaque black). */
+const infoSymbolAssetUrl = (file: string) =>
+	`${import.meta.env.BASE_URL}assets/sprites/symbols/info/${file}`;
+
 export const GAME_INFO_SYMBOL_IMAGES: Record<GameInfoImageSymbolId, string> = {
-	H1: symbolAssetUrl('H1.webp'),
-	H2: symbolAssetUrl('H2.webp'),
-	H3: symbolAssetUrl('H3.webp'),
-	H4: symbolAssetUrl('H4.webp'),
-	L1: symbolAssetUrl('L1.webp'),
-	L2: symbolAssetUrl('L2.webp'),
-	L3: symbolAssetUrl('L3.webp'),
-	L4: symbolAssetUrl('L4.webp'),
+	H1: infoSymbolAssetUrl('H1.webp'),
+	H2: infoSymbolAssetUrl('H2.webp'),
+	H3: infoSymbolAssetUrl('H3.webp'),
+	H4: infoSymbolAssetUrl('H4.webp'),
+	L1: infoSymbolAssetUrl('L1.webp'),
+	L2: infoSymbolAssetUrl('L2.webp'),
+	L3: infoSymbolAssetUrl('L3.webp'),
+	L4: infoSymbolAssetUrl('L4.webp'),
 	W: symbolAssetUrl('Wild.webp'),
 	B: symbolAssetUrl('Bonus.webp'),
 	BD: symbolAssetUrl('BonusDuel.webp'),

@@ -7,6 +7,7 @@
 	import LoaderIntroBackground from '../components/LoaderIntroBackground.svelte';
 	import LoaderCardsHtmlOverlay from '../components/LoaderCardsHtmlOverlay.svelte';
 	import LoaderContinueHandlers from '../components/LoaderContinueHandlers.svelte';
+	import GameNameHtmlOverlay from '../components/GameNameHtmlOverlay.svelte';
 	import { setContext } from '../game/context';
 	import { startEarlyAssetPreload } from '../game/earlyAssetPreload';
 	import { setLoaderStage } from '../game/loaderAssetPipeline.svelte';
@@ -57,6 +58,7 @@
 					{/await}
 				{/snippet}
 			</EntranceLiftShell>
+			<GameNameHtmlOverlay />
 		</LoadI18n>
 	</Authenticate>
 </GlobalStyle>
