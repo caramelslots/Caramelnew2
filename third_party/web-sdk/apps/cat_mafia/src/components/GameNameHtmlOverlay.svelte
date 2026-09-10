@@ -5,7 +5,7 @@
 <script lang="ts">
 	import { SvelteDate } from 'svelte/reactivity';
 
-	import { isPopoutSmallViewport, POPOUT_S_SCALE } from '../game/constants';
+	import { computeGameNameHtmlLayout } from '../game/gameNameHtmlLayout';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { stateDuel } from '../game/stateDuel.svelte';
@@ -13,11 +13,6 @@
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
-
-	const GAME_NAME_LEFT = 20;
-	const FONT_SIZE = 24;
-	const LINE_HEIGHT = 32;
-	const LABEL_GAP = 5;
 
 	let uiVisible = $state(true);
 
@@ -49,9 +44,7 @@
 		};
 	});
 
-	const canvasSizes = $derived(stateLayoutDerived.canvasSizes());
-	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
-	const scale = $derived(isPopoutSmall ? POPOUT_S_SCALE : 1);
+	const layout = $derived(computeGameNameHtmlLayout(stateLayoutDerived));
 	const show = $derived(
 		uiVisible &&
 			!stateDuel.active &&
@@ -63,12 +56,11 @@
 {#if show}
 	<div
 		class="game-name-overlay"
-		style:left="{GAME_NAME_LEFT}px"
-		style:top="0px"
-		style:--gn-scale={scale}
-		style:--gn-font-size="{FONT_SIZE}px"
-		style:--gn-line-height="{LINE_HEIGHT}px"
-		style:--gn-gap="{LABEL_GAP}px"
+		style:left="{layout.left}px"
+		style:top="{layout.top}px"
+		style:font-size="{layout.fontSize}px"
+		style:line-height="{layout.lineHeight}px"
+		style:gap="{layout.gap}px"
 		aria-hidden="true"
 	>
 		<time class="clock">{clock}</time>
@@ -83,13 +75,8 @@
 		pointer-events: none;
 		display: flex;
 		align-items: baseline;
-		gap: calc(var(--gn-gap) * var(--gn-scale));
-		transform: scale(var(--gn-scale));
-		transform-origin: top left;
 		font-family: 'proxima-nova', sans-serif;
-		font-size: var(--gn-font-size);
 		font-weight: 600;
-		line-height: var(--gn-line-height);
 		color: #fff;
 		white-space: nowrap;
 	}

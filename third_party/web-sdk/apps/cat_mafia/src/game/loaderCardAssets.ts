@@ -2,9 +2,9 @@ const LOADER_CARD_FILES = ['loader_card_1.webp', 'loader_card_2.webp', 'loader_c
 
 const assetBase = `${import.meta.env.BASE_URL}assets/sprites/ui/loader`;
 
-export const LOADER_NEON_LOGO_URL = `${assetBase}/wok_fury_neon_logo.webp`;
-/** Native px size of `wok_fury_neon_logo.webp`. */
-export const LOADER_NEON_LOGO_ASPECT = 3833 / 1394;
+export const LOADER_NEON_LOGO_URL = `${assetBase}/meowfia_neon_logo.webp`;
+/** Native px size of `meowfia_neon_logo.webp`. */
+export const LOADER_NEON_LOGO_ASPECT = 1877 / 748;
 
 export const LOADER_CARD_IMAGE_URLS = LOADER_CARD_FILES.map(
 	(file) => `${assetBase}/${file}`,

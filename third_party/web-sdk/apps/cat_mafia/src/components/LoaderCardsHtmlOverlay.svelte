@@ -15,6 +15,7 @@
 		computeLoaderCarouselMetrics,
 		computeLoaderLogoMetrics,
 		computeLoaderRowMetrics,
+		computeLoaderScreenPosition,
 		shouldUseLoaderCarousel,
 	} from '../game/loaderCardsHtmlLayout';
 	import { preloadHtmlImages } from '../game/preloadHtmlImages';
@@ -48,9 +49,15 @@
 	);
 
 	const logoMetrics = $derived(computeLoaderLogoMetrics(context.stateLayoutDerived));
+	const cardHeight = $derived(
+		useCarousel ? carouselMetrics.cardHeight : rowMetrics.cardHeight,
+	);
+	const screenPos = $derived(
+		computeLoaderScreenPosition(context.stateLayoutDerived, cardHeight, logoMetrics),
+	);
 
 	const logoStyle = $derived(
-		`width:${logoMetrics.width}px;height:${logoMetrics.height}px;margin-bottom:${logoMetrics.gap}px;transform:translateX(-50%) translateY(${logoMetrics.dropOffset}px);`,
+		`width:${logoMetrics.width}px;height:${logoMetrics.height}px;margin-bottom:${logoMetrics.gap}px;transform:translateX(-50%) translateY(${logoMetrics.lift}px);`,
 	);
 
 	let activeIndex = $state(0);
@@ -70,10 +77,8 @@
 
 	const clampIndex = (index: number) => Math.max(0, Math.min(LOADER_CARD_COUNT - 1, index));
 
-	const overlayTransform = $derived('translate(-50%,-50%)');
-
 	const overlayStyle = $derived(
-		`left:${anchor.x}px;top:${anchor.y + (logoMetrics.height + logoMetrics.gap) / 2}px;transform:${overlayTransform};`,
+		`left:${screenPos.centerX}px;top:${screenPos.centerY}px;transform:translate(-50%,-50%);`,
 	);
 
 	const snapToIndex = (index: number, animate = true) => {
@@ -149,8 +154,10 @@
 {#if show}
 	<div class="loader-cards-overlay" style={overlayStyle} aria-hidden={!show}>
 		<div class="loader-cards-stack">
-			<!-- Loader logo slot (layout only). -->
-			<div class="loader-neon-logo-placeholder" style={logoStyle}></div>
+			<!-- daloniil_test: NeonForegroundOverlay (Spine). Here: same slot, HTML WebP. -->
+			<div class="loader-neon-logo-placeholder" style={logoStyle}>
+				<img class="loader-neon-logo" src={LOADER_NEON_LOGO_URL} alt="" draggable="false" />
+			</div>
 			{#if useCarousel}
 			<div
 				class="carousel-viewport"
@@ -202,6 +209,15 @@
 		left: 50%;
 		bottom: 100%;
 		display: block;
+		pointer-events: none;
+	}
+
+	.loader-neon-logo {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		user-select: none;
 		pointer-events: none;
 	}
 

@@ -3,6 +3,7 @@
 	import { backOut } from 'svelte/easing';
 	import { Tween } from 'svelte/motion';
 
+	import ArchedRibbonTitle from './ArchedRibbonTitle.svelte';
 	import { getContext } from '../game/context';
 	import { loaderCardImageUrl } from '../game/loaderCardAssets';
 
@@ -24,6 +25,14 @@
 	const scale = new Tween(1);
 
 	const cardUrl = $derived(loaderCardImageUrl(props.cardIndex));
+	const titleText = $derived(
+		props.cardIndex === 0
+			? context.i18nDerived.loaderCard1Title()
+			: props.cardIndex === 1
+				? context.i18nDerived.loaderCard2Title()
+				: context.i18nDerived.loaderCard3Title(),
+	);
+	const titleArchDeg = $derived(props.cardIndex === 0 ? 34 : props.cardIndex === 1 ? 30 : 26);
 	const animationIndex = $derived(props.animationIndex ?? props.cardIndex);
 	const cardStyle = $derived(
 		`--card-width:${props.cardWidth}px;transform:scale(${scale.current});`,
@@ -57,8 +66,10 @@
 	<img class="card-bg" src={cardUrl} alt="" draggable="false" />
 
 	<div class="card-content">
+		<div class="card-title">
+			<ArchedRibbonTitle text={titleText} archDeg={titleArchDeg} tracking={1} />
+		</div>
 		{#if props.cardIndex === 0}
-			<h3 class="card-title">{context.i18nDerived.loaderCard1Title()}</h3>
 			<div class="card-body card-body--1">
 				<div class="line-block line-block--1">
 					<p class="line">{context.i18nDerived.loaderCard1Line1()}</p>
@@ -70,12 +81,10 @@
 				</div>
 			</div>
 		{:else if props.cardIndex === 1}
-			<h3 class="card-title">{context.i18nDerived.loaderCard2Title()}</h3>
 			<div class="card-body card-body--2">
 				<p class="line">{context.i18nDerived.loaderCard2Body()}</p>
 			</div>
 		{:else}
-			<h3 class="card-title">{context.i18nDerived.loaderCard3Title()}</h3>
 			<div class="card-body card-body--3">
 				<div class="line-block line-block--3">
 					<p class="line">{context.i18nDerived.loaderCard3Line1()}</p>
@@ -132,23 +141,27 @@
 
 	.card-title {
 		position: absolute;
-		top: calc(var(--card-height) * 0.105);
+		top: calc(var(--card-height) * 0.033);
 		left: 12%;
 		right: 12%;
+		height: calc(var(--card-height) * 0.12);
 		margin: 0;
-		transform: translateY(-50%);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--card-width) * 0.052);
-		font-weight: 900;
-		font-style: italic;
-		letter-spacing: 0.03em;
-		text-transform: uppercase;
-		line-height: 1.05;
-		text-align: center;
+		font-size: calc(var(--card-width) * 0.06);
+		--bb-title-tracking: 1;
+	}
+
+	.card-title :global(.arched-title) {
+		filter: none;
+	}
+
+	.card-title :global(.arch-char) {
+		top: 21%;
 		color: #f5e6c8;
+		background: none;
+		background-clip: unset;
+		-webkit-background-clip: unset;
+		-webkit-text-fill-color: #f5e6c8;
+		font-weight: 900;
 		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 	}
 
@@ -209,7 +222,7 @@
 	}
 
 	.line-block--3 {
-		top: calc(var(--card-height) * 0.7);
+		top: calc(var(--card-height) * 0.735);
 		--line-block-gap: calc(var(--line-height) * 0.25);
 	}
 </style>

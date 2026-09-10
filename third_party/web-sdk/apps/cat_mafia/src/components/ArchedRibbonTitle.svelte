@@ -55,7 +55,10 @@
 			if (ctx) {
 				ctx.font = `800 ${fontPx}px proxima-nova, sans-serif`;
 				for (const char of chars) {
-					const raw = Math.max(ctx.measureText(char === ' ' ? '\u00a0' : char).width, fontPx * 0.18);
+					const raw = Math.max(
+						ctx.measureText(char === ' ' ? '\u00a0' : char).width,
+						fontPx * 0.18,
+					);
 					widths.push(raw * pack);
 				}
 			}
