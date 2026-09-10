@@ -176,12 +176,15 @@
 		transform: translate(-50%, -50%);
 		width: calc(var(--card-width) * 0.78);
 		height: calc(var(--card-height) * 0.4);
+		z-index: 2;
 		pointer-events: none;
 	}
 
 	.card-body {
 		position: absolute;
 		inset: 0;
+		z-index: 1;
+		pointer-events: none;
 	}
 
 	.line {

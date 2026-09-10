@@ -64,7 +64,8 @@ const isDisplayed = (el: HTMLElement) => {
 	while (node) {
 		const style = getComputedStyle(node);
 		if (style.display === 'none' || style.visibility === 'hidden') return false;
-		if (Number.parseFloat(style.opacity) === 0) return false;
+		// Skip opacity — desktop `.loader-card.animate-in` fades 0→1; a one-frame
+		// false here used to stop the ticker and never recover after the CSS anim.
 		node = node.parentElement;
 	}
 	return true;
@@ -226,10 +227,15 @@ const pickView = () => {
 const syncSharedStage = () => {
 	if (!app || !spine) return;
 
+	if (views.size === 0) {
+		spine.visible = false;
+		app.ticker.stop();
+		return;
+	}
+
 	const view = pickView();
 	if (!view) {
 		spine.visible = false;
-		app.ticker.stop();
 		app.render();
 		return;
 	}
@@ -245,7 +251,7 @@ const syncSharedStage = () => {
 };
 
 const requestSync = () => {
-	if (!app) return;
+	if (!app || views.size === 0) return;
 	if (!app.ticker.started) app.ticker.start();
 	syncSharedStage();
 };
@@ -292,6 +298,8 @@ export const registerLoaderCardBonusView = (
 			if (views.has(id)) requestSync();
 		});
 	});
+	// Desktop cards fade in (opacity 0→1) — re-sync once the host has layout.
+	requestAnimationFrame(() => requestSync());
 	return id;
 };
 
