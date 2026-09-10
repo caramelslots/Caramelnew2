@@ -12,7 +12,6 @@
 		portraitBuyPanelCanvasTop,
 		portraitBuyPanelSizeCanvas,
 	} from '../game/portraitHudLayout';
-	import { portraitHudAnchors } from '../game/portraitHudAnchors.svelte';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
@@ -47,43 +46,10 @@
 	const buyBonusLabel = $derived(context.i18nDerived.buyBonusPanelButton());
 	const buyBonusSize = $derived(portraitBuyPanelSizeCanvas(stateLayoutDerived));
 	const buyBonusHeight = $derived(buyBonusSize / BUY_BONUS_BUTTON_ASPECT);
-
-	let panelEl = $state<HTMLElement | null>(null);
-
-	$effect(() => {
-		void stateLayoutDerived.canvasSizes();
-		void stateLayoutDerived.mainLayout();
-
-		if (!panelEl || !isPortrait || !show) {
-			if (!show || !isPortrait) portraitHudAnchors.buyPanelBottom = 0;
-			return;
-		}
-
-		let syncRaf = 0;
-		const syncBottom = () => {
-			cancelAnimationFrame(syncRaf);
-			syncRaf = requestAnimationFrame(() => {
-				if (!panelEl) return;
-				portraitHudAnchors.buyPanelBottom = panelEl.getBoundingClientRect().bottom;
-			});
-		};
-
-		syncBottom();
-		const observer = new ResizeObserver(syncBottom);
-		observer.observe(panelEl);
-		window.addEventListener('resize', syncBottom);
-
-		return () => {
-			cancelAnimationFrame(syncRaf);
-			observer.disconnect();
-			window.removeEventListener('resize', syncBottom);
-		};
-	});
 </script>
 
 {#if show}
 	<aside
-		bind:this={panelEl}
 		class="buy-bonus-panel daloniil-ui-enter portrait"
 		class:in-lift={!gameEntrance.liftComplete}
 		data-test="buy-bonus-panel"

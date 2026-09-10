@@ -59,7 +59,8 @@
 <div class="entrance-viewport" class:entrance-viewport--settled={gameEntrance.liftComplete}>
 	<div
 		class="entrance-lift"
-		style:transform="translate3d(0, {liftYpx}px, 0)"
+		class:entrance-lift--settled={gameEntrance.liftComplete}
+		style:transform={gameEntrance.liftComplete ? undefined : `translate3d(0, ${liftYpx}px, 0)`}
 		style:--panel-h="{panelHeight}px"
 		style:--seam-overlap="{LOADER_LIFT_SEAM_OVERLAP_PX}px"
 	>
@@ -87,13 +88,15 @@
 		background: #000;
 	}
 
-	.entrance-viewport--settled .game-panel {
-		margin-top: 0;
-	}
-
 	.entrance-lift {
 		will-change: transform;
 		backface-visibility: hidden;
+	}
+
+	.entrance-lift--settled {
+		/* Drop transform so `position: fixed` HUD is viewport-rooted again. */
+		will-change: auto;
+		transform: none;
 	}
 
 	.intro-panel,
@@ -115,5 +118,11 @@
 		margin-top: calc(-1 * var(--seam-overlap));
 		background: #000;
 		z-index: 0;
+	}
+
+	.entrance-viewport--settled .game-panel {
+		/* Fixed HUD lives inside this panel — don't clip it after lift. */
+		overflow: visible;
+		margin-top: 0;
 	}
 </style>

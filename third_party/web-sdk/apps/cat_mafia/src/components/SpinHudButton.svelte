@@ -62,6 +62,8 @@
 		<img class="spin-hud-btn__icon" src={HUD_ASSETS.spin2} alt="" draggable="false" />
 		<span class="spin-hud-btn__counter" style:font-size="{counterFontSize}px">{counterText}</span>
 	{:else}
+		<!-- Static idle art. Spine only overlays the press clip (idle track is empty). -->
+		<img class="spin-hud-btn__icon" src={HUD_ASSETS.spin1} alt="" draggable="false" />
 		<SpinButtonHtmlSpine bind:this={spine} />
 	{/if}
 </button>

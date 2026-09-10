@@ -18,7 +18,6 @@
 	import { HUD_TURBO_ICON_BG_FRAC } from '../game/constants';
 	import HudBalanceBetLine from './HudBalanceBetLine.svelte';
 	import SpinHudButton from './SpinHudButton.svelte';
-	import { portraitHudAnchors } from '../game/portraitHudAnchors.svelte';
 	import { getRoundsCounter } from '../game/autoplay';
 	import { canAffordSpin, canIncreaseBet } from '../game/buyBonusBalance';
 	import { isLockedBonusHud } from '../game/activeFeature';
@@ -77,11 +76,10 @@
 
 	const hud = $derived.by(() => {
 		void hudLocked;
-		void portraitHudAnchors.buyPanelBottom;
-		const buyPanelBottomCanvas =
-			portraitHudAnchors.buyPanelBottom > 0 ? portraitHudAnchors.buyPanelBottom : undefined;
+		// Always use layout-space Y (same as buy-panel `top`). Never feed
+		// getBoundingClientRect viewport coords here — during EntranceLiftShell
+		// those are stale/out-of-panel and push spin/−/+ under overflow:hidden.
 		return computePortraitHudCanvas(stateLayoutDerived, {
-			buyPanelBottomCanvas,
 			hideAutoplay: hudLocked || isReplay,
 		});
 	});
