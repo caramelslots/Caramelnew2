@@ -18,6 +18,7 @@
 		computeLoaderScreenPosition,
 		shouldUseLoaderCarousel,
 	} from '../game/loaderCardsHtmlLayout';
+	import { preloadLoaderCardBonusPixi, warmLoaderCardBonusPixi } from '../game/loaderCardBonusPixi';
 	import { preloadHtmlImages } from '../game/preloadHtmlImages';
 
 	const SNAP_MS = 520;
@@ -114,6 +115,8 @@
 
 	onMount(() => {
 		clearAutoAdvance();
+		void preloadLoaderCardBonusPixi();
+		void warmLoaderCardBonusPixi();
 		void preloadHtmlImages(LOADER_SCREEN_IMAGE_URLS, {
 			priority: [LOADER_NEON_LOGO_URL, LOADER_SCREEN_IMAGE_URLS[0]!],
 			concurrency: 2,

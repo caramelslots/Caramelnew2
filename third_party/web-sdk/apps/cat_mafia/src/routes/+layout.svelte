@@ -10,6 +10,7 @@
 	import GameNameHtmlOverlay from '../components/GameNameHtmlOverlay.svelte';
 	import { setContext } from '../game/context';
 	import { startEarlyAssetPreload } from '../game/earlyAssetPreload';
+	import { preloadLoaderCardBonusPixi, warmLoaderCardBonusPixi } from '../game/loaderCardBonusPixi';
 	import { setLoaderStage } from '../game/loaderAssetPipeline.svelte';
 	import { devPreview } from '../game/devPreview.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
@@ -28,6 +29,8 @@
 
 	onMount(() => {
 		startEarlyAssetPreload();
+		void preloadLoaderCardBonusPixi();
+		void warmLoaderCardBonusPixi();
 	});
 </script>
 
