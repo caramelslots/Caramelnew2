@@ -6,7 +6,6 @@ import {
 } from './assetLoadPlan';
 import { knewaveFontUrl } from './knewaveFont';
 import { startEarlyLoaderBackgroundPreload } from './earlyLoaderPreload';
-import { preloadLoaderCardBonusPixi } from './loaderCardBonusPixi';
 import { resolveLanguage } from 'state-shared';
 
 const warmHttpCache = async (urls: readonly string[], concurrency: number) => {
@@ -53,7 +52,6 @@ export const startBatch2EarlyPreload = () => {
 	batch2Started = true;
 
 	void warmHttpCache(collectBatch2EarlyPreloadUrls(), 8);
-	void preloadLoaderCardBonusPixi();
 };
 
 let batch3Started = false;

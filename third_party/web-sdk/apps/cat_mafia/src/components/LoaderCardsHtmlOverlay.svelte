@@ -8,6 +8,7 @@
 	import PressToContinueHtml from './PressToContinueHtml.svelte';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { GAME_INFO_SYMBOL_IMAGES } from '../game/gameInfoSymbols';
 	import { LOADER_NEON_LOGO_URL, LOADER_SCREEN_IMAGE_URLS } from '../game/loaderCardAssets';
 	import {
 		LOADER_CARD_COUNT,
@@ -18,7 +19,6 @@
 		computeLoaderScreenPosition,
 		shouldUseLoaderCarousel,
 	} from '../game/loaderCardsHtmlLayout';
-	import { preloadLoaderCardBonusPixi, warmLoaderCardBonusPixi } from '../game/loaderCardBonusPixi';
 	import { preloadHtmlImages } from '../game/preloadHtmlImages';
 
 	const SNAP_MS = 520;
@@ -115,10 +115,8 @@
 
 	onMount(() => {
 		clearAutoAdvance();
-		void preloadLoaderCardBonusPixi();
-		void warmLoaderCardBonusPixi();
-		void preloadHtmlImages(LOADER_SCREEN_IMAGE_URLS, {
-			priority: [LOADER_NEON_LOGO_URL, LOADER_SCREEN_IMAGE_URLS[0]!],
+		void preloadHtmlImages([...LOADER_SCREEN_IMAGE_URLS, GAME_INFO_SYMBOL_IMAGES.B], {
+			priority: [LOADER_NEON_LOGO_URL, LOADER_SCREEN_IMAGE_URLS[0]!, GAME_INFO_SYMBOL_IMAGES.B],
 			concurrency: 2,
 		});
 	});
