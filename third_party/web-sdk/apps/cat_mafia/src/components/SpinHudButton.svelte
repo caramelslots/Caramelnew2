@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
+	import SpinButtonHtmlSpine from './SpinButtonHtmlSpine.svelte';
 
 	type Props = {
 		x: number;
@@ -27,17 +28,20 @@
 		counterFontSize = 16,
 	}: Props = $props();
 
+	let spine = $state<SpinButtonHtmlSpine | undefined>();
 	let pressed = $state(false);
 	let pressTimer: ReturnType<typeof setTimeout> | undefined;
 
-	const spinUrl = $derived(hasCounter ? HUD_ASSETS.spin2 : HUD_ASSETS.spin1);
-
 	export function playAnimation() {
-		pressed = true;
-		clearTimeout(pressTimer);
-		pressTimer = setTimeout(() => {
-			pressed = false;
-		}, 150);
+		if (hasCounter) {
+			pressed = true;
+			clearTimeout(pressTimer);
+			pressTimer = setTimeout(() => {
+				pressed = false;
+			}, 150);
+			return;
+		}
+		spine?.playPress();
 	}
 </script>
 
@@ -54,10 +58,11 @@
 	aria-label={ariaLabel}
 	onclick={onpress}
 >
-	<img class="spin-hud-btn__icon" src={spinUrl} alt="" draggable="false" />
-
 	{#if hasCounter}
+		<img class="spin-hud-btn__icon" src={HUD_ASSETS.spin2} alt="" draggable="false" />
 		<span class="spin-hud-btn__counter" style:font-size="{counterFontSize}px">{counterText}</span>
+	{:else}
+		<SpinButtonHtmlSpine bind:this={spine} />
 	{/if}
 </button>
 
