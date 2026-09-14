@@ -166,7 +166,7 @@ class GameStateOverride(GameExecutables):
     def apply_fs_profile_from_trigger(self) -> None:
         """Pick FS reel profile from bet mode or natural trigger B count.
 
-        Natural trigger (base / bonus_boost / special_spins):
+        Natural trigger (base / bonus_boost):
           3× B → bonus_normal (FR0, no starting MR)
           4× B → bonus_super  (FR1, 1 starting MR)
 

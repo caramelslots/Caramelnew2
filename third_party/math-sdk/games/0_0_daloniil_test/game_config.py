@@ -207,10 +207,8 @@ class GameConfig(Config):
         reels = {
             "BR0": "BR0.csv",  # basegame default
             "BR1": "BR1.csv",  # bonus_boost basegame (агрессивнее)
-            "BR2": "BR2.csv",  # special_spins basegame (гарантированный FS)
             "BR0_ZW": "BR0_ZW.csv",  # base zerowin (plain dead)
             "BR1_ZW": "BR1_ZW.csv",  # bonus_boost zerowin (plain dead)
-            "BR2_ZW": "BR2_ZW.csv",  # special_spins zerowin (plain dead)
             "FR0": "FR0.csv",  # freegame default
             "FR1": "FR1.csv",  # freegame для super bonus (больше Mystery)
             "FR0_ZW": "FR0_ZW.csv",  # FS zerowin reference strip (cluster is programmatic)
@@ -343,21 +341,6 @@ class GameConfig(Config):
             "force_freegame": True,
         }
 
-        # Special Spins — гарантированный FS trigger.
-        special_spins_freegame_condition = {
-            "reel_weights": {
-                self.basegame_type: {"BR2": 1},
-                self.freegame_type: {"FR0": 1},
-            },
-            "scatter_triggers": {3: 70, 4: 30},
-            "mult_values": {
-                self.basegame_type: {1: 1},
-                self.freegame_type: {2: 20, 5: 25, 10: 25, 20: 20, 50: 10},
-            },
-            "force_wincap": False,
-            "force_freegame": True,
-        }
-
         # Buy Bonus (Normal) — гарантированный FS, обычные reelstrips.
         # Cost = 100×. High-vol: max VI ≈ 5.0 при wincap=2500.
         # Avg mult old ≈ 16×, new ≈ 38× (жёсткий скос к ×50).
@@ -400,7 +383,6 @@ class GameConfig(Config):
         mode_maxwins = {
             "base": self.wincap,
             "bonus_boost": self.wincap,
-            "special_spins": self.wincap,
             "bonus_normal": self.wincap,
             "bonus_super": self.wincap,
         }
@@ -469,24 +451,6 @@ class GameConfig(Config):
                         conditions=bonus_boost_zerowin_cluster_condition,
                     ),
                     Distribution(criteria="basegame", quota=0.37, conditions=bonus_boost_basegame_condition),
-                ],
-            ),
-            BetMode(
-                name="special_spins",
-                cost=30.0,
-                rtp=self.rtp,
-                max_win=mode_maxwins["special_spins"],
-                auto_close_disabled=False,
-                is_feature=True,
-                is_buybonus=False,
-                distributions=[
-                    Distribution(
-                        criteria="wincap",
-                        quota=0.002,
-                        win_criteria=mode_maxwins["special_spins"],
-                        conditions=wincap_condition,
-                    ),
-                    Distribution(criteria="freegame", quota=0.998, conditions=special_spins_freegame_condition),
                 ],
             ),
             BetMode(

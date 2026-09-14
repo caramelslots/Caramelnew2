@@ -1,0 +1,136 @@
+// Compute --panel-width on the panel, then inherit pixels.
+// Nested card containers would otherwise re-resolve 100cqi and shrink titles/prices.
+@property --panel-width {
+	syntax: "<length>";
+	inherits: true;
+	initial-value: 0px;
+}
+
+@mixin buy-bonus-panel-dimensions($preserve-ratio: false) {
+	@if $preserve-ratio {
+		// designer_assets/bonus_buy_board.png — 1067×1500
+		--panel-height-scale: 1.406;
+		--panel-max-height: min(98svh, 100cqh);
+		--panel-width: min(
+			700px,
+			90vw,
+			100cqi,
+			calc(var(--panel-max-height) / var(--panel-height-scale))
+		);
+		width: var(--panel-width);
+		height: calc(var(--panel-width) * var(--panel-height-scale));
+		max-width: 100%;
+		max-height: 100%;
+		min-width: 0;
+		min-height: 0;
+
+		&.portrait:not(.popout-l):not(.popout-s) {
+			--panel-max-height: min(96svh, 100cqh);
+			--panel-width: min(
+				640px,
+				96vw,
+				100cqi,
+				calc(var(--panel-max-height) / var(--panel-height-scale))
+			);
+		}
+
+		&.popout-l {
+			--panel-max-height: min(94svh, 100cqh);
+			--panel-width: min(
+				380px,
+				86vw,
+				100cqi,
+				calc(var(--panel-max-height) / var(--panel-height-scale))
+			);
+		}
+
+		&.popout-s {
+			--panel-max-height: min(94svh, 100cqh);
+			--panel-width: min(
+				220px,
+				60vw,
+				100cqi,
+				calc(var(--panel-max-height) / var(--panel-height-scale))
+			);
+		}
+
+		@media (max-width: 1024px) and (min-width: 601px) {
+			&:not(.portrait):not(.popout-l):not(.popout-s) {
+				--panel-width: min(
+					630px,
+					90vw,
+					100cqi,
+					calc(var(--panel-max-height) / var(--panel-height-scale))
+				);
+			}
+		}
+
+		@media (max-width: 600px) {
+			&:not(.popout-l):not(.popout-s) {
+				--panel-max-height: min(95svh, 100cqh);
+				--panel-width: min(
+					420px,
+					96vw,
+					100cqi,
+					calc(var(--panel-max-height) / var(--panel-height-scale))
+				);
+			}
+		}
+
+		@media (max-height: 500px) {
+			&:not(.popout-l):not(.popout-s):not(.portrait) {
+				--panel-max-height: min(92svh, 100cqh);
+				--panel-width: min(
+					360px,
+					70vw,
+					100cqi,
+					calc(var(--panel-max-height) / var(--panel-height-scale))
+				);
+			}
+		}
+	} @else {
+		--panel-width: min(700px, 90vw);
+		--panel-height-scale: 1.406;
+		width: var(--panel-width);
+		height: min(calc(var(--panel-width) * var(--panel-height-scale)), 98vh);
+
+		&.portrait:not(.popout-l):not(.popout-s) {
+			--panel-height-scale: 1.406;
+			height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
+		}
+
+		&.popout-l {
+			--panel-width: min(425px, 86vw);
+			--panel-height-scale: 1.28;
+			height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
+		}
+
+		&.popout-s {
+			--panel-width: min(240px, 60vw);
+			--panel-height-scale: 1.28;
+			height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
+		}
+
+		@media (max-width: 1024px) and (min-width: 601px) {
+			&:not(.portrait):not(.popout-l):not(.popout-s) {
+				--panel-width: min(630px, 90vw);
+			}
+		}
+
+		@media (max-width: 600px) {
+			&:not(.popout-l):not(.popout-s) {
+				--panel-width: min(480px, 94vw);
+				--panel-height-scale: 1.36;
+				height: min(calc(var(--panel-width) * var(--panel-height-scale)), 96vh);
+			}
+		}
+
+		@media (max-height: 500px) {
+			&:not(.popout-l):not(.popout-s):not(.portrait) {
+				--panel-width: min(360px, 58vw);
+				--panel-height-scale: 1.22;
+				height: min(calc(var(--panel-width) * var(--panel-height-scale)), 94vh);
+			}
+		}
+	}
+}

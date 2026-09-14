@@ -17,6 +17,10 @@ type ModalBuyBonusConfirm = {
 	name: 'buyBonusConfirm';
 };
 
+type ModalBuyDuelPick = {
+	name: 'buyDuelPick';
+};
+
 type ModalAutoSpin = {
 	name: 'autoSpin';
 };
@@ -52,6 +56,7 @@ type Modal =
 	| ModalBetMenu
 	| ModalBuyBonus
 	| ModalBuyBonusConfirm
+	| ModalBuyDuelPick
 	| ModalAutoSpin
 	| ModalAutoSpinMessage
 	| ModalPayTable

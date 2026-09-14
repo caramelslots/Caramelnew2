@@ -111,7 +111,6 @@
 <FadeContainer {show} zIndex={10}>
 	{#if winLevelData}
 		{@const duration = winLevelData.presentDuration}
-		{@const isBigWin = winLevelData.type === 'big'}
 		{#key winAmount}
 			<WinCountUpProvider
 				amount={winAmount}
@@ -139,31 +138,29 @@
 								{@const lang = stateUrlDerived.lang()}
 								{@const titleLineGap = width * 0.22}
 								{@const titleYOffset = width * 0.06}
-								{#if isBigWin}
-									<Container y={titleYOffset}>
-										<ResponsiveLocaleText
-											anchor={0.5}
-											y={-(titleLineGap * 3.0)}
-											text={getFsOutroCongratulationsText(lang)}
-											maxWidth={width * 3.5}
-											fallbackFill={LOCALE_TEXT_FILL_GOLD}
-											style={{
-												fontFamily: fontForLocale(
-													FONT_KRUTOI,
-													FONT_KRUTOI_RU,
-													stateI18n.i18n.locale,
-													FONT_PROSTOI_HI,
-													FONT_KRUTOI_VI,
-													FONT_KRUTOI_CJK,
-												),
-												fontSize: width * 0.7 * BITMAP_FONT_SCALE,
-												align: 'center',
-												fontWeight: 'bold',
-												letterSpacing: 0,
-											}}
-										/>
-									</Container>
-								{/if}
+								<Container y={titleYOffset}>
+									<ResponsiveLocaleText
+										anchor={0.5}
+										y={-(titleLineGap * 3.0)}
+										text={getFsOutroCongratulationsText(lang)}
+										maxWidth={width * 3.5}
+										fallbackFill={LOCALE_TEXT_FILL_GOLD}
+										style={{
+											fontFamily: fontForLocale(
+												FONT_KRUTOI,
+												FONT_KRUTOI_RU,
+												stateI18n.i18n.locale,
+												FONT_PROSTOI_HI,
+												FONT_KRUTOI_VI,
+												FONT_KRUTOI_CJK,
+											),
+											fontSize: width * 0.7 * BITMAP_FONT_SCALE,
+											align: 'center',
+											fontWeight: 'bold',
+											letterSpacing: 0,
+										}}
+									/>
+								</Container>
 							{/snippet}
 							{#snippet winAmount({ width })}
 								{@const lang = stateUrlDerived.lang()}
@@ -172,7 +169,7 @@
 								<Container y={width * 0.05}>
 									<ResponsiveLocaleText
 										anchor={0.5}
-										y={isBigWin ? -lineGap * 0.65 : -lineGap * 0.75}
+										y={-lineGap * 0.65}
 										text={youWon}
 										maxWidth={width * 3.2}
 										fallbackFill={LOCALE_TEXT_FILL_WHITE}
@@ -185,7 +182,7 @@
 												FONT_PROSTOI_WHITE_VI,
 												FONT_PROSTOI_WHITE_CJK,
 											),
-											fontSize: width * (isBigWin ? 0.58 : 0.68) * BITMAP_FONT_SCALE,
+											fontSize: width * 0.58 * BITMAP_FONT_SCALE,
 											align: 'center',
 											fontWeight: 'bold',
 											letterSpacing: 0,
@@ -193,7 +190,7 @@
 									/>
 									<ResponsiveCurrencyBitmapText
 										anchor={0.5}
-										y={isBigWin ? lineGap * 1.85 : lineGap * 1.05}
+										y={lineGap * 1.85}
 										style={{
 											fontSize: width * 0.62 * BITMAP_FONT_SCALE,
 										}}

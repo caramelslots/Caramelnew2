@@ -20,12 +20,19 @@ export function createPlayOnce<TSoundName extends string>(options: {
 
 		options.initSoundVolume(sound.soundName);
 
-		options.howl.on('end', (soundIdOnEnd) => {
-			if (soundIdOnEnd === soundId) {
+		// Scoped to this soundId and auto-removed. `on('end')` without an id
+		// leaked one listener per play (reel stops, UI clicks, win SFX).
+		options.howl.once(
+			'end',
+			() => {
 				options.howl.stop(soundId);
-				delete options.getSoundMap()[sound.soundName];
-			}
-		});
+				const current = options.getSoundMap()[sound.soundName];
+				if (current?.soundId === soundId) {
+					delete options.getSoundMap()[sound.soundName];
+				}
+			},
+			soundId,
+		);
 	};
 
 	const soundPlayMap = {

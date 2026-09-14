@@ -6,7 +6,6 @@ Format: same as 0_0_lines reels (comma-separated symbol names).
 Generated strips:
   BR0.csv  — base default reelstrip (~220 rows)
   BR1.csv  — bonus_boost basegame (denser Bonus)
-  BR2.csv  — special_spins basegame (very dense Bonus, near-guaranteed FS)
   FR0.csv  — freegame default
   FR1.csv  — freegame for super bonus (denser Mystery + Bonus)
   FRWCAP.csv — wincap freegame (Wild-rich, fewer Bonus)
@@ -94,16 +93,6 @@ BR1_WEIGHTS = [
     {"L1": 40, "L2": 39, "L3": 40, "L4": 40, "H4": 7, "H3": 10, "H2": 12, "H1": 17, "W": 17, "B": 6},
 ]
 
-# BR2 — special_spins basegame. Keeps high B density for near-guaranteed FS
-# while shifting L → H ratio for volatility consistency with BR0/BR1.
-BR2_WEIGHTS = [
-    {"L1": 33, "L2": 33, "L3": 33, "L4": 33, "H4": 7, "H3": 10, "H2": 12, "H1": 14, "W": 16, "B": 14},
-    {"L1": 33, "L2": 33, "L3": 33, "L4": 33, "H4": 7, "H3": 10, "H2": 12, "H1": 14, "W": 16, "B": 14},
-    {"L1": 33, "L2": 33, "L3": 33, "L4": 33, "H4": 7, "H3": 10, "H2": 12, "H1": 14, "W": 14, "B": 16},
-    {"L1": 33, "L2": 33, "L3": 33, "L4": 33, "H4": 7, "H3": 10, "H2": 12, "H1": 14, "W": 16, "B": 14},
-    {"L1": 33, "L2": 33, "L3": 33, "L4": 33, "H4": 7, "H3": 10, "H2": 12, "H1": 14, "W": 16, "B": 14},
-]
-
 # FR0 — freegame default. 200 cells.
 #   W=15% (30 per reel) — enough for good wins but allows wide payout distribution.
 #   Mystery reveals cover the high-volatility tail (optimizer biases those sessions up).
@@ -158,14 +147,6 @@ BR1_ZW_WEIGHTS = [
     {"L1": 42, "L2": 40, "L3": 41, "L4": 41, "H4": 8, "H3": 11, "H2": 13, "H1": 15, "W": 10, "B": 6},
 ]
 
-BR2_ZW_WEIGHTS = [
-    {"L1": 35, "L2": 34, "L3": 34, "L4": 34, "H4": 8, "H3": 11, "H2": 13, "H1": 14, "W": 10, "B": 12},
-    {"L1": 34, "L2": 35, "L3": 34, "L4": 34, "H4": 8, "H3": 11, "H2": 13, "H1": 14, "W": 10, "B": 12},
-    {"L1": 35, "L2": 34, "L3": 33, "L4": 34, "H4": 8, "H3": 11, "H2": 13, "H1": 14, "W": 10, "B": 14},
-    {"L1": 34, "L2": 34, "L3": 35, "L4": 34, "H4": 8, "H3": 11, "H2": 13, "H1": 14, "W": 10, "B": 12},
-    {"L1": 35, "L2": 33, "L3": 34, "L4": 34, "H4": 8, "H3": 11, "H2": 13, "H1": 14, "W": 10, "B": 12},
-]
-
 FR0_ZW_WEIGHTS = [
     {"L1": 32, "L2": 30, "L3": 30, "L4": 28, "H4": 9, "H3": 14, "H2": 18, "H1": 21, "W": 12, "B": 4},
     {"L1": 31, "L2": 31, "L3": 29, "L4": 28, "H4": 9, "H3": 14, "H2": 18, "H1": 21, "W": 12, "B": 5},
@@ -186,10 +167,8 @@ FR1_ZW_WEIGHTS = [
 STRIPS = [
     ("BR0", BR0_WEIGHTS, 220, 1001),
     ("BR1", BR1_WEIGHTS, 220, 1002),
-    ("BR2", BR2_WEIGHTS, 220, 1003),
     ("BR0_ZW", BR0_ZW_WEIGHTS, 220, 1101),
     ("BR1_ZW", BR1_ZW_WEIGHTS, 220, 1102),
-    ("BR2_ZW", BR2_ZW_WEIGHTS, 220, 1103),
     ("FR0", FR0_WEIGHTS, 200, 2001),
     ("FR1", FR1_WEIGHTS, 200, 2002),
     ("FRWCAP", FRWCAP_WEIGHTS, 120, 2003),

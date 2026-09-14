@@ -1,3 +1,5 @@
+import './patchSpinePipe';
+
 export * from './components/index';
 export * from './utils.svelte';
 export * from './types';

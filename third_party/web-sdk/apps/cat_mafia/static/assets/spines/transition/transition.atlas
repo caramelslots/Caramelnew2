@@ -1,0 +1,9 @@
+transition.webp
+size:2048,1024
+filter:Linear,Linear
+cloud_1
+bounds:2,35,900,489
+cloud_2
+bounds:1527,12,512,512
+cloud_3
+bounds:904,2,621,522
