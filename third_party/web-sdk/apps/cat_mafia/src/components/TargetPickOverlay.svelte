@@ -40,6 +40,7 @@
 		type TargetShotFlight,
 	} from '../game/shotBulletAssets';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { ensureTirPixiInApp } from '../game/tirGpuMemory';
 	import {
 		TARGET_BOARD_DEV_VALUES,
 		TARGET_BOARD_PICK_FLIP_MS_BY_ANIM,
@@ -274,6 +275,7 @@
 		freeSpinTargetPick: async (event) => {
 			startShotBulletPreload();
 			startTargetBoardPreload();
+			await ensureTirPixiInApp(context.stateApp);
 			targets = event.targets.length === 6 ? [...event.targets] : [...TARGET_BOARD_DEV_VALUES];
 			chosenIndex = event.chosenIndex;
 			awardedFs = event.awardedFs;

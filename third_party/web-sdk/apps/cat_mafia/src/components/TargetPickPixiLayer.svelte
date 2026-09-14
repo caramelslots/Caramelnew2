@@ -92,7 +92,19 @@
 		);
 
 	$effect(() => {
-		if (!open) return;
+		if (!open) {
+			if (wood !== PIXI.Texture.EMPTY) {
+				try {
+					wood.destroy(false);
+				} catch {
+					/* GPU already released */
+				}
+			}
+			wood = PIXI.Texture.EMPTY;
+			holder = PIXI.Texture.EMPTY;
+			front = PIXI.Texture.EMPTY;
+			return;
+		}
 		const bgUrl = boardBgUrl;
 		const native = boardNative;
 		const content = boardContent;

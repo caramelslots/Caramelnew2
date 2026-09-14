@@ -86,6 +86,8 @@
 		freeSpinOutroShow: () => {
 			show = true;
 			closing = false;
+			// Raise the Pixi stage over HTML HUD (spin / bet / balance).
+			stateGame.winOverlayActive = true;
 		},
 		freeSpinOutroHide: async () => {
 			show = false;
@@ -105,9 +107,7 @@
 			});
 			winAmount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
-			// Keep Pixi under HTML underlays so the revolver drum is not cut by
-			// the dim / coin layers. Outro has its own CanvasSizeRectangle dim.
-			stateGame.winOverlayActive = false;
+			stateGame.winOverlayActive = true;
 			stateGame.overlayDimAlpha = FS_OUTRO_DIM_ALPHA;
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},

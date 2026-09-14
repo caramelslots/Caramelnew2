@@ -12,9 +12,22 @@
 	let container = $state<HTMLDivElement>();
 	let ready = $state(false);
 	let player: SpinePlayer | undefined;
+	let pressPlaying = false;
+
+	const pauseIfIdle = (spinePlayer: SpinePlayer) => {
+		if (isHtmlWebglPaused()) {
+			pressPlaying = false;
+			spinePlayer.animationState?.setEmptyAnimation(0, 0);
+			spinePlayer.paused = true;
+			return;
+		}
+		spinePlayer.paused = !pressPlaying;
+	};
 
 	export function playPress() {
 		if (!player || !ready || isHtmlWebglPaused()) return;
+		pressPlaying = true;
+		player.paused = false;
 		player.setAnimation('animation', false);
 	}
 
@@ -43,10 +56,12 @@
 					complete: (entry) => {
 						if (entry.animation?.name === 'animation') {
 							spinePlayer.animationState?.setEmptyAnimation(0, 0);
+							pressPlaying = false;
+							pauseIfIdle(spinePlayer);
 						}
 					},
 				});
-				spinePlayer.paused = isHtmlWebglPaused();
+				spinePlayer.paused = true;
 				ready = true;
 			},
 		});
@@ -59,7 +74,7 @@
 
 	$effect(() => {
 		if (!player || !ready) return;
-		player.paused = isHtmlWebglPaused();
+		pauseIfIdle(player);
 	});
 </script>
 

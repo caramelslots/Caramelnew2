@@ -78,6 +78,7 @@ import {
 	BOARD_SIZES,
 	BOARD_LAYOUT_OFFSETS,
 	BOARD_LAYOUT_SCALE,
+	BOARD_LAYOUT_SCALE_POPOUT,
 	getPortraitBoardScale,
 	getPortraitDeviceWidth,
 	getPortraitParchmentSize,
@@ -87,6 +88,7 @@ import {
 	STARTUP_SW_ORIGIN_ROW,
 	BOARD_DIMENSIONS,
 	isVisibleBoardSymbolIndex,
+	isPopoutViewport,
 	SPIN_OPTIONS_DEFAULT,
 	SPIN_OPTIONS_FAST,
 	INITIAL_SYMBOL_STATE,
@@ -404,6 +406,7 @@ const baseBoardLayout = () => {
 	const offset = BOARD_LAYOUT_OFFSETS[layoutType];
 	const ml = stateLayoutDerived.mainLayout();
 	const parchment = layoutType === 'portrait' ? getPortraitParchmentSize() : null;
+	const isPopout = isPopoutViewport(stateLayoutDerived.canvasSizes());
 	const scale =
 		layoutType === 'portrait'
 			? getPortraitBoardScale(
@@ -411,7 +414,9 @@ const baseBoardLayout = () => {
 					stateLayoutDerived.canvasSizeType(),
 					getPortraitDeviceWidth(stateLayoutDerived.canvasSizes()),
 				)
-			: (BOARD_LAYOUT_SCALE[layoutType as keyof typeof BOARD_LAYOUT_SCALE] ?? 1);
+			: isPopout
+				? BOARD_LAYOUT_SCALE_POPOUT
+				: (BOARD_LAYOUT_SCALE[layoutType as keyof typeof BOARD_LAYOUT_SCALE] ?? 1);
 
 	const visualWidth = parchment ? parchment.width * scale : BOARD_SIZES.width * scale;
 	const visualHeight = parchment ? parchment.height * scale : BOARD_SIZES.height * scale;

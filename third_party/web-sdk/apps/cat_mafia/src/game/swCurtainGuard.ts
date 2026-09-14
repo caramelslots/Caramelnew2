@@ -1,12 +1,26 @@
 /**
  * Hard rule: expanded / sticky Super Wild is ONLY the Spine curtain.
  * Board SW tiles (Wild.webp) may appear for a single lying SW before expand —
- * never as a 4-high stack. Call `ensureSwCurtainsForBoard` whenever the board
- * may hold a full SW column.
+ * never as a 4-high stack, and never as four regular W / WILDCARD cells.
+ * Call `ensureSwCurtainsForBoard` whenever the board may hold a full SW column.
  */
 
 import { BOARD_DIMENSIONS } from './constants';
+import { isBuyBonusFlowOpen } from './isAnyMenuOpen';
 import { stateGame } from './stateGame.svelte';
+
+/**
+ * Drop curtains that no longer own a column. Never strip a live full-SW
+ * (or sticky) reel — that is what painted four WILD tiles after FS.
+ */
+export const releaseSuperWildCurtains = () => {
+	const keepGame = stateGame.superWildCurtains.filter(
+		(c) => isFullSwColumn(c.reel) || stateGame.stickySwByReel[c.reel] != null,
+	);
+	if (keepGame.length !== stateGame.superWildCurtains.length) {
+		stateGame.superWildCurtains = keepGame;
+	}
+};
 
 export const countVisibleSwOnReel = (
 	reelIndex: number,
@@ -63,6 +77,8 @@ export const shouldHideBoardSwTile = (reelIndex: number): boolean => {
 export const ensureSwCurtainsForBoard = () => {
 	// Super first spin: curtain must slide in via `dropIn`, not snap to `done`.
 	if (stateGame.stickySwIntroPending) return;
+	// Buy-bonus / FS intro: do not remount WILD_F_1 under the overlay.
+	if (isBuyBonusFlowOpen() || stateGame.freeSpinIntroActive) return;
 
 	const originRow = Math.floor(BOARD_DIMENSIONS.y / 2) + 1;
 	const list = stateGame.superWildCurtains.slice();
@@ -102,6 +118,8 @@ export const ensureSwCurtainsForBoard = () => {
 		ensureReel(reel, stateGame.stickySwByReel[reel] || 2);
 	}
 
+	// Any full SW column is a curtain — FS, leftover last-FS board, or base.
+	// Do not rewrite those cells to W. First base reveal dismisses under the mask.
 	for (let reel = 0; reel < stateGame.board.length; reel++) {
 		if (!isFullSwColumn(reel)) continue;
 		const mult = stateGame.stickySwByReel[reel] ?? swMultOnReel(reel);

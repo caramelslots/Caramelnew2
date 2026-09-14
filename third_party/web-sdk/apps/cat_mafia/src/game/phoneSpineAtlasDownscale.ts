@@ -26,6 +26,11 @@ const PHONE_ATLAS_CAPS: readonly AtlasCap[] = [
 	{ assetKey: 'targetBoardFlip', maxEdge: PHONE_SPINE_ATLAS_MAX_EDGE },
 	{ assetKey: 'H1', maxEdge: PHONE_SPINE_ATLAS_MAX_EDGE_TIGHT },
 	{ assetKey: 'cartridge', maxEdge: PHONE_SPINE_ATLAS_MAX_EDGE_TIGHT },
+	/**
+	 * Extra-FS peak: WILD_F_1 is 1885×1667 (under 2048, so the board cap is a no-op).
+	 * Same atlas as `W` — one key is enough; UV/layout unchanged, slightly softer on phone.
+	 */
+	{ assetKey: 'superWildCurtain', maxEdge: PHONE_SPINE_ATLAS_MAX_EDGE_TIGHT },
 ];
 
 export const isPhoneForAtlasDownscale = () => {

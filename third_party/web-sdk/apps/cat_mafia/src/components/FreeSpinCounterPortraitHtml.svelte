@@ -7,7 +7,6 @@
 
 	import { getContext } from '../game/context';
 	import { stateDuel } from '../game/stateDuel.svelte';
-	import { stateGame } from '../game/stateGame.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { devPreview } from '../game/devPreview.svelte';
 	import { getPortraitFsCounterScreenPos } from '../game/duelLayout';
@@ -24,7 +23,7 @@
 	const forceShow = $derived(devPreview.forceShowFsBoardChrome);
 	const visible = $derived.by(() => {
 		if (!isPortrait || !gameEntrance.showContent) return false;
-		if (stateDuel.active || stateGame.transitionActive) return false;
+		if (stateDuel.active) return false;
 		if (forceShow) return true;
 		return show;
 	});

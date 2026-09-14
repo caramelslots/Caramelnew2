@@ -84,6 +84,12 @@ export const SUPER_WILD_WIN_MS = 1800;
  * ~0.5 = mid gesture — cat has grabbed the wheel, then the drum takes over.
  */
 export const SUPER_WILD_WIN_WHEEL_START_FRAC = 0.5;
+/**
+ * Native Spine `win` time when the grabbing hand lifts above the drum disk.
+ * Short delay so the cuff doesn't pop over the rim on the first frame of
+ * the reach; arch (side columns) stays above the hand.
+ */
+export const SUPER_WILD_WIN_HAND_ABOVE_WHEEL_NATIVE_MS = 100;
 /** Total expanding wait: full open → idle → cat mid-win → wheel land → activation. */
 export const SUPER_WILD_PRESENT_MS =
 	SUPER_WILD_OPEN_MS +

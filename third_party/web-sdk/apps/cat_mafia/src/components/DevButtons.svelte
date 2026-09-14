@@ -1170,12 +1170,12 @@
 			playBookEvent(asEvent({ type: 'freeSpinEnd', amount, winLevel }), { bookEvents: [] }),
 		);
 
-	const playFsIntroPreview = () =>
+	const playFsIntroPreview = (totalFreeSpins = 8) =>
 		guard(async () => {
 			eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
 			await eventEmitter.broadcastAsync({
 				type: 'freeSpinIntroUpdate',
-				totalFreeSpins: 10,
+				totalFreeSpins,
 			});
 			eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
 		});
@@ -1940,8 +1940,8 @@
 					>
 						{fsCounterPreview ? 'FS Counter: ON' : 'FS Counter'}
 					</button>
-					<button type="button" disabled={busy} onclick={playFsIntroPreview}>
-						FS Intro
+					<button type="button" disabled={busy} onclick={() => playFsIntroPreview(8)}>
+						FS Intro (8)
 					</button>
 					<button type="button" disabled={busy} onclick={playFsExtraIntroPreview}>
 						FS Extra Spins

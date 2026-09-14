@@ -61,6 +61,8 @@
 	const NUMBER_Y_RATIO_PORTRAIT = 0.485;
 	const FREE_SPINS_Y_RATIO = 0.625;
 	const FREE_SPINS_SIZE_RATIO = 0.056;
+	/** Inner gold banner between the side gems — EXTRA SPINS is wider than FREE SPINS. */
+	const BANNER_FIT_WIDTH_RATIO = 0.5;
 	/** Number glyph size vs panel width (this is what you tweak). */
 	const NUMBER_FONT_RATIO = 0.14;
 	const NUMBER_FONT_RATIO_PORTRAIT = 0.11;
@@ -117,26 +119,13 @@
 		return [`top:${p.numberTop}px`, `font-size:${p.numberFontPx}px`].join(';');
 	});
 
-	const freeSpinsStyle = $derived.by(() => {
-		const p = panelLayout;
-		const fontPx = Math.max(14, Math.round(p.panelWidth * FREE_SPINS_SIZE_RATIO));
-		return [
-			`top:${p.panelHeight * FREE_SPINS_Y_RATIO}px`,
-			`font-size:${fontPx}px`,
-			`max-width:${p.panelWidth * 0.38}px`,
-		].join(';');
-	});
-
-	const congratulationsStyle = $derived.by(() => {
-		const p = panelLayout;
-		const fontPx = Math.max(14, Math.round(p.panelWidth * CONGRATULATIONS_SIZE_RATIO));
-		return [`top:${p.panelHeight * CONGRATULATIONS_Y_RATIO}px`, `font-size:${fontPx}px`].join(';');
-	});
-
 	let show = $state(false);
 	let totalFreeSpins = $state(10);
 	let introMode = $state<FreeSpinIntroMode>('award');
 	let oncomplete = $state(() => {});
+	let dismissing = false;
+	let bannerEl = $state<HTMLParagraphElement | undefined>();
+	let bannerFitScale = $state(1);
 
 	const lang = $derived(stateUrlDerived.lang());
 	const congratulationsText = $derived(getFsOutroCongratulationsText(lang));
@@ -145,6 +134,22 @@
 	const extraSpinsText = $derived(context.i18nDerived.extraSpins());
 	const isExtraMode = $derived(introMode === 'extra');
 	const bannerLabel = $derived(isExtraMode ? extraSpinsText : freeSpinsText);
+
+	const freeSpinsStyle = $derived.by(() => {
+		const p = panelLayout;
+		const fontPx = Math.max(14, Math.round(p.panelWidth * FREE_SPINS_SIZE_RATIO));
+		return [
+			`top:${p.panelHeight * FREE_SPINS_Y_RATIO}px`,
+			`font-size:${fontPx}px`,
+			`transform:translate(-50%, -50%) scale(${bannerFitScale})`,
+		].join(';');
+	});
+
+	const congratulationsStyle = $derived.by(() => {
+		const p = panelLayout;
+		const fontPx = Math.max(14, Math.round(p.panelWidth * CONGRATULATIONS_SIZE_RATIO));
+		return [`top:${p.panelHeight * CONGRATULATIONS_Y_RATIO}px`, `font-size:${fontPx}px`].join(';');
+	});
 
 	/** Proxima-nova on a circular arc — spaced by glyph width so the bow stays smooth. */
 	const congratulationsGlyphs = $derived.by(() => {
@@ -221,10 +226,29 @@
 
 	onMount(() => () => cancelAnimationFrame(revealRaf));
 
-	const dismiss = () => oncomplete();
+	$effect(() => {
+		void bannerLabel;
+		void panelLayout.panelWidth;
+		const el = bannerEl;
+		if (!el) return;
+
+		el.style.transform = 'translate(-50%, -50%) scale(1)';
+		const limit = panelLayout.panelWidth * BANNER_FIT_WIDTH_RATIO;
+		const width = el.scrollWidth;
+		bannerFitScale = width > limit ? Math.max(0.62, limit / width) : 1;
+	});
+
+	const dismiss = () => {
+		if (!show || dismissing) return;
+		dismissing = true;
+		cancelAnimationFrame(revealRaf);
+		revealRaf = 0;
+		oncomplete();
+	};
 
 	context.eventEmitter.subscribeOnMount({
 		freeSpinIntroShow: () => {
+			dismissing = false;
 			show = true;
 			stateGame.freeSpinIntroActive = true;
 		},
@@ -235,6 +259,7 @@
 			show = false;
 			stateGame.freeSpinIntroActive = false;
 			introMode = 'award';
+			dismissing = false;
 		},
 		freeSpinIntroUpdate: async (event) => {
 			totalFreeSpins = event.totalFreeSpins;
@@ -299,9 +324,19 @@
 						? `+${totalFreeSpins} extra spins`
 						: `${totalFreeSpins} free spins`}
 				>
-					{#if isExtraMode}<span class="number-plus">+</span>{/if}{totalFreeSpins}
+					<span class="number-bob">
+						{#if isExtraMode}<span class="number-plus">+</span>{/if}
+						<span class="number-digits">{totalFreeSpins}</span>
+					</span>
 				</div>
-				<p class="free-spins" style={freeSpinsStyle}>{bannerLabel}</p>
+				<p
+					bind:this={bannerEl}
+					class="free-spins"
+					class:free-spins--extra={isExtraMode}
+					style={freeSpinsStyle}
+				>
+					{bannerLabel}
+				</p>
 			</div>
 		</div>
 
@@ -437,30 +472,48 @@
 	.number {
 		position: absolute;
 		left: 50%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: max-content;
 		transform: translate(-50%, -50%);
 		font-family: 'proxima-nova', sans-serif;
 		font-weight: 800;
+		font-synthesis: none;
 		line-height: 1;
+		filter: drop-shadow(0 1px 0 #fff3b0) drop-shadow(0 3px 0 #5a3a0e)
+			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
+		user-select: none;
+		pointer-events: none;
+	}
+
+	.number-bob {
+		position: relative;
+		display: block;
+		transform-origin: 50% 50%;
+		animation: fs-cong-number-idle 2800ms infinite ease-in-out;
+	}
+
+	.number-digits,
+	.number-plus {
 		color: #ffe28a;
 		background: linear-gradient(180deg, #fff6c8 0%, #ffd56a 38%, #e8a020 72%, #b8730f 100%);
 		-webkit-background-clip: text;
 		background-clip: text;
 		-webkit-text-fill-color: transparent;
-		filter: drop-shadow(0 1px 0 #fff3b0) drop-shadow(0 3px 0 #5a3a0e)
-			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
-		user-select: none;
-		pointer-events: none;
-		transform-origin: center center;
-		will-change: transform;
-		animation: fs-cong-number-idle 2800ms infinite ease-in-out;
+	}
+
+	.number-digits {
+		display: block;
+		min-width: 2ch;
+		text-align: center;
+		font-variant-numeric: tabular-nums lining-nums;
+		font-feature-settings: 'tnum' 1, 'lnum' 1;
+		font-kerning: none;
 	}
 
 	.number-plus {
-		margin-right: 0.06em;
+		position: absolute;
+		right: 100%;
+		top: 50%;
+		margin-right: 0.04em;
+		transform: translateY(-50%);
 	}
 
 	.free-spins {
@@ -468,7 +521,9 @@
 		left: 50%;
 		margin: 0;
 		padding: 0;
+		width: max-content;
 		transform: translate(-50%, -50%);
+		transform-origin: center center;
 		font-family: 'proxima-nova', sans-serif;
 		font-weight: 800;
 		letter-spacing: 0.06em;
@@ -487,6 +542,10 @@
 		pointer-events: none;
 	}
 
+	.free-spins--extra {
+		letter-spacing: 0.03em;
+	}
+
 	@keyframes fs-cong-rays-spin {
 		from {
 			transform: translate(-50%, -50%) rotate(0deg);
@@ -500,11 +559,11 @@
 	@keyframes fs-cong-number-idle {
 		0%,
 		100% {
-			transform: translate(-50%, calc(-50% + 0px)) scale(1);
+			transform: translateY(0) scale(1);
 		}
 
 		52.4% {
-			transform: translate(-50%, calc(-50% - 4.5px)) scale(1.12);
+			transform: translateY(-4.5px) scale(1.12);
 		}
 	}
 </style>

@@ -1,7 +1,7 @@
 <!--
 	Shared blur backdrop for buy-bonus menu + confirm.
-	Shell JS loads after the bootstrap loader; card Pixi apps wait for first open
-	so they do not compete with slot startup.
+	Shell JS loads after the bootstrap loader. Card WebGL is created only while
+	a panel is visible and released when the flow closes.
 -->
 <script lang="ts">
 	import { stateModal } from 'state-shared';

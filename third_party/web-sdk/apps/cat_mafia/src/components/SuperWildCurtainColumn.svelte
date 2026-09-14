@@ -169,7 +169,7 @@
 			x={transform.spineX}
 			y={transform.spineY}
 			scale={transform.scale}
-			autoUpdate
+			autoUpdate={!stateGame.freeSpinIntroActive}
 		>
 			<SuperWildCurtainController
 				playKey={props.playKey}

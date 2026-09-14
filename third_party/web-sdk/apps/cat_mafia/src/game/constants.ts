@@ -130,6 +130,14 @@ export const PRESS_TO_CONTINUE_BOTTOM_OFFSET = 18;
 
 /** HTML HUD balance/bet — system/web font stack (not bitmap). */
 export const HUD_BALANCE_BET_FONT_FAMILY = "'Reggae One', 'Philosopher', Georgia, serif";
+
+/** CSS family for HTML labels that used to be Pixi-extracted bitmap text. */
+export const htmlLabelFontFamily = (locale: string): string => {
+	if (isArabicLocale(locale)) return FONT_ARABIC_PROSTOI;
+	if (locale === 'ru') return "'Philosopher', Georgia, serif";
+	if (isCjkLocale(locale) || locale === 'hi') return SYSTEM_TEXT_FONT_FAMILY;
+	return HUD_BALANCE_BET_FONT_FAMILY;
+};
 /** Buy-bonus card display font (Latin script only; digits always). */
 export const FONT_KNEWAVE = 'Knewave';
 export const BUY_BONUS_CARD_KNEWAVE_FONT_FAMILY = `'${FONT_KNEWAVE}'`;
@@ -886,6 +894,15 @@ export const BOARD_LAYOUT_SCALE = {
 	tablet: 1.14,
 	landscape: 1.16,
 } as const;
+
+/**
+ * Popout L/S classify as landscape + mobile (narrow canvas), so the default
+ * landscape board scale reads smaller (~52% of canvas height vs ~61% on
+ * desktop/laptop). Boost so on-screen board height matches PC/laptop.
+ * Factor = desktopScale × (landscapeMainH / desktopMainH) = 1.22 × 900/800.
+ */
+export const BOARD_LAYOUT_SCALE_POPOUT =
+	BOARD_LAYOUT_SCALE.desktop * (900 / 800);
 /** Frame bezel + glow offset from board center (px): +x right, +y down. */
 export const BOARD_FRAME_OFFSET = { x: 0, y: 0 } as const;
 /** Vertical nudge (game px, +y = down) applied to all desk artwork layers (base / contour)

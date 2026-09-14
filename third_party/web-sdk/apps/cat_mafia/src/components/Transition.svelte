@@ -6,9 +6,12 @@
 
 <script lang="ts">
 	import { waitForResolve } from 'utils-shared/wait';
+	import { stateUi } from 'state-shared';
 
 	import TransitionAnimation from './TransitionAnimation.svelte';
 	import { getContext } from '../game/context';
+	import { wantedMascotCatSpineKey } from '../game/mascotCatSkinMemory';
+	import { stateDuel } from '../game/stateDuel.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
 
 	const context = getContext();
@@ -33,9 +36,25 @@
 	<TransitionAnimation
 		onThemeSwitch={() => {
 			if (pendingGameType) {
-				stateGame.gameType = pendingGameType;
-				// Mount drum only once steam has closed over the screen.
-				if (pendingGameType === 'freegame') stateGame.fsDrumWanted = true;
+				const next = pendingGameType;
+				stateGame.gameType = next;
+				// Same beat as street/drum — mascot atlas while steam covers the board.
+				stateGame.mascotCatSpineKey = wantedMascotCatSpineKey({
+					gameType: next,
+					duelActive: stateDuel.active,
+				});
+				if (next === 'freegame') {
+					stateGame.fsDrumWanted = true;
+					context.eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
+					stateUi.freeSpinCounterShow = true;
+					context.eventEmitter.broadcast({ type: 'drawerButtonShow' });
+					context.eventEmitter.broadcast({ type: 'drawerFold' });
+				} else if (next === 'basegame') {
+					context.eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
+					stateUi.freeSpinCounterShow = false;
+					context.eventEmitter.broadcast({ type: 'drawerUnfold' });
+					context.eventEmitter.broadcast({ type: 'drawerButtonHide' });
+				}
 				pendingGameType = undefined;
 			}
 			// Swap gallery → symbols while steam fully covers the board.

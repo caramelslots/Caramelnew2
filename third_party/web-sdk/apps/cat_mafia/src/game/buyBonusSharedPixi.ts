@@ -1,6 +1,8 @@
 /**
  * One WebGL context for every buy-bonus card.
  * Menu + confirm register host boxes; each variant has a single Spine.
+ * The context exists only while a card is visible — hidden menus must not
+ * keep a second WebGL renderer alive (iOS Safari GPU).
  */
 import * as PIXI from 'pixi.js';
 import { Spine } from '@esotericsoftware/spine-pixi-v8';
@@ -31,11 +33,13 @@ const spines = new Map<BuyBonusSpineVariant, Spine>();
 const loading = new Map<BuyBonusSpineVariant, Promise<Spine | null>>();
 
 let app: PIXI.Application | undefined;
-let appReady: Promise<PIXI.Application> | undefined;
+let appReady: Promise<PIXI.Application | undefined> | undefined;
+let appGen = 0;
 let nextViewId = 1;
 let tickerBound = false;
 let layerObserver: ResizeObserver | undefined;
 let resizeListening = false;
+let destroyTimer: ReturnType<typeof setTimeout> | undefined;
 
 const hostDpr = () => Math.min(window.devicePixelRatio || 1, 2);
 
@@ -44,18 +48,39 @@ const hostBox = (el: HTMLElement) => ({
 	h: Math.max(0, Math.round(el.clientHeight)),
 });
 
+const isPreparing = (el: HTMLElement) => Boolean(el.closest('[data-buy-bonus-prepare]'));
+
 const isDisplayed = (el: HTMLElement) => {
 	if (!el.isConnected) return false;
 	const { w, h } = hostBox(el);
 	if (w < 2 || h < 2) return false;
+	const preparing = isPreparing(el);
 	let node: HTMLElement | null = el;
 	while (node) {
 		const style = getComputedStyle(node);
-		if (style.display === 'none' || style.visibility === 'hidden') return false;
-		if (Number.parseFloat(style.opacity) === 0) return false;
+		if (style.display === 'none') return false;
+		if (style.visibility === 'hidden' && !preparing) return false;
+		// Preparing panel stays opacity:0 so bg+cards can reveal together.
+		if (!preparing && Number.parseFloat(style.opacity) === 0) return false;
 		node = node.parentElement;
 	}
 	return true;
+};
+
+const hasDisplayedView = () => {
+	for (const view of views.values()) {
+		if (isDisplayed(view.host)) return true;
+	}
+	return false;
+};
+
+/** Open menu/confirm hosts — keep GL even while the panel is still opacity:0. */
+const hasLiveView = () => {
+	for (const view of views.values()) {
+		if (!view.host.isConnected) continue;
+		if (view.active || isDisplayed(view.host)) return true;
+	}
+	return false;
 };
 
 const hideReferenceSlots = (spine: Spine, variant: BuyBonusSpineVariant) => {
@@ -66,11 +91,12 @@ const hideReferenceSlots = (spine: Spine, variant: BuyBonusSpineVariant) => {
 	}
 };
 
-const ensureApp = () => {
+const ensureApp = (): Promise<PIXI.Application | undefined> => {
 	if (app) return Promise.resolve(app);
 	if (appReady) return appReady;
 
-	appReady = (async () => {
+	const gen = ++appGen;
+	const pending = (async () => {
 		const next = new PIXI.Application();
 		await next.init({
 			width: 4,
@@ -83,6 +109,10 @@ const ensureApp = () => {
 			resolution: hostDpr(),
 			autoStart: false,
 		});
+		if (gen !== appGen || views.size === 0) {
+			next.destroy(true);
+			return undefined;
+		}
 		next.canvas.className = CANVAS_CLASS;
 		next.canvas.style.position = 'absolute';
 		next.canvas.style.inset = '0';
@@ -100,8 +130,15 @@ const ensureApp = () => {
 		return next;
 	})();
 
+	appReady = pending.then((created) => {
+		if (!created && appReady === pending) appReady = undefined;
+		return created;
+	});
+
 	return appReady;
 };
+
+const MENU_VARIANTS: readonly BuyBonusSpineVariant[] = ['normal', 'super', 'duel'];
 
 const loadSpine = (variant: BuyBonusSpineVariant) => {
 	const existing = spines.get(variant);
@@ -110,10 +147,14 @@ const loadSpine = (variant: BuyBonusSpineVariant) => {
 	if (pending) return pending;
 
 	const task = (async () => {
-		await ensureApp();
+		if (views.size === 0) return null;
+		const createdApp = await ensureApp();
+		if (!createdApp || views.size === 0) return null;
 		const urls = buyBonusSpineUrls(variant);
 		await PIXI.Assets.load([urls.atlas, urls.skeleton]);
 		if (!app || views.size === 0) return null;
+		const already = spines.get(variant);
+		if (already) return already;
 		const spine = Spine.from({
 			skeleton: urls.skeleton,
 			atlas: urls.atlas,
@@ -128,11 +169,26 @@ const loadSpine = (variant: BuyBonusSpineVariant) => {
 		return spine;
 	})().finally(() => {
 		loading.delete(variant);
-		if (views.size === 0) destroyIfIdle();
+		if (!hasLiveView()) scheduleDestroyIfIdle();
 	});
 
 	loading.set(variant, task);
 	return task;
+};
+
+export const whenBuyBonusSpinesReady = async (
+	variants: readonly BuyBonusSpineVariant[] = MENU_VARIANTS,
+) => {
+	await Promise.all(variants.map((variant) => loadSpine(variant)));
+};
+
+export const areBuyBonusSpinesReady = (
+	variants: readonly BuyBonusSpineVariant[] = MENU_VARIANTS,
+) => variants.every((variant) => spines.has(variant));
+
+/** Force one layout/render pass (e.g. while the menu is still opacity:0). */
+export const flushBuyBonusSharedStage = () => {
+	requestSync();
 };
 
 const attachCanvas = (layer: HTMLElement) => {
@@ -212,9 +268,11 @@ const syncSharedStage = () => {
 	if (!layer) {
 		for (const spine of spines.values()) spine.visible = false;
 		app.ticker.stop();
+		scheduleDestroyIfIdle();
 		return;
 	}
 
+	cancelScheduledDestroy();
 	attachCanvas(layer);
 	resizeCanvas(layer);
 
@@ -245,21 +303,56 @@ const requestSync = () => {
 	syncSharedStage();
 };
 
+const cancelScheduledDestroy = () => {
+	if (destroyTimer === undefined) return;
+	clearTimeout(destroyTimer);
+	destroyTimer = undefined;
+};
+
+/** Cover buyBonus → confirm remount so we do not thrash the context. */
+const DESTROY_IDLE_MS = 80;
+
+const scheduleDestroyIfIdle = () => {
+	cancelScheduledDestroy();
+	destroyTimer = setTimeout(() => {
+		destroyTimer = undefined;
+		destroyIfIdle();
+	}, DESTROY_IDLE_MS);
+};
+
 const destroyIfIdle = () => {
-	if (views.size > 0 || loading.size > 0) return;
+	if (loading.size > 0 || hasLiveView()) return;
+	cancelScheduledDestroy();
+	appGen += 1;
+	for (const spine of spines.values()) {
+		try {
+			spine.destroy({ children: true });
+		} catch {
+			/* already released */
+		}
+	}
+	spines.clear();
 	const current = app;
 	app = undefined;
 	appReady = undefined;
 	tickerBound = false;
-	for (const spine of spines.values()) spine.destroy({ children: true });
-	spines.clear();
 	layerObserver?.disconnect();
 	layerObserver = undefined;
 	if (resizeListening) {
 		window.removeEventListener('resize', requestSync);
 		resizeListening = false;
 	}
-	if (current) current.destroy(true);
+	if (current) {
+		current.ticker.remove(syncSharedStage);
+		current.destroy(true);
+	}
+	const urls = MENU_VARIANTS.flatMap((variant) => {
+		const files = buyBonusSpineUrls(variant);
+		return [files.atlas, files.skeleton];
+	});
+	void PIXI.Assets.unload(urls).catch(() => {
+		/* nothing cached */
+	});
 };
 
 export const registerBuyBonusCardView = (
@@ -270,8 +363,9 @@ export const registerBuyBonusCardView = (
 	const id = nextViewId;
 	nextViewId += 1;
 	views.set(id, { id, variant, host, active });
-	void ensureApp().then(() => {
-		if (!views.has(id)) return;
+	cancelScheduledDestroy();
+	void ensureApp().then((created) => {
+		if (!created || !views.has(id)) return;
 		void loadSpine(variant).then(() => {
 			if (views.has(id)) requestSync();
 		});
@@ -283,13 +377,23 @@ export const setBuyBonusCardViewActive = (id: BuyBonusCardViewId, active: boolea
 	const view = views.get(id);
 	if (!view || view.active === active) return;
 	view.active = active;
-	requestSync();
+	if (!active) {
+		requestSync();
+		return;
+	}
+	cancelScheduledDestroy();
+	void ensureApp().then((created) => {
+		if (!created || !views.has(id)) return;
+		void loadSpine(view.variant).then(() => {
+			if (views.has(id)) requestSync();
+		});
+	});
 };
 
 export const unregisterBuyBonusCardView = (id: BuyBonusCardViewId) => {
 	views.delete(id);
-	if (views.size === 0) {
-		destroyIfIdle();
+	if (views.size === 0 || !hasLiveView()) {
+		scheduleDestroyIfIdle();
 		return;
 	}
 	requestSync();

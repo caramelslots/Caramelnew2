@@ -325,6 +325,9 @@ const expandSuperWildColumn = (reelIndex: number, mult: number) => {
 	if (stateGame.gameType === 'freegame') {
 		stateGame.stickySwByReel[reelIndex] = mult;
 		stateGame.stickySwOpened = true;
+	} else {
+		const originRow = Math.floor(BOARD_DIMENSIONS.y / 2) + 1;
+		setBaseSuperWildCurtain(reelIndex, mult, 'done', originRow);
 	}
 	ensureSwCurtainsForBoard();
 };
@@ -1145,19 +1148,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Warm fsCong while bonus celebrate / HUD hide runs.
 		void preloadHtmlImages(FS_CONG_IMAGE_URLS);
 
-		// Hide HUD for steam / intro (gallery kept HUD visible during pick).
-		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		await preloadHtmlImages(FS_CONG_IMAGE_URLS);
 		// Mount congrats under the cloud (HTML z70 < transition z100) so it appears
 		// the instant steam clears — no empty-board beat after the spine completes.
 		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin', withIntro: true });
-		await eventEmitter.broadcastAsync({ type: 'transition', gameType: 'freegame' });
-		// Safety: if theme-switch dismiss missed, snap gallery off before intro.
-		eventEmitter.broadcast({ type: 'targetPickDismiss' });
-		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
-		stateUi.freeSpinCounterShow = true;
 		eventEmitter.broadcast({
 			type: 'freeSpinCounterUpdate',
 			current: 0,
@@ -1165,14 +1161,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 		stateUi.freeSpinCounterCurrent = 0;
 		stateUi.freeSpinCounterTotal = bookEvent.totalFs;
+		await eventEmitter.broadcastAsync({ type: 'transition', gameType: 'freegame' });
+		// Safety: if theme-switch dismiss missed, snap gallery off before intro.
+		eventEmitter.broadcast({ type: 'targetPickDismiss' });
 		await eventEmitter.broadcastAsync({
 			type: 'freeSpinIntroUpdate',
 			totalFreeSpins: bookEvent.totalFs,
 		});
 		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
-		await eventEmitter.broadcastAsync({ type: 'uiShow' });
-		await eventEmitter.broadcastAsync({ type: 'drawerButtonShow' });
-		eventEmitter.broadcast({ type: 'drawerFold' });
 	},
 	updateFreeSpin: async (bookEvent: BookEventOfType<'updateFreeSpin'>) => {
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
@@ -1207,6 +1203,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.mysteryReels = [];
 		resetMysteryReelSession();
 		stateGame.bonusMode = null;
+		// Keep `gameType` as freegame through outro. Theme + mascot atlas swap
+		// on the transition spine (`onThemeSwitch` / after steam), not here.
 		stateGame.drumFiringChamber = null;
 		stateGame.drumShootActive = false;
 		stateGame.fsMainTotal = 0;
@@ -1215,9 +1213,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.stickySwByReel = {};
 		stateGame.stickySwOpened = false;
 		stateGame.stickySwIntroPending = false;
-		stateGame.swSpineHideReels = {};
+		// Last FS board stays on screen through outro. Full SW columns keep
+		// their Spine curtains — never four WILD tiles. First base spin dismisses.
+		ensureSwCurtainsForBoard();
 
-		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
 		winLevelSoundsPlay({ winLevelData });
 		await eventEmitter.broadcastAsync({
@@ -1228,8 +1227,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// gameType is still `freegame` until the transition animation — force main BGM.
 		winLevelSoundsStop({ music: 'bgm_main' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
-		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
-		stateUi.freeSpinCounterShow = false;
 		stateGame.mascotPose = 'idle';
 		// Drop drum after outro so it can sit through the celebration.
 		stateGame.fsDrumWanted = false;
@@ -1240,9 +1237,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.drumSpentChambers = {};
 		stateGame.drumShakeKey = 0;
 		await eventEmitter.broadcastAsync({ type: 'transition', gameType: 'basegame' });
-		await eventEmitter.broadcastAsync({ type: 'uiShow' });
-		await eventEmitter.broadcastAsync({ type: 'drawerUnfold' });
-		eventEmitter.broadcast({ type: 'drawerButtonHide' });
 	},
 	setWin: async (bookEvent: BookEventOfType<'setWin'>, { bookEvents }: BookEventContext) => {
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];

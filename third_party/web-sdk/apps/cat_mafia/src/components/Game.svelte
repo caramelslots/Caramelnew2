@@ -17,6 +17,8 @@
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { startLoadingIdleUiPreload } from '../game/uiHtmlAssetManifest';
 	import { GAME_ENTRANCE_MS } from '../game/constants';
+	import { PHONE_TICKER_MAX_FPS } from '../game/duelPhoneDpr';
+	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import EnableSound from './EnableSound.svelte';
 	import EnableSymbolTextureOptimization from './EnableSymbolTextureOptimization.svelte';
@@ -24,6 +26,7 @@
 	import EnableUiTextureOptimization from './EnableUiTextureOptimization.svelte';
 	import EnablePhoneSpineAtlasDownscale from './EnablePhoneSpineAtlasDownscale.svelte';
 	import EnableMascotCatSkinMemory from './EnableMascotCatSkinMemory.svelte';
+	import EnableTirGpuMemory from './EnableTirGpuMemory.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
 	import EnableBoardIdleBounce from './EnableBoardIdleBounce.svelte';
 	import EnableLivingIdle from './EnableLivingIdle.svelte';
@@ -58,6 +61,7 @@
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinCounterPortraitHtml from './FreeSpinCounterPortraitHtml.svelte';
+	import BoardNeonLogoHtmlOverlay from './BoardNeonLogoHtmlOverlay.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
 	import DuelModeOverlay from './DuelModeOverlay.svelte';
@@ -73,6 +77,7 @@
 	import { FadeContainer } from 'components-pixi';
 
 	const context = getContext();
+	const phoneTickerMaxFps = isPhoneForAtlasDownscale() ? PHONE_TICKER_MAX_FPS : undefined;
 
 	let BuyBonusModalShell = $state<Component | null>(null);
 
@@ -126,13 +131,19 @@
 	class:above-html-ui={context.stateGame.transitionActive ||
 		context.stateGame.winOverlayActive}
 >
-	<GameApp maxResolution={3} tuneForMobilePortrait webglOnIosAndroid>
+	<GameApp
+		maxResolution={3}
+		tuneForMobilePortrait
+		webglOnIosAndroid
+		maxFps={phoneTickerMaxFps}
+	>
 		<EnableSound />
 		<EnableSymbolTextureOptimization />
 		<EnableSymbolCellFit />
 		<EnableUiTextureOptimization />
 		<EnablePhoneSpineAtlasDownscale />
 		<EnableMascotCatSkinMemory />
+		<EnableTirGpuMemory />
 		<EnableHotkey />
 		<EnableGameActor />
 		<EnableBoardIdleBounce />
@@ -285,6 +296,7 @@
 	<RevolverDrumPlaceholder />
 </div>
 <FreeSpinCounterPortraitHtml />
+<BoardNeonLogoHtmlOverlay />
 <!-- Duel HTML chrome (pick / counters / outro). Desks + mascots + paw coins are Pixi. -->
 <DuelModeOverlay />
 <DuelIntro />

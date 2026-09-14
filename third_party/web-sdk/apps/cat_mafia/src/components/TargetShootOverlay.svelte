@@ -9,7 +9,8 @@
 <script lang="ts">
 	/**
 	 * Stage E: after main FS, 9-target board slides in → player taps (drum shots) →
-	 * FreeSpinIntro while the board slides up. Math fixes the reward queue;
+	 * then FreeSpinIntro after the board is gone (do not overlap tir + intro GPU).
+	 * Math fixes the reward queue;
 	 * click only picks which face shows each reward.
 	 *
 	 * Shots pipeline: drum shake+advance starts only after `gun_shot` ends;
@@ -48,6 +49,7 @@
 		type TargetShotFlight,
 	} from '../game/shotBulletAssets';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { ensureTirPixiInApp } from '../game/tirGpuMemory';
 	import {
 		TARGET_BOARD_PICK_FLIP_MS_BY_ANIM,
 		TARGET_PICK_SLIDE_MS,
@@ -180,7 +182,16 @@
 		stateGame.mascotPose = 'idle';
 		stateGame.drumFiringChamber = null;
 
-		const slideOut = tweenSlide(0);
+		await tweenSlide(0);
+
+		stateGame.targetPickOpen = false;
+		stateGame.targetPickSeatMode = 'six';
+		stateGame.drumShootActive = false;
+		show = false;
+		await new Promise<void>((resolve) => {
+			requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+		});
+
 		if (extraFs > 0) {
 			context.eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
 			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
@@ -191,12 +202,6 @@
 			});
 			context.eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
 		}
-		await slideOut;
-
-		stateGame.targetPickOpen = false;
-		stateGame.targetPickSeatMode = 'six';
-		stateGame.drumShootActive = false;
-		show = false;
 		oncomplete();
 	};
 
@@ -412,6 +417,7 @@
 		targetShootRound: async (event) => {
 			startShotBulletPreload();
 			startTargetBoardPreload();
+			await ensureTirPixiInApp(context.stateApp);
 			rewardQueue = event.shots.map((s) => s.reward as 0 | 1 | 2 | 3);
 			extraFs = event.extraFs;
 			faceValues = Array.from({ length: TARGET_SHOOT_SEAT_COUNT }, () => 0);

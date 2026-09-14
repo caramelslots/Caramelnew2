@@ -4,9 +4,10 @@
 	import { Tween } from 'svelte/motion';
 
 	import ArchedRibbonTitle from './ArchedRibbonTitle.svelte';
+	import LoaderCardBonusSpine from './LoaderCardBonusSpine.svelte';
 	import { getContext } from '../game/context';
 	import { GAME_INFO_SYMBOL_IMAGES } from '../game/gameInfoSymbols';
-	import { loaderCardImageUrl } from '../game/loaderCardAssets';
+	import { loaderCardContentIndex, loaderCardImageUrl } from '../game/loaderCardAssets';
 
 	const bonusSymbolUrl = GAME_INFO_SYMBOL_IMAGES.B;
 
@@ -27,15 +28,16 @@
 
 	const scale = new Tween(1);
 
+	const contentIndex = $derived(loaderCardContentIndex(props.cardIndex));
 	const cardUrl = $derived(loaderCardImageUrl(props.cardIndex));
 	const titleText = $derived(
-		props.cardIndex === 0
+		contentIndex === 0
 			? context.i18nDerived.loaderCard1Title()
-			: props.cardIndex === 1
+			: contentIndex === 1
 				? context.i18nDerived.loaderCard2Title()
 				: context.i18nDerived.loaderCard3Title(),
 	);
-	const titleArchDeg = $derived(props.cardIndex === 0 ? 34 : props.cardIndex === 1 ? 30 : 26);
+	const titleArchDeg = $derived(contentIndex === 0 ? 34 : contentIndex === 1 ? 30 : 26);
 	const animationIndex = $derived(props.animationIndex ?? props.cardIndex);
 	const cardStyle = $derived(
 		`--card-width:${props.cardWidth}px;transform:scale(${scale.current});`,
@@ -64,7 +66,7 @@
 	class:animate-in={!props.carousel && props.animate !== false}
 	style={cardStyle}
 	style:--anim-index={animationIndex}
-	aria-label="loader card {props.cardIndex + 1}"
+	aria-label="loader card {contentIndex + 1}"
 >
 	<img class="card-bg" src={cardUrl} alt="" draggable="false" />
 
@@ -72,9 +74,10 @@
 		<div class="card-title">
 			<ArchedRibbonTitle text={titleText} archDeg={titleArchDeg} tracking={1} />
 		</div>
-		{#if props.cardIndex === 0}
+		{#if contentIndex === 0}
 			<div class="card-bonus-symbol">
 				<img class="card-bonus-symbol-img" src={bonusSymbolUrl} alt="" draggable="false" />
+				<LoaderCardBonusSpine active={!props.carousel || props.isActive !== false} />
 			</div>
 			<div class="card-body card-body--1">
 				<div class="line-block line-block--1">
@@ -86,7 +89,7 @@
 					<p class="line highlight">{context.i18nDerived.loaderCard1Line4()}</p>
 				</div>
 			</div>
-		{:else if props.cardIndex === 1}
+		{:else if contentIndex === 1}
 			<div class="card-body card-body--2">
 				<p class="line">{context.i18nDerived.loaderCard2Body()}</p>
 			</div>
@@ -176,9 +179,10 @@
 		left: 50%;
 		top: calc(var(--card-height) * 0.33);
 		transform: translate(-50%, -50%);
-		width: calc(var(--card-width) * 0.7);
-		height: calc(var(--card-height) * 0.36);
+		width: calc(var(--card-width) * 0.76);
+		height: calc(var(--card-height) * 0.39);
 		z-index: 2;
+		overflow: hidden;
 		pointer-events: none;
 	}
 
@@ -189,6 +193,10 @@
 		object-fit: contain;
 		user-select: none;
 		pointer-events: none;
+	}
+
+	.card-bonus-symbol:has(:global([data-ready])) .card-bonus-symbol-img {
+		opacity: 0;
 	}
 
 	.card-body {

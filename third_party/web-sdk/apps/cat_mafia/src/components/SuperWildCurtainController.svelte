@@ -25,6 +25,7 @@
 		SUPER_WILD_STICKY_DROP_IN_MS,
 		SUPER_WILD_WHEEL_SPIN_MS,
 		SUPER_WILD_WIN_ANIM,
+		SUPER_WILD_WIN_HAND_ABOVE_WHEEL_NATIVE_MS,
 		SUPER_WILD_WIN_MS,
 		SUPER_WILD_WIN_NATIVE_MS,
 		SUPER_WILD_WIN_WHEEL_START_FRAC,
@@ -108,6 +109,53 @@
 		if (!bone) return;
 		bone.rotation = deg;
 		bone.updateWorldTransform();
+	};
+
+	/**
+	 * Grabbing hand above the drum disk, still under `arch` (side columns).
+	 * Designer only shifts `wheel` −6 and never includes `finger`; that key
+	 * also resets at 1.7s mid-spin. Lift a beat after the authored grab
+	 * (`SUPER_WILD_WIN_HAND_ABOVE_WHEEL_NATIVE_MS`), then keep it for the spin.
+	 */
+	const FRONT_HAND_SLOTS = new Set([
+		'finger',
+		'wrist1',
+		'wrist2',
+		'shoulder1',
+		'shoulder2',
+		'forearm1',
+		'forearm2',
+	]);
+	const HAND_ABOVE_WHEEL_NATIVE_S = SUPER_WILD_WIN_HAND_ABOVE_WHEEL_NATIVE_MS / 1000;
+	const applyWheelUnderHandsDrawOrder = () => {
+		if (!catWinding && !wheelSpinning) return;
+		if (!wheelSpinning) {
+			const entry = spine.state?.getCurrent?.(0);
+			if (entry?.animation?.name !== SUPER_WILD_WIN_ANIM) return;
+			if ((entry.trackTime ?? 0) < HAND_ABOVE_WHEEL_NATIVE_S) return;
+		}
+		const skeleton = spine.skeleton;
+		if (!skeleton) return;
+		const { slots, drawOrder } = skeleton;
+		const n = slots.length;
+		const hands: (typeof slots)[number][] = [];
+		const rest: (typeof slots)[number][] = [];
+		for (let i = 0; i < n; i++) {
+			const slot = slots[i];
+			if (FRONT_HAND_SLOTS.has(slot.data.name)) hands.push(slot);
+			else rest.push(slot);
+		}
+		// After wheel disk (+ glow), before arch side-columns.
+		let insertAt = -1;
+		for (let i = 0; i < rest.length; i++) {
+			const name = rest[i].data.name;
+			if (name === 'wheel' || name === 'wheel2') insertAt = i + 1;
+		}
+		if (insertAt < 0) insertAt = rest.length;
+		let o = 0;
+		for (let i = 0; i < insertAt; i++) drawOrder[o++] = rest[i];
+		for (let i = 0; i < hands.length; i++) drawOrder[o++] = hands[i];
+		for (let i = insertAt; i < rest.length; i++) drawOrder[o++] = rest[i];
 	};
 
 	/**
@@ -385,6 +433,8 @@
 			if (catWinding || wheelSpinning || props.wheelLanded || pendingWheelMult != null) {
 				applyWheelBone(props.wheelDeg);
 			}
+			// Keep wheel under grabbing hands for the whole programmatic spin.
+			applyWheelUnderHandsDrawOrder();
 			// Replace Spine `win` shake with a plain spin-time wiggle.
 			applyPointerRotation(s, wheelSpinning);
 		};

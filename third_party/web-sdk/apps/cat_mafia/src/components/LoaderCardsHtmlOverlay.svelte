@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 	import { backOut } from 'svelte/easing';
 	import { Tween } from 'svelte/motion';
 	import { untrack } from 'svelte';
@@ -10,6 +10,11 @@
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { GAME_INFO_SYMBOL_IMAGES } from '../game/gameInfoSymbols';
 	import { LOADER_NEON_LOGO_URL, LOADER_SCREEN_IMAGE_URLS } from '../game/loaderCardAssets';
+	import {
+		destroyLoaderCardBonusPixi,
+		flushLoaderCardBonusStage,
+		whenLoaderCardBonusReady,
+	} from '../game/loaderCardBonusPixi';
 	import {
 		LOADER_CARD_COUNT,
 		computeLoaderCardsAnchor,
@@ -63,6 +68,8 @@
 
 	let activeIndex = $state(0);
 	let autoAdvanceTimer: ReturnType<typeof setTimeout> | undefined;
+	/** Hide logo+cards until WebPs and Spine B can paint together. */
+	let contentReady = $state(false);
 
 	const trackOffset = new Tween(0);
 
@@ -113,12 +120,44 @@
 		}, delay);
 	};
 
+	const screenImageUrls = [...LOADER_SCREEN_IMAGE_URLS, GAME_INFO_SYMBOL_IMAGES.B] as const;
+
 	onMount(() => {
 		clearAutoAdvance();
-		void preloadHtmlImages([...LOADER_SCREEN_IMAGE_URLS, GAME_INFO_SYMBOL_IMAGES.B], {
+		void preloadHtmlImages([...screenImageUrls], {
 			priority: [LOADER_NEON_LOGO_URL, LOADER_SCREEN_IMAGE_URLS[0]!, GAME_INFO_SYMBOL_IMAGES.B],
 			concurrency: 2,
 		});
+	});
+
+	onDestroy(() => {
+		clearAutoAdvance();
+		destroyLoaderCardBonusPixi();
+	});
+
+	$effect(() => {
+		if (!show) {
+			contentReady = false;
+			destroyLoaderCardBonusPixi();
+			return;
+		}
+		if (contentReady) return;
+		let cancelled = false;
+		void (async () => {
+			// Mount card hosts first so Spine can bind while images finish.
+			await tick();
+			await Promise.all([
+				preloadHtmlImages([...screenImageUrls], { concurrency: 4 }),
+				whenLoaderCardBonusReady(),
+			]);
+			flushLoaderCardBonusStage();
+			await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+			if (cancelled) return;
+			contentReady = true;
+		})();
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	$effect(() => {
@@ -140,7 +179,7 @@
 	});
 
 	$effect(() => {
-		if (!show || !useCarousel || !assetsReady || gameEntrance.loaderExitActive) {
+		if (!show || !useCarousel || !assetsReady || !contentReady || gameEntrance.loaderExitActive) {
 			clearAutoAdvance();
 			return;
 		}
@@ -153,7 +192,13 @@
 </script>
 
 {#if show}
-	<div class="loader-cards-overlay" style={overlayStyle} aria-hidden={!show}>
+	<div
+		class="loader-cards-overlay"
+		class:ready={contentReady}
+		data-loader-cards-prepare={contentReady ? undefined : ''}
+		style={overlayStyle}
+		aria-hidden={!show}
+	>
 		<div class="loader-cards-stack">
 			<!-- daloniil_test: NeonForegroundOverlay (Spine). Here: same slot, HTML WebP. -->
 			<div class="loader-neon-logo-placeholder" style={logoStyle}>
@@ -187,7 +232,12 @@
 				style:gap="{rowMetrics.gap}px"
 			>
 				{#each Array(LOADER_CARD_COUNT) as _, index (index)}
-					<LoaderCardHtml cardIndex={index} cardWidth={rowMetrics.cardWidth} {index} />
+					<LoaderCardHtml
+						cardIndex={index}
+						cardWidth={rowMetrics.cardWidth}
+						{index}
+						animate={contentReady}
+					/>
 				{/each}
 			</div>
 		{/if}
@@ -198,7 +248,7 @@
 		Space / tap handlers live in LoaderContinueHandlers.
 	-->
 	<div class="loader-press-to-continue">
-		{#if gameEntrance.loadingCardsVisible && assetsReady}
+		{#if gameEntrance.loadingCardsVisible && assetsReady && contentReady}
 			<PressToContinueHtml contained />
 		{/if}
 	</div>
@@ -235,6 +285,11 @@
 		pointer-events: none;
 		user-select: none;
 		overflow: visible;
+		opacity: 0;
+
+		&.ready {
+			opacity: 1;
+		}
 	}
 
 	.loader-press-to-continue {

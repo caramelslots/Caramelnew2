@@ -22,6 +22,8 @@
 		 */
 		webglOnIosAndroid?: boolean;
 		preference?: 'webgl' | 'webgpu';
+		/** Cap `ticker.maxFPS` after init. Omit or 0 = uncapped. */
+		maxFps?: number;
 	};
 
 	const props: Props = $props();
@@ -70,6 +72,11 @@
 		});
 
 		wrap.appendChild(context.stateApp.pixiApplication.canvas);
+
+		const maxFps = props.maxFps;
+		if (maxFps && maxFps > 0) {
+			context.stateApp.pixiApplication.ticker.maxFPS = maxFps;
+		}
 
 		// to prevent that you can't scroll the page with touch on the canvas. https://github.com/pixijs/pixijs/issues/4824
 		context.stateApp.pixiApplication.renderer.events.autoPreventDefault = false;

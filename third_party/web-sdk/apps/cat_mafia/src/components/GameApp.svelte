@@ -14,6 +14,7 @@
 		tuneForMobilePortrait?: boolean;
 		webglOnIosAndroid?: boolean;
 		preference?: 'webgl' | 'webgpu';
+		maxFps?: number;
 	};
 
 	const props: Props = $props();
@@ -29,6 +30,7 @@
 	tuneForMobilePortrait={props.tuneForMobilePortrait}
 	webglOnIosAndroid={props.webglOnIosAndroid}
 	preference={props.preference}
+	maxFps={props.maxFps}
 >
 	<InitialiseParent>
 		<GameAssetsLoader>

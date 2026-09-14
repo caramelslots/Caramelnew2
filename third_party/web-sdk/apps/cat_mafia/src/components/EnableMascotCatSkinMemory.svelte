@@ -1,7 +1,8 @@
 <!--
 	п.7 Phone: one cat atlas in GPU.
-	Preload under steam; swap visible key only when gameType/duel actually changes
-	(not at transition start — that flashed white too early).
+	Preload the destination skin when steam starts. Swap the visible Spine when
+	the cloud covers the board (`onThemeSwitch` / gameType), not at FS end and
+	not after the transition clip finishes.
 	Desktop keeps both skins loaded; only updates stateGame.mascotCatSpineKey.
 -->
 <script lang="ts">
@@ -68,9 +69,7 @@
 		const duelActive = stateDuel.active;
 		const transitionGameType = context.stateGame.transitionGameType;
 
-		/** What the player should see now (theme switch / duel). */
 		const visible = wantedMascotCatSpineKey({ gameType, duelActive });
-		/** Upcoming skin while steam covers — preload only. */
 		const upcoming = wantedMascotCatSpineKey({
 			gameType,
 			duelActive,
@@ -79,9 +78,11 @@
 
 		const gen = ++syncGen;
 		void (async () => {
+			// Steam started, theme not switched yet — preload only.
+			// Swap on `onThemeSwitch` (gameType flips under the cloud), not after the clip.
 			if (upcoming !== visible) {
 				await preloadSkin(upcoming, gen);
-				if (gen !== syncGen) return;
+				return;
 			}
 			await applyVisibleSkin(visible, gen);
 		})();

@@ -103,7 +103,14 @@
 
 		return () => {
 			player?.dispose();
+			player = undefined;
 		};
+	});
+
+	$effect(() => {
+		if (show) return;
+		player?.dispose();
+		player = undefined;
 	});
 </script>
 

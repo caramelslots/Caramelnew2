@@ -23,6 +23,13 @@
 	import { ensureKnewaveFontLoaded } from '../game/knewaveFont';
 	import { getContext } from '../game/context';
 	import { getContextLayout } from 'utils-layout';
+	import { tick } from 'svelte';
+
+	import {
+		areBuyBonusSpinesReady,
+		flushBuyBonusSharedStage,
+		whenBuyBonusSpinesReady,
+	} from '../game/buyBonusSharedPixi';
 	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS, HUD_ASSETS } from '../game/uiHtmlAssetManifest';
 	import ArchedRibbonTitle from './ArchedRibbonTitle.svelte';
 	import BuyBonusCardSpine from './BuyBonusCardSpine.svelte';
@@ -41,9 +48,35 @@
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonus');
 	let spinesMounted = $state(false);
+	/** Board stays invisible until first card paint — later opens reuse this. */
+	let panelReady = $state(false);
+	let revealedOnce = $state(false);
 
 	$effect(() => {
-		if (isOpen) spinesMounted = true;
+		if (!isOpen) return;
+		spinesMounted = true;
+		if (revealedOnce && areBuyBonusSpinesReady()) {
+			panelReady = true;
+			return;
+		}
+		panelReady = false;
+		let cancelled = false;
+		void (async () => {
+			await tick();
+			await new Promise<void>((resolve) => {
+				requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+			});
+			await whenBuyBonusSpinesReady();
+			flushBuyBonusSharedStage();
+			// Layout shared canvas into hosts while the panel is still opacity:0.
+			await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+			if (cancelled) return;
+			panelReady = true;
+			revealedOnce = true;
+		})();
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	$effect(() => {
@@ -130,6 +163,8 @@
 	class:portrait={isPortrait}
 	class:popout-l={isPopout}
 	class:popout-s={isPopoutSmall}
+	class:ready={panelReady}
+	data-buy-bonus-prepare={isOpen && !panelReady ? '' : undefined}
 	data-test="buy-bonus-overlay"
 	aria-hidden={!isOpen}
 >
@@ -297,7 +332,12 @@
 		z-index: 10;
 		pointer-events: auto;
 		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
+		opacity: 0;
 		@include buy-bonus-panel-dimensions(true);
+
+		&.ready {
+			opacity: 1;
+		}
 	}
 
 	.panel-bg {

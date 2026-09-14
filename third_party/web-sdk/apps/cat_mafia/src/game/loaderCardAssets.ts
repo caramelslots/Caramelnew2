@@ -10,8 +10,14 @@ export const LOADER_CARD_IMAGE_URLS = LOADER_CARD_FILES.map(
 	(file) => `${assetBase}/${file}`,
 ) as readonly [string, string, string];
 
+/** Maps on-screen slot (0..2) to card asset/copy index; first two slots swapped. */
+const LOADER_CARD_SLOT_TO_CONTENT_INDEX = [1, 0, 2] as const;
+
+export const loaderCardContentIndex = (slotIndex: number) =>
+	LOADER_CARD_SLOT_TO_CONTENT_INDEX[slotIndex] ?? slotIndex;
+
 /** Card WebPs + neon title for the info-cards loader screen. */
 export const LOADER_SCREEN_IMAGE_URLS = [LOADER_NEON_LOGO_URL, ...LOADER_CARD_IMAGE_URLS] as const;
 
-export const loaderCardImageUrl = (index: number) =>
-	LOADER_CARD_IMAGE_URLS[index] ?? LOADER_CARD_IMAGE_URLS[0];
+export const loaderCardImageUrl = (slotIndex: number) =>
+	LOADER_CARD_IMAGE_URLS[loaderCardContentIndex(slotIndex)] ?? LOADER_CARD_IMAGE_URLS[0];
