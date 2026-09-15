@@ -1,8 +1,8 @@
-# Cat Mafia (`cat_mafia`)
+# Meowfia (`cat_mafia`)
 
-Fork of `daloniil_test` (Wok Fury) for the Cat Mafia prototype.
+Fork of `daloniil_test` (Wok Fury) for the Meowfia prototype.
 
-`daloniil_test` is left unchanged. All Cat Mafia work happens in this app.
+`daloniil_test` is left unchanged. All Meowfia work happens in this app.
 
 ## Commands
 
@@ -19,7 +19,7 @@ pnpm --filter cat_mafia build
 |---------|------------------|
 | Package | `cat_mafia`      |
 | Game ID | `0_0_cat_mafia`  |
-| Title   | Cat Mafia        |
+| Title   | Meowfia        |
 
 ## Docs
 

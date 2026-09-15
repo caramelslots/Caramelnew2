@@ -145,7 +145,7 @@ loaderCards.ru = {
 	LOADER_CARD_2_TITLE: 'PAW & SUPER WILD',
 	LOADER_CARD_2_BODY:
 		'PAW ПРЕВРАЩАЕТ РЯД В МОНЕТЫ. SUPER WILD РАСКРЫВАЕТ КОЛОНКУ С ×2 / ×4 / ×6 / ×8. НИКОГДА ОБА В ОДНОМ СПИНЕ.',
-	LOADER_CARD_3_TITLE: 'ПАТРОНЫ И РЕВОЛЬВЕР',
+	LOADER_CARD_3_TITLE: 'РЕВОЛЬВЕР',
 	LOADER_CARD_3_LINE_1: 'СОБИРАЙТЕ ПАТРОНЫ ВО ФРИСПИНАХ (МАКС. 6). ПОСЛЕ ОСНОВНЫХ СПИНОВ',
 	LOADER_CARD_3_LINE_2: 'КОТ СТРЕЛЯЕТ ПО МИШЕНЯМ ЗА +1 / +2 / +3 ДОП. FS',
 };

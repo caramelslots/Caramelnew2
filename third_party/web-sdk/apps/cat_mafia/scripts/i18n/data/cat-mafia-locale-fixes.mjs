@@ -202,7 +202,7 @@ export const gameInfoFixes = {
 		GAME_INFO_BULLET_BODY:
 			'Trong free spin chính, Bullet lấp trống revolver (tối đa 6). Hết vòng chính, mèo tự bắn mục tiêu. Mỗi trúng có thể không có gì hoặc +1/+2/+3 vòng thêm. Đạn không xuất hiện ở vòng thêm và không có vòng bắn thứ hai.',
 		GAME_INFO_BET_MODES_BODY:
-			'Base (1×): Cat Mafia cổ điển — thắng dòng, Paw và rèm Super Wild mỗi vòng. 3+ Bonus vào free spin: chọn mục tiêu 8/10/12 vòng (3 Bonus = Normal · 4+ = Super với cột sticky Super Wild). Thắng trả theo bội số cược cơ bản. RTP 96,01% · Tối đa 2.500×.\nBonus Boost (2×): Chơi 2× và săn Bonus mạnh hơn. Free spin thường xuyên hơn với cùng quy tắc Base. Thắng vẫn theo cược cơ bản, không theo chi phí 2×. RTP 96,01% · Tối đa 2.500×.\nMua Normal Bonus (100×): Vào thẳng hành động — 100× cược, chọn mục tiêu 8–12 FS, thu đạn, mèo bắn thêm vòng — không sticky Super Wild lúc đầu. RTP 96,01% · Tối đa 25.000×.\nMua Super Bonus (200×): Heist cao cấp — cột Super Wild mở từ vòng đầu. RTP 96,01% · Tối đa 25.000×.\nMua Duel — Mèo (150×): Hai bảng, 10 vòng mỗi bên. ~50% cơ hội vượt Chó và lấy cả hai ngân hàng. RTP 96,01% · Tối đa 25.000×.\nMua Duel — Chó (150×): Biến động cao — Chó thắng ít hơn nhưng payout nặng khi dẫn. RTP 96,01% · Tối đa 25.000×.',
+			'Base (1×): Meowfia cổ điển — thắng dòng, Paw và rèm Super Wild mỗi vòng. 3+ Bonus vào free spin: chọn mục tiêu 8/10/12 vòng (3 Bonus = Normal · 4+ = Super với cột sticky Super Wild). Thắng trả theo bội số cược cơ bản. RTP 96,01% · Tối đa 2.500×.\nBonus Boost (2×): Chơi 2× và săn Bonus mạnh hơn. Free spin thường xuyên hơn với cùng quy tắc Base. Thắng vẫn theo cược cơ bản, không theo chi phí 2×. RTP 96,01% · Tối đa 2.500×.\nMua Normal Bonus (100×): Vào thẳng hành động — 100× cược, chọn mục tiêu 8–12 FS, thu đạn, mèo bắn thêm vòng — không sticky Super Wild lúc đầu. RTP 96,01% · Tối đa 25.000×.\nMua Super Bonus (200×): Heist cao cấp — cột Super Wild mở từ vòng đầu. RTP 96,01% · Tối đa 25.000×.\nMua Duel — Mèo (150×): Hai bảng, 10 vòng mỗi bên. ~50% cơ hội vượt Chó và lấy cả hai ngân hàng. RTP 96,01% · Tối đa 25.000×.\nMua Duel — Chó (150×): Biến động cao — Chó thắng ít hơn nhưng payout nặng khi dẫn. RTP 96,01% · Tối đa 25.000×.',
 		GAME_INFO_CONTROLS_BODY:
 			'Spin: Bấm Spin để bắt đầu vòng. Trong vòng, cùng nút có thể dừng guồng hoặc autoplay.\nSpace: Giống Spin. Giữ Space để chơi nhanh liên tục.\nCược (−/+): Giảm/tăng cược khi game rảnh.\nBuy Bonus: Mua Normal, Super hoặc Duel.\nBonus Boost: Bật 2× cược với nhiều Bonus hơn.\nAutoplay/Turbo/Info/Menu/Balance/Cược: như mô tả tiêu chuẩn.',
 	},
@@ -223,7 +223,7 @@ export const gameInfoFixes = {
 		GAME_INFO_BULLET_BODY:
 			'Selama free spin utama, simbol Bullet mengisi drum revolver (maks. 6). Setelah spin utama selesai, kucing otomatis menembak target. Setiap kena bisa nol atau +1/+2/+3 free spin extra. Peluru tidak muncul di spin extra dan tidak ada ronde tembak kedua.',
 		GAME_INFO_BET_MODES_BODY:
-			'Base (1×): Lari Cat Mafia klasik — kemenangan garis, koin Paw, tirai Super Wild tiap spin. 3+ Bonus masuk free spin: pilih target 8/10/12 (3 Bonus = Normal · 4+ = Super dengan kolom sticky Super Wild). Kemenangan kelipatan taruhan dasar. RTP 96,01% · Maks. 2.500×.\nBonus Boost (2×): Main 2× dan buru Bonus lebih agresif. Free spin lebih sering dengan aturan masuk yang sama. Kemenangan tetap kelipatan taruhan dasar. RTP 96,01% · Maks. 2.500×.\nBeli Normal Bonus (100×): Langsung aksi — 100× taruhan, pilih target 8–12 FS, kumpul peluru, kucing tembak extra — tanpa sticky Super Wild awal. RTP 96,01% · Maks. 25.000×.\nBeli Super Bonus (200×): Heist premium — kolom Super Wild terbuka dari spin pertama. RTP 96,01% · Maks. 25.000×.\nBeli Duel — Kucing (150×): Dua papan, 10 spin masing-masing. ~50% peluang unggul Anjing. RTP 96,01% · Maks. 25.000×.\nBeli Duel — Anjing (150×): Volatilitas tinggi. RTP 96,01% · Maks. 25.000×.',
+			'Base (1×): Lari Meowfia klasik — kemenangan garis, koin Paw, tirai Super Wild tiap spin. 3+ Bonus masuk free spin: pilih target 8/10/12 (3 Bonus = Normal · 4+ = Super dengan kolom sticky Super Wild). Kemenangan kelipatan taruhan dasar. RTP 96,01% · Maks. 2.500×.\nBonus Boost (2×): Main 2× dan buru Bonus lebih agresif. Free spin lebih sering dengan aturan masuk yang sama. Kemenangan tetap kelipatan taruhan dasar. RTP 96,01% · Maks. 2.500×.\nBeli Normal Bonus (100×): Langsung aksi — 100× taruhan, pilih target 8–12 FS, kumpul peluru, kucing tembak extra — tanpa sticky Super Wild awal. RTP 96,01% · Maks. 25.000×.\nBeli Super Bonus (200×): Heist premium — kolom Super Wild terbuka dari spin pertama. RTP 96,01% · Maks. 25.000×.\nBeli Duel — Kucing (150×): Dua papan, 10 spin masing-masing. ~50% peluang unggul Anjing. RTP 96,01% · Maks. 25.000×.\nBeli Duel — Anjing (150×): Volatilitas tinggi. RTP 96,01% · Maks. 25.000×.',
 		GAME_INFO_CONTROLS_BODY:
 			'Spin: Tekan Spin untuk memulai ronde. Tombol yang sama dapat menghentikan reel atau autoplay.\nSpace: Sama seperti Spin. Tahan untuk main cepat.\nTaruhan (−/+): Ubah taruhan saat idle.\nBuy Bonus: Beli Normal, Super, atau Duel.\nBonus Boost: Main 2× taruhan dengan lebih banyak Bonus.\nAutoplay/Turbo/Info/Menu/Saldo/Taruhan: sesuai panduan standar.',
 	},
@@ -244,7 +244,7 @@ export const gameInfoFixes = {
 		GAME_INFO_BULLET_BODY:
 			'Pääilmaiskierrosten aikana Bullet-symbolit täyttävät revolverin rummun (enintään 6). Pääkierrosten päätyttyä kissa ampuu automaattisesti kohteita. Jokainen osuma voi antaa ei mitään tai +1, +2, +3 extra-ilmaiskierrosta. Luodit eivät ilmesty näillä extrakierroksilla eikä toista ammuntakierrosta ole.',
 		GAME_INFO_BET_MODES_BODY:
-			'Base (1×): Klassinen Cat Mafia -juoksu — linjavoitot, Paw-kolikot ja Super Wild -verhot joka kierroksella. 3+ Bonus ilmaiskierroksille: valitse kohde 8, 10 tai 12 kierrokselle (3 Bonus = Normal Bonus · 4+ = Super Bonus sticky Super Wild -sarakkeella). Voitot peruspanoksen kertoimina. RTP 96,01% · Maks. voitto 2 500×.\nBonus Boost (2×): Pelaa 2× panoksella ja metsästä Bonus-symbolia aggressiivisemmin. Ilmaiskierrokset laukeavat useammin samoilla säännöillä. Voitot lasketaan peruspanoksesta, ei 2×-kierroksen hinnasta. RTP 96,01% · Maks. voitto 2 500×.\nOsta Normal Bonus (100×): Suoraan toimintaan — 100× panos, kohde 8–12 FS, kerää luoteja, kissa ampuu extra-kierroksia — ei sticky Super Wildia alussa. RTP 96,01% · Maks. voitto 25 000×.\nOsta Super Bonus (200×): Premium-ryöstö — Super Wild -sarake auki ensimmäisestä kierroksesta. RTP 96,01% · Maks. voitto 25 000×.\nOsta Duel — Kissa (150×): Kaksialueinen kaksintaistelu, 10 kierrosta kumpikin. ~50% mahdollisuus voittaa Koira ja nappaa molemmat pankit. RTP 96,01% · Maks. voitto 25 000×.\nOsta Duel — Koira (150×): Korkea volatiliteetti. RTP 96,01% · Maks. voitto 25 000×.',
+			'Base (1×): Klassinen Meowfia -juoksu — linjavoitot, Paw-kolikot ja Super Wild -verhot joka kierroksella. 3+ Bonus ilmaiskierroksille: valitse kohde 8, 10 tai 12 kierrokselle (3 Bonus = Normal Bonus · 4+ = Super Bonus sticky Super Wild -sarakkeella). Voitot peruspanoksen kertoimina. RTP 96,01% · Maks. voitto 2 500×.\nBonus Boost (2×): Pelaa 2× panoksella ja metsästä Bonus-symbolia aggressiivisemmin. Ilmaiskierrokset laukeavat useammin samoilla säännöillä. Voitot lasketaan peruspanoksesta, ei 2×-kierroksen hinnasta. RTP 96,01% · Maks. voitto 2 500×.\nOsta Normal Bonus (100×): Suoraan toimintaan — 100× panos, kohde 8–12 FS, kerää luoteja, kissa ampuu extra-kierroksia — ei sticky Super Wildia alussa. RTP 96,01% · Maks. voitto 25 000×.\nOsta Super Bonus (200×): Premium-ryöstö — Super Wild -sarake auki ensimmäisestä kierroksesta. RTP 96,01% · Maks. voitto 25 000×.\nOsta Duel — Kissa (150×): Kaksialueinen kaksintaistelu, 10 kierrosta kumpikin. ~50% mahdollisuus voittaa Koira ja nappaa molemmat pankit. RTP 96,01% · Maks. voitto 25 000×.\nOsta Duel — Koira (150×): Korkea volatiliteetti. RTP 96,01% · Maks. voitto 25 000×.',
 		GAME_INFO_CONTROLS_BODY:
 			'Spin: Paina Spin aloittaaksesi kierroksen. Kierroksen aikana sama painike voi pysäyttää rullat tai autoplayn.\nVälilyönti: Sama toiminto kuin Spin. Pidä pohjassa nopeaa peliä varten.\nPanos (−/+): Muuta panosta vain kun peli on idle-tilassa.\nBuy Bonus: Osta Normal, Super tai Duel.\nBonus Boost: Pelaa 2× peruspanoksella enemmän Bonus-symboleilla.\nAutoplay/Turbo/Info/Menu/Saldo/Panos: vakioiden mukaisesti.',
 	},
@@ -265,7 +265,7 @@ export const gameInfoFixes = {
 		GAME_INFO_BULLET_BODY:
 			'أثناء اللفات المجانية الرئيسية، تملأ رموز Bullet أسطوانة المسدس (حد أقصى 6). عند انتهاء اللفات الرئيسية، تطلق القطة تلقائيًا على الأهداف. كل إصابة قد لا تمنح شيئًا أو +1 أو +2 أو +3 لفات مجانية إضافية. لا يظهر الرصاص في تلك اللفات الإضافية ولا توجد جولة إطلاق ثانية.',
 		GAME_INFO_BET_MODES_BODY:
-			'Base (1×): جولة Cat Mafia الكلاسيكية — أرباح الخطوط وPaw وستائر Super Wild في كل لفة. 3+ Bonus للدخول في لفات مجانية: اختر هدفًا لـ 8 أو 10 أو 12 لفة (3 Bonus = Normal Bonus · 4+ = Super Bonus مع عمود sticky Super Wild). الأرباح مضاعفات الرهان الأساسي. RTP 96.01% · أقصى ربح 2,500×.\nBonus Boost (2×): العب بـ 2× واصطد Bonus بقوة أكبر. RTP 96.01% · أقصى 2,500×.\nشراء Normal Bonus (100×): مباشرة إلى الحركة — 100× الرهان، هدف 8–12 FS، جمع الرصاص، القطة تطلق للجولات الإضافية. RTP 96.01% · أقصى 25,000×.\nشراء Super Bonus (200×): السطو المميز — عمود Super Wild مفتوح من اللفة الأولى. RTP 96.01% · أقصى 25,000×.\nشراء Duel — Cat (150×): مواجهة لوحتين، 10 لفات لكل منهما. ~50% فرصة التفوق على Dog. RTP 96.01% · أقصى 25,000×.\nشراء Duel — Dog (150×): تقلب عالٍ. RTP 96.01% · أقصى 25,000×.',
+			'Base (1×): جولة Meowfia الكلاسيكية — أرباح الخطوط وPaw وستائر Super Wild في كل لفة. 3+ Bonus للدخول في لفات مجانية: اختر هدفًا لـ 8 أو 10 أو 12 لفة (3 Bonus = Normal Bonus · 4+ = Super Bonus مع عمود sticky Super Wild). الأرباح مضاعفات الرهان الأساسي. RTP 96.01% · أقصى ربح 2,500×.\nBonus Boost (2×): العب بـ 2× واصطد Bonus بقوة أكبر. RTP 96.01% · أقصى 2,500×.\nشراء Normal Bonus (100×): مباشرة إلى الحركة — 100× الرهان، هدف 8–12 FS، جمع الرصاص، القطة تطلق للجولات الإضافية. RTP 96.01% · أقصى 25,000×.\nشراء Super Bonus (200×): السطو المميز — عمود Super Wild مفتوح من اللفة الأولى. RTP 96.01% · أقصى 25,000×.\nشراء Duel — Cat (150×): مواجهة لوحتين، 10 لفات لكل منهما. ~50% فرصة التفوق على Dog. RTP 96.01% · أقصى 25,000×.\nشراء Duel — Dog (150×): تقلب عالٍ. RTP 96.01% · أقصى 25,000×.',
 		GAME_INFO_CONTROLS_BODY:
 			'Spin: اضغط Spin لبدء جولة. أثناء الجولة يمكن لنفس الزر إيقاف البكرات أو autoplay.\nالمسافة: نفس إجراء Spin.\nمبلغ الرهان (−/+): غيّر الرهان عند الخمول فقط.\nBuy Bonus: اشترِ Normal أو Super أو Duel.\nBonus Boost: العب بـ 2× الرهان الأساسي مع المزيد من Bonus.\nAutoplay/Turbo/Info/Menu/الرصيد/الرهان: وفق الدليل القياسي.',
 	},
@@ -286,7 +286,7 @@ export const gameInfoFixes = {
 		GAME_INFO_BULLET_BODY:
 			'मुख्य फ्री स्पिन के दौरान Bullet सिंबल रेवॉल्वर ड्रम भरते हैं (अधिकतम 6)। मुख्य स्पिन समाप्त होने पर बिल्ली स्वचालित रूप से लक्ष्यों पर गोली चलाती है। प्रत्येक हिट कुछ नहीं या +1/+2/+3 extra FS दे सकती है। extra स्पिन पर गोली नहीं और दूसरा शूटिंग राउंड नहीं।',
 		GAME_INFO_BET_MODES_BODY:
-			'Base (1×): क्लासिक Cat Mafia — हर स्पिन पर लाइन जीत, Paw, Super Wild पर्दे। 3+ Bonus से फ्री स्पिन: 8/10/12 के लिए लक्ष्य (3 Bonus = Normal · 4+ = Super sticky Super Wild)। जीत बेस बेट के गुणक। RTP 96.01% · अधिकतम 2,500×.\nBonus Boost (2×): 2× दांव पर Bonus का शिकार। RTP 96.01% · अधिकतम 2,500×.\nNormal Bonus खरीदें (100×): 100× बेट, 8–12 FS, गोली इकट्ठा, बिल्ली extra राउंड। RTP 96.01% · अधिकतम 25,000×.\nSuper Bonus खरीदें (200×): प्रीमियम — पहले स्पिन से Super Wild कॉलम खुला। RTP 96.01% · अधिकतम 25,000×.\nDuel खरीदें — Cat (150×): दो बोर्ड, 10-10 स्पिन। ~50% Dog से आगे। RTP 96.01% · अधिकतम 25,000×.\nDuel खरीदें — Dog (150×): उच्च volatility। RTP 96.01% · अधिकतम 25,000×.',
+			'Base (1×): क्लासिक Meowfia — हर स्पिन पर लाइन जीत, Paw, Super Wild पर्दे। 3+ Bonus से फ्री स्पिन: 8/10/12 के लिए लक्ष्य (3 Bonus = Normal · 4+ = Super sticky Super Wild)। जीत बेस बेट के गुणक। RTP 96.01% · अधिकतम 2,500×.\nBonus Boost (2×): 2× दांव पर Bonus का शिकार। RTP 96.01% · अधिकतम 2,500×.\nNormal Bonus खरीदें (100×): 100× बेट, 8–12 FS, गोली इकट्ठा, बिल्ली extra राउंड। RTP 96.01% · अधिकतम 25,000×.\nSuper Bonus खरीदें (200×): प्रीमियम — पहले स्पिन से Super Wild कॉलम खुला। RTP 96.01% · अधिकतम 25,000×.\nDuel खरीदें — Cat (150×): दो बोर्ड, 10-10 स्पिन। ~50% Dog से आगे। RTP 96.01% · अधिकतम 25,000×.\nDuel खरीदें — Dog (150×): उच्च volatility। RTP 96.01% · अधिकतम 25,000×.',
 		GAME_INFO_CONTROLS_BODY:
 			'Spin: राउंड शुरू करने के लिए Spin दबाएँ। चल रहे राउंड में वही बटन रील/autoplay रोक सकता है।\nSpace: Spin जैसा।\nबेट (−/+): idle पर बदलें।\nBuy Bonus: Normal/Super/Duel खरीदें।\nBonus Boost: 2× बेस बेट।\nAutoplay/Turbo/Info/Menu/बैलेंस/बेट: मानक गाइड।',
 	},
@@ -302,7 +302,7 @@ export const loaderCardsFixes = {
 		LOADER_CARD_2_TITLE: 'PAW & SUPER WILD',
 		LOADER_CARD_2_BODY:
 			'PAW TRANSFORMA UMA FILA EM MOEDAS. SUPER WILD EXPANDE UMA COLUNA COM ×2 / ×4 / ×6 / ×8. NUNCA AMBOS NO MESMO SPIN.',
-		LOADER_CARD_3_TITLE: 'BALAS & REVÓLVER',
+		LOADER_CARD_3_TITLE: 'REVÓLVER',
 		LOADER_CARD_3_LINE_1: 'RECOLHA BALAS NAS RODADAS GRÁTIS (MÁX. 6). APÓS AS RODADAS PRINCIPAIS',
 		LOADER_CARD_3_LINE_2: 'O GATO DISPARA AOS ALVOS POR +1 / +2 / +3 FS EXTRA',
 	},
@@ -315,7 +315,7 @@ export const loaderCardsFixes = {
 		LOADER_CARD_2_TITLE: 'PAW & SUPER WILD',
 		LOADER_CARD_2_BODY:
 			'PAW BİR SATIRI COİNE ÇEVİRİR. SUPER WILD ×2 / ×4 / ×6 / ×8 İLE SÜTUNU GENİŞLETİR. AYNI SPİNDE İKİSİ BİRDEN ASLA.',
-		LOADER_CARD_3_TITLE: 'MERMİLER & REVOLVER',
+		LOADER_CARD_3_TITLE: 'REVOLVER',
 		LOADER_CARD_3_LINE_1: 'ÜCRETSİZ SPİNLERDE MERMİ TOPLAYIN (MAKS. 6). ANA SPİNLERDEN SONRA',
 		LOADER_CARD_3_LINE_2: 'KEDİ +1 / +2 / +3 EKSTRA FS İÇİN HEDEFLERE ATEŞ EDER',
 	},
@@ -328,7 +328,7 @@ export const loaderCardsFixes = {
 		LOADER_CARD_2_TITLE: 'PAW & SUPER WILD',
 		LOADER_CARD_2_BODY:
 			'PAW BIẾN MỘT HÀNG THÀNH XU. SUPER WILD MỞ RỘNG CỘT VỚI ×2 / ×4 / ×6 / ×8. KHÔNG BAO GIỜ CẢ HAI TRONG MỘT VÒNG.',
-		LOADER_CARD_3_TITLE: 'ĐẠN & REVOLVER',
+		LOADER_CARD_3_TITLE: 'REVOLVER',
 		LOADER_CARD_3_LINE_1: 'THU ĐẠN TRONG FREE SPIN (TỐI ĐA 6). SAU CÁC VÒNG CHÍNH',
 		LOADER_CARD_3_LINE_2: 'MÈO BẮN MỤC TIÊU CHO +1 / +2 / +3 FS THÊM',
 	},
@@ -341,7 +341,7 @@ export const loaderCardsFixes = {
 		LOADER_CARD_2_TITLE: 'PAW & SUPER WILD',
 		LOADER_CARD_2_BODY:
 			'PAW MENGUBAH SATU BARIS MENJADI KOIN. SUPER WILD MEMPERLUAS KOLOM DENGAN ×2 / ×4 / ×6 / ×8. TIDAK PERNAH KEDUANYA DALAM SATU PUTARAN.',
-		LOADER_CARD_3_TITLE: 'PELURU & REVOLVER',
+		LOADER_CARD_3_TITLE: 'REVOLVER',
 		LOADER_CARD_3_LINE_1: 'KUMPULKAN PELURU DI FREE SPIN (MAKS. 6). SETELAH PUTARAN UTAMA',
 		LOADER_CARD_3_LINE_2: 'KUCING MENEMBAK TARGET UNTUK +1 / +2 / +3 FS EKSTRA',
 	},
@@ -354,7 +354,7 @@ export const loaderCardsFixes = {
 		LOADER_CARD_2_TITLE: 'PAW & SUPER WILD',
 		LOADER_CARD_2_BODY:
 			'PAW MUUTTAA RIVIN KOLIKOIKSI. SUPER WILD LAJENTAA SARAKKEEN ×2 / ×4 / ×6 / ×8. EI KOSKAAN MOLEMMAT SAMALLA KIERROKSLLA.',
-		LOADER_CARD_3_TITLE: 'LUODIT & REVOLVERI',
+		LOADER_CARD_3_TITLE: 'REVOLVERI',
 		LOADER_CARD_3_LINE_1: 'KERÄÄ LUODEJA ILMAISKIERROKSILLA (MAKS. 6). PÄÄKIERROSTEN JÄLKEEN',
 		LOADER_CARD_3_LINE_2: 'KISSA AMPUU KOHTEITA +1 / +2 / +3 EXTRA-FS',
 	},
@@ -367,7 +367,7 @@ export const loaderCardsFixes = {
 		LOADER_CARD_2_TITLE: 'PAW & SUPER WILD',
 		LOADER_CARD_2_BODY:
 			'PAW يحوّل صفًا إلى عملات. SUPER WILD يوسّع عمودًا بـ ×2 / ×4 / ×6 / ×8. ليس كلاهما في لفة واحدة.',
-		LOADER_CARD_3_TITLE: 'رصاص & مسدس',
+		LOADER_CARD_3_TITLE: 'مسدس',
 		LOADER_CARD_3_LINE_1: 'اجمع الرصاص في اللفات المجانية (حد أقصى 6). بعد اللفات الرئيسية',
 		LOADER_CARD_3_LINE_2: 'القطة تطلق على الأهداف لـ +1 / +2 / +3 FS إضافية',
 	},
@@ -380,7 +380,7 @@ export const loaderCardsFixes = {
 		LOADER_CARD_2_TITLE: 'PAW & SUPER WILD',
 		LOADER_CARD_2_BODY:
 			'PAW एक पंक्ति को सिक्कों में बदलता है। SUPER WILD ×2 / ×4 / ×6 / ×8 के साथ कॉलम बढ़ाता है। एक स्पिन में दोनों कभी नहीं।',
-		LOADER_CARD_3_TITLE: 'गोली & रेवॉल्वर',
+		LOADER_CARD_3_TITLE: 'रेवॉल्वर',
 		LOADER_CARD_3_LINE_1: 'फ्री स्पिन में गोली इकट्ठा करें (अधिकतम 6)। मुख्य स्पिन के बाद',
 		LOADER_CARD_3_LINE_2: 'बिल्ली +1 / +2 / +3 अतिरिक्त FS के लिए लक्ष्य पर गोली चलाती है',
 	},
@@ -393,7 +393,7 @@ export const loaderCardsFixes = {
 		LOADER_CARD_2_TITLE: 'PAW & SUPER WILD',
 		LOADER_CARD_2_BODY:
 			'PAWは1段をコインに変換。SUPER WILDは×2/×4/×6/×8で列を展開。同一スピンで両方は不可。',
-		LOADER_CARD_3_TITLE: '弾丸 & リボルバー',
+		LOADER_CARD_3_TITLE: 'リボルバー',
 		LOADER_CARD_3_LINE_1: 'FS中に弾丸を集める（最大6）。メインスピン後',
 		LOADER_CARD_3_LINE_2: '猫がターゲットを射撃 +1/+2/+3 追加FS',
 	},
@@ -406,7 +406,7 @@ export const loaderCardsFixes = {
 		LOADER_CARD_2_TITLE: 'PAW & SUPER WILD',
 		LOADER_CARD_2_BODY:
 			'PAW는 한 행을 코인으로 변환. SUPER WILD는 ×2/×4/×6/×8로 열 확장. 한 스핀에 둘 다 불가.',
-		LOADER_CARD_3_TITLE: '총알 & 리볼버',
+		LOADER_CARD_3_TITLE: '리볼버',
 		LOADER_CARD_3_LINE_1: '프리 스핀에서 총알 수집(최대 6). 메인 스핀 후',
 		LOADER_CARD_3_LINE_2: '고양이가 목표 사격 +1/+2/+3 추가 FS',
 	},
@@ -419,7 +419,7 @@ export const loaderCardsFixes = {
 		LOADER_CARD_2_TITLE: 'PAW & SUPER WILD',
 		LOADER_CARD_2_BODY:
 			'PAW 将一行变为金币。SUPER WILD 以 ×2/×4/×6/×8 扩展列。同一旋转不会同时触发。',
-		LOADER_CARD_3_TITLE: '子弹 & 左轮',
+		LOADER_CARD_3_TITLE: '左轮',
 		LOADER_CARD_3_LINE_1: '在免费旋转中收集子弹（最多 6）。主要旋转结束后',
 		LOADER_CARD_3_LINE_2: '猫射击目标获得 +1/+2/+3 额外 FS',
 	},

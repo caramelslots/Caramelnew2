@@ -7,6 +7,7 @@
 
 	import { getContext } from '../game/context';
 	import { stateDuel } from '../game/stateDuel.svelte';
+	import { stateGame } from '../game/stateGame.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { devPreview } from '../game/devPreview.svelte';
 	import { getPortraitFsCounterScreenPos } from '../game/duelLayout';
@@ -62,7 +63,7 @@
 		style:left="{pos.left}px"
 		style:top="{pos.top}px"
 		data-test="fs-counter-portrait"
-		transition:fade={{ duration: 220 }}
+		transition:fade={{ duration: stateGame.freeSpinIntroActive ? 0 : 220 }}
 		aria-hidden="true"
 	>
 		<span class="counter-label">{label}</span>

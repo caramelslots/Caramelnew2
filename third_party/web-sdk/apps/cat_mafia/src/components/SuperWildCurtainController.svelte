@@ -4,12 +4,26 @@
 	2) `idle` — living curtain after bounce
 	3) `win` — cat winds the drum (wheel bone held still at first)
 	4) ~mid-win → programmatic main16 spin → math mult (cat clip keeps playing)
-	5) `activation` — thumb-up finger gesture after the drum lands
-	6) `idle`
+	5) `idle` after the drum lands (× badge pinned)
+	6) `activation` — thumb-up when a payline reaches this column
+	7) `idle`
 -->
+<script lang="ts" module>
+	export type EmitterEventSuperWildCurtain = {
+		type: 'superWildCurtainActivate';
+		/** Curtain reels whose columns the active paylines cross. */
+		reels: number[];
+		/** Duel desk filter — omit for base / FS board. */
+		side?: 'cat' | 'dog';
+	};
+</script>
+
 <script lang="ts">
 	import { getContextSpine } from 'pixi-svelte';
 
+	import { getContext } from '../game/context';
+	import { BOARD_DIMENSIONS, PAYLINE_DRAW_DURATION_MS } from '../game/constants';
+	import type { DuelSide } from '../game/stateDuel.svelte';
 	import {
 		SUPER_WILD_ACTIVATION_ANIM,
 		SUPER_WILD_IDLE_ANIM,
@@ -40,6 +54,10 @@
 		playKey: string | null;
 		phase: 'expanding' | 'dropIn' | 'dismiss' | 'done' | null;
 		mult: number;
+		/** Board reel this curtain owns (0-based). */
+		reel: number;
+		/** Duel desk — omit for base / FS. */
+		duelSide?: DuelSide;
 		wheelDeg: number;
 		wheelLanded: boolean;
 		onWheelDeg: (deg: number) => void;
@@ -50,13 +68,14 @@
 
 	const props: Props = $props();
 	const spine = getContextSpine();
+	const context = getContext();
 
 	let playedKey = $state<string | null>(null);
 	let pendingWheelMult = $state<number | null>(null);
 	/** Cat `win` clip playing — drum held at startDeg until mid-clip spin. */
 	let catWinding = $state(false);
 	let wheelSpinning = $state(false);
-	/** Thumb-up `activation` after the mult drum lands. */
+	/** Thumb-up `activation` while a payline crosses this column. */
 	let activating = $state(false);
 	/** 0→1 progress through drum spin (matches easeOutCubic wall clock). */
 	let wheelSpinT = 0;
@@ -73,6 +92,7 @@
 	let openIdleStarted = false;
 	let wheelRaf = 0;
 	let wheelStartTimer: ReturnType<typeof setTimeout> | undefined;
+	let activationTimer: ReturnType<typeof setTimeout> | undefined;
 	let prevAfter: ((s: typeof spine) => void) | undefined;
 
 	/**
@@ -94,6 +114,13 @@
 		}
 	};
 
+	const clearActivationTimer = () => {
+		if (activationTimer !== undefined) {
+			clearTimeout(activationTimer);
+			activationTimer = undefined;
+		}
+	};
+
 	const clearWheelRaf = () => {
 		if (wheelRaf) cancelAnimationFrame(wheelRaf);
 		wheelRaf = 0;
@@ -102,6 +129,7 @@
 	const clearAllTimers = () => {
 		clearWheelRaf();
 		clearWheelStartTimer();
+		clearActivationTimer();
 	};
 
 	const applyWheelBone = (deg: number) => {
@@ -112,10 +140,10 @@
 	};
 
 	/**
-	 * Grabbing hand above the drum disk, still under `arch` (side columns).
-	 * Designer only shifts `wheel` −6 and never includes `finger`; that key
-	 * also resets at 1.7s mid-spin. Lift a beat after the authored grab
-	 * (`SUPER_WILD_WIN_HAND_ABOVE_WHEEL_NATIVE_MS`), then keep it for the spin.
+	 * Grabbing hand above the drum only during the reach (`win`).
+	 * Once the programmatic spin starts (and after land), the hand sits under
+	 * the disk again — we mutate `drawOrder` every frame while grabbing, so
+	 * we must restore under-wheel order or the hand stays stuck on top.
 	 */
 	const FRONT_HAND_SLOTS = new Set([
 		'finger',
@@ -127,15 +155,26 @@
 		'forearm2',
 	]);
 	const HAND_ABOVE_WHEEL_NATIVE_S = SUPER_WILD_WIN_HAND_ABOVE_WHEEL_NATIVE_MS / 1000;
-	const applyWheelUnderHandsDrawOrder = () => {
-		if (!catWinding && !wheelSpinning) return;
-		if (!wheelSpinning) {
-			const entry = spine.state?.getCurrent?.(0);
-			if (entry?.animation?.name !== SUPER_WILD_WIN_ANIM) return;
-			if ((entry.trackTime ?? 0) < HAND_ABOVE_WHEEL_NATIVE_S) return;
-		}
+	const applyHandWheelDrawOrder = () => {
 		const skeleton = spine.skeleton;
 		if (!skeleton) return;
+
+		// Above only while the cat is still winding / grabbing the rim.
+		let handsAbove = false;
+		if (catWinding) {
+			const entry = spine.state?.getCurrent?.(0);
+			if (
+				entry?.animation?.name === SUPER_WILD_WIN_ANIM &&
+				(entry.trackTime ?? 0) >= HAND_ABOVE_WHEEL_NATIVE_S
+			) {
+				handsAbove = true;
+			}
+		} else if (!wheelSpinning && !props.wheelLanded && pendingWheelMult == null) {
+			// Pre-open / unset — leave Spine's authored order alone.
+			return;
+		}
+		// wheelSpinning / landed idle / activation → hands under the disk.
+
 		const { slots, drawOrder } = skeleton;
 		const n = slots.length;
 		const hands: (typeof slots)[number][] = [];
@@ -145,13 +184,27 @@
 			if (FRONT_HAND_SLOTS.has(slot.data.name)) hands.push(slot);
 			else rest.push(slot);
 		}
-		// After wheel disk (+ glow), before arch side-columns.
+
+		// Setup order: hand slots → wheel → wheel2 → arch. Grab = after wheel;
+		// spin + settled = before wheel (under the disk, still under arch).
 		let insertAt = -1;
-		for (let i = 0; i < rest.length; i++) {
-			const name = rest[i].data.name;
-			if (name === 'wheel' || name === 'wheel2') insertAt = i + 1;
+		if (handsAbove) {
+			for (let i = 0; i < rest.length; i++) {
+				const name = rest[i].data.name;
+				if (name === 'wheel' || name === 'wheel2') insertAt = i + 1;
+			}
+			if (insertAt < 0) insertAt = rest.length;
+		} else {
+			for (let i = 0; i < rest.length; i++) {
+				const name = rest[i].data.name;
+				if (name === 'wheel' || name === 'wheel2') {
+					insertAt = i;
+					break;
+				}
+			}
+			if (insertAt < 0) insertAt = rest.length;
 		}
-		if (insertAt < 0) insertAt = rest.length;
+
 		let o = 0;
 		for (let i = 0; i < insertAt; i++) drawOrder[o++] = rest[i];
 		for (let i = 0; i < hands.length; i++) drawOrder[o++] = hands[i];
@@ -214,8 +267,10 @@
 		}
 	};
 
-	/** Finger like after the wheel stops — then living idle. */
+	/** Finger like when the payline reaches this column — then living idle. */
 	const playActivationThenIdle = () => {
+		// Never interrupt open / drum sequence; dismiss owns the slide-out.
+		if (opening || catWinding || wheelSpinning || props.phase === 'dismiss') return;
 		activating = true;
 		spine.state.timeScale = 1;
 		const entry = spine.state.setAnimation(0, SUPER_WILD_ACTIVATION_ANIM, false);
@@ -232,6 +287,25 @@
 			activating = false;
 			holdIdlePose();
 		}
+	};
+
+	/**
+	 * Schedule thumb-up so it starts when the payline draw reaches this reel
+	 * (left→right arc-length progress ≈ reel / (cols-1)).
+	 */
+	const scheduleActivationForPayline = () => {
+		if (opening || catWinding || wheelSpinning || props.phase === 'dismiss') return;
+		clearActivationTimer();
+		const span = Math.max(1, BOARD_DIMENSIONS.x - 1);
+		const delayMs = (props.reel / span) * PAYLINE_DRAW_DURATION_MS;
+		if (delayMs <= 0) {
+			playActivationThenIdle();
+			return;
+		}
+		activationTimer = setTimeout(() => {
+			activationTimer = undefined;
+			playActivationThenIdle();
+		}, delayMs);
 	};
 
 	const startWheelSpin = (mult: number) => {
@@ -269,7 +343,8 @@
 			wheelSpinning = false;
 			props.onWheelLanded(true, landSectorIndex, targetMult);
 			wheelRaf = 0;
-			playActivationThenIdle();
+			// Thumb-up waits for payline×curtain — settle on living idle here.
+			holdIdlePose(0.2);
 		};
 		wheelRaf = requestAnimationFrame(tick);
 	};
@@ -332,6 +407,7 @@
 		pendingWheelMult = mult;
 		catWinding = false;
 		wheelSpinning = false;
+		activating = false;
 		opening = true;
 		openFinished = false;
 		openLanded = false;
@@ -372,6 +448,7 @@
 		pendingWheelMult = mult;
 		catWinding = false;
 		wheelSpinning = false;
+		activating = false;
 		opening = false;
 		// Allow finishOpen after drop-in (same guard as expand complete).
 		openFinished = false;
@@ -406,6 +483,28 @@
 		}
 	};
 
+	context.eventEmitter.subscribeOnMount({
+		superWildCurtainActivate: (event) => {
+			if (props.duelSide) {
+				if (event.side !== props.duelSide) return;
+			} else if (event.side) {
+				return;
+			}
+			if (!event.reels.includes(props.reel)) return;
+			scheduleActivationForPayline();
+		},
+		paylineClearAll: (event) => {
+			const side = event && 'side' in event ? event.side : undefined;
+			if (props.duelSide) {
+				if (side !== props.duelSide) return;
+			} else if (side) {
+				return;
+			}
+			// Lines gone before the draw reached this column — skip the pending like.
+			clearActivationTimer();
+		},
+	});
+
 	$effect(() => {
 		ensurePointerTune();
 		prevAfter = spine.afterUpdateWorldTransforms;
@@ -433,8 +532,8 @@
 			if (catWinding || wheelSpinning || props.wheelLanded || pendingWheelMult != null) {
 				applyWheelBone(props.wheelDeg);
 			}
-			// Keep wheel under grabbing hands for the whole programmatic spin.
-			applyWheelUnderHandsDrawOrder();
+			// Grab reach: hands over wheel. Spin + land: hands under the disk.
+			applyHandWheelDrawOrder();
 			// Replace Spine `win` shake with a plain spin-time wiggle.
 			applyPointerRotation(s, wheelSpinning);
 		};

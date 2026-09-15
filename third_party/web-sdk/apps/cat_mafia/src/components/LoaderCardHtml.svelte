@@ -72,7 +72,13 @@
 
 	<div class="card-content">
 		<div class="card-title">
-			<ArchedRibbonTitle text={titleText} archDeg={titleArchDeg} tracking={1} />
+			<ArchedRibbonTitle
+				text={titleText}
+				archDeg={titleArchDeg}
+				tracking={0.92}
+				fitChordRatio={0.92}
+				minFitScale={0.52}
+			/>
 		</div>
 		{#if contentIndex === 0}
 			<div class="card-bonus-symbol">
@@ -91,7 +97,10 @@
 			</div>
 		{:else if contentIndex === 1}
 			<div class="card-body card-body--2">
-				<p class="line">{context.i18nDerived.loaderCard2Body()}</p>
+				<div class="line-block line-block--2-card">
+					<p class="line">{context.i18nDerived.loaderCard2Line1()}</p>
+					<p class="line highlight">{context.i18nDerived.loaderCard2Line2()}</p>
+				</div>
 			</div>
 		{:else}
 			<div class="card-body card-body--3">
@@ -150,13 +159,14 @@
 
 	.card-title {
 		position: absolute;
-		top: calc(var(--card-height) * 0.033);
-		left: 12%;
-		right: 12%;
-		height: calc(var(--card-height) * 0.12);
+		/* Keep the title box inside the dark arched ribbon of the card art. */
+		top: calc(var(--card-height) * 0.028);
+		left: 14%;
+		right: 14%;
+		height: calc(var(--card-height) * 0.105);
 		margin: 0;
-		font-size: calc(var(--card-width) * 0.06);
-		--bb-title-tracking: 1;
+		font-size: calc(var(--card-width) * 0.062);
+		--bb-title-tracking: 0.92;
 	}
 
 	.card-title :global(.arched-title) {
@@ -164,7 +174,8 @@
 	}
 
 	.card-title :global(.arch-char) {
-		top: 21%;
+		/* Peak of the arc inside the dark ribbon. */
+		top: 28%;
 		color: #f5e6c8;
 		background: none;
 		background-clip: unset;
@@ -253,8 +264,9 @@
 		--line-block-gap: calc(var(--line-height) * 0.25);
 	}
 
-	.card-body--2 .line:nth-child(1) {
-		top: calc(var(--card-height) * 0.645);
+	.line-block--2-card {
+		top: calc(var(--card-height) * 0.62);
+		--line-block-gap: calc(var(--line-height) * 0.35);
 	}
 
 	.line-block--3 {

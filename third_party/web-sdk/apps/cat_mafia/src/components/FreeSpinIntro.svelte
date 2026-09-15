@@ -280,6 +280,7 @@
 		role="button"
 		tabindex="0"
 	>
+		<div class="dim" aria-hidden="true"></div>
 		<div class="panel" style={panelStyle}>
 			<img class="layer layer-bg" src={bgUrl} alt="" draggable="false" />
 			<!-- Rays clipped to plaque shape (fs_bg alpha) so spin never spills past the frame. -->
@@ -353,7 +354,7 @@
 		/* Above TargetPickOverlay (60) so congrats sits over the sliding board. */
 		z-index: 70;
 		cursor: pointer;
-		background: rgba(0, 0, 0, 0.5);
+		background: transparent;
 		opacity: 0;
 		transition: opacity 320ms ease-out;
 		pointer-events: none;
@@ -362,6 +363,13 @@
 			opacity: 1;
 			pointer-events: auto;
 		}
+	}
+
+	.dim {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.5);
+		pointer-events: none;
 	}
 
 	.panel {

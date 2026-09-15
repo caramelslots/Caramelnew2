@@ -1,5 +1,5 @@
 <!--
-	DevButtons.svelte — Cat Mafia dev panel.
+	DevButtons.svelte — Meowfia dev panel.
 
 	Feature buttons play real math books (synced from 0_0_cat_mafia) via
 	playBet — same path as Storybook / production book playback.
@@ -1356,7 +1356,7 @@
 			</section>
 
 			<section>
-				<h4>Cat Mafia Books</h4>
+				<h4>Meowfia Books</h4>
 				<p class="subhint">Real math books via playBet ({allBooks.length} total)</p>
 				<div class="grid">
 					<button

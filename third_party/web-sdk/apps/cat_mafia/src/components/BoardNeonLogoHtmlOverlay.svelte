@@ -8,7 +8,9 @@
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { LOADER_NEON_LOGO_URL } from '../game/loaderCardAssets';
+	import { isFreeSpinsActive } from '../game/activeFeature';
 	import { stateDuel } from '../game/stateDuel.svelte';
+	import { stateGame } from '../game/stateGame.svelte';
 
 	const context = getContext();
 
@@ -37,9 +39,14 @@
 		}),
 	);
 
-	/** With the board as soon as the game panel is mounted (under intro → lift). */
+	/** Base game only — never during bonus normal / super FS, duel, or FS congrats. */
 	const show = $derived(
-		uiVisible && box.show && !stateDuel.active && gameEntrance.preloadContent,
+		uiVisible &&
+			box.show &&
+			!stateDuel.active &&
+			!isFreeSpinsActive() &&
+			!stateGame.freeSpinIntroActive &&
+			gameEntrance.preloadContent,
 	);
 </script>
 

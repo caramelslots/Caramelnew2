@@ -34,7 +34,7 @@ export const SUPER_WILD_OPEN_ANIM = 'open';
 export const SUPER_WILD_IDLE_ANIM = 'idle';
 /** Designer clip: cat turns the drum after the curtain opens. */
 export const SUPER_WILD_WIN_ANIM = 'win';
-/** Thumb-up finger gesture after the mult drum lands. */
+/** Thumb-up finger gesture when a payline crosses the open curtain. */
 export const SUPER_WILD_ACTIVATION_ANIM = 'activation';
 /** Native Spine `activation` (finger like) length at 1×. */
 export const SUPER_WILD_ACTIVATION_NATIVE_MS = 1233;
@@ -90,13 +90,15 @@ export const SUPER_WILD_WIN_WHEEL_START_FRAC = 0.5;
  * the reach; arch (side columns) stays above the hand.
  */
 export const SUPER_WILD_WIN_HAND_ABOVE_WHEEL_NATIVE_MS = 100;
-/** Total expanding wait: full open → idle → cat mid-win → wheel land → activation. */
+/**
+ * Total expanding wait: full open → idle → cat mid-win → wheel land.
+ * Thumb-up `activation` waits for payline×curtain (not part of present).
+ */
 export const SUPER_WILD_PRESENT_MS =
 	SUPER_WILD_OPEN_MS +
 	SUPER_WILD_OPEN_IDLE_MS +
 	SUPER_WILD_WIN_MS * SUPER_WILD_WIN_WHEEL_START_FRAC +
-	SUPER_WILD_WHEEL_SPIN_MS +
-	SUPER_WILD_ACTIVATION_NATIVE_MS;
+	SUPER_WILD_WHEEL_SPIN_MS;
 /**
  * Other reel symbols slide under the board during `open` (SW itself is hidden —
  * replaced by the Spine lying tile).
@@ -113,13 +115,12 @@ export const SUPER_WILD_STICKY_DROP_IN_MS = 720;
 export const SUPER_WILD_STICKY_DROP_IN_DIST = SYMBOL_SIZE * (BOARD_DIMENSIONS.y + 0.35);
 /**
  * Super intro wait: dropIn → cat mid-win → wheel land (same spin as expand,
- * without Spine `open`).
+ * without Spine `open`). `activation` waits for the first payline hit.
  */
 export const SUPER_WILD_STICKY_PRESENT_MS =
 	SUPER_WILD_STICKY_DROP_IN_MS +
 	SUPER_WILD_WIN_MS * SUPER_WILD_WIN_WHEEL_START_FRAC +
-	SUPER_WILD_WHEEL_SPIN_MS +
-	SUPER_WILD_ACTIVATION_NATIVE_MS;
+	SUPER_WILD_WHEEL_SPIN_MS;
 /**
  * Base next-spin: idle curtain slides under the board mask while reels scroll
  * (solid Spine art — never swaps to a 4-tile Wild.webp stack).

@@ -14,6 +14,7 @@ import type { EmitterEventTargetShootRound } from '../components/TargetShootOver
 import type { EmitterEventDuel } from '../components/DuelModeOverlay.svelte';
 import type { EmitterEventDuelIntro } from '../components/DuelIntro.svelte';
 import type { EmitterEventDuelBoard } from '../components/DuelPixiBoard.svelte';
+import type { EmitterEventSuperWildCurtain } from '../components/SuperWildCurtainController.svelte';
 
 export type EmitterEventGame =
 	| EmitterEventBoard
@@ -31,4 +32,5 @@ export type EmitterEventGame =
 	| EmitterEventTargetShootRound
 	| EmitterEventDuel
 	| EmitterEventDuelIntro
-	| EmitterEventDuelBoard;
+	| EmitterEventDuelBoard
+	| EmitterEventSuperWildCurtain;

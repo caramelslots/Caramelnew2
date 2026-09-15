@@ -1,6 +1,7 @@
 <!--
 	Card-ribbon title on a shallow circular arc — same layout as
 	FreeSpinIntro CONGRATULATIONS (proxima-nova + gold gradient).
+	Long titles scale down to stay inside the ribbon chord.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
@@ -11,9 +12,19 @@
 		text: string;
 		archDeg?: number;
 		tracking?: number;
+		/** Fraction of host width the glyph chain may occupy (padding inside the ribbon). */
+		fitChordRatio?: number;
+		/** Floor for auto font scaling when the title is very long. */
+		minFitScale?: number;
 	};
 
-	const { text, archDeg = 34, tracking }: Props = $props();
+	const {
+		text,
+		archDeg = 34,
+		tracking,
+		fitChordRatio = 0.86,
+		minFitScale = 0.5,
+	}: Props = $props();
 
 	let host = $state<HTMLDivElement>();
 	let hostWidth = $state(0);
@@ -29,9 +40,10 @@
 	const measureHost = () => {
 		const el = host;
 		if (!el) return;
-		const styles = getComputedStyle(el);
 		hostWidth = el.clientWidth;
-		const size = Number.parseFloat(styles.fontSize);
+		// Base size lives on the parent; this node may carry a fitted inline font-size.
+		const baseStyles = getComputedStyle(el.parentElement ?? el);
+		const size = Number.parseFloat(baseStyles.fontSize);
 		fontPx = Number.isFinite(size) && size > 0 ? size : 16;
 		const next = readTracking(el);
 		if (next !== cssTracking) cssTracking = next;
@@ -39,37 +51,49 @@
 
 	const resolvedTracking = $derived(tracking ?? cssTracking);
 
-	const glyphs = $derived.by((): Glyph[] => {
-		const chars = Array.from(text);
-		const n = chars.length;
-		if (n === 0 || hostWidth < 4) return [];
-
-		const chord = hostWidth * 0.9;
-		const halfRad = (archDeg * Math.PI) / 360;
-		const radius = halfRad > 0.001 ? chord / (2 * Math.sin(halfRad)) : chord;
-		const pack = Math.max(0.04, resolvedTracking);
-
+	const measureWidths = (chars: string[], sizePx: number, pack: number) => {
 		const widths: number[] = [];
 		if (typeof document !== 'undefined') {
 			const ctx = document.createElement('canvas').getContext('2d');
 			if (ctx) {
-				ctx.font = `800 ${fontPx}px proxima-nova, sans-serif`;
+				ctx.font = `900 ${sizePx}px proxima-nova, sans-serif`;
 				for (const char of chars) {
 					const raw = Math.max(
 						ctx.measureText(char === ' ' ? '\u00a0' : char).width,
-						fontPx * 0.18,
+						sizePx * 0.18,
 					);
 					widths.push(raw * pack);
 				}
+				return widths;
 			}
 		}
-		if (widths.length !== n) {
-			for (let i = 0; i < n; i++) widths.push(fontPx * 0.55 * pack);
-		}
+		for (let i = 0; i < chars.length; i++) widths.push(sizePx * 0.55 * pack);
+		return widths;
+	};
+
+	const layout = $derived.by((): { glyphs: Glyph[]; fitFontPx: number } => {
+		const chars = Array.from(text);
+		const n = chars.length;
+		if (n === 0 || hostWidth < 4) return { glyphs: [], fitFontPx: fontPx };
+
+		const pack = Math.max(0.04, resolvedTracking);
+		const maxTotal = hostWidth * fitChordRatio;
+		const naturalWidths = measureWidths(chars, fontPx, pack);
+		const naturalTotal = naturalWidths.reduce((sum, width) => sum + width, 0);
+		const fitScale =
+			naturalTotal > 0 ? Math.min(1, Math.max(minFitScale, maxTotal / naturalTotal)) : 1;
+		const fitFontPx = fontPx * fitScale;
+
+		const widths =
+			fitScale < 0.999 ? measureWidths(chars, fitFontPx, pack) : naturalWidths;
+
+		const chord = hostWidth * fitChordRatio;
+		const halfRad = (archDeg * Math.PI) / 360;
+		const radius = halfRad > 0.001 ? chord / (2 * Math.sin(halfRad)) : chord;
 
 		const total = widths.reduce((sum, width) => sum + width, 0);
 		let cursor = -total / 2;
-		return chars.map((char, i) => {
+		const glyphs = chars.map((char, i) => {
 			const width = widths[i]!;
 			const arc = cursor + width * 0.5;
 			cursor += width;
@@ -81,7 +105,13 @@
 				rot: (phi * 180) / Math.PI,
 			};
 		});
+
+		return { glyphs, fitFontPx };
 	});
+
+	const glyphs = $derived(layout.glyphs);
+	const fitFontPx = $derived(layout.fitFontPx);
+	const hostStyle = $derived(`font-size:${fitFontPx}px`);
 
 	onMount(() => {
 		const el = host;
@@ -100,7 +130,7 @@
 	});
 </script>
 
-<div class="arched-title" bind:this={host} aria-label={text}>
+<div class="arched-title" bind:this={host} style={hostStyle} aria-label={text}>
 	{#each glyphs as glyph, i (i)}
 		<span
 			class="arch-char"

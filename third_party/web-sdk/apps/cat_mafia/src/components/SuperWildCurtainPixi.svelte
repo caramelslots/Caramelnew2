@@ -65,6 +65,7 @@
 					phase={curtain.phase}
 					originRow={curtain.originRow}
 					playKey={`${props.duelSide ?? 'base'}:${curtain.reel}:${curtain.mult}`}
+					duelSide={props.duelSide}
 					{boxW}
 					{boxH}
 					{colY}

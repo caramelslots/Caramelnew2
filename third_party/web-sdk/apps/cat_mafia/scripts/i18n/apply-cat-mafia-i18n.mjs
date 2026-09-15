@@ -13,6 +13,7 @@ import {
 	loaderCardsFixes,
 	socialGameInfoFixes,
 } from './data/cat-mafia-locale-fixes.mjs';
+import { buyBonusFixes, loaderCard2Fixes } from './data/locale-ui-patches.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const gameDir = join(__dirname, 'data/game');
@@ -71,6 +72,13 @@ for (const file of readdirSync(gameDir)
 	if (loaderCardsFixes[locale]) {
 		Object.assign(updated, loaderCardsFixes[locale]);
 	}
+	if (loaderCard2Fixes[locale]) {
+		Object.assign(updated, loaderCard2Fixes[locale]);
+		delete updated.LOADER_CARD_2_BODY;
+	}
+	if (buyBonusFixes[locale]) {
+		Object.assign(updated, buyBonusFixes[locale]);
+	}
 
 	writeFileSync(join(gameDir, file), toMjsObject(updated), 'utf8');
 	console.log(`Updated game/${file}`);
@@ -91,6 +99,6 @@ writeFileSync(socialKeysPath, serializeSocialKeys(mergedSocial), 'utf8');
 console.log('Updated data/social-keys.mjs');
 
 console.log(
-	'Applied Cat Mafia i18n for locales:',
+	'Applied Meowfia i18n for locales:',
 	Object.keys(gameInfo).join(', '),
 );

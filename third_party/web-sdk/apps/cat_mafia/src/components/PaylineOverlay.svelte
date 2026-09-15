@@ -33,7 +33,7 @@
 	import { Graphics } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { PAYLINE_DRAW_DURATION_MS, SYMBOL_SIZE } from '../game/constants';
 	import { getSymbolX } from '../game/utils';
 
 	type Props = {
@@ -56,7 +56,6 @@
 	};
 
 	const ENERGY_ORANGE = 0xff8800;
-	const DRAW_DURATION_MS = 620;
 	const CYCLE_MS = 1600;
 	const SAMPLES_PER_SEGMENT = 14;
 	const PATH_CHUNKS = 14;
@@ -84,7 +83,7 @@
 		animTime = now * 0.001;
 		for (const line of activeLines) {
 			const elapsed = (now - line.startTime) % CYCLE_MS;
-			line.progress = Math.min(1, elapsed / DRAW_DURATION_MS);
+			line.progress = Math.min(1, elapsed / PAYLINE_DRAW_DURATION_MS);
 		}
 		if (activeLines.length > 0) {
 			raf = requestAnimationFrame(tick);

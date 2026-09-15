@@ -1539,6 +1539,12 @@ export const MYSTERY_BG_UNCOVER_MS = 1533;
 export const WIN_INFO_PRE_DELAY_MS = 100;
 
 /**
+ * PaylineOverlay left→right draw wall-clock. Curtain `activation` (thumb-up)
+ * starts when the line reaches that column — keep in sync with the overlay.
+ */
+export const PAYLINE_DRAW_DURATION_MS = 620;
+
+/**
  * Base SW two-beat: hold phase-1 paylines (lying SW) before clearing for curtain.
  */
 export const SW_PHASE1_HOLD_MS = 550;

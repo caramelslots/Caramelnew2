@@ -110,6 +110,33 @@ const duelSwRowsOnReel = (side: DuelSide, reelIndex: number) => {
 	return swRows;
 };
 
+/** Open curtain reels that appear in the winning positions (payline×curtain). */
+const curtainReelsHitByWins = (
+	wins: { positions: Position[] }[],
+	side?: DuelSide,
+): number[] => {
+	const hit = new Set<number>();
+	for (const win of wins) {
+		for (const pos of win.positions) hit.add(pos.reel);
+	}
+	if (hit.size === 0) return [];
+	const curtains = side
+		? stateDuel.superWildCurtains.filter((c) => c.side === side)
+		: stateGame.superWildCurtains;
+	return curtains.filter((c) => hit.has(c.reel)).map((c) => c.reel);
+};
+
+/** Thumb-up `activation` when paylines cross open SW curtains. */
+const broadcastCurtainActivation = (wins: { positions: Position[] }[], side?: DuelSide) => {
+	const reels = curtainReelsHitByWins(wins, side);
+	if (!reels.length) return;
+	eventEmitter.broadcast({
+		type: 'superWildCurtainActivate',
+		reels,
+		...(side ? { side } : {}),
+	});
+};
+
 const playDuelWinLines = async (
 	side: DuelSide,
 	wins: NonNullable<BookEventOfType<'duelSpin'>['wins']>,
@@ -148,6 +175,7 @@ const playDuelWinLines = async (
 			paylineRows,
 		});
 	}
+	broadcastCurtainActivation(wins, side);
 
 	const anchorWin = wins[0];
 	eventEmitter.broadcast({
@@ -982,6 +1010,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				paylineRows,
 			});
 		}
+		broadcastCurtainActivation(bookEvent.wins);
 
 		const anchorWin = bookEvent.wins[0];
 		if (anchorWin) {

@@ -74,16 +74,71 @@ def strip_editor_bone_fields(data: dict) -> None:
         bone.pop("icon", None)
 
 
-def convert_pngs(src_dir: Path, out_dir: Path, pngs: tuple[str, ...]) -> None:
+def atlas_has_pma(atlas_text: str) -> bool:
+    return any(line.strip() == "pma:true" for line in atlas_text.splitlines())
+
+
+def strip_atlas_pma(atlas_text: str) -> str:
+    """WebP + atlas pma:true breaks spine-pixi (see-through / x-ray layers).
+
+    spine-pixi uploads non-PMA pages with premultiply-on-upload; keep atlases
+    straight-alpha and never leave pma:true after PNG→WebP conversion.
+    """
+    lines = [line for line in atlas_text.splitlines() if line.strip() != "pma:true"]
+    return "\n".join(lines) + ("\n" if atlas_text.endswith("\n") else "")
+
+
+def unpremultiply_png(src_png: Path, out_png: Path) -> None:
+    """Convert PMA PNG → straight RGBA so cwebp + premultiply-on-upload is correct."""
+    from PIL import Image
+    import numpy as np
+
+    im = np.array(Image.open(src_png).convert("RGBA"), dtype=np.float32)
+    a = im[:, :, 3:4] / 255.0
+    rgb = im[:, :, :3]
+    mid = (im[:, :, 3] > 20) & (im[:, :, 3] < 240)
+    viol = (
+        float((rgb[mid].max(axis=1) > im[:, :, 3][mid] + 2).mean()) if mid.any() else 0.0
+    )
+    if viol > 0.3:
+        Image.fromarray(im.astype(np.uint8), "RGBA").save(out_png)
+        return
+    out = im.copy()
+    mask = a[:, :, 0] > 0
+    safe = np.maximum(a, 1e-6)
+    out[:, :, :3] = np.clip(rgb / safe, 0, 255)
+    out[~mask, :3] = 0
+    Image.fromarray(out.astype(np.uint8), "RGBA").save(out_png)
+
+
+def convert_pngs(
+    src_dir: Path,
+    out_dir: Path,
+    pngs: tuple[str, ...],
+    *,
+    unpremultiply: bool,
+) -> None:
+    import tempfile
+
     for png_name in pngs:
         src_png = src_dir / png_name
         if not src_png.is_file():
             raise FileNotFoundError(src_png)
         out_webp = out_dir / (Path(png_name).stem + ".webp")
-        subprocess.run(
-            ["cwebp", "-q", "90", "-exact", "-alpha_q", "100", str(src_png), "-o", str(out_webp)],
-            check=True,
-        )
+        convert_src = src_png
+        tmp: Path | None = None
+        if unpremultiply:
+            tmp = Path(tempfile.mkstemp(suffix=".png")[1])
+            unpremultiply_png(src_png, tmp)
+            convert_src = tmp
+        try:
+            subprocess.run(
+                ["cwebp", "-q", "90", "-exact", "-alpha_q", "100", str(convert_src), "-o", str(out_webp)],
+                check=True,
+            )
+        finally:
+            if tmp is not None:
+                tmp.unlink(missing_ok=True)
 
 
 def prepare_job(job: dict) -> None:
@@ -108,14 +163,18 @@ def prepare_job(job: dict) -> None:
     out_json.write_text(json.dumps(data, separators=(",", ":")), encoding="utf-8")
 
     atlas_text = src_atlas.read_text(encoding="utf-8")
+    had_pma = atlas_has_pma(atlas_text)
     for png_name in job["pngs"]:
         atlas_text = atlas_text.replace(png_name, Path(png_name).stem + ".webp")
+    atlas_text = strip_atlas_pma(atlas_text)
     (out_dir / job["atlas_name"]).write_text(atlas_text, encoding="utf-8")
 
-    convert_pngs(src_dir, out_dir, job["pngs"])
+    convert_pngs(src_dir, out_dir, job["pngs"], unpremultiply=had_pma)
 
     print(f"wrote {out_dir}")
     print("  animations:", sorted(data.get("animations", {})))
+    if had_pma:
+        print("  stripped pma:true (WebP must stay straight-alpha for spine-pixi)")
 
 
 def main() -> int:

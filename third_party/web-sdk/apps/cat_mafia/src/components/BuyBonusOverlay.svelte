@@ -474,7 +474,8 @@
 			height: 100%;
 			pointer-events: none;
 			z-index: 0;
-			filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.45));
+			/* No CSS filter — filters on transparent WebGL canvases re-composite
+			   alpha incorrectly and make opaque Spine layers look see-through. */
 		}
 	}
 

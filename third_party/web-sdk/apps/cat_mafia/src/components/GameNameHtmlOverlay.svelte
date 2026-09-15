@@ -9,6 +9,7 @@
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { stateDuel } from '../game/stateDuel.svelte';
+	import { stateGame } from '../game/stateGame.svelte';
 	import { getContextLayout } from 'utils-layout';
 
 	const context = getContext();
@@ -51,11 +52,13 @@
 			(context.stateLayout.showLoadingScreen || gameEntrance.showContent),
 	);
 	const gameTitle = $derived(context.i18nDerived.gameTitle());
+	const aboveFsIntro = $derived(stateGame.freeSpinIntroActive);
 </script>
 
 {#if show}
 	<div
 		class="game-name-overlay"
+		class:above-fs-intro={aboveFsIntro}
 		style:left="{layout.left}px"
 		style:top="{layout.top}px"
 		style:font-size="{layout.fontSize}px"
@@ -73,6 +76,10 @@
 		position: fixed;
 		z-index: 47;
 		pointer-events: none;
+
+		&.above-fs-intro {
+			z-index: 80;
+		}
 		display: flex;
 		align-items: baseline;
 		font-family: 'proxima-nova', sans-serif;

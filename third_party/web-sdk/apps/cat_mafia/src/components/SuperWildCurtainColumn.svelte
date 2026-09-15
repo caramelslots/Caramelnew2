@@ -22,6 +22,7 @@
 	import { getSymbolX } from '../game/utils';
 	import { gameSpeedMultFor } from '../game/gameSpeed';
 	import { stateGame } from '../game/stateGame.svelte';
+	import type { DuelSide } from '../game/stateDuel.svelte';
 	import {
 		SUPER_WILD_OPEN0_ALIGN_Y_PX,
 		SUPER_WILD_OPEN_LAND_MS,
@@ -54,6 +55,8 @@
 		boxW: number;
 		boxH: number;
 		colY: number;
+		/** Duel desk — omit for base / FS. */
+		duelSide?: DuelSide;
 	};
 
 	const props: Props = $props();
@@ -175,6 +178,8 @@
 				playKey={props.playKey}
 				phase={props.phase}
 				mult={props.mult}
+				reel={props.reel}
+				duelSide={props.duelSide}
 				{wheelDeg}
 				{wheelLanded}
 				onWheelDeg={(deg) => {

@@ -22,8 +22,8 @@
 		fontForLocale,
 		isArabicLocale,
 		LOCALE_TEXT_FILL_GOLD,
-		SYMBOL_SIZE,
 	} from '../game/constants';
+	import { DESKTOP_FS_COUNTER_LAYOUT } from '../game/fsCounterLayout';
 	import LocaleGlyph from './LocaleGlyph.svelte';
 	import { anchorToPivot, BitmapText, Container, Sprite, type Sizes } from 'pixi-svelte';
 	import { stateI18n } from 'state-shared';
@@ -31,23 +31,14 @@
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 
-	/** Desktop spinboard art (`spinboard.webp`) — brackets on the right. */
-	const DESKTOP_PANEL_RATIO = 582 / 334;
-	/**
-	 * Dark panel centre inside spinboard (brackets pull geometric centre right).
-	 * Measured from art: panel to gold edge ≈ x 0.05–0.82, y 0.07–0.91.
-	 */
-	const DESKTOP_TEXT_X_FRAC = 0.436;
-	const DESKTOP_TEXT_Y_FRAC = 0.488;
-	/** How far the right mounts overlap the board frame (unscaled board units). More positive = further right. */
-	const DESKTOP_MOUNT_OVERLAP = SYMBOL_SIZE * -0.13;
-	/**
-	 * Vertical centre as a fraction of board visual height from the top
-	 * (PC-tuned; Popout inherits the same ratio).
-	 */
-	const DESKTOP_CHROME_CENTER_Y_FRAC = 0.2;
-	/** Spinboard width as a fraction of board visual width (PC: 1.75×SYMBOL / 500). */
-	const DESKTOP_PANEL_WIDTH_FRAC = (SYMBOL_SIZE * 1.75) / 500;
+	const {
+		PANEL_RATIO: DESKTOP_PANEL_RATIO,
+		TEXT_X_FRAC: DESKTOP_TEXT_X_FRAC,
+		TEXT_Y_FRAC: DESKTOP_TEXT_Y_FRAC,
+		MOUNT_OVERLAP: DESKTOP_MOUNT_OVERLAP,
+		CHROME_CENTER_Y_FRAC: DESKTOP_CHROME_CENTER_Y_FRAC,
+		PANEL_WIDTH_FRAC: DESKTOP_PANEL_WIDTH_FRAC,
+	} = DESKTOP_FS_COUNTER_LAYOUT;
 
 	const isPortrait = $derived(stateLayoutDerived.layoutType() === 'portrait');
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
@@ -105,6 +96,8 @@
 
 	const forceShow = $derived(devPreview.forceShowFsBoardChrome);
 	const visible = $derived((show || forceShow) && !isPortrait);
+	/** Instant under the cloud / during congrats — no pop-in after steam clears. */
+	const fadeMs = 0;
 
 	$effect(() => {
 		if (!forceShow) return;
@@ -135,7 +128,7 @@
 </script>
 
 <MainContainer>
-	<FadeContainer show={visible} {...position} {scale}>
+	<FadeContainer show={visible} duration={fadeMs} {...position} {scale}>
 		<Sprite key="fsLeftCounterSpinboard" {...panelSizes} />
 		<Container
 			x={textAnchor.x}

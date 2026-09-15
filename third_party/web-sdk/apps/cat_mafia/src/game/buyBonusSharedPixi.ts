@@ -5,7 +5,7 @@
  * keep a second WebGL renderer alive (iOS Safari GPU).
  */
 import * as PIXI from 'pixi.js';
-import { Spine } from '@esotericsoftware/spine-pixi-v8';
+import { BlendMode, Spine } from '@esotericsoftware/spine-pixi-v8';
 
 import {
 	BUY_BONUS_HIDDEN_SLOTS,
@@ -91,6 +91,23 @@ const hideReferenceSlots = (spine: Spine, variant: BuyBonusSpineVariant) => {
 	}
 };
 
+/**
+ * Menu cards only need the character + frame. Additive / screen slots
+ * (rays, glows, duplicate tint layers) composite as see-through “x-ray”
+ * over the opaque body on a transparent WebGL canvas.
+ */
+const hideSpecialBlendSlots = (spine: Spine) => {
+	for (const slot of spine.skeleton.slots) {
+		if (slot.data.blendMode === BlendMode.Normal) continue;
+		slot.setAttachment(null);
+	}
+};
+
+const prepareBuyBonusSpineDraw = (spine: Spine, variant: BuyBonusSpineVariant) => {
+	hideReferenceSlots(spine, variant);
+	hideSpecialBlendSlots(spine);
+};
+
 const ensureApp = (): Promise<PIXI.Application | undefined> => {
 	if (app) return Promise.resolve(app);
 	if (appReady) return appReady;
@@ -161,8 +178,13 @@ const loadSpine = (variant: BuyBonusSpineVariant) => {
 			autoUpdate: false,
 		});
 		spine.state.setAnimation(0, BUY_BONUS_SPINE_ANIM[variant], true);
+		const previousBefore = spine.beforeUpdateWorldTransforms;
+		spine.beforeUpdateWorldTransforms = (self) => {
+			previousBefore?.(self);
+			prepareBuyBonusSpineDraw(self, variant);
+		};
 		spine.update(0);
-		hideReferenceSlots(spine, variant);
+		prepareBuyBonusSpineDraw(spine, variant);
 		spine.visible = false;
 		app.stage.addChild(spine);
 		spines.set(variant, spine);

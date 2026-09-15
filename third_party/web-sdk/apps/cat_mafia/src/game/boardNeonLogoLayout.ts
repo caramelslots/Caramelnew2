@@ -19,9 +19,9 @@ const LOGO_HEIGHT_FRAC = 0.28;
 const LOGO_GAP_FRAC = 0.08;
 /**
  * Vertical centre of the logo as a fraction of board height from the board top.
- * 0.5 = board centre.
+ * 0.5 = board centre; lower = higher on screen.
  */
-const LOGO_CENTER_Y_FRAC = 0.42;
+const LOGO_CENTER_Y_FRAC = 0.22;
 
 export type BoardNeonLogoScreenBox = {
 	show: boolean;
@@ -33,8 +33,8 @@ export type BoardNeonLogoScreenBox = {
 
 /**
  * MEOWFIA neon logo to the left of the slot board.
- * Size + gap scale with board screen size so PC / laptop / tablet / popout stay consistent.
- * Hidden only on phone portrait tiers — popout L/S still show (narrow width looks like mobile).
+ * Size + gap scale with board screen size so PC / laptop / tablet stay consistent.
+ * Hidden on phone and popout L/S (not enough side space).
  */
 export const computeBoardNeonLogoScreenBox = (opts: {
 	layoutDerived: LayoutDerived;
@@ -42,9 +42,8 @@ export const computeBoardNeonLogoScreenBox = (opts: {
 }): BoardNeonLogoScreenBox => {
 	const { layoutDerived, board } = opts;
 	const canvasSizes = layoutDerived.canvasSizes();
-	const isPopout = isPopoutViewport(canvasSizes);
 
-	if (isPhoneCanvasSizeType(layoutDerived.canvasSizeType()) && !isPopout) {
+	if (isPopoutViewport(canvasSizes) || isPhoneCanvasSizeType(layoutDerived.canvasSizeType())) {
 		return { show: false, left: 0, top: 0, width: 0, height: 0 };
 	}
 

@@ -1,7 +1,6 @@
 mascot_cat.webp
 size:3299,3299
 filter:Linear,Linear
-pma:true
 body
 bounds:2,1845,1387,1452
 offsets:0,7,1488,1459
@@ -123,7 +122,6 @@ offsets:6,6,76,49
 mascot_cat_2.webp
 size:952,952
 filter:Linear,Linear
-pma:true
 ejector_rod
 bounds:618,547,403,321
 offsets:1,1,405,323

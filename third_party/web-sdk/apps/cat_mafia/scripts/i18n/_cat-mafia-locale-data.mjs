@@ -8,7 +8,7 @@ export const localePacks = {
 	de: pack(
 		{
 			GAME_INFO_ABOUT_BODY:
-				'Cat Mafia ist ein Slot mit 5 Walzen und 4 Reihen sowie 20 Gewinnlinien. Gewinne werden von links nach rechts auf benachbarten Walzen ausgezahlt, beginnend bei der linken Walze. Für einen Gewinn auf einer Linie sind mindestens 3 übereinstimmende Symbole erforderlich. Pro Linie wird nur der höchste Gewinn ausgezahlt. In der Basisrunde können Paw-Münzen oder Super Wild in einem Dreh auslösen — aber nie beides gleichzeitig. Erhalte 3 oder mehr Bonus-Symbole, um Freispiele zu starten und ein Ziel für 8, 10 oder 12 Freispiele zu wählen.',
+				'Meowfia ist ein Slot mit 5 Walzen und 4 Reihen sowie 20 Gewinnlinien. Gewinne werden von links nach rechts auf benachbarten Walzen ausgezahlt, beginnend bei der linken Walze. Für einen Gewinn auf einer Linie sind mindestens 3 übereinstimmende Symbole erforderlich. Pro Linie wird nur der höchste Gewinn ausgezahlt. In der Basisrunde können Paw-Münzen oder Super Wild in einem Dreh auslösen — aber nie beides gleichzeitig. Erhalte 3 oder mehr Bonus-Symbole, um Freispiele zu starten und ein Ziel für 8, 10 oder 12 Freispiele zu wählen.',
 			GAME_INFO_PAYLINES_TITLE: 'GEWINNLINIEN (20)',
 			GAME_INFO_PAYLINES_NOTE:
 				'Alle 20 Gewinnlinien sind immer aktiv. Gewinne werden von links nach rechts auf benachbarten Walzen ausgezahlt, beginnend bei der linken Walze. Für eine gültige Gewinnlinie sind mindestens 3 übereinstimmende Symbole auf benachbarten Walzen erforderlich.',
@@ -27,7 +27,7 @@ export const localePacks = {
 			GAME_INFO_BULLET_BODY:
 				'Während der Haupt-Freispiele füllen Kugel-Symbole die Revolvertrommel (maximal 6). Wenn die Hauptdrehs enden, schießt die Katze automatisch auf Ziele. Jeder Treffer kann nichts oder +1, +2 oder +3 Extra-Freispiele geben. Kugeln erscheinen in diesen Extra-Drehs nicht und es gibt keine zweite Schussrunde.',
 			GAME_INFO_BET_MODES_BODY: betModes({
-				base: 'Base (1×): Der klassische Cat-Mafia-Lauf — Liniengewinne, Paw-Münzen und Super-Wild-Vorhänge bei jedem Dreh. Erhalte 3+ Bonus-Symbole für Freispiele: wähle ein Ziel für 8, 10 oder 12 Drehs (3 Bonus = Normal Bonus · 4+ = Super Bonus mit sticky Super-Wild-Spalte ab Dreh eins). Gewinne werden als Vielfache deines Basiseinsatzes ausgezahlt. RTP 96,01% · Max. Gewinn 2.500×.',
+				base: 'Base (1×): Der klassische Meowfia-Lauf — Liniengewinne, Paw-Münzen und Super-Wild-Vorhänge bei jedem Dreh. Erhalte 3+ Bonus-Symbole für Freispiele: wähle ein Ziel für 8, 10 oder 12 Drehs (3 Bonus = Normal Bonus · 4+ = Super Bonus mit sticky Super-Wild-Spalte ab Dreh eins). Gewinne werden als Vielfache deines Basiseinsatzes ausgezahlt. RTP 96,01% · Max. Gewinn 2.500×.',
 				boost: 'Bonus Boost (2×): Mehr Druck — spiele mit 2× Einsatz und jage Bonus-Symbole aggressiver. Freispiele lösen häufiger mit denselben Einstiegsregeln wie Base aus. Jeder Gewinn zahlt weiter als Vielfaches deines Basiseinsatzes, nicht der 2×-Drehkosten. RTP 96,01% · Max. Gewinn 2.500×.',
 				buyNormal: 'Normal Bonus kaufen (100×): Direkt ins Geschehen. Zahle 100× deinen Basiseinsatz, wähle ein Ziel für 8–12 Freispiele, sammle Kugeln im Revolver und lass die Katze für Extra-Runden schießen — ohne sticky Super Wild am Start. Gewinne werden als Vielfache deines Basiseinsatzes ausgezahlt. RTP 96,01% · Max. Gewinn 25.000×.',
 				buySuper: 'Super Bonus kaufen (200×): Der Premium-Raubzug. Gleiche Zielwahl und Kugel-Finale, aber eine Super-Wild-Spalte ist ab dem ersten Dreh bereits offen — sticky Wilds, multiplizierende Spalten und mehr Bonus-Potenzial. Gewinne werden als Vielfache deines Basiseinsatzes ausgezahlt. RTP 96,01% · Max. Gewinn 25.000×.',
@@ -51,7 +51,7 @@ export const localePacks = {
 		},
 		{
 			GAME_INFO_ABOUT_BODY_SOCIAL:
-				'Cat Mafia ist ein Slot mit 5 Walzen und 4 Reihen sowie 20 Gewinnlinien. Preise werden von links nach rechts auf benachbarten Walzen vergeben, beginnend bei der linken Walze. Für einen Preis auf einer Linie sind mindestens 3 übereinstimmende Symbole erforderlich. Pro Linie wird nur der höchste Preis vergeben. In der Basisrunde können Paw-Münzen oder Super Wild in einem Dreh auslösen — aber nie beides gleichzeitig. Erhalte 3 oder mehr Bonus-Symbole, um Freispiele zu starten und ein Ziel für 8, 10 oder 12 Freispiele zu wählen.',
+				'Meowfia ist ein Slot mit 5 Walzen und 4 Reihen sowie 20 Gewinnlinien. Preise werden von links nach rechts auf benachbarten Walzen vergeben, beginnend bei der linken Walze. Für einen Preis auf einer Linie sind mindestens 3 übereinstimmende Symbole erforderlich. Pro Linie wird nur der höchste Preis vergeben. In der Basisrunde können Paw-Münzen oder Super Wild in einem Dreh auslösen — aber nie beides gleichzeitig. Erhalte 3 oder mehr Bonus-Symbole, um Freispiele zu starten und ein Ziel für 8, 10 oder 12 Freispiele zu wählen.',
 			GAME_INFO_PAYLINES_TITLE_SOCIAL: 'GEWINNLINIEN (20)',
 			GAME_INFO_PAYLINES_NOTE_SOCIAL:
 				'Alle 20 Gewinnlinien sind immer aktiv. Preise werden von links nach rechts auf benachbarten Walzen vergeben, beginnend bei der linken Walze. Für eine gültige Linie sind mindestens 3 übereinstimmende Symbole auf benachbarten Walzen erforderlich.',
@@ -67,7 +67,7 @@ export const localePacks = {
 				'Während der Haupt-Freispiele füllen Kugel-Symbole die Revolvertrommel (maximal 6). Wenn die Hauptdrehs enden, schießt die Katze automatisch auf Ziele. Jeder Treffer kann nichts oder +1, +2 oder +3 Extra-Freispiele geben. Kugeln erscheinen in Extra-Drehs nicht und es gibt keine zweite Schussrunde.',
 			GAME_INFO_BET_MODES_TITLE_SOCIAL: 'SPIELMODI',
 			GAME_INFO_BET_MODES_BODY_SOCIAL: betModes({
-				base: 'Base (1×): Der klassische Cat-Mafia-Lauf — Linien, Paw-Münzen und Super-Wild-Vorhänge bei jedem Dreh. Erhalte 3+ Bonus für Freispiele: wähle ein Ziel für 8, 10 oder 12 Drehs (3 Bonus = Normal Bonus · 4+ = Super Bonus mit sticky Super Wild ab Dreh eins). Preise sind Vielfache deines Basisspiels. RTP 96,01% · Max. Preis 2.500×.',
+				base: 'Base (1×): Der klassische Meowfia-Lauf — Linien, Paw-Münzen und Super-Wild-Vorhänge bei jedem Dreh. Erhalte 3+ Bonus für Freispiele: wähle ein Ziel für 8, 10 oder 12 Drehs (3 Bonus = Normal Bonus · 4+ = Super Bonus mit sticky Super Wild ab Dreh eins). Preise sind Vielfache deines Basisspiels. RTP 96,01% · Max. Preis 2.500×.',
 				boost: 'Bonus Boost (2×): Mehr Druck — spiele mit 2× und jage Bonus-Symbole aggressiver. Freispiele lösen häufiger mit denselben Regeln wie Base. Jeder Preis zahlt als Vielfaches deines Basisspiels, nicht der 2×-Summe. RTP 96,01% · Max. Preis 2.500×.',
 				buyNormal: 'Normal Bonus spielen (100×): Direkt ins Geschehen. Spiele für 100× dein Basisspiel, wähle ein Ziel für 8–12 Freispiele, sammle Kugeln und lass die Katze für Extra-Runden schießen — ohne sticky Super Wild am Start. Preise sind Vielfache deines Basisspiels. RTP 96,01% · Max. Preis 25.000×.',
 				buySuper: 'Super Bonus spielen (200×): Der Premium-Raubzug. Gleiche Zielwahl und Kugel-Finale, aber eine Super-Wild-Spalte ist ab dem ersten Dreh offen. Preise sind Vielfache deines Basisspiels. RTP 96,01% · Max. Preis 25.000×.',
@@ -99,7 +99,7 @@ export const localePacks = {
 			LOADER_CARD_2_TITLE: 'PAW & SUPER WILD',
 			LOADER_CARD_2_BODY:
 				'PAW VERWANDELT EINE REIHE IN MÜNZEN. SUPER WILD EXPANDIERT EINE SPALTE MIT ×2 / ×4 / ×6 / ×8. NIE BEIDES IN EINEM DREH.',
-			LOADER_CARD_3_TITLE: 'KUGELN & REVOLVER',
+			LOADER_CARD_3_TITLE: 'REVOLVER',
 			LOADER_CARD_3_LINE_1: 'SAMMLE KUGELN IN FREISPIELEN (MAX. 6). NACH DEN HAUPTDREHS',
 			LOADER_CARD_3_LINE_2: 'SCHIEßT DIE KATZE AUF ZIELE FÜR +1 / +2 / +3 EXTRA-FS',
 		},
