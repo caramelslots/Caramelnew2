@@ -1412,22 +1412,26 @@ const l2PostWin = makeRenderPostWin('L2', letterSizeRatios);
 const l3PostWin = makeRenderPostWin('L3', letterSizeRatios, l3Opts);
 const l4PostWin = makeRenderPostWin('L4', letterSizeRatios);
 
-// Spin WebPs already contain only the glyph/prop in a 196² canvas — use the
-// on-cell fill directly. Inflated spine sizeRatios (skeleton ≫ art) would make
-// the sprite much larger than the idle/land spine and pop on bounce.
-const letterSpinSizeRatios = { width: CELL_SYMBOL_SIZE, height: CELL_SYMBOL_SIZE };
-const propSpinSizeRatios = { width: CELL_SYMBOL_SIZE, height: CELL_SYMBOL_SIZE };
+// Spin WebPs are letterboxed into 196² (`extractSymbolSprites.fit_square`,
+// 2% pad → content max-edge 188/196). Scaling the *texture* to CELL_SYMBOL_SIZE
+// made the silhouette ~4–15% smaller than idle/land Spine (which targets
+// CELL_SYMBOL_SIZE of the *art*). Inflate spin ratios so visible fill matches.
+const SPIN_SPRITE_CONTENT_FILL = 188 / 196;
+const payingSpinSizeRatios = (() => {
+	const ratio = CELL_SYMBOL_SIZE / SPIN_SPRITE_CONTENT_FILL;
+	return { width: ratio, height: ratio };
+})();
 /** Wild / Super Wild — full parchment column. Bonus spin matches inset spine. */
 const wildSizeRatios = { width: WILD_SYMBOL_SIZE, height: WILD_SYMBOL_SIZE };
 const bonusSpinSizeRatios = { width: BONUS_BAY_FILL, height: BONUS_BAY_FILL };
-const h1Spin = makeRenderSpinSprite('H1Img', propSpinSizeRatios);
-const h2Spin = makeRenderSpinSprite('H2Img', propSpinSizeRatios);
-const h3Spin = makeRenderSpinSprite('H3Img', propSpinSizeRatios, lighterOpts);
-const h4Spin = makeRenderSpinSprite('H4Img', propSpinSizeRatios);
-const l1Spin = makeRenderSpinSprite('L1Img', letterSpinSizeRatios);
-const l2Spin = makeRenderSpinSprite('L2Img', letterSpinSizeRatios);
-const l3Spin = makeRenderSpinSprite('L3Img', letterSpinSizeRatios, l3Opts);
-const l4Spin = makeRenderSpinSprite('L4Img', letterSpinSizeRatios);
+const h1Spin = makeRenderSpinSprite('H1Img', payingSpinSizeRatios);
+const h2Spin = makeRenderSpinSprite('H2Img', payingSpinSizeRatios);
+const h3Spin = makeRenderSpinSprite('H3Img', payingSpinSizeRatios, lighterOpts);
+const h4Spin = makeRenderSpinSprite('H4Img', payingSpinSizeRatios);
+const l1Spin = makeRenderSpinSprite('L1Img', payingSpinSizeRatios);
+const l2Spin = makeRenderSpinSprite('L2Img', payingSpinSizeRatios);
+const l3Spin = makeRenderSpinSprite('L3Img', payingSpinSizeRatios, l3Opts);
+const l4Spin = makeRenderSpinSprite('L4Img', payingSpinSizeRatios);
 const wSpin = makeRenderSpinSprite('WImg', wildSizeRatios);
 /**
  * Wild — WebP while scrolling; spine `static` idle at rest; spine `land` bounce
@@ -1458,7 +1462,7 @@ const bdStatic = makeRenderStatic('BD', bonusSizeRatios, bonusOpts);
 const bdLand = makeRenderLand('BD', bonusSizeRatios, bonusOpts);
 const bdWin = makeRenderWin('BD', bonusSizeRatios, bonusOpts);
 /** Cartridge has no `idle` — sprite for rest/spin; spine `stop` on land. */
-const btSprite = makeRenderSpinSprite('BTImg', propSpinSizeRatios);
+const btSprite = makeRenderSpinSprite('BTImg', payingSpinSizeRatios);
 const btLand = makeRenderLand('BT', cartridgeSizeRatios);
 
 /**

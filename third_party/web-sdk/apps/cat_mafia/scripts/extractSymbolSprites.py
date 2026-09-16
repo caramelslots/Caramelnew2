@@ -31,6 +31,8 @@ DESIGNER_ROOT = APP_ROOT.parents[3] / "designer_assets"
 
 SYMBOL_SIZE = 196
 # Tiny inset so Lanczos resize doesn't clip bevel/shadow into the frame edge.
+# Keep in sync with `SPIN_SPRITE_CONTENT_FILL` in src/game/constants.ts
+# (round(SYMBOL_SIZE * (1 - 2 * FIT_PADDING)) / SYMBOL_SIZE).
 FIT_PADDING = 0.02
 
 # Atlas region name for the resting glyph inside each per-symbol skeleton.
@@ -53,6 +55,9 @@ DESIGNER_STILL_BY_SYMBOL: dict[str, Path] = {
 	"H1": DESIGNER_ROOT / "H1" / "H1_static.webp",
 	"H2": DESIGNER_ROOT / "H2" / "H2_static.webp",
 	"H3": DESIGNER_ROOT / "json" / "lighter-idle_0.png",
+	# Full composed J with under-hook shadow. Atlas `J` region is cropped;
+	# source already has transparency — do not black-flood (eats the shadow).
+	"L4": DESIGNER_ROOT / "L4" / "L4_static.webp",
 }
 
 INFO_SPRITE_SIZE = 256
@@ -237,7 +242,7 @@ def extract() -> None:
 		raw = Image.open(still).convert("RGBA")
 		print(f"  {symbol}: designer still {still}")
 		save_sprite(fit_square(raw), symbol)
-		if symbol == "H3":
+		if symbol in ("H3", "L4"):
 			save_info_sprite(raw, symbol)
 		done.add(symbol)
 
@@ -246,16 +251,17 @@ def extract() -> None:
 			continue
 		save_sprite(extract_from_atlas(symbol, region), symbol)
 
-	# H4 is a composed still (atlas only has mesh parts) — strip baked black letterbox.
-	# H3 now comes from designer_assets/json/lighter-idle_0.png (already transparent).
+	# H4 is a composed still (atlas only has mesh parts) — strip baked black
+	# letterbox, then fit_square like every other paying spin sprite. Skipping
+	# the re-fit left vertical padding so H4 read smaller than idle Spine.
 	for symbol in ("H4",):
 		src = SPRITE_DIRS[0] / f"{symbol}.webp"
 		if not src.is_file():
 			print(f"  skip {symbol}: missing {src}")
 			continue
 		cleared = clear_letterbox_black(Image.open(src))
-		save_sprite(cleared, symbol)
-		print(f"  {symbol}: cleared opaque letterbox")
+		save_sprite(fit_square(cleared), symbol)
+		print(f"  {symbol}: cleared letterbox + fit_square")
 
 	print("done.")
 
