@@ -48,12 +48,12 @@ export const BUY_BONUS_SPINE_FILES: Record<
 	super: {
 		json: 'WILD_F_1.json',
 		atlas: 'WILD_F_1.atlas',
-		images: ['WILD_F_1.webp'],
+		images: ['WILD_F_1.webp', 'WILD_F_1_2.webp'],
 	},
 	duel: {
 		json: 'mascot_cat.json',
 		atlas: 'mascot_cat.atlas',
-		images: ['mascot_cat.webp'],
+		images: ['mascot_cat.webp', 'mascot_cat_2.webp'],
 	},
 };
 

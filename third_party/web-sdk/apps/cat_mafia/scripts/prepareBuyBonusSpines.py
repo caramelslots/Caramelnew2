@@ -33,14 +33,14 @@ JOBS = (
         "src": REPO_ROOT / "designer_assets" / "wild_render",
         "json_name": "WILD_F_1.json",
         "atlas_name": "WILD_F_1.atlas",
-        "pngs": ("WILD_F_1.png",),
+        "pngs": ("WILD_F_1.png", "WILD_F_1_2.png"),
     },
     {
         "name": "duel",
         "src": REPO_ROOT / "designer_assets" / "export_cat&dog",
         "json_name": "mascot_cat.json",
         "atlas_name": "mascot_cat.atlas",
-        "pngs": ("mascot_cat.png",),
+        "pngs": ("mascot_cat.png", "mascot_cat_2.png"),
     },
 )
 
@@ -141,11 +141,22 @@ def convert_pngs(
                 tmp.unlink(missing_ok=True)
 
 
+def copy_pngs(src_dir: Path, out_dir: Path, pngs: tuple[str, ...]) -> None:
+    import shutil
+
+    for png_name in pngs:
+        src_png = src_dir / png_name
+        if not src_png.is_file():
+            raise FileNotFoundError(src_png)
+        shutil.copy2(src_png, out_dir / png_name)
+
+
 def prepare_job(job: dict) -> None:
     src_dir: Path = job["src"]
     out_dir = OUT_ROOT / job["name"]
     src_json = src_dir / job["json_name"]
     src_atlas = src_dir / job["atlas_name"]
+    keep_png = bool(job.get("keep_png"))
 
     for path in (src_json, src_atlas):
         if not path.is_file():
@@ -164,16 +175,24 @@ def prepare_job(job: dict) -> None:
 
     atlas_text = src_atlas.read_text(encoding="utf-8")
     had_pma = atlas_has_pma(atlas_text)
-    for png_name in job["pngs"]:
-        atlas_text = atlas_text.replace(png_name, Path(png_name).stem + ".webp")
-    atlas_text = strip_atlas_pma(atlas_text)
-    (out_dir / job["atlas_name"]).write_text(atlas_text, encoding="utf-8")
-
-    convert_pngs(src_dir, out_dir, job["pngs"], unpremultiply=had_pma)
+    if keep_png:
+        atlas_text = strip_atlas_pma(atlas_text)
+        (out_dir / job["atlas_name"]).write_text(atlas_text, encoding="utf-8")
+        copy_pngs(src_dir, out_dir, job["pngs"])
+        for stale in out_dir.glob("*.webp"):
+            stale.unlink()
+    else:
+        for png_name in job["pngs"]:
+            atlas_text = atlas_text.replace(png_name, Path(png_name).stem + ".webp")
+        atlas_text = strip_atlas_pma(atlas_text)
+        (out_dir / job["atlas_name"]).write_text(atlas_text, encoding="utf-8")
+        convert_pngs(src_dir, out_dir, job["pngs"], unpremultiply=had_pma)
 
     print(f"wrote {out_dir}")
     print("  animations:", sorted(data.get("animations", {})))
-    if had_pma:
+    if keep_png:
+        print("  kept PNG atlas pages (no WebP conversion)")
+    elif had_pma:
         print("  stripped pma:true (WebP must stay straight-alpha for spine-pixi)")
 
 

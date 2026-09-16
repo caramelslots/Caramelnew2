@@ -44,7 +44,7 @@ let layerObserver: ResizeObserver | undefined;
 let resizeListening = false;
 let destroyTimer: ReturnType<typeof setTimeout> | undefined;
 
-const hostDpr = () => Math.min(window.devicePixelRatio || 1, 2);
+const hostDpr = () => window.devicePixelRatio || 1;
 
 const hostBox = (el: HTMLElement) => ({
 	w: Math.max(0, Math.round(el.clientWidth)),
