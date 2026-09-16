@@ -173,11 +173,12 @@ const loadSpine = (variant: BuyBonusSpineVariant) => {
 	const pending = loading.get(variant);
 	if (pending) return pending;
 
-	const gen = appGen;
 	const task = (async () => {
 		if (!canOwnApp()) return null;
 		const createdApp = await ensureApp();
-		if (!createdApp || gen !== appGen || !canOwnApp()) return null;
+		if (!createdApp || !canOwnApp()) return null;
+		// Capture AFTER ensureApp — create bumps appGen; only destroy should abort.
+		const gen = appGen;
 		const urls = buyBonusSpineUrls(variant);
 		await PIXI.Assets.load([urls.atlas, urls.skeleton]);
 		if (!app || gen !== appGen || !canOwnApp()) return null;
@@ -232,6 +233,8 @@ export const ensureBuyBonusWarm = (): Promise<void> => {
 
 	warmPromise = (async () => {
 		try {
+			const createdApp = await ensureApp();
+			if (!createdApp || !shouldKeepBuyBonusWarm()) return;
 			await whenBuyBonusSpinesReady();
 			if (!app || !shouldKeepBuyBonusWarm()) return;
 			for (const spine of spines.values()) spine.visible = false;

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import ReelSymbol from './ReelSymbol.svelte';
 	import { getContext } from '../game/context';
-	import { FULL_COLUMN_SYMBOL_NAMES } from '../game/constants';
 	import type { SymbolState } from '../game/types';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
@@ -26,8 +25,9 @@
 		/** When true, render landed PB/PS/PG above the gold rails (not while spinning). */
 		pawCoin?: boolean;
 		/**
-		 * When true, render resting B/W/SW above the gold rails so the outer
-		 * frame / rail overlay cannot clip full-column tiles (cols 1 & 5).
+		 * When true, render all resting (non-spinning) tiles above the gold
+		 * rails / desk frame so lids, glow and full-column props are not clipped.
+		 * Spinning tiles stay on the masked board.
 		 */
 		fullColumn?: boolean;
 		/** Override reel board (Duel dual desks). Defaults to main stateGame.board. */
@@ -100,9 +100,12 @@
 		reelMotion !== 'spinning';
 
 	/**
-	 * Outer Bonus / Wild / Super Wild only — middle cols stay under rails.
-	 * Disabled during target-pick park AND while an SW curtain / hide covers
-	 * this reel (otherwise cols 1/5 flash a 4-tile Wild.webp stack).
+	 * Resting tiles above the gold rails / desk frame (BoardFullColumnLayer).
+	 * Spinning tiles stay masked so they clip at the playfield edges.
+	 * Disabled during target-pick park and while an SW curtain covers the reel
+	 * (otherwise a 4-tile stack flashes under the Spine curtain).
+	 * Win / idle-bounce / paw layers own their states — excluded here to avoid
+	 * double-mounting the same cell.
 	 */
 	const isFullColumnAboveFrame = (
 		reelSymbol: ReelLike['reelState']['symbols'][number],
@@ -112,12 +115,10 @@
 		if (targetPickParking || isReelCoveredBySwCurtain(reelIndex)) return false;
 		// Never lift painted SW above rails — Spine curtain is the only SW art.
 		if (reelSymbol.rawSymbol.name === 'SW') return false;
-		return (
-			FULL_COLUMN_SYMBOL_NAMES.has(reelSymbol.rawSymbol.name) &&
-			(reelIndex === 0 || reelIndex === 4) &&
-			reelSymbol.symbolState !== 'spin' &&
-			reelMotion !== 'spinning'
-		);
+		if (isMysteryFx(reelSymbol.symbolState)) return false;
+		if (isAboveRails(reelSymbol.symbolState)) return false;
+		if (isPawCoinAboveFrame(reelSymbol, reelMotion)) return false;
+		return reelSymbol.symbolState !== 'spin' && reelMotion !== 'spinning';
 	};
 
 	const matchesLayer = (

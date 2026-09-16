@@ -239,7 +239,7 @@
 		<BoardFrame layer="nameplate" {layout} disableCatZoom side={props.side} />
 	</MainContainer>
 {:else if props.layer === 'idleBounce'}
-	<!-- Win / idle pops + resting B/W/SW above gold rails (same split as base game).
+	<!-- Win / idle pops + all resting tiles above gold rails (same as base game).
 	     Without this, `symbolState === 'win'` unmounts from the masked board
 	     and nothing remounts — symbols vanish and duelBoardAnimateSymbols hangs. -->
 	<MainContainer>

@@ -48,11 +48,18 @@ SPRITE_NAME_BY_SYMBOL: dict[str, str] = {}
 
 # Full composed stills when the atlas has no single idle glyph (H2 = crossed
 # revolvers). H1 designer still includes the sparkle star that sits on a
-# separate spine attachment.
+# separate spine attachment. H3 = lighter idle from designer_assets/json.
 DESIGNER_STILL_BY_SYMBOL: dict[str, Path] = {
 	"H1": DESIGNER_ROOT / "H1" / "H1_static.webp",
 	"H2": DESIGNER_ROOT / "H2" / "H2_static.webp",
+	"H3": DESIGNER_ROOT / "json" / "lighter-idle_0.png",
 }
+
+INFO_SPRITE_SIZE = 256
+INFO_SPRITE_DIRS = (
+	APP_ROOT / "assets/sprites/symbols/info",
+	APP_ROOT / "static/assets/sprites/symbols/info",
+)
 
 
 def parse_atlas(atlas_path: Path) -> tuple[str, dict[str, dict]]:
@@ -199,6 +206,17 @@ def save_sprite(sprite: Image.Image, name: str) -> None:
 		print(f"  wrote {out_path.relative_to(APP_ROOT)} ({sprite.width}x{sprite.height})")
 
 
+def save_info_sprite(source: Image.Image, name: str) -> None:
+	"""Paytable cards use a larger 256² letterbox than spin sprites."""
+	out_name = SPRITE_NAME_BY_SYMBOL.get(name, name)
+	info = fit_square(source, size=INFO_SPRITE_SIZE)
+	for info_dir in INFO_SPRITE_DIRS:
+		info_dir.mkdir(parents=True, exist_ok=True)
+		out_path = info_dir / f"{out_name}.webp"
+		info.save(out_path, "WEBP", lossless=True, method=6)
+		print(f"  wrote {out_path.relative_to(APP_ROOT)} ({info.width}x{info.height})")
+
+
 def extract_from_atlas(symbol: str, region_name: str) -> Image.Image:
 	atlas_path = SPINE_ROOT / symbol / f"{symbol}.atlas"
 	page_image, regions = parse_atlas(atlas_path)
@@ -212,18 +230,15 @@ def extract_from_atlas(symbol: str, region_name: str) -> Image.Image:
 	return fit_square(glyph)
 
 
-def extract_from_designer(symbol: str, still_path: Path) -> Image.Image:
-	if not still_path.is_file():
-		raise FileNotFoundError(still_path)
-	print(f"  {symbol}: designer still {still_path}")
-	return fit_square(Image.open(still_path).convert("RGBA"))
-
-
 def extract() -> None:
 	# Designer stills win when present (composed idle), else atlas glyph.
 	done: set[str] = set()
 	for symbol, still in DESIGNER_STILL_BY_SYMBOL.items():
-		save_sprite(extract_from_designer(symbol, still), symbol)
+		raw = Image.open(still).convert("RGBA")
+		print(f"  {symbol}: designer still {still}")
+		save_sprite(fit_square(raw), symbol)
+		if symbol == "H3":
+			save_info_sprite(raw, symbol)
 		done.add(symbol)
 
 	for symbol, region in ATLAS_REGION_BY_SYMBOL.items():
@@ -231,8 +246,9 @@ def extract() -> None:
 			continue
 		save_sprite(extract_from_atlas(symbol, region), symbol)
 
-	# H3/H4 are composed stills (atlas only has mesh parts) — strip baked black letterbox.
-	for symbol in ("H3", "H4"):
+	# H4 is a composed still (atlas only has mesh parts) — strip baked black letterbox.
+	# H3 now comes from designer_assets/json/lighter-idle_0.png (already transparent).
+	for symbol in ("H4",):
 		src = SPRITE_DIRS[0] / f"{symbol}.webp"
 		if not src.is_file():
 			print(f"  skip {symbol}: missing {src}")

@@ -1,8 +1,8 @@
 <script lang="ts">
 	/**
-	 * Resting Bonus / Wild / Super Wild above the gold rails.
+	 * Resting symbols above the gold rails / desk frame.
 	 * Spinning tiles stay on the masked board; once stopped they lift so the
-	 * outer desk frame cannot clip columns 1 and 5.
+	 * outer frame cannot clip lids, glow, or full-column props.
 	 *
 	 * Do NOT add BoardMask here — extra Sprite masks corrupt the main reel mask.
 	 * During target-pick slide, BoardBase keeps these on the masked board instead.

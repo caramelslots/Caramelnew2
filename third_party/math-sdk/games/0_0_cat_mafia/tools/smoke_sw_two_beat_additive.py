@@ -60,6 +60,101 @@ def check_additive_unit() -> None:
     print("OK unit additive (base + duel)")
 
 
+def check_super_skip_phase2_when_new_reel_unused() -> None:
+    """Super: expand without phase-2 winInfo when new curtain reel is off the wins."""
+    config = GameConfig()
+    gs = GameState(config)
+    gs.reset_seed(0)
+    gs.reset_book()
+    gs.gametype = config.freegame_type
+    gs.fs_profile = "bonus_super"
+    gs.sticky_sw = {1: 2}  # pre-expand sticky (pending product ×2)
+    gs._pending_sw_product = 2
+    gs._pending_sw_expands = []
+    gs.win_manager.reset_spin_win()
+    gs.win_manager.running_bet_win = 0.0
+
+    phase1 = 0.10
+    phase1_wins = [
+        {
+            "symbol": "H1",
+            "win": phase1,
+            "positions": [{"reel": 0, "row": 0}, {"reel": 1, "row": 0}],
+            "meta": {
+                "multiplier": 1,
+                "winWithoutMult": phase1,
+                "globalMult": 1,
+                "lineMultiplier": 1,
+                "lineIndex": 0,
+            },
+        }
+    ]
+    # Phase-2 board wins only use reels 0/1 — new curtain on reel 3 is unused.
+    phase2_raw = 0.10
+    product = 6  # would include new ×3 if we paid phase-2
+    orig = Lines.get_lines
+
+    def fake_get_lines(board, config, global_multiplier=1):
+        return {
+            "totalWin": phase2_raw,
+            "wins": [
+                {
+                    "symbol": "H1",
+                    "win": phase2_raw,
+                    "positions": [{"reel": 0, "row": 0}, {"reel": 1, "row": 0}],
+                    "meta": {
+                        "multiplier": 1,
+                        "winWithoutMult": phase2_raw,
+                        "globalMult": 1,
+                        "lineMultiplier": 1,
+                        "lineIndex": 0,
+                    },
+                }
+            ],
+        }
+
+    Lines.get_lines = staticmethod(fake_get_lines)
+    try:
+        gs.win_manager.update_spinwin(phase1)
+        gs.win_data = {"totalWin": phase1, "wins": list(phase1_wins)}
+        gs.board = [[gs.create_symbol("L1") for _ in range(4)] for _ in range(5)]
+        n_before = len(gs.book.events)
+        gs._emit_sw_reeval_wins(
+            product,
+            phase1_wins=phase1_wins,
+            phase1_total=phase1,
+            require_new_reels={3},
+        )
+        types = [e.get("type") for e in gs.book.events[n_before:]]
+        assert "winInfo" not in types, types
+        # Pre-expand sticky product applied once (no additive phase-2).
+        assert round(float(gs.win_manager.spin_win), 2) == 0.20
+        assert round(float(gs.win_data["totalWin"]), 2) == 0.20
+
+        # Participating new reel → phase-2 winInfo as usual.
+        gs.reset_book()
+        gs.sticky_sw = {1: 2, 3: 3}
+        gs._pending_sw_product = 2
+        gs.win_manager.reset_spin_win()
+        gs.win_manager.running_bet_win = 0.0
+        gs.win_manager.update_spinwin(phase1)
+        gs.win_data = {"totalWin": phase1, "wins": list(phase1_wins)}
+        n_before = len(gs.book.events)
+        gs._emit_sw_reeval_wins(
+            product,
+            phase1_wins=phase1_wins,
+            phase1_total=phase1,
+            require_new_reels={0},  # reel 0 is in phase-2 wins
+        )
+        types = [e.get("type") for e in gs.book.events[n_before:]]
+        assert "winInfo" in types, types
+        assert round(float(gs.win_data["totalWin"]), 2) == 0.60  # 0.10 * 6
+        assert round(float(gs.win_manager.spin_win), 2) == 0.70  # 0.10 + 0.60
+    finally:
+        Lines.get_lines = orig
+    print("OK unit super skip phase-2 when new reel unused")
+
+
 def segment_spins(events: list[dict]) -> list[list[dict]]:
     segs: list[list[dict]] = []
     i = 0
@@ -95,6 +190,7 @@ def check_super_live(n: int = 200) -> None:
     expand_segs = 0
     bad_order = 0
     both_wins = 0
+    expand_no_phase2 = 0
     additive_ok = 0
     additive_bad: list[tuple] = []
     samples: list[list[str]] = []
@@ -116,7 +212,11 @@ def check_super_live(n: int = 200) -> None:
                 samples.append(types)
             wins_before = [k for k, t in enumerate(types) if t == "winInfo" and k < exp_i]
             wins_after = [k for k, t in enumerate(types) if t == "winInfo" and k > exp_i]
-            if not (wins_before and wins_after):
+            if not wins_after:
+                # Allowed in Super when the new curtain reel is off phase-2 wins.
+                expand_no_phase2 += 1
+                continue
+            if not wins_before:
                 continue
             # Soft/hard wincap may skip phase-2 setWin; spin_win still additive in math.
             if any(e.get("type") == "wincap" for e in seg):
@@ -147,7 +247,8 @@ def check_super_live(n: int = 200) -> None:
 
     print(
         f"expand_segs={expand_segs} bad_order={bad_order} "
-        f"both_wins={both_wins} additive_ok={additive_ok} additive_bad={len(additive_bad)}"
+        f"both_wins={both_wins} expand_no_phase2={expand_no_phase2} "
+        f"additive_ok={additive_ok} additive_bad={len(additive_bad)}"
     )
     print("sample orders:", samples)
     if additive_bad[:5]:
@@ -215,5 +316,6 @@ def check_base_sw_expand(n: int = 80) -> None:
 
 if __name__ == "__main__":
     check_additive_unit()
+    check_super_skip_phase2_when_new_reel_unused()
     check_base_sw_expand()
     check_super_live()
