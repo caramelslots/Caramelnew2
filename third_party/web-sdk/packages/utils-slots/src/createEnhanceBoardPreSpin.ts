@@ -10,13 +10,21 @@ export function createEnhanceBoardPreSpin<TReel extends Reel<any, any>>({
 }) {
 	type TRawSymbol = GetRawSymbolFromReel<TReel>;
 
-	const preSpin = async ({ paddingBoard }: { paddingBoard?: TRawSymbol[][] }) => {
+	const preSpin = async ({
+		paddingBoard,
+		frozenReelIndices = [],
+	}: {
+		paddingBoard?: TRawSymbol[][];
+		/** Reel indices that must not pre-spin (e.g. sticky Super Wild columns). */
+		frozenReelIndices?: number[];
+	}) => {
 		stateSlots.isPreSpinning = true;
 
 		const isTurboBeforeAll = stateBet.isTurbo;
 
 		await Promise.all(
 			board.map((reel, reelIndex) => {
+				if (frozenReelIndices.includes(reelIndex)) return Promise.resolve();
 				// @ts-ignore Ignored because paddingReel is not required by createCascadingReel
 				return reel.preSpin({ isTurboBeforeAll, preSpinPaddingReel: paddingBoard?.[reelIndex] });
 			}),

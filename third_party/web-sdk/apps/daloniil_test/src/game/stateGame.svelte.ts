@@ -13,7 +13,7 @@ stateUi.autoSpinsText = String(CASH_STACKS_DEFAULT_ROUND) as typeof stateUi.auto
 
 /*
 	Wok Fury использует кастомные bet-mode keys (`bonus_normal`,
-	`bonus_super`, `bonus_boost`, `special_spins`) — это то, что отдаёт math
+	`bonus_super`, `bonus_boost`) — это то, что отдаёт math
 	(см. game/config.ts). SDK-овский `stateMeta.betModeMeta` по дефолту
 	содержит только BASE/ANTE/SUPERANTE/BONUS/SUPER (см. state-shared
 	constants.ts), и при обращении к нашим ключам lookup возвращает null →
@@ -55,8 +55,6 @@ stateMeta.betModeMeta = {
 	base: makeMeta('BASE', 'default', 1, 'Base'),
 	BONUS_BOOST: makeMeta('bonus_boost', 'activate', 2, 'Bonus Boost'),
 	bonus_boost: makeMeta('bonus_boost', 'activate', 2, 'Bonus Boost'),
-	SPECIAL_SPINS: makeMeta('special_spins', 'activate', 30, 'Special Spin'),
-	special_spins: makeMeta('special_spins', 'activate', 30, 'Special Spin'),
 	BONUS_NORMAL: makeMeta('bonus_normal', 'buy', 100, 'Normal Bonus'),
 	bonus_normal: makeMeta('bonus_normal', 'buy', 100, 'Normal Bonus'),
 	BONUS_SUPER: makeMeta('bonus_super', 'buy', 200, 'Super Bonus'),
@@ -197,8 +195,8 @@ export const stateGame = $state({
 	// Барабаны, у которых reveal сыграл и ждёт схлопывания обратно к ?.
 	// Record<reelIndex, revealedSymbol>
 	mysteryReelsPendingCollapse: {} as Record<number, string>,
-	// Bonus Boost / Special Spins state (для autoplay).
-	activeFeature: null as 'bonus_boost' | 'special_spins' | null,
+	// Bonus Boost state (для autoplay).
+	activeFeature: null as 'bonus_boost' | null,
 	// Скорость игры: 1 = normal, 2 = 1.5× normal scroll, 3 = 2× fast scroll (см. gameSpeed.ts).
 	// isTurbo (SDK fast spin) только для уровня 3.
 	gameSpeed: 1 as 1 | 2 | 3,

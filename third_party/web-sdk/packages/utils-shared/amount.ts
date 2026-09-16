@@ -47,6 +47,8 @@ const CURRENCY_META: Record<
 	BHD: { symbol: 'BD', decimals: 2 },
 	XGC: { symbol: 'GC', decimals: 0, symbolAfter: true },
 	XSC: { symbol: 'SC', decimals: 2, symbolAfter: true },
+	/** Stake EU Social Mode cash — display as SC (same label as XSC / Stake US). */
+	XEC: { symbol: 'SC', decimals: 2, symbolAfter: true },
 };
 
 /** API amounts are micro-units (1_000_000 = 1.00). Wins may need up to this many fraction digits. */
@@ -118,52 +120,45 @@ const formatWholeGrouped = (whole: number, locale: string) => {
 
 /**
  * Win amount body (no currency symbol).
- * Default: currency decimals (USD → 2, `$16.30`).
- * Extra digits only when the amount truly has sub-cent precision (`$0.075`).
+ * Default: currency decimals (USD → 2, `$16.30`) so count-up width stays stable.
+ * Pass `fractionDigits` to force a fixed length (e.g. DEV QA for 3dp count-up).
  */
-export const formatWinAmountBody = (value: number, currency = stateBet.currency) => {
+export const formatWinAmountBody = (
+	value: number,
+	currency = stateBet.currency,
+	options?: { fractionDigits?: number },
+) => {
 	const meta = getCurrencyMeta(currency);
 	const minDigits = Math.max(0, meta.decimals);
+	const digits =
+		options?.fractionDigits != null
+			? Math.max(0, Math.min(WIN_AMOUNT_MAX_FRACTION_DIGITS, Math.floor(options.fractionDigits)))
+			: minDigits;
 	const signedMicros = toApiMicros(value);
 	const sign = signedMicros < 0 ? '-' : '';
 	const micros = Math.abs(signedMicros);
-	const whole = Math.floor(micros / API_AMOUNT_MULTIPLIER);
+	let whole = Math.floor(micros / API_AMOUNT_MULTIPLIER);
 	const fracMicros = micros % API_AMOUNT_MULTIPLIER;
 
-	const wholeFormatted = formatWholeGrouped(whole, stateI18n.i18n.locale || 'en');
+	const wholeFormatted = () => formatWholeGrouped(whole, stateI18n.i18n.locale || 'en');
 
-	if (meta.decimals <= 0) {
-		// JPY / XGC: no fraction unless there is a real fractional remainder.
-		if (fracMicros === 0) return `${sign}${wholeFormatted}`;
+	if (digits <= 0) {
+		// JPY / XGC: whole units only (sub-unit dust rounds away via toApiMicros).
+		if (fracMicros >= API_AMOUNT_MULTIPLIER / 2) whole += 1;
+		return `${sign}${wholeFormatted()}`;
 	}
 
-	// Unit for currency decimals in micros (USD 2dp → 10_000 micros = $0.01).
-	const currencyUnit =
-		minDigits > 0 ? 10 ** (WIN_AMOUNT_MAX_FRACTION_DIGITS - minDigits) : API_AMOUNT_MULTIPLIER;
-	const hasSubCurrencyPrecision = minDigits > 0 && fracMicros % currencyUnit !== 0;
-
-	let fracStr: string;
-	if (!hasSubCurrencyPrecision) {
-		// Default: exactly currency decimals ( Balance/Bet-like 2dp for USD ).
-		const roundedFrac =
-			minDigits > 0
-				? Math.round(fracMicros / currencyUnit) % 10 ** minDigits
-				: 0;
-		// Handle round-up carrying into whole (e.g. 0.999999 → next dollar) — rare after toApiMicros.
-		fracStr = String(roundedFrac).padStart(minDigits, '0');
-	} else {
-		// Real sub-cent win — keep needed digits, trim trailing zeros.
-		fracStr = String(fracMicros).padStart(WIN_AMOUNT_MAX_FRACTION_DIGITS, '0');
-		while (fracStr.length > minDigits && fracStr.endsWith('0')) {
-			fracStr = fracStr.slice(0, -1);
-		}
+	// Unit for requested decimals in micros (USD 2dp → 10_000; 3dp → 1_000).
+	const digitUnit = 10 ** (WIN_AMOUNT_MAX_FRACTION_DIGITS - digits);
+	let roundedFrac = Math.round(fracMicros / digitUnit);
+	const fracMod = 10 ** digits;
+	if (roundedFrac >= fracMod) {
+		roundedFrac = 0;
+		whole += 1;
 	}
+	const fracStr = String(roundedFrac).padStart(digits, '0');
 
-	if (!fracStr) {
-		return `${sign}${wholeFormatted}`;
-	}
-
-	return `${sign}${wholeFormatted}.${fracStr}`;
+	return `${sign}${wholeFormatted()}.${fracStr}`;
 };
 
 /** Balance / bet / costs — currency-native decimals (XGC=0, USD=2, JPY=0, …). */
@@ -178,7 +173,7 @@ export const numberToCurrencyString = (value: number) => {
 	return `${meta.symbol}${formatted}`;
 };
 
-/** Win displays — significant API digits only (trim trailing zeros; min = currency decimals). */
+/** Win displays — currency-native decimals (same stability as Balance/Bet). */
 export const numberToWinCurrencyString = (value: number) => {
 	const meta = getCurrencyMeta();
 	const formatted = formatWinAmountBody(value);
