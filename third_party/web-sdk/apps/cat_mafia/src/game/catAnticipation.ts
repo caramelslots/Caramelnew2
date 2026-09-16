@@ -1,7 +1,11 @@
+import type * as PIXI from 'pixi.js';
+import type { SpinningReelMotion } from 'utils-slots';
+
 import type { GameType, RawSymbol } from './types';
 import {
 	BOARD_DIMENSIONS,
 	BOARD_MASK_OVERFLOW,
+	BOARD_SIZES,
 	INITIAL_BOARD,
 	isVisibleBoardSymbolIndex,
 	SPIN_OPTIONS_DEFAULT,
@@ -9,7 +13,6 @@ import {
 } from './constants';
 import { gameSpeedMultFor, scaleMsByGameSpeed, type GameSpeedLevel } from './gameSpeed';
 import { getSuperWildColumnAnchorX, getSuperWildColumnBoxMetrics } from './superWildHtmlSpine';
-import type { SpinningReelMotion } from 'utils-slots';
 
 /** Scroll speed multiplier for reels after the 2nd bonus (B/BD) lands (basegame only). */
 export const REEL_SCROLL_SPEED_MULT_CAT = 0.35;
@@ -108,14 +111,62 @@ export const OUTLINE_REEL_EFFECT = {
 } as const;
 
 /**
- * Extra height beyond the SW column box — legacy outline runway
- * (BOARD_MASK_OVERFLOW top/bottom + heightExtra 20).
+ * Extra height beyond the SW column box (layout box only — not texture scale).
  */
-export const OUTLINE_REEL_HEIGHT_EXTRA_PX =
-	BOARD_MASK_OVERFLOW.top + BOARD_MASK_OVERFLOW.bottom + 260;
+export const OUTLINE_REEL_HEIGHT_EXTRA_PX = 0;
+
+/**
+ * Vertical scale of the bonusReel spine texture itself (1 = fit SW column height).
+ * <1 shrinks the capsule without changing the clip masks.
+ */
+export const OUTLINE_REEL_TEXTURE_SCALE_Y = 0.98;
 
 /** Extra width beyond the SW column box — all reels (board-local px). */
 export const OUTLINE_REEL_WIDTH_EXTRA_PX = 8;
+
+/**
+ * Board-local Y nudge for the outline spine only (mask stays on SW anchor).
+ * Positive = DOWN, negative = UP.
+ */
+export const OUTLINE_REEL_OFFSET_Y_PX = -90;
+
+/**
+ * Bottom overflow for outline clips only. Top uses BOARD_MASK_OVERFLOW.top (24);
+ * SW/board masks zero the bottom via DESK_BOTTOM_PULL — that squares off the
+ * texture's rounded bottom cap. Mirror the top overflow here.
+ */
+export const OUTLINE_REEL_MASK_BOTTOM_OVERFLOW_PX = BOARD_MASK_OVERFLOW.top;
+
+/**
+ * Outline column clip — board window + bottom overflow so rounded texture caps
+ * are not squared off (unlike the short SW boxH mask).
+ */
+export const drawOutlineReelColumnMask = (
+	g: PIXI.Graphics,
+	width: number,
+	top: number,
+	bottom: number,
+) => {
+	g.clear();
+	g.rect(-width * 0.5, top, width, bottom - top);
+	g.fill(0xffffff);
+};
+
+/**
+ * Board-level clip for CatAnticipationFrames — same as SW board clip but with
+ * bottom overflow so the outline capsule's rounded end is not hard-cut.
+ */
+export const drawOutlineReelBoardClipMask = (g: PIXI.Graphics) => {
+	const maskTop = BOARD_MASK_OVERFLOW.top;
+	const maskBottom = OUTLINE_REEL_MASK_BOTTOM_OVERFLOW_PX;
+	g.rect(
+		-SYMBOL_SIZE,
+		-maskTop,
+		BOARD_SIZES.width + SYMBOL_SIZE * 2,
+		BOARD_SIZES.height + maskTop + maskBottom,
+	);
+	g.fill(0xffffff);
+};
 
 /**
  * Layout for one bonusReel column — SW anchor; wider / taller column box.
@@ -126,7 +177,9 @@ export const getOutlineReelLayout = (reelIndex: number) => {
 	const boxH = swBoxH + OUTLINE_REEL_HEIGHT_EXTRA_PX;
 	const maskW = boxW * 1.08;
 	const scaleX = boxW / OUTLINE_REEL_EFFECT.width;
-	const scaleY = boxH / OUTLINE_REEL_EFFECT.height;
+	const scaleY = (boxH / OUTLINE_REEL_EFFECT.height) * OUTLINE_REEL_TEXTURE_SCALE_Y;
+	const maskTop = -BOARD_MASK_OVERFLOW.top - colY;
+	const maskBottom = BOARD_SIZES.height + OUTLINE_REEL_MASK_BOTTOM_OVERFLOW_PX - colY;
 
 	return {
 		x: getSuperWildColumnAnchorX(reelIndex),
@@ -134,8 +187,10 @@ export const getOutlineReelLayout = (reelIndex: number) => {
 		boxW,
 		boxH,
 		maskW,
+		maskTop,
+		maskBottom,
 		spineX: -OUTLINE_REEL_MAIN_EFFECT.x * scaleX,
-		spineY: -OUTLINE_REEL_MAIN_EFFECT.y * scaleY,
+		spineY: -OUTLINE_REEL_MAIN_EFFECT.y * scaleY + OUTLINE_REEL_OFFSET_Y_PX,
 		scale: { x: scaleX, y: scaleY },
 	};
 };

@@ -69,6 +69,10 @@ const BOOK_EVENT_TYPES_TO_RESERVE_FOR_SNAPSHOT = [
 	'updateFreeSpin',
 	'targetShootRound',
 	'setTotalWin',
+	// Board + sticky SW — used by createBonusSnapshot (not replayed as animations).
+	'reveal',
+	'superWildExpand',
+	'bulletCollect',
 ];
 
 export const convertTorResumableBet = (betToResume: Bet) => {

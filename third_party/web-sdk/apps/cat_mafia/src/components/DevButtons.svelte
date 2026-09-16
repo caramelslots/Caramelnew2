@@ -934,6 +934,43 @@
 			});
 		});
 
+	/**
+	 * Under-board WIN stacker debug — same path as bonus FS (`setTotalWin` while
+	 * `gameType === 'freegame'` → `winHudCountUpPending` → HUD tween).
+	 * Bet $0.50 → 1 book = $0.005 (useful with forced 3dp).
+	 */
+	const WIN_STACK_DEBUG_BET = 0.5;
+	/** Book step per press — enough to cross many cent / sub-cent boundaries. */
+	const WIN_STACK_DEBUG_ADD = 40;
+
+	const playWinHudStackCountUp = (fractionDigits: number | null = null) =>
+		guard(async () => {
+			devPreview.winForceFractionDigits = fractionDigits;
+			stateBetDerived.setBetAmount(WIN_STACK_DEBUG_BET);
+			stateBet.wageredBetAmount = WIN_STACK_DEBUG_BET;
+			// Bonus-mode gate inside maybeRequestWinHudCountUp / setTotalWin.
+			stateGame.gameType = 'freegame';
+			const from = stateBet.winBookEventAmount;
+			const to = from + WIN_STACK_DEBUG_ADD;
+			const dpLabel = fractionDigits == null ? 'currency-dp' : `${fractionDigits}dp`;
+			// eslint-disable-next-line no-console
+			console.log(
+				`[DEV] WIN stack count-up (FS path, ${dpLabel}): bet=$${WIN_STACK_DEBUG_BET} book ${from}→${to} ` +
+					`(1 book=$${WIN_STACK_DEBUG_BET / 100})`,
+			);
+			await playBookEvent(asEvent({ type: 'setTotalWin', amount: to }), {
+				bookEvents: [],
+			});
+		});
+
+	const resetWinHudStack = () => {
+		stateGame.winHudCountUpPending = false;
+		stateBet.winBookEventAmount = 0;
+		devPreview.winForceFractionDigits = null;
+		// eslint-disable-next-line no-console
+		console.log('[DEV] WIN stack reset');
+	};
+
 	// === Board wins (5×4 synthetic QA — not math books) ===
 	const reel = (symbols: string[]) => symbols.map((name) => ({ name }));
 
@@ -1883,7 +1920,37 @@
 
 			<section>
 				<h4>Win Precision (QA)</h4>
+				<p class="subhint">
+					FS count-up via setTotalWin. +40 = currency dp (USD 2). +40 · 3dp forces three
+					fraction digits ($0.005 steps @ $0.50 bet) to verify L/R stability.
+				</p>
 				<div class="grid">
+					<button
+						type="button"
+						disabled={busy}
+						class:active={devPreview.winForceFractionDigits == null &&
+							stateBet.winBookEventAmount > 0}
+						title={`Count-up +${WIN_STACK_DEBUG_ADD} book @ $${WIN_STACK_DEBUG_BET} bet (currency decimals)`}
+						onclick={() => playWinHudStackCountUp(null)}
+					>
+						WIN Stack +{WIN_STACK_DEBUG_ADD}
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						class:active={devPreview.winForceFractionDigits === 3}
+						title={`Count-up +${WIN_STACK_DEBUG_ADD} with forced 3 fraction digits (e.g. $0.005)`}
+						onclick={() => playWinHudStackCountUp(3)}
+					>
+						WIN Stack +{WIN_STACK_DEBUG_ADD} · 3dp
+					</button>
+					<button
+						type="button"
+						title="Reset under-board WIN to 0 and clear forced decimals"
+						onclick={resetWinHudStack}
+					>
+						Reset WIN
+					</button>
 					<button
 						type="button"
 						disabled={busy}

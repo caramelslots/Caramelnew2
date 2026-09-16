@@ -1,8 +1,10 @@
 /**
  * One WebGL context for every buy-bonus card.
  * Menu + confirm register host boxes; each variant has a single Spine.
- * The context exists only while a card is visible — hidden menus must not
- * keep a second WebGL renderer alive (iOS Safari GPU).
+ *
+ * Warm keep in basegame (ticker stopped while closed) so reopen is instant.
+ * Cold destroy in freegame / FS intro — second WebGL must not sit on iOS GPU
+ * while bonus content already stresses VRAM.
  */
 import * as PIXI from 'pixi.js';
 import { BlendMode, Spine } from '@esotericsoftware/spine-pixi-v8';
@@ -15,6 +17,7 @@ import {
 	type BuyBonusSpineVariant,
 } from './buyBonusHtmlSpine';
 import { isHtmlWebglPaused } from './htmlWebglPause';
+import { stateGame } from './stateGame.svelte';
 
 export type BuyBonusCardViewId = number;
 
@@ -108,6 +111,13 @@ const prepareBuyBonusSpineDraw = (spine: Spine, variant: BuyBonusSpineVariant) =
 	hideSpecialBlendSlots(spine);
 };
 
+/** True while buy-bonus may open again soon — keep GL + spines parked. */
+export const shouldKeepBuyBonusWarm = () =>
+	stateGame.gameType === 'basegame' && !stateGame.freeSpinIntroActive;
+
+/** Hosts registered, or basegame warm-hold (parked GL without an open menu). */
+const canOwnApp = () => views.size > 0 || shouldKeepBuyBonusWarm();
+
 const ensureApp = (): Promise<PIXI.Application | undefined> => {
 	if (app) return Promise.resolve(app);
 	if (appReady) return appReady;
@@ -126,7 +136,7 @@ const ensureApp = (): Promise<PIXI.Application | undefined> => {
 			resolution: hostDpr(),
 			autoStart: false,
 		});
-		if (gen !== appGen || views.size === 0) {
+		if (gen !== appGen || !canOwnApp()) {
 			next.destroy(true);
 			return undefined;
 		}
@@ -163,13 +173,14 @@ const loadSpine = (variant: BuyBonusSpineVariant) => {
 	const pending = loading.get(variant);
 	if (pending) return pending;
 
+	const gen = appGen;
 	const task = (async () => {
-		if (views.size === 0) return null;
+		if (!canOwnApp()) return null;
 		const createdApp = await ensureApp();
-		if (!createdApp || views.size === 0) return null;
+		if (!createdApp || gen !== appGen || !canOwnApp()) return null;
 		const urls = buyBonusSpineUrls(variant);
 		await PIXI.Assets.load([urls.atlas, urls.skeleton]);
-		if (!app || views.size === 0) return null;
+		if (!app || gen !== appGen || !canOwnApp()) return null;
 		const already = spines.get(variant);
 		if (already) return already;
 		const spine = Spine.from({
@@ -207,6 +218,31 @@ export const whenBuyBonusSpinesReady = async (
 export const areBuyBonusSpinesReady = (
 	variants: readonly BuyBonusSpineVariant[] = MENU_VARIANTS,
 ) => variants.every((variant) => spines.has(variant));
+
+let warmPromise: Promise<void> | null = null;
+
+/**
+ * Background warm: create overlay WebGL + load card spines while menu is closed.
+ * Call after basegame entrance (and again after FS → base). No-ops in FS.
+ */
+export const ensureBuyBonusWarm = (): Promise<void> => {
+	if (!shouldKeepBuyBonusWarm()) return Promise.resolve();
+	if (areBuyBonusSpinesReady()) return Promise.resolve();
+	if (warmPromise) return warmPromise;
+
+	warmPromise = (async () => {
+		try {
+			await whenBuyBonusSpinesReady();
+			if (!app || !shouldKeepBuyBonusWarm()) return;
+			for (const spine of spines.values()) spine.visible = false;
+			if (app.ticker.started) app.ticker.stop();
+		} finally {
+			warmPromise = null;
+		}
+	})();
+
+	return warmPromise;
+};
 
 /** Force one layout/render pass (e.g. while the menu is still opacity:0). */
 export const flushBuyBonusSharedStage = () => {
@@ -260,9 +296,8 @@ const layoutSpine = (spine: Spine, variant: BuyBonusSpineVariant, host: HTMLElem
 
 	const button = cardButton(host);
 	const disabled = Boolean(button?.disabled);
-	const hovered = Boolean(button && !disabled && button.matches(':hover'));
 	spine.alpha = disabled ? 0.5 : 1;
-	spine.tint = hovered ? 0xfff2dc : 0xffffff;
+	spine.tint = 0xffffff;
 };
 
 const pickLayer = (visible: CardView[]) => {
@@ -331,10 +366,14 @@ const cancelScheduledDestroy = () => {
 	destroyTimer = undefined;
 };
 
-/** Cover buyBonus → confirm remount so we do not thrash the context. */
+/** Cover buyBonus → confirm remount only on the cold path (not base warm-keep). */
 const DESTROY_IDLE_MS = 80;
 
 const scheduleDestroyIfIdle = () => {
+	if (shouldKeepBuyBonusWarm()) {
+		cancelScheduledDestroy();
+		return;
+	}
 	cancelScheduledDestroy();
 	destroyTimer = setTimeout(() => {
 		destroyTimer = undefined;
@@ -342,8 +381,7 @@ const scheduleDestroyIfIdle = () => {
 	}, DESTROY_IDLE_MS);
 };
 
-const destroyIfIdle = () => {
-	if (loading.size > 0 || hasLiveView()) return;
+const destroySharedStage = () => {
 	cancelScheduledDestroy();
 	appGen += 1;
 	for (const spine of spines.values()) {
@@ -375,6 +413,23 @@ const destroyIfIdle = () => {
 	void PIXI.Assets.unload(urls).catch(() => {
 		/* nothing cached */
 	});
+};
+
+const destroyIfIdle = () => {
+	if (loading.size > 0 || hasLiveView()) return;
+	if (shouldKeepBuyBonusWarm()) return;
+	destroySharedStage();
+};
+
+/** Drop warm GL when entering FS / leaving base — call from lifecycle effect. */
+export const releaseBuyBonusSharedStage = () => {
+	if (hasLiveView()) {
+		// Menu still open — destroy after hosts go idle (cold path only).
+		scheduleDestroyIfIdle();
+		return;
+	}
+	// Bumps appGen so in-flight ensureBuyBonusWarm / loadSpine abort.
+	destroySharedStage();
 };
 
 export const registerBuyBonusCardView = (

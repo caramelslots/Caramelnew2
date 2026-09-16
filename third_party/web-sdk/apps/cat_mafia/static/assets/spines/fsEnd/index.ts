@@ -1,7 +1,7 @@
 import { createAsset } from 'pixi-svelte';
 
-import img from './skeleton.webp';
-import rawAtlas from './fs_popup.atlas?raw';
-import fsPopup from './fs_popup.json';
+import img from './total_win.webp';
+import rawAtlas from './total_win.atlas?raw';
+import totalWin from './total_win.json';
 
-export default createAsset({ img, rawAtlas, spine: fsPopup });
+export default createAsset({ img, rawAtlas, spine: totalWin });

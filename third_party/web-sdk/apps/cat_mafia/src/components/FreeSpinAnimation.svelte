@@ -7,6 +7,7 @@
 	import { getContext } from '../game/context';
 	import {
 		BOARD_SIZES,
+		FS_OUTRO_POPUP_Y_FRAC,
 		FS_OUTRO_SPINE_WIDTH_FRAC,
 		FS_OUTRO_TEXT_LAYOUT_FRAC,
 		getFsOutroSpineWidth,
@@ -46,13 +47,13 @@
 </script>
 
 <MainContainer>
-	<Container x={mainLayout.width * 0.5} y={mainLayout.height * 0.3}>
+	<Container x={mainLayout.width * 0.5} y={mainLayout.height * FS_OUTRO_POPUP_Y_FRAC}>
 		<SpineProvider key="fsPopup" width={spineWidth}>
 			<FsPopupSpineController bind:this={controller} />
-			<SpineSlot slotName="text_placeholder_1">
+			<SpineSlot slotName="total_win">
 				{@render props.title({ width: layoutRefWidth, height: layoutRefHeight })}
 			</SpineSlot>
-			<SpineSlot slotName="text_placeholder_2">
+			<SpineSlot slotName="sum">
 				{@render props.winAmount({ width: layoutRefWidth, height: layoutRefHeight })}
 			</SpineSlot>
 		</SpineProvider>

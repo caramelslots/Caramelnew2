@@ -11,7 +11,7 @@ be restored with a 90° CW transpose before fitting, otherwise letters like J/K
 land sideways / look cropped (see previous L4.webp).
 
 Glyphs are alpha-trimmed and letterboxed into SYMBOL_TEXTURE_NATIVE_PX (196²)
-on an opaque black canvas — same convention as the reel spin sprites.
+on a transparent canvas so reel spin sprites don't show black boxes.
 """
 from __future__ import annotations
 
@@ -34,19 +34,17 @@ SYMBOL_SIZE = 196
 FIT_PADDING = 0.02
 
 # Atlas region name for the resting glyph inside each per-symbol skeleton.
+# Bonus (B) is a composed still — do NOT extract `frame_000` (empty gold frame only).
 ATLAS_REGION_BY_SYMBOL: dict[str, str] = {
 	"H1": "diamond",
 	"L1": "A",
 	"L2": "K",
 	"L3": "Q",
 	"L4": "J",
-	"B": "frame_000",
 }
 
-# Spin-sprite filename when it differs from the spine folder key (B → Bonus.webp).
-SPRITE_NAME_BY_SYMBOL: dict[str, str] = {
-	"B": "Bonus",
-}
+# Spin-sprite filename when it differs from the spine folder key.
+SPRITE_NAME_BY_SYMBOL: dict[str, str] = {}
 
 # Full composed stills when the atlas has no single idle glyph (H2 = crossed
 # revolvers). H1 designer still includes the sparkle star that sits on a
@@ -135,9 +133,9 @@ def fit_square(
 	im: Image.Image,
 	size: int = SYMBOL_SIZE,
 	padding: float = FIT_PADDING,
-	bg: tuple[int, int, int, int] = (0, 0, 0, 255),
+	bg: tuple[int, int, int, int] = (0, 0, 0, 0),
 ) -> Image.Image:
-	"""Alpha-trim and center into an opaque square canvas."""
+	"""Alpha-trim and center into a transparent square canvas."""
 	im = im.convert("RGBA")
 	bbox = im.getbbox()
 	if not bbox:
@@ -152,6 +150,44 @@ def fit_square(
 	canvas = Image.new("RGBA", (size, size), bg)
 	canvas.paste(resized, ((size - nw) // 2, (size - nh) // 2), resized)
 	return canvas
+
+
+def clear_letterbox_black(
+	im: Image.Image,
+	thresh: int = 12,
+) -> Image.Image:
+	"""Flood-fill near-black from edges → transparent (for composed H3/H4 stills)."""
+	from collections import deque
+
+	im = im.convert("RGBA").copy()
+	px = im.load()
+	w, h = im.size
+
+	def is_bg(x: int, y: int) -> bool:
+		r, g, b, a = px[x, y]
+		return a > 0 and r <= thresh and g <= thresh and b <= thresh
+
+	queue: deque[tuple[int, int]] = deque()
+	seen: set[tuple[int, int]] = set()
+	for x in range(w):
+		for y in (0, h - 1):
+			if is_bg(x, y):
+				queue.append((x, y))
+				seen.add((x, y))
+	for y in range(h):
+		for x in (0, w - 1):
+			if (x, y) not in seen and is_bg(x, y):
+				queue.append((x, y))
+				seen.add((x, y))
+
+	while queue:
+		x, y = queue.popleft()
+		px[x, y] = (0, 0, 0, 0)
+		for nx, ny in ((x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)):
+			if 0 <= nx < w and 0 <= ny < h and (nx, ny) not in seen and is_bg(nx, ny):
+				seen.add((nx, ny))
+				queue.append((nx, ny))
+	return im
 
 
 def save_sprite(sprite: Image.Image, name: str) -> None:
@@ -195,8 +231,17 @@ def extract() -> None:
 			continue
 		save_sprite(extract_from_atlas(symbol, region), symbol)
 
+	# H3/H4 are composed stills (atlas only has mesh parts) — strip baked black letterbox.
+	for symbol in ("H3", "H4"):
+		src = SPRITE_DIRS[0] / f"{symbol}.webp"
+		if not src.is_file():
+			print(f"  skip {symbol}: missing {src}")
+			continue
+		cleared = clear_letterbox_black(Image.open(src))
+		save_sprite(cleared, symbol)
+		print(f"  {symbol}: cleared opaque letterbox")
+
 	print("done.")
-	print("Note: H3/H4 stay as composed sprites (atlas only has mesh parts).")
 
 
 if __name__ == "__main__":

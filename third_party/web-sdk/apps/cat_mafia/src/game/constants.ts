@@ -672,23 +672,23 @@ const BONUS_ART_SPAN = 1225 * 1.55057;
  * Same options are used in base game and free spins (spinOptions are
  * picked by `spinType` only, never by `gameType`, see stateGame.svelte.ts).
  *
- * Target: ~2.5 s from Bet click to last reel stopped (instant RGS).
+ * Target: ~2.0 s from Bet click to last reel stopped (instant RGS, Turbo 1).
  * Tuned via REEL_SPEED + reelSpinDelay; pre-spin / main-spin / settle
  * speeds stay equal (or proportionally linked) so motion stays smooth.
+ * Turbo 2/3 keep the same ratios (1.5× / 2×) via gameSpeedMultFor.
  *
  * Speed ↔ duration coupling: the last reel's main slide takes roughly
  *   t ≈ (728 + 500 × B) / REEL_SPEED   (px/ms, B = reelLength × paddingMult),
  * so the symbols' visual speed and the total spin time are linked through
  * the scroll distance B. To make the spin *slower* (symbols travel at a
- * lower px/ms) WITHOUT dragging past ~2.5 s, we lower REEL_SPEED and shrink
+ * lower px/ms) WITHOUT dragging past the target, we lower REEL_SPEED and shrink
  * the scroll distance (reelPaddingMultiplierNormal) by a matching amount.
- * Lowering only the speed would inflate the spin to ~3.4 s.
+ * Lowering only the speed would inflate the spin duration.
  *
- * Current tuning: REEL_SPEED 2.5 → 1.6 (≈36% slower symbols) with
- * paddingMult 1.2 → 0.7, which keeps the last reel's main slide at
- * ~1.97 s (≈2.5 s total incl. stagger + settle).
+ * Current tuning: REEL_SPEED 1.4 → 1.61 (≈15% faster scroll) with
+ * paddingMult 0.7, scaling total spin ~2.3 s → ~2.0 s at Turbo 1.
  */
-const REEL_SPEED = 1.4;
+const REEL_SPEED = 1.61;
 const REEL_SETTLE_SPEED = REEL_SPEED * 0.62;
 const SPIN_OPTIONS_SHARED = {
 	reelBounceBackSpeed: REEL_SETTLE_SPEED,
@@ -901,8 +901,7 @@ export const BOARD_LAYOUT_SCALE = {
  * desktop/laptop). Boost so on-screen board height matches PC/laptop.
  * Factor = desktopScale × (landscapeMainH / desktopMainH) = 1.22 × 900/800.
  */
-export const BOARD_LAYOUT_SCALE_POPOUT =
-	BOARD_LAYOUT_SCALE.desktop * (900 / 800);
+export const BOARD_LAYOUT_SCALE_POPOUT = BOARD_LAYOUT_SCALE.desktop * (900 / 800);
 /** Frame bezel + glow offset from board center (px): +x right, +y down. */
 export const BOARD_FRAME_OFFSET = { x: 0, y: 0 } as const;
 /** Vertical nudge (game px, +y = down) applied to all desk artwork layers (base / contour)
@@ -925,7 +924,7 @@ export const DESK_BOTTOM_PULL_PX = 20;
  * rail. Keep in sync with DESK_BOTTOM_PULL_PX — if pull rises and slack stays
  * high, the overlay hole punches below the gold.
  */
-export const DESK_BOTTOM_MASK_SLACK_PX = 5.5;
+export const DESK_BOTTOM_MASK_SLACK_PX = 10;
 
 /**
  * Reference width (px) for portrait board scaling. Parchment on-screen width
@@ -1574,20 +1573,29 @@ export const WIN_SCREEN_POST_COUNT_UP_DELAY_MS = 1500;
 export const BIG_WIN_DIM_ALPHA = 0.5;
 /** Full-screen dim behind FS end (FreeSpinOutro) count-up panel. */
 export const FS_OUTRO_DIM_ALPHA = 0.85;
-/** FS end fortune-cookie spine width as a fraction of board width (desktop/tablet). */
-export const FS_OUTRO_SPINE_WIDTH_FRAC = 2.5;
-/** Skeleton bounds height / width from fs_popup export (load-time scale cancels out). */
-export const FS_OUTRO_SPINE_ASPECT = 1023.8 / 1978.27;
+/**
+ * FS end total-win spine width as a fraction of board width (desktop/tablet).
+ * Skeleton is ~square (vs old cookie ~0.5 aspect) — keep on-screen height similar.
+ */
+export const FS_OUTRO_SPINE_WIDTH_FRAC = 1.45;
+/** Skeleton bounds height / width from total_win export (load-time scale cancels out). */
+export const FS_OUTRO_SPINE_ASPECT = 1896 / 1954;
 /** Text layout ref as a fraction of board width; compensates for spine slot scaling. */
-export const FS_OUTRO_TEXT_LAYOUT_FRAC = 0.3;
+export const FS_OUTRO_TEXT_LAYOUT_FRAC = 0.78;
+/** FS end popup Y as a fraction of main-layout height (lower = higher on screen). */
+export const FS_OUTRO_POPUP_Y_FRAC = 0.38;
+/** TOTAL WIN bow on the green plaque — same sweep as loader card 1 ribbon title. */
+export const FS_OUTRO_TOTAL_WIN_ARCH_DEG = 34;
+/** Letter advance pack for TOTAL WIN arc (>1 = more space between glyphs). */
+export const FS_OUTRO_TOTAL_WIN_TRACKING = 1.22;
 /** fsPopup skeleton load scale from assets.ts (parser.scale). */
 export const FS_OUTRO_SKELETON_LOAD_SCALE = 2;
-/** fs_popup export bounds (pre-load-scale). */
+/** total_win export bounds (pre-load-scale). */
 const FS_OUTRO_SKELETON_BOUNDS = {
-	x: -983.87,
-	y: -519.42,
-	width: 1978.27,
-	height: 1023.8,
+	x: -981.8052,
+	y: -986.927,
+	width: 1954,
+	height: 1896,
 } as const;
 /** Skeleton data width after load scale — used for SpineProvider width fit. */
 export const FS_OUTRO_SKELETON_DATA_WIDTH =
@@ -1614,10 +1622,10 @@ export const getFsOutroSpineWidth = (args: {
 	return base * FS_OUTRO_PHONE_SCALE[tier];
 };
 
-/** FS end popup visual centre in main-layout coords (screen centre). */
+/** FS end popup visual centre in main-layout coords. */
 export const getFsOutroPopupVisualCenter = (mainLayout: { width: number; height: number }) => ({
 	x: mainLayout.width * 0.5,
-	y: mainLayout.height * 0.5,
+	y: mainLayout.height * FS_OUTRO_POPUP_Y_FRAC,
 });
 
 /**

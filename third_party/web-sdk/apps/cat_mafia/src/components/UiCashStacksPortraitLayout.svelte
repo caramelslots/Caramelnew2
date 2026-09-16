@@ -50,6 +50,9 @@
 		const from = winAmountTween.current;
 
 		if (target <= 0 || target + 0.01 < from) {
+			// Pending rise from a zero HUD: keep the flag for the amount write
+			// (same-tick or next). Clearing here made first FS / debug stack snap.
+			if (wantCountUp && target <= 0 && from <= 0) return;
 			if (stateGame.winHudCountUpPending) stateGame.winHudCountUpPending = false;
 			hudTweenTarget = null;
 			winAmountTween.set(target, { duration: 0 });

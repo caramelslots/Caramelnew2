@@ -2,7 +2,7 @@
 	import { Container, Graphics } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { drawSuperWildBoardClipMask } from '../game/superWildHtmlSpine';
+	import { drawOutlineReelBoardClipMask } from '../game/catAnticipation';
 	import CatAnticipationOutline from './CatAnticipationOutline.svelte';
 	import { devPreview } from '../game/devPreview.svelte';
 
@@ -27,7 +27,7 @@
 </script>
 
 <Container>
-	<Graphics isMask draw={drawSuperWildBoardClipMask} />
+	<Graphics isMask draw={drawOutlineReelBoardClipMask} />
 	<Container y={slideY}>
 		{#each outlineReels as reel (reel.reelIndex)}
 			<CatAnticipationOutline {reel} />

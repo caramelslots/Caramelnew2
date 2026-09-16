@@ -1159,6 +1159,20 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.stickySwOpened = stateGame.bonusMode === 'super';
 		// Super: first reveal slides the pre-open curtain down from the top.
 		stateGame.stickySwIntroPending = stateGame.bonusMode === 'super';
+		// Drop idle showcase Super Wild (startup reel-2 curtain). Otherwise freegame
+		// promote in ensureSwCurtainsForBoard treats it as a real sticky ×N.
+		stateGame.superWildCurtains = [];
+		stateGame.swSpineHideReels = {};
+		{
+			const stripped = stateGame.board.map((reel) =>
+				reel.reelState.symbols
+					.slice(0, reel.reelLength)
+					.map(({ rawSymbol }) =>
+						rawSymbol.name === 'SW' ? { name: 'L1' as const } : { ...rawSymbol },
+					),
+			);
+			stateGameDerived.enhancedBoard.settle(stripped);
+		}
 		// Bonus `activate` already played in freeSpinTargetPick (board still
 		// visible). Skip here so we don't double-fire after the gallery.
 		// Also skip if bonusCollect preceded us (same celebrate path).
@@ -2021,11 +2035,77 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const lastUpdateFreeSpinEvent = findLastBookEvent('updateFreeSpin' as const);
 		const lastSetTotalWinEvent = findLastBookEvent('setTotalWin' as const);
 		const lastUpdateGlobalMultEvent = findLastBookEvent('updateGlobalMult' as const);
+		const lastBulletCollectEvent = findLastBookEvent('bulletCollect' as const);
+		const lastTargetShootRoundEvent = findLastBookEvent('targetShootRound' as const);
+		const lastFsRevealEvent = _.findLast(
+			bookEvents,
+			(e) => e.type === 'reveal' && e.gameType === 'freegame',
+		) as BookEventOfType<'reveal'> | undefined;
 
 		if (lastFreeSpinTriggerEvent) await playBookEvent(lastFreeSpinTriggerEvent, { bookEvents });
 		if (lastUpdateFreeSpinEvent) playBookEvent(lastUpdateFreeSpinEvent, { bookEvents });
 		if (lastSetTotalWinEvent) playBookEvent(lastSetTotalWinEvent, { bookEvents });
 		if (lastUpdateGlobalMultEvent) playBookEvent(lastUpdateGlobalMultEvent, { bookEvents });
+
+		// Drum / extra-FS flags — freeSpinTrigger resets these; restore quietly.
+		if (lastBulletCollectEvent) {
+			stateGame.drumCount = Math.min(DRUM_MAX, lastBulletCollectEvent.drumCount);
+			syncDrumLoadRotation();
+			stateGame.drumBulletOrientDeg = syncDrumBulletOrients(
+				stateGame.drumBulletOrientDeg,
+				stateGame.drumCount,
+			);
+		}
+		if (lastTargetShootRoundEvent) {
+			stateGame.fsExtraPhase = true;
+			if (lastTargetShootRoundEvent.extraFs > 0) {
+				const newTotal =
+					(stateUi.freeSpinCounterTotal || stateGame.fsMainTotal) +
+					lastTargetShootRoundEvent.extraFs;
+				stateUi.freeSpinCounterTotal = newTotal;
+				eventEmitter.broadcast({
+					type: 'freeSpinCounterUpdate',
+					current: stateUi.freeSpinCounterCurrent,
+					total: newTotal,
+				});
+			}
+		}
+
+		// Mid-bonus resume: replace idle showcase board with the last FS reveal and
+		// rebuild sticky Super Wild from expands (and Super full-SW reveal columns).
+		if (lastFsRevealEvent) {
+			stateGame.gameType = 'freegame';
+			stateGame.stickySwIntroPending = false;
+			stateGameDerived.enhancedBoard.settle(lastFsRevealEvent.board);
+
+			const triggerIdx = lastFreeSpinTriggerEvent
+				? bookEvents.indexOf(lastFreeSpinTriggerEvent)
+				: -1;
+			const sticky: Record<number, number> = {};
+			for (let i = Math.max(0, triggerIdx + 1); i < bookEvents.length; i++) {
+				const ev = bookEvents[i];
+				if (ev?.type !== 'superWildExpand') continue;
+				for (const expand of (ev as BookEventOfType<'superWildExpand'>).expands) {
+					sticky[expand.reel] = expand.mult;
+				}
+			}
+			if (stateGame.bonusMode === 'super') {
+				for (let reel = 0; reel < lastFsRevealEvent.board.length; reel++) {
+					const mult = fullSwMultFromRevealColumn(lastFsRevealEvent.board[reel] || []);
+					if (mult != null && sticky[reel] == null) sticky[reel] = mult;
+				}
+			}
+
+			stateGame.stickySwByReel = sticky;
+			stateGame.stickySwOpened =
+				Object.keys(sticky).length > 0 || stateGame.bonusMode === 'super';
+			stateGame.superWildCurtains = [];
+			stateGame.swSpineHideReels = {};
+			for (const reel of Object.keys(sticky).map(Number)) {
+				expandSuperWildColumn(reel, sticky[reel] || 2);
+			}
+			ensureSwCurtainsForBoard();
+		}
 	},
 };
 

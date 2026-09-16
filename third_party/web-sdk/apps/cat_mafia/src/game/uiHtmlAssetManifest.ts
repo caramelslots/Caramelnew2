@@ -45,8 +45,6 @@ export const HUD_ASSETS = {
 export const BUY_BONUS_ASSETS = {
 	menuBg: uiHtmlAssetUrl('buy_bonus/bg_buy_bonus_board.webp'),
 	confirmBg: uiHtmlAssetUrl('buy_bonus/bg_buy_bonus_board.webp'),
-	normalCard: uiHtmlAssetUrl('buy_bonus/normal_bonus_card.webp'),
-	superCard: uiHtmlAssetUrl('buy_bonus/super_bonus_card.webp'),
 	deskL: uiHtmlAssetUrl('buy_bonus/desk_l.webp'),
 	deskR: uiHtmlAssetUrl('buy_bonus/desk_r.webp'),
 	buyButtonBg: uiHtmlAssetUrl('buy_bonus/buy_button_bg.webp'),
@@ -159,8 +157,6 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 export const BUY_BONUS_FLOW_IMAGE_URLS = dedupeUrls([
 	BUY_BONUS_ASSETS.menuBg,
 	BUY_BONUS_ASSETS.confirmBg,
-	BUY_BONUS_ASSETS.normalCard,
-	BUY_BONUS_ASSETS.superCard,
 	BUY_BONUS_ASSETS.deskL,
 	BUY_BONUS_ASSETS.deskR,
 	BUY_BONUS_ASSETS.buyButtonBg,

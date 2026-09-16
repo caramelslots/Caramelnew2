@@ -3,8 +3,7 @@
 	import { Container, Graphics, SpineProvider, SpineTrack } from 'pixi-svelte';
 	import { stateBetDerived } from 'state-shared';
 
-	import { getOutlineReelLayout } from '../game/catAnticipation';
-	import { drawSuperWildColumnMask } from '../game/superWildHtmlSpine';
+	import { drawOutlineReelColumnMask, getOutlineReelLayout } from '../game/catAnticipation';
 	import type { Reel } from '../game/stateGame.svelte';
 
 	type Props = {
@@ -19,7 +18,7 @@
 
 	const layout = $derived(getOutlineReelLayout(props.reel.reelIndex));
 	const drawColumnMask = $derived((g: PIXI.Graphics) => {
-		drawSuperWildColumnMask(g, layout.maskW, layout.boxH, props.reel.reelIndex);
+		drawOutlineReelColumnMask(g, layout.maskW, layout.maskTop, layout.maskBottom);
 	});
 </script>
 

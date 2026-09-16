@@ -55,12 +55,23 @@
 	$effect(() => {
 		if (!isOpen) return;
 		spinesMounted = true;
-		if (revealedOnce && areBuyBonusSpinesReady()) {
-			panelReady = true;
-			return;
+		let cancelled = false;
+		// Background warm / warm-keep: spines already in GL — one frame to mount hosts.
+		if (areBuyBonusSpinesReady()) {
+			panelReady = false;
+			void (async () => {
+				await tick();
+				await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+				if (cancelled) return;
+				flushBuyBonusSharedStage();
+				panelReady = true;
+				revealedOnce = true;
+			})();
+			return () => {
+				cancelled = true;
+			};
 		}
 		panelReady = false;
-		let cancelled = false;
 		void (async () => {
 			await tick();
 			await new Promise<void>((resolve) => {
@@ -490,13 +501,7 @@
 		cursor: pointer;
 		font-family: inherit;
 		text-align: left;
-		transition:
-			filter 0.15s,
-			transform 0.1s;
-
-		&:hover:not(:disabled) {
-			filter: brightness(1.06);
-		}
+		transition: transform 0.1s;
 
 		&:active:not(:disabled) {
 			transform: scale(0.97);

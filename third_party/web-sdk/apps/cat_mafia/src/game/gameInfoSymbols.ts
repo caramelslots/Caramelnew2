@@ -21,7 +21,7 @@ export type GameInfoSpecialSymbolId = 'W' | 'B' | 'BD' | 'SW' | 'Paw' | 'BT';
 const symbolAssetUrl = (file: string) =>
 	`${import.meta.env.BASE_URL}assets/sprites/symbols/${file}`;
 
-/** Paytable / info cards — transparent letterbox (reel spin sprites keep opaque black). */
+/** Paytable / info cards — larger transparent letterbox (256² vs 196² spin sprites). */
 const infoSymbolAssetUrl = (file: string) =>
 	`${import.meta.env.BASE_URL}assets/sprites/symbols/info/${file}`;
 

@@ -281,8 +281,8 @@ export default {
 	fsPopup: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/fsEnd/fs_popup.atlas'),
-			skeleton: assetUrl('assets/spines/fsEnd/fs_popup.json'),
+			atlas: assetUrl('assets/spines/fsEnd/total_win.atlas'),
+			skeleton: assetUrl('assets/spines/fsEnd/total_win.json'),
 			scale: 2,
 		},
 	},

@@ -3,6 +3,7 @@
 	import { stateBet, stateI18n } from 'state-shared';
 
 	import { amountToLayoutParts } from '../game/currencyTextSegments';
+	import { devPreview } from '../game/devPreview.svelte';
 	import {
 		FONT_BABLO,
 		FONT_KRUTOI,
@@ -38,6 +39,7 @@
 		amountToLayoutParts(props.amount, {
 			bookEvent: props.bookEvent,
 			prefix: props.prefix,
+			fractionDigits: devPreview.winForceFractionDigits,
 		}),
 	);
 
@@ -75,6 +77,11 @@
 	let beforeWidth = $state(0);
 	let symbolWidth = $state(0);
 	let afterWidth = $state(0);
+	/** Last measured string lengths — ignore proportional glyph jitter at same length. */
+	let labelMeasureLen = $state(-1);
+	let beforeMeasureLen = $state(-1);
+	let symbolMeasureLen = $state(-1);
+	let afterMeasureLen = $state(-1);
 
 	const labelGapPx = $derived(
 		props.labelGap ?? (props.style.fontSize ?? 24) * (hasLabel ? 0.38 : 0),
@@ -110,6 +117,7 @@
 			hasLabel ? '1' : '0',
 			parts.before ? '1' : '0',
 			parts.after ? '1' : '0',
+			devPreview.winForceFractionDigits ?? 'auto',
 		].join('|'),
 	);
 
@@ -121,12 +129,42 @@
 			(!parts.after || afterWidth > 0),
 	);
 
+	/** Apply measure: grow on longer/wider text, never shrink (avoids L/R jitter). */
+	const commitWidth = (
+		kind: 'label' | 'before' | 'symbol' | 'after',
+		text: string,
+		width: number,
+	) => {
+		const len = text.length;
+		if (kind === 'label') {
+			if (len < labelMeasureLen) return;
+			labelMeasureLen = len;
+			if (width > labelWidth) labelWidth = width;
+		} else if (kind === 'before') {
+			if (len < beforeMeasureLen) return;
+			beforeMeasureLen = len;
+			if (width > beforeWidth) beforeWidth = width;
+		} else if (kind === 'symbol') {
+			if (len < symbolMeasureLen) return;
+			symbolMeasureLen = len;
+			if (width > symbolWidth) symbolWidth = width;
+		} else {
+			if (len < afterMeasureLen) return;
+			afterMeasureLen = len;
+			if (width > afterWidth) afterWidth = width;
+		}
+	};
+
 	$effect.pre(() => {
 		structureKey;
 		labelWidth = 0;
 		beforeWidth = 0;
 		symbolWidth = 0;
 		afterWidth = 0;
+		labelMeasureLen = -1;
+		beforeMeasureLen = -1;
+		symbolMeasureLen = -1;
+		afterMeasureLen = -1;
 	});
 </script>
 
@@ -139,7 +177,7 @@
 				fallbackFill={LOCALE_TEXT_FILL_GOLD}
 				style={{ ...layoutStyle, fontFamily: labelFont }}
 				onresize={(s) => {
-					labelWidth = s.width;
+					commitWidth('label', labelText, s.width);
 				}}
 			/>
 		{/if}
@@ -148,7 +186,7 @@
 				text={parts.before}
 				style={{ ...layoutStyle, fontFamily: digitFont }}
 				onresize={(s) => {
-					beforeWidth = s.width;
+					commitWidth('before', parts.before, s.width);
 				}}
 			/>
 		{/if}
@@ -157,7 +195,7 @@
 				text={parts.symbol}
 				style={{ ...layoutStyle, fontFamily: FONT_BABLO }}
 				onresize={(s) => {
-					symbolWidth = s.width;
+					commitWidth('symbol', parts.symbol, s.width);
 				}}
 			/>
 		{/if}
@@ -166,7 +204,7 @@
 				text={parts.after}
 				style={{ ...layoutStyle, fontFamily: digitFont }}
 				onresize={(s) => {
-					afterWidth = s.width;
+					commitWidth('after', parts.after, s.width);
 				}}
 			/>
 		{/if}

@@ -9,7 +9,6 @@
 
 <script lang="ts">
 	import { FadeContainer, WinCountUpProvider } from 'components-pixi';
-	import { Container } from 'pixi-svelte';
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 	import { CanvasSizeRectangle } from 'components-layout';
 	import { OnMount } from 'components-shared';
@@ -22,25 +21,21 @@
 		FONT_KRUTOI,
 		FONT_KRUTOI_RU,
 		FONT_PROSTOI_HI,
-		FONT_PROSTOI_WHITE,
-		FONT_PROSTOI_WHITE_RU,
-		FONT_PROSTOI_WHITE_HI,
-		FONT_PROSTOI_WHITE_VI,
-		FONT_PROSTOI_WHITE_CJK,
 		FONT_KRUTOI_VI,
 		FONT_KRUTOI_CJK,
 		fontForLocale,
 		FS_OUTRO_DIM_ALPHA,
-		getFsOutroPopupVisualCenter,
+		FS_OUTRO_POPUP_Y_FRAC,
+		FS_OUTRO_TOTAL_WIN_ARCH_DEG,
+		FS_OUTRO_TOTAL_WIN_TRACKING,
 		LOCALE_TEXT_FILL_GOLD,
-		LOCALE_TEXT_FILL_WHITE,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
+	import ArchedLocaleText from './ArchedLocaleText.svelte';
 	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
-	import ResponsiveLocaleText from './ResponsiveLocaleText.svelte';
 	import { scaleMsByGameSpeed } from '../game/gameSpeed';
 	import { stateGame } from '../game/stateGame.svelte';
-	import { getFsOutroCongratulationsText, getFsOutroYouWonText } from '../game/fsOutroBannerText';
+	import { getFsOutroTotalWinText } from '../game/fsOutroBannerText';
 	import { stopWinLevelCountUpSounds } from '../game/bookEventHandlerMap';
 	import FreeSpinAnimation from './FreeSpinAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
@@ -51,11 +46,10 @@
 	const fsOutroPopupCenter = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
 		const cs = context.stateLayoutDerived.canvasSizes();
-		// Popup spine is in MainContainer at (ml.width*0.5, ml.height*0.3).
-		// Convert to canvas px: screenPos = canvasCenter + (localPos - ml.center) * scale
+		// Match FreeSpinAnimation Y so coins emit from the plaque centre.
 		return {
 			x: cs.width * 0.5,
-			y: cs.height * 0.5 + (ml.height * 0.3 - ml.height * 0.5) * ml.scale,
+			y: cs.height * 0.5 + (ml.height * FS_OUTRO_POPUP_Y_FRAC - ml.height * 0.5) * ml.scale,
 		};
 	});
 
@@ -142,69 +136,42 @@
 						<FreeSpinAnimation bind:this={fsAnimation}>
 							{#snippet title({ width })}
 								{@const lang = stateUrlDerived.lang()}
-								{@const titleLineGap = width * 0.22}
-								{@const titleYOffset = width * 0.06}
-								<Container y={titleYOffset}>
-									<ResponsiveLocaleText
-										anchor={0.5}
-										y={-(titleLineGap * 3.0)}
-										text={getFsOutroCongratulationsText(lang)}
-										maxWidth={width * 3.5}
-										fallbackFill={LOCALE_TEXT_FILL_GOLD}
-										style={{
-											fontFamily: fontForLocale(
-												FONT_KRUTOI,
-												FONT_KRUTOI_RU,
-												stateI18n.i18n.locale,
-												FONT_PROSTOI_HI,
-												FONT_KRUTOI_VI,
-												FONT_KRUTOI_CJK,
-											),
-											fontSize: width * 0.7 * BITMAP_FONT_SCALE,
-											align: 'center',
-											fontWeight: 'bold',
-											letterSpacing: 0,
-										}}
-									/>
-								</Container>
+								<!-- `total_win` slot — arched like loader card 1 ribbon title. -->
+								<ArchedLocaleText
+									y={-width * 0.4}
+									text={getFsOutroTotalWinText(lang)}
+									maxWidth={width * 5.8}
+									archDeg={FS_OUTRO_TOTAL_WIN_ARCH_DEG}
+									tracking={FS_OUTRO_TOTAL_WIN_TRACKING}
+									fallbackFill={LOCALE_TEXT_FILL_GOLD}
+									style={{
+										fontFamily: fontForLocale(
+											FONT_KRUTOI,
+											FONT_KRUTOI_RU,
+											stateI18n.i18n.locale,
+											FONT_PROSTOI_HI,
+											FONT_KRUTOI_VI,
+											FONT_KRUTOI_CJK,
+										),
+										fontSize: width * 1.18 * BITMAP_FONT_SCALE,
+										align: 'center',
+										fontWeight: 'bold',
+										letterSpacing: 0,
+									}}
+								/>
 							{/snippet}
 							{#snippet winAmount({ width })}
-								{@const lang = stateUrlDerived.lang()}
-								{@const youWon = getFsOutroYouWonText(lang)}
-								{@const lineGap = width * 0.22}
-								<Container y={width * 0.05}>
-									<ResponsiveLocaleText
-										anchor={0.5}
-										y={-lineGap * 0.65}
-										text={youWon}
-										maxWidth={width * 3.2}
-										fallbackFill={LOCALE_TEXT_FILL_WHITE}
-										style={{
-											fontFamily: fontForLocale(
-												FONT_PROSTOI_WHITE,
-												FONT_PROSTOI_WHITE_RU,
-												stateI18n.i18n.locale,
-												FONT_PROSTOI_WHITE_HI,
-												FONT_PROSTOI_WHITE_VI,
-												FONT_PROSTOI_WHITE_CJK,
-											),
-											fontSize: width * 0.58 * BITMAP_FONT_SCALE,
-											align: 'center',
-											fontWeight: 'bold',
-											letterSpacing: 0,
-										}}
-									/>
-									<ResponsiveCurrencyBitmapText
-										anchor={0.5}
-										y={lineGap * 1.85}
-										style={{
-											fontSize: width * 0.62 * BITMAP_FONT_SCALE,
-										}}
-										amount={countUpAmount}
-										bookEvent
-										maxWidth={width * 3.6}
-									/>
-								</Container>
+								<!-- `sum` slot — empty gold plate; overlay currency count-up. -->
+								<ResponsiveCurrencyBitmapText
+									anchor={0.5}
+									y={-width * 0.1}
+									style={{
+										fontSize: width * 0.95 * BITMAP_FONT_SCALE,
+									}}
+									amount={countUpAmount}
+									bookEvent
+									maxWidth={width * 5.0}
+								/>
 							{/snippet}
 						</FreeSpinAnimation>
 					{/key}

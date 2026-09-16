@@ -55,4 +55,9 @@ export const devPreview = $state({
 	 * Pin `assets/spines/bonusReel` (`outlineReel`) on every board column — layout / VFX QA.
 	 */
 	forceShowBonusReelAllColumns: false,
+	/**
+	 * Force under-board / bitmap WIN fraction digits (null = currency default, e.g. USD 2).
+	 * DevButtons "WIN Stack · 3dp" sets 3 to QA count-up with millicents visible.
+	 */
+	winForceFractionDigits: null as null | number,
 });
