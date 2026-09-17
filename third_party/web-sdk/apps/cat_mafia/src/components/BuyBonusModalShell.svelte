@@ -11,19 +11,23 @@
 	import BuyDuelPickOverlay from './BuyDuelPickOverlay.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
+	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
 
 	const shellMounted = $derived(gameEntrance.showContent);
-	const isVisible = $derived(
-		stateModal.modal?.name === 'buyBonus' ||
-			stateModal.modal?.name === 'buyBonusConfirm' ||
-			stateModal.modal?.name === 'buyDuelPick',
-	);
 	const showBuyPanel = $derived(stateModal.modal?.name === 'buyBonus');
 	const showConfirmPanel = $derived(stateModal.modal?.name === 'buyBonusConfirm');
 	const showDuelPickPanel = $derived(stateModal.modal?.name === 'buyDuelPick');
+	/** Blur shell only when buy panel is painted — avoid empty-card flash. */
+	const isVisible = $derived(
+		(showBuyPanel && gameEntrance.buyBonusPanelReady) || showConfirmPanel || showDuelPickPanel,
+	);
+	/** Keep shell in DOM for layout while spines flush (no blur yet). */
+	const isPreparingBuy = $derived(showBuyPanel && !gameEntrance.buyBonusPanelReady);
+	const isBuyFlowOpen = $derived(showBuyPanel || showConfirmPanel || showDuelPickPanel);
+	const phoneDim = isPhoneForAtlasDownscale();
 
 	$effect(() => {
-		if (isVisible) startBuyBonusFlowPreload();
+		if (isBuyFlowOpen) startBuyBonusFlowPreload();
 	});
 </script>
 
@@ -31,15 +35,18 @@
 	<div
 		class="buy-bonus-modal-shell"
 		class:active={isVisible}
+		class:preparing={isPreparingBuy}
+		class:phone-dim={phoneDim}
 		aria-hidden={!isVisible}
 		inert={!isVisible}
 		data-test="buy-bonus-modal-shell"
 	>
 		<div
 			class="panel-slot"
-			class:active={showBuyPanel}
+			class:active={showBuyPanel && gameEntrance.buyBonusPanelReady}
+			class:preparing={isPreparingBuy}
 			aria-hidden={!showBuyPanel}
-			inert={!showBuyPanel}
+			inert={!showBuyPanel || !gameEntrance.buyBonusPanelReady}
 		>
 			<BuyBonusOverlay />
 		</div>
@@ -83,8 +90,25 @@
 			-webkit-backdrop-filter: blur(30px);
 		}
 
-		&:not(.active),
-		&:not(.active) * {
+		/* iOS: blur + two WebGL contexts Jetsams on open. 50% dim, no holes. */
+		&.active.phone-dim {
+			backdrop-filter: none;
+			-webkit-backdrop-filter: none;
+			background: rgba(0, 0, 0, 0.5);
+		}
+
+		/* Layout card hosts while spines flush — invisible, no blur. */
+		&.preparing:not(.active) {
+			opacity: 0;
+			visibility: visible;
+			pointer-events: none;
+			background: transparent;
+			backdrop-filter: none;
+			-webkit-backdrop-filter: none;
+		}
+
+		&:not(.active):not(.preparing),
+		&:not(.active):not(.preparing) * {
 			pointer-events: none !important;
 		}
 	}
@@ -109,8 +133,16 @@
 			z-index: 1;
 		}
 
-		&:not(.active),
-		&:not(.active) * {
+		/* Layout hosts off-screen while spines flush — keep size, hide paint. */
+		&.preparing {
+			opacity: 0;
+			pointer-events: none;
+			z-index: 0;
+			visibility: visible;
+		}
+
+		&:not(.active):not(.preparing),
+		&:not(.active):not(.preparing) * {
 			pointer-events: none !important;
 		}
 	}

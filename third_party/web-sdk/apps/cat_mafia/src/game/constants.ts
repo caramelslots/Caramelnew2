@@ -1412,26 +1412,32 @@ const l2PostWin = makeRenderPostWin('L2', letterSizeRatios);
 const l3PostWin = makeRenderPostWin('L3', letterSizeRatios, l3Opts);
 const l4PostWin = makeRenderPostWin('L4', letterSizeRatios);
 
-// Spin WebPs are letterboxed into 196² (`extractSymbolSprites.fit_square`,
-// 2% pad → content max-edge 188/196). Scaling the *texture* to CELL_SYMBOL_SIZE
-// made the silhouette ~4–15% smaller than idle/land Spine (which targets
-// CELL_SYMBOL_SIZE of the *art*). Inflate spin ratios so visible fill matches.
-const SPIN_SPRITE_CONTENT_FILL = 188 / 196;
-const payingSpinSizeRatios = (() => {
-	const ratio = CELL_SYMBOL_SIZE / SPIN_SPRITE_CONTENT_FILL;
+// Spin WebPs are letterboxed into 196² (`extractSymbolSprites.fit_square`).
+// Spine contain-fits the idle silhouette max-edge to CELL_SYMBOL_SIZE.
+// Scaling WebP by *height only* made landscape stills larger than Spine;
+// pure contain made them short. Blend so static sits with the idle pose.
+const SPIN_SPRITE_TEXTURE_PX = 196;
+/** 0 = Spine-like max-edge fit; 1 = match content height to the cell. */
+const SPIN_SPRITE_HEIGHT_BLEND = 0.3;
+const spinSizeRatiosForContent = (contentWidthPx: number, contentHeightPx: number) => {
+	const fillW = contentWidthPx / SPIN_SPRITE_TEXTURE_PX;
+	const fillH = contentHeightPx / SPIN_SPRITE_TEXTURE_PX;
+	const contain = CELL_SYMBOL_SIZE / Math.max(fillW, fillH);
+	const byHeight = CELL_SYMBOL_SIZE / fillH;
+	const ratio = contain + (byHeight - contain) * SPIN_SPRITE_HEIGHT_BLEND;
 	return { width: ratio, height: ratio };
-})();
+};
 /** Wild / Super Wild — full parchment column. Bonus spin matches inset spine. */
 const wildSizeRatios = { width: WILD_SYMBOL_SIZE, height: WILD_SYMBOL_SIZE };
 const bonusSpinSizeRatios = { width: BONUS_BAY_FILL, height: BONUS_BAY_FILL };
-const h1Spin = makeRenderSpinSprite('H1Img', payingSpinSizeRatios);
-const h2Spin = makeRenderSpinSprite('H2Img', payingSpinSizeRatios);
-const h3Spin = makeRenderSpinSprite('H3Img', payingSpinSizeRatios, lighterOpts);
-const h4Spin = makeRenderSpinSprite('H4Img', payingSpinSizeRatios);
-const l1Spin = makeRenderSpinSprite('L1Img', payingSpinSizeRatios);
-const l2Spin = makeRenderSpinSprite('L2Img', payingSpinSizeRatios);
-const l3Spin = makeRenderSpinSprite('L3Img', payingSpinSizeRatios, l3Opts);
-const l4Spin = makeRenderSpinSprite('L4Img', payingSpinSizeRatios);
+const h1Spin = makeRenderSpinSprite('H1Img', spinSizeRatiosForContent(188, 173));
+const h2Spin = makeRenderSpinSprite('H2Img', spinSizeRatiosForContent(188, 187));
+const h3Spin = makeRenderSpinSprite('H3SpinImg', spinSizeRatiosForContent(146, 188), lighterOpts);
+const h4Spin = makeRenderSpinSprite('H4Img', spinSizeRatiosForContent(188, 142));
+const l1Spin = makeRenderSpinSprite('L1Img', spinSizeRatiosForContent(188, 186));
+const l2Spin = makeRenderSpinSprite('L2Img', spinSizeRatiosForContent(188, 188));
+const l3Spin = makeRenderSpinSprite('L3Img', spinSizeRatiosForContent(161, 188), l3Opts);
+const l4Spin = makeRenderSpinSprite('L4Img', spinSizeRatiosForContent(146, 188));
 const wSpin = makeRenderSpinSprite('WImg', wildSizeRatios);
 /**
  * Wild — WebP while scrolling; spine `static` idle at rest; spine `land` bounce
@@ -1462,7 +1468,7 @@ const bdStatic = makeRenderStatic('BD', bonusSizeRatios, bonusOpts);
 const bdLand = makeRenderLand('BD', bonusSizeRatios, bonusOpts);
 const bdWin = makeRenderWin('BD', bonusSizeRatios, bonusOpts);
 /** Cartridge has no `idle` — sprite for rest/spin; spine `stop` on land. */
-const btSprite = makeRenderSpinSprite('BTImg', payingSpinSizeRatios);
+const btSprite = makeRenderSpinSprite('BTImg', spinSizeRatiosForContent(187, 188));
 const btLand = makeRenderLand('BT', cartridgeSizeRatios);
 
 /**

@@ -43,13 +43,23 @@
 	};
 
 	const props: Props = $props();
+	const reelMotion = $derived(
+		props.reelMotion ?? stateGame.board[props.reelIndex]?.reelState.motion ?? 'stopped',
+	);
+	// On-screen Spine stays Spine until that cell itself enters `spin`.
+	// Do not key off reelMotion — that snapped the whole board to WebP
+	// the moment the reel started moving.
+	const isSpinningSymbol = $derived(props.reelSymbol.symbolState === 'spin');
 	const symbolRenderState = $derived(
-		props.reelSymbol.symbolState === 'idleBounce' || props.reelSymbol.symbolState === 'winLift'
-			? 'static'
-			: props.reelSymbol.symbolState,
+		isSpinningSymbol
+			? 'spin'
+			: props.reelSymbol.symbolState === 'idleBounce' ||
+				  props.reelSymbol.symbolState === 'winLift'
+				? 'static'
+				: props.reelSymbol.symbolState,
 	);
 	const symbolInfo = $derived(
-		getSymbolInfo({ rawSymbol: props.reelSymbol.rawSymbol, state: props.reelSymbol.symbolState }),
+		getSymbolInfo({ rawSymbol: props.reelSymbol.rawSymbol, state: symbolRenderState }),
 	);
 
 	/** Open SW is covered by the curtain spine — never draw board ×N badges. */
@@ -98,11 +108,11 @@
 	);
 	/** FS bullets stay bright during payline spotlight (not part of lines). */
 	const isBulletSymbol = $derived(props.reelSymbol.rawSymbol.name === 'BT');
-	const isSpinningSymbol = $derived(props.reelSymbol.symbolState === 'spin');
-	const applyWinPresentation = $derived(isWinningState && !isSpinningSymbol);
-	const applyIdleBouncePresentation = $derived(isIdleBouncing);
-	const reelMotion = $derived(
-		props.reelMotion ?? stateGame.board[props.reelIndex]?.reelState.motion ?? 'stopped',
+	const applyWinPresentation = $derived(
+		isWinningState && !isSpinningSymbol && reelMotion !== 'spinning',
+	);
+	const applyIdleBouncePresentation = $derived(
+		isIdleBouncing && !isSpinningSymbol && reelMotion !== 'spinning',
 	);
 	const activeSymbolCount = $derived(
 		props.activeSymbolCount ??
@@ -169,13 +179,14 @@
 
 	$effect(() => {
 		const state = props.reelSymbol.symbolState;
-		if (stateGame.targetPickOpen || state === 'spin' || state === 'static' || state === 'land') {
+		const flying = reelMotion === 'spinning' || state === 'spin';
+		if (stateGame.targetPickOpen || flying || state === 'static' || state === 'land') {
 			untrack(() => {
 				winScale.set(1, { duration: 0 });
 				winYOffset.set(0, { duration: 0 });
 				idleScale.set(1, { duration: 0 });
 				idleYOffset.set(0, { duration: 0 });
-				if (state === 'spin') {
+				if (flying) {
 					dimAlphaTween.set(1, { duration: 0 });
 					const covered = props.duelSide
 						? stateDuel.superWildCurtains.some(

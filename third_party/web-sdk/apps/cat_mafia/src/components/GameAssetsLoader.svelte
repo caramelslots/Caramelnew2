@@ -5,15 +5,26 @@
 	import { getContextApp } from 'pixi-svelte';
 	import { getProcessed } from '../../../../packages/pixi-svelte/src/lib/assetLoad';
 	import type { LoadedAssets, RawAsset } from 'pixi-svelte';
+	import { waitForTimeout } from 'utils-shared/wait';
 
 	import {
 		LOADER_ASSET_BATCHES,
 		getBatch3KeysForLocale,
 		getEntryLoadKeyCount,
 	} from '../game/assetLoadPlan';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { waitForLoaderStage } from '../game/loaderAssetPipeline.svelte';
-	import { downscalePhoneSpineAtlases } from '../game/phoneSpineAtlasDownscale';
+	import { downscalePhoneSpineAtlases, isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
+	import { startBuyBonusSpineBitmapDecode } from '../game/buyBonusHtmlSpine';
+	import { ensureBuyBonusWarm } from '../game/buyBonusSharedPixi';
 	import { startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
+	import {
+		omitParkedTirAssets,
+		parkTirGpuForDeferredLoad,
+		shouldSkipDeferredTirMerge,
+		TIR_SPINE_KEYS,
+		unloadTirPixiGpuAsync,
+	} from '../game/tirGpuMemory';
 	import { stateUrlDerived } from 'state-shared';
 
 	type Props = { children: Snippet };
@@ -22,12 +33,19 @@
 	const context = getContextApp();
 
 	let preLoaded = $state(false);
+	let batch4Started = false;
 
 	let loadedCount = 0;
 	let entryTotal = 1;
 	/** Pixi 1–3 fill 0–86%; buy-bonus takes the bar to 96% before Continue. */
 	const PIXI_PROGRESS_CAP = 86;
 	const ENTRY_PROGRESS_CAP = 96;
+	/**
+	 * After lift: wait for loader GL to drop, then batch 4.
+	 * Phone does not warm buy-bonus here — that second WebGL on Continue Jetsams.
+	 */
+	const POST_LIFT_BATCH4_MS_PHONE = 1200;
+	const POST_LIFT_BATCH4_MS_DESKTOP = 50;
 
 	const bumpProgress = () => {
 		loadedCount += 1;
@@ -79,7 +97,7 @@
 				loadedCount = 0;
 				context.stateApp.loadingProgress = 0;
 
-				const [batch1, batch2, , batch4] = LOADER_ASSET_BATCHES;
+				const [batch1, batch2] = LOADER_ASSET_BATCHES;
 
 				// Batch 3 is filtered to the active locale — locale-specific font keys
 				// for other scripts (hi / vi / cjk) are skipped, saving 0.8–3 MB for
@@ -105,15 +123,38 @@
 				await startBuyBonusFlowPreload();
 
 				context.stateApp.loaded = true;
-
-				// Batch 4 is bonus / duel / FS / tir — after buy-bonus, not blocking Continue.
-				void loadAssetBatch(batch4).then((batch4Assets) => {
-					mergeLoadedAssets(batch4Assets);
-					// Batch 4 may include tir atlases loaded after initial phone downscale.
-					downscalePhoneSpineAtlases();
-				});
+				// Desktop: decode 4K buy-bonus pages on the cards idle screen.
+				// Phone: skip — 4K bitmaps in RAM plus the slot on Continue is a Jetsam.
+				if (!isPhoneForAtlasDownscale()) void startBuyBonusSpineBitmapDecode();
 			})();
 		}
+	});
+
+	// After lift settles: batch 4. Phone skips tir + buy-bonus warm (load those on demand).
+	$effect(() => {
+		if (!context.stateApp.loaded || !gameEntrance.liftComplete || batch4Started) return;
+		batch4Started = true;
+		const [, , , batch4] = LOADER_ASSET_BATCHES;
+		// One-shot: do not abort on effect re-run — Continue peak must stay clear.
+		void (async () => {
+			const phone = isPhoneForAtlasDownscale();
+			if (phone) parkTirGpuForDeferredLoad();
+			await waitForTimeout(phone ? POST_LIFT_BATCH4_MS_PHONE : POST_LIFT_BATCH4_MS_DESKTOP);
+			const tirKeys = new Set<string>(TIR_SPINE_KEYS);
+			const batch4Keys = phone ? batch4.filter((key) => !tirKeys.has(key)) : batch4;
+			const batch4Assets = await loadAssetBatch(batch4Keys);
+			if (shouldSkipDeferredTirMerge()) {
+				await unloadTirPixiGpuAsync(batch4Assets as Record<string, unknown>);
+				mergeLoadedAssets(omitParkedTirAssets(batch4Assets));
+			} else {
+				mergeLoadedAssets(batch4Assets);
+			}
+			downscalePhoneSpineAtlases();
+			gameEntrance.postLiftAssetsReady = true;
+			if (phone) return;
+			await ensureBuyBonusWarm();
+			if (gameEntrance.buyBonusWarmReady) gameEntrance.buyBonusEverWarmed = true;
+		})();
 	});
 </script>
 

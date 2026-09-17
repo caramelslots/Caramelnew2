@@ -1,6 +1,6 @@
 <!--
 	Host box for a buy-bonus card Spine.
-	All cards share one WebGL context (buyBonusSharedPixi).
+	All cards share one overlay WebGL context (buyBonusSharedPixi).
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';

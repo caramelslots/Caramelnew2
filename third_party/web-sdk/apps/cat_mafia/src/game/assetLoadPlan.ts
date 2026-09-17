@@ -18,6 +18,7 @@ export const LOADER_BATCH_1_KEYS = [
 	'H1Img',
 	'H2Img',
 	'H3Img',
+	'H3SpinImg',
 	'H4Img',
 ] as const satisfies readonly (keyof typeof assets)[];
 
@@ -92,11 +93,11 @@ export const LOADER_BATCH_3_KEYS = [
 	'superWildCurtain',
 ] as const satisfies readonly (keyof typeof assets)[];
 
-/**
- * Post-entry deferred batch — bonus / duel / FS / tir. Loads in the background
- * after `loaded` while the player reads "Press to continue".
- * Night street is a skin on `mainBackground` (batch 1), not a separate key.
- */
+	/**
+	 * Post-entry deferred batch — bonus / duel / FS / tir.
+	 * Loaded after entrance lift settles (not while reading cards / on Continue).
+	 * Night street is a skin on `mainBackground` (batch 1), not a separate key.
+	 */
 export const LOADER_BATCH_4_KEYS = [
 	'BD',
 	'BT',

@@ -27,10 +27,12 @@
 
 	import {
 		areBuyBonusSpinesReady,
+		ensureBuyBonusMenuOpen,
 		flushBuyBonusSharedStage,
 		whenBuyBonusSpinesReady,
 	} from '../game/buyBonusSharedPixi';
 	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS, HUD_ASSETS } from '../game/uiHtmlAssetManifest';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import ArchedRibbonTitle from './ArchedRibbonTitle.svelte';
 	import BuyBonusCardSpine from './BuyBonusCardSpine.svelte';
 	import CashStacksFeatureToggles from './CashStacksFeatureToggles.svelte';
@@ -47,43 +49,58 @@
 	const plusUrl = HUD_ASSETS.betPlus;
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonus');
+	/** Mount card hosts only while open — sticky mounts remounted GL during extra FS. */
 	let spinesMounted = $state(false);
-	/** Board stays invisible until first card paint — later opens reuse this. */
+	/** Board + cards reveal together — never show empty card slots. */
 	let panelReady = $state(false);
 	let revealedOnce = $state(false);
 
 	$effect(() => {
-		if (!isOpen) return;
+		gameEntrance.buyBonusPanelReady = isOpen && panelReady;
+	});
+
+	$effect(() => {
+		if (!isOpen) {
+			panelReady = false;
+			spinesMounted = false;
+			return;
+		}
 		spinesMounted = true;
 		let cancelled = false;
-		// Background warm / warm-keep: spines already in GL — one frame to mount hosts.
-		if (areBuyBonusSpinesReady()) {
-			panelReady = false;
-			void (async () => {
+		void (async () => {
+			await tick();
+			if (cancelled) return;
+			try {
+				// Spines first (usually already warm); only then show the board.
+				if (areBuyBonusSpinesReady()) {
+					flushBuyBonusSharedStage();
+				} else {
+					await ensureBuyBonusMenuOpen();
+				}
+				if (cancelled) return;
 				await tick();
-				await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+				flushBuyBonusSharedStage();
+				await new Promise<void>((r) => requestAnimationFrame(() => r()));
 				if (cancelled) return;
 				flushBuyBonusSharedStage();
 				panelReady = true;
 				revealedOnce = true;
-			})();
-			return () => {
-				cancelled = true;
-			};
-		}
-		panelReady = false;
-		void (async () => {
-			await tick();
-			await new Promise<void>((resolve) => {
-				requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-			});
-			await whenBuyBonusSpinesReady();
-			flushBuyBonusSharedStage();
-			// Layout shared canvas into hosts while the panel is still opacity:0.
-			await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-			if (cancelled) return;
-			panelReady = true;
-			revealedOnce = true;
+			} catch (error) {
+				console.error('[buyBonus] menu open failed', error);
+				try {
+					await whenBuyBonusSpinesReady();
+					if (cancelled) return;
+					flushBuyBonusSharedStage();
+					panelReady = true;
+					revealedOnce = true;
+				} catch (retryError) {
+					console.error('[buyBonus] menu open retry failed', retryError);
+					if (!cancelled) {
+						panelReady = true;
+						revealedOnce = true;
+					}
+				}
+			}
 		})();
 		return () => {
 			cancelled = true;
@@ -226,10 +243,8 @@
 						/>
 					</div>
 					<div class="card-price-wrap">
-						<span
-							class="card-price"
-							data-test="bonus-price-normal"
-							x-apple-data-detectors="false">{normalPrice}</span
+						<span class="card-price" data-test="bonus-price-normal" x-apple-data-detectors="false"
+							>{normalPrice}</span
 						>
 					</div>
 				</div>
@@ -261,10 +276,8 @@
 						/>
 					</div>
 					<div class="card-price-wrap">
-						<span
-							class="card-price"
-							data-test="bonus-price-super"
-							x-apple-data-detectors="false">{superPrice}</span
+						<span class="card-price" data-test="bonus-price-super" x-apple-data-detectors="false"
+							>{superPrice}</span
 						>
 					</div>
 				</div>
@@ -283,10 +296,8 @@
 				{/if}
 				<div class="card-content">
 					<div class="card-price-wrap">
-						<span
-							class="card-price"
-							data-test="bonus-price-duel"
-							x-apple-data-detectors="false">{duelPrice}</span
+						<span class="card-price" data-test="bonus-price-duel" x-apple-data-detectors="false"
+							>{duelPrice}</span
 						>
 					</div>
 				</div>
@@ -342,7 +353,6 @@
 		position: relative;
 		z-index: 10;
 		pointer-events: auto;
-		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
 		opacity: 0;
 		@include buy-bonus-panel-dimensions(true);
 
@@ -359,6 +369,8 @@
 		object-fit: fill;
 		pointer-events: none;
 		user-select: none;
+		/* Shadow on the PNG only — a filter on the panel rasterizes WebGL and smears the top on iOS. */
+		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
 	}
 
 	.panel-content {
@@ -1618,5 +1630,4 @@
 			);
 		}
 	}
-
 </style>

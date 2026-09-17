@@ -175,6 +175,11 @@ export default {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/symbols/H3.webp'),
 	},
+	/** Spin-only — first frame of H3 Spine `idle` (closed lid). Paytable keeps H3.webp. */
+	H3SpinImg: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/symbols/H3Spin.webp'),
+	},
 	H4Img: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/symbols/H4.webp'),

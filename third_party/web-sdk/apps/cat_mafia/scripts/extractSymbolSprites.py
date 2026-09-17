@@ -31,8 +31,8 @@ DESIGNER_ROOT = APP_ROOT.parents[3] / "designer_assets"
 
 SYMBOL_SIZE = 196
 # Tiny inset so Lanczos resize doesn't clip bevel/shadow into the frame edge.
-# Keep in sync with `SPIN_SPRITE_CONTENT_FILL` in src/game/constants.ts
-# (round(SYMBOL_SIZE * (1 - 2 * FIT_PADDING)) / SYMBOL_SIZE).
+# Keep in sync with `spinSizeRatiosForContent` in src/game/constants.ts
+# (alpha-bbox of each 196² WebP).
 FIT_PADDING = 0.02
 
 # Atlas region name for the resting glyph inside each per-symbol skeleton.
@@ -262,6 +262,15 @@ def extract() -> None:
 		cleared = clear_letterbox_black(Image.open(src))
 		save_sprite(fit_square(cleared), symbol)
 		print(f"  {symbol}: cleared letterbox + fit_square")
+
+	# H3.webp is the open still (paytable / info). Do not overwrite it here.
+	spin_still = DESIGNER_ROOT / "render_lighter_new" / "lighter-stop_0.png"
+	if spin_still.is_file():
+		raw = clear_letterbox_black(Image.open(spin_still))
+		print(f"  H3Spin: Spine idle still {spin_still}")
+		save_sprite(fit_square(raw), "H3Spin")
+	else:
+		print(f"  skip H3Spin: missing {spin_still}")
 
 	print("done.")
 

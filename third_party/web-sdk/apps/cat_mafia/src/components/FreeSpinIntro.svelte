@@ -2,7 +2,7 @@
 	export type FreeSpinIntroMode = 'award' | 'extra';
 
 	export type EmitterEventFreeSpinIntro =
-		| { type: 'freeSpinIntroShow' }
+		| { type: 'freeSpinIntroShow'; mode?: FreeSpinIntroMode }
 		| { type: 'freeSpinIntroHide' }
 		| {
 				type: 'freeSpinIntroUpdate';
@@ -13,11 +13,10 @@
 </script>
 
 <script lang="ts">
-	import { fade } from 'svelte/transition';
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { OnHotkey } from 'components-shared';
 	import { stateUrlDerived } from 'state-shared';
-	import { waitForResolve } from 'utils-shared/wait';
+	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 
 	import {
 		BOARD_DIMENSIONS,
@@ -35,7 +34,9 @@
 	import assets from '../game/assets';
 	import { getFsOutroCongratulationsText, getFsOutroYouWonText } from '../game/fsOutroBannerText';
 	import { getContext } from '../game/context';
+	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { waitAnimationFrames } from '../game/tirGpuMemory';
 	import FsIntroBannerLabel from './FsIntroBannerLabel.svelte';
 	import PressToContinueHtml from './PressToContinueHtml.svelte';
 
@@ -196,35 +197,52 @@
 		});
 	});
 
-	/** Fade in after cloud clears (FS entry) or one frame after mount (extra spins). */
+	/** Fade in after cloud clears (FS entry) or after tir GPU settles (extra). */
 	let overlayRevealed = $state(false);
 	let revealRaf = 0;
+	let extraRevealTimer: ReturnType<typeof setTimeout> | undefined;
+
+	const clearRevealWait = () => {
+		cancelAnimationFrame(revealRaf);
+		revealRaf = 0;
+		if (extraRevealTimer !== undefined) {
+			clearTimeout(extraRevealTimer);
+			extraRevealTimer = undefined;
+		}
+	};
 
 	const scheduleOverlayReveal = () => {
-		cancelAnimationFrame(revealRaf);
-		revealRaf = requestAnimationFrame(() => {
+		clearRevealWait();
+		const kick = () => {
 			revealRaf = requestAnimationFrame(() => {
-				if (show && !stateGame.transitionActive) overlayRevealed = true;
+				revealRaf = requestAnimationFrame(() => {
+					if (show && !stateGame.transitionActive) overlayRevealed = true;
+				});
 			});
-		});
+		};
+		// Extra sits on Super curtains — wait for tir VRAM to drop before mask/blend/rays.
+		if (introMode === 'extra' && isPhoneForAtlasDownscale()) {
+			extraRevealTimer = setTimeout(kick, 150);
+			return;
+		}
+		kick();
 	};
 
 	$effect(() => {
+		void introMode;
 		if (!show || stateGame.transitionActive) {
-			cancelAnimationFrame(revealRaf);
-			revealRaf = 0;
+			clearRevealWait();
 			overlayRevealed = false;
 			return;
 		}
 
 		scheduleOverlayReveal();
 		return () => {
-			cancelAnimationFrame(revealRaf);
-			revealRaf = 0;
+			clearRevealWait();
 		};
 	});
 
-	onMount(() => () => cancelAnimationFrame(revealRaf));
+	onMount(() => () => clearRevealWait());
 
 	$effect(() => {
 		void bannerLabel;
@@ -241,25 +259,39 @@
 	const dismiss = () => {
 		if (!show || dismissing) return;
 		dismissing = true;
-		cancelAnimationFrame(revealRaf);
-		revealRaf = 0;
+		clearRevealWait();
+		// Drop compositor (mask / blend / spinning rays) this frame — do not
+		// wait for hide. First FS spin must not start under the 2K plaque.
+		overlayRevealed = false;
 		oncomplete();
 	};
 
+	const unmountIntro = async () => {
+		const extra = introMode === 'extra';
+		clearRevealWait();
+		overlayRevealed = false;
+		show = false;
+		stateGame.freeSpinIntroActive = false;
+		introMode = 'award';
+		dismissing = false;
+		await tick();
+		await waitAnimationFrames(extra ? 6 : 3);
+		// Extra sits on a full FS board (+ Super curtains). Give Safari time
+		// to drop the 2K plaque before the next reveal uploads spin textures.
+		if (extra) {
+			await waitForTimeout(isPhoneForAtlasDownscale() ? 400 : 150);
+		}
+	};
+
 	context.eventEmitter.subscribeOnMount({
-		freeSpinIntroShow: () => {
+		freeSpinIntroShow: (event) => {
 			dismissing = false;
+			introMode = event.mode === 'extra' ? 'extra' : 'award';
 			show = true;
 			stateGame.freeSpinIntroActive = true;
 		},
-		freeSpinIntroHide: () => {
-			cancelAnimationFrame(revealRaf);
-			revealRaf = 0;
-			overlayRevealed = false;
-			show = false;
-			stateGame.freeSpinIntroActive = false;
-			introMode = 'award';
-			dismissing = false;
+		freeSpinIntroHide: async () => {
+			await unmountIntro();
 		},
 		freeSpinIntroUpdate: async (event) => {
 			totalFreeSpins = event.totalFreeSpins;
@@ -274,7 +306,6 @@
 		class="overlay"
 		class:overlay--visible={overlayRevealed}
 		data-test="free-spin-intro-overlay"
-		out:fade={{ duration: 220 }}
 		onclick={dismiss}
 		onkeydown={(e) => e.key === 'Enter' && dismiss()}
 		role="button"
@@ -283,10 +314,12 @@
 		<div class="dim" aria-hidden="true"></div>
 		<div class="panel" style={panelStyle}>
 			<img class="layer layer-bg" src={bgUrl} alt="" draggable="false" />
-			<!-- Rays clipped to plaque shape (fs_bg alpha) so spin never spills past the frame. -->
-			<div class="rays-mask" aria-hidden="true">
-				<img class="layer-rays" src={raysUrl} alt="" draggable="false" />
-			</div>
+			{#if overlayRevealed}
+				<!-- Rays clipped to plaque shape (fs_bg alpha) so spin never spills past the frame. -->
+				<div class="rays-mask" aria-hidden="true">
+					<img class="layer-rays" src={raysUrl} alt="" draggable="false" />
+				</div>
+			{/if}
 			<img class="layer layer-frame" src={frameUrl} alt="" draggable="false" />
 			<img class="layer layer-board" src={boardUrl} alt="" draggable="false" />
 
@@ -362,6 +395,20 @@
 		&.overlay--visible {
 			opacity: 1;
 			pointer-events: auto;
+		}
+
+		&:not(.overlay--visible) {
+			transition: none;
+		}
+
+		&:not(.overlay--visible) .layer-rays {
+			animation: none;
+			mix-blend-mode: normal;
+		}
+
+		&:not(.overlay--visible) .rays-mask {
+			-webkit-mask-image: none;
+			mask-image: none;
 		}
 	}
 

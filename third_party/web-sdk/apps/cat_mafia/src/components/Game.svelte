@@ -113,7 +113,11 @@
 	});
 
 	$effect(() => {
-		if (gameEntrance.showContent) startLoadingIdleUiPreload();
+		// Warm HUD HTML during cards idle (or after skip-loading), not on Continue tap.
+		if (!context.stateApp.loaded) return;
+		if (gameEntrance.loadingCardsVisible || gameEntrance.liftComplete) {
+			startLoadingIdleUiPreload();
+		}
 	});
 
 	context.eventEmitter.subscribeOnMount({

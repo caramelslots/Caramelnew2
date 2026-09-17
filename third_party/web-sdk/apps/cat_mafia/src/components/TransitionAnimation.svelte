@@ -8,6 +8,8 @@
 		oncomplete: () => void;
 		onThemeSwitch?: () => void;
 		themeSwitchDelayMs?: number;
+		/** False = caller applies theme after a GPU barrier (FS entry tir unload). */
+		timedThemeSwitch?: boolean;
 	};
 
 	const props: Props = $props();
@@ -16,7 +18,7 @@
 	onMount(() => {
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_transition_steam' });
 
-		if (!props.onThemeSwitch) return;
+		if (!props.onThemeSwitch || props.timedThemeSwitch === false) return;
 
 		const timer = setTimeout(
 			props.onThemeSwitch,

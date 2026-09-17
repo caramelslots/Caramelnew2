@@ -31,6 +31,8 @@
 	const startLoadingTransition = () => {
 		if (gameEntrance.loaderExitActive || gameEntrance.introFading) return;
 
+		// Keep cards + bonus spine painted through the lift; loader WebGL is
+		// destroyed when the overlay unmounts (showLoadingScreen → false).
 		gameEntrance.loadingCardsVisible = false;
 		gameEntrance.loaderExitActive = true;
 		gameEntrance.showContent = true;

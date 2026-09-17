@@ -1,5 +1,7 @@
 /** designer_assets buy-bonus card spines — Pixi overlay (not HTML SpinePlayer). */
 
+import { isPhoneForAtlasDownscale } from './phoneSpineAtlasDownscale';
+
 export type BuyBonusSpineVariant = 'normal' | 'super' | 'duel';
 
 export type BuyBonusSpineViewport = {
@@ -111,4 +113,98 @@ export const preloadBuyBonusSpines = async () => {
 		return [files.atlas, files.skeleton, ...files.images];
 	});
 	await Promise.all(urls.map((url) => fetch(url).catch(() => null)));
+};
+
+const buyBonusSpineBitmaps = new Map<string, ImageBitmap>();
+let bitmapDecodePromise: Promise<void> | null = null;
+let bitmapDecodeEpoch = 0;
+/** Feature / tir must not re-decode 4K pages into RAM. */
+let bitmapDecodeAllowed = true;
+
+const uniqueBuyBonusSpineImageUrls = () => [...new Set(BUY_BONUS_SPINE_IMAGE_URLS)];
+
+const yieldFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+const decodeBuyBonusSpineBitmap = async (url: string, epoch: number) => {
+	if (epoch !== bitmapDecodeEpoch || buyBonusSpineBitmaps.has(url)) return;
+	const response = await fetch(url);
+	if (!response.ok) return;
+	const blob = await response.blob();
+	if (epoch !== bitmapDecodeEpoch) return;
+	const bitmap = await createImageBitmap(blob);
+	if (epoch !== bitmapDecodeEpoch) {
+		bitmap.close();
+		return;
+	}
+	const previous = buyBonusSpineBitmaps.get(url);
+	if (previous && previous !== bitmap) previous.close();
+	buyBonusSpineBitmaps.set(url, bitmap);
+};
+
+/**
+ * CPU-decode atlas pages during the loader cards idle screen.
+ * No WebGL — overlay `loadSpine` only uploads after `ensureApp`.
+ * Fire-and-forget: do not await from Continue / `startBuyBonusFlowPreload`.
+ */
+export const startBuyBonusSpineBitmapDecode = (): Promise<void> => {
+	if (typeof window === 'undefined' || typeof createImageBitmap !== 'function') {
+		return Promise.resolve();
+	}
+	if (!bitmapDecodeAllowed) return Promise.resolve();
+	if (bitmapDecodePromise) return bitmapDecodePromise;
+
+	const urls = uniqueBuyBonusSpineImageUrls();
+	if (urls.every((url) => buyBonusSpineBitmaps.has(url))) return Promise.resolve();
+
+	const epoch = bitmapDecodeEpoch;
+	bitmapDecodePromise = (async () => {
+		if (isPhoneForAtlasDownscale()) {
+			for (const url of urls) {
+				if (epoch !== bitmapDecodeEpoch) return;
+				try {
+					await decodeBuyBonusSpineBitmap(url, epoch);
+				} catch {
+					/* keep going — overlay loadSpine falls back to Assets.load */
+				}
+				await yieldFrame();
+			}
+			return;
+		}
+		await Promise.all(
+			urls.map((url) => decodeBuyBonusSpineBitmap(url, epoch).catch(() => undefined)),
+		);
+	})();
+
+	return bitmapDecodePromise;
+};
+
+export const getBuyBonusSpineBitmap = (url: string) => buyBonusSpineBitmaps.get(url);
+
+/** Drop decoded pages after GPU upload (phone compact) or overlay teardown. */
+export const releaseBuyBonusSpineBitmaps = (urls?: readonly string[]) => {
+	const targets = urls ?? [...buyBonusSpineBitmaps.keys()];
+	for (const url of targets) {
+		const bitmap = buyBonusSpineBitmaps.get(url);
+		buyBonusSpineBitmaps.delete(url);
+		if (!bitmap) continue;
+		try {
+			bitmap.close();
+		} catch {
+			/* already closed */
+		}
+	}
+	if (!urls) {
+		bitmapDecodeEpoch += 1;
+		bitmapDecodePromise = null;
+	}
+};
+
+/** Drop in-flight 4K decode before tir / FS GPU grows. */
+export const suspendBuyBonusSpineBitmapDecode = () => {
+	bitmapDecodeAllowed = false;
+	releaseBuyBonusSpineBitmaps();
+};
+
+export const resumeBuyBonusSpineBitmapDecode = () => {
+	bitmapDecodeAllowed = true;
 };

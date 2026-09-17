@@ -46,6 +46,8 @@ import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
 import { preloadHtmlImages } from './preloadHtmlImages';
 import { FS_CONG_IMAGE_URLS } from './uiHtmlAssetManifest';
 import { waitForTimeout } from 'utils-shared/wait';
+import { evictBuyBonusForFeature, clearBuyBonusFeatureEvictLock } from './buyBonusSharedPixi';
+import { dismissTirAndUnloadGpu, waitAnimationFrames } from './tirGpuMemory';
 import {
 	getDrumLastFilledChamberIndex,
 	syncDrumBulletOrients,
@@ -448,6 +450,19 @@ const applyStickySwPreExpanded = async () => {
 		}
 	}
 	if (stickyReels.length) {
+		const curtainsAlreadyUp =
+			stateGame.fsExtraPhase &&
+			!intro &&
+			stickyReels.every((reel) =>
+				stateGame.superWildCurtains.some(
+					(c) => c.reel === reel && (c.phase === 'done' || c.phase === 'dropIn'),
+				),
+			);
+		// Extra first spin: do not rebuild SW Spine in the same beat as intro hide.
+		if (curtainsAlreadyUp) {
+			ensureSwCurtainsForBoard();
+			return;
+		}
 		await waitForGameSpeed(120, stateGame.gameSpeed);
 		const originRow = Math.floor(BOARD_DIMENSIONS.y / 2) + 1;
 		const makeCurtains = (phase: 'dropIn' | 'done') =>
@@ -1109,6 +1124,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		{ bookEvents }: BookEventContext,
 	) => {
 		clearWinSpotlight();
+		// Drop buy-bonus WebGL before tir cabinet / atlases grow.
+		await evictBuyBonusForFeature();
 		// Celebrate Bonus tiles on the settled board before the target gallery
 		// opens — freeSpinTrigger skips this when a pick already ran.
 		const trigger = bookEvents.find(
@@ -1186,15 +1203,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		}
 		if (!hadTargetPick) {
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
+			// Natural / no-gallery path — still drop buy-bonus before FS GPU grows.
+			await evictBuyBonusForFeature();
 		}
 
-		// Warm fsCong while bonus celebrate / HUD hide runs.
-		void preloadHtmlImages(FS_CONG_IMAGE_URLS);
-
-		await preloadHtmlImages(FS_CONG_IMAGE_URLS);
-		// Mount congrats under the cloud (HTML z70 < transition z100) so it appears
-		// the instant steam clears — no empty-board beat after the spine completes.
-		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin', withIntro: true });
 		eventEmitter.broadcast({
@@ -1204,14 +1216,30 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 		stateUi.freeSpinCounterCurrent = 0;
 		stateUi.freeSpinCounterTotal = bookEvent.totalFs;
-		await eventEmitter.broadcastAsync({ type: 'transition', gameType: 'freegame' });
-		// Safety: if theme-switch dismiss missed, snap gallery off before intro.
-		eventEmitter.broadcast({ type: 'targetPickDismiss' });
+
+		// Steam covers the gallery, then tir GPU drops, THEN night/mascot/drum.
+		// Theme-switch on the 193 ms timer overlapped tir 4K + white cat + drum.
+		const transitionPromise = eventEmitter.broadcastAsync({
+			type: 'transition',
+			gameType: 'freegame',
+			deferThemeSwitch: true,
+		});
+		await waitForTimeout(TRANSITION_THEME_SWITCH_DELAY_MS);
+		await dismissTirAndUnloadGpu();
+		await waitAnimationFrames(3);
+		eventEmitter.broadcast({ type: 'transitionApplyTheme' });
+		await transitionPromise;
+
+		await preloadHtmlImages(FS_CONG_IMAGE_URLS, { concurrency: 1 });
+		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
 		await eventEmitter.broadcastAsync({
 			type: 'freeSpinIntroUpdate',
 			totalFreeSpins: bookEvent.totalFs,
 		});
-		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
+		// Intro compositor (2K plaque + mask/blend/rays) must be gone before
+		// the first FS reveal / Super drop-in. Same barrier as tir → intro.
+		await eventEmitter.broadcastAsync({ type: 'freeSpinIntroHide' });
+		await waitAnimationFrames(3);
 	},
 	updateFreeSpin: async (bookEvent: BookEventOfType<'updateFreeSpin'>) => {
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
@@ -1345,14 +1373,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	ladderTierUp: async () => {},
 	mysteryReelActivate: async () => {},
 	mysteryReelUnlock: async (bookEvent: BookEventOfType<'mysteryReelUnlock'>) => {
-		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
+		await preloadHtmlImages(FS_CONG_IMAGE_URLS, { concurrency: 1 });
+		eventEmitter.broadcast({ type: 'freeSpinIntroShow', mode: 'extra' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
 		await eventEmitter.broadcastAsync({
 			type: 'freeSpinIntroUpdate',
 			totalFreeSpins: bookEvent.rewardSpins,
 			mode: 'extra',
 		});
-		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
+		await eventEmitter.broadcastAsync({ type: 'freeSpinIntroHide' });
+		await waitAnimationFrames(3);
 	},
 	mysteryReveal: async () => {},
 
@@ -1725,6 +1755,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Real book overrides layout-only DEV preview.
 		devPreview.forceShowDuelLayout = false;
 		resetDuelState();
+		// Drop buy-bonus WebGL before dual boards / dog atlas mount.
+		await evictBuyBonusForFeature();
 		// Keep active=false until the cloud cover — same reveal timing as FS.
 		stateDuel.phase = 'pick';
 		stateDuel.totalSpinsPerSide = bookEvent.totalSpinsPerSide;
@@ -2017,6 +2049,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		}
 		resetDuelState();
 		stateBet.activeBetModeKey = 'BASE';
+		// Duel cloud has no gameType — unlock buy-bonus warm remount explicitly.
+		clearBuyBonusFeatureEvictLock();
 		await transitionPromise;
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 	},

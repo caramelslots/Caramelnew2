@@ -201,7 +201,6 @@
 		position: relative;
 		z-index: 10;
 		pointer-events: auto;
-		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
 		@include buy-bonus-panel-dimensions(true);
 	}
 
@@ -213,6 +212,7 @@
 		object-fit: fill;
 		pointer-events: none;
 		user-select: none;
+		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
 	}
 
 	.panel-content {

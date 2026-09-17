@@ -14,8 +14,7 @@
 	 * click only picks which face shows each reward.
 	 *
 	 * Shots pipeline: drum shake+advance starts only after `gun_shot` ends;
-	 * each seat opens independently as soon as its bullet hits (parallel Pixi
-	 * flips — no shared open queue).
+	 * seat opens after its bullet hits (phone: max two Pixi flips at once).
 	 */
 	import { waitForResolve } from 'utils-shared/wait';
 
@@ -49,7 +48,10 @@
 		type TargetShotFlight,
 	} from '../game/shotBulletAssets';
 	import { stateGame } from '../game/stateGame.svelte';
-	import { ensureTirPixiInApp } from '../game/tirGpuMemory';
+	import { preloadHtmlImages } from '../game/preloadHtmlImages';
+	import { dismissTirAndUnloadGpu, ensureTirPixiInApp, PHONE_MAX_PARALLEL_TIR_FLIPS, waitAnimationFrames } from '../game/tirGpuMemory';
+	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
+	import { FS_CONG_IMAGE_URLS } from '../game/uiHtmlAssetManifest';
 	import {
 		TARGET_BOARD_PICK_FLIP_MS_BY_ANIM,
 		TARGET_PICK_SLIDE_MS,
@@ -79,6 +81,7 @@
 	let drumCyclePromise: Promise<void> | null = null;
 	/** In-flight seat opens — each runs independently after its own bullet hit. */
 	const activeFlipPromises = new Set<Promise<void>>();
+	let liveFlipCount = 0;
 	let oncomplete = $state(() => {});
 	let shootBoard = $state<TargetShootBoard | undefined>();
 
@@ -170,6 +173,7 @@
 		pendingSeats = [];
 		reservedSeats = new Set();
 		drumCyclePromise = null;
+		liveFlipCount = 0;
 		await waitAllFlips();
 		spinningSeats = new Set();
 		stateGame.targetPickSpinningSeats = [];
@@ -186,22 +190,25 @@
 
 		stateGame.targetPickOpen = false;
 		stateGame.targetPickSeatMode = 'six';
-		stateGame.drumShootActive = false;
 		show = false;
-		await new Promise<void>((resolve) => {
-			requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-		});
+		// Keep HTML drum until extra intro is gone — remounting Pixi drum
+		// under the 2K plaque is the Extra Continue Jetsam.
+		await dismissTirAndUnloadGpu({ uiAlreadyDismissed: true });
+		await waitAnimationFrames(isPhoneForAtlasDownscale() ? 5 : 3);
 
 		if (extraFs > 0) {
-			context.eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
+			await preloadHtmlImages(FS_CONG_IMAGE_URLS, { concurrency: 1 });
+			context.eventEmitter.broadcast({ type: 'freeSpinIntroShow', mode: 'extra' });
 			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
 			await context.eventEmitter.broadcastAsync({
 				type: 'freeSpinIntroUpdate',
 				totalFreeSpins: extraFs,
 				mode: 'extra',
 			});
-			context.eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
+			await context.eventEmitter.broadcastAsync({ type: 'freeSpinIntroHide' });
 		}
+		stateGame.drumShootActive = false;
+		await waitAnimationFrames(3);
 		oncomplete();
 	};
 
@@ -227,8 +234,8 @@
 	};
 
 	/**
-	 * Start this seat's open immediately — independent of other seats.
-	 * Several Pixi flips can run at once after rapid taps.
+	 * Start this seat's open after its bullet hits.
+	 * Phone: at most two Pixi flip spines at once (Stage E VRAM).
 	 */
 	const beginSeatFlip = (job: {
 		index: number;
@@ -238,36 +245,43 @@
 		y: number;
 	}) => {
 		const run = async () => {
+			const cap = isPhoneForAtlasDownscale()
+				? PHONE_MAX_PARALLEL_TIR_FLIPS
+				: Number.POSITIVE_INFINITY;
+			while (liveFlipCount >= cap && phase !== 'done') {
+				await wait(32);
+			}
 			if (phase === 'done') {
 				flipped = flipped.map((v, i) => (i === job.index ? true : v));
 				reservedSeats = new Set([...reservedSeats].filter((i) => i !== job.index));
 				return;
 			}
 
+			liveFlipCount += 1;
 			flipNonceSeq += 1;
 			const flipNonce = flipNonceSeq;
-			spinningSeats = new Set([...spinningSeats, job.index]);
-			stateGame.targetShotFlips = [
-				...stateGame.targetShotFlips,
-				{
-					nonce: flipNonce,
-					seatIndex: job.index,
-					anim: job.anim,
-					value: job.reward,
-					displayText: job.reward <= 0 ? '-' : `+${job.reward}`,
-					showFsLabel: job.reward > 0,
-					x: job.x,
-					y: job.y,
-					size: seatSizePx(job.index),
-				},
-			];
+			try {
+				spinningSeats = new Set([...spinningSeats, job.index]);
+				stateGame.targetShotFlips = [
+					...stateGame.targetShotFlips,
+					{
+						nonce: flipNonce,
+						seatIndex: job.index,
+						anim: job.anim,
+						value: job.reward,
+						displayText: job.reward <= 0 ? '-' : `+${job.reward}`,
+						showFsLabel: job.reward > 0,
+						x: job.x,
+						y: job.y,
+						size: seatSizePx(job.index),
+					},
+				];
 
-			await wait(TARGET_BOARD_PICK_FLIP_MS_BY_ANIM[job.anim] + 150);
-			if (phase === 'done') {
+				await wait(TARGET_BOARD_PICK_FLIP_MS_BY_ANIM[job.anim] + 150);
 				settleFlip(job.index, flipNonce);
-				return;
+			} finally {
+				liveFlipCount = Math.max(0, liveFlipCount - 1);
 			}
-			settleFlip(job.index, flipNonce);
 		};
 
 		const promise = run().catch(() => {});
@@ -418,6 +432,7 @@
 			startShotBulletPreload();
 			startTargetBoardPreload();
 			await ensureTirPixiInApp(context.stateApp);
+			if (isPhoneForAtlasDownscale()) await waitAnimationFrames(3);
 			rewardQueue = event.shots.map((s) => s.reward as 0 | 1 | 2 | 3);
 			extraFs = event.extraFs;
 			faceValues = Array.from({ length: TARGET_SHOOT_SEAT_COUNT }, () => 0);
@@ -435,6 +450,7 @@
 			draining = false;
 			drumCyclePromise = null;
 			activeFlipPromises.clear();
+			liveFlipCount = 0;
 			phase = 'prep';
 
 			stateGame.targetPickSeatMode = 'nine';

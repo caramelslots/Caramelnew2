@@ -28,8 +28,29 @@
 
 	onMount(() => {
 		startEarlyAssetPreload();
+		const blockZoom = (event: Event) => event.preventDefault();
+		const blockPinchMove = (event: TouchEvent) => {
+			if (event.touches.length > 1) event.preventDefault();
+		};
+		document.addEventListener('gesturestart', blockZoom, { passive: false });
+		document.addEventListener('gesturechange', blockZoom, { passive: false });
+		document.addEventListener('gestureend', blockZoom, { passive: false });
+		document.addEventListener('touchmove', blockPinchMove, { passive: false });
+		return () => {
+			document.removeEventListener('gesturestart', blockZoom);
+			document.removeEventListener('gesturechange', blockZoom);
+			document.removeEventListener('gestureend', blockZoom);
+			document.removeEventListener('touchmove', blockPinchMove);
+		};
 	});
 </script>
+
+<svelte:head>
+	<meta
+		name="viewport"
+		content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+	/>
+</svelte:head>
 
 <GlobalStyle>
 	<Authenticate>
@@ -68,3 +89,11 @@
 {/if}
 
 {@render props.children()}
+
+<style>
+	:global(html),
+	:global(body) {
+		touch-action: pan-x pan-y;
+		overscroll-behavior: none;
+	}
+</style>

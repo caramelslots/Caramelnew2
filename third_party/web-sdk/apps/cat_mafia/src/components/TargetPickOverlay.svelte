@@ -40,7 +40,8 @@
 		type TargetShotFlight,
 	} from '../game/shotBulletAssets';
 	import { stateGame } from '../game/stateGame.svelte';
-	import { ensureTirPixiInApp } from '../game/tirGpuMemory';
+	import { ensureTirPixiInApp, waitAnimationFrames } from '../game/tirGpuMemory';
+	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
 	import {
 		TARGET_BOARD_DEV_VALUES,
 		TARGET_BOARD_PICK_FLIP_MS_BY_ANIM,
@@ -276,6 +277,7 @@
 			startShotBulletPreload();
 			startTargetBoardPreload();
 			await ensureTirPixiInApp(context.stateApp);
+			if (isPhoneForAtlasDownscale()) await waitAnimationFrames(2);
 			targets = event.targets.length === 6 ? [...event.targets] : [...TARGET_BOARD_DEV_VALUES];
 			chosenIndex = event.chosenIndex;
 			awardedFs = event.awardedFs;

@@ -16,6 +16,7 @@ export const SYMBOL_TEXTURE_KEYS = [
 	'H1Img',
 	'H2Img',
 	'H3Img',
+	'H3SpinImg',
 	'H4Img',
 	'L1Img',
 	'L2Img',

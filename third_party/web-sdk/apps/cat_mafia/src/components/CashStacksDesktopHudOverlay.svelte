@@ -21,6 +21,8 @@
 	import { canAffordSpin, canIncreaseBet } from '../game/buyBonusBalance';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { prepareBuyBonusMenu } from '../game/buyBonusSharedPixi';
+	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
 	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { isSdkTurboSpin } from '../game/gameSpeed';
@@ -157,10 +159,28 @@
 		stateUi.menuOpen = !stateUi.menuOpen;
 	};
 
+	let buyBonusOpening = $state(false);
+
 	const onBuyBonusPress = () => {
-		if (buyDisabled) return;
+		if (buyDisabled || buyBonusOpening) return;
+		buyBonusOpening = true;
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
-		stateModal.modal = { name: 'buyBonus' };
+		void (async () => {
+			try {
+				if (
+					isPhoneForAtlasDownscale() &&
+					gameEntrance.buyBonusWarmReady &&
+					gameEntrance.postLiftAssetsReady
+				) {
+					stateModal.modal = { name: 'buyBonus' };
+					return;
+				}
+				await prepareBuyBonusMenu();
+				stateModal.modal = { name: 'buyBonus' };
+			} finally {
+				buyBonusOpening = false;
+			}
+		})();
 	};
 
 	const onDecreasePress = () => {

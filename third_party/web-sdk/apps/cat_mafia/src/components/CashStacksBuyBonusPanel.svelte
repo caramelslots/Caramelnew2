@@ -14,6 +14,8 @@
 	} from '../game/portraitHudLayout';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { prepareBuyBonusMenu } from '../game/buyBonusSharedPixi';
+	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
 	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
 	import { getContextLayout } from 'utils-layout';
 
@@ -36,10 +38,28 @@
 		return `left:${left}px;top:${top}px;transform:translate(-50%,0)`;
 	});
 
+	let opening = $state(false);
+
 	const onBuyBonusPress = () => {
-		if (buyDisabled) return;
+		if (buyDisabled || opening) return;
+		opening = true;
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
-		stateModal.modal = { name: 'buyBonus' };
+		void (async () => {
+			try {
+				if (
+					isPhoneForAtlasDownscale() &&
+					gameEntrance.buyBonusWarmReady &&
+					gameEntrance.postLiftAssetsReady
+				) {
+					stateModal.modal = { name: 'buyBonus' };
+					return;
+				}
+				await prepareBuyBonusMenu();
+				stateModal.modal = { name: 'buyBonus' };
+			} finally {
+				opening = false;
+			}
+		})();
 	};
 
 	const buyBonusBgUrl = HUD_ASSETS.buyBonusPanel;

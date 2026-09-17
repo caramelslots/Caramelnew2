@@ -9,6 +9,7 @@
 		GAME_MAX_RESOLUTION,
 		phonePortraitMaxDpr,
 	} from '../game/duelPhoneDpr';
+	import { isBuyBonusFlowOpen } from '../game/isAnyMenuOpen';
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
 
@@ -26,22 +27,39 @@
 		const app = pixiContext.stateApp.pixiApplication;
 		if (!app?.renderer) return;
 
-		// Track DPR + viewport so we re-apply after resize / zoom changes.
-		const dpr = devicePixelRatio.current ?? 1;
 		void innerWidth.current;
 		void innerHeight.current;
+		void devicePixelRatio.current;
+		void isPhonePortrait;
+		void duelVisualActive;
+		void isBuyBonusFlowOpen();
 
-		const maxDpr =
-			isPhonePortrait && duelVisualActive
-				? duelPhonePortraitMaxDpr()
-				: isPhonePortrait
-					? phonePortraitMaxDpr()
-					: GAME_MAX_RESOLUTION;
+		const apply = () => {
+			const dpr = devicePixelRatio.current ?? 1;
+			const zoom = window.visualViewport?.scale ?? 1;
+			// Pinch-zoom inflates devicePixelRatio on some WebKits — keep layout DPR only.
+			const layoutDpr = dpr / Math.max(1, zoom);
+			const maxDpr =
+				isPhonePortrait && isBuyBonusFlowOpen()
+					? 1
+					: isPhonePortrait && duelVisualActive
+						? duelPhonePortraitMaxDpr()
+						: isPhonePortrait
+							? phonePortraitMaxDpr()
+							: GAME_MAX_RESOLUTION;
+			const resolution = cappedRendererResolution(layoutDpr, maxDpr);
+			if (Math.abs(app.renderer.resolution - resolution) < 0.001) return;
+			app.renderer.resolution = resolution;
+			app.resize?.();
+		};
 
-		const resolution = cappedRendererResolution(dpr, maxDpr);
-		if (Math.abs(app.renderer.resolution - resolution) < 0.001) return;
-
-		app.renderer.resolution = resolution;
-		app.resize?.();
+		apply();
+		const vv = window.visualViewport;
+		vv?.addEventListener('resize', apply);
+		vv?.addEventListener('scroll', apply);
+		return () => {
+			vv?.removeEventListener('resize', apply);
+			vv?.removeEventListener('scroll', apply);
+		};
 	});
 </script>

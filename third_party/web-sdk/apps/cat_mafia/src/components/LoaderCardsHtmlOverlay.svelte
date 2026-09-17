@@ -141,6 +141,15 @@
 			destroyLoaderCardBonusPixi();
 			return;
 		}
+
+		// During Continue lift the overlay stays mounted — keep cards + bonus
+		// spine as-is. Do not destroy WebGL or flip contentReady off.
+		const lifting =
+			gameEntrance.loaderExitActive ||
+			gameEntrance.introFading ||
+			!gameEntrance.loadingCardsVisible;
+		if (lifting) return;
+
 		if (contentReady) return;
 		let cancelled = false;
 		void (async () => {
