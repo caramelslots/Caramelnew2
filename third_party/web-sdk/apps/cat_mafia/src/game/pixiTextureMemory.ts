@@ -61,8 +61,7 @@ export const estimateTextureSourceBytes = (source: TextureSource): number => {
 	const h = source.pixelHeight | 0;
 	if (w <= 0 || h <= 0) return 0;
 
-	const mipFactor =
-		source.mipLevelCount > 1 || source.autoGenerateMipmaps ? 4 / 3 : 1;
+	const mipFactor = source.mipLevelCount > 1 || source.autoGenerateMipmaps ? 4 / 3 : 1;
 	const samples = Math.max(1, source.sampleCount || 1);
 	return Math.ceil(w * h * RGBA_BYTES * mipFactor * samples);
 };
@@ -158,7 +157,8 @@ type HtmlSpineAssetManager = {
 	assets?: Record<string, unknown>;
 };
 
-const shortPathLabel = (path: string) => path.replace(/^.*\//, '').slice(0, 28) || path.slice(0, 28);
+const shortPathLabel = (path: string) =>
+	path.replace(/^.*\//, '').slice(0, 28) || path.slice(0, 28);
 
 /**
  * Estimate HTML SpinePlayer GPU: framebuffer (canvas) + atlas page textures.
@@ -202,8 +202,8 @@ export const estimateHtmlSpinePlayerMemory = (
 			if (!Array.isArray(atlas.pages)) continue;
 			for (const page of atlas.pages) {
 				const image = page.texture?.getImage?.() ?? null;
-				const w = (image?.width | 0) || (page.width | 0);
-				const h = (image?.height | 0) || (page.height | 0);
+				const w = image?.width | 0 || page.width | 0;
+				const h = image?.height | 0 || page.height | 0;
 				const label = `html:${shortPathLabel(page.name || path)}`;
 				push(label, w, h);
 			}
@@ -214,9 +214,7 @@ export const estimateHtmlSpinePlayerMemory = (
 	return { bytes, count, top: top.slice(0, 30) };
 };
 
-export const estimatePixiTextureMemory = (
-	app?: Application | null,
-): PixiTextureMemoryStats => {
+export const estimatePixiTextureMemory = (app?: Application | null): PixiTextureMemoryStats => {
 	const gpuSources = new Map<number, TextureSource>();
 	const cacheSources = new Map<number, TextureSource>();
 
@@ -283,7 +281,13 @@ export const releaseCanvasTextGpu = (app?: Application | null) => {
 	}
 };
 
-const CANVAS_TEXT_ATLAS_DIMS = new Set(['512x512', '1024x512', '1024x1024', '2048x512', '2048x1024']);
+const CANVAS_TEXT_ATLAS_DIMS = new Set([
+	'512x512',
+	'1024x512',
+	'1024x1024',
+	'2048x512',
+	'2048x1024',
+]);
 
 const sourceHasName = (source: TextureSource): boolean => {
 	if (source.label && !source.label.startsWith('tex#')) return true;

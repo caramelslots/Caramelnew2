@@ -1,9 +1,10 @@
 transition.webp
-size:2048,1024
+size:1024,512
 filter:Linear,Linear
+scale:0.5
 cloud_1
-bounds:2,35,900,489
+bounds:1,18,450,244
 cloud_2
-bounds:1527,12,512,512
+bounds:764,6,256,256
 cloud_3
-bounds:904,2,621,522
+bounds:452,1,310,261

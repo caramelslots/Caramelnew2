@@ -1,8 +1,11 @@
 <!--
 	Buy-bonus card art — HTML SpinePlayer (same path as DuelPickMascot).
 
-	Normal uses the Pixi sandwich: street bg → white mascot → frame/fg.
-	`normal_background` is keyed every frame by idle — clear/keep it in `update`.
+	Normal sandwich: street Spine → white mascot → frame Spine.
+	Street must share the frame camera (not a full-bleed still) or it spills
+	past the gold border.
+
+	Confirm reparents `portalHost` (imperative DOM), never the Svelte root.
 -->
 <script lang="ts">
 	import { onDestroy, untrack } from 'svelte';
@@ -32,16 +35,14 @@
 
 	const { variant, active = true }: Props = $props();
 
+	/** Svelte-owned anchor — never reparented. */
 	let rootEl = $state<HTMLDivElement | undefined>();
+	/** Imperative host confirm moves; contains street + SpinePlayer canvases. */
+	let portalHost = $state<HTMLDivElement | undefined>();
 	let bgHost = $state<HTMLDivElement | undefined>();
 	let fgHost = $state<HTMLDivElement | undefined>();
 	let mascotHost = $state<HTMLDivElement | undefined>();
 
-	/** Confirm reparents this root into its larger card slot — same WebGL, no second atlas. */
-	$effect(() => {
-		registerBuyBonusCardSpineHost(variant, rootEl);
-		return () => registerBuyBonusCardSpineHost(variant, null);
-	});
 	let bgPlayer = $state<SpinePlayer | undefined>(undefined);
 	let fgPlayer = $state<SpinePlayer | undefined>(undefined);
 	let mascotPlayer = $state<SpinePlayer | undefined>(undefined);
@@ -50,17 +51,15 @@
 	let mascotReady = $state(false);
 
 	const isNormal = variant === 'normal';
-	const ready = $derived(
-		isNormal ? bgReady && fgReady && mascotReady : fgReady,
-	);
+	const ready = $derived(isNormal ? bgReady && fgReady && mascotReady : fgReady);
 
 	/** Card atlases: normal is PMA; super/duel exports omit pma (straight alpha). */
 	const framePremultiplied = variant === 'normal';
 
 	const NORMAL_BG_SLOT = 'normal_background';
 
-	/** BG layer: only street. FG layer: everything except street. Animation restores slots — re-apply each frame. */
-	const applyNormalLayerSlots = (player: SpinePlayer, layer: 'bg' | 'fg') => {
+	/** BG: only street. FG: everything except street. Animation restores slots — re-apply each frame. */
+	const applyLayerSlots = (player: SpinePlayer, layer: 'bg' | 'fg') => {
 		const skeleton = player.skeleton;
 		if (!skeleton) return;
 		for (const slot of skeleton.slots) {
@@ -109,15 +108,15 @@
 				animations: { [anim]: vp },
 			},
 			update: (spinePlayer) => {
-				if (layer === 'bg') applyNormalLayerSlots(spinePlayer, 'bg');
-				else if (layer === 'fg' && isNormal) applyNormalLayerSlots(spinePlayer, 'fg');
+				if (layer === 'bg') applyLayerSlots(spinePlayer, 'bg');
+				else if (layer === 'fg' && isNormal) applyLayerSlots(spinePlayer, 'fg');
 			},
 			success: (spinePlayer) => {
 				if (disposed) return;
 				spinePlayer.skeleton!.scaleY = -1;
 				spinePlayer.animationState?.setAnimation(0, anim, true);
-				if (layer === 'bg') applyNormalLayerSlots(spinePlayer, 'bg');
-				else if (layer === 'fg' && isNormal) applyNormalLayerSlots(spinePlayer, 'fg');
+				if (layer === 'bg') applyLayerSlots(spinePlayer, 'bg');
+				else if (layer === 'fg' && isNormal) applyLayerSlots(spinePlayer, 'fg');
 				spinePlayer.animationState!.timeScale = untrack(() => (active ? 1 : 0));
 				trackBuyBonusCardSpinePlayer(created);
 				onReady(created);
@@ -134,12 +133,54 @@
 		};
 	};
 
+	/** Build imperative portal once under the Svelte root (safe to reparent). */
+	$effect(() => {
+		const root = rootEl;
+		if (!root) return;
+
+		const portal = document.createElement('div');
+		portal.className = 'spine-portal';
+		portal.setAttribute('aria-hidden', 'true');
+
+		const fg = document.createElement('div');
+		fg.className = 'spine-host fg-host';
+
+		let bg: HTMLDivElement | undefined;
+		let mascot: HTMLDivElement | undefined;
+		if (isNormal) {
+			bg = document.createElement('div');
+			bg.className = 'spine-host bg-host';
+			mascot = document.createElement('div');
+			mascot.className = 'spine-host mascot-host';
+			portal.append(bg, mascot, fg);
+		} else {
+			portal.append(fg);
+		}
+
+		root.replaceChildren(portal);
+		portalHost = portal;
+		bgHost = bg;
+		mascotHost = mascot;
+		fgHost = fg;
+		registerBuyBonusCardSpineHost(variant, portal);
+
+		return () => {
+			registerBuyBonusCardSpineHost(variant, null);
+			if (portal.parentElement === root) root.replaceChildren();
+			else if (portal.isConnected) portal.remove();
+			portalHost = undefined;
+			bgHost = undefined;
+			mascotHost = undefined;
+			fgHost = undefined;
+		};
+	});
+
 	$effect(() => {
 		setBuyBonusCardReady(variant, ready);
 		return () => setBuyBonusCardReady(variant, false);
 	});
 
-	/** Normal street background only. */
+	/** Normal street — same Spine camera as the frame (no full-bleed still spill). */
 	$effect(() => {
 		if (!isNormal) return;
 		const el = bgHost;
@@ -193,7 +234,6 @@
 		if (!el) return;
 		const urls = buyBonusNormalMascotUrls();
 		const anim = BUY_BONUS_NORMAL_MASCOT_ANIM;
-		// Same camera as the frame — Pixi nested mascot+frame under one transform.
 		const vp = padViewport(BUY_BONUS_SPINE_VIEWPORTS.normal);
 
 		let disposed = false;
@@ -263,13 +303,7 @@
 	});
 </script>
 
-<div class="buy-bonus-card-spine" class:ready bind:this={rootEl} aria-hidden="true">
-	{#if isNormal}
-		<div class="spine-host bg-host" bind:this={bgHost}></div>
-		<div class="spine-host mascot-host" bind:this={mascotHost}></div>
-	{/if}
-	<div class="spine-host fg-host" bind:this={fgHost}></div>
-</div>
+<div class="buy-bonus-card-spine" class:ready bind:this={rootEl} aria-hidden="true"></div>
 
 <style lang="scss">
 	.buy-bonus-card-spine {
@@ -287,26 +321,49 @@
 		opacity: 1;
 	}
 
-	.spine-host {
+	.buy-bonus-card-spine :global(.spine-portal) {
 		position: absolute;
 		inset: 0;
 		width: 100%;
 		height: 100%;
 	}
 
-	.bg-host {
+	.buy-bonus-card-spine :global(.spine-host),
+	:global(.spine-portal .spine-host) {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	.buy-bonus-card-spine :global(.bg-host),
+	:global(.spine-portal .bg-host) {
 		z-index: 0;
 	}
 
-	.mascot-host {
+	.buy-bonus-card-spine :global(.mascot-host),
+	:global(.spine-portal .mascot-host) {
 		z-index: 1;
 	}
 
-	.fg-host {
+	.buy-bonus-card-spine :global(.fg-host),
+	:global(.spine-portal .fg-host) {
 		z-index: 2;
 	}
 
-	.spine-host :global(.spine-player) {
+	.buy-bonus-card-spine :global(.street-still),
+	:global(.spine-portal .street-still) {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: center;
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.buy-bonus-card-spine :global(.spine-player),
+	:global(.spine-portal .spine-player) {
 		position: absolute;
 		inset: 0;
 		width: 100%;
@@ -314,7 +371,8 @@
 		background: transparent !important;
 	}
 
-	.spine-host :global(.spine-player-canvas) {
+	.buy-bonus-card-spine :global(.spine-player-canvas),
+	:global(.spine-portal .spine-player-canvas) {
 		display: block;
 		width: 100% !important;
 		height: 100% !important;

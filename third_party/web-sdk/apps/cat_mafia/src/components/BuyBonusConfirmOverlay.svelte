@@ -57,18 +57,45 @@
 	const isSuper = $derived(stateBonus.selectedBetModeKey === 'bonus_super');
 	const spineVariant = $derived<BuyBonusSpineVariant>(isSuper ? 'super' : 'normal');
 
-	/** Borrow the menu card's Spine root (same WebGL) — reparent into the larger slot (no 2nd atlas). */
+	/**
+	 * Borrow the menu card's imperative portal (same WebGL canvases).
+	 * Never mount a second BuyBonusCardSpine here — that doubles bonus_normal / WILD.
+	 */
 	$effect(() => {
 		if (!isOpen || !spineMount) return;
-		const host = getBuyBonusCardSpineHost(spineVariant);
-		if (!host) return;
-		const home = host.parentElement;
-		if (!home) return;
-		if (host.parentElement !== spineMount) {
-			spineMount.appendChild(host);
-		}
+		const mount = spineMount;
+		const variant = spineVariant;
+		let host: HTMLElement | undefined;
+		let home: HTMLElement | null = null;
+		let cancelled = false;
+		let raf = 0;
+
+		const attach = () => {
+			if (cancelled) return;
+			host = getBuyBonusCardSpineHost(variant);
+			if (!host) {
+				raf = requestAnimationFrame(attach);
+				return;
+			}
+			if (!home) {
+				const parent = host.parentElement;
+				// Need the menu root as home — skip if already under confirm.
+				if (!parent || parent === mount) {
+					raf = requestAnimationFrame(attach);
+					return;
+				}
+				home = parent;
+			}
+			if (host.parentElement !== mount) {
+				mount.appendChild(host);
+			}
+		};
+		attach();
+
 		return () => {
-			if (host.parentElement === spineMount && home.isConnected) {
+			cancelled = true;
+			cancelAnimationFrame(raf);
+			if (host && home?.isConnected && host.parentElement === mount) {
 				home.appendChild(host);
 			}
 		};
@@ -342,11 +369,58 @@
 	.spine-layer {
 		position: absolute;
 		inset: 0;
+		/* Isolate host z-index (bg/mascot/fg) so fg cannot paint over .card-content.
+		   Menu wraps spines in `.buy-bonus-card-spine { z-index: 0 }`; confirm only
+		   reparents the portal, so this layer must create that stacking context. */
+		z-index: 0;
+		isolation: isolate;
 		opacity: 0;
 		pointer-events: none;
+		overflow: hidden;
 
 		&.on {
 			opacity: 1;
+		}
+
+		:global(.spine-portal) {
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+		}
+
+		:global(.spine-host) {
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+		}
+
+		:global(.bg-host) {
+			z-index: 0;
+		}
+
+		:global(.mascot-host) {
+			z-index: 1;
+		}
+
+		:global(.fg-host) {
+			z-index: 2;
+		}
+
+		:global(.spine-player) {
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			background: transparent !important;
+		}
+
+		:global(.spine-player-canvas) {
+			display: block;
+			width: 100% !important;
+			height: 100% !important;
+			background: transparent !important;
 		}
 	}
 
@@ -361,7 +435,7 @@
 	.card-content {
 		position: absolute;
 		inset: 0;
-		z-index: 1;
+		z-index: 2;
 		pointer-events: none;
 	}
 

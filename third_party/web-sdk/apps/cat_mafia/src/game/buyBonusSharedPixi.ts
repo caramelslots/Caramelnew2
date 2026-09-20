@@ -23,6 +23,7 @@ import {
 	type BuyBonusSpineVariant,
 } from './buyBonusHtmlSpine';
 import { isBuyBonusCardSpineGpuLive, releaseAllBuyBonusCardSpinePlayers } from './buyBonusCardGpu';
+import { releaseBuyBonusNormalStreetStill } from './buyBonusNormalStreetStill';
 import { isHtmlWebglPaused } from './htmlWebglPause';
 import { isBuyBonusFlowOpen } from './isAnyMenuOpen';
 import { isPhoneForAtlasDownscale } from './phoneSpineAtlasDownscale';
@@ -205,7 +206,6 @@ const hideReferenceSlots = (spine: Spine, variant: BuyBonusSpineVariant) => {
 	}
 };
 
-
 const prepareBuyBonusSpineDraw = (spine: Spine, variant: BuyBonusSpineVariant) => {
 	// Only hide designer reference stills. Do NOT strip Additive/Screen slots —
 	// super card art is mostly additive; clearing them left empty cards.
@@ -213,9 +213,7 @@ const prepareBuyBonusSpineDraw = (spine: Spine, variant: BuyBonusSpineVariant) =
 };
 
 const isTirSceneLive = () =>
-	stateGame.targetPickOpen ||
-	stateGame.targetPickSlide > 0.001 ||
-	stateGame.drumShootActive;
+	stateGame.targetPickOpen || stateGame.targetPickSlide > 0.001 || stateGame.drumShootActive;
 
 /** True while buy-bonus may open again soon — keep GL + spines parked. */
 export const shouldKeepBuyBonusWarm = () =>
@@ -238,8 +236,7 @@ export const buyBonusWarmAfterFeatureMs = () => (isPhoneForAtlasDownscale() ? 90
 const visualZoom = () =>
 	typeof window === 'undefined' ? 1 : Math.max(1, window.visualViewport?.scale ?? 1);
 
-const buyBonusHostResolution = () =>
-	(isPhoneForAtlasDownscale() ? 2 : 3) / visualZoom();
+const buyBonusHostResolution = () => (isPhoneForAtlasDownscale() ? 2 : 3) / visualZoom();
 
 const ensureApp = (): Promise<PIXI.Application | undefined> => {
 	if (app) return Promise.resolve(app);
@@ -359,7 +356,10 @@ const applyNormalFrameLayer = (spine: Spine, layer: 'bg' | 'fg') => {
 	}
 };
 
-const createFrameSpine = (variant: BuyBonusSpineVariant, urls: ReturnType<typeof buyBonusSpineUrls>) => {
+const createFrameSpine = (
+	variant: BuyBonusSpineVariant,
+	urls: ReturnType<typeof buyBonusSpineUrls>,
+) => {
 	const spine = Spine.from({
 		skeleton: urls.skeleton,
 		atlas: urls.atlas,
@@ -804,6 +804,7 @@ export const evictBuyBonusForFeature = async () => {
 	suspendBuyBonusSpineBitmapDecode();
 	cancelScheduledDestroy();
 	releaseAllBuyBonusCardSpinePlayers();
+	releaseBuyBonusNormalStreetStill();
 	gameEntrance.buyBonusPanelReady = false;
 	gameEntrance.buyBonusWarmReady = false;
 	await destroySharedStageAsync();

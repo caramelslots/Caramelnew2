@@ -60,13 +60,6 @@ DESIGNER_STILL_BY_SYMBOL: dict[str, Path] = {
 	"L4": DESIGNER_ROOT / "L4" / "L4_static.webp",
 }
 
-INFO_SPRITE_SIZE = 256
-INFO_SPRITE_DIRS = (
-	APP_ROOT / "assets/sprites/symbols/info",
-	APP_ROOT / "static/assets/sprites/symbols/info",
-)
-
-
 def parse_atlas(atlas_path: Path) -> tuple[str, dict[str, dict]]:
 	"""Parse Spine 4.x compact atlas → (page image name, region fields)."""
 	lines = atlas_path.read_text(encoding="utf-8").splitlines()
@@ -211,17 +204,6 @@ def save_sprite(sprite: Image.Image, name: str) -> None:
 		print(f"  wrote {out_path.relative_to(APP_ROOT)} ({sprite.width}x{sprite.height})")
 
 
-def save_info_sprite(source: Image.Image, name: str) -> None:
-	"""Paytable cards use a larger 256² letterbox than spin sprites."""
-	out_name = SPRITE_NAME_BY_SYMBOL.get(name, name)
-	info = fit_square(source, size=INFO_SPRITE_SIZE)
-	for info_dir in INFO_SPRITE_DIRS:
-		info_dir.mkdir(parents=True, exist_ok=True)
-		out_path = info_dir / f"{out_name}.webp"
-		info.save(out_path, "WEBP", lossless=True, method=6)
-		print(f"  wrote {out_path.relative_to(APP_ROOT)} ({info.width}x{info.height})")
-
-
 def extract_from_atlas(symbol: str, region_name: str) -> Image.Image:
 	atlas_path = SPINE_ROOT / symbol / f"{symbol}.atlas"
 	page_image, regions = parse_atlas(atlas_path)
@@ -242,8 +224,6 @@ def extract() -> None:
 		raw = Image.open(still).convert("RGBA")
 		print(f"  {symbol}: designer still {still}")
 		save_sprite(fit_square(raw), symbol)
-		if symbol in ("H3", "L4"):
-			save_info_sprite(raw, symbol)
 		done.add(symbol)
 
 	for symbol, region in ATLAS_REGION_BY_SYMBOL.items():
@@ -263,7 +243,7 @@ def extract() -> None:
 		save_sprite(fit_square(cleared), symbol)
 		print(f"  {symbol}: cleared letterbox + fit_square")
 
-	# H3.webp is the open still (paytable / info). Do not overwrite it here.
+	# H3.webp is the open still. Do not overwrite it here.
 	spin_still = DESIGNER_ROOT / "render_lighter_new" / "lighter-stop_0.png"
 	if spin_still.is_file():
 		raw = clear_letterbox_black(Image.open(spin_still))

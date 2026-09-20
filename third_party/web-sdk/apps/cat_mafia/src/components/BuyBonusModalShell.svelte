@@ -43,10 +43,8 @@
 			})(),
 	);
 	const mountBuyPanel = $derived(showBuyPanel || showConfirmPanel || keepBuyWarm);
-	/** Confirm spines wait until menu cards are warm — avoids fighting GPU on first open. */
-	const mountConfirmPanel = $derived(
-		showConfirmPanel || (isBuyFlowOpen && gameEntrance.buyBonusPanelReady) || (keepBuyWarm && gameEntrance.buyBonusPanelReady),
-	);
+	/** Confirm has no own spines — only mounts when open and reparents the menu portal. */
+	const mountConfirmPanel = $derived(showConfirmPanel);
 
 	/** Blur shell only when buy panel is painted — avoid empty-card flash. */
 	const isVisible = $derived(
@@ -100,7 +98,6 @@
 		<div
 			class="panel-slot"
 			class:active={showConfirmPanel}
-			class:warm-park={mountConfirmPanel && !showConfirmPanel}
 			aria-hidden={!showConfirmPanel}
 			inert={!showConfirmPanel}
 		>

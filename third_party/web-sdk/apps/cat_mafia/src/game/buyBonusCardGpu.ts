@@ -2,8 +2,8 @@
  * Buy-bonus card HTML SpinePlayers (frame + normal mascot).
  * Keep WebGL warm across menu open/close; drop only on feature eviction.
  *
- * Ready flags are ref-counted — confirm mounts its own card spines without
- * clearing the menu's warm-ready state when you navigate back.
+ * Confirm reparents the menu portal (no second SpinePlayers). Ready flags
+ * stay ref-counted so overlay remounts during warm park do not flicker.
  */
 import type { SpinePlayer } from '@esotericsoftware/spine-player';
 

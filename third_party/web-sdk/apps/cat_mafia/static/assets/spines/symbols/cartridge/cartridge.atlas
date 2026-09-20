@@ -1,17 +1,17 @@
 cartridge.webp
-size:2048,2048
+size:1024,1024
 filter:Linear,Linear
-scale:0.5
+scale:0.25
 Layer 1
-bounds:2,656,741,743
-offsets:66,68,873,877
+bounds:1,328,370,372
+offsets:33,34,436,438
 cartridge
-bounds:2,39,610,615
+bounds:1,20,305,308
 cartridge's Outer Glow
-bounds:745,675,724,717
-offsets:3,1,727,719
+bounds:372,338,362,358
+offsets:2,0,364,360
 rotate:90
 cartridge_1
-bounds:614,318,304,336
+bounds:307,159,152,168
 shadow
-bounds:920,2,688,671
+bounds:460,1,344,336
