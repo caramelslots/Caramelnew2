@@ -1,5 +1,6 @@
 <!--
-	DEV overlay: estimated Pixi texture / atlas footprint (not system RAM).
+	Overlay: estimated Pixi texture / atlas footprint (not system RAM).
+	Visible in prod builds too (Stake debug) — remove when done.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
@@ -29,7 +30,7 @@
 	});
 </script>
 
-{#if import.meta.env.DEV && stats}
+{#if stats}
 	<div class="pixi-mem" data-test="pixi-texture-memory">
 		<div class="pixi-mem__total">Pixi ~{formatMb(stats.totalBytes)}</div>
 		<div class="pixi-mem__row">
