@@ -77,7 +77,7 @@
 	const forceDogAnim = $derived(isDuelDog ? null : devPreview.mascotDogAnimation);
 	const previewDogOnPrimary = $derived(!isDuelDog && forceDogAnim !== null);
 	const useDogSpine = $derived(isDuelDog || previewDogOnPrimary);
-	/** Gray = basegame; white = freegame / duel — key owned by EnableMascotCatSkinMemory. */
+	/** Gray = basegame; white = freegame / duel — key from EnableMascotCatSkinMemory. */
 	const catSpineKey = $derived(context.stateGame.mascotCatSpineKey);
 	const forceAnim = $derived(forceCatAnim ?? forceDogAnim);
 	const mascotAnimToken = $derived(context.stateGame.mascotAnimToken);

@@ -11,6 +11,7 @@ import {
 	DESK_PARCHMENT_PADDING,
 	DESK_VISUAL_OFFSET_Y,
 } from './constants';
+import { Assets } from 'pixi.js';
 
 const SPRITE_BASE = `${import.meta.env.BASE_URL}assets/sprites/targetBoard`;
 
@@ -294,6 +295,11 @@ export const TARGET_BOARD_SPRITE_URLS = [
 	TARGET_BOARD_SPRITES.back,
 	TARGET_BOARD_SPRITES.holder,
 ] as const;
+
+/** Warm Pixi Assets cache so TargetPickPixiLayer can bind textures before the slide. */
+export const ensureTargetBoardSpritesInPixi = async () => {
+	await Assets.load([...TARGET_BOARD_SPRITE_URLS]);
+};
 
 let targetBoardPreloadStarted = false;
 

@@ -1212,8 +1212,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateUi.freeSpinCounterCurrent = 0;
 		stateUi.freeSpinCounterTotal = bookEvent.totalFs;
 
-		// Steam covers the gallery, then tir GPU drops, THEN night/mascot/drum.
-		// Theme-switch on the 193 ms timer overlapped tir 4K + white cat + drum.
+		// Steam covers the gallery, snap tir UI off, THEN night/mascot/drum.
 		const transitionPromise = eventEmitter.broadcastAsync({
 			type: 'transition',
 			gameType: 'freegame',

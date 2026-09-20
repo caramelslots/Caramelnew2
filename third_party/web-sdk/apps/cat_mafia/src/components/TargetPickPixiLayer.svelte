@@ -2,6 +2,7 @@
 	Cabinet + stands/discs ABOVE the slot spine, BELOW the mascot (Pixi z 6).
 	Hard clip keeps the plate inside the gold frame. HTML seats are hit-only.
 	Seat count follows targetPickSeatMode (6 entry / 9 Stage E).
+	Textures stay warm while closed so slide-in does not hitch on re-bind.
 -->
 <script lang="ts">
 	import { BaseSprite, Container, Graphics } from 'pixi-svelte';
@@ -41,6 +42,8 @@
 	let wood = $state<PIXI.Texture>(PIXI.Texture.EMPTY);
 	let holder = $state<PIXI.Texture>(PIXI.Texture.EMPTY);
 	let front = $state<PIXI.Texture>(PIXI.Texture.EMPTY);
+	/** Last bg URL applied — skip rebind when reopening the same cabinet. */
+	let boundBgUrl = $state('');
 
 	const offsetY = $derived(clip.y + (stateGame.targetPickSlide - 1) * clip.height);
 	const ready = $derived(
@@ -48,6 +51,10 @@
 			holder !== PIXI.Texture.EMPTY &&
 			front !== PIXI.Texture.EMPTY,
 	);
+
+	$effect(() => {
+		stateGame.targetPickCabinetReady = open && ready;
+	});
 
 	const seats = $derived.by(() => {
 		const size = clip.width * seatWidthFrac;
@@ -73,8 +80,6 @@
 				discX: p.x - size / 2,
 				discY: p.y - size / 2 - size * TARGET_PICK_DISC_LIFT_FRAC,
 				size,
-				// Hide idle front while this seat flips or already shows the back face —
-				// otherwise the Pixi disc sits under the flip / HTML back (double target).
 				showDisc: !flipped && !spinning,
 			};
 		});
@@ -86,45 +91,74 @@
 		g.fill(0xffffff);
 	});
 
+	const resolveTex = (loaded: unknown) =>
+		loaded instanceof PIXI.Texture ? loaded : PIXI.Texture.from(loaded as never);
+
+	const texFromCache = (url: string) => {
+		try {
+			if (!PIXI.Assets.cache.has(url)) return null;
+			return resolveTex(PIXI.Assets.get(url));
+		} catch {
+			return null;
+		}
+	};
+
 	const loadTex = (url: string) =>
-		PIXI.Assets.load(url).then((loaded) =>
-			loaded instanceof PIXI.Texture ? loaded : PIXI.Texture.from(loaded),
+		PIXI.Assets.load(url).then((loaded) => resolveTex(loaded));
+
+	const applyTextures = (
+		bg: PIXI.Texture,
+		h: PIXI.Texture,
+		f: PIXI.Texture,
+		native: { width: number; height: number },
+		content: { left: number; top: number; width: number; height: number },
+		bgUrl: string,
+	) => {
+		if (wood !== PIXI.Texture.EMPTY) {
+			try {
+				wood.destroy(false);
+			} catch {
+				/* previous frame */
+			}
+		}
+		const frame = new PIXI.Rectangle(
+			Math.round(content.left * native.width),
+			Math.round(content.top * native.height),
+			Math.round(content.width * native.width),
+			Math.round(content.height * native.height),
 		);
+		wood = new PIXI.Texture({ source: bg.source, frame });
+		holder = h;
+		front = f;
+		boundBgUrl = bgUrl;
+	};
 
 	$effect(() => {
-		if (!open) {
-			if (wood !== PIXI.Texture.EMPTY) {
-				try {
-					wood.destroy(false);
-				} catch {
-					/* GPU already released */
-				}
-			}
-			wood = PIXI.Texture.EMPTY;
-			holder = PIXI.Texture.EMPTY;
-			front = PIXI.Texture.EMPTY;
-			return;
-		}
+		// Keep GPU textures while closed — remounting on every open was the slide hitch.
 		const bgUrl = boardBgUrl;
 		const native = boardNative;
 		const content = boardContent;
+		const needBind = boundBgUrl !== bgUrl || wood === PIXI.Texture.EMPTY;
+		if (!needBind) return;
+
 		let cancelled = false;
-		wood = PIXI.Texture.EMPTY;
+		const cachedBg = texFromCache(bgUrl);
+		const cachedH = texFromCache(TARGET_BOARD_SPRITES.holder);
+		const cachedF = texFromCache(TARGET_BOARD_SPRITES.front);
+		if (cachedBg && cachedH && cachedF) {
+			applyTextures(cachedBg, cachedH, cachedF, native, content, bgUrl);
+			return () => {
+				cancelled = true;
+			};
+		}
+
 		void Promise.all([
 			loadTex(bgUrl),
 			loadTex(TARGET_BOARD_SPRITES.holder),
 			loadTex(TARGET_BOARD_SPRITES.front),
 		]).then(([bg, h, f]) => {
 			if (cancelled) return;
-			const frame = new PIXI.Rectangle(
-				Math.round(content.left * native.width),
-				Math.round(content.top * native.height),
-				Math.round(content.width * native.width),
-				Math.round(content.height * native.height),
-			);
-			wood = new PIXI.Texture({ source: bg.source, frame });
-			holder = h;
-			front = f;
+			applyTextures(bg, h, f, native, content, bgUrl);
 		});
 		return () => {
 			cancelled = true;

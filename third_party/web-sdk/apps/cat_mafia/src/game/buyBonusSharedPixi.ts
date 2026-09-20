@@ -293,11 +293,7 @@ const loadSpine = (variant: BuyBonusSpineVariant) => {
 export const whenBuyBonusSpinesReady = async (
 	variants: readonly BuyBonusSpineVariant[] = MENU_VARIANTS,
 ) => {
-	if (isPhoneForAtlasDownscale()) {
-		for (const variant of variants) await loadSpine(variant);
-	} else {
-		await Promise.all(variants.map((variant) => loadSpine(variant)));
-	}
+	await Promise.all(variants.map((variant) => loadSpine(variant)));
 };
 
 export const areBuyBonusSpinesReady = (variants: readonly BuyBonusSpineVariant[] = MENU_VARIANTS) =>
@@ -358,24 +354,10 @@ export const ensureBuyBonusMenuOpen = async () => {
 	markBuyBonusWarmSucceeded();
 };
 
-const waitMs = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
-
-const waitForPostLiftAssetsReady = async () => {
-	if (!isPhoneForAtlasDownscale() || gameEntrance.postLiftAssetsReady) return;
-	const start = performance.now();
-	while (!gameEntrance.postLiftAssetsReady && performance.now() - start < 20000) {
-		await waitMs(50);
-	}
-};
-
 export const prepareBuyBonusMenu = async () => {
-	await waitForPostLiftAssetsReady();
-	resumeBuyBonusSpineBitmapDecode();
-	if (!areBuyBonusSpinesReady()) {
-		await whenBuyBonusSpinesReady();
-	}
+	// Spines are warmed after lift; this is usually a no-op by the first tap.
+	await ensureBuyBonusWarm();
 	flushBuyBonusSharedStage();
-	markBuyBonusWarmSucceeded();
 };
 
 const observeLayer = (layer: HTMLElement) => {

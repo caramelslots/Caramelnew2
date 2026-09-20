@@ -56,6 +56,7 @@
 		TARGET_BOARD_PICK_FLIP_MS_BY_ANIM,
 		TARGET_PICK_SLIDE_MS,
 		TARGET_SHOOT_SEAT_COUNT,
+		ensureTargetBoardSpritesInPixi,
 		pickTargetFlipAnim,
 		startTargetBoardPreload,
 		targetPickInnerClip,
@@ -192,7 +193,7 @@
 		stateGame.targetPickSeatMode = 'six';
 		show = false;
 		// Keep HTML drum until extra intro is gone — remounting Pixi drum
-		// under the 2K plaque is the Extra Continue Jetsam.
+		// under the 2K plaque still spikes phone memory.
 		await dismissTirAndUnloadGpu({ uiAlreadyDismissed: true });
 		await waitAnimationFrames(isPhoneForAtlasDownscale() ? 5 : 3);
 
@@ -431,8 +432,8 @@
 		targetShootRound: async (event) => {
 			startShotBulletPreload();
 			startTargetBoardPreload();
-			await ensureTirPixiInApp(context.stateApp);
-			if (isPhoneForAtlasDownscale()) await waitAnimationFrames(3);
+			void ensureTirPixiInApp(context.stateApp);
+			void ensureTargetBoardSpritesInPixi();
 			rewardQueue = event.shots.map((s) => s.reward as 0 | 1 | 2 | 3);
 			extraFs = event.extraFs;
 			faceValues = Array.from({ length: TARGET_SHOOT_SEAT_COUNT }, () => 0);

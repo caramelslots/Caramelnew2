@@ -198,7 +198,7 @@
 		});
 	});
 
-	/** Fade in after cloud clears (FS entry) or after tir GPU settles (extra). */
+	/** Fade in after cloud clears (FS entry) or after tir dismiss settles (extra). */
 	let overlayRevealed = $state(false);
 	let revealRaf = 0;
 	let extraRevealTimer: ReturnType<typeof setTimeout> | undefined;

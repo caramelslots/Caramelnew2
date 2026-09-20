@@ -18,13 +18,7 @@
 	import { startBuyBonusSpineBitmapDecode } from '../game/buyBonusHtmlSpine';
 	import { ensureBuyBonusWarm } from '../game/buyBonusSharedPixi';
 	import { startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
-	import {
-		omitParkedTirAssets,
-		parkTirGpuForDeferredLoad,
-		shouldSkipDeferredTirMerge,
-		TIR_SPINE_KEYS,
-		unloadTirPixiGpuAsync,
-	} from '../game/tirGpuMemory';
+	import { ensureTargetBoardSpritesInPixi } from '../game/targetBoardAssets';
 	import { stateUrlDerived } from 'state-shared';
 
 	type Props = { children: Snippet };
@@ -41,11 +35,10 @@
 	const PIXI_PROGRESS_CAP = 86;
 	const ENTRY_PROGRESS_CAP = 96;
 	/**
-	 * After lift: wait for loader GL to drop, then batch 4.
-	 * Phone does not warm buy-bonus here — that second WebGL on Continue Jetsams.
+	 * After lift: brief settle, then batch 4.
+	 * Buy-bonus warm runs on phone too so the menu opens without a cold hitch.
 	 */
-	const POST_LIFT_BATCH4_MS_PHONE = 1200;
-	const POST_LIFT_BATCH4_MS_DESKTOP = 50;
+	const POST_LIFT_BATCH4_MS = 50;
 
 	const bumpProgress = () => {
 		loadedCount += 1;
@@ -130,29 +123,23 @@
 		}
 	});
 
-	// After lift settles: batch 4. Phone skips tir + buy-bonus warm (load those on demand).
+	// After lift settles: batch 4 + buy-bonus warm (phone and desktop).
 	$effect(() => {
 		if (!context.stateApp.loaded || !gameEntrance.liftComplete || batch4Started) return;
 		batch4Started = true;
 		const [, , , batch4] = LOADER_ASSET_BATCHES;
 		// One-shot: do not abort on effect re-run — Continue peak must stay clear.
 		void (async () => {
-			const phone = isPhoneForAtlasDownscale();
-			if (phone) parkTirGpuForDeferredLoad();
-			await waitForTimeout(phone ? POST_LIFT_BATCH4_MS_PHONE : POST_LIFT_BATCH4_MS_DESKTOP);
-			const tirKeys = new Set<string>(TIR_SPINE_KEYS);
-			const batch4Keys = phone ? batch4.filter((key) => !tirKeys.has(key)) : batch4;
-			const batch4Assets = await loadAssetBatch(batch4Keys);
-			if (shouldSkipDeferredTirMerge()) {
-				await unloadTirPixiGpuAsync(batch4Assets as Record<string, unknown>);
-				mergeLoadedAssets(omitParkedTirAssets(batch4Assets));
-			} else {
-				mergeLoadedAssets(batch4Assets);
-			}
+			await waitForTimeout(POST_LIFT_BATCH4_MS);
+			const batch4Promise = loadAssetBatch(batch4);
+			// Warm buy-bonus WebGL in parallel with batch 4 — ready before first tap.
+			const warmPromise = ensureBuyBonusWarm();
+			const batch4Assets = await batch4Promise;
+			mergeLoadedAssets(batch4Assets);
 			downscalePhoneSpineAtlases();
 			gameEntrance.postLiftAssetsReady = true;
-			if (phone) return;
-			await ensureBuyBonusWarm();
+			void ensureTargetBoardSpritesInPixi();
+			await warmPromise;
 			if (gameEntrance.buyBonusWarmReady) gameEntrance.buyBonusEverWarmed = true;
 		})();
 	});

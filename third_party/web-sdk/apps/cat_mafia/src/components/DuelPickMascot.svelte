@@ -1,6 +1,8 @@
 <!--
 	Lightweight Spine mascot for the Duel side-pick screen (idle loop only).
 	Kept mounted after warm-up so choose-side opens without a Spine load hitch.
+	SSAA: draw into a larger canvas, then CSS-scale down (same idea as MascotPlaceholder)
+	so the card zoom (scale 1.28–1.72) does not soft-blur the figure.
 -->
 <script lang="ts">
 	import { onDestroy, untrack } from 'svelte';
@@ -12,6 +14,7 @@
 		MASCOT_DOG_SPINE_VIEWPORT,
 		MASCOT_SPINE_ANIMATIONS,
 		MASCOT_SPINE_VIEWPORT,
+		MASCOT_SSAA,
 		resolveMascotSpineUrl,
 	} from '../game/mascotHtmlSpine';
 
@@ -30,6 +33,8 @@
 	const species = $derived(props.species ?? 'cat');
 	const playing = $derived(props.playing !== false);
 	const fill = $derived(props.fill === true);
+	/** Always supersample on pick cards — CSS zoom would otherwise soft-blur. */
+	const ssaa = MASCOT_SSAA;
 
 	let container = $state<HTMLDivElement | undefined>();
 	let player = $state<SpinePlayer | undefined>(undefined);
@@ -62,6 +67,7 @@
 			showLoading: false,
 			backgroundColor: '#00000000',
 			premultipliedAlpha: false,
+			mipmaps: true,
 			alpha: true,
 			defaultMix: 0.15,
 			viewport: {
@@ -109,8 +115,23 @@
 	});
 </script>
 
-<div class="pick-spine" class:mirror={props.mirror} class:ready class:fill aria-hidden="true">
-	<div class="pick-spine-host" bind:this={container}></div>
+<div
+	class="pick-spine"
+	class:mirror={props.mirror}
+	class:ready
+	class:fill
+	style="--pick-ssaa: {ssaa}"
+	aria-hidden="true"
+>
+	<!--
+		SSAA: Spine draws into a larger box, then we CSS-scale down so the
+		card zoom (1.28–1.72) still has enough pixels.
+	-->
+	<div
+		class="pick-spine-host"
+		bind:this={container}
+		style="width:{100 * ssaa}%;height:{100 * ssaa}%;transform:scale({1 / ssaa})"
+	></div>
 </div>
 
 <style lang="scss">
@@ -121,6 +142,7 @@
 		aspect-ratio: 520 / 440;
 		pointer-events: none;
 		opacity: 0;
+		overflow: hidden;
 	}
 
 	.pick-spine.ready {
@@ -141,7 +163,10 @@
 
 	.pick-spine-host {
 		position: absolute;
-		inset: 0;
+		left: 0;
+		top: 0;
+		transform-origin: top left;
+		overflow: visible;
 	}
 
 	.pick-spine-host :global(.spine-player) {

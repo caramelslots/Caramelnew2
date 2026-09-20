@@ -7,7 +7,7 @@
 				gameType?: GameType;
 				/**
 				 * FS entry: steam starts, but night / white mascot / drum wait until
-				 * the caller unloads tir GPU (`transitionApplyTheme`).
+				 * the caller dismisses the tir gallery (`transitionApplyTheme`).
 				 */
 				deferThemeSwitch?: boolean;
 		  }
@@ -72,7 +72,7 @@
 			deferThemeSwitch = Boolean(event.deferThemeSwitch);
 			stateGame.transitionActive = true;
 			pendingGameType = event.gameType;
-			// Defer destination skin preload — white mascot + tir 4K is the FS-entry Jetsam.
+			// Defer destination skin preload until theme apply.
 			if (!deferThemeSwitch) {
 				stateGame.transitionGameType = event.gameType;
 			}

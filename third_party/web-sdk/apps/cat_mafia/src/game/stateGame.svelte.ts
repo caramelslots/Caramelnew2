@@ -259,7 +259,7 @@ export const stateGame = $state({
 	transitionGameType: undefined as GameType | undefined,
 	/**
 	 * Active Pixi cat spine key (gray base / white FS|duel).
-	 * Phone unloads the other atlas — see EnableMascotCatSkinMemory.
+	 * Both atlases stay resident — see EnableMascotCatSkinMemory.
 	 */
 	mascotCatSpineKey: 'mascotCatGray' as 'mascotCat' | 'mascotCatGray',
 	// Big-win overlay only — raises Pixi canvas above HTML HUD so celebration
@@ -304,6 +304,8 @@ export const stateGame = $state({
 	targetPickSlide: 0,
 	/** Target-pick cabinet is mounted (Pixi plate under the desk frame). */
 	targetPickOpen: false,
+	/** Pixi wood/holder/front bound — overlays wait on this before slide-in. */
+	targetPickCabinetReady: false,
 	/** `six` = entry pick (6 seats); `nine` = Stage E extra-FS shoot. */
 	targetPickSeatMode: 'six' as 'six' | 'nine',
 	targetPickFlipped: Array.from({ length: 6 }, () => false),

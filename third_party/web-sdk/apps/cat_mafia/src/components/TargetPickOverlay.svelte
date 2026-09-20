@@ -40,12 +40,12 @@
 		type TargetShotFlight,
 	} from '../game/shotBulletAssets';
 	import { stateGame } from '../game/stateGame.svelte';
-	import { ensureTirPixiInApp, waitAnimationFrames } from '../game/tirGpuMemory';
-	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
+	import { ensureTirPixiInApp } from '../game/tirGpuMemory';
 	import {
 		TARGET_BOARD_DEV_VALUES,
 		TARGET_BOARD_PICK_FLIP_MS_BY_ANIM,
 		TARGET_PICK_SLIDE_MS,
+		ensureTargetBoardSpritesInPixi,
 		pickTargetFlipAnim,
 		startTargetBoardPreload,
 		targetPickInnerClip,
@@ -276,8 +276,9 @@
 		freeSpinTargetPick: async (event) => {
 			startShotBulletPreload();
 			startTargetBoardPreload();
-			await ensureTirPixiInApp(context.stateApp);
-			if (isPhoneForAtlasDownscale()) await waitAnimationFrames(2);
+			// Warm in background — do not block the slide (decode hitch felt like lag).
+			void ensureTirPixiInApp(context.stateApp);
+			void ensureTargetBoardSpritesInPixi();
 			targets = event.targets.length === 6 ? [...event.targets] : [...TARGET_BOARD_DEV_VALUES];
 			chosenIndex = event.chosenIndex;
 			awardedFs = event.awardedFs;
