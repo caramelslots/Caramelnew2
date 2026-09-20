@@ -74,7 +74,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--backup",
         action="store_true",
-        help="Copy each .atlas/.webp to *.bak before overwriting",
+        help="Copy each atlas/image to *.bak beside the original before overwriting",
     )
     p.add_argument("--dry-run", action="store_true", help="Print plan only (default if --write omitted)")
     p.add_argument("--write", action="store_true", help="Actually rewrite files")
