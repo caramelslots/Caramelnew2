@@ -1,6 +1,6 @@
 /**
- * Pixi keys that must not sit in base-game VRAM.
- * Loaded on first FS / duel / tir, unloaded when that feature ends.
+ * Feature Pixi keys: deferred from base batch, loaded on first need.
+ * Dog / popup / outline unload when the feature ends; cartridge stays resident.
  */
 
 import { Assets } from 'pixi.js';

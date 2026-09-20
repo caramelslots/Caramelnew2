@@ -1,6 +1,6 @@
 <!--
-	Base game must not hold FS cartridge, duel dog, or tir atlases.
-	Load on feature entry; drop when back on settled base.
+	Duel dog / tir / FS popup: load on feature entry, drop on settled base.
+	Cartridge (BT/BTImg): load on first FS, then stay resident — never unload.
 -->
 <script lang="ts">
 	import { getContextApp } from 'pixi-svelte';
@@ -50,12 +50,8 @@
 				if (patch) {
 					app.stateApp.loadedAssets = { ...app.stateApp.loadedAssets, ...patch };
 				}
-			} else {
-				const loaded = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
-				if (FS_CARTRIDGE_KEYS.some((key) => key in loaded)) {
-					app.stateApp.loadedAssets = unloadFeatureKeys(FS_CARTRIDGE_KEYS, loaded);
-				}
 			}
+			// BT/BTImg stay in RAM after first FS — do not unload on base return.
 
 			if (wantDog) {
 				const patch = await ensureFeatureKeysLoaded(

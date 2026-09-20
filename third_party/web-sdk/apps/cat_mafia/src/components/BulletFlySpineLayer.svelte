@@ -50,6 +50,7 @@
 	const showOnLayout = $derived(
 		layoutType === 'desktop' ||
 			layoutType === 'portrait' ||
+			layoutType === 'landscape' ||
 			layoutType === 'tablet' ||
 			isPopout,
 	);
@@ -193,12 +194,14 @@
 		slotContainer.visible = false;
 		const sprites = new Map<number, PIXI.Sprite>();
 
-		const texture = appContext.stateApp.loadedAssets?.['BTImg'] as PIXI.Texture | undefined;
+		/** Resolve live — BTImg loads on FS entry, often after this mount. */
+		const resolveTexture = () =>
+			appContext.stateApp.loadedAssets?.['BTImg'] as PIXI.Texture | undefined;
 
-		const ensureSprite = (key: number) => {
+		const ensureSprite = (key: number, texture: PIXI.Texture) => {
 			let sprite = sprites.get(key);
 			if (sprite) return sprite;
-			sprite = new PIXI.Sprite(texture ?? PIXI.Texture.EMPTY);
+			sprite = new PIXI.Sprite(texture);
 			sprite.anchor.set(TIP_ANCHOR_X, TIP_ANCHOR_Y);
 			slotContainer.addChild(sprite);
 			sprites.set(key, sprite);
@@ -228,6 +231,7 @@
 			const onLayout =
 				layout === 'desktop' ||
 				layout === 'portrait' ||
+				layout === 'landscape' ||
 				layout === 'tablet' ||
 				isPopoutViewport(canvas);
 			if (!onLayout) {
@@ -235,6 +239,7 @@
 				return;
 			}
 
+			const texture = resolveTexture();
 			const coordSpace = spine.parent?.parent?.parent;
 			if (!coordSpace || !texture || texture === PIXI.Texture.EMPTY) {
 				slotContainer.visible = false;
@@ -254,7 +259,7 @@
 
 			for (const pose of active) {
 				live.add(pose.key);
-				const sprite = ensureSprite(pose.key);
+				const sprite = ensureSprite(pose.key, texture);
 				if (sprite.texture !== texture) sprite.texture = texture;
 				stagePoint.set(pose.x, pose.y);
 				const local = spine.toLocal(stagePoint, coordSpace);
