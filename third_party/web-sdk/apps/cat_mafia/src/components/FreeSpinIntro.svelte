@@ -45,6 +45,7 @@
 	const raysUrl = assets.fsCongRays.src;
 	const bgUrl = assets.fsCongBg.src;
 	const frameUrl = assets.fsCongFrame.src;
+	const textPawUrl = assets.fsCongTextPaw.src;
 	const boardUrl = assets.fsCongBoard.src;
 
 	/** Designer canvas 2000×1500 — all FS_* layers share this artboard. */
@@ -53,8 +54,8 @@
 	const BOARD_SCALE = 1.9;
 	/** Keep phone modal a bit larger than desktop/tablet. */
 	const BOARD_SCALE_PORTRAIT = 2.05;
-	// Layout vs 2000×1500 art: congrats under top arch, YOU WON on frame needles
-	// (y≈553), number in plaque centre, FREE SPINS on the gem banner (y≈943).
+	// Layout vs 2000×1500 art: congrats under top arch, YOU WON between side
+	// text paws (y≈553), number in plaque centre, FREE SPINS on gem banner.
 	const CONGRATULATIONS_Y_RATIO = 0.282;
 	const YOU_WON_Y_RATIO = 0.348;
 	const NUMBER_Y_RATIO = 0.462;
@@ -322,6 +323,21 @@
 			{/if}
 			<img class="layer layer-frame" src={frameUrl} alt="" draggable="false" />
 			<img class="layer layer-board" src={boardUrl} alt="" draggable="false" />
+			<!-- Text paws only on FS Intro / Extra spins (this overlay); Autoplay uses clean frame alone. -->
+			<img
+				class="text-paw text-paw--left"
+				src={textPawUrl}
+				alt=""
+				draggable="false"
+				aria-hidden="true"
+			/>
+			<img
+				class="text-paw text-paw--right"
+				src={textPawUrl}
+				alt=""
+				draggable="false"
+				aria-hidden="true"
+			/>
 
 			<div class="copy">
 				<div class="congratulations" style={congratulationsStyle} aria-label={congratulationsText}>
@@ -487,10 +503,32 @@
 		z-index: 3;
 	}
 
+	.text-paw {
+		/* Designer 121×26 on 2000×1500 artboard (was baked into old fs_frame). */
+		position: absolute;
+		top: 36%; /* 540/1500 */
+		width: 6.05%; /* 121/2000 */
+		height: 1.733%; /* 26/1500 */
+		display: block;
+		object-fit: fill;
+		user-select: none;
+		pointer-events: none;
+		z-index: 4;
+	}
+
+	.text-paw--left {
+		left: 35.9%; /* 718/2000 */
+	}
+
+	.text-paw--right {
+		left: 58%; /* 1160/2000 */
+		transform: scaleX(-1);
+	}
+
 	.copy {
 		position: absolute;
 		inset: 0;
-		z-index: 4;
+		z-index: 5;
 	}
 
 	.congratulations {

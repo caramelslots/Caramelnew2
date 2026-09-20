@@ -71,34 +71,27 @@
 			await tick();
 			if (cancelled) return;
 			try {
-				// Spines first (usually already warm); only then show the board.
-				if (areBuyBonusSpinesReady()) {
-					flushBuyBonusSharedStage();
-				} else {
-					await ensureBuyBonusMenuOpen();
+				await ensureBuyBonusMenuOpen();
+				if (cancelled) return;
+				if (!areBuyBonusSpinesReady()) {
+					await whenBuyBonusSpinesReady();
 				}
 				if (cancelled) return;
+				// Reveal even if a spine is still catching up — never auto-close the menu.
+				panelReady = true;
+				revealedOnce = true;
 				await tick();
+				if (cancelled) return;
 				flushBuyBonusSharedStage();
 				await new Promise<void>((r) => requestAnimationFrame(() => r()));
 				if (cancelled) return;
 				flushBuyBonusSharedStage();
-				panelReady = true;
-				revealedOnce = true;
 			} catch (error) {
 				console.error('[buyBonus] menu open failed', error);
-				try {
-					await whenBuyBonusSpinesReady();
-					if (cancelled) return;
-					flushBuyBonusSharedStage();
+				if (!cancelled) {
 					panelReady = true;
 					revealedOnce = true;
-				} catch (retryError) {
-					console.error('[buyBonus] menu open retry failed', retryError);
-					if (!cancelled) {
-						panelReady = true;
-						revealedOnce = true;
-					}
+					flushBuyBonusSharedStage();
 				}
 			}
 		})();
@@ -544,7 +537,7 @@
 		align-self: start;
 		width: 100%;
 		height: auto;
-		aspect-ratio: 4230 / 1436;
+		aspect-ratio: 4230 / 1480;
 		container-type: inline-size;
 		container-name: bonus-card-duel;
 		--bb-card-price-fs: 4.3cqw;

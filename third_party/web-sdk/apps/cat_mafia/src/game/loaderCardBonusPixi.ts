@@ -3,8 +3,9 @@
  * one Spine, designer clip on the cat, `frame`/`frame2` after the clip end
  * (BonusUnclipFrame), scale + BONUS_OFFSET from constants.ts.
  *
- * Portrait `background` is drawn *before* the clip and stretched down so it
- * fills the gold-frame cutouts (on the board those show parchment).
+ * Portrait `background` is drawn *before* the clip so it fills the gold-frame
+ * cutouts (on the board those show parchment). Do not stretch it — extra
+ * height leaks under the BONUS bar.
  *
  * Canvas is a child of the card host so carousel translateX moves with it.
  */
@@ -26,9 +27,6 @@ type View = {
 const CANVAS_CLASS = 'loader-card-bonus-spine-canvas';
 const FRAME_SLOT_NAMES = new Set(['frame', 'frame2']);
 const BACK_SLOT_NAMES = new Set(['background', 'background2']);
-/** Grow portrait fill downward into the BONUS-bar flourish cutouts. */
-const BACK_HEIGHT_SCALE = 1.18;
-const BACK_SETUP_HEIGHT = 1170;
 
 /** Same AABB / art span as `constants.ts` Bonus (B). */
 const BONUS_SKELETON = {
@@ -128,18 +126,8 @@ const hideOuterGlow = (target: Spine) => {
 	if (slot) slot.setAttachment(null);
 };
 
-/** Stretch `background` down only — top edge stays, extra covers the cutouts. */
-const extendMascotBackground = (target: Spine) => {
-	const bone = target.skeleton.findBone('background');
-	if (!bone) return;
-	const extra = (BACK_HEIGHT_SCALE - 1) * BACK_SETUP_HEIGHT;
-	bone.scaleY = bone.data.scaleY * BACK_HEIGHT_SCALE;
-	bone.y = bone.data.y - extra * 0.5;
-};
-
 const prepareSlotDraw = (target: Spine) => {
 	hideOuterGlow(target);
-	extendMascotBackground(target);
 	orderBonusSlots(target);
 };
 

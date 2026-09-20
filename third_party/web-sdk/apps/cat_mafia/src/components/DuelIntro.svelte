@@ -10,41 +10,75 @@
 </script>
 
 <script lang="ts">
-	import { fade } from 'svelte/transition';
+	import { fade, scale } from 'svelte/transition';
+	import { backOut, cubicOut } from 'svelte/easing';
 	import { OnHotkey } from 'components-shared';
 	import { waitForResolve } from 'utils-shared/wait';
 
+	import assets from '../game/assets';
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
-	import { isPopoutSmallViewport } from '../game/constants';
-	import { BUY_BONUS_ASSETS } from '../game/uiHtmlAssetManifest';
-	import DuelPickMascot from './DuelPickMascot.svelte';
+	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
 	import PressToContinueHtml from './PressToContinueHtml.svelte';
 
 	const context = getContext();
+
+	const bgUrl = assets.fsCongBg.src;
+	const frameUrl = assets.fsCongFrame.src;
 
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 	const isPortrait = $derived(layoutType === 'portrait');
 	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
+	const isPopout = $derived(isPopoutViewport(canvasSizes) && !isPopoutSmall);
 
 	let show = $state(false);
 	let totalSpinsPerSide = $state(10);
-	let playerSide = $state<'cat' | 'dog' | undefined>(undefined);
 	let oncomplete = $state(() => {});
+	let winnerEl = $state<HTMLParagraphElement | undefined>();
+	let winnerSlotEl = $state<HTMLDivElement | undefined>();
+	/** Shrink long locales so the punchline stays inside the gold frame. */
+	let winnerFitScale = $state(1);
 
-	const rule1 = $derived(
-		playerSide
-			? context.i18nDerived.duelIntroYourSide(
-					playerSide === 'cat'
-						? context.i18nDerived.duelSideCat()
-						: context.i18nDerived.duelSideDog(),
-				)
-			: context.i18nDerived.duelIntroRule1(),
-	);
-	const rule2 = $derived(context.i18nDerived.duelIntroRule2(totalSpinsPerSide));
-	const rule3 = $derived(context.i18nDerived.duelIntroRule3());
-	const title = $derived(context.i18nDerived.duelBonus());
+	const ruleCat = $derived(context.i18nDerived.duelIntroRule1(totalSpinsPerSide));
+	const ruleDog = $derived(context.i18nDerived.duelIntroRule2(totalSpinsPerSide));
+	const ruleWinner = $derived(context.i18nDerived.duelIntroRule3());
+
+	const MIN_WINNER_FIT = 0.55;
+
+	const refitWinner = () => {
+		const el = winnerEl;
+		const slot = winnerSlotEl;
+		if (!el || !slot) return;
+
+		winnerFitScale = 1;
+		el.style.transform = 'scale(1)';
+
+		const maxW = slot.clientWidth;
+		if (maxW <= 0) return;
+
+		const natural = el.scrollWidth;
+		if (natural <= 0) return;
+
+		winnerFitScale = Math.min(1, Math.max(MIN_WINNER_FIT, maxW / natural));
+		el.style.transform = `scale(${winnerFitScale})`;
+	};
+
+	$effect(() => {
+		if (!show) return;
+		ruleWinner;
+		canvasSizes.width;
+		canvasSizes.height;
+		requestAnimationFrame(() => requestAnimationFrame(refitWinner));
+	});
+
+	$effect(() => {
+		const slot = winnerSlotEl;
+		if (!slot || !show) return;
+		const observer = new ResizeObserver(() => refitWinner());
+		observer.observe(slot);
+		return () => observer.disconnect();
+	});
 
 	const dismiss = () => oncomplete();
 
@@ -60,7 +94,6 @@
 		},
 		duelIntroUpdate: async (event) => {
 			totalSpinsPerSide = event.totalSpinsPerSide;
-			playerSide = event.playerSide;
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},
 	});
@@ -78,46 +111,36 @@
 		role="button"
 		tabindex="0"
 	>
-		<div class="content">
-			<h1 class="title">{title}</h1>
+		<div
+			class="board"
+			class:portrait={isPortrait}
+			class:popout-l={isPopout}
+			class:popout-s={isPopoutSmall}
+			role="dialog"
+			aria-modal="true"
+			aria-label={ruleWinner}
+			in:scale={{ duration: 320, easing: backOut, start: 0.88, opacity: 0 }}
+			out:scale={{ duration: 200, easing: cubicOut, start: 0.95, opacity: 0 }}
+		>
+			<img class="layer layer-bg" src={bgUrl} alt="" draggable="false" loading="eager" />
+			<img class="layer layer-frame" src={frameUrl} alt="" draggable="false" loading="eager" />
 
-			<div class="rules">
-				<article class="rule">
-					<div class="visual pick-visual" aria-hidden="true">
-						<span class="mascot-wrap dog">
-							<DuelPickMascot species="dog" mirror playing={show} />
-						</span>
-						{#if isPortrait}
-							<span class="vs-mini">VS</span>
-						{/if}
-						<span class="mascot-wrap cat">
-							<DuelPickMascot playing={show} />
-						</span>
+			<div class="board-content">
+				<div class="content-safe">
+					<p class="rule-line cat">{ruleCat}</p>
+					<span class="rule-vs" aria-hidden="true">VS</span>
+					<p class="rule-line dog">{ruleDog}</p>
+					<div class="rule-divider" aria-hidden="true"></div>
+					<div class="rule-winner-slot" bind:this={winnerSlotEl}>
+						<p
+							class="rule-winner"
+							bind:this={winnerEl}
+							style:transform="scale({winnerFitScale})"
+						>
+							{ruleWinner}
+						</p>
 					</div>
-					<p class="copy">{rule1}</p>
-				</article>
-
-				<article class="rule">
-					<div class="visual boards-visual" aria-hidden="true">
-						<img src={BUY_BONUS_ASSETS.deskL} alt="" draggable="false" class="desk" />
-						{#if isPortrait}
-							<span class="vs-mini">VS</span>
-						{/if}
-						<img src={BUY_BONUS_ASSETS.deskR} alt="" draggable="false" class="desk" />
-					</div>
-					<p class="copy">{rule2}</p>
-				</article>
-
-				<article class="rule">
-					<div class="visual win-visual" aria-hidden="true">
-						<span class="bank dog-bank">DOG</span>
-						<span class="plus">+</span>
-						<span class="bank cat-bank">CAT</span>
-						<span class="arrow">→</span>
-						<span class="trophy">WIN</span>
-					</div>
-					<p class="copy">{rule3}</p>
-				</article>
+				</div>
 			</div>
 		</div>
 
@@ -138,173 +161,202 @@
 		align-items: center;
 		justify-content: center;
 		padding: clamp(0.75rem, 2vh, 1.5rem);
+		box-sizing: border-box;
 	}
 
-	.content {
-		width: min(1120px, 100%);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: clamp(1rem, 2.8vh, 2rem);
+	.board {
+		--panel-width: min(860px, 98vw);
+		position: relative;
+		width: var(--panel-width);
+		aspect-ratio: calc(2000 / 1500);
+		max-height: 82vh;
 		pointer-events: none;
+		filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.75));
 	}
 
-	.title {
-		margin: 0;
-		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
-		font-size: clamp(2rem, 5.5vw, 3.4rem);
-		letter-spacing: 0.18em;
-		color: #f6e8c8;
-		text-shadow:
-			0 0 0 #2a1208,
-			0 3px 0 #5a3010,
-			0 6px 18px rgba(0, 0, 0, 0.55);
-		text-transform: uppercase;
-	}
-
-	.rules {
+	.layer {
+		position: absolute;
+		inset: 0;
+		display: block;
 		width: 100%;
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: clamp(0.75rem, 2vw, 1.35rem);
-	}
-
-	.rule {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.85rem;
-		padding: clamp(0.65rem, 1.6vw, 1rem);
-		border-radius: 14px;
-		background: linear-gradient(180deg, rgba(22, 12, 34, 0.72) 0%, rgba(10, 6, 18, 0.55) 100%);
-		border: 1px solid rgba(255, 220, 140, 0.22);
-		box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.08);
-	}
-
-	.visual {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		min-height: clamp(72px, 14vh, 110px);
-		width: 100%;
-	}
-
-	.copy {
-		margin: 0;
-		text-align: center;
-		font-family: 'Philosopher', Georgia, serif;
-		font-size: clamp(0.82rem, 1.55vw, 1rem);
-		font-weight: 700;
-		line-height: 1.35;
-		letter-spacing: 0.04em;
-		color: #ffe9a8;
-		text-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
-		text-transform: uppercase;
-	}
-
-	.pick-visual {
-		gap: 0.35rem;
-	}
-
-	.mascot-wrap {
-		width: clamp(52px, 9vw, 78px);
-		height: clamp(52px, 9vw, 78px);
-		border-radius: 50%;
-		overflow: hidden;
-		border: 2px solid rgba(255, 214, 120, 0.75);
-		background: rgba(18, 10, 28, 0.9);
-		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
-	}
-
-	.mascot-wrap.dog {
-		transform: scaleX(-1);
-	}
-
-	.vs-mini {
-		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
-		font-size: clamp(0.65rem, 1.2vw, 0.85rem);
-		letter-spacing: 0.08em;
-		color: #f6e8c8;
-		padding: 0.2rem 0.45rem;
-		border-radius: 999px;
-		background: rgba(20, 12, 30, 0.88);
-		border: 1px solid rgba(255, 220, 140, 0.35);
-	}
-
-	.boards-visual {
-		gap: 0.45rem;
-	}
-
-	.desk {
-		width: clamp(56px, 10vw, 88px);
-		height: auto;
+		height: 100%;
 		object-fit: contain;
-		filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
 		user-select: none;
 		pointer-events: none;
 	}
 
-	.win-visual {
-		gap: 0.28rem;
-		flex-wrap: wrap;
-		padding-inline: 0.25rem;
+	.layer-bg {
+		z-index: 0;
 	}
 
-	.bank,
-	.trophy {
-		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
-		font-size: clamp(0.62rem, 1.1vw, 0.78rem);
-		letter-spacing: 0.06em;
-		padding: 0.22rem 0.45rem;
-		border-radius: 8px;
-		color: #f6e8c8;
-		border: 1px solid rgba(255, 220, 140, 0.4);
-		background: rgba(20, 12, 30, 0.88);
+	.layer-frame {
+		z-index: 1;
 	}
 
-	.trophy {
-		color: #ffe07a;
-		border-color: rgba(255, 210, 90, 0.75);
-		box-shadow: 0 0 12px rgba(255, 190, 60, 0.25);
+	.board-content {
+		position: absolute;
+		inset: 0;
+		z-index: 2;
 	}
 
-	.plus,
-	.arrow {
-		font-weight: 800;
-		color: #ffe9a8;
-		font-size: clamp(0.85rem, 1.4vw, 1rem);
+	/* Keep clear of gold frame + bottom paw medallion. */
+	.content-safe {
+		position: absolute;
+		top: 26%;
+		left: 15%;
+		right: 15%;
+		bottom: 28%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: calc(var(--panel-width) * 0.01);
+		box-sizing: border-box;
+		text-align: center;
+		overflow: hidden;
 	}
 
-	.overlay.portrait .rules {
-		grid-template-columns: 1fr;
-		max-width: 420px;
-		margin-inline: auto;
-	}
-
-	.overlay.portrait .title {
-		font-size: clamp(1.85rem, 8vw, 2.6rem);
-	}
-
-	.overlay.popout-s .title {
-		font-size: 1.15rem;
-		letter-spacing: 0.12em;
-	}
-
-	.overlay.popout-s .copy {
-		font-size: 0.55rem;
+	.rule-line {
+		margin: 0;
+		width: 100%;
+		padding: 0 2%;
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.032);
+		font-weight: 700;
 		line-height: 1.25;
+		letter-spacing: 0.02em;
+		color: #f8e6c4;
+		text-shadow:
+			0 1px 0 #000,
+			1px 1px 3px rgba(0, 0, 0, 0.9),
+			0 0 18px rgba(255, 210, 120, 0.18);
 	}
 
-	.overlay.popout-s .visual {
-		min-height: 48px;
+	.rule-line.cat {
+		color: #ffe2b0;
 	}
 
-	.overlay.popout-s .mascot-wrap {
-		width: 40px;
-		height: 40px;
+	.rule-line.dog {
+		color: #dce8ff;
+		text-shadow:
+			0 1px 0 #000,
+			1px 1px 3px rgba(0, 0, 0, 0.9),
+			0 0 18px rgba(140, 180, 255, 0.2);
 	}
 
-	.overlay.popout-s .desk {
-		width: 42px;
+	.rule-vs {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: calc(var(--panel-width) * 0.08);
+		padding: 0.14em 0.5em;
+		border-radius: 999px;
+		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
+		font-size: calc(var(--panel-width) * 0.024);
+		letter-spacing: 0.14em;
+		color: #ffe7a0;
+		background: rgba(18, 10, 28, 0.78);
+		border: 1px solid rgba(255, 214, 120, 0.45);
+		box-shadow:
+			0 0 14px rgba(255, 190, 60, 0.22),
+			inset 0 1px 0 rgba(255, 240, 200, 0.12);
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+	}
+
+	.rule-divider {
+		width: min(58%, 220px);
+		height: 2px;
+		margin: calc(var(--panel-width) * 0.008) 0 calc(var(--panel-width) * 0.004);
+		border-radius: 999px;
+		background: linear-gradient(
+			90deg,
+			transparent 0%,
+			rgba(255, 210, 110, 0.15) 12%,
+			rgba(255, 220, 130, 0.9) 50%,
+			rgba(255, 210, 110, 0.15) 88%,
+			transparent 100%
+		);
+		box-shadow: 0 0 12px rgba(255, 190, 60, 0.35);
+	}
+
+	.rule-winner-slot {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		box-sizing: border-box;
+	}
+
+	.rule-winner {
+		margin: 0;
+		width: max-content;
+		max-width: none;
+		padding: 0;
+		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
+		font-size: calc(var(--panel-width) * 0.04);
+		font-weight: 400;
+		line-height: 1.12;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		white-space: nowrap;
+		transform-origin: center center;
+		color: #ffe28a;
+		text-shadow:
+			0 1px 0 #fff3b0,
+			0 2px 0 #5a3a0e,
+			0 5px 12px rgba(0, 0, 0, 0.55);
+	}
+
+	.board.portrait:not(.popout-l):not(.popout-s) {
+		--panel-width: min(920px, 100vw);
+		transform: scale(1.12);
+		transform-origin: center center;
+
+		.content-safe {
+			top: 26%;
+			left: 15%;
+			right: 15%;
+			bottom: 28%;
+		}
+
+		.rule-line {
+			font-size: calc(var(--panel-width) * 0.034);
+		}
+
+		.rule-winner {
+			font-size: calc(var(--panel-width) * 0.042);
+		}
+	}
+
+	.board.popout-l {
+		--panel-width: min(520px, 94vw);
+	}
+
+	.board.popout-s {
+		--panel-width: min(480px, 99vw);
+
+		.content-safe {
+			top: 26%;
+			left: 14%;
+			right: 14%;
+			bottom: 28%;
+		}
+
+		.rule-line {
+			font-size: calc(var(--panel-width) * 0.034);
+		}
+
+		.rule-vs {
+			font-size: calc(var(--panel-width) * 0.026);
+		}
+
+		.rule-winner {
+			font-size: calc(var(--panel-width) * 0.038);
+		}
+	}
+
+	.overlay.popout-s .board {
+		max-height: 70vh;
 	}
 </style>

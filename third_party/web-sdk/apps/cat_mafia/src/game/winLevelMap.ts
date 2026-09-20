@@ -19,16 +19,20 @@ export const WIN_BGM_MS = {
 const WIN_LADDER_THROUGH_EPIC_MS = WIN_BGM_MS.big + WIN_BGM_MS.superwin + WIN_BGM_MS.epic;
 
 /**
- * One spine track for every big-win tier (Big → Super → Epic → Sensational).
- * `big_win_*` / `super_win_*` bake heavier banner glow and read darker over
- * the HTML HUD; `max_win_*` (Sensational) keeps the UI visible under the
- * 0.5-alpha dim. Banner label still comes from each tier's `text` field.
+ * Money-stack big-win spine (`static/assets/spines/bigwin/money.json`).
+ * Per tier: intro/transition on the main spine → freeze (stack stays) while
+ * `banknotes_paket_*` loops on a second overlay spine (flying notes only).
+ * Sensational dismiss plays `paket_4_out`; lower tiers map outro=idle (skip).
  */
-export const UNIFIED_BIG_WIN_SPINE = {
-	intro: 'max_win_intro',
-	idle: 'max_win_idle',
-	outro: 'max_win_exit',
-} as const;
+export type BigWinSpineAnimationMap = {
+	intro:
+		| 'paket_1_in'
+		| 'paket_1_to_paket_2'
+		| 'paket_2_to_paket_3'
+		| 'paket_3_to_paket_4';
+	idle: 'banknotes_paket_1' | 'banknotes_paket_2' | 'banknotes_paket_3' | 'banknotes_paket_4';
+	outro: 'paket_4_out' | 'banknotes_paket_1' | 'banknotes_paket_2' | 'banknotes_paket_3' | 'banknotes_paket_4';
+};
 
 /**
  * Wok Fury 4-tier win-level visual map.
@@ -38,23 +42,12 @@ export const UNIFIED_BIG_WIN_SPINE = {
  * (`GameConfig.get_win_level`):
  *
  *   1..5  → no full-screen banner, just count-up ticker
- *   6     → BIG WIN          (10x..50x)
- *   7     → SUPER WIN        (50x..100x)
- *   8     → EPIC WIN         (100x..250x)
- *   9..10 → SENSATIONAL WIN  (250x..wincap..∞)
+ *   6     → BIG WIN              (10x..50x)
+ *   7     → SUPER WIN            (50x..100x)
+ *   8     → EPIC WIN             (100x..250x)
+ *   9..10 → SENSATIONAL          (250x..wincap..∞)
  *
- * Spine animation names (`big_win_*`, `super_win_*`, `epic_win_*`,
- * `max_win_*`) reference baked-in sets inside
- * `static/assets/spines/bigwin/mm_bigwin.json`. The `mega_win_*` set is
- * still present in the spine but no longer referenced (kept as dead
- * asset to avoid an art rebuild).
- *
- * TODO (art):
- *   `sensational` reuses `max_win_*` spine, so the on-screen banner
- *   currently renders as "MAX WIN" (baked into the atlas). Replace with
- *   a dedicated `sensational_win_*` set when art delivers it. The
- *   in-data `text` field is already 'SENSATIONAL WIN' so DevButtons /
- *   logging surfaces the new label correctly.
+ * Spine clips live in `static/assets/spines/bigwin/money.json`.
  */
 export const winLevelMap = {
 	1: {
@@ -110,7 +103,11 @@ export const winLevelMap = {
 		presentDuration: WIN_BGM_MS.big,
 		bgmDuration: WIN_BGM_MS.big,
 		sound: { sfx: undefined, bgm: 'bgm_winlevel_big' },
-		animation: { intro: 'big_win_intro', idle: 'big_win_idle', outro: 'big_win_exit' },
+		animation: {
+			intro: 'paket_1_in',
+			idle: 'banknotes_paket_1',
+			outro: 'banknotes_paket_1',
+		} satisfies BigWinSpineAnimationMap,
 	},
 	7: {
 		level: 7,
@@ -120,7 +117,11 @@ export const winLevelMap = {
 		presentDuration: WIN_BGM_MS.big + WIN_BGM_MS.superwin,
 		bgmDuration: WIN_BGM_MS.superwin,
 		sound: { sfx: undefined, bgm: 'bgm_winlevel_superwin' },
-		animation: { intro: 'super_win_intro', idle: 'super_win_idle', outro: 'super_win_exit' },
+		animation: {
+			intro: 'paket_1_to_paket_2',
+			idle: 'banknotes_paket_2',
+			outro: 'banknotes_paket_2',
+		} satisfies BigWinSpineAnimationMap,
 	},
 	8: {
 		level: 8,
@@ -130,28 +131,40 @@ export const winLevelMap = {
 		presentDuration: WIN_LADDER_THROUGH_EPIC_MS,
 		bgmDuration: WIN_BGM_MS.epic,
 		sound: { sfx: undefined, bgm: 'bgm_winlevel_epic' },
-		animation: { intro: 'epic_win_intro', idle: 'epic_win_idle', outro: 'epic_win_exit' },
+		animation: {
+			intro: 'paket_2_to_paket_3',
+			idle: 'banknotes_paket_3',
+			outro: 'banknotes_paket_3',
+		} satisfies BigWinSpineAnimationMap,
 	},
 	9: {
 		level: 9,
 		alias: 'sensational',
 		type: 'big',
-		text: 'SENSATIONAL WIN',
+		text: 'SENSATIONAL',
 		// Total count-up; sensational BGM loops for the remainder after the ladder.
 		presentDuration: WIN_LADDER_THROUGH_EPIC_MS + 12 * SECOND,
 		bgmDuration: WIN_BGM_MS.sensational,
 		sound: { sfx: undefined, bgm: 'bgm_winlevel_max' },
-		animation: { intro: 'max_win_intro', idle: 'max_win_idle', outro: 'max_win_exit' },
+		animation: {
+			intro: 'paket_3_to_paket_4',
+			idle: 'banknotes_paket_4',
+			outro: 'paket_4_out',
+		} satisfies BigWinSpineAnimationMap,
 	},
 	10: {
 		level: 10,
 		alias: 'sensational',
 		type: 'big',
-		text: 'SENSATIONAL WIN',
+		text: 'SENSATIONAL',
 		presentDuration: WIN_LADDER_THROUGH_EPIC_MS + 14 * SECOND,
 		bgmDuration: WIN_BGM_MS.sensational,
 		sound: { sfx: undefined, bgm: 'bgm_winlevel_max' },
-		animation: { intro: 'max_win_intro', idle: 'max_win_idle', outro: 'max_win_exit' },
+		animation: {
+			intro: 'paket_3_to_paket_4',
+			idle: 'banknotes_paket_4',
+			outro: 'paket_4_out',
+		} satisfies BigWinSpineAnimationMap,
 	},
 } as const;
 

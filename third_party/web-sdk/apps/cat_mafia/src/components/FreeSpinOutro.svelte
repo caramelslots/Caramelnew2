@@ -25,7 +25,6 @@
 		FONT_KRUTOI_CJK,
 		fontForLocale,
 		FS_OUTRO_DIM_ALPHA,
-		FS_OUTRO_POPUP_Y_FRAC,
 		FS_OUTRO_TOTAL_WIN_ARCH_DEG,
 		FS_OUTRO_TOTAL_WIN_TRACKING,
 		LOCALE_TEXT_FILL_GOLD,
@@ -39,27 +38,14 @@
 	import { stopWinLevelCountUpSounds } from '../game/bookEventHandlerMap';
 	import FreeSpinAnimation from './FreeSpinAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
-	import WinCoins from './WinCoins.svelte';
 
 	const context = getContext();
-
-	const fsOutroPopupCenter = $derived.by(() => {
-		const ml = context.stateLayoutDerived.mainLayout();
-		const cs = context.stateLayoutDerived.canvasSizes();
-		// Match FreeSpinAnimation Y so coins emit from the plaque centre.
-		return {
-			x: cs.width * 0.5,
-			y: cs.height * 0.5 + (ml.height * FS_OUTRO_POPUP_Y_FRAC - ml.height * 0.5) * ml.scale,
-		};
-	});
 
 	let show = $state(true);
 	let winAmount = $state(0);
 	let winLevelData = $state<WinLevelData>();
 	let oncomplete = $state(() => {});
 	let onCountUpComplete = $state(() => {});
-	let cookieOpened = $state(false);
-	let coinsEmit = $state(false);
 	let fsAnimation = $state<FreeSpinAnimation | undefined>();
 	let finishingOutro = $state(false);
 	let closing = $state(false);
@@ -92,11 +78,7 @@
 		freeSpinOutroCountUp: async (emitterEvent) => {
 			finishingOutro = false;
 			closing = false;
-			cookieOpened = false;
-			coinsEmit = false;
 			waitForTimeout(scaleMsByGameSpeed(1000, stateGame.gameSpeed)).then(() => {
-				cookieOpened = true;
-				coinsEmit = true;
 				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });
 			});
 			winAmount = emitterEvent.amount;
@@ -116,7 +98,6 @@
 				amount={winAmount}
 				{duration}
 				oncomplete={() => {
-					coinsEmit = false;
 					stopWinLevelCountUpSounds();
 					onCountUpComplete();
 				}}
@@ -176,23 +157,12 @@
 						</FreeSpinAnimation>
 					{/key}
 
-					{#if cookieOpened && !closing}
-						<WinCoins
-							emit={coinsEmit}
-							levelAlias={winLevelData?.alias}
-							canvasSpace
-							x={fsOutroPopupCenter.x}
-							y={fsOutroPopupCenter.y}
-						/>
-					{/if}
-
 					{#if !closing}
 						<PressToContinue
 							onpress={() => {
 								if (countUpCompleted) {
 									finishOutro();
 								} else {
-									coinsEmit = false;
 									stopWinLevelCountUpSounds();
 									finishCountUp();
 								}

@@ -46,15 +46,10 @@
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		void (async () => {
 			try {
-				if (
-					isPhoneForAtlasDownscale() &&
-					gameEntrance.buyBonusWarmReady &&
-					gameEntrance.postLiftAssetsReady
-				) {
-					stateModal.modal = { name: 'buyBonus' };
-					return;
-				}
 				await prepareBuyBonusMenu();
+				stateModal.modal = { name: 'buyBonus' };
+			} catch (error) {
+				console.error('[buyBonus] prepare failed', error);
 				stateModal.modal = { name: 'buyBonus' };
 			} finally {
 				opening = false;

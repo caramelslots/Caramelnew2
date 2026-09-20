@@ -20,7 +20,6 @@
 
 	import TransitionAnimation from './TransitionAnimation.svelte';
 	import { getContext } from '../game/context';
-	import { clearBuyBonusFeatureEvictLock } from '../game/buyBonusSharedPixi';
 	import { wantedMascotCatSpineKey } from '../game/mascotCatSkinMemory';
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
@@ -40,11 +39,6 @@
 		if (pendingGameType) {
 			const next = pendingGameType;
 			stateGame.transitionGameType = next;
-			// Unlock on the way back to base. Remount waits until the cloud
-			// finishes (`transitionActive`) plus a delay — not this beat.
-			if (next === 'basegame') {
-				clearBuyBonusFeatureEvictLock();
-			}
 			stateGame.gameType = next;
 			// Same beat as street/drum — mascot atlas while steam covers the board.
 			stateGame.mascotCatSpineKey = wantedMascotCatSpineKey({

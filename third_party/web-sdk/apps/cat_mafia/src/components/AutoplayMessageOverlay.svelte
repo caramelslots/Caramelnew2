@@ -1,6 +1,6 @@
 <!--
 	AutoplayMessageOverlay.svelte — сообщение об остановке автоигры (недостаток средств и др.).
-	fsCong board (fs_bg + fs_frame, без fs_rays). OK — fs_board.webp (узкая).
+	fsCong board (fs_bg + чистый fs_frame, без fs_rays и без текстовых лапок). OK — fs_board.webp.
 -->
 <script lang="ts">
 	import { fade, scale } from 'svelte/transition';
@@ -160,10 +160,11 @@
 		z-index: 2;
 	}
 
-	/* Safe zone inside gold frame — tuned to 2000×1500 fsCong artboard. */
+	/* Safe zone inside gold frame — tuned to 2000×1500 fsCong artboard.
+	   Slightly lower than FS Intro: clean frame has no side text paws. */
 	.content-safe {
 		position: absolute;
-		top: 28%;
+		top: 33%;
 		left: 21%;
 		right: 21%;
 		bottom: 23%;
@@ -276,7 +277,7 @@
 		transform-origin: center center;
 
 		.content-safe {
-			top: 27%;
+			top: 32%;
 			left: 20%;
 			right: 20%;
 			bottom: 22%;

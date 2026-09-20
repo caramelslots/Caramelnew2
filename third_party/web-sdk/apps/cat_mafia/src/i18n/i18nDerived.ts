@@ -5,7 +5,8 @@ import { i18nDerived as i18nDerivedUiHtml } from 'components-ui-html';
 
 import { getGameInfoSections } from '../game/gameInfoCopy';
 
-const t = (key: string) => stateI18nDerived.translate(key);
+const t = (key: string, values?: Record<string, unknown>) =>
+	stateI18nDerived.translate(key, values);
 
 /** Real-money vs social (`?social=true`) string from parallel `KEY` / `KEY_SOCIAL` entries. */
 const ts = (key: string) => {
@@ -33,12 +34,16 @@ export const i18nDerived = {
 	normalBonus: () => t('NORMAL_BONUS'),
 	superBonus: () => t('SUPER_BONUS'),
 	duelBonus: () => t('DUEL_BONUS'),
-	duelIntroRule1: () => t('DUEL_INTRO_RULE_1'),
-	duelIntroYourSide: (side: string) => t('DUEL_INTRO_YOUR_SIDE').replace('{side}', side),
+	duelIntroRule1: (n: number) => t('DUEL_INTRO_RULE_1', { n }),
+	duelIntroYourSide: (side: string) => t('DUEL_INTRO_YOUR_SIDE', { side }),
 	duelSideCat: () => t('DUEL_SIDE_CAT'),
 	duelSideDog: () => t('DUEL_SIDE_DOG'),
-	duelIntroRule2: (n: number) => t('DUEL_INTRO_RULE_2').replace('{n}', String(n)),
+	duelIntroRule2: (n: number) => t('DUEL_INTRO_RULE_2', { n }),
 	duelIntroRule3: () => t('DUEL_INTRO_RULE_3'),
+	duelOutroLossTitle: () => t('DUEL_OUTRO_LOSS_TITLE'),
+	/** Labels only — amounts render separately as big gold numbers. */
+	duelOutroLossEnemy: () => t('DUEL_OUTRO_LOSS_ENEMY'),
+	duelOutroLossYou: () => t('DUEL_OUTRO_LOSS_YOU'),
 	duelPickTitle: () => t('DUEL_PICK_TITLE'),
 	duelCatShortDesc: () => t('DUEL_CAT_SHORT_DESC'),
 	duelDogShortDesc: () => t('DUEL_DOG_SHORT_DESC'),
@@ -120,12 +125,12 @@ export const i18nDerived = {
 	targetPickTitle: () => t('TARGET_PICK_TITLE'),
 	targetPickHintPick: () => t('TARGET_PICK_HINT_PICK'),
 	targetPickHintShoot: () => t('TARGET_PICK_HINT_SHOOT'),
-	targetPickHintWon: (n: number) => t('TARGET_PICK_HINT_WON').replace('{n}', String(n)),
+	targetPickHintWon: (n: number) => t('TARGET_PICK_HINT_WON', { n }),
 	targetShootTitle: () => t('TARGET_SHOOT_TITLE'),
 	targetShootHintIntro: () => t('TARGET_SHOOT_HINT_INTRO'),
 	targetShootHintPick: () => t('TARGET_SHOOT_HINT_PICK'),
 	targetShootHintFiring: () => t('TARGET_SHOOT_HINT_FIRING'),
-	targetShootHintExtra: (n: number) => t('TARGET_SHOOT_HINT_EXTRA').replace('{n}', String(n)),
+	targetShootHintExtra: (n: number) => t('TARGET_SHOOT_HINT_EXTRA', { n }),
 	targetShootHintNone: () => t('TARGET_SHOOT_HINT_NONE'),
 	// Game info / rules
 	gameInfoTitle: () => t('GAME_INFO_TITLE'),

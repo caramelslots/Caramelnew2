@@ -77,7 +77,7 @@
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 	};
 
-	const confirm = () => {
+	const confirm = async () => {
 		if (!canAffordBuyBonus(multiplier)) return;
 		clearActiveFeature();
 		const modeKey = stateBonus.selectedBetModeKey;

@@ -1,33 +1,24 @@
 /**
  * Buy-bonus card visuals: one overlay WebGL for every card Spine.
- * Parked in basegame; dropped in Normal / Super / Duel.
- * Phone uses the same overlay (no holes, no second copy on the slot).
+ * Warm once on game entry; keep in memory for the session (open/close only).
  */
 import * as PIXI from 'pixi.js';
 import { BlendMode, Spine } from '@esotericsoftware/spine-pixi-v8';
 
 import {
 	BUY_BONUS_HIDDEN_SLOTS,
+	BUY_BONUS_NORMAL_MASCOT_ANIM,
 	BUY_BONUS_SPINE_ANIM,
-	BUY_BONUS_SPINE_FILES,
-	BUY_BONUS_SPINE_VIEWPORTS,
+	buyBonusNormalMascotUrls,
 	buyBonusSpineUrls,
 	getBuyBonusPixiTransform,
-	getBuyBonusSpineBitmap,
-	releaseBuyBonusSpineBitmaps,
 	resumeBuyBonusSpineBitmapDecode,
 	startBuyBonusSpineBitmapDecode,
-	suspendBuyBonusSpineBitmapDecode,
 	type BuyBonusSpineVariant,
 } from './buyBonusHtmlSpine';
 import { isHtmlWebglPaused } from './htmlWebglPause';
-import {
-	compactBuyBonusAtlasByUrl,
-	isPhoneForAtlasDownscale,
-} from './phoneSpineAtlasDownscale';
+import { isPhoneForAtlasDownscale } from './phoneSpineAtlasDownscale';
 import { gameEntrance } from './gameEntrance.svelte';
-import { stateDuel } from './stateDuel.svelte';
-import { stateGame } from './stateGame.svelte';
 
 export type BuyBonusCardViewId = number;
 
@@ -42,11 +33,11 @@ const LAYER_SELECTOR = '[data-buy-bonus-spine-layer]';
 const CANVAS_CLASS = 'buy-bonus-shared-spine-canvas';
 
 const views = new Map<BuyBonusCardViewId, CardView>();
-const spines = new Map<BuyBonusSpineVariant, Spine>();
-const loading = new Map<BuyBonusSpineVariant, Promise<Spine | null>>();
+/** Frame spine, or (normal) Container: bg frame + shared white mascot + fg frame. */
+type CardVisual = Spine | PIXI.Container;
 
-/** Blocks warm/recreate until basegame remount after Normal / Super / Duel. */
-let buyBonusFeatureEvictLock = false;
+const spines = new Map<BuyBonusSpineVariant, CardVisual>();
+const loading = new Map<BuyBonusSpineVariant, Promise<CardVisual | null>>();
 
 let app: PIXI.Application | undefined;
 let appReady: Promise<PIXI.Application | undefined> | undefined;
@@ -55,7 +46,6 @@ let nextViewId = 1;
 let tickerBound = false;
 let layerObserver: ResizeObserver | undefined;
 let resizeListening = false;
-let destroyTimer: ReturnType<typeof setTimeout> | undefined;
 const MENU_VARIANTS: readonly BuyBonusSpineVariant[] = ['normal', 'super', 'duel'];
 
 const hostBox = (el: HTMLElement) => ({
@@ -75,21 +65,12 @@ const isDisplayed = (el: HTMLElement) => {
 		const style = getComputedStyle(node);
 		if (style.display === 'none') return false;
 		if (style.visibility === 'hidden' && !preparing) return false;
-		// Preparing panel stays opacity:0 so bg+cards can reveal together.
 		if (!preparing && Number.parseFloat(style.opacity) === 0) return false;
 		node = node.parentElement;
 	}
 	return true;
 };
 
-const hasDisplayedView = () => {
-	for (const view of views.values()) {
-		if (isDisplayed(view.host)) return true;
-	}
-	return false;
-};
-
-/** Open menu/confirm hosts — keep GL even while the panel is still opacity:0. */
 const hasLiveView = () => {
 	for (const view of views.values()) {
 		if (!view.host.isConnected) continue;
@@ -106,11 +87,6 @@ const hideReferenceSlots = (spine: Spine, variant: BuyBonusSpineVariant) => {
 	}
 };
 
-/**
- * Menu cards only need the character + frame. Additive / screen slots
- * (rays, glows, duplicate tint layers) composite as see-through “x-ray”
- * over the opaque body on a transparent WebGL canvas.
- */
 const hideSpecialBlendSlots = (spine: Spine) => {
 	for (const slot of spine.skeleton.slots) {
 		if (slot.data.blendMode === BlendMode.Normal) continue;
@@ -123,61 +99,11 @@ const prepareBuyBonusSpineDraw = (spine: Spine, variant: BuyBonusSpineVariant) =
 	hideSpecialBlendSlots(spine);
 };
 
-const isTirSceneLive = () =>
-	stateGame.targetPickOpen ||
-	stateGame.targetPickSlide > 0.001 ||
-	stateGame.drumShootActive;
-
-/** True while buy-bonus may open again soon — keep GL + spines parked. */
-export const shouldKeepBuyBonusWarm = () =>
-	!buyBonusFeatureEvictLock &&
-	stateGame.gameType === 'basegame' &&
-	!stateGame.freeSpinIntroActive &&
-	!stateGame.transitionActive &&
-	!stateDuel.active &&
-	!isTirSceneLive();
-
-/**
- * Hard gate for creating / loading buy-bonus GPU.
- * Must NOT be `views.size > 0 || shouldKeep` — sticky card hosts after the first
- * menu open remounted WebGL during freeSpinIntro / extra spins → Jetsam.
- */
-const canOwnApp = () => shouldKeepBuyBonusWarm();
-
-/**
- * After FS/Duel cloud finishes — remount delay so outro / mascot swap / leftover
- * SW GPU can drop before the overlay WebGL comes back. First-entry warm is
- * owned by GameAssetsLoader (no extra wait).
- */
-export const buyBonusWarmAfterFeatureMs = () => (isPhoneForAtlasDownscale() ? 2500 : 1500);
-
 const visualZoom = () =>
 	typeof window === 'undefined' ? 1 : Math.max(1, window.visualViewport?.scale ?? 1);
 
-/** Overlay canvas only — never the slot renderer. Phone 2×; desktop 3×. */
 const buyBonusHostResolution = () =>
 	(isPhoneForAtlasDownscale() ? 2 : 3) / visualZoom();
-
-/**
- * Force-drop buy-bonus WebGL + atlases before Normal / Super / Duel GPU grows.
- * Stays locked until {@link clearBuyBonusFeatureEvictLock} (settled basegame).
- */
-export const evictBuyBonusForFeature = async () => {
-	buyBonusFeatureEvictLock = true;
-	suspendBuyBonusSpineBitmapDecode();
-	cancelScheduledDestroy();
-	await destroySharedStageAsync();
-};
-
-/**
- * Allow opening / remounting buy-bonus after returning to basegame.
- * Lifecycle waits for the cloud to finish, then warms in the background.
- * A Buy Bonus press still loads immediately via {@link prepareBuyBonusMenu}.
- */
-export const clearBuyBonusFeatureEvictLock = () => {
-	buyBonusFeatureEvictLock = false;
-	resumeBuyBonusSpineBitmapDecode();
-};
 
 const ensureApp = (): Promise<PIXI.Application | undefined> => {
 	if (app) return Promise.resolve(app);
@@ -198,7 +124,7 @@ const ensureApp = (): Promise<PIXI.Application | undefined> => {
 			resolution: buyBonusHostResolution(),
 			autoStart: false,
 		});
-		if (gen !== appGen || !canOwnApp()) {
+		if (gen !== appGen) {
 			next.destroy(true);
 			return undefined;
 		}
@@ -227,42 +153,12 @@ const ensureApp = (): Promise<PIXI.Application | undefined> => {
 	return appReady;
 };
 
-const yieldFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-
-const buyBonusAssetUrls = () =>
-	MENU_VARIANTS.flatMap((variant) => {
-		const urls = buyBonusSpineUrls(variant);
-		return [urls.atlas, urls.skeleton, ...urls.images];
-	});
-
-const unloadBuyBonusAssets = async () => {
-	releaseBuyBonusSpineBitmaps();
-	try {
-		await PIXI.Assets.unload(buyBonusAssetUrls());
-	} catch {
-		/* cache already empty / mid-recreate */
-	}
-};
-
-const loadBuyBonusAtlasAndSkeleton = (variant: BuyBonusSpineVariant) => {
+const loadBuyBonusAtlasAndSkeleton = async (variant: BuyBonusSpineVariant) => {
 	const urls = buyBonusSpineUrls(variant);
-	const files = BUY_BONUS_SPINE_FILES[variant];
-	const images: Record<string, PIXI.TextureSource> = {};
-	for (let i = 0; i < files.images.length; i += 1) {
-		const page = files.images[i];
-		const url = urls.images[i];
-		if (!page || !url) continue;
-		const bitmap = getBuyBonusSpineBitmap(url);
-		if (!bitmap) continue;
-		images[page] = PIXI.Texture.from(bitmap, true).source;
-	}
-	if (Object.keys(images).length === 0) {
-		return PIXI.Assets.load([urls.atlas, urls.skeleton]);
-	}
-	return PIXI.Assets.load([{ src: urls.atlas, data: { images } }, urls.skeleton]);
+	await PIXI.Assets.load([urls.atlas, urls.skeleton]);
 };
 
-/** Serialize phone atlas work — parallel 3×4K decode is the Jetsam spike. */
+/** Serialize phone atlas work — parallel 3× decode is a Jetsam spike. */
 let phoneLoadChain: Promise<void> = Promise.resolve();
 
 const runPhoneSerialized = <T>(fn: () => Promise<T>): Promise<T> => {
@@ -275,6 +171,42 @@ const runPhoneSerialized = <T>(fn: () => Promise<T>): Promise<T> => {
 	return run;
 };
 
+const NORMAL_BG_SLOT = 'normal_background';
+
+const isCardSpine = (visual: CardVisual): visual is Spine => visual instanceof Spine;
+
+const forEachCardSpine = (visual: CardVisual, fn: (spine: Spine) => void) => {
+	if (isCardSpine(visual)) {
+		fn(visual);
+		return;
+	}
+	const visit = (node: PIXI.Container) => {
+		for (const child of node.children) {
+			if (child instanceof Spine) fn(child);
+			else if (child instanceof PIXI.Container) visit(child);
+		}
+	};
+	visit(visual);
+};
+
+const applyNormalFrameLayer = (spine: Spine, layer: 'bg' | 'fg') => {
+	for (const slot of spine.skeleton.slots) {
+		const isBg = slot.data.name === NORMAL_BG_SLOT;
+		const keep = layer === 'bg' ? isBg : !isBg;
+		if (!keep) slot.setAttachment(null);
+	}
+};
+
+const createFrameSpine = (variant: BuyBonusSpineVariant, urls: ReturnType<typeof buyBonusSpineUrls>) => {
+	const spine = Spine.from({
+		skeleton: urls.skeleton,
+		atlas: urls.atlas,
+		autoUpdate: false,
+	});
+	spine.state.setAnimation(0, BUY_BONUS_SPINE_ANIM[variant], true);
+	return spine;
+};
+
 const loadSpine = (variant: BuyBonusSpineVariant) => {
 	const existing = spines.get(variant);
 	if (existing) return Promise.resolve(existing);
@@ -284,36 +216,61 @@ const loadSpine = (variant: BuyBonusSpineVariant) => {
 	const task = runPhoneSerialized(async () => {
 		const cached = spines.get(variant);
 		if (cached) return cached;
-		if (!canOwnApp()) return null;
-		// Finish CPU decode (started on cards idle) before overlay GL upload.
-		await startBuyBonusSpineBitmapDecode();
+		void startBuyBonusSpineBitmapDecode();
 		const createdApp = await ensureApp();
-		if (!createdApp || !canOwnApp()) return null;
-		// Capture AFTER ensureApp — create bumps appGen; only destroy should abort.
+		if (!createdApp) return null;
 		const gen = appGen;
 		const urls = buyBonusSpineUrls(variant);
 		if (gen !== appGen) return null;
 		try {
 			await loadBuyBonusAtlasAndSkeleton(variant);
-		} catch {
+			if (variant === 'normal') {
+				const mascot = buyBonusNormalMascotUrls();
+				await PIXI.Assets.load([mascot.atlas, mascot.skeleton]);
+			}
+		} catch (error) {
+			console.error('[buyBonus] atlas/skeleton load failed', variant, error);
 			return null;
 		}
-		if (!app || gen !== appGen || !canOwnApp()) return null;
-		// Keep cat/frame/WILD at native pixels; drop SW FX pages (wheel/rays/arch).
-		if (isPhoneForAtlasDownscale()) {
-			compactBuyBonusAtlasByUrl(urls.atlas);
-			releaseBuyBonusSpineBitmaps(urls.images);
-			await yieldFrame();
-			if (!app || gen !== appGen || !canOwnApp()) return null;
-		}
+		if (!app || gen !== appGen) return null;
 		const already = spines.get(variant);
 		if (already) return already;
-		const spine = Spine.from({
-			skeleton: urls.skeleton,
-			atlas: urls.atlas,
-			autoUpdate: false,
-		});
-		spine.state.setAnimation(0, BUY_BONUS_SPINE_ANIM[variant], true);
+
+		if (variant === 'normal') {
+			const mascotUrls = buyBonusNormalMascotUrls();
+			const bg = createFrameSpine(variant, urls);
+			const fg = createFrameSpine(variant, urls);
+			const mascot = Spine.from({
+				skeleton: mascotUrls.skeleton,
+				atlas: mascotUrls.atlas,
+				autoUpdate: false,
+			});
+			mascot.state.setAnimation(0, BUY_BONUS_NORMAL_MASCOT_ANIM, true);
+
+			const wireFrame = (spine: Spine, layer: 'bg' | 'fg') => {
+				const previousBefore = spine.beforeUpdateWorldTransforms;
+				spine.beforeUpdateWorldTransforms = (self) => {
+					previousBefore?.(self);
+					prepareBuyBonusSpineDraw(self, variant);
+					applyNormalFrameLayer(self, layer);
+				};
+				spine.update(0);
+				prepareBuyBonusSpineDraw(spine, variant);
+				applyNormalFrameLayer(spine, layer);
+			};
+			wireFrame(bg, 'bg');
+			wireFrame(fg, 'fg');
+			mascot.update(0);
+
+			const root = new PIXI.Container();
+			root.addChild(bg, mascot, fg);
+			root.visible = false;
+			createdApp.stage.addChild(root);
+			spines.set(variant, root);
+			return root;
+		}
+
+		const spine = createFrameSpine(variant, urls);
 		const previousBefore = spine.beforeUpdateWorldTransforms;
 		spine.beforeUpdateWorldTransforms = (self) => {
 			previousBefore?.(self);
@@ -327,8 +284,6 @@ const loadSpine = (variant: BuyBonusSpineVariant) => {
 		return spine;
 	}).finally(() => {
 		loading.delete(variant);
-		// Warm-keep parks spines with no hosts — do not treat that as idle teardown.
-		if (!hasLiveView() && !shouldKeepBuyBonusWarm()) scheduleDestroyIfIdle();
 	});
 
 	loading.set(variant, task);
@@ -343,13 +298,6 @@ export const whenBuyBonusSpinesReady = async (
 	} else {
 		await Promise.all(variants.map((variant) => loadSpine(variant)));
 	}
-	const missing = variants.filter((variant) => !spines.has(variant));
-	if (missing.length === 0) return;
-	if (isPhoneForAtlasDownscale()) {
-		for (const variant of missing) await loadSpine(variant);
-		return;
-	}
-	await Promise.all(missing.map((variant) => loadSpine(variant)));
 };
 
 export const areBuyBonusSpinesReady = (variants: readonly BuyBonusSpineVariant[] = MENU_VARIANTS) =>
@@ -359,28 +307,35 @@ const syncBuyBonusWarmReadyFlag = () => {
 	gameEntrance.buyBonusWarmReady = areBuyBonusSpinesReady();
 };
 
+const markBuyBonusWarmSucceeded = () => {
+	syncBuyBonusWarmReadyFlag();
+	if (areBuyBonusSpinesReady()) gameEntrance.buyBonusEverWarmed = true;
+};
+
+export const acknowledgeBuyBonusPresented = () => {
+	markBuyBonusWarmSucceeded();
+};
+
 let warmPromise: Promise<void> | null = null;
 
-/**
- * Background warm: overlay WebGL + parked spines.
- */
+/** Load once on game entry; keep parked for the whole session. */
 export const ensureBuyBonusWarm = (): Promise<void> => {
-	if (!shouldKeepBuyBonusWarm()) return Promise.resolve();
 	if (areBuyBonusSpinesReady()) {
-		syncBuyBonusWarmReadyFlag();
+		markBuyBonusWarmSucceeded();
 		return Promise.resolve();
 	}
 	if (warmPromise) return warmPromise;
 
 	warmPromise = (async () => {
 		try {
+			resumeBuyBonusSpineBitmapDecode();
 			const createdApp = await ensureApp();
-			if (!createdApp || !shouldKeepBuyBonusWarm()) return;
+			if (!createdApp) return;
 			await whenBuyBonusSpinesReady();
-			if (!app || !shouldKeepBuyBonusWarm()) return;
+			if (!app) return;
 			for (const spine of spines.values()) spine.visible = false;
 			if (app.ticker.started) app.ticker.stop();
-			syncBuyBonusWarmReadyFlag();
+			markBuyBonusWarmSucceeded();
 		} finally {
 			warmPromise = null;
 			syncBuyBonusWarmReadyFlag();
@@ -390,21 +345,21 @@ export const ensureBuyBonusWarm = (): Promise<void> => {
 	return warmPromise;
 };
 
-/** Force one layout/render pass (e.g. while the menu is still opacity:0). */
 export const flushBuyBonusSharedStage = () => {
 	requestSync();
 };
 
 export const ensureBuyBonusMenuOpen = async () => {
-	buyBonusFeatureEvictLock = false;
-	await whenBuyBonusSpinesReady();
+	resumeBuyBonusSpineBitmapDecode();
+	if (!areBuyBonusSpinesReady()) {
+		await whenBuyBonusSpinesReady();
+	}
 	flushBuyBonusSharedStage();
-	syncBuyBonusWarmReadyFlag();
+	markBuyBonusWarmSucceeded();
 };
 
 const waitMs = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-/** Phone: do not create buy-bonus GL while batch 4 (tir / fsCong) is still decoding. */
 const waitForPostLiftAssetsReady = async () => {
 	if (!isPhoneForAtlasDownscale() || gameEntrance.postLiftAssetsReady) return;
 	const start = performance.now();
@@ -413,23 +368,14 @@ const waitForPostLiftAssetsReady = async () => {
 	}
 };
 
-/**
- * Call from the Buy Bonus button BEFORE opening the modal.
- */
 export const prepareBuyBonusMenu = async () => {
-	buyBonusFeatureEvictLock = false;
 	await waitForPostLiftAssetsReady();
-	if (areBuyBonusSpinesReady()) {
-		flushBuyBonusSharedStage();
-		syncBuyBonusWarmReadyFlag();
-		gameEntrance.buyBonusEverWarmed = true;
-		return;
+	resumeBuyBonusSpineBitmapDecode();
+	if (!areBuyBonusSpinesReady()) {
+		await whenBuyBonusSpinesReady();
 	}
-	await ensureBuyBonusWarm();
-	if (!areBuyBonusSpinesReady()) await whenBuyBonusSpinesReady();
 	flushBuyBonusSharedStage();
-	syncBuyBonusWarmReadyFlag();
-	if (areBuyBonusSpinesReady()) gameEntrance.buyBonusEverWarmed = true;
+	markBuyBonusWarmSucceeded();
 };
 
 const observeLayer = (layer: HTMLElement) => {
@@ -472,7 +418,7 @@ const resizeCanvas = (layer: HTMLElement) => {
 const cardButton = (host: HTMLElement) => host.closest('button');
 
 const layoutSpine = (
-	spine: Spine,
+	visual: CardVisual,
 	variant: BuyBonusSpineVariant,
 	host: HTMLElement,
 	layer: HTMLElement,
@@ -482,19 +428,19 @@ const layoutSpine = (
 	const w = hostRect.width / zoom;
 	const h = hostRect.height / zoom;
 	if (w < 2 || h < 2) {
-		spine.visible = false;
+		visual.visible = false;
 		return;
 	}
 	const transform = getBuyBonusPixiTransform(variant, w, h);
 	const button = cardButton(host);
 	const disabled = Boolean(button?.disabled);
-	spine.alpha = disabled ? 0.5 : 1;
-	spine.tint = 0xffffff;
-	spine.visible = true;
+	visual.alpha = disabled ? 0.5 : 1;
+	if (isCardSpine(visual)) visual.tint = 0xffffff;
+	visual.visible = true;
 	const layerRect = layer.getBoundingClientRect();
-	spine.scale.set(transform.scale);
-	spine.x = (hostRect.left - layerRect.left) / zoom + w * 0.5 + transform.spineX;
-	spine.y = (hostRect.top - layerRect.top) / zoom + h * 0.5 + transform.spineY;
+	visual.scale.set(transform.scale);
+	visual.x = (hostRect.left - layerRect.left) / zoom + w * 0.5 + transform.spineX;
+	visual.y = (hostRect.top - layerRect.top) / zoom + h * 0.5 + transform.spineY;
 };
 
 const pickLayer = (visible: CardView[]) => {
@@ -525,11 +471,9 @@ const layoutAndDraw = (advance: boolean) => {
 		for (const spine of spines.values()) spine.visible = false;
 		lastSpineAdvanceMs = 0;
 		app.ticker.stop();
-		scheduleDestroyIfIdle();
 		return;
 	}
 
-	cancelScheduledDestroy();
 	attachCanvas(layer);
 	resizeCanvas(layer);
 
@@ -544,17 +488,19 @@ const layoutAndDraw = (advance: boolean) => {
 	}
 
 	for (const variant of spines.keys()) {
-		const spine = spines.get(variant);
-		if (!spine) continue;
+		const visual = spines.get(variant);
+		if (!visual) continue;
 		const view =
 			visible.find((item) => item.variant === variant && item.active) ??
 			visible.find((item) => item.variant === variant);
 		if (!view) {
-			spine.visible = false;
+			visual.visible = false;
 			continue;
 		}
-		layoutSpine(spine, variant, view.host, layer);
-		if (dt > 0 && view.active) spine.update(dt);
+		layoutSpine(visual, variant, view.host, layer);
+		if (dt > 0 && view.active) {
+			forEachCardSpine(visual, (spine) => spine.update(dt));
+		}
 	}
 
 	app.render();
@@ -570,93 +516,6 @@ const requestSync = () => {
 	layoutAndDraw(false);
 };
 
-const cancelScheduledDestroy = () => {
-	if (destroyTimer === undefined) return;
-	clearTimeout(destroyTimer);
-	destroyTimer = undefined;
-};
-
-/** Cover buyBonus → confirm remount only on the cold path (not base warm-keep). */
-const DESTROY_IDLE_MS = 80;
-
-const scheduleDestroyIfIdle = () => {
-	if (shouldKeepBuyBonusWarm()) {
-		cancelScheduledDestroy();
-		return;
-	}
-	cancelScheduledDestroy();
-	destroyTimer = setTimeout(() => {
-		destroyTimer = undefined;
-		destroyIfIdle();
-	}, DESTROY_IDLE_MS);
-};
-
-/** Tear down overlay GL. */
-const teardownSharedStageSync = () => {
-	cancelScheduledDestroy();
-	appGen += 1;
-	const inflight = [...loading.values()];
-	for (const spine of spines.values()) {
-		try {
-			spine.destroy({ children: true, texture: false });
-		} catch {
-			/* already released */
-		}
-	}
-	spines.clear();
-	loading.clear();
-	views.clear();
-	gameEntrance.buyBonusWarmReady = false;
-	const current = app;
-	app = undefined;
-	appReady = undefined;
-	warmPromise = null;
-	tickerBound = false;
-	layerObserver?.disconnect();
-	layerObserver = undefined;
-	if (resizeListening) {
-		window.removeEventListener('resize', requestSync);
-		window.visualViewport?.removeEventListener('resize', requestSync);
-		window.visualViewport?.removeEventListener('scroll', requestSync);
-		resizeListening = false;
-	}
-	if (current) {
-		current.ticker.remove(tickSharedStage);
-		current.destroy(true);
-	}
-	return inflight;
-};
-
-const destroySharedStage = () => {
-	const inflight = teardownSharedStageSync();
-	void Promise.allSettled(inflight).then(() => {
-		void unloadBuyBonusAssets();
-	});
-};
-
-const destroySharedStageAsync = async () => {
-	const inflight = teardownSharedStageSync();
-	await Promise.allSettled(inflight);
-	await unloadBuyBonusAssets();
-};
-
-const destroyIfIdle = () => {
-	if (loading.size > 0 || hasLiveView()) return;
-	if (shouldKeepBuyBonusWarm()) return;
-	destroySharedStage();
-};
-
-/** Drop warm GL when entering FS / leaving base — call from lifecycle effect. */
-export const releaseBuyBonusSharedStage = () => {
-	if (hasLiveView()) {
-		// Menu still open — destroy after hosts go idle (cold path only).
-		scheduleDestroyIfIdle();
-		return;
-	}
-	// Bumps appGen so in-flight ensureBuyBonusWarm / loadSpine abort.
-	destroySharedStage();
-};
-
 export const registerBuyBonusCardView = (
 	variant: BuyBonusSpineVariant,
 	host: HTMLElement,
@@ -665,12 +524,10 @@ export const registerBuyBonusCardView = (
 	const id = nextViewId;
 	nextViewId += 1;
 	views.set(id, { id, variant, host, active });
-	if (!canOwnApp()) return id;
-	cancelScheduledDestroy();
 	void ensureApp().then((created) => {
-		if (!created || !views.has(id) || !canOwnApp()) return;
+		if (!created || !views.has(id)) return;
 		void loadSpine(variant).then(() => {
-			if (views.has(id) && canOwnApp()) requestSync();
+			if (views.has(id)) requestSync();
 		});
 	});
 	return id;
@@ -684,12 +541,10 @@ export const setBuyBonusCardViewActive = (id: BuyBonusCardViewId, active: boolea
 		requestSync();
 		return;
 	}
-	if (!canOwnApp()) return;
-	cancelScheduledDestroy();
 	void ensureApp().then((created) => {
-		if (!created || !views.has(id) || !canOwnApp()) return;
+		if (!created || !views.has(id)) return;
 		void loadSpine(view.variant).then(() => {
-			if (views.has(id) && canOwnApp()) requestSync();
+			if (views.has(id)) requestSync();
 		});
 	});
 };
@@ -697,7 +552,8 @@ export const setBuyBonusCardViewActive = (id: BuyBonusCardViewId, active: boolea
 export const unregisterBuyBonusCardView = (id: BuyBonusCardViewId) => {
 	views.delete(id);
 	if (views.size === 0 || !hasLiveView()) {
-		scheduleDestroyIfIdle();
+		if (app?.ticker.started) app.ticker.stop();
+		for (const spine of spines.values()) spine.visible = false;
 		return;
 	}
 	requestSync();

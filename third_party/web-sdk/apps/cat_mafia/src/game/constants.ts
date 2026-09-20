@@ -1587,11 +1587,11 @@ export const FS_OUTRO_DIM_ALPHA = 0.85;
  * FS end total-win spine width as a fraction of board width (desktop/tablet).
  * Skeleton is ~square (vs old cookie ~0.5 aspect) — keep on-screen height similar.
  */
-export const FS_OUTRO_SPINE_WIDTH_FRAC = 1.45;
+export const FS_OUTRO_SPINE_WIDTH_FRAC = 0.9;
 /** Skeleton bounds height / width from total_win export (load-time scale cancels out). */
-export const FS_OUTRO_SPINE_ASPECT = 1896 / 1954;
+export const FS_OUTRO_SPINE_ASPECT = 1010.7654 / 1099.149;
 /** Text layout ref as a fraction of board width; compensates for spine slot scaling. */
-export const FS_OUTRO_TEXT_LAYOUT_FRAC = 0.78;
+export const FS_OUTRO_TEXT_LAYOUT_FRAC = 0.58;
 /** FS end popup Y as a fraction of main-layout height (lower = higher on screen). */
 export const FS_OUTRO_POPUP_Y_FRAC = 0.38;
 /** TOTAL WIN bow on the green plaque — same sweep as loader card 1 ribbon title. */
@@ -1602,10 +1602,10 @@ export const FS_OUTRO_TOTAL_WIN_TRACKING = 1.22;
 export const FS_OUTRO_SKELETON_LOAD_SCALE = 2;
 /** total_win export bounds (pre-load-scale). */
 const FS_OUTRO_SKELETON_BOUNDS = {
-	x: -981.8052,
-	y: -986.927,
-	width: 1954,
-	height: 1896,
+	x: -549.47,
+	y: -653.4352,
+	width: 1099.149,
+	height: 1010.7654,
 } as const;
 /** Skeleton data width after load scale — used for SpineProvider width fit. */
 export const FS_OUTRO_SKELETON_DATA_WIDTH =

@@ -45,8 +45,6 @@ export const HUD_ASSETS = {
 export const BUY_BONUS_ASSETS = {
 	menuBg: uiHtmlAssetUrl('buy_bonus/bg_buy_bonus_board.webp'),
 	confirmBg: uiHtmlAssetUrl('buy_bonus/bg_buy_bonus_board.webp'),
-	deskL: uiHtmlAssetUrl('buy_bonus/desk_l.webp'),
-	deskR: uiHtmlAssetUrl('buy_bonus/desk_r.webp'),
 	buyButtonBg: uiHtmlAssetUrl('buy_bonus/buy_button_bg.webp'),
 	cancelButtonBg: uiHtmlAssetUrl('buy_bonus/cancel_button_bg.webp'),
 	confirmButtonBg: uiHtmlAssetUrl('buy_bonus/confirm_button_bg.webp'),
@@ -72,7 +70,6 @@ export const SETTINGS_ASSETS = {
 export const AUTOSPIN_ASSETS = {
 	bg: uiHtmlAssetUrl('autoplay_menu/board.webp'),
 	close: uiHtmlAssetUrl('autoplay/cross.webp'),
-	messageOkBg: uiHtmlAssetUrl('autoplay/autoplay_message_ok_bg.webp'),
 	pawIcon: uiHtmlAssetUrl('autoplay_menu/paw.webp'),
 	bonusIcon: uiHtmlAssetUrl('autoplay_menu/bonus.webp'),
 	startButton: uiHtmlAssetUrl('autoplay_menu/start.webp'),
@@ -95,10 +92,11 @@ export const FS_CONG_IMAGE_URLS = dedupeUrls([
 	assets.fsCongRays.src,
 	assets.fsCongBg.src,
 	assets.fsCongFrame.src,
+	assets.fsCongTextPaw.src,
 	assets.fsCongBoard.src,
 ]);
 
-/** fsCong board without rays — AutoplayMessageOverlay + shared preload. */
+/** fsCong board without rays — AutoplayMessageOverlay + shared preload (no text paws). */
 export const FS_CONG_BOARD_IMAGE_URLS = dedupeUrls([
 	assets.fsCongBg.src,
 	assets.fsCongFrame.src,
@@ -136,7 +134,6 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	AUTOSPIN_ASSETS.bg,
 	AUTOSPIN_ASSETS.close,
 	...FS_CONG_BOARD_IMAGE_URLS,
-	AUTOSPIN_ASSETS.messageOkBg,
 	AUTOSPIN_ASSETS.pawIcon,
 	AUTOSPIN_ASSETS.bonusIcon,
 	AUTOSPIN_ASSETS.startButton,
@@ -157,8 +154,6 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 export const BUY_BONUS_FLOW_IMAGE_URLS = dedupeUrls([
 	BUY_BONUS_ASSETS.menuBg,
 	BUY_BONUS_ASSETS.confirmBg,
-	BUY_BONUS_ASSETS.deskL,
-	BUY_BONUS_ASSETS.deskR,
 	BUY_BONUS_ASSETS.buyButtonBg,
 	BUY_BONUS_ASSETS.cancelButtonBg,
 	BUY_BONUS_ASSETS.confirmButtonBg,

@@ -1,6 +1,6 @@
 <!--
-	Buy Duel — side pick (cat / dog) + per-side confirm overlay.
-	Opens from Buy Bonus menu instead of the generic confirm panel.
+	Buy Duel — side pick on the same board as BuyBonusOverlay
+	(bg_buy_bonus_board.webp + buyBonusPanelDimensions).
 -->
 <script lang="ts">
 	import { stateModal, stateBet } from 'state-shared';
@@ -9,16 +9,34 @@
 
 	import { clearActiveFeature } from '../game/activeFeature';
 	import { buyDuelCostMultiplier, canAffordBuyBonus } from '../game/buyBonusBalance';
-	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
+	import {
+		BUY_BONUS_CARD_KNEWAVE_FONT_FAMILY,
+		HUD_BALANCE_BET_FONT_FAMILY,
+		isPopoutSmallViewport,
+		isPopoutViewport,
+	} from '../game/constants';
+	import { ensureKnewaveFontLoaded } from '../game/knewaveFont';
 	import { getContext } from '../game/context';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { startMascotSpinePreload } from '../game/mascotHtmlSpine';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
-	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS } from '../game/uiHtmlAssetManifest';
+	import { BUY_BONUS_ASSETS } from '../game/uiHtmlAssetManifest';
+	import { DUEL_PICK_CARD } from '../game/duelAssets';
 	import DuelPickMascot from './DuelPickMascot.svelte';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 
+	const bgUrl = BUY_BONUS_ASSETS.menuBg;
+	const cancelButtonBgUrl = BUY_BONUS_ASSETS.cancelButtonBg;
+	const confirmButtonBgUrl = BUY_BONUS_ASSETS.confirmButtonBg;
+
 	const isOpen = $derived(stateModal.modal?.name === 'buyDuelPick');
+	const isBuyFlowOpen = $derived(
+		stateModal.modal?.name === 'buyBonus' ||
+			stateModal.modal?.name === 'buyBonusConfirm' ||
+			stateModal.modal?.name === 'buyDuelPick',
+	);
 
 	const layoutType = $derived(stateLayoutDerived.layoutType());
 	const isPortrait = $derived(layoutType === 'portrait');
@@ -31,29 +49,47 @@
 	const canBuy = $derived(canAffordBuyBonus(multiplier));
 
 	let pendingSide = $state<DuelSide | null>(null);
+	/** Keep Spine players mounted after first warm so pick opens with mascots ready. */
 	let spinesWarmed = $state(false);
+	let knewaveFontReady = $state(false);
+
+	const warmPickSpines = () => {
+		if (spinesWarmed) return;
+		startMascotSpinePreload();
+		spinesWarmed = true;
+		context.eventEmitter.broadcast({ type: 'duelPickWarm' });
+	};
+
+	// Prefetch while buy-bonus is open — cat/dog already in HTTP cache from main load.
+	$effect(() => {
+		if (isBuyFlowOpen || isOpen) warmPickSpines();
+	});
+
+	// Same early warm as in-round duel pick (DuelModeOverlay).
+	$effect(() => {
+		if (!gameEntrance.showContent || spinesWarmed) return;
+		const timer = setTimeout(() => warmPickSpines(), 600);
+		return () => clearTimeout(timer);
+	});
 
 	$effect(() => {
-		if (isOpen) {
-			spinesWarmed = true;
-			context.eventEmitter.broadcast({ type: 'duelPickWarm' });
-		} else {
-			pendingSide = null;
-		}
+		if (!isOpen) pendingSide = null;
+	});
+
+	$effect(() => {
+		let cancelled = false;
+		void ensureKnewaveFontLoaded().then(() => {
+			if (!cancelled) knewaveFontReady = true;
+		});
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	const sideTitle = (side: DuelSide) =>
 		side === 'cat' ? context.i18nDerived.duelSideCat() : context.i18nDerived.duelSideDog();
 	const sideShortDesc = (side: DuelSide) =>
 		side === 'cat' ? context.i18nDerived.duelCatShortDesc() : context.i18nDerived.duelDogShortDesc();
-	const sideLongDesc = (side: DuelSide) =>
-		side === 'cat' ? context.i18nDerived.duelCatLongDesc() : context.i18nDerived.duelDogLongDesc();
-
-	const closeAll = () => {
-		stateModal.modal = null;
-		pendingSide = null;
-		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
-	};
 
 	const backToBuyMenu = () => {
 		stateModal.modal = { name: 'buyBonus' };
@@ -90,13 +126,13 @@
 		if (!isOpen) return;
 		if (e.key === 'Escape') {
 			if (pendingSide) cancelConfirm();
-			else closeAll();
+			else backToBuyMenu();
 		}
 	}}
 />
 
 <div
-	class="duel-buy-panel"
+	class="duel-pick-panel"
 	class:portrait={isPortrait}
 	class:popout-l={isPopout}
 	class:popout-s={isPopoutSmall}
@@ -106,421 +142,445 @@
 	aria-hidden={!isOpen}
 	data-test="buy-duel-pick-overlay"
 >
-	<header class="panel-header">
-		<button
-			type="button"
-			class="close-button"
-			onclick={closeAll}
-			aria-label="close"
-			data-test="buy-duel-pick-close"
+	<img class="panel-bg" src={bgUrl} alt="" draggable="false" loading="eager" />
+
+	<div class="panel-content">
+		<h2 class="pick-title" class:hidden={pendingSide != null}>{context.i18nDerived.duelPickTitle()}</h2>
+
+		<!-- Keep both Spine mascots mounted across pick ↔ confirm so they never reload. -->
+		<section
+			class="cards-section"
+			class:confirm-mode={pendingSide != null}
+			aria-label={pendingSide == null ? 'choose side' : 'confirm side'}
 		>
-			<img class="close-icon" src={AUTOSPIN_ASSETS.close} alt="" draggable="false" />
-		</button>
-	</header>
-
-	<div class="pick-stage">
-		<p class="eyebrow">{context.i18nDerived.buyBonusTitle()}</p>
-		<h2 class="pick-title">{context.i18nDerived.duelPickTitle()}</h2>
-
-		<div class="side-cards">
 			{#each ['dog', 'cat'] as side (side)}
-				<article class="side-card" class:side-dog={side === 'dog'} class:side-cat={side === 'cat'}>
-					<div class="side-visual" aria-hidden="true">
-						<span class="pick-pedestal">
-							<span class="pick-pedestal-glow"></span>
-							<span class="pick-pedestal-card">
-								{#if spinesWarmed}
-									<DuelPickMascot
-										species={side === 'dog' ? 'dog' : 'cat'}
-										mirror={side === 'dog'}
-										playing={false}
-									/>
-								{/if}
-							</span>
-							<span class="pick-pedestal-base"></span>
+				{@const pickArt = side === 'dog' ? DUEL_PICK_CARD.dog : DUEL_PICK_CARD.cat}
+				{@const isSelected = pendingSide === side}
+				{@const isParked = pendingSide != null && pendingSide !== side}
+				<button
+					type="button"
+					class="side-card"
+					class:side-dog={side === 'dog'}
+					class:side-cat={side === 'cat'}
+					class:is-selected={isSelected}
+					class:is-parked={isParked}
+					disabled={!canBuy || pendingSide != null}
+					tabindex={pendingSide != null ? -1 : 0}
+					data-test="buy-duel-side-{side}"
+					aria-hidden={isParked}
+					aria-label={sideTitle(side as DuelSide)}
+					onclick={() => openConfirm(side as DuelSide)}
+				>
+					<span class="pick-card" class:confirm-hero={isSelected} aria-hidden="true">
+						<img class="pick-card-layer pick-card-bg" src={pickArt.bg} alt="" draggable="false" />
+						<span
+							class="pick-card-mascot"
+							class:mascot-dog={side === 'dog'}
+							class:mascot-cat={side === 'cat'}
+						>
+							{#if spinesWarmed}
+								<DuelPickMascot
+									species={side === 'dog' ? 'dog' : 'cat'}
+									playing={isBuyFlowOpen && (pendingSide == null || isSelected)}
+									fill
+								/>
+							{/if}
 						</span>
-					</div>
-					<h3 class="side-name">{sideTitle(side as DuelSide)}</h3>
-					<p class="side-tag">{sideShortDesc(side as DuelSide)}</p>
-					<p class="side-desc">{sideLongDesc(side as DuelSide)}</p>
-					<div class="side-price-wrap">
-						<span class="side-price">{price}</span>
-					</div>
-					<button
-						type="button"
-						class="side-buy"
-						style:background-image="url('{BUY_BONUS_ASSETS.buyButtonBg}')"
-						disabled={!canBuy}
-						data-test="buy-duel-side-{side}"
-						onclick={() => openConfirm(side as DuelSide)}
-					>
-						{context.i18nDerived.buyConfirm()}
-					</button>
-				</article>
-			{/each}
-		</div>
-
-		<button
-			type="button"
-			class="pick-cancel"
-			style:background-image="url('{BUY_BONUS_ASSETS.cancelButtonBg}')"
-			data-test="buy-duel-pick-cancel"
-			onclick={backToBuyMenu}
-		>
-			{context.i18nDerived.buyCancel()}
-		</button>
-	</div>
-
-	{#if pendingSide}
-		<div class="confirm-layer" data-test="buy-duel-confirm-layer">
-			<div class="confirm-card">
-				<div class="confirm-hero" aria-hidden="true">
-					{#if spinesWarmed}
-						<DuelPickMascot
-							species={pendingSide === 'dog' ? 'dog' : 'cat'}
-							mirror={pendingSide === 'dog'}
-							playing={false}
-							fill
+						<img
+							class="pick-card-layer pick-card-frame"
+							src={pickArt.frame}
+							alt=""
+							draggable="false"
 						/>
-					{/if}
-				</div>
+						<span class="pick-card-name">{sideTitle(side as DuelSide)}</span>
+						<span
+							class="pick-card-tag"
+							class:card-tag-knewave={knewaveFontReady}
+							style:font-family={knewaveFontReady
+								? BUY_BONUS_CARD_KNEWAVE_FONT_FAMILY
+								: undefined}
+						>{sideShortDesc(side as DuelSide)}</span>
+						<span class="pick-card-price">{price}</span>
+					</span>
+				</button>
+			{/each}
+		</section>
 
-				<div class="confirm-body">
-					<p class="confirm-eyebrow">{context.i18nDerived.duelBonus()}</p>
-					<h3 class="confirm-title">{sideTitle(pendingSide)}</h3>
-					<p class="confirm-tag">{sideShortDesc(pendingSide)}</p>
-					<p class="confirm-desc">{sideLongDesc(pendingSide)}</p>
-					<p class="confirm-price">{price}</p>
-				</div>
-
-				<div class="confirm-actions">
-					<button
-						type="button"
-						class="action-btn cancel-btn"
-						style:background-image="url('{BUY_BONUS_ASSETS.cancelButtonBg}')"
-						data-test="buy-duel-confirm-cancel"
-						onclick={cancelConfirm}
-					>
-						{context.i18nDerived.buyCancel()}
-					</button>
-					<button
-						type="button"
-						class="action-btn confirm-btn"
-						style:background-image="url('{BUY_BONUS_ASSETS.confirmButtonBg}')"
-						disabled={!canBuy}
-						data-test="buy-duel-confirm-button"
-						onclick={confirmPurchase}
-					>
-						{context.i18nDerived.buyConfirm()}
-					</button>
-				</div>
-			</div>
-		</div>
-	{/if}
+		{#if pendingSide == null}
+			<footer class="pick-footer">
+				<button
+					type="button"
+					class="action-btn cancel-btn"
+					style:background-image="url('{cancelButtonBgUrl}')"
+					data-test="buy-duel-pick-cancel"
+					onclick={backToBuyMenu}
+				>
+					{context.i18nDerived.buyCancel()}
+				</button>
+			</footer>
+		{:else}
+			<footer class="confirm-actions">
+				<button
+					type="button"
+					class="action-btn cancel-btn"
+					style:background-image="url('{cancelButtonBgUrl}')"
+					data-test="buy-duel-confirm-cancel"
+					onclick={cancelConfirm}
+				>
+					{context.i18nDerived.buyCancel()}
+				</button>
+				<button
+					type="button"
+					class="action-btn confirm-btn"
+					style:background-image="url('{confirmButtonBgUrl}')"
+					disabled={!canBuy}
+					data-test="buy-duel-confirm-button"
+					onclick={confirmPurchase}
+				>
+					{context.i18nDerived.buyConfirm()}
+				</button>
+			</footer>
+		{/if}
+	</div>
 </div>
 
 <style lang="scss">
+	@use './buyBonusPanelDimensions.scss' as *;
 	@import url('https://fonts.googleapis.com/css2?family=Philosopher:wght@700&family=Reggae+One&display=swap');
 
-	.duel-buy-panel {
+	.duel-pick-panel {
+		--bb-card-price-fs: calc(var(--panel-width) * 0.048);
+		--bb-action-fs: calc(var(--panel-width) * 0.034);
+		--bb-title-fs: calc(var(--panel-width) * 0.048);
+		font-family: v-bind(HUD_BALANCE_BET_FONT_FAMILY);
 		position: relative;
-		width: min(960px, 96vw);
-		max-height: min(92vh, 820px);
-		overflow: auto;
+		z-index: 10;
 		pointer-events: auto;
-		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
-		color: #f6e8c8;
+		@include buy-bonus-panel-dimensions(true);
 	}
 
-	.panel-header {
-		display: flex;
-		justify-content: flex-end;
-		padding: 0.35rem 0.15rem 0;
-	}
-
-	.close-button {
-		width: clamp(2rem, 4vw, 2.6rem);
-		height: clamp(2rem, 4vw, 2.6rem);
-		padding: 0;
-		border: 0;
-		background: transparent;
-		cursor: pointer;
-		transition: transform 0.12s ease;
-
-		&:hover {
-			transform: scale(1.06);
-		}
-	}
-
-	.close-icon {
+	.panel-bg {
+		position: absolute;
+		inset: 0;
 		width: 100%;
 		height: 100%;
-		object-fit: contain;
+		object-fit: fill;
+		pointer-events: none;
+		user-select: none;
+		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
 	}
 
-	.pick-stage {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: clamp(0.65rem, 2vh, 1rem);
-		padding: 0 clamp(0.75rem, 2vw, 1.25rem) clamp(1rem, 2.5vh, 1.5rem);
-	}
-
-	.eyebrow {
-		margin: 0;
-		font-size: clamp(0.75rem, 1.6vw, 0.95rem);
-		letter-spacing: 0.14em;
-		color: #d4b44a;
-		text-transform: uppercase;
+	.panel-content {
+		position: absolute;
+		inset: 0;
 	}
 
 	.pick-title {
+		position: absolute;
+		top: 12%;
+		left: 8%;
+		right: 8%;
 		margin: 0;
-		font-size: clamp(1.35rem, 3.8vw, 2rem);
-		letter-spacing: 0.08em;
+		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
+		font-size: var(--bb-title-fs);
+		letter-spacing: 0.06em;
+		text-align: center;
+		color: #f6e8c8;
 		text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+		pointer-events: none;
+
+		&.hidden {
+			visibility: hidden;
+			opacity: 0;
+		}
 	}
 
-	.side-cards {
+	.cards-section {
+		position: absolute;
+		top: 24%;
+		left: 50%;
+		width: 88%;
+		height: 52%;
+		transform: translateX(-50%);
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: clamp(0.75rem, 2vw, 1.25rem);
-		width: 100%;
-		max-width: 820px;
+		column-gap: calc(var(--panel-width) * 0.028);
+		align-content: start;
+		justify-items: center;
+		box-sizing: border-box;
 	}
 
 	.side-card {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: clamp(0.35rem, 1.2vh, 0.55rem);
-		padding: clamp(0.65rem, 1.6vw, 0.95rem);
-		border-radius: clamp(0.75rem, 1.4vw, 1rem);
-		background: linear-gradient(180deg, rgba(28, 16, 42, 0.92) 0%, rgba(12, 8, 22, 0.88) 100%);
-		border: 1px solid rgba(255, 220, 140, 0.28);
-		box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
-		text-align: center;
-	}
-
-	.side-visual {
-		width: clamp(88px, 16vw, 128px);
-		height: clamp(88px, 16vw, 128px);
-	}
-
-	.pick-pedestal {
-		position: relative;
+		appearance: none;
 		display: block;
 		width: 100%;
-		height: 100%;
-	}
-
-	.pick-pedestal-glow {
-		position: absolute;
-		inset: 8%;
-		border-radius: 50%;
-		background: radial-gradient(circle, rgba(255, 210, 100, 0.35), transparent 70%);
-	}
-
-	.pick-pedestal-card {
-		position: absolute;
-		inset: 0;
-		border-radius: 50%;
-		overflow: hidden;
-		border: 2px solid rgba(255, 214, 120, 0.75);
-		background: rgba(18, 10, 28, 0.92);
-		box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
-	}
-
-	.side-card.side-dog .pick-pedestal-card {
-		transform: scaleX(-1);
-	}
-
-	.pick-pedestal-base {
-		position: absolute;
-		left: 50%;
-		bottom: -6%;
-		width: 72%;
-		height: 12%;
-		transform: translateX(-50%);
-		border-radius: 50%;
-		background: rgba(0, 0, 0, 0.45);
-		filter: blur(4px);
-	}
-
-	.side-name {
+		max-width: 100%;
+		padding: 0;
 		margin: 0;
-		font-size: clamp(1rem, 2.4vw, 1.35rem);
-		letter-spacing: 0.1em;
-	}
-
-	.side-tag {
-		margin: 0;
-		font-family: 'Philosopher', Georgia, serif;
-		font-size: clamp(0.72rem, 1.5vw, 0.9rem);
-		font-weight: 700;
-		color: #ffe07a;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-	}
-
-	.side-desc {
-		margin: 0;
-		flex: 1;
-		font-family: 'Philosopher', Georgia, serif;
-		font-size: clamp(0.68rem, 1.35vw, 0.82rem);
-		font-weight: 700;
-		line-height: 1.35;
-		color: rgba(246, 232, 200, 0.88);
-		text-transform: uppercase;
-	}
-
-	.side-price-wrap {
-		margin-top: 0.15rem;
-		padding: 0.18rem 0.75rem;
-		border-radius: 999px;
-		background: rgba(0, 0, 0, 0.35);
-		border: 1px solid rgba(255, 220, 140, 0.35);
-	}
-
-	.side-price {
-		font-size: clamp(0.95rem, 2vw, 1.15rem);
-		color: #f0d78c;
-	}
-
-	.side-buy {
-		margin-top: 0.15rem;
-		width: min(100%, 180px);
-		min-height: 2.4rem;
-		padding: 0.35rem 0.85rem;
 		border: 0;
-		background: center / 100% 100% no-repeat;
-		font-family: inherit;
-		font-size: clamp(0.75rem, 1.5vw, 0.9rem);
-		letter-spacing: 0.08em;
-		color: #f6e8c8;
+		background: transparent;
 		cursor: pointer;
-		transition: transform 0.12s ease, filter 0.12s ease;
+		font-family: inherit;
+		color: inherit;
+		transition: transform 0.12s ease;
 
-		&:hover:not(:disabled) {
-			transform: translateY(-2px);
-			filter: brightness(1.08);
+		&:active:not(:disabled) {
+			transform: scale(0.98);
 		}
 
 		&:disabled {
 			opacity: 0.45;
 			cursor: not-allowed;
 		}
+
+		&.is-selected:disabled {
+			opacity: 1;
+			cursor: default;
+			transform: none;
+		}
 	}
 
-	.pick-cancel {
-		margin-top: 0.35rem;
-		min-width: min(100%, 220px);
-		min-height: 2.5rem;
-		padding: 0.4rem 1.2rem;
-		border: 0;
-		background: center / 100% 100% no-repeat;
-		font-family: inherit;
-		font-size: clamp(0.78rem, 1.6vw, 0.95rem);
-		letter-spacing: 0.08em;
-		color: #f6e8c8;
-		cursor: pointer;
-	}
-
-	.confirm-layer {
-		position: fixed;
-		inset: 0;
-		z-index: 2;
-		display: grid;
-		place-items: center;
-		padding: 1rem;
-		background: rgba(4, 2, 10, 0.72);
-		backdrop-filter: blur(6px);
-	}
-
-	.confirm-card {
+	.cards-section.confirm-mode {
+		/* Same binding as BuyBonusConfirmOverlay `.confirm-card-section`. */
+		top: 10.5%;
+		left: 50%;
+		width: 66%;
+		height: 70%;
+		transform: translateX(-50%);
 		display: flex;
-		flex-direction: column;
-		width: min(440px, 92vw);
-		max-height: min(88vh, 760px);
-		min-height: min(520px, 86vh);
-		padding: clamp(0.85rem, 2vh, 1.15rem);
-		border-radius: 1rem;
-		background: linear-gradient(180deg, rgba(32, 18, 48, 0.96) 0%, rgba(14, 8, 24, 0.94) 100%);
-		border: 1px solid rgba(255, 220, 140, 0.35);
-		box-shadow: 0 18px 42px rgba(0, 0, 0, 0.55);
+		align-items: flex-start;
+		justify-content: center;
+		grid-template-columns: none;
+		column-gap: 0;
+		box-sizing: border-box;
+
+		.side-card.is-selected {
+			width: 100%;
+			max-width: 100%;
+			flex: 0 0 auto;
+			position: relative;
+			z-index: 1;
+		}
+
+		.pick-card.confirm-hero {
+			width: 100%;
+			max-height: 100%;
+			height: auto;
+		}
+
+		.pick-card-name {
+			font-size: clamp(1.15rem, 14cqw, 2.05rem);
+		}
+
+		.pick-card-tag {
+			font-size: clamp(1.2rem, 15cqw, 2.2rem);
+			bottom: 14.5%;
+		}
+
+		.pick-card-price {
+			font-size: calc(var(--panel-width) * 0.058);
+		}
+
+		/* Keep the other Spine alive off-stack without remounting. */
+		.side-card.is-parked {
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 100%;
+			opacity: 0;
+			visibility: hidden;
+			pointer-events: none;
+			z-index: 0;
+		}
+	}
+
+	.pick-card {
+		position: relative;
+		display: block;
+		width: 100%;
+		aspect-ratio: 437 / 625;
+		container-type: size;
+		container-name: duel-pick-card;
+		filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.45));
+	}
+
+	.pick-card-layer {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: fill;
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.pick-card-bg {
+		z-index: 0;
+	}
+
+	.pick-card-mascot {
+		position: absolute;
+		left: 4%;
+		right: 4%;
+		top: 10%;
+		bottom: 12%;
+		z-index: 1;
+		overflow: hidden;
+		pointer-events: none;
+	}
+
+	.pick-card-mascot.mascot-dog :global(.pick-spine.fill) {
+		transform: scale(1.28) translateY(5%);
+		transform-origin: 50% 78%;
+	}
+
+	.pick-card-mascot.mascot-cat :global(.pick-spine.fill) {
+		transform: scale(1.72) translateY(6%);
+		transform-origin: 50% 70%;
+	}
+
+	.pick-card-frame {
+		z-index: 2;
+	}
+
+	.pick-card-name {
+		position: absolute;
+		left: 10%;
+		right: 10%;
+		top: 0.4%;
+		height: 10%;
+		z-index: 3;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
+		font-size: clamp(0.75rem, 10cqw, 1.35rem);
+		letter-spacing: 0.12em;
+		line-height: 1;
+		color: #f8ecd0;
+		text-shadow:
+			0 1px 0 rgba(40, 18, 8, 0.85),
+			0 2px 6px rgba(0, 0, 0, 0.55);
+		pointer-events: none;
+		text-transform: uppercase;
+	}
+
+	.pick-card-tag {
+		position: absolute;
+		left: 8%;
+		right: 8%;
+		bottom: 14.5%;
+		z-index: 3;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: clamp(0.95rem, 12cqw, 1.85rem);
+		font-weight: 900;
+		line-height: 0.9;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+		color: #ffe08a;
+		paint-order: stroke fill;
+		-webkit-font-smoothing: antialiased;
+		-webkit-text-stroke: 0.07em rgba(48, 22, 6, 0.94);
+		text-shadow:
+			0 0.04em 0 rgba(48, 22, 6, 0.75),
+			0 0.07em 0.1em rgba(0, 0, 0, 0.5);
+		pointer-events: none;
+	}
+
+	.pick-card-tag.card-tag-knewave {
+		-webkit-text-stroke: 0.06em rgba(48, 22, 6, 0.94);
+	}
+
+	.pick-card-price {
+		/* Same binding as BuyBonusConfirmOverlay `.card-price-wrap` — centered in the gold plate on all sizes. */
+		position: absolute;
+		left: 14%;
+		right: 14%;
+		bottom: 0.5%;
+		width: auto;
+		height: 12.5%;
+		z-index: 3;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		box-sizing: border-box;
+		font-size: var(--bb-card-price-fs);
+		font-weight: 900;
+		letter-spacing: 0;
+		line-height: 1;
 		text-align: center;
+		color: #1a1208;
+		-webkit-text-fill-color: #1a1208;
+		text-shadow: 0 1px 0 rgba(255, 236, 190, 0.45);
+		pointer-events: none;
+		transform: translate(0.06em, 0.16em);
+	}
+
+	.pick-footer {
+		position: absolute;
+		top: 80%;
+		left: 28%;
+		right: 28%;
+		height: 11%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 		box-sizing: border-box;
 	}
 
 	.confirm-hero {
-		position: relative;
-		flex: 1 1 auto;
-		min-height: clamp(200px, 42vh, 380px);
 		width: 100%;
-		overflow: hidden;
-		margin-bottom: clamp(0.5rem, 1.5vh, 0.85rem);
-	}
-
-	.confirm-body {
-		flex: 0 0 auto;
-	}
-
-	.confirm-eyebrow {
-		margin: 0;
-		font-size: 0.75rem;
-		letter-spacing: 0.12em;
-		color: #d4b44a;
-	}
-
-	.confirm-title {
-		margin: 0.25rem 0 0.15rem;
-		font-size: clamp(1.2rem, 3vw, 1.55rem);
-		letter-spacing: 0.1em;
-	}
-
-	.confirm-tag {
-		margin: 0 0 0.45rem;
-		font-family: 'Philosopher', Georgia, serif;
-		font-size: 0.85rem;
-		font-weight: 700;
-		color: #ffe07a;
-		text-transform: uppercase;
-	}
-
-	.confirm-desc {
-		margin: 0 0 0.65rem;
-		font-family: 'Philosopher', Georgia, serif;
-		font-size: 0.78rem;
-		font-weight: 700;
-		line-height: 1.35;
-		color: rgba(246, 232, 200, 0.9);
-		text-transform: uppercase;
-	}
-
-	.confirm-price {
-		margin: 0 0 0.85rem;
-		font-size: clamp(1.1rem, 2.5vw, 1.35rem);
-		color: #f0d78c;
+		max-height: 100%;
 	}
 
 	.confirm-actions {
-		flex: 0 0 auto;
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.65rem;
-		margin-top: 0.85rem;
+		position: absolute;
+		top: 80%;
+		left: 12%;
+		right: 12%;
+		height: 11%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: calc(var(--panel-width) * 0.07);
+		box-sizing: border-box;
 	}
 
 	.action-btn {
-		min-height: 2.5rem;
-		padding: 0.35rem 0.65rem;
+		flex: 1 1 0;
+		height: 100%;
+		max-width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 4% 4% 3%;
 		border: 0;
-		background: center / 100% 100% no-repeat;
-		font-family: inherit;
-		font-size: 0.78rem;
-		letter-spacing: 0.06em;
-		color: #f6e8c8;
+		border-radius: 0;
 		cursor: pointer;
+		background-color: transparent;
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: 100% 100%;
+		font-family: inherit;
+		font-size: var(--bb-action-fs);
+		font-weight: 900;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		line-height: 1;
+		color: #f5e6c8;
+		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+		transition:
+			transform 0.1s,
+			filter 0.15s,
+			opacity 0.15s;
+
+		&:hover:not(:disabled) {
+			filter: brightness(1.1);
+		}
 
 		&:disabled {
 			opacity: 0.45;
@@ -528,27 +588,156 @@
 		}
 	}
 
-	.duel-buy-panel.portrait .side-cards {
-		grid-template-columns: 1fr;
-		max-width: 380px;
-		margin-inline: auto;
+	.pick-footer .action-btn {
+		max-width: 100%;
 	}
 
-	.duel-buy-panel.popout-s {
-		width: min(360px, 96vw);
+	.confirm-actions .action-btn {
+		max-width: 46%;
+	}
+
+	.duel-pick-panel.portrait:not(.popout-l):not(.popout-s) {
+		--bb-card-price-fs: calc(var(--panel-width) * 0.058);
+		--bb-action-fs: calc(var(--panel-width) * 0.038);
+		--bb-title-fs: calc(var(--panel-width) * 0.052);
+
+		.cards-section {
+			top: 23.5%;
+			width: 90%;
+			height: 52%;
+			column-gap: calc(var(--panel-width) * 0.024);
+		}
+
+		.pick-card-name {
+			font-size: clamp(1.05rem, 14cqw, 1.9rem);
+		}
+
+		.pick-card-tag {
+			font-size: clamp(1.45rem, 18cqw, 2.5rem);
+			bottom: 14%;
+		}
+
+		.pick-footer {
+			left: 22%;
+			right: 22%;
+		}
+
+		.cards-section.confirm-mode {
+			top: 10.5%;
+			width: 66%;
+			height: 70%;
+
+			.pick-card-name {
+				font-size: clamp(1.4rem, 17cqw, 2.45rem);
+			}
+
+			.pick-card-tag {
+				font-size: clamp(1.75rem, 21cqw, 3rem);
+				bottom: 14%;
+			}
+
+			.pick-card-price {
+				font-size: calc(var(--panel-width) * 0.072);
+			}
+		}
+	}
+
+	.duel-pick-panel.popout-l {
+		--bb-card-price-fs: calc(var(--panel-width) * 0.052);
+		--bb-action-fs: calc(var(--panel-width) * 0.032);
+		--bb-title-fs: calc(var(--panel-width) * 0.044);
+
+		.cards-section {
+			top: 23%;
+			width: 88%;
+			column-gap: calc(var(--panel-width) * 0.022);
+		}
+
+		.cards-section.confirm-mode {
+			top: 10.5%;
+			width: 66%;
+			height: 70%;
+
+			.pick-card-name {
+				font-size: clamp(0.95rem, 13cqw, 1.55rem);
+			}
+
+			.pick-card-tag {
+				font-size: clamp(1rem, 14cqw, 1.65rem);
+				bottom: 14.5%;
+			}
+
+			.pick-card-price {
+				font-size: calc(var(--panel-width) * 0.062);
+			}
+		}
+
+		.pick-card-name {
+			font-size: clamp(0.65rem, 10cqw, 1.1rem);
+		}
+
+		.pick-card-tag {
+			font-size: clamp(0.7rem, 11cqw, 1.1rem);
+			bottom: 14.5%;
+		}
+	}
+
+	.duel-pick-panel.popout-s {
+		--bb-card-price-fs: calc(var(--panel-width) * 0.052);
+		--bb-action-fs: calc(var(--panel-width) * 0.032);
+		--bb-title-fs: calc(var(--panel-width) * 0.042);
 
 		.pick-title {
-			font-size: 0.95rem;
+			top: 11%;
 		}
 
-		.side-desc,
-		.confirm-desc {
-			font-size: 0.55rem;
+		.cards-section {
+			top: 23%;
+			width: 90%;
+			height: 52%;
+			column-gap: calc(var(--panel-width) * 0.02);
 		}
 
-		.side-visual {
-			width: 64px;
-			height: 64px;
+		.pick-card-name {
+			font-size: clamp(0.55rem, 10cqw, 0.85rem);
+		}
+
+		.pick-card-tag {
+			font-size: clamp(0.5rem, 11cqw, 0.75rem);
+			bottom: 13.5%;
+		}
+
+		.pick-footer {
+			left: 24%;
+			right: 24%;
+			height: 12%;
+		}
+
+		.cards-section.confirm-mode {
+			top: 10.5%;
+			width: 66%;
+			height: 70%;
+
+			.pick-card-name {
+				font-size: clamp(0.8rem, 13cqw, 1.25rem);
+			}
+
+			.pick-card-tag {
+				font-size: clamp(0.85rem, 14cqw, 1.35rem);
+				bottom: 13.5%;
+			}
+
+			.pick-card-price {
+				font-size: calc(var(--panel-width) * 0.062);
+			}
+		}
+
+		.pick-card-mascot.mascot-dog :global(.pick-spine.fill) {
+			transform: scale(1.2) translateY(4%);
+		}
+
+		.pick-card-mascot.mascot-cat :global(.pick-spine.fill) {
+			transform: scale(1.55) translateY(5%);
 		}
 	}
 </style>

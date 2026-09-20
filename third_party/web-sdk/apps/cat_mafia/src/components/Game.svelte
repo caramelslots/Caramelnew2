@@ -31,7 +31,6 @@
 	import EnableBoardIdleBounce from './EnableBoardIdleBounce.svelte';
 	import EnableLivingIdle from './EnableLivingIdle.svelte';
 	import EnablePauseMainPixiOnBuyBonus from './EnablePauseMainPixiOnBuyBonus.svelte';
-	import EnableBuyBonusWarmLifecycle from './EnableBuyBonusWarmLifecycle.svelte';
 	import EnableDuelPhoneDpr from './EnableDuelPhoneDpr.svelte';
 	import ResumeBet from './ResumeBet.svelte';
 	import Sound from './Sound.svelte';
@@ -154,7 +153,6 @@
 		<EnableBoardIdleBounce />
 		<EnableLivingIdle />
 		<EnablePauseMainPixiOnBuyBonus />
-		<EnableBuyBonusWarmLifecycle />
 		<EnablePixiExtension />
 		<EnableDuelPhoneDpr />
 

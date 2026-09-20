@@ -20,7 +20,6 @@
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
 	import { OnMount } from 'components-shared';
 
-	import WinCoins from './WinCoins.svelte';
 	import WinAnimation from './WinAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
@@ -33,7 +32,7 @@
 	import { getContext } from '../game/context';
 	import { scaleMsByGameSpeed } from '../game/gameSpeed';
 	import { stateGame } from '../game/stateGame.svelte';
-	import { winLevelMap, UNIFIED_BIG_WIN_SPINE, type WinLevel } from '../game/winLevelMap';
+	import { winLevelMap, type WinLevel } from '../game/winLevelMap';
 	import { sound } from '../game/sound';
 
 	const context = getContext();
@@ -52,6 +51,12 @@
 	// When non-null, calling it skips the current tier's wait and advances to the next tier.
 	// Null means we're on the final tier — click should finish the count-up instead.
 	let skipCurrentTier = $state<(() => void) | null>(null);
+	let winAnimation: { playOutro: () => Promise<void> } | undefined = $state();
+
+	const finishWinPresentation = async () => {
+		await winAnimation?.playOutro();
+		oncomplete();
+	};
 
 	/**
 	 * Builds the win ladder for big wins:
@@ -61,7 +66,7 @@
 	 *   level 9+ → [Big, Super, Epic, Sensational]
 	 *
 	 * Duplicate banner labels are deduplicated (levels 9 & 10 both say
-	 * SENSATIONAL WIN) so the ladder never shows the same title twice.
+	 * SENSATIONAL) so the ladder never shows the same title twice.
 	 */
 	function computeWinLadder(data: WinLevelData): WinLevelData[] {
 		const BIG_WIN_LEVEL = 6;
@@ -199,7 +204,7 @@
 						await waitForTimeout(
 							scaleMsByGameSpeed(WIN_SCREEN_POST_COUNT_UP_DELAY_MS, stateGame.gameSpeed),
 						);
-						oncomplete();
+						await finishWinPresentation();
 					}}
 				/>
 
@@ -209,17 +214,20 @@
 						y={context.stateGameDerived.boardLayout().y}
 					>
 						{#if currentTierData?.animation}
+							{@const amountMaxWidth = context.stateGameDerived.boardLayout().width * 1.4}
 							<WinAnimation
-								animationMap={UNIFIED_BIG_WIN_SPINE}
+								bind:this={winAnimation}
+								animationMap={currentTierData.animation}
 								bannerOverrideText={currentTierData.text ?? undefined}
 							>
 								<ResponsiveCurrencyBitmapText
 									anchor={0.5}
-									maxWidth={2130}
+									y={-SYMBOL_SIZE * 0.2}
+									maxWidth={amountMaxWidth}
 									amount={countUpAmount}
 									bookEvent
 									style={{
-										fontSize: SYMBOL_SIZE * 3.6 * BITMAP_FONT_SCALE,
+										fontSize: SYMBOL_SIZE * 7.6 * BITMAP_FONT_SCALE,
 										align: 'center',
 										fontWeight: 'bold',
 										letterSpacing: 0,
@@ -245,12 +253,10 @@
 					</Container>
 				</MainContainer>
 
-				<WinCoins emit={!countUpCompleted} levelAlias={winLevelData?.alias} />
-
 				<PressToContinue
 					onpress={() => {
 						if (countUpCompleted) {
-							oncomplete();
+							void finishWinPresentation();
 						} else if (skipCurrentTier) {
 							// On an intermediate ladder tier — skip to the next one
 							skipCurrentTier();

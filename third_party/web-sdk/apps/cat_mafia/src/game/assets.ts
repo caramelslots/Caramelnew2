@@ -278,8 +278,8 @@ export default {
 	bigwin: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/bigwin/big_wins.atlas'),
-			skeleton: assetUrl('assets/spines/bigwin/mm_bigwin.json'),
+			atlas: assetUrl('assets/spines/bigwin/money.atlas'),
+			skeleton: assetUrl('assets/spines/bigwin/money.json'),
 			scale: 2,
 		},
 	},
@@ -303,6 +303,11 @@ export default {
 	fsCongFrame: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/fsCong/fs_frame.webp'),
+	},
+	/** Side text claws flanking YOU WON — FreeSpinIntro only (award + extra). */
+	fsCongTextPaw: {
+		type: 'sprite',
+		src: assetUrl('assets/sprites/fsCong/fs_text_paw.webp'),
 	},
 	/** Empty FREE SPINS banner (gems + frame) — label text is overlaid for i18n. */
 	fsCongBoard: {
@@ -344,19 +349,13 @@ export default {
 	mascotDog: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/mascot/mascot_dog.atlas'),
-			skeleton: assetUrl('assets/spines/mascot/mascot_dog.json'),
+			atlas: assetUrl('assets/spines/mascot/dog/mascot_dog.atlas'),
+			skeleton: assetUrl('assets/spines/mascot/dog/mascot_dog.json'),
 			scale: 1,
 		},
 	},
-	coins: {
-		type: 'spriteSheet',
-		src: assetUrl('assets/sprites/coin/SD2_Coin.json'),
-	},
-	// Baked paw-coin animations (bronze/silver/gold × appear/loop) — board
-	// symbols PB/PS/PG render from this sheet (SymbolCoinPaw.svelte).
 	// Live coin spine (60fps, skins coin_bronze/coin_silver/coin_gold) — board
-	// symbols PB/PS/PG render this natively in Pixi instead of the baked sheet.
+	// symbols PB/PS/PG render this natively in Pixi.
 	coinsPaw: {
 		type: 'spine',
 		src: {

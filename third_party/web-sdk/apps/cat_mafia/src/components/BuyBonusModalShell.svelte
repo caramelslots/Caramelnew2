@@ -61,6 +61,7 @@
 		<div
 			class="panel-slot"
 			class:active={showDuelPickPanel}
+			class:preparing={isBuyFlowOpen && !showDuelPickPanel}
 			aria-hidden={!showDuelPickPanel}
 			inert={!showDuelPickPanel}
 		>

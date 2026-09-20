@@ -152,9 +152,10 @@ const asCanvasImageSource = (resource: unknown): CanvasImageSource | null => {
  * cat + WILD banner + frame. Rays / wheel / arch / glows stay off GPU.
  */
 export const isBuyBonusKeptAtlasRegion = (name: string) =>
-	!/glow|rays|Circle_rays|^arch$|^wheel$|sector|^pointer$|^clip$|gradient|photo_/i.test(
-		name,
-	) && name !== 'background';
+	// Keep card chrome (`normal_*`, `gradient_visual2`); drop SW FX + reference stills.
+	!/glow|rays|Circle_rays|^arch$|^wheel$|sector|^pointer$|^clip$|photo_/i.test(name) &&
+	name !== 'background' &&
+	!/^gradient_visual$/i.test(name);
 
 const packedRegionSize = (region: TextureAtlasRegion) => {
 	const rot90 = region.degrees === 90;
@@ -235,8 +236,10 @@ export const compactBuyBonusAtlas = (atlas: TextureAtlas): number => {
 		page.regions.length = 0;
 		page.regions.push(...leftover);
 		page.setTexture(SpineTexture.from(emptyTex.source));
+		// Do not destroy(true): Assets still owns this source until unload.
+		// Hard-destroy left a dead atlas in cache → Super/Duel blank after remount.
 		try {
-			pixiTex.destroy(true);
+			pixiTex.destroy(false);
 		} catch {
 			/* GPU already released */
 		}

@@ -22,13 +22,15 @@
 </script>
 
 <script lang="ts">
-	import { fade } from 'svelte/transition';
+	import { fade, scale } from 'svelte/transition';
+	import { backOut, cubicOut } from 'svelte/easing';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { waitForResolve } from 'utils-shared/wait';
 	import { OnHotkey } from 'components-shared';
 
 	import { stateBet } from 'state-shared';
 
+	import assets from '../game/assets';
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
@@ -39,6 +41,7 @@
 		DUEL_BANK_SCALE_SRC,
 		DUEL_CAT_FACE_AVATAR_SRC,
 		DUEL_DOG_FACE_AVATAR_SRC,
+		DUEL_PICK_CARD,
 	} from '../game/duelAssets';
 	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
@@ -83,6 +86,19 @@
 	let onOutroContinue = $state(() => {});
 
 	const money = (bookCents: number) => bookEventAmountToCurrencyString(bookCents);
+
+	const outroBgUrl = assets.fsCongBg.src;
+	const outroFrameUrl = assets.fsCongFrame.src;
+	const isPopoutLarge = $derived(isPopoutViewport(canvasSizes) && !isPopoutSmall);
+
+	const outroPlayerTotal = $derived(outroPlayerSide === 'cat' ? outroCat : outroDog);
+	const outroEnemyTotal = $derived(outroPlayerSide === 'cat' ? outroDog : outroCat);
+	const lossTitle = $derived(context.i18nDerived.duelOutroLossTitle());
+	const lossEnemyLabel = $derived(context.i18nDerived.duelOutroLossEnemy());
+	const lossYouLabel = $derived(context.i18nDerived.duelOutroLossYou());
+	const lossEnemyAmount = $derived(money(outroEnemyTotal));
+	const lossYouAmount = $derived(money(outroPlayerTotal));
+
 	/** Cloud spine sits in Pixi (z50) — hide HTML chrome/modals so they stay under it. */
 	const underCloud = $derived(stateGame.transitionActive);
 	const portraitAvatarSize = $derived(Math.round(Math.min(88, duelLayout.boardWidth * 0.28)));
@@ -141,7 +157,8 @@
 			duelLayout.boardHeight * 0.5;
 		const scaleH = bankRatioWidth / DUEL_BANK_SCALE.aspect;
 
-		if (isPopoutSmall) {
+		// Phones keep the tighter tuck under the desks.
+		if (isPopoutSmall || isPortrait) {
 			const preferred = deskBottom - Math.round(duelLayout.boardHeight * 0.04);
 			const maxTop = canvasSizes.height - Math.round(scaleH * 0.78);
 			return Math.min(preferred, maxTop);
@@ -154,6 +171,8 @@
 			return Math.min(preferred, maxTop);
 		}
 
+		// Desktop: tuck the scale under the desks (menu stays put).
+		// Only the WIN sum text is nudged lower via `.bank-ratio-total`.
 		const gap = Math.round(duelLayout.boardHeight * -0.035);
 		return deskBottom + gap;
 	});
@@ -378,14 +397,19 @@
 					tabindex={pickShow ? 0 : -1}
 					onclick={() => chooseSide('dog')}
 				>
-					<span class="pick-pedestal" aria-hidden="true">
-						<span class="pick-pedestal-glow"></span>
-						<span class="pick-pedestal-card">
-							<DuelPickMascot species="dog" mirror playing={pickShow} />
+					<span class="pick-card" aria-hidden="true">
+						<img class="pick-card-layer pick-card-bg" src={DUEL_PICK_CARD.dog.bg} alt="" draggable="false" />
+						<span class="pick-card-mascot">
+							<DuelPickMascot species="dog" mirror playing={pickShow} fill />
 						</span>
-						<span class="pick-pedestal-base"></span>
+						<img
+							class="pick-card-layer pick-card-frame"
+							src={DUEL_PICK_CARD.dog.frame}
+							alt=""
+							draggable="false"
+						/>
+						<span class="pick-card-name">DOG</span>
 					</span>
-					<span class="pick-mascot-name">DOG</span>
 				</button>
 				<button
 					type="button"
@@ -395,14 +419,19 @@
 					tabindex={pickShow ? 0 : -1}
 					onclick={() => chooseSide('cat')}
 				>
-					<span class="pick-pedestal" aria-hidden="true">
-						<span class="pick-pedestal-glow"></span>
-						<span class="pick-pedestal-card">
-							<DuelPickMascot playing={pickShow} />
+					<span class="pick-card" aria-hidden="true">
+						<img class="pick-card-layer pick-card-bg" src={DUEL_PICK_CARD.cat.bg} alt="" draggable="false" />
+						<span class="pick-card-mascot">
+							<DuelPickMascot playing={pickShow} fill />
 						</span>
-						<span class="pick-pedestal-base"></span>
+						<img
+							class="pick-card-layer pick-card-frame"
+							src={DUEL_PICK_CARD.cat.frame}
+							alt=""
+							draggable="false"
+						/>
+						<span class="pick-card-name">CAT</span>
 					</span>
-					<span class="pick-mascot-name">CAT</span>
 				</button>
 			</div>
 		</div>
@@ -414,9 +443,8 @@
 		class="duel-modal"
 		transition:fade={{ duration: 200 }}
 		data-test="duel-outro"
-		role="dialog"
-		aria-modal="true"
-		tabindex="-1"
+		role="button"
+		tabindex="0"
 		onclick={() => onOutroContinue()}
 		onkeydown={(e) => {
 			if (e.key === 'Enter' || e.key === ' ') {
@@ -425,29 +453,31 @@
 			}
 		}}
 	>
-		<div class="modal-card" class:win={outroPlayerWon} class:lose={!outroPlayerWon}>
-			<p class="eyebrow">DUEL RESULT</p>
-			{#if outroPlayerWon}
-				<h2>YOU WIN</h2>
-				<p class="body">Played as {outroPlayerSide === 'cat' ? 'CAT' : 'DOG'}</p>
-				<div class="compare">
-					<span>Dog {money(outroDog)}</span>
-					<span class="plus">+</span>
-					<span>Cat {money(outroCat)}</span>
+		<div
+			class="loss-board"
+			class:portrait={isPortrait}
+			class:popout-l={isPopoutLarge}
+			class:popout-s={isPopoutSmall}
+			role="presentation"
+			in:scale={{ duration: 320, easing: backOut, start: 0.88, opacity: 0 }}
+			out:scale={{ duration: 200, easing: cubicOut, start: 0.95, opacity: 0 }}
+		>
+			<img class="layer layer-bg" src={outroBgUrl} alt="" draggable="false" loading="eager" />
+			<img class="layer layer-frame" src={outroFrameUrl} alt="" draggable="false" loading="eager" />
+			<div class="board-content">
+				<div class="content-safe">
+					<h2 class="loss-title">{lossTitle}</h2>
+					<div class="loss-row enemy">
+						<span class="loss-label">{lossEnemyLabel}</span>
+						<span class="loss-amount">{lossEnemyAmount}</span>
+					</div>
+					<div class="loss-divider" aria-hidden="true"></div>
+					<div class="loss-row you">
+						<span class="loss-label">{lossYouLabel}</span>
+						<span class="loss-amount">{lossYouAmount}</span>
+					</div>
 				</div>
-				<p class="payout">{money(outroPayout)}</p>
-				<p class="body muted">Both banks paid</p>
-			{:else}
-				<h2>YOU LOSE</h2>
-				<p class="body">Played as {outroPlayerSide === 'cat' ? 'CAT' : 'DOG'}</p>
-				<div class="compare">
-					<span>Dog {money(outroDog)}</span>
-					<span class="plus">·</span>
-					<span>Cat {money(outroCat)}</span>
-				</div>
-				<p class="payout lose">{money(0)}</p>
-				<p class="body muted">{outroWinner === 'cat' ? 'Cat' : 'Dog'} finished ahead</p>
-			{/if}
+			</div>
 		</div>
 		<PressToContinueHtml />
 	</div>
@@ -699,8 +729,8 @@
 			0 2px 6px rgba(0, 0, 0, 0.7);
 		pointer-events: none;
 		user-select: none;
-		/* Nudge WIN label slightly up into the plaque center. */
-		transform: translateY(-18%);
+		/* WIN sum inside the plaque — scale art stays put. */
+		transform: translateY(0%);
 	}
 
 	.bank-ratio-total-label {
@@ -715,13 +745,16 @@
 		font-size: clamp(0.62rem, 3.2vh, 1rem);
 	}
 
-	.duel-modal {
+.duel-modal {
 		position: fixed;
 		inset: 0;
 		/* Below Pixi cloud stage (z50) so transition always covers this UI. */
 		z-index: 48;
-		display: grid;
-		place-items: center;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
 		background: rgba(6, 4, 12, 0.55);
 		pointer-events: auto;
 		cursor: pointer;
@@ -747,12 +780,9 @@
 	.pick-stage {
 		/* Viewport-only tokens (no % of self) so card size stays stable everywhere. */
 		--pick-gap: clamp(14px, 2.8vw, 40px);
-		--pick-card: min(400px, 36vw, 58vh, calc((90vw - var(--pick-gap)) / 2));
+		--pick-card: min(340px, 34vw, calc(68vh * 437 / 625), calc((90vw - var(--pick-gap)) / 2));
 		--pick-title-size: clamp(1.15rem, 3.6vw, 2.1rem);
-		--pick-name-size: clamp(0.75rem, 2.1vw, 1.25rem);
-		--pick-card-pad: clamp(0.28rem, 1vw, 0.55rem);
-		--pick-card-radius: clamp(0.7rem, 1.4vw, 1.15rem);
-		--pick-inner-gap: clamp(0.28rem, 1vw, 0.65rem);
+		--pick-name-size: clamp(0.72rem, 2vw, 1.15rem);
 
 		display: flex;
 		flex-direction: column;
@@ -794,10 +824,7 @@
 		background: transparent;
 		padding: 0;
 		margin: 0;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: var(--pick-inner-gap);
+		display: block;
 		width: 100%;
 		min-width: 0;
 		max-width: 100%;
@@ -805,22 +832,15 @@
 		cursor: pointer;
 		color: #f6e8c8;
 		font-family: inherit;
-		transition: transform 0.14s ease;
+		filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.55));
+		transition:
+			transform 0.14s ease,
+			filter 0.14s ease;
 
 		&:hover {
 			transform: translateY(-6px) scale(1.03);
-
-			.pick-pedestal-card {
-				border-color: rgba(255, 220, 140, 0.75);
-				box-shadow:
-					0 16px 36px rgba(0, 0, 0, 0.55),
-					0 0 28px rgba(255, 200, 90, 0.28),
-					inset 0 1px 0 rgba(255, 240, 200, 0.18);
-			}
-
-			.pick-pedestal-glow {
-				opacity: 0.9;
-			}
+			filter: drop-shadow(0 18px 34px rgba(0, 0, 0, 0.6))
+				drop-shadow(0 0 22px rgba(255, 200, 90, 0.28));
 		}
 
 		&:active {
@@ -828,99 +848,72 @@
 		}
 	}
 
-	.pick-pedestal {
+	.pick-card {
 		position: relative;
 		display: block;
 		width: 100%;
+		aspect-ratio: 437 / 625;
 		min-width: 0;
 	}
 
-	.pick-pedestal-glow {
-		position: absolute;
-		left: 50%;
-		bottom: 8%;
-		width: 78%;
-		height: 42%;
-		transform: translateX(-50%);
-		border-radius: 50%;
-		background: radial-gradient(
-			ellipse at center,
-			rgba(255, 200, 110, 0.35) 0%,
-			rgba(120, 60, 180, 0.12) 45%,
-			transparent 72%
-		);
-		opacity: 0.55;
-		pointer-events: none;
-		transition: opacity 0.14s ease;
-	}
-
-	.pick-pedestal-card {
-		position: relative;
-		display: block;
-		width: 100%;
-		min-width: 0;
-		box-sizing: border-box;
-		padding: var(--pick-card-pad) var(--pick-card-pad) 0.08rem;
-		border-radius: var(--pick-card-radius);
-		background: linear-gradient(
-			165deg,
-			rgba(72, 48, 96, 0.92) 0%,
-			rgba(24, 14, 38, 0.96) 55%,
-			rgba(12, 8, 22, 0.98) 100%
-		);
-		border: 1px solid rgba(230, 190, 110, 0.42);
-		box-shadow:
-			0 14px 32px rgba(0, 0, 0, 0.5),
-			inset 0 1px 0 rgba(255, 240, 200, 0.12);
-		overflow: hidden;
-		transition:
-			border-color 0.14s ease,
-			box-shadow 0.14s ease;
-	}
-
-	.pick-pedestal-card::before {
-		content: '';
+	.pick-card-layer {
 		position: absolute;
 		inset: 0;
-		background:
-			radial-gradient(ellipse 80% 55% at 50% 18%, rgba(255, 220, 150, 0.12), transparent 60%),
-			linear-gradient(180deg, transparent 55%, rgba(0, 0, 0, 0.28) 100%);
+		width: 100%;
+		height: 100%;
+		object-fit: fill;
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.pick-card-bg {
+		z-index: 0;
+	}
+
+	.pick-card-mascot {
+		position: absolute;
+		/* Clear window inside the gold frame (measured on 437×625 art). */
+		left: 7%;
+		right: 7%;
+		top: 13.5%;
+		bottom: 15%;
+		z-index: 1;
+		overflow: hidden;
 		pointer-events: none;
 	}
 
-	.pick-pedestal-base {
-		display: block;
-		width: 72%;
-		height: clamp(0.28rem, 1vmin, 0.55rem);
-		margin: -0.1rem auto 0;
-		border-radius: 999px;
-		background: linear-gradient(
-			90deg,
-			transparent 0%,
-			rgba(40, 24, 20, 0.95) 18%,
-			rgba(90, 60, 30, 0.9) 50%,
-			rgba(40, 24, 20, 0.95) 82%,
-			transparent 100%
-		);
-		box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+	.pick-card-frame {
+		z-index: 2;
 	}
 
-	.pick-mascot-name {
-		font-size: var(--pick-name-size);
-		letter-spacing: 0.16em;
-		text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
-		padding: clamp(0.08rem, 0.6vmin, 0.2rem) clamp(0.45rem, 1.6vmin, 0.85rem);
-		border-radius: 999px;
-		background: rgba(18, 10, 28, 0.82);
-		border: 1px solid rgba(255, 220, 140, 0.4);
+	.pick-card-name {
+		position: absolute;
+		left: 12%;
+		right: 12%;
+		/* Sit higher in the arched ribbon. */
+		top: 0.6%;
+		height: 9%;
+		z-index: 3;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding-bottom: 0.35%;
+		font-size: clamp(0.75rem, 2.1vw, 1.25rem);
+		letter-spacing: 0.14em;
+		line-height: 1;
+		color: #f8ecd0;
+		text-shadow:
+			0 1px 0 rgba(40, 18, 8, 0.85),
+			0 2px 6px rgba(0, 0, 0, 0.55);
+		pointer-events: none;
 	}
 
 	/* Phone portrait — same tokens, stacked column. */
 	.pick-modal.portrait .pick-stage {
 		--pick-gap: clamp(14px, 2.8vh, 24px);
-		--pick-card: min(280px, 62vw);
+		--pick-card: min(260px, 58vw, calc(52vh * 437 / 625));
 		--pick-title-size: clamp(1.25rem, 6.5vw, 1.75rem);
-		--pick-name-size: clamp(0.88rem, 3.8vw, 1.05rem);
+		--pick-name-size: clamp(0.82rem, 3.6vw, 1rem);
 		width: min(320px, 92vw);
 		padding-top: clamp(0.85rem, 5vh, 2rem);
 		max-height: min(92vh, 100%);
@@ -935,70 +928,161 @@
 		transform: translateY(-4px) scale(1.02);
 	}
 
-	.modal-card {
-		width: min(420px, 88vw);
-		padding: 1.6rem 1.4rem 1.2rem;
-		border-radius: 1rem;
-		background: linear-gradient(180deg, #3a2750 0%, #1a1028 100%);
-		border: 1px solid rgba(230, 190, 110, 0.45);
-		box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
-		text-align: center;
-		color: #f6e8c8;
-		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
-		cursor: pointer;
+	.loss-board {
+		--panel-width: min(860px, 98vw);
+		position: relative;
+		width: var(--panel-width);
+		aspect-ratio: calc(2000 / 1500);
+		max-height: 82vh;
+		pointer-events: none;
+		filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.75));
 	}
 
-	.modal-card.win {
-		border-color: rgba(180, 255, 170, 0.45);
+	.layer {
+		position: absolute;
+		inset: 0;
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		user-select: none;
+		pointer-events: none;
 	}
 
-	.modal-card.lose {
-		border-color: rgba(255, 150, 150, 0.4);
+	.layer-bg {
+		z-index: 0;
 	}
 
-	.eyebrow {
-		margin: 0;
-		font-size: 0.75rem;
-		letter-spacing: 0.14em;
-		opacity: 0.7;
+	.layer-frame {
+		z-index: 1;
 	}
 
-	.modal-card h2 {
-		margin: 0.35rem 0 0.7rem;
-		font-size: clamp(1.5rem, 4.5vw, 2.2rem);
-		letter-spacing: 0.06em;
+	.board-content {
+		position: absolute;
+		inset: 0;
+		z-index: 2;
 	}
 
-	.body {
-		margin: 0.25rem 0;
-		font-size: 0.95rem;
-		line-height: 1.35;
-	}
-
-	.body.muted {
-		opacity: 0.75;
-		font-size: 0.85rem;
-	}
-
-	.compare {
+	/* Keep clear of gold frame + bottom paw medallion. */
+	.content-safe {
+		position: absolute;
+		top: 26%;
+		left: 16%;
+		right: 16%;
+		bottom: 28%;
 		display: flex;
-		justify-content: center;
+		flex-direction: column;
 		align-items: center;
-		gap: 0.45rem;
-		font-size: 0.95rem;
+		justify-content: center;
+		gap: calc(var(--panel-width) * 0.01);
+		box-sizing: border-box;
+		text-align: center;
+		overflow: hidden;
 	}
 
-	.compare .plus {
-		opacity: 0.6;
+	.loss-title {
+		margin: 0;
+		width: 100%;
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.046);
+		font-weight: 800;
+		line-height: 1.05;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: #ffe28a;
+		text-shadow:
+			0 1px 0 #fff3b0,
+			0 2px 0 #5a3a0e,
+			0 4px 10px rgba(0, 0, 0, 0.55);
 	}
 
-	.payout {
-		margin: 0.8rem 0 0.25rem;
-		font-size: 1.7rem;
+	.loss-row {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: calc(var(--panel-width) * 0.004);
+		width: 100%;
+		padding: 0 2%;
+		box-sizing: border-box;
+	}
+
+	.loss-label {
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.022);
+		font-weight: 700;
+		line-height: 1.15;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: #f5e0c0;
+		text-shadow:
+			0 1px 0 #000,
+			1px 1px 3px rgba(0, 0, 0, 0.9);
+	}
+
+	/* Solid fills only — transparent clip + filter reads as black digits. */
+	.loss-amount {
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.048);
+		font-weight: 800;
+		line-height: 1;
+		letter-spacing: 0.02em;
+		font-variant-numeric: tabular-nums;
+		color: #ffe7a0;
+		text-shadow:
+			0 1px 0 rgba(255, 240, 180, 0.55),
+			0 2px 0 #5a3a0e,
+			0 4px 8px rgba(0, 0, 0, 0.55);
+	}
+
+	.loss-row.enemy .loss-label {
+		color: #ffc9c9;
+	}
+
+	.loss-row.enemy .loss-amount {
+		color: #ffb4b4;
+		text-shadow:
+			0 1px 0 rgba(255, 210, 210, 0.45),
+			0 2px 0 #4a1818,
+			0 4px 8px rgba(0, 0, 0, 0.55);
+	}
+
+	.loss-row.you .loss-label {
 		color: #ffe7a0;
 	}
 
-	.payout.lose {
-		color: #ff9b9b;
+	.loss-row.you .loss-amount {
+		color: #ffd56a;
 	}
+
+	.loss-divider {
+		width: min(58%, 220px);
+		height: 2px;
+		margin: calc(var(--panel-width) * 0.002) 0;
+		border-radius: 999px;
+		background: linear-gradient(
+			90deg,
+			transparent 0%,
+			rgba(255, 210, 110, 0.15) 12%,
+			rgba(255, 220, 130, 0.9) 50%,
+			rgba(255, 210, 110, 0.15) 88%,
+			transparent 100%
+		);
+		box-shadow: 0 0 12px rgba(255, 190, 60, 0.35);
+	}
+
+	.loss-board.portrait:not(.popout-l):not(.popout-s) {
+		--panel-width: min(920px, 100vw);
+		transform: scale(1.12);
+		transform-origin: center center;
+	}
+
+	.loss-board.popout-l {
+		--panel-width: min(520px, 94vw);
+	}
+
+	.loss-board.popout-s {
+		--panel-width: min(480px, 99vw);
+	}
+
 </style>

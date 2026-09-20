@@ -4,6 +4,7 @@
  */
 
 import {
+	AUTOPLAY_PILL_ASPECT,
 	BOARD_SIZES,
 	DESK_PARCHMENT,
 	DESK_PARCHMENT_PADDING,
@@ -251,18 +252,20 @@ export const getDuelSpinCounterPos = (layout: DuelScreenLayout, side: 'cat' | 'd
 };
 
 /**
- * Phone FS pill — fractions of the gold desk.
- * RIGHT_INSET: larger = lefter, smaller = righter (0 = flush with the right pillar).
- * ABOVE_RAIL: larger = higher, smaller / negative = lower (0 = pill bottom on the rail).
+ * Phone FS plaque (`autoplay.webp`) — sits on the top gold desk rail.
+ * WIDTH_FRAC: plaque width as a fraction of desk slot width.
+ * CENTER_Y_FRAC: plaque centre from desk top (0 = flush with top edge).
+ * OFFSET_X_FRAC: shift from desk centre (+ = right).
  */
-export const PORTRAIT_FS_COUNTER_RIGHT_INSET_FRAC = 0.03;
-export const PORTRAIT_FS_COUNTER_ABOVE_RAIL_FRAC = -0.06;
+export const PORTRAIT_FS_COUNTER_WIDTH_FRAC = 0.18;
+export const PORTRAIT_FS_COUNTER_CENTER_Y_FRAC = 0.09;
+export const PORTRAIT_FS_COUNTER_OFFSET_X_FRAC = 0.28;
 
 /**
- * Bonus normal / super FS pill on phone — same gold-rail sit as duel,
- * mirrored to the top-right of the single desk.
+ * Bonus normal / super FS plaque on phone — top desk rail,
+ * sized to `autoplay.webp` (number only, no FREE SPINS label).
  */
-export const getPortraitFsCounterScreenPos = (opts: {
+export const getPortraitFsCounterScreenBox = (opts: {
 	mainLayout: MainLayoutLike;
 	boardLayout: BoardLayoutLike;
 }) => {
@@ -274,13 +277,21 @@ export const getPortraitFsCounterScreenPos = (opts: {
 	const boardCenterY = ml.y + (board.y - ml.height * 0.5) * ml.scale;
 	const slotW = (visualW * ml.scale) / DESK_PARCHMENT.widthFrac;
 	const slotH = (visualH * ml.scale) / DESK_PARCHMENT.heightFrac;
-	const deskRight = boardCenterX - DESK_PARCHMENT.offsetXFrac * slotW + slotW * 0.5;
+	const deskCenterX = boardCenterX - DESK_PARCHMENT.offsetXFrac * slotW;
 	const deskTop = boardCenterY - DESK_PARCHMENT.offsetYFrac * slotH - slotH * 0.5;
+	const width = slotW * PORTRAIT_FS_COUNTER_WIDTH_FRAC;
+	const height = width / AUTOPLAY_PILL_ASPECT;
 	return {
-		left: deskRight - slotW * PORTRAIT_FS_COUNTER_RIGHT_INSET_FRAC,
-		top: deskTop - slotH * PORTRAIT_FS_COUNTER_ABOVE_RAIL_FRAC,
+		left: deskCenterX + slotW * PORTRAIT_FS_COUNTER_OFFSET_X_FRAC,
+		top: deskTop + slotH * PORTRAIT_FS_COUNTER_CENTER_Y_FRAC,
+		width,
+		height,
+		fontSize: height * 0.42,
 	};
 };
+
+/** @deprecated Prefer getPortraitFsCounterScreenBox — kept for call-site migration. */
+export const getPortraitFsCounterScreenPos = getPortraitFsCounterScreenBox;
 
 /** Screen box for the cat mascot to the right of the cat board (desktop). */
 export const getDuelCatMascotBox = (layout: DuelScreenLayout) => {

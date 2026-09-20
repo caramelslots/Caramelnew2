@@ -225,7 +225,7 @@ export type MascotSpineViewport = {
 };
 
 /**
- * Dog skeleton AABB from `mascot_dog.json` (+ small margins for baton / glow).
+ * Dog skeleton AABB from `dog/mascot_dog.json` (+ small margins for baton / glow).
  * Same pad fractions as the cat so `getMascotPixiTransform` framing matches.
  */
 export const MASCOT_DOG_SPINE_VIEWPORT = {
@@ -443,10 +443,10 @@ export const MASCOT_SPINE_FILES = [
 ] as const;
 
 export const MASCOT_DOG_SPINE_FILES = [
-	'mascot_dog.json',
-	'mascot_dog.atlas',
-	'mascot_dog.png',
-	'mascot_dog_2.png',
+	'dog/mascot_dog.json',
+	'dog/mascot_dog.atlas',
+	'dog/mascot_dog.png',
+	'dog/mascot_dog_2.png',
 ] as const;
 
 export const MASCOT_SPINE_ASSET_URLS = MASCOT_SPINE_FILES.map(resolveMascotSpineUrl);
@@ -456,7 +456,7 @@ export const MASCOT_DOG_SPINE_ASSET_URLS = MASCOT_DOG_SPINE_FILES.map(resolveMas
 export const MASCOT_SPINE_IMAGE_URL = resolveMascotSpineUrl('white/mascot_cat.png');
 export const MASCOT_SPINE_GRAY_IMAGE_URL = resolveMascotSpineUrl('gray/mascot_cat.png');
 
-/** Spine clip names in `mascot_dog.json`. */
+/** Spine clip names in `dog/mascot_dog.json`. */
 export type MascotDogSpineAnimation =
 	| 'idle'
 	| 'idle_glow'

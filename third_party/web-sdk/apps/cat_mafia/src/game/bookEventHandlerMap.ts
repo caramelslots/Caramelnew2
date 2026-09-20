@@ -46,7 +46,6 @@ import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
 import { preloadHtmlImages } from './preloadHtmlImages';
 import { FS_CONG_IMAGE_URLS } from './uiHtmlAssetManifest';
 import { waitForTimeout } from 'utils-shared/wait';
-import { evictBuyBonusForFeature, clearBuyBonusFeatureEvictLock } from './buyBonusSharedPixi';
 import { dismissTirAndUnloadGpu, waitAnimationFrames } from './tirGpuMemory';
 import {
 	getDrumLastFilledChamberIndex,
@@ -1124,8 +1123,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		{ bookEvents }: BookEventContext,
 	) => {
 		clearWinSpotlight();
-		// Drop buy-bonus WebGL before tir cabinet / atlases grow.
-		await evictBuyBonusForFeature();
 		// Celebrate Bonus tiles on the settled board before the target gallery
 		// opens — freeSpinTrigger skips this when a pick already ran.
 		const trigger = bookEvents.find(
@@ -1203,8 +1200,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		}
 		if (!hadTargetPick) {
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
-			// Natural / no-gallery path — still drop buy-bonus before FS GPU grows.
-			await evictBuyBonusForFeature();
 		}
 
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
@@ -1755,8 +1750,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Real book overrides layout-only DEV preview.
 		devPreview.forceShowDuelLayout = false;
 		resetDuelState();
-		// Drop buy-bonus WebGL before dual boards / dog atlas mount.
-		await evictBuyBonusForFeature();
 		// Keep active=false until the cloud cover — same reveal timing as FS.
 		stateDuel.phase = 'pick';
 		stateDuel.totalSpinsPerSide = bookEvent.totalSpinsPerSide;
@@ -2003,59 +1996,46 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Same units as setTotalWin / LabelWin (book cents).
 		stateBet.winBookEventAmount = payout;
 
-		eventEmitter.broadcast({ type: 'duelOutroShow' });
-		await eventEmitter.broadcastAsync({
-			type: 'duelOutroUpdate',
-			dogTotal: bookEvent.dogTotal,
-			catTotal: bookEvent.catTotal,
-			winner: bookEvent.winner,
-			playerSide,
-			playerWon,
-			payout,
-		});
-
-		let bigWinShown = false;
-		// Big Win only when the player's chosen side won.
-		if (playerWon && payout > 0) {
-			const winLevelData = winLevelMap[(stateDuel.winLevel ?? 1) as WinLevel];
-			if (winLevelData?.type === 'big') {
-				const BIG_WIN_LEVEL = 6 as const;
-				const firstTierData =
-					winLevelData.level > BIG_WIN_LEVEL ? winLevelMap[BIG_WIN_LEVEL] : winLevelData;
-				eventEmitter.broadcast({ type: 'duelOutroHide' });
-				eventEmitter.broadcast({ type: 'winShow' });
-				winLevelSoundsPlay({ winLevelData: firstTierData });
-				await eventEmitter.broadcastAsync({
-					type: 'winUpdate',
-					amount: payout,
-					winLevelData,
-				});
-				winLevelSoundsStop({ music: 'bgm_freespin' });
-				bigWinShown = true;
-			}
+		if (playerWon) {
+			// Win: same fsEnd / total_win panel as free-spin outro — amount only, no compare.
+			const winLevelData =
+				winLevelMap[(stateDuel.winLevel ?? 1) as WinLevel] ?? winLevelMap[1];
+			eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
+			winLevelSoundsPlay({ winLevelData });
+			await eventEmitter.broadcastAsync({
+				type: 'freeSpinOutroCountUp',
+				amount: payout,
+				winLevelData,
+			});
+			winLevelSoundsStop({ music: 'bgm_main' });
+			eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
+		} else {
+			// Loss: fsCong board with opponent vs player totals (see DuelModeOverlay).
+			eventEmitter.broadcast({ type: 'duelOutroShow' });
+			await eventEmitter.broadcastAsync({
+				type: 'duelOutroUpdate',
+				dogTotal: bookEvent.dogTotal,
+				catTotal: bookEvent.catTotal,
+				winner: bookEvent.winner,
+				playerSide,
+				playerWon,
+				payout,
+			});
 		}
 
-		// Cloud first — result modals stay up until the cover closes over them.
+		// Cloud cover — then tear down duel chrome.
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
 		const transitionPromise = eventEmitter.broadcastAsync({ type: 'transition' });
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		await waitForTimeout(TRANSITION_THEME_SWITCH_DELAY_MS);
 		eventEmitter.broadcast({ type: 'duelOutroHide' });
-		if (bigWinShown) {
-			// Same order as setWin: hide overlay first so Win.svelte won't re-force
-			// clap/react, then restore looping idle.
-			eventEmitter.broadcast({ type: 'winHide' });
-			stateGame.mascotPose = 'idle';
-		}
 		resetDuelState();
 		stateBet.activeBetModeKey = 'BASE';
-		// Duel cloud has no gameType — unlock buy-bonus warm remount explicitly.
-		clearBuyBonusFeatureEvictLock();
 		await transitionPromise;
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 	},
 
-	// customised
+
 	createBonusSnapshot: async (bookEvent: BookEventOfType<'createBonusSnapshot'>) => {
 		const { bookEvents } = bookEvent;
 

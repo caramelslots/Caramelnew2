@@ -38,10 +38,11 @@
 		const phone = isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType());
 		const loading =
 			context.stateLayout.showLoadingScreen && !gameEntrance.preloadContent;
-		const next = !phone && !loading && !context.stateGame.winOverlayActive;
+		const holdFirstFrame = phone || loading || !gameEntrance.liftComplete;
+		const next = !holdFirstFrame && !context.stateGame.winOverlayActive;
 		if (spine.autoUpdate !== next) spine.autoUpdate = next;
-		if (phone || loading) {
-			// One pose refresh so StreetOffscreenCull / skin apply still settle.
+		if (holdFirstFrame) {
+			// First animation frame (dim light) for loader, lift, and phone.
 			spine.update(0);
 		}
 	});

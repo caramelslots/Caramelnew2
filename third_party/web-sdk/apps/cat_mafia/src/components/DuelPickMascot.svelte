@@ -3,7 +3,7 @@
 	Kept mounted after warm-up so choose-side opens without a Spine load hitch.
 -->
 <script lang="ts">
-	import { onDestroy } from 'svelte';
+	import { onDestroy, untrack } from 'svelte';
 	import { SpinePlayer } from '@esotericsoftware/spine-player';
 	import '@esotericsoftware/spine-player/dist/spine-player.css';
 
@@ -32,7 +32,7 @@
 	const fill = $derived(props.fill === true);
 
 	let container = $state<HTMLDivElement | undefined>();
-	let player: SpinePlayer | undefined;
+	let player = $state<SpinePlayer | undefined>(undefined);
 	let ready = $state(false);
 
 	$effect(() => {
@@ -41,16 +41,18 @@
 		const isDog = species === 'dog';
 
 		let disposed = false;
-		player?.dispose();
-		player = undefined;
+		untrack(() => {
+			player?.dispose();
+			player = undefined;
+		});
 		ready = false;
 		el.replaceChildren();
 
 		const viewport = isDog ? MASCOT_DOG_SPINE_VIEWPORT : MASCOT_SPINE_VIEWPORT;
 		const animNames = isDog ? MASCOT_DOG_SPINE_ANIMATIONS : MASCOT_SPINE_ANIMATIONS;
 		const viewportAnims = Object.fromEntries(animNames.map((name) => [name, viewport]));
-		const jsonFile = isDog ? 'mascot_dog.json' : 'white/mascot_cat.json';
-		const atlasFile = isDog ? 'mascot_dog.atlas' : 'white/mascot_cat.atlas';
+		const jsonFile = isDog ? 'dog/mascot_dog.json' : 'white/mascot_cat.json';
+		const atlasFile = isDog ? 'dog/mascot_dog.atlas' : 'white/mascot_cat.atlas';
 
 		const created = new SpinePlayer(el, {
 			jsonUrl: resolveMascotSpineUrl(jsonFile),
@@ -78,7 +80,9 @@
 					}
 				}
 				spinePlayer.animationState?.setAnimation(0, 'idle', true);
-				spinePlayer.animationState!.timeScale = playing ? 1 : 0;
+				// Don't subscribe to `playing` here — that would remount the player on open.
+				spinePlayer.animationState!.timeScale = untrack(() => (playing ? 1 : 0));
+				player = created;
 				ready = true;
 			},
 		});
@@ -94,8 +98,9 @@
 
 	$effect(() => {
 		const p = player;
+		const isPlaying = playing;
 		if (!p?.animationState) return;
-		p.animationState.timeScale = playing ? 1 : 0;
+		p.animationState.timeScale = isPlaying ? 1 : 0;
 	});
 
 	onDestroy(() => {
@@ -116,7 +121,6 @@
 		aspect-ratio: 520 / 440;
 		pointer-events: none;
 		opacity: 0;
-		transition: opacity 0.25s ease;
 	}
 
 	.pick-spine.ready {

@@ -16,6 +16,19 @@ export const DUEL_BANK_SCALE_SRC = assetUrl('assets/sprites/duel/scale.png');
 /** Paw diamond slider that rides the bank scale (89×94). */
 export const DUEL_BANK_SCALE_PAW_SRC = assetUrl('assets/sprites/duel/scale_paw.png');
 
+/** Choose-side card art (437×625) — red for cat, blue for dog. */
+export const DUEL_PICK_CARD = {
+	aspect: 437 / 625,
+	cat: {
+		bg: assetUrl('assets/sprites/duel/pick_bg_cat.png'),
+		frame: assetUrl('assets/sprites/duel/pick_frame_cat.png'),
+	},
+	dog: {
+		bg: assetUrl('assets/sprites/duel/pick_bg_dog.png'),
+		frame: assetUrl('assets/sprites/duel/pick_frame_dog.png'),
+	},
+} as const;
+
 /**
  * Paw travel on `scale.png` (fractions of art width / height).
  * Left = dog lead, right = cat lead; measured from the coloured track edges.

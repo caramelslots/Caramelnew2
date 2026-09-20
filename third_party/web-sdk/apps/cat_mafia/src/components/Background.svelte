@@ -49,11 +49,9 @@
 		(context.stateGame.gameType === 'freegame' || showDuelBackground) && !hidePixiStreet,
 	);
 	const isPhone = $derived(isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType()));
-	/** Freeze street only until board preload starts (bootstrap logo phase). */
-	const loaderActive = $derived(
-		context.stateLayout.showLoadingScreen && !gameEntrance.preloadContent,
-	);
-	const playStreetIdle = $derived(!isPhone && !loaderActive);
+	/** First frame during lift / phone; play only after the slot has opened. */
+	const playStreetIdle = $derived(!isPhone && gameEntrance.liftComplete);
+	const streetTimeScale = $derived(playStreetIdle ? 1 : 0);
 	/** Full alpha under HTML cover; normal fade for in-game day/night swaps. */
 	const bgFadeMs = $derived(context.stateLayout.showLoadingScreen ? 0 : SECOND);
 
@@ -75,9 +73,12 @@
 			<SpineProvider key="mainBackground" {...spineProps}>
 				<BackgroundSkinController skin="day" />
 				<StreetOffscreenCull />
-				{#if playStreetIdle}
-					<SpineTrack trackIndex={0} animationName={BG_IDLE_ANIMATION} loop timeScale={1} />
-				{/if}
+				<SpineTrack
+					trackIndex={0}
+					animationName={BG_IDLE_ANIMATION}
+					loop
+					timeScale={streetTimeScale}
+				/>
 			</SpineProvider>
 		</Container>
 	</Container>
@@ -89,9 +90,12 @@
 			<SpineProvider key="mainBackground" {...spineProps}>
 				<BackgroundSkinController skin="night" />
 				<StreetOffscreenCull />
-				{#if playStreetIdle}
-					<SpineTrack trackIndex={0} animationName={BG_IDLE_ANIMATION} loop timeScale={1} />
-				{/if}
+				<SpineTrack
+					trackIndex={0}
+					animationName={BG_IDLE_ANIMATION}
+					loop
+					timeScale={streetTimeScale}
+				/>
 			</SpineProvider>
 		</Container>
 	</Container>
