@@ -351,17 +351,6 @@
 		z-index: 2;
 	}
 
-	.buy-bonus-card-spine :global(.street-still),
-	:global(.spine-portal .street-still) {
-		display: block;
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		object-position: center;
-		pointer-events: none;
-		user-select: none;
-	}
-
 	.buy-bonus-card-spine :global(.spine-player),
 	:global(.spine-portal .spine-player) {
 		position: absolute;
