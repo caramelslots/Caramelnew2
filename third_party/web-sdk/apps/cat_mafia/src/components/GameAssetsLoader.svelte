@@ -8,17 +8,17 @@
 	import { waitForTimeout } from 'utils-shared/wait';
 
 	import {
+		BATCH4_HTML_ONLY_KEYS,
 		LOADER_ASSET_BATCHES,
 		getBatch3KeysForLocale,
 		getEntryLoadKeyCount,
 	} from '../game/assetLoadPlan';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { waitForLoaderStage } from '../game/loaderAssetPipeline.svelte';
-	import { downscalePhoneSpineAtlases, isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
-	import { startBuyBonusSpineBitmapDecode } from '../game/buyBonusHtmlSpine';
-	import { ensureBuyBonusWarm } from '../game/buyBonusSharedPixi';
-	import { startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
+	import { downscalePhoneSpineAtlases } from '../game/phoneSpineAtlasDownscale';
 	import { ensureTargetBoardSpritesInPixi } from '../game/targetBoardAssets';
+	import { omitParkedTirAssets, parkTirGpuForDeferredLoad, shouldSkipDeferredTirMerge } from '../game/tirGpuMemory';
+	import { BATCH4_DEFERRED_KEYS } from '../game/featureGpuMemory';
 	import { stateUrlDerived } from 'state-shared';
 
 	type Props = { children: Snippet };
@@ -36,7 +36,7 @@
 	const ENTRY_PROGRESS_CAP = 96;
 	/**
 	 * After lift: brief settle, then batch 4.
-	 * Buy-bonus warm runs on phone too so the menu opens without a cold hitch.
+	 * Buy-bonus WebGL waits for the first menu open.
 	 */
 	const POST_LIFT_BATCH4_MS = 50;
 
@@ -113,34 +113,30 @@
 				mergeLoadedAssets(batch3Assets);
 
 				context.stateApp.loadingProgress = ENTRY_PROGRESS_CAP;
-				await startBuyBonusFlowPreload();
 
 				context.stateApp.loaded = true;
-				// Desktop: decode 4K buy-bonus pages on the cards idle screen.
-				// Phone: skip — 4K bitmaps in RAM plus the slot on Continue is a Jetsam.
-				if (!isPhoneForAtlasDownscale()) void startBuyBonusSpineBitmapDecode();
 			})();
 		}
 	});
 
-	// After lift settles: batch 4 + buy-bonus warm (phone and desktop).
+	// After lift settles: batch 4. Buy-bonus GPU waits for the first menu open.
 	$effect(() => {
 		if (!context.stateApp.loaded || !gameEntrance.liftComplete || batch4Started) return;
 		batch4Started = true;
 		const [, , , batch4] = LOADER_ASSET_BATCHES;
+		const deferred = new Set<string>([...BATCH4_DEFERRED_KEYS, ...BATCH4_HTML_ONLY_KEYS]);
+		const batch4Now = batch4.filter((key) => !deferred.has(key));
 		// One-shot: do not abort on effect re-run — Continue peak must stay clear.
 		void (async () => {
+			parkTirGpuForDeferredLoad();
 			await waitForTimeout(POST_LIFT_BATCH4_MS);
-			const batch4Promise = loadAssetBatch(batch4);
-			// Warm buy-bonus WebGL in parallel with batch 4 — ready before first tap.
-			const warmPromise = ensureBuyBonusWarm();
-			const batch4Assets = await batch4Promise;
-			mergeLoadedAssets(batch4Assets);
+			const batch4Assets = await loadAssetBatch(batch4Now);
+			mergeLoadedAssets(
+				shouldSkipDeferredTirMerge() ? omitParkedTirAssets(batch4Assets) : batch4Assets,
+			);
 			downscalePhoneSpineAtlases();
 			gameEntrance.postLiftAssetsReady = true;
-			void ensureTargetBoardSpritesInPixi();
-			await warmPromise;
-			if (gameEntrance.buyBonusWarmReady) gameEntrance.buyBonusEverWarmed = true;
+			if (!shouldSkipDeferredTirMerge()) void ensureTargetBoardSpritesInPixi('six');
 		})();
 	});
 </script>

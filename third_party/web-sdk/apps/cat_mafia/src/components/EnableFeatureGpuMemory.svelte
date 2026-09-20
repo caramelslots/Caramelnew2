@@ -1,0 +1,95 @@
+<!--
+	Base game must not hold FS cartridge, duel dog, or tir atlases.
+	Load on feature entry; drop when back on settled base.
+-->
+<script lang="ts">
+	import { getContextApp } from 'pixi-svelte';
+
+	import { getContext } from '../game/context';
+	import {
+		DUEL_MASCOT_KEYS,
+		ensureFeatureKeysLoaded,
+		FS_CARTRIDGE_KEYS,
+		FS_OUTLINE_KEYS,
+		shouldKeepDuelMascotGpu,
+		shouldKeepOutlineReelGpu,
+		unloadFeatureKeys,
+	} from '../game/featureGpuMemory';
+	import { waitAnimationFrames } from '../game/tirGpuMemory';
+
+	const app = getContextApp();
+	const context = getContext();
+
+	let syncGen = 0;
+
+	$effect(() => {
+		if (!app.stateApp.loaded) return;
+
+		const gameType = context.stateGame.gameType;
+		const upcoming = context.stateGame.transitionGameType ?? gameType;
+		const isPortrait = context.stateLayoutDerived.layoutType() === 'portrait';
+		const wantCartridge =
+			gameType === 'freegame' ||
+			upcoming === 'freegame' ||
+			context.stateGame.freeSpinIntroActive;
+		const wantDog = shouldKeepDuelMascotGpu(isPortrait);
+		const wantOutline = shouldKeepOutlineReelGpu();
+
+		const gen = ++syncGen;
+		void (async () => {
+			if (wantCartridge) {
+				const patch = await ensureFeatureKeysLoaded(
+					FS_CARTRIDGE_KEYS,
+					(app.stateApp.loadedAssets ?? {}) as Record<string, unknown>,
+				);
+				if (gen !== syncGen) return;
+				if (patch) {
+					app.stateApp.loadedAssets = { ...app.stateApp.loadedAssets, ...patch };
+				}
+			} else {
+				const loaded = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
+				if (FS_CARTRIDGE_KEYS.some((key) => key in loaded)) {
+					app.stateApp.loadedAssets = unloadFeatureKeys(FS_CARTRIDGE_KEYS, loaded);
+				}
+			}
+
+			if (wantDog) {
+				const patch = await ensureFeatureKeysLoaded(
+					DUEL_MASCOT_KEYS,
+					(app.stateApp.loadedAssets ?? {}) as Record<string, unknown>,
+				);
+				if (gen !== syncGen) return;
+				if (patch) {
+					app.stateApp.loadedAssets = { ...app.stateApp.loadedAssets, ...patch };
+				}
+			} else {
+				const loaded = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
+				if (DUEL_MASCOT_KEYS.some((key) => key in loaded)) {
+					await waitAnimationFrames(2);
+					if (gen !== syncGen) return;
+					const latest = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
+					if (DUEL_MASCOT_KEYS.some((key) => key in latest)) {
+						app.stateApp.loadedAssets = unloadFeatureKeys(DUEL_MASCOT_KEYS, latest);
+					}
+				}
+			}
+
+			if (gen !== syncGen) return;
+			if (wantOutline) {
+				const patch = await ensureFeatureKeysLoaded(
+					FS_OUTLINE_KEYS,
+					(app.stateApp.loadedAssets ?? {}) as Record<string, unknown>,
+				);
+				if (gen !== syncGen) return;
+				if (patch) {
+					app.stateApp.loadedAssets = { ...app.stateApp.loadedAssets, ...patch };
+				}
+			} else {
+				const loaded = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
+				if (FS_OUTLINE_KEYS.some((key) => key in loaded)) {
+					app.stateApp.loadedAssets = unloadFeatureKeys(FS_OUTLINE_KEYS, loaded);
+				}
+			}
+		})();
+	});
+</script>

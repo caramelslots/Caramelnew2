@@ -3,6 +3,7 @@
 	(bg_buy_bonus_board.webp + buyBonusPanelDimensions).
 -->
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { stateModal, stateBet } from 'state-shared';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 	import { getContextLayout } from 'utils-layout';
@@ -17,10 +18,10 @@
 	} from '../game/constants';
 	import { ensureKnewaveFontLoaded } from '../game/knewaveFont';
 	import { getContext } from '../game/context';
-	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { evictBuyBonusForFeature } from '../game/buyBonusSharedPixi';
 	import { startMascotSpinePreload } from '../game/mascotHtmlSpine';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
-	import { BUY_BONUS_ASSETS } from '../game/uiHtmlAssetManifest';
+	import { BUY_BONUS_ASSETS, startFsCongPreload } from '../game/uiHtmlAssetManifest';
 	import { DUEL_PICK_CARD } from '../game/duelAssets';
 	import DuelPickMascot from './DuelPickMascot.svelte';
 
@@ -32,11 +33,6 @@
 	const confirmButtonBgUrl = BUY_BONUS_ASSETS.confirmButtonBg;
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyDuelPick');
-	const isBuyFlowOpen = $derived(
-		stateModal.modal?.name === 'buyBonus' ||
-			stateModal.modal?.name === 'buyBonusConfirm' ||
-			stateModal.modal?.name === 'buyDuelPick',
-	);
 
 	const layoutType = $derived(stateLayoutDerived.layoutType());
 	const isPortrait = $derived(layoutType === 'portrait');
@@ -49,28 +45,9 @@
 	const canBuy = $derived(canAffordBuyBonus(multiplier));
 
 	let pendingSide = $state<DuelSide | null>(null);
-	/** Keep Spine players mounted after first warm so pick opens with mascots ready. */
-	let spinesWarmed = $state(false);
 	let knewaveFontReady = $state(false);
 
-	const warmPickSpines = () => {
-		if (spinesWarmed) return;
-		startMascotSpinePreload();
-		spinesWarmed = true;
-		context.eventEmitter.broadcast({ type: 'duelPickWarm' });
-	};
-
-	// Prefetch while buy-bonus is open — cat/dog already in HTTP cache from main load.
-	$effect(() => {
-		if (isBuyFlowOpen || isOpen) warmPickSpines();
-	});
-
-	// Same early warm as in-round duel pick (DuelModeOverlay).
-	$effect(() => {
-		if (!gameEntrance.showContent || spinesWarmed) return;
-		const timer = setTimeout(() => warmPickSpines(), 600);
-		return () => clearTimeout(timer);
-	});
+	startMascotSpinePreload();
 
 	$effect(() => {
 		if (!isOpen) pendingSide = null;
@@ -108,15 +85,18 @@
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 	};
 
-	const confirmPurchase = () => {
+	const confirmPurchase = async () => {
 		if (!pendingSide || !canBuy) return;
 		clearActiveFeature();
 		stateDuel.playerSide = pendingSide;
-		stateBet.activeBetModeKey =
-			pendingSide === 'cat' ? 'bonus_duel_cat' : 'bonus_duel_dog';
+		const modeKey = pendingSide === 'cat' ? 'bonus_duel_cat' : 'bonus_duel_dog';
 		stateModal.modal = null;
 		pendingSide = null;
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+		void startFsCongPreload();
+		await tick();
+		await evictBuyBonusForFeature();
+		stateBet.activeBetModeKey = modeKey;
 		context.eventEmitter.broadcast({ type: 'bet' });
 	};
 </script>
@@ -178,13 +158,11 @@
 							class:mascot-dog={side === 'dog'}
 							class:mascot-cat={side === 'cat'}
 						>
-							{#if spinesWarmed}
-								<DuelPickMascot
+							<DuelPickMascot
 									species={side === 'dog' ? 'dog' : 'cat'}
-									playing={isBuyFlowOpen && (pendingSide == null || isSelected)}
+									playing={isOpen && (pendingSide == null || isSelected)}
 									fill
 								/>
-							{/if}
 						</span>
 						<img
 							class="pick-card-layer pick-card-frame"

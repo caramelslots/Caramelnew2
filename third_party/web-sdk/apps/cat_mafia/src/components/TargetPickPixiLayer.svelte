@@ -2,7 +2,7 @@
 	Cabinet + stands/discs ABOVE the slot spine, BELOW the mascot (Pixi z 6).
 	Hard clip keeps the plate inside the gold frame. HTML seats are hit-only.
 	Seat count follows targetPickSeatMode (6 entry / 9 Stage E).
-	Textures stay warm while closed so slide-in does not hitch on re-bind.
+	Drop local texture refs when closed so FS entry can unload tir GPU.
 -->
 <script lang="ts">
 	import { BaseSprite, Container, Graphics } from 'pixi-svelte';
@@ -23,6 +23,8 @@
 		TARGET_SHOOT_NATIVE,
 		TARGET_SHOOT_SEAT_WIDTH_FRAC,
 		TARGET_SHOOT_SLOTS,
+		ensureTargetBoardSpritesInPixi,
+		isTargetBoardSpriteLive,
 		targetBoardSlotPoint,
 		targetPickInnerClip,
 	} from '../game/targetBoardAssets';
@@ -95,16 +97,24 @@
 		loaded instanceof PIXI.Texture ? loaded : PIXI.Texture.from(loaded as never);
 
 	const texFromCache = (url: string) => {
+		if (!isTargetBoardSpriteLive(url)) return null;
 		try {
-			if (!PIXI.Assets.cache.has(url)) return null;
 			return resolveTex(PIXI.Assets.get(url));
 		} catch {
 			return null;
 		}
 	};
 
-	const loadTex = (url: string) =>
-		PIXI.Assets.load(url).then((loaded) => resolveTex(loaded));
+	const loadTex = async (url: string) => {
+		const cached = texFromCache(url);
+		if (cached) return cached;
+		const loaded = await PIXI.Assets.load(url);
+		const tex = resolveTex(loaded);
+		if (!isTargetBoardSpriteLive(url)) {
+			throw new Error(`tir sprite not live after load: ${url}`);
+		}
+		return tex;
+	};
 
 	const applyTextures = (
 		bg: PIXI.Texture,
@@ -133,8 +143,26 @@
 		boundBgUrl = bgUrl;
 	};
 
+	const releaseLocalTextures = () => {
+		if (wood !== PIXI.Texture.EMPTY) {
+			try {
+				wood.destroy(false);
+			} catch {
+				/* GPU already released */
+			}
+		}
+		wood = PIXI.Texture.EMPTY;
+		holder = PIXI.Texture.EMPTY;
+		front = PIXI.Texture.EMPTY;
+		boundBgUrl = '';
+	};
+
 	$effect(() => {
-		// Keep GPU textures while closed — remounting on every open was the slide hitch.
+		if (!open) {
+			releaseLocalTextures();
+			return;
+		}
+
 		const bgUrl = boardBgUrl;
 		const native = boardNative;
 		const content = boardContent;
@@ -142,24 +170,27 @@
 		if (!needBind) return;
 
 		let cancelled = false;
-		const cachedBg = texFromCache(bgUrl);
-		const cachedH = texFromCache(TARGET_BOARD_SPRITES.holder);
-		const cachedF = texFromCache(TARGET_BOARD_SPRITES.front);
-		if (cachedBg && cachedH && cachedF) {
-			applyTextures(cachedBg, cachedH, cachedF, native, content, bgUrl);
-			return () => {
-				cancelled = true;
-			};
-		}
-
-		void Promise.all([
-			loadTex(bgUrl),
-			loadTex(TARGET_BOARD_SPRITES.holder),
-			loadTex(TARGET_BOARD_SPRITES.front),
-		]).then(([bg, h, f]) => {
-			if (cancelled) return;
-			applyTextures(bg, h, f, native, content, bgUrl);
-		});
+		void (async () => {
+			try {
+				await ensureTargetBoardSpritesInPixi(nine ? 'nine' : 'six');
+				if (cancelled || !stateGame.targetPickOpen) return;
+				const cachedBg = texFromCache(bgUrl);
+				const cachedH = texFromCache(TARGET_BOARD_SPRITES.holder);
+				const cachedF = texFromCache(TARGET_BOARD_SPRITES.front);
+				const [bg, h, f] =
+					cachedBg && cachedH && cachedF
+						? [cachedBg, cachedH, cachedF]
+						: await Promise.all([
+								loadTex(bgUrl),
+								loadTex(TARGET_BOARD_SPRITES.holder),
+								loadTex(TARGET_BOARD_SPRITES.front),
+							]);
+				if (cancelled || !stateGame.targetPickOpen) return;
+				applyTextures(bg, h, f, native, content, bgUrl);
+			} catch (error) {
+				console.error('[tir] cabinet sprites failed to bind', error);
+			}
+		})();
 		return () => {
 			cancelled = true;
 		};

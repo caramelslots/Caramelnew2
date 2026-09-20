@@ -259,7 +259,7 @@ export const stateGame = $state({
 	transitionGameType: undefined as GameType | undefined,
 	/**
 	 * Active Pixi cat spine key (gray base / white FS|duel).
-	 * Both atlases stay resident — see EnableMascotCatSkinMemory.
+	 * Portrait duel parks both skins — see EnableMascotCatSkinMemory.
 	 */
 	mascotCatSpineKey: 'mascotCatGray' as 'mascotCat' | 'mascotCatGray',
 	// Big-win overlay only — raises Pixi canvas above HTML HUD so celebration

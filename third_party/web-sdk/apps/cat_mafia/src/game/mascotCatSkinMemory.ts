@@ -1,9 +1,11 @@
 /**
  * Cat mascot skin key (gray base / white FS|duel).
- * Both atlases stay resident — phone one-skin unload was removed (blank mascot + no bullet fly).
+ * Keep only the live atlas in GPU — the other is dropped after the spine remounts.
  */
 
 import { Assets } from 'pixi.js';
+import type { TextureAtlas } from '@esotericsoftware/spine-core';
+import { SpineTexture } from '@esotericsoftware/spine-pixi-v8';
 import { getProcessed } from '../../../../packages/pixi-svelte/src/lib/assetLoad';
 
 import assets from './assets';
@@ -13,6 +15,9 @@ export const MASCOT_CAT_SPINE_WHITE = 'mascotCat' as const;
 export const MASCOT_CAT_SPINE_GRAY = 'mascotCatGray' as const;
 
 export type MascotCatSpineKey = typeof MASCOT_CAT_SPINE_WHITE | typeof MASCOT_CAT_SPINE_GRAY;
+
+export const otherMascotCatSpineKey = (key: MascotCatSpineKey): MascotCatSpineKey =>
+	key === MASCOT_CAT_SPINE_WHITE ? MASCOT_CAT_SPINE_GRAY : MASCOT_CAT_SPINE_WHITE;
 
 export const wantedMascotCatSpineKey = (opts: {
 	gameType: GameType | string;
@@ -51,4 +56,39 @@ export const ensureMascotCatSpineLoaded = async (
 	});
 	if (!processed) return null;
 	return processed as Record<string, unknown>;
+};
+
+const destroyAtlasGpuTextures = (atlasUrl: string) => {
+	let atlas: TextureAtlas | undefined;
+	try {
+		atlas = Assets.get(atlasUrl) as TextureAtlas | undefined;
+	} catch {
+		return;
+	}
+	if (!atlas?.pages?.length) return;
+	for (const page of atlas.pages) {
+		const pixiTex = (page.texture as SpineTexture | null)?.texture;
+		if (!pixiTex) continue;
+		try {
+			pixiTex.destroy(true);
+		} catch {
+			/* already released */
+		}
+	}
+};
+
+export const unloadMascotCatSpine = (
+	key: MascotCatSpineKey,
+	loadedAssets: Record<string, unknown>,
+): Record<string, unknown> => {
+	if (!(key in loadedAssets)) return loadedAssets;
+	const atlasUrl = (assets[key].src as { atlas?: string }).atlas;
+	if (atlasUrl) destroyAtlasGpuTextures(atlasUrl);
+	const urls = spineSrcUrls(key);
+	if (urls.length > 0) {
+		void Assets.unload(urls).catch(() => undefined);
+	}
+	const next = { ...loadedAssets };
+	delete next[key];
+	return next;
 };

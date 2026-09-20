@@ -1,6 +1,6 @@
 <!--
 	Lightweight Spine mascot for the Duel side-pick screen (idle loop only).
-	Kept mounted after warm-up so choose-side opens without a Spine load hitch.
+	Destroyed (WebGL lost) when the pick UI unmounts — buy-bonus close or in-round hide.
 	SSAA: draw into a larger canvas, then CSS-scale down (same idea as MascotPlaceholder)
 	so the card zoom (scale 1.28–1.72) does not soft-blur the figure.
 -->
@@ -9,6 +9,10 @@
 	import { SpinePlayer } from '@esotericsoftware/spine-player';
 	import '@esotericsoftware/spine-player/dist/spine-player.css';
 
+	import {
+		disposeDuelPickSpinePlayer,
+		trackDuelPickSpinePlayer,
+	} from '../game/duelPickGpu';
 	import {
 		MASCOT_DOG_SPINE_ANIMATIONS,
 		MASCOT_DOG_SPINE_VIEWPORT,
@@ -47,7 +51,7 @@
 
 		let disposed = false;
 		untrack(() => {
-			player?.dispose();
+			disposeDuelPickSpinePlayer(player);
 			player = undefined;
 		});
 		ready = false;
@@ -89,14 +93,16 @@
 				// Don't subscribe to `playing` here — that would remount the player on open.
 				spinePlayer.animationState!.timeScale = untrack(() => (playing ? 1 : 0));
 				player = created;
+				trackDuelPickSpinePlayer(created);
 				ready = true;
 			},
 		});
 		player = created;
+		trackDuelPickSpinePlayer(created);
 
 		return () => {
 			disposed = true;
-			created.dispose();
+			disposeDuelPickSpinePlayer(created);
 			if (player === created) player = undefined;
 			ready = false;
 		};
@@ -110,7 +116,7 @@
 	});
 
 	onDestroy(() => {
-		player?.dispose();
+		disposeDuelPickSpinePlayer(player);
 		player = undefined;
 	});
 </script>

@@ -96,13 +96,6 @@ export const FS_CONG_IMAGE_URLS = dedupeUrls([
 	assets.fsCongBoard.src,
 ]);
 
-/** fsCong board without rays — AutoplayMessageOverlay + shared preload (no text paws). */
-export const FS_CONG_BOARD_IMAGE_URLS = dedupeUrls([
-	assets.fsCongBg.src,
-	assets.fsCongFrame.src,
-	assets.fsCongBoard.src,
-]);
-
 /** HUD + settings + autoplay + buy bonus sprites shown soon after entering the game. */
 export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	HUD_ASSETS.info,
@@ -133,7 +126,6 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	...SETTINGS_TURBO_URLS,
 	AUTOSPIN_ASSETS.bg,
 	AUTOSPIN_ASSETS.close,
-	...FS_CONG_BOARD_IMAGE_URLS,
 	AUTOSPIN_ASSETS.pawIcon,
 	AUTOSPIN_ASSETS.bonusIcon,
 	AUTOSPIN_ASSETS.startButton,
@@ -160,8 +152,9 @@ export const BUY_BONUS_FLOW_IMAGE_URLS = dedupeUrls([
 ]);
 
 let buyBonusFlowPreload: Promise<void> | null = null;
+let fsCongPreload: Promise<void> | null = null;
 
-/** Board, buttons, and card spines — awaited before Continue, before batch 4. */
+/** Board, buttons, and card spines — HTTP cache only, when the user opens Buy Bonus. */
 export const startBuyBonusFlowPreload = (): Promise<void> => {
 	if (buyBonusFlowPreload) return buyBonusFlowPreload;
 
@@ -171,6 +164,13 @@ export const startBuyBonusFlowPreload = (): Promise<void> => {
 	]).then(() => undefined);
 
 	return buyBonusFlowPreload;
+};
+
+/** Decode fsCong HTML layers after a bought bonus / just before FS or duel intro. */
+export const startFsCongPreload = (): Promise<void> => {
+	if (fsCongPreload) return fsCongPreload;
+	fsCongPreload = preloadHtmlImages(FS_CONG_IMAGE_URLS, { concurrency: 2 }).then(() => undefined);
+	return fsCongPreload;
 };
 
 const LOADING_IDLE_UI_PRIORITY = [

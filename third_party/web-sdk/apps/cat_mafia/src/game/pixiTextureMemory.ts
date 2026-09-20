@@ -112,7 +112,7 @@ const sumSources = (sources: Iterable<TextureSource>) => {
 	return { bytes, count };
 };
 
-const collectTop = (sources: Map<number, TextureSource>, limit = 5): PixiTextureMemoryEntry[] => {
+const collectTop = (sources: Map<number, TextureSource>, limit = 30): PixiTextureMemoryEntry[] => {
 	const entries: PixiTextureMemoryEntry[] = [];
 	for (const source of sources.values()) {
 		const bytes = estimateTextureSourceBytes(source);

@@ -44,7 +44,6 @@
 		DUEL_PICK_CARD,
 	} from '../game/duelAssets';
 	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
-	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import PressToContinueHtml from './PressToContinueHtml.svelte';
 	import DuelPickMascot from './DuelPickMascot.svelte';
 	import DuelBankTotalBitmapHtml from './DuelBankTotalBitmapHtml.svelte';
@@ -73,8 +72,6 @@
 	const catCounterPos = $derived(getDuelSpinCounterPos(duelLayout, 'cat'));
 
 	let pickShow = $state(false);
-	/** Keep pick Spine players warm so choose-side does not hitch on first open. */
-	let pickSpinesWarmed = $state(false);
 	let outroShow = $state(false);
 	let outroDog = $state(0);
 	let outroCat = $state(0);
@@ -177,18 +174,6 @@
 		return deskBottom + gap;
 	});
 
-	// Warm duel pick spines after the board is up (or immediately when pick opens).
-	$effect(() => {
-		if (pickShow) pickSpinesWarmed = true;
-	});
-	$effect(() => {
-		if (!gameEntrance.showContent || pickSpinesWarmed) return;
-		const timer = setTimeout(() => {
-			pickSpinesWarmed = true;
-		}, 600);
-		return () => clearTimeout(timer);
-	});
-
 	const chooseSide = (side: DuelSide) => {
 		if (!pickShow) return;
 		stateDuel.playerSide = side;
@@ -199,14 +184,10 @@
 	};
 
 	context.eventEmitter.subscribeOnMount({
-		duelPickWarm: () => {
-			pickSpinesWarmed = true;
-		},
 		duelIntroShow: () => {
 			pickShow = false;
 		},
 		duelPickShow: () => {
-			pickSpinesWarmed = true;
 			pickShow = true;
 		},
 		duelPickHide: () => {
@@ -373,7 +354,7 @@
 	</div>
 {/if}
 
-{#if pickSpinesWarmed}
+{#if pickOpen}
 	<div
 		class="duel-modal pick-modal"
 		class:open={pickOpen}

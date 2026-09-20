@@ -50,11 +50,6 @@
 		void prepareBuyBonusMenu();
 	};
 
-	// Soft warm as soon as the button is on screen (warm is idempotent / shared).
-	$effect(() => {
-		if (show && !gameEntrance.buyBonusWarmReady) void prepareBuyBonusMenu();
-	});
-
 	const buyBonusBgUrl = HUD_ASSETS.buyBonusPanel;
 	const buyBonusLabel = $derived(context.i18nDerived.buyBonusPanelButton());
 	const buyBonusSize = $derived(portraitBuyPanelSizeCanvas(stateLayoutDerived));

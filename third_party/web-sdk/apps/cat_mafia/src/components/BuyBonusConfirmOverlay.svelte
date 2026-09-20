@@ -3,6 +3,7 @@
 	что и BuyBonusOverlay (bg_buy_bonus_board.webp).
 -->
 <script lang="ts">
+	import { tick } from 'svelte';
 	import { stateModal, stateBet } from 'state-shared';
 	import { stateBonus } from 'components-ui-html/src/stateBonus.svelte';
 	import { numberToCurrencyString } from 'utils-shared/amount';
@@ -17,7 +18,8 @@
 	import { isPopoutSmallViewport, isPopoutViewport, HUD_BALANCE_BET_FONT_FAMILY } from '../game/constants';
 	import { ensureKnewaveFontLoaded } from '../game/knewaveFont';
 	import { getContext } from '../game/context';
-	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS } from '../game/uiHtmlAssetManifest';
+	import { evictBuyBonusForFeature } from '../game/buyBonusSharedPixi';
+	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS, startFsCongPreload } from '../game/uiHtmlAssetManifest';
 	import ArchedRibbonTitle from './ArchedRibbonTitle.svelte';
 	import BuyBonusCardSpine from './BuyBonusCardSpine.svelte';
 	import FitCardText from './FitCardText.svelte';
@@ -83,6 +85,9 @@
 		const modeKey = stateBonus.selectedBetModeKey;
 		stateModal.modal = null;
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+		void startFsCongPreload();
+		await tick();
+		await evictBuyBonusForFeature();
 		stateBet.activeBetModeKey = modeKey;
 		context.eventEmitter.broadcast({ type: 'bet' });
 	};

@@ -48,15 +48,13 @@
 		type TargetShotFlight,
 	} from '../game/shotBulletAssets';
 	import { stateGame } from '../game/stateGame.svelte';
-	import { preloadHtmlImages } from '../game/preloadHtmlImages';
+	import { startFsCongPreload } from '../game/uiHtmlAssetManifest';
 	import { dismissTirAndUnloadGpu, ensureTirPixiInApp, PHONE_MAX_PARALLEL_TIR_FLIPS, waitAnimationFrames } from '../game/tirGpuMemory';
 	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
-	import { FS_CONG_IMAGE_URLS } from '../game/uiHtmlAssetManifest';
 	import {
 		TARGET_BOARD_PICK_FLIP_MS_BY_ANIM,
 		TARGET_PICK_SLIDE_MS,
 		TARGET_SHOOT_SEAT_COUNT,
-		ensureTargetBoardSpritesInPixi,
 		pickTargetFlipAnim,
 		startTargetBoardPreload,
 		targetPickInnerClip,
@@ -198,7 +196,7 @@
 		await waitAnimationFrames(isPhoneForAtlasDownscale() ? 5 : 3);
 
 		if (extraFs > 0) {
-			await preloadHtmlImages(FS_CONG_IMAGE_URLS, { concurrency: 1 });
+			await startFsCongPreload();
 			context.eventEmitter.broadcast({ type: 'freeSpinIntroShow', mode: 'extra' });
 			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
 			await context.eventEmitter.broadcastAsync({
@@ -432,8 +430,8 @@
 		targetShootRound: async (event) => {
 			startShotBulletPreload();
 			startTargetBoardPreload();
-			void ensureTirPixiInApp(context.stateApp);
-			void ensureTargetBoardSpritesInPixi();
+			// Load 9-seat only and drop the 6-seat plate before the cabinet slides.
+			await ensureTirPixiInApp(context.stateApp, 'nine');
 			rewardQueue = event.shots.map((s) => s.reward as 0 | 1 | 2 | 3);
 			extraFs = event.extraFs;
 			faceValues = Array.from({ length: TARGET_SHOOT_SEAT_COUNT }, () => 0);

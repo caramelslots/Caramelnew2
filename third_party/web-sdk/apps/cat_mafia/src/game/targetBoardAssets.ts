@@ -11,7 +11,7 @@ import {
 	DESK_PARCHMENT_PADDING,
 	DESK_VISUAL_OFFSET_Y,
 } from './constants';
-import { Assets } from 'pixi.js';
+import { Assets, Cache, Texture } from 'pixi.js';
 
 const SPRITE_BASE = `${import.meta.env.BASE_URL}assets/sprites/targetBoard`;
 
@@ -288,17 +288,83 @@ export const TARGET_BOARD_SPINE_ASSET_URLS = TARGET_BOARD_SPINE_FILES.map(
 	resolveTargetBoardSpineUrl,
 );
 
-export const TARGET_BOARD_SPRITE_URLS = [
-	TARGET_BOARD_SPRITES.background,
-	TARGET_BOARD_SPRITES.background9,
+export const TARGET_BOARD_SHARED_SPRITE_URLS = [
 	TARGET_BOARD_SPRITES.front,
 	TARGET_BOARD_SPRITES.back,
 	TARGET_BOARD_SPRITES.holder,
 ] as const;
 
-/** Warm Pixi Assets cache so TargetPickPixiLayer can bind textures before the slide. */
-export const ensureTargetBoardSpritesInPixi = async () => {
-	await Assets.load([...TARGET_BOARD_SPRITE_URLS]);
+/** 6-seat entry gallery — do not pair with the 9-seat Stage E plate. */
+export const TARGET_PICK_SPRITE_URLS = [
+	TARGET_BOARD_SPRITES.background,
+	...TARGET_BOARD_SHARED_SPRITE_URLS,
+] as const;
+
+/** Stage E 9-seat cabinet — do not pair with the 6-seat gallery plate. */
+export const TARGET_SHOOT_SPRITE_URLS = [
+	TARGET_BOARD_SPRITES.background9,
+	...TARGET_BOARD_SHARED_SPRITE_URLS,
+] as const;
+
+export const TARGET_BOARD_SPRITE_URLS = [
+	TARGET_BOARD_SPRITES.background,
+	TARGET_BOARD_SPRITES.background9,
+	...TARGET_BOARD_SHARED_SPRITE_URLS,
+] as const;
+
+export type TirCabinetMode = 'six' | 'nine';
+
+export const spriteUrlsForTirCabinet = (mode: TirCabinetMode) =>
+	mode === 'nine' ? TARGET_SHOOT_SPRITE_URLS : TARGET_PICK_SPRITE_URLS;
+
+const isPixiTextureLive = (value: unknown): boolean => {
+	try {
+		const tex = value instanceof Texture ? value : Texture.from(value as never);
+		return Boolean(tex && !tex.destroyed && !tex.source?.destroyed);
+	} catch {
+		return false;
+	}
+};
+
+/** True when Pixi Cache still holds an uploadable bitmap for this sprite URL. */
+export const isTargetBoardSpriteLive = (url: string): boolean => {
+	try {
+		if (!Assets.cache.has(url) && !Cache.has(url)) return false;
+		return isPixiTextureLive(Assets.get(url));
+	} catch {
+		return false;
+	}
+};
+
+const evictSpriteUrls = async (urls: readonly string[]) => {
+	if (urls.length === 0) return;
+	try {
+		await Assets.unload([...urls]);
+	} catch {
+		/* already empty */
+	}
+	for (const url of urls) {
+		try {
+			if (Cache.has(url)) Cache.remove(url);
+		} catch {
+			/* already gone */
+		}
+	}
+};
+
+/** Warm only the live cabinet so Stage E does not stack 6-seat + 9-seat plates. */
+export const ensureTargetBoardSpritesInPixi = async (mode: TirCabinetMode = 'six') => {
+	const urls = [...spriteUrlsForTirCabinet(mode)];
+	const stale = urls.filter((url) => !isTargetBoardSpriteLive(url));
+	if (stale.length > 0) await evictSpriteUrls(stale);
+	await Assets.load(urls);
+	const otherBg =
+		mode === 'nine' ? TARGET_BOARD_SPRITES.background : TARGET_BOARD_SPRITES.background9;
+	try {
+		if (Assets.cache.has(otherBg) || Cache.has(otherBg)) await evictSpriteUrls([otherBg]);
+	} catch {
+		/* not in cache */
+	}
 };
 
 let targetBoardPreloadStarted = false;

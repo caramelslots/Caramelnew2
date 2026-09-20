@@ -226,3 +226,9 @@ export const releaseBuyBonusSpineBitmaps = (urls?: readonly string[]) => {
 export const resumeBuyBonusSpineBitmapDecode = () => {
 	bitmapDecodeAllowed = true;
 };
+
+/** Stop CPU decode and drop bitmaps while a feature owns VRAM. */
+export const suspendBuyBonusSpineBitmapDecode = () => {
+	bitmapDecodeAllowed = false;
+	releaseBuyBonusSpineBitmaps();
+};

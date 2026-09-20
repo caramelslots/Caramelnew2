@@ -11,6 +11,7 @@
 	import BuyDuelPickOverlay from './BuyDuelPickOverlay.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
+	import { releaseAllDuelPickSpinePlayers } from '../game/duelPickGpu';
 	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
 
 	const shellMounted = $derived(gameEntrance.showContent);
@@ -27,7 +28,11 @@
 	const phoneDim = isPhoneForAtlasDownscale();
 
 	$effect(() => {
-		if (isBuyFlowOpen) startBuyBonusFlowPreload();
+		if (isBuyFlowOpen) {
+			startBuyBonusFlowPreload();
+			return;
+		}
+		releaseAllDuelPickSpinePlayers();
 	});
 </script>
 
@@ -48,7 +53,9 @@
 			aria-hidden={!showBuyPanel}
 			inert={!showBuyPanel || !gameEntrance.buyBonusPanelReady}
 		>
-			<BuyBonusOverlay />
+			{#if showBuyPanel || isPreparingBuy}
+				<BuyBonusOverlay />
+			{/if}
 		</div>
 		<div
 			class="panel-slot"
@@ -56,7 +63,9 @@
 			aria-hidden={!showConfirmPanel}
 			inert={!showConfirmPanel}
 		>
-			<BuyBonusConfirmOverlay />
+			{#if showConfirmPanel}
+				<BuyBonusConfirmOverlay />
+			{/if}
 		</div>
 		<div
 			class="panel-slot"
@@ -65,7 +74,9 @@
 			aria-hidden={!showDuelPickPanel}
 			inert={!showDuelPickPanel}
 		>
-			<BuyDuelPickOverlay />
+			{#if isBuyFlowOpen}
+				<BuyDuelPickOverlay />
+			{/if}
 		</div>
 	</div>
 {/if}

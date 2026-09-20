@@ -26,6 +26,9 @@
 	import EnableUiTextureOptimization from './EnableUiTextureOptimization.svelte';
 	import EnablePhoneSpineAtlasDownscale from './EnablePhoneSpineAtlasDownscale.svelte';
 	import EnableMascotCatSkinMemory from './EnableMascotCatSkinMemory.svelte';
+	import EnableTirGpuMemory from './EnableTirGpuMemory.svelte';
+	import EnableFeatureGpuMemory from './EnableFeatureGpuMemory.svelte';
+	import EnableBuyBonusWarmLifecycle from './EnableBuyBonusWarmLifecycle.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
 	import EnableBoardIdleBounce from './EnableBoardIdleBounce.svelte';
 	import EnableLivingIdle from './EnableLivingIdle.svelte';
@@ -149,6 +152,9 @@
 		<EnableUiTextureOptimization />
 		<EnablePhoneSpineAtlasDownscale />
 		<EnableMascotCatSkinMemory />
+		<EnableTirGpuMemory />
+		<EnableFeatureGpuMemory />
+		<EnableBuyBonusWarmLifecycle />
 		<EnableHotkey />
 		<EnableGameActor />
 		<EnableBoardIdleBounce />

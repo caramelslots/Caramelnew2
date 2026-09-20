@@ -124,6 +124,18 @@ export const LOADER_BATCH_4_KEYS = [
 	'targetBoardFlip',
 ] as const satisfies readonly (keyof typeof assets)[];
 
+/**
+ * Declared in batch 4 for the key-count check, but never uploaded to Pixi.
+ * FreeSpinIntro / duel / autoplay paint these as HTML `<img>` after buy / FS.
+ */
+export const BATCH4_HTML_ONLY_KEYS = [
+	'fsCongRays',
+	'fsCongBg',
+	'fsCongFrame',
+	'fsCongTextPaw',
+	'fsCongBoard',
+] as const satisfies readonly (typeof LOADER_BATCH_4_KEYS)[number][];
+
 export const LOADER_ASSET_BATCHES = [
 	LOADER_BATCH_1_KEYS,
 	LOADER_BATCH_2_KEYS,

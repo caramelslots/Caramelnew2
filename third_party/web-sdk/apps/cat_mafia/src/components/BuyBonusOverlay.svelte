@@ -73,11 +73,16 @@
 			try {
 				await ensureBuyBonusMenuOpen();
 				if (cancelled) return;
-				if (!areBuyBonusSpinesReady()) {
+				for (let i = 0; i < 40 && !areBuyBonusSpinesReady(); i += 1) {
 					await whenBuyBonusSpinesReady();
+					if (cancelled) return;
+					if (areBuyBonusSpinesReady()) break;
+					await new Promise<void>((resolve) => setTimeout(resolve, 50));
+					if (cancelled) return;
+					await ensureBuyBonusMenuOpen();
+					if (cancelled) return;
 				}
-				if (cancelled) return;
-				// Reveal even if a spine is still catching up — never auto-close the menu.
+				if (cancelled || !areBuyBonusSpinesReady()) return;
 				panelReady = true;
 				revealedOnce = true;
 				await tick();
@@ -88,11 +93,6 @@
 				flushBuyBonusSharedStage();
 			} catch (error) {
 				console.error('[buyBonus] menu open failed', error);
-				if (!cancelled) {
-					panelReady = true;
-					revealedOnce = true;
-					flushBuyBonusSharedStage();
-				}
 			}
 		})();
 		return () => {

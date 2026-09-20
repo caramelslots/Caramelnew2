@@ -105,30 +105,59 @@ const decodeImageToCanvas = async (url: string, maxEdge: number): Promise<HTMLCa
 	return canvas;
 };
 
+const atlasPagesNeedCap = (atlasText: string, maxEdge: number) => {
+	for (const raw of atlasText.split(/\r?\n/)) {
+		const match = /^size:\s*(\d+)\s*,\s*(\d+)/i.exec(raw.trim());
+		if (!match) continue;
+		if (Math.max(Number(match[1]), Number(match[2])) > maxEdge) return true;
+	}
+	return false;
+};
+
+const cappedAtlasSourceCache = new Map<string, Record<string, Texture['source']>>();
+
 /**
  * Decode atlas pages on CPU and upload already-capped bitmaps.
  * Avoids the 4K GPU spike of Assets.load → downscale → destroy.
+ * Returns null when every page already fits maxEdge — do not canvas-copy.
  */
 export const prepareCappedAtlasImageSources = async (
 	atlasUrl: string,
 	maxEdge: number,
 ): Promise<Record<string, Texture['source']> | null> => {
 	if (typeof window === 'undefined') return null;
+	const cacheKey = `${atlasUrl}#${maxEdge}`;
+	const cached = cappedAtlasSourceCache.get(cacheKey);
+	if (cached) return cached;
 	try {
 		const atlasText = await fetch(atlasUrl).then((res) => {
 			if (!res.ok) throw new Error(`atlas fetch failed: ${atlasUrl}`);
 			return res.text();
 		});
+		if (!atlasPagesNeedCap(atlasText, maxEdge)) return null;
 		const files = atlasPageFileNames(atlasText);
 		if (files.length === 0) return null;
 		const images: Record<string, Texture['source']> = {};
 		for (const file of files) {
 			const canvas = await decodeImageToCanvas(resolveAtlasPageUrl(atlasUrl, file), maxEdge);
-			images[file] = Texture.from(canvas).source;
+			const source = Texture.from(canvas).source;
+			source.label = file;
+			images[file] = source;
 		}
+		cappedAtlasSourceCache.set(cacheKey, images);
 		return images;
 	} catch {
 		return null;
+	}
+};
+
+export const forgetCappedAtlasImageSources = (atlasUrl?: string) => {
+	if (!atlasUrl) {
+		cappedAtlasSourceCache.clear();
+		return;
+	}
+	for (const key of [...cappedAtlasSourceCache.keys()]) {
+		if (key.startsWith(`${atlasUrl}#`)) cappedAtlasSourceCache.delete(key);
 	}
 };
 
@@ -292,6 +321,7 @@ export const downscaleSpineAtlasPageTexture = (
 		ctx.drawImage(img, 0, 0, nw, nh);
 
 		const next = Texture.from(canvas);
+		if (!next.source.label) next.source.label = `${page.name || 'atlas'}-cap`;
 		page.setTexture(SpineTexture.from(next.source));
 		try {
 			pixiTex.destroy(true);

@@ -43,8 +43,7 @@ import {
 import { SUPER_WILD_PRESENT_MS, SUPER_WILD_STICKY_PRESENT_MS } from './superWildHtmlSpine';
 import { ensureSwCurtainsForBoard } from './swCurtainGuard';
 import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
-import { preloadHtmlImages } from './preloadHtmlImages';
-import { FS_CONG_IMAGE_URLS } from './uiHtmlAssetManifest';
+import { startFsCongPreload } from './uiHtmlAssetManifest';
 import { waitForTimeout } from 'utils-shared/wait';
 import { dismissTirAndUnloadGpu, waitAnimationFrames } from './tirGpuMemory';
 import {
@@ -1224,7 +1223,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'transitionApplyTheme' });
 		await transitionPromise;
 
-		await preloadHtmlImages(FS_CONG_IMAGE_URLS, { concurrency: 1 });
+		await startFsCongPreload();
 		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
 		await eventEmitter.broadcastAsync({
 			type: 'freeSpinIntroUpdate',
@@ -1367,7 +1366,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	ladderTierUp: async () => {},
 	mysteryReelActivate: async () => {},
 	mysteryReelUnlock: async (bookEvent: BookEventOfType<'mysteryReelUnlock'>) => {
-		await preloadHtmlImages(FS_CONG_IMAGE_URLS, { concurrency: 1 });
+		await startFsCongPreload();
 		eventEmitter.broadcast({ type: 'freeSpinIntroShow', mode: 'extra' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
 		await eventEmitter.broadcastAsync({
@@ -1787,6 +1786,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		await transitionPromise;
 
 		// Rules splash after transition (same beat as freeSpinIntro after cloud).
+		await startFsCongPreload();
 		eventEmitter.broadcast({ type: 'duelIntroShow' });
 		await eventEmitter.broadcastAsync({
 			type: 'duelIntroUpdate',

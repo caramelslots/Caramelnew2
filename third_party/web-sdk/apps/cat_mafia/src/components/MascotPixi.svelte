@@ -4,7 +4,7 @@
 	`duelDog` uses the dog skeleton on the left desk (faces right toward the boards).
 -->
 <script lang="ts">
-	import { Container, SpineProvider } from 'pixi-svelte';
+	import { Container, SpineProvider, getContextApp } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
@@ -49,6 +49,7 @@
 	const variant = $derived(props.variant ?? 'primary');
 	const isDuelDog = $derived(variant === 'duelDog');
 
+	const pixiApp = getContextApp();
 	const context = getContext();
 	const show = $derived(gameEntrance.showContent);
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
@@ -79,6 +80,8 @@
 	const useDogSpine = $derived(isDuelDog || previewDogOnPrimary);
 	/** Gray = basegame; white = freegame / duel — key from EnableMascotCatSkinMemory. */
 	const catSpineKey = $derived(context.stateGame.mascotCatSpineKey);
+	const spineKey = $derived(useDogSpine ? 'mascotDog' : catSpineKey);
+	const spineReady = $derived(Boolean(pixiApp.stateApp.loadedAssets?.[spineKey]));
 	const forceAnim = $derived(forceCatAnim ?? forceDogAnim);
 	const mascotAnimToken = $derived(context.stateGame.mascotAnimToken);
 	const mounted = $derived(
@@ -207,7 +210,7 @@
 	});
 </script>
 
-{#if mounted && transform && (showMascotLayout || forceAnim)}
+{#if mounted && transform && (showMascotLayout || forceAnim) && spineReady}
 	<Container
 		x={transform.x}
 		y={transform.y}
@@ -216,7 +219,7 @@
 		sortableChildren
 	>
 		<SpineProvider
-			key={useDogSpine ? 'mascotDog' : catSpineKey}
+			key={spineKey}
 			x={transform.spineX}
 			y={transform.spineY}
 			scale={transform.scale}

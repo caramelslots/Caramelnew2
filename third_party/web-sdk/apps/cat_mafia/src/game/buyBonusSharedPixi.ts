@@ -1,9 +1,12 @@
 /**
  * Buy-bonus card visuals: one overlay WebGL for every card Spine.
- * Warm once on game entry; keep in memory for the session (open/close only).
+ * Load when the user opens the menu; drop GPU on bonus purchase / FS;
+ * remount after returning to base.
  */
 import * as PIXI from 'pixi.js';
-import { BlendMode, Spine } from '@esotericsoftware/spine-pixi-v8';
+import { Cache } from 'pixi.js';
+import type { TextureAtlas } from '@esotericsoftware/spine-core';
+import { BlendMode, Spine, SpineTexture } from '@esotericsoftware/spine-pixi-v8';
 
 import {
 	BUY_BONUS_HIDDEN_SLOTS,
@@ -12,13 +15,18 @@ import {
 	buyBonusNormalMascotUrls,
 	buyBonusSpineUrls,
 	getBuyBonusPixiTransform,
+	releaseBuyBonusSpineBitmaps,
 	resumeBuyBonusSpineBitmapDecode,
 	startBuyBonusSpineBitmapDecode,
+	suspendBuyBonusSpineBitmapDecode,
 	type BuyBonusSpineVariant,
 } from './buyBonusHtmlSpine';
 import { isHtmlWebglPaused } from './htmlWebglPause';
+import { isBuyBonusFlowOpen } from './isAnyMenuOpen';
 import { isPhoneForAtlasDownscale } from './phoneSpineAtlasDownscale';
 import { gameEntrance } from './gameEntrance.svelte';
+import { stateDuel } from './stateDuel.svelte';
+import { stateGame } from './stateGame.svelte';
 
 export type BuyBonusCardViewId = number;
 
@@ -39,6 +47,9 @@ type CardVisual = Spine | PIXI.Container;
 const spines = new Map<BuyBonusSpineVariant, CardVisual>();
 const loading = new Map<BuyBonusSpineVariant, Promise<CardVisual | null>>();
 
+/** Blocks warm/recreate until settled base after a bought bonus / FS. */
+let buyBonusFeatureEvictLock = false;
+
 let app: PIXI.Application | undefined;
 let appReady: Promise<PIXI.Application | undefined> | undefined;
 let appGen = 0;
@@ -46,7 +57,92 @@ let nextViewId = 1;
 let tickerBound = false;
 let layerObserver: ResizeObserver | undefined;
 let resizeListening = false;
+let destroyTimer: ReturnType<typeof setTimeout> | undefined;
+/** All three cards stay parked after the first open — dropping duel left a black card. */
 const MENU_VARIANTS: readonly BuyBonusSpineVariant[] = ['normal', 'super', 'duel'];
+
+const buyBonusAssetUrls = () =>
+	MENU_VARIANTS.flatMap((variant) => {
+		const urls = buyBonusSpineUrls(variant);
+		return [urls.atlas, urls.skeleton, ...urls.images];
+	});
+
+const buyBonusMascotAssetUrls = () => {
+	const mascot = buyBonusNormalMascotUrls();
+	return [mascot.atlas, mascot.skeleton, ...mascot.images];
+};
+
+const allBuyBonusReloadUrls = () => [...new Set([...buyBonusAssetUrls(), ...buyBonusMascotAssetUrls()])];
+
+const destroyCachedAtlasGpu = (atlasUrl: string) => {
+	let atlas: TextureAtlas | undefined;
+	try {
+		atlas = PIXI.Assets.get(atlasUrl) as TextureAtlas | undefined;
+	} catch {
+		return;
+	}
+	if (!atlas?.pages?.length) return;
+	for (const page of atlas.pages) {
+		const pixiTex = (page.texture as SpineTexture | null)?.texture;
+		if (!pixiTex) continue;
+		try {
+			pixiTex.destroy(true);
+		} catch {
+			/* already released */
+		}
+	}
+};
+
+const atlasPagesLive = (atlasUrl: string) => {
+	try {
+		const atlas = PIXI.Assets.get(atlasUrl) as TextureAtlas | undefined;
+		if (!atlas?.pages?.length) return false;
+		return atlas.pages.every((page) => {
+			const pixiTex = (page.texture as SpineTexture | null)?.texture;
+			return Boolean(pixiTex && !pixiTex.destroyed && !pixiTex.source?.destroyed);
+		});
+	} catch {
+		return false;
+	}
+};
+
+const variantTexturesLive = (variant: BuyBonusSpineVariant) => {
+	if (!atlasPagesLive(buyBonusSpineUrls(variant).atlas)) return false;
+	if (variant === 'normal' && !atlasPagesLive(buyBonusNormalMascotUrls().atlas)) return false;
+	return true;
+};
+
+/** Overlay GL was destroyed — drop Cache entries so the next app can re-upload. */
+const purgeBuyBonusAssetCache = async () => {
+	const urls = allBuyBonusReloadUrls();
+	for (const url of urls) destroyCachedAtlasGpu(url);
+	try {
+		await PIXI.Assets.unload(urls);
+	} catch {
+		/* cache already empty */
+	}
+	for (const url of urls) {
+		try {
+			if (Cache.has(url)) Cache.remove(url);
+		} catch {
+			/* already gone */
+		}
+	}
+	atlasesDirty = false;
+};
+
+const dropDeadSpine = (variant: BuyBonusSpineVariant) => {
+	const visual = spines.get(variant);
+	if (!visual) return;
+	if (variantTexturesLive(variant)) return;
+	try {
+		visual.destroy({ children: true, texture: false });
+	} catch {
+		/* already released */
+	}
+	spines.delete(variant);
+	atlasesDirty = true;
+};
 
 const hostBox = (el: HTMLElement) => ({
 	w: Math.max(0, Math.round(el.clientWidth)),
@@ -99,6 +195,29 @@ const prepareBuyBonusSpineDraw = (spine: Spine, variant: BuyBonusSpineVariant) =
 	hideSpecialBlendSlots(spine);
 };
 
+const isTirSceneLive = () =>
+	stateGame.targetPickOpen ||
+	stateGame.targetPickSlide > 0.001 ||
+	stateGame.drumShootActive;
+
+/** True while buy-bonus may open again soon — keep GL + spines parked. */
+export const shouldKeepBuyBonusWarm = () =>
+	!buyBonusFeatureEvictLock &&
+	stateGame.gameType === 'basegame' &&
+	!stateGame.freeSpinIntroActive &&
+	!stateGame.transitionActive &&
+	!stateDuel.active &&
+	!isTirSceneLive();
+
+const canOwnApp = () => {
+	if (stateGame.gameType !== 'basegame' || stateDuel.active) return false;
+	if (isBuyBonusFlowOpen()) return true;
+	return shouldKeepBuyBonusWarm();
+};
+
+/** After FS cloud — wait so outro / tir GPU can drop before overlay WebGL returns. */
+export const buyBonusWarmAfterFeatureMs = () => (isPhoneForAtlasDownscale() ? 2500 : 1500);
+
 const visualZoom = () =>
 	typeof window === 'undefined' ? 1 : Math.max(1, window.visualViewport?.scale ?? 1);
 
@@ -124,7 +243,7 @@ const ensureApp = (): Promise<PIXI.Application | undefined> => {
 			resolution: buyBonusHostResolution(),
 			autoStart: false,
 		});
-		if (gen !== appGen) {
+		if (gen !== appGen || !canOwnApp()) {
 			next.destroy(true);
 			return undefined;
 		}
@@ -153,9 +272,30 @@ const ensureApp = (): Promise<PIXI.Application | undefined> => {
 	return appReady;
 };
 
+/** Serialize unload ↔ reload so a late FS unload cannot wipe a remounted atlas. */
+let assetGate: Promise<void> = Promise.resolve();
+let atlasesDirty = false;
+
+const withBuyBonusAssets = async <T>(fn: () => Promise<T>): Promise<T> => {
+	let release: () => void = () => undefined;
+	const previous = assetGate;
+	assetGate = new Promise<void>((resolve) => {
+		release = resolve;
+	});
+	await previous;
+	try {
+		return await fn();
+	} finally {
+		release();
+	}
+};
+
 const loadBuyBonusAtlasAndSkeleton = async (variant: BuyBonusSpineVariant) => {
 	const urls = buyBonusSpineUrls(variant);
-	await PIXI.Assets.load([urls.atlas, urls.skeleton]);
+	await withBuyBonusAssets(async () => {
+		if (atlasesDirty) await purgeBuyBonusAssetCache();
+		await PIXI.Assets.load([urls.atlas, urls.skeleton]);
+	});
 };
 
 /** Serialize phone atlas work — parallel 3× decode is a Jetsam spike. */
@@ -208,80 +348,101 @@ const createFrameSpine = (variant: BuyBonusSpineVariant, urls: ReturnType<typeof
 };
 
 const loadSpine = (variant: BuyBonusSpineVariant) => {
+	dropDeadSpine(variant);
 	const existing = spines.get(variant);
 	if (existing) return Promise.resolve(existing);
 	const pending = loading.get(variant);
 	if (pending) return pending;
 
 	const task = runPhoneSerialized(async () => {
+		dropDeadSpine(variant);
 		const cached = spines.get(variant);
 		if (cached) return cached;
+		if (!canOwnApp()) return null;
 		void startBuyBonusSpineBitmapDecode();
 		const createdApp = await ensureApp();
 		if (!createdApp) return null;
 		const gen = appGen;
 		const urls = buyBonusSpineUrls(variant);
 		if (gen !== appGen) return null;
-		try {
+
+		const loadAssets = async () => {
 			await loadBuyBonusAtlasAndSkeleton(variant);
 			if (variant === 'normal') {
 				const mascot = buyBonusNormalMascotUrls();
 				await PIXI.Assets.load([mascot.atlas, mascot.skeleton]);
 			}
+		};
+
+		try {
+			await loadAssets();
 		} catch (error) {
 			console.error('[buyBonus] atlas/skeleton load failed', variant, error);
-			return null;
+			atlasesDirty = true;
+			try {
+				await loadAssets();
+			} catch (retryError) {
+				console.error('[buyBonus] atlas/skeleton retry failed', variant, retryError);
+				return null;
+			}
 		}
-		if (!app || gen !== appGen) return null;
+		if (!app || gen !== appGen || !canOwnApp()) return null;
+		dropDeadSpine(variant);
 		const already = spines.get(variant);
 		if (already) return already;
 
-		if (variant === 'normal') {
-			const mascotUrls = buyBonusNormalMascotUrls();
-			const bg = createFrameSpine(variant, urls);
-			const fg = createFrameSpine(variant, urls);
-			const mascot = Spine.from({
-				skeleton: mascotUrls.skeleton,
-				atlas: mascotUrls.atlas,
-				autoUpdate: false,
-			});
-			mascot.state.setAnimation(0, BUY_BONUS_NORMAL_MASCOT_ANIM, true);
+		try {
+			if (variant === 'normal') {
+				const mascotUrls = buyBonusNormalMascotUrls();
+				const bg = createFrameSpine(variant, urls);
+				const fg = createFrameSpine(variant, urls);
+				const mascot = Spine.from({
+					skeleton: mascotUrls.skeleton,
+					atlas: mascotUrls.atlas,
+					autoUpdate: false,
+				});
+				mascot.state.setAnimation(0, BUY_BONUS_NORMAL_MASCOT_ANIM, true);
 
-			const wireFrame = (spine: Spine, layer: 'bg' | 'fg') => {
-				const previousBefore = spine.beforeUpdateWorldTransforms;
-				spine.beforeUpdateWorldTransforms = (self) => {
-					previousBefore?.(self);
-					prepareBuyBonusSpineDraw(self, variant);
-					applyNormalFrameLayer(self, layer);
+				const wireFrame = (spine: Spine, layer: 'bg' | 'fg') => {
+					const previousBefore = spine.beforeUpdateWorldTransforms;
+					spine.beforeUpdateWorldTransforms = (self) => {
+						previousBefore?.(self);
+						prepareBuyBonusSpineDraw(self, variant);
+						applyNormalFrameLayer(self, layer);
+					};
+					spine.update(0);
+					prepareBuyBonusSpineDraw(spine, variant);
+					applyNormalFrameLayer(spine, layer);
 				};
-				spine.update(0);
-				prepareBuyBonusSpineDraw(spine, variant);
-				applyNormalFrameLayer(spine, layer);
+				wireFrame(bg, 'bg');
+				wireFrame(fg, 'fg');
+				mascot.update(0);
+
+				const root = new PIXI.Container();
+				root.addChild(bg, mascot, fg);
+				root.visible = false;
+				createdApp.stage.addChild(root);
+				spines.set(variant, root);
+				return root;
+			}
+
+			const spine = createFrameSpine(variant, urls);
+			const previousBefore = spine.beforeUpdateWorldTransforms;
+			spine.beforeUpdateWorldTransforms = (self) => {
+				previousBefore?.(self);
+				prepareBuyBonusSpineDraw(self, variant);
 			};
-			wireFrame(bg, 'bg');
-			wireFrame(fg, 'fg');
-			mascot.update(0);
-
-			const root = new PIXI.Container();
-			root.addChild(bg, mascot, fg);
-			root.visible = false;
-			createdApp.stage.addChild(root);
-			spines.set(variant, root);
-			return root;
+			spine.update(0);
+			prepareBuyBonusSpineDraw(spine, variant);
+			spine.visible = false;
+			createdApp.stage.addChild(spine);
+			spines.set(variant, spine);
+			return spine;
+		} catch (error) {
+			console.error('[buyBonus] Spine.from failed', variant, error);
+			atlasesDirty = true;
+			return null;
 		}
-
-		const spine = createFrameSpine(variant, urls);
-		const previousBefore = spine.beforeUpdateWorldTransforms;
-		spine.beforeUpdateWorldTransforms = (self) => {
-			previousBefore?.(self);
-			prepareBuyBonusSpineDraw(self, variant);
-		};
-		spine.update(0);
-		prepareBuyBonusSpineDraw(spine, variant);
-		spine.visible = false;
-		createdApp.stage.addChild(spine);
-		spines.set(variant, spine);
-		return spine;
 	}).finally(() => {
 		loading.delete(variant);
 	});
@@ -297,15 +458,19 @@ export const whenBuyBonusSpinesReady = async (
 };
 
 export const areBuyBonusSpinesReady = (variants: readonly BuyBonusSpineVariant[] = MENU_VARIANTS) =>
-	variants.every((variant) => spines.has(variant));
+	variants.every((variant) => spines.has(variant) && variantTexturesLive(variant));
+
+/** Overlay normal card shares `white/mascot_cat` — do not Assets.unload it. */
+export const isBuyBonusWhiteMascotGpuLive = () =>
+	spines.has('normal') && atlasPagesLive(buyBonusNormalMascotUrls().atlas);
 
 const syncBuyBonusWarmReadyFlag = () => {
-	gameEntrance.buyBonusWarmReady = areBuyBonusSpinesReady();
+	gameEntrance.buyBonusWarmReady = areBuyBonusSpinesReady(MENU_VARIANTS);
 };
 
 const markBuyBonusWarmSucceeded = () => {
 	syncBuyBonusWarmReadyFlag();
-	if (areBuyBonusSpinesReady()) gameEntrance.buyBonusEverWarmed = true;
+	if (areBuyBonusSpinesReady(MENU_VARIANTS)) gameEntrance.buyBonusEverWarmed = true;
 };
 
 export const acknowledgeBuyBonusPresented = () => {
@@ -314,9 +479,10 @@ export const acknowledgeBuyBonusPresented = () => {
 
 let warmPromise: Promise<void> | null = null;
 
-/** Load once on game entry; keep parked for the whole session. */
+/** Load on first Buy Bonus open; remount after FS. Never during a feature. */
 export const ensureBuyBonusWarm = (): Promise<void> => {
-	if (areBuyBonusSpinesReady()) {
+	if (!canOwnApp()) return Promise.resolve();
+	if (areBuyBonusSpinesReady(MENU_VARIANTS)) {
 		markBuyBonusWarmSucceeded();
 		return Promise.resolve();
 	}
@@ -326,11 +492,15 @@ export const ensureBuyBonusWarm = (): Promise<void> => {
 		try {
 			resumeBuyBonusSpineBitmapDecode();
 			const createdApp = await ensureApp();
-			if (!createdApp) return;
-			await whenBuyBonusSpinesReady();
-			if (!app) return;
-			for (const spine of spines.values()) spine.visible = false;
-			if (app.ticker.started) app.ticker.stop();
+			if (!createdApp || !canOwnApp()) return;
+			await whenBuyBonusSpinesReady(MENU_VARIANTS);
+			if (!app || !canOwnApp()) return;
+			if (hasLiveView()) {
+				flushBuyBonusSharedStage();
+			} else {
+				for (const spine of spines.values()) spine.visible = false;
+				if (app.ticker.started) app.ticker.stop();
+			}
 			markBuyBonusWarmSucceeded();
 		} finally {
 			warmPromise = null;
@@ -346,16 +516,18 @@ export const flushBuyBonusSharedStage = () => {
 };
 
 export const ensureBuyBonusMenuOpen = async () => {
+	buyBonusFeatureEvictLock = false;
 	resumeBuyBonusSpineBitmapDecode();
-	if (!areBuyBonusSpinesReady()) {
-		await whenBuyBonusSpinesReady();
-	}
+	cancelScheduledDestroy();
+	const createdApp = await ensureApp();
+	if (!createdApp) return;
+	await whenBuyBonusSpinesReady(MENU_VARIANTS);
 	flushBuyBonusSharedStage();
 	markBuyBonusWarmSucceeded();
 };
 
 export const prepareBuyBonusMenu = async () => {
-	// Spines are warmed after lift; this is usually a no-op by the first tap.
+	buyBonusFeatureEvictLock = false;
 	await ensureBuyBonusWarm();
 	flushBuyBonusSharedStage();
 };
@@ -498,6 +670,121 @@ const requestSync = () => {
 	layoutAndDraw(false);
 };
 
+const unloadBuyBonusAssets = async () => {
+	releaseBuyBonusSpineBitmaps();
+	atlasesDirty = true;
+	await withBuyBonusAssets(async () => {
+		if (app || spines.size > 0) return;
+		try {
+			await PIXI.Assets.unload(buyBonusAssetUrls());
+		} catch {
+			/* cache already empty / mid-recreate */
+		}
+		for (const url of buyBonusAssetUrls()) {
+			try {
+				if (Cache.has(url)) Cache.remove(url);
+			} catch {
+				/* already gone */
+			}
+		}
+	});
+};
+
+const cancelScheduledDestroy = () => {
+	if (destroyTimer === undefined) return;
+	clearTimeout(destroyTimer);
+	destroyTimer = undefined;
+};
+
+const DESTROY_IDLE_MS = 80;
+
+const teardownSharedStageSync = () => {
+	cancelScheduledDestroy();
+	appGen += 1;
+	atlasesDirty = true;
+	const inflight = [...loading.values()];
+	for (const visual of spines.values()) {
+		try {
+			visual.destroy({ children: true, texture: false });
+		} catch {
+			/* already released */
+		}
+	}
+	spines.clear();
+	loading.clear();
+	views.clear();
+	gameEntrance.buyBonusWarmReady = false;
+	const current = app;
+	app = undefined;
+	appReady = undefined;
+	warmPromise = null;
+	tickerBound = false;
+	layerObserver?.disconnect();
+	layerObserver = undefined;
+	if (resizeListening) {
+		window.removeEventListener('resize', requestSync);
+		window.visualViewport?.removeEventListener('resize', requestSync);
+		window.visualViewport?.removeEventListener('scroll', requestSync);
+		resizeListening = false;
+	}
+	if (current) {
+		current.ticker.remove(tickSharedStage);
+		current.destroy(true);
+	}
+	return inflight;
+};
+
+const destroySharedStage = () => {
+	const inflight = teardownSharedStageSync();
+	void Promise.allSettled(inflight).then(() => {
+		void unloadBuyBonusAssets();
+	});
+};
+
+const destroySharedStageAsync = async () => {
+	const inflight = teardownSharedStageSync();
+	await Promise.allSettled(inflight);
+	await unloadBuyBonusAssets();
+};
+
+const destroyIfIdle = () => {
+	if (loading.size > 0 || hasLiveView()) return;
+	if (shouldKeepBuyBonusWarm()) return;
+	destroySharedStage();
+};
+
+const scheduleDestroyIfIdle = () => {
+	if (shouldKeepBuyBonusWarm()) {
+		cancelScheduledDestroy();
+		return;
+	}
+	cancelScheduledDestroy();
+	destroyTimer = setTimeout(() => {
+		destroyTimer = undefined;
+		destroyIfIdle();
+	}, DESTROY_IDLE_MS);
+};
+
+export const evictBuyBonusForFeature = async () => {
+	buyBonusFeatureEvictLock = true;
+	suspendBuyBonusSpineBitmapDecode();
+	cancelScheduledDestroy();
+	await destroySharedStageAsync();
+};
+
+export const clearBuyBonusFeatureEvictLock = () => {
+	buyBonusFeatureEvictLock = false;
+	resumeBuyBonusSpineBitmapDecode();
+};
+
+export const releaseBuyBonusSharedStage = () => {
+	if (hasLiveView()) {
+		scheduleDestroyIfIdle();
+		return;
+	}
+	destroySharedStage();
+};
+
 export const registerBuyBonusCardView = (
 	variant: BuyBonusSpineVariant,
 	host: HTMLElement,
@@ -506,8 +793,10 @@ export const registerBuyBonusCardView = (
 	const id = nextViewId;
 	nextViewId += 1;
 	views.set(id, { id, variant, host, active });
+	if (!canOwnApp()) return id;
+	cancelScheduledDestroy();
 	void ensureApp().then((created) => {
-		if (!created || !views.has(id)) return;
+		if (!created || !views.has(id) || !canOwnApp()) return;
 		void loadSpine(variant).then(() => {
 			if (views.has(id)) requestSync();
 		});
@@ -523,8 +812,10 @@ export const setBuyBonusCardViewActive = (id: BuyBonusCardViewId, active: boolea
 		requestSync();
 		return;
 	}
+	if (!canOwnApp()) return;
+	cancelScheduledDestroy();
 	void ensureApp().then((created) => {
-		if (!created || !views.has(id)) return;
+		if (!created || !views.has(id) || !canOwnApp()) return;
 		void loadSpine(view.variant).then(() => {
 			if (views.has(id)) requestSync();
 		});
@@ -536,6 +827,7 @@ export const unregisterBuyBonusCardView = (id: BuyBonusCardViewId) => {
 	if (views.size === 0 || !hasLiveView()) {
 		if (app?.ticker.started) app.ticker.stop();
 		for (const spine of spines.values()) spine.visible = false;
+		if (!shouldKeepBuyBonusWarm()) scheduleDestroyIfIdle();
 		return;
 	}
 	requestSync();

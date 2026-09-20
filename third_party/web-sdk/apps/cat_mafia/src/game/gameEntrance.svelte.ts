@@ -14,9 +14,7 @@ export const gameEntrance = $state({
 	introFading: false,
 	/** Intro panel removed — game uses normal single-panel layout. */
 	liftComplete: false,
-	/**
-	 * Batch 4 finished. Buy-bonus warm runs in parallel after lift.
-	 */
+	/** Batch 4 finished after lift. */
 	postLiftAssetsReady: false,
 	/** Overlay card spines warmed into the buy-bonus WebGL — safe to open the menu. */
 	buyBonusWarmReady: false,
