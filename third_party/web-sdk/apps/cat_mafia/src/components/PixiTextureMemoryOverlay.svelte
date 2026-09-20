@@ -55,17 +55,20 @@
 			aria-label={open ? 'Collapse Pixi memory panel' : 'Expand Pixi memory panel'}
 			onclick={toggle}
 		>
-			<span class="pixi-mem__total">Pixi ~{formatMb(stats.totalBytes)}</span>
+			<span class="pixi-mem__total">GPU ~{formatMb(stats.totalBytes)}</span>
 			<span class="pixi-mem__chevron" aria-hidden="true">{open ? '▾' : '▸'}</span>
 		</button>
 
 		{#if open}
 			<div class="pixi-mem__body">
 				<div class="pixi-mem__row">
-					GPU {formatMb(stats.gpuBytes)} · {stats.gpuCount} tex
+					Pixi {formatMb(stats.gpuBytes)} · {stats.gpuCount} tex
 				</div>
 				<div class="pixi-mem__row">
 					Cache {formatMb(stats.cacheBytes)} · {stats.cacheCount} tex
+				</div>
+				<div class="pixi-mem__row">
+					HTML Spine {formatMb(stats.htmlSpineBytes)} · {stats.htmlSpineCount} surf
 				</div>
 				<div class="pixi-mem__top-title">Top 30 live</div>
 				{#if stats.top.length}

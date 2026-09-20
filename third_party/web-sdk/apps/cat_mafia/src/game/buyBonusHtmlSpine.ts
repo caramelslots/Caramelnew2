@@ -1,4 +1,4 @@
-/** designer_assets buy-bonus card spines — Pixi overlay (not HTML SpinePlayer). */
+/** designer_assets buy-bonus card spines — HTML SpinePlayer (same path as duel pick). */
 
 import { isPhoneForAtlasDownscale } from './phoneSpineAtlasDownscale';
 

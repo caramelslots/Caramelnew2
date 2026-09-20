@@ -4,6 +4,7 @@
 	--panel-width для desktop, portrait, popout L (800×450) и popout S (400×225).
 -->
 <script lang="ts">
+	import { onDestroy } from 'svelte';
 	import { stateModal, stateBet, stateBetDerived, stateConfig } from 'state-shared';
 	import { stateBonus } from 'components-ui-html/src/stateBonus.svelte';
 	import { numberToCurrencyString } from 'utils-shared/amount';
@@ -23,15 +24,12 @@
 	import { ensureKnewaveFontLoaded } from '../game/knewaveFont';
 	import { getContext } from '../game/context';
 	import { getContextLayout } from 'utils-layout';
-	import { tick } from 'svelte';
 
 	import {
-		areBuyBonusSpinesReady,
-		ensureBuyBonusMenuOpen,
-		flushBuyBonusSharedStage,
-		whenBuyBonusSpinesReady,
-	} from '../game/buyBonusSharedPixi';
-	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS, HUD_ASSETS } from '../game/uiHtmlAssetManifest';
+		areBuyBonusMenuCardsReady,
+		subscribeBuyBonusCardsReady,
+	} from '../game/buyBonusCardGpu';
+	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS, HUD_ASSETS, startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import ArchedRibbonTitle from './ArchedRibbonTitle.svelte';
 	import BuyBonusCardSpine from './BuyBonusCardSpine.svelte';
@@ -42,6 +40,7 @@
 	const { stateLayoutDerived } = getContextLayout();
 
 	let knewaveFontReady = $state(false);
+	let cardsReady = $state(areBuyBonusMenuCardsReady());
 
 	const bgUrl = BUY_BONUS_ASSETS.menuBg;
 	const closeIconUrl = AUTOSPIN_ASSETS.close;
@@ -49,61 +48,32 @@
 	const plusUrl = HUD_ASSETS.betPlus;
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonus');
-	/** Mount card hosts only while open — sticky mounts remounted GL during extra FS. */
-	let spinesMounted = $state(false);
-	/** Board + cards reveal together — never show empty card slots. */
-	let panelReady = $state(false);
-	let revealedOnce = $state(false);
+	const isConfirmOpen = $derived(stateModal.modal?.name === 'buyBonusConfirm');
+	const confirmIsSuper = $derived(stateBonus.selectedBetModeKey === 'bonus_super');
 
 	$effect(() => {
-		gameEntrance.buyBonusPanelReady = isOpen && panelReady;
+		cardsReady = areBuyBonusMenuCardsReady();
+		return subscribeBuyBonusCardsReady(() => {
+			cardsReady = areBuyBonusMenuCardsReady();
+		});
+	});
+
+	/** Never flash empty board — keep ready sticky while spines stay warm (confirm ↔ back). */
+	$effect(() => {
+		const painted = cardsReady;
+		gameEntrance.buyBonusWarmReady = painted;
+		if (painted) {
+			gameEntrance.buyBonusEverWarmed = true;
+			gameEntrance.buyBonusPanelReady = true;
+		}
+	});
+
+	onDestroy(() => {
+		gameEntrance.buyBonusPanelReady = false;
 	});
 
 	$effect(() => {
-		if (!isOpen) {
-			panelReady = false;
-			spinesMounted = false;
-			return;
-		}
-		spinesMounted = true;
-		let cancelled = false;
-		void (async () => {
-			if (areBuyBonusSpinesReady()) {
-				panelReady = true;
-				revealedOnce = true;
-				flushBuyBonusSharedStage();
-				return;
-			}
-			await tick();
-			if (cancelled) return;
-			try {
-				await ensureBuyBonusMenuOpen();
-				if (cancelled) return;
-				for (let i = 0; i < 40 && !areBuyBonusSpinesReady(); i += 1) {
-					await whenBuyBonusSpinesReady();
-					if (cancelled) return;
-					if (areBuyBonusSpinesReady()) break;
-					await new Promise<void>((resolve) => setTimeout(resolve, 50));
-					if (cancelled) return;
-					await ensureBuyBonusMenuOpen();
-					if (cancelled) return;
-				}
-				if (cancelled || !areBuyBonusSpinesReady()) return;
-				panelReady = true;
-				revealedOnce = true;
-				await tick();
-				if (cancelled) return;
-				flushBuyBonusSharedStage();
-				await new Promise<void>((r) => requestAnimationFrame(() => r()));
-				if (cancelled) return;
-				flushBuyBonusSharedStage();
-			} catch (error) {
-				console.error('[buyBonus] menu open failed', error);
-			}
-		})();
-		return () => {
-			cancelled = true;
-		};
+		void startBuyBonusFlowPreload();
 	});
 
 	$effect(() => {
@@ -190,8 +160,7 @@
 	class:portrait={isPortrait}
 	class:popout-l={isPopout}
 	class:popout-s={isPopoutSmall}
-	class:ready={panelReady}
-	data-buy-bonus-prepare={isOpen && !panelReady ? '' : undefined}
+	class:ready={isOpen}
 	data-test="buy-bonus-overlay"
 	aria-hidden={!isOpen}
 >
@@ -224,9 +193,7 @@
 				onclick={() => onBuy('normal')}
 				aria-label={context.i18nDerived.normalBonus()}
 			>
-				{#if spinesMounted}
-					<BuyBonusCardSpine variant="normal" active={isOpen} />
-				{/if}
+				<BuyBonusCardSpine variant="normal" active={isOpen || (isConfirmOpen && !confirmIsSuper)} />
 				<div class="card-content">
 					<div class="card-title">
 						<ArchedRibbonTitle text={context.i18nDerived.normalBonus()} />
@@ -257,9 +224,7 @@
 				onclick={() => onBuy('super')}
 				aria-label={context.i18nDerived.superBonus()}
 			>
-				{#if spinesMounted}
-					<BuyBonusCardSpine variant="super" active={isOpen} />
-				{/if}
+				<BuyBonusCardSpine variant="super" active={isOpen || (isConfirmOpen && confirmIsSuper)} />
 				<div class="card-content">
 					<div class="card-title">
 						<ArchedRibbonTitle text={context.i18nDerived.superBonus()} archDeg={30} />
@@ -290,9 +255,7 @@
 				onclick={() => onBuy('duel')}
 				aria-label={context.i18nDerived.duelBonus()}
 			>
-				{#if spinesMounted}
-					<BuyBonusCardSpine variant="duel" active={isOpen} />
-				{/if}
+				<BuyBonusCardSpine variant="duel" active={isOpen} />
 				<div class="card-content">
 					<div class="card-price-wrap">
 						<span class="card-price" data-test="bonus-price-duel" x-apple-data-detectors="false"
@@ -503,7 +466,7 @@
 
 	.card {
 		position: relative;
-		z-index: 1;
+		/* No z-index — a stacking context here paints over the shared spine canvas. */
 		min-width: 0;
 		overflow: visible;
 		background: none;
@@ -565,6 +528,11 @@
 		margin: 0;
 		--bb-card-title-fs: calc(var(--panel-width) * 0.026);
 		font-size: var(--bb-card-title-fs);
+	}
+
+	.card-normal .card-title,
+	.card-super .card-title {
+		top: 0.5%;
 	}
 
 	.card-title.card-label-knewave {
@@ -750,7 +718,7 @@
 		position: absolute;
 		left: 14%;
 		right: 14%;
-		bottom: 1.5%;
+		bottom: 0.6%;
 		width: auto;
 		height: 12.5%;
 		display: flex;
@@ -773,7 +741,7 @@
 	.card-super .card-price-wrap {
 		left: 14%;
 		right: 14%;
-		bottom: 1.5%;
+		bottom: 0.6%;
 		width: auto;
 		height: 12.5%;
 		transform: none;
@@ -784,7 +752,7 @@
 		right: 36%;
 		width: auto;
 		height: 22%;
-		bottom: 5.2%;
+		bottom: 5.8%;
 		transform: none;
 	}
 
@@ -801,7 +769,7 @@
 		-webkit-text-fill-color: #1a1208;
 		text-shadow: 0 1px 0 rgba(255, 236, 190, 0.45);
 		text-decoration: none;
-		transform: translate(0.14em, 0.14em);
+		transform: translate(0.14em, 0.26em);
 	}
 
 	.card-price :global(a) {
@@ -811,7 +779,7 @@
 	}
 
 	.card-duel .card-price {
-		transform: translate(0.02em, 0.28em);
+		transform: translate(0.02em, 0.36em);
 	}
 
 	.features-section {
@@ -1055,7 +1023,7 @@
 		.card-price-wrap {
 			left: 14%;
 			right: 14%;
-			bottom: 1.5%;
+			bottom: 0.6%;
 			height: 12.5%;
 			width: auto;
 			transform: none;
@@ -1065,7 +1033,7 @@
 		.card-super .card-price-wrap {
 			left: 14%;
 			right: 14%;
-			bottom: 1.5%;
+			bottom: 0.6%;
 			width: auto;
 			height: 12.5%;
 			transform: none;
@@ -1074,7 +1042,7 @@
 		.card-duel .card-price-wrap {
 			left: 36%;
 			right: 36%;
-			bottom: 5.2%;
+			bottom: 5.8%;
 			height: 22%;
 			width: auto;
 			transform: none;
@@ -1214,7 +1182,7 @@
 		.card-price-wrap {
 			left: 14%;
 			right: 14%;
-			bottom: 1.5%;
+			bottom: 0.6%;
 			height: 12.5%;
 			width: auto;
 			transform: none;
@@ -1224,7 +1192,7 @@
 		.card-super .card-price-wrap {
 			left: 14%;
 			right: 14%;
-			bottom: 1.5%;
+			bottom: 0.6%;
 			width: auto;
 			height: 12.5%;
 			transform: none;
@@ -1233,7 +1201,7 @@
 		.card-duel .card-price-wrap {
 			left: 36%;
 			right: 36%;
-			bottom: 5.2%;
+			bottom: 5.8%;
 			height: 22%;
 			width: auto;
 			transform: none;
@@ -1366,7 +1334,7 @@
 		.card-price-wrap {
 			left: 14%;
 			right: 14%;
-			bottom: 1.5%;
+			bottom: 0.6%;
 			height: 12.5%;
 			width: auto;
 			transform: none;
@@ -1376,7 +1344,7 @@
 		.card-super .card-price-wrap {
 			left: 14%;
 			right: 14%;
-			bottom: 1.5%;
+			bottom: 0.6%;
 			width: auto;
 			height: 12.5%;
 			transform: none;
@@ -1385,7 +1353,7 @@
 		.card-duel .card-price-wrap {
 			left: 36%;
 			right: 36%;
-			bottom: 5.2%;
+			bottom: 5.8%;
 			height: 22%;
 			width: auto;
 			transform: none;
@@ -1514,7 +1482,7 @@
 		.card-price-wrap {
 			left: 14%;
 			right: 14%;
-			bottom: 1.5%;
+			bottom: 0.6%;
 			height: 12.5%;
 			width: auto;
 			transform: none;
@@ -1524,7 +1492,7 @@
 		.card-super .card-price-wrap {
 			left: 14%;
 			right: 14%;
-			bottom: 1.5%;
+			bottom: 0.6%;
 			width: auto;
 			height: 12.5%;
 			transform: none;
@@ -1533,7 +1501,7 @@
 		.card-duel .card-price-wrap {
 			left: 36%;
 			right: 36%;
-			bottom: 5.2%;
+			bottom: 5.8%;
 			height: 22%;
 			width: auto;
 			transform: none;

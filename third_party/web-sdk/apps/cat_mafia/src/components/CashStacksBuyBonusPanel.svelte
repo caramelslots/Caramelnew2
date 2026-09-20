@@ -14,8 +14,7 @@
 	} from '../game/portraitHudLayout';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
-	import { prepareBuyBonusMenu } from '../game/buyBonusSharedPixi';
-	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
+	import { HUD_ASSETS, startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
 	import { getContextLayout } from 'utils-layout';
 
 	const context = getContext();
@@ -47,7 +46,7 @@
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		// Open immediately — shell shows dim while spines flush (no tap blocked on prepare).
 		stateModal.modal = { name: 'buyBonus' };
-		void prepareBuyBonusMenu();
+		void startBuyBonusFlowPreload();
 	};
 
 	const buyBonusBgUrl = HUD_ASSETS.buyBonusPanel;

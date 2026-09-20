@@ -25,4 +25,9 @@ export const gameEntrance = $state({
 	buyBonusEverWarmed: false,
 	/** Buy-bonus board+cards painted — shell blur waits for this so user never sees empty cards. */
 	buyBonusPanelReady: false,
+	/**
+	 * Set during bought-feature eviction; cleared when basegame settles so warm-park can remount.
+	 * Must live here (reactive) — a plain module `let` does not re-run shell `keepBuyWarm`.
+	 */
+	buyBonusFeatureEvictLock: false,
 });

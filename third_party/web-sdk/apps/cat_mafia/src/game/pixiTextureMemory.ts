@@ -4,6 +4,10 @@
  */
 
 import { Cache, Texture, TextureSource, type Application } from 'pixi.js';
+import type { SpinePlayer } from '@esotericsoftware/spine-player';
+
+import { getLiveBuyBonusCardSpinePlayers } from './buyBonusCardGpu';
+import { getLiveDuelPickSpinePlayers } from './duelPickGpu';
 
 const RGBA_BYTES = 4;
 
@@ -20,7 +24,10 @@ export type PixiTextureMemoryStats = {
 	gpuCount: number;
 	cacheBytes: number;
 	cacheCount: number;
-	/** Unique sources across GPU + Assets.Cache */
+	/** HTML SpinePlayer canvases + atlas pages (buy-bonus / duel-pick). */
+	htmlSpineBytes: number;
+	htmlSpineCount: number;
+	/** Unique sources across GPU + Assets.Cache + HTML Spine */
 	totalBytes: number;
 	totalCount: number;
 	top: PixiTextureMemoryEntry[];
@@ -136,6 +143,77 @@ export const formatMb = (bytes: number): string => {
 	return `${mb.toFixed(2)} MB`;
 };
 
+type HtmlSpineAtlasPage = {
+	name?: string;
+	width?: number;
+	height?: number;
+	texture?: { getImage?: () => { width?: number; height?: number; src?: string } | null } | null;
+};
+
+type HtmlSpineAtlas = {
+	pages?: HtmlSpineAtlasPage[];
+};
+
+type HtmlSpineAssetManager = {
+	assets?: Record<string, unknown>;
+};
+
+const shortPathLabel = (path: string) => path.replace(/^.*\//, '').slice(0, 28) || path.slice(0, 28);
+
+/**
+ * Estimate HTML SpinePlayer GPU: framebuffer (canvas) + atlas page textures.
+ * Buy-bonus / duel-pick sit outside Pixi managedTextures — without this the RAM bar misses them.
+ */
+export const estimateHtmlSpinePlayerMemory = (
+	players: readonly SpinePlayer[],
+): { bytes: number; count: number; top: PixiTextureMemoryEntry[] } => {
+	const top: PixiTextureMemoryEntry[] = [];
+	let bytes = 0;
+	let count = 0;
+	let uid = -1;
+
+	const push = (label: string, w: number, h: number) => {
+		if (w <= 0 || h <= 0) return;
+		const b = w * h * RGBA_BYTES;
+		bytes += b;
+		count += 1;
+		top.push({
+			uid: uid--,
+			label,
+			bytes: b,
+			pixelWidth: w,
+			pixelHeight: h,
+		});
+	};
+
+	for (const player of players) {
+		const canvas = player.canvas;
+		if (canvas && canvas.width > 1 && canvas.height > 1) {
+			push('html-spine:canvas', canvas.width | 0, canvas.height | 0);
+		}
+
+		const manager = player.assetManager as HtmlSpineAssetManager | null;
+		const assets = manager?.assets;
+		if (!assets || typeof assets !== 'object') continue;
+
+		for (const [path, asset] of Object.entries(assets)) {
+			if (!asset || typeof asset !== 'object') continue;
+			const atlas = asset as HtmlSpineAtlas;
+			if (!Array.isArray(atlas.pages)) continue;
+			for (const page of atlas.pages) {
+				const image = page.texture?.getImage?.() ?? null;
+				const w = (image?.width | 0) || (page.width | 0);
+				const h = (image?.height | 0) || (page.height | 0);
+				const label = `html:${shortPathLabel(page.name || path)}`;
+				push(label, w, h);
+			}
+		}
+	}
+
+	top.sort((a, b) => b.bytes - a.bytes);
+	return { bytes, count, top: top.slice(0, 30) };
+};
+
 export const estimatePixiTextureMemory = (
 	app?: Application | null,
 ): PixiTextureMemoryStats => {
@@ -159,16 +237,27 @@ export const estimatePixiTextureMemory = (
 	const all = new Map<number, TextureSource>([...cacheSources, ...gpuSources]);
 	const gpu = sumSources(gpuSources.values());
 	const cached = sumSources(cacheSources.values());
-	const total = sumSources(all.values());
+	const pixiTotal = sumSources(all.values());
+
+	const htmlSpine = estimateHtmlSpinePlayerMemory([
+		...getLiveBuyBonusCardSpinePlayers(),
+		...getLiveDuelPickSpinePlayers(),
+	]);
+
+	const mergedTop = [...collectTop(all), ...htmlSpine.top]
+		.sort((a, b) => b.bytes - a.bytes)
+		.slice(0, 30);
 
 	return {
 		gpuBytes: gpu.bytes,
 		gpuCount: gpu.count,
 		cacheBytes: cached.bytes,
 		cacheCount: cached.count,
-		totalBytes: total.bytes,
-		totalCount: total.count,
-		top: collectTop(all),
+		htmlSpineBytes: htmlSpine.bytes,
+		htmlSpineCount: htmlSpine.count,
+		totalBytes: pixiTotal.bytes + htmlSpine.bytes,
+		totalCount: pixiTotal.count + htmlSpine.count,
+		top: mergedTop,
 	};
 };
 

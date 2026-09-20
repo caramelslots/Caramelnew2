@@ -20,14 +20,16 @@
 	import { getContext } from '../game/context';
 	import { evictBuyBonusForFeature } from '../game/buyBonusSharedPixi';
 	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS, startFsCongPreload } from '../game/uiHtmlAssetManifest';
+	import { getBuyBonusCardSpineHost } from '../game/buyBonusCardHosts';
+	import type { BuyBonusSpineVariant } from '../game/buyBonusHtmlSpine';
 	import ArchedRibbonTitle from './ArchedRibbonTitle.svelte';
-	import BuyBonusCardSpine from './BuyBonusCardSpine.svelte';
 	import FitCardText from './FitCardText.svelte';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 
 	let knewaveFontReady = $state(false);
+	let spineMount = $state<HTMLDivElement | undefined>();
 
 	const bgUrl = BUY_BONUS_ASSETS.menuBg;
 	const closeIconUrl = AUTOSPIN_ASSETS.close;
@@ -35,11 +37,6 @@
 	const confirmButtonBgUrl = BUY_BONUS_ASSETS.confirmButtonBg;
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonusConfirm');
-	let spinesMounted = $state(false);
-
-	$effect(() => {
-		if (isOpen) spinesMounted = true;
-	});
 
 	$effect(() => {
 		let cancelled = false;
@@ -58,6 +55,24 @@
 	const isPopout = $derived(isPopoutViewport(canvasSizes) && !isPopoutSmall);
 
 	const isSuper = $derived(stateBonus.selectedBetModeKey === 'bonus_super');
+	const spineVariant = $derived<BuyBonusSpineVariant>(isSuper ? 'super' : 'normal');
+
+	/** Borrow the menu card's Spine root (same WebGL) — reparent into the larger slot (no 2nd atlas). */
+	$effect(() => {
+		if (!isOpen || !spineMount) return;
+		const host = getBuyBonusCardSpineHost(spineVariant);
+		if (!host) return;
+		const home = host.parentElement;
+		if (!home) return;
+		if (host.parentElement !== spineMount) {
+			spineMount.appendChild(host);
+		}
+		return () => {
+			if (host.parentElement === spineMount && home.isConnected) {
+				home.appendChild(host);
+			}
+		};
+	});
 
 	const multiplier = $derived(
 		isSuper ? buySuperCostMultiplier() : buyNormalCostMultiplier(),
@@ -130,16 +145,7 @@
 
 		<section class="confirm-card-section" data-buy-bonus-spine-layer aria-label="selected bonus">
 			<article class="card confirm-card" class:card-normal={!isSuper} class:card-super={isSuper}>
-				<div class="spine-layer" class:on={!isSuper}>
-					{#if spinesMounted}
-						<BuyBonusCardSpine variant="normal" active={isOpen && !isSuper} />
-					{/if}
-				</div>
-				<div class="spine-layer" class:on={isSuper}>
-					{#if spinesMounted}
-						<BuyBonusCardSpine variant="super" active={isOpen && isSuper} />
-					{/if}
-				</div>
+				<div class="spine-layer on" bind:this={spineMount}></div>
 				<div class="card-content">
 					<div class="card-title">
 						<ArchedRibbonTitle text={cardTitle} archDeg={isSuper ? 30 : 34} />
@@ -361,7 +367,7 @@
 
 	.card-title {
 		position: absolute;
-		top: 1.2%;
+		top: 0.2%;
 		left: 4.5%;
 		right: 4.5%;
 		height: 16%;
@@ -512,7 +518,7 @@
 		position: absolute;
 		left: 14%;
 		right: 14%;
-		bottom: 1.5%;
+		bottom: 0.4%;
 		width: auto;
 		height: 12.5%;
 		display: flex;
@@ -633,7 +639,7 @@
 		.card-price-wrap {
 			left: 14%;
 			right: 14%;
-			bottom: 1.5%;
+			bottom: 0.4%;
 			height: 12.5%;
 			width: auto;
 			transform: none;
@@ -680,7 +686,7 @@
 		.card-price-wrap {
 			left: 14%;
 			right: 14%;
-			bottom: 1.5%;
+			bottom: 0.4%;
 			height: 12.5%;
 			width: auto;
 			transform: none;
@@ -716,7 +722,7 @@
 		.card-price-wrap {
 			left: 14%;
 			right: 14%;
-			bottom: 1.5%;
+			bottom: 0.4%;
 			height: 12.5%;
 			width: auto;
 			transform: none;
@@ -751,7 +757,7 @@
 		.card-price-wrap {
 			left: 14%;
 			right: 14%;
-			bottom: 1.5%;
+			bottom: 0.4%;
 			height: 12.5%;
 			width: auto;
 			transform: none;

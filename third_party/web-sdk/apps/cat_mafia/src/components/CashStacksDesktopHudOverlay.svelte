@@ -21,9 +21,8 @@
 	import { canAffordSpin, canIncreaseBet } from '../game/buyBonusBalance';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
-	import { prepareBuyBonusMenu } from '../game/buyBonusSharedPixi';
 	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
-	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
+	import { HUD_ASSETS, startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { isSdkTurboSpin } from '../game/gameSpeed';
 	import { getContextLayout } from 'utils-layout';
@@ -170,7 +169,7 @@
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		// Open immediately — shell shows dim while spines flush (no tap blocked on prepare).
 		stateModal.modal = { name: 'buyBonus' };
-		void prepareBuyBonusMenu();
+		void startBuyBonusFlowPreload();
 	};
 
 	const onDecreasePress = () => {

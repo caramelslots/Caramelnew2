@@ -1,47 +1,33 @@
 <!--
-	Buy-bonus overlay WebGL:
-	- After lift: warm so the first Buy tap is instant.
-	- After a bought bonus / FS: evict while not base, remount when settled.
-	- Character pick / confirm screens are not warmed here.
+	HTTP-warm buy-bonus assets as soon as content shows (don't wait for lift end).
+	Card WebGL mounts via BuyBonusModalShell warm-park — SpinePlayer inside each card.
+
+	After a bought feature, `evictBuyBonusForFeature` sets a reactive lock on gameEntrance.
+	Once basegame settles, clear it so `keepBuyWarm` remounts the parked panel *before*
+	the next tap (a plain module `let` never retriggered the shell).
 -->
 <script lang="ts">
+	import { startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
 	import {
-		areBuyBonusSpinesReady,
 		buyBonusWarmAfterFeatureMs,
 		clearBuyBonusFeatureEvictLock,
-		ensureBuyBonusWarm,
-		releaseBuyBonusSharedStage,
 		shouldKeepBuyBonusWarm,
 	} from '../game/buyBonusSharedPixi';
-	import { suspendBuyBonusSpineBitmapDecode } from '../game/buyBonusHtmlSpine';
-	import { isBuyBonusFlowOpen } from '../game/isAnyMenuOpen';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
-	import { stateModal } from 'state-shared';
 
-	let remountTimer: ReturnType<typeof setTimeout> | undefined;
+	const isTirLive = () =>
+		stateGame.targetPickOpen ||
+		stateGame.targetPickSlide > 0.001 ||
+		stateGame.drumShootActive;
 
-	const cancelRemount = () => {
-		if (remountTimer === undefined) return;
-		clearTimeout(remountTimer);
-		remountTimer = undefined;
-	};
-
-	const scheduleRemount = (delayMs?: number) => {
-		if (remountTimer !== undefined) return;
-		if (areBuyBonusSpinesReady()) return;
-		const wait = delayMs ?? (gameEntrance.buyBonusEverWarmed ? buyBonusWarmAfterFeatureMs() : 80);
-		remountTimer = setTimeout(() => {
-			remountTimer = undefined;
-			if (!shouldKeepBuyBonusWarm()) return;
-			void ensureBuyBonusWarm().then(() => {
-				if (areBuyBonusSpinesReady()) {
-					gameEntrance.buyBonusEverWarmed = true;
-				}
-			});
-		}, wait);
-	};
+	const isSettledBasegame = () =>
+		stateGame.gameType === 'basegame' &&
+		!stateGame.freeSpinIntroActive &&
+		!stateGame.transitionActive &&
+		!stateDuel.active &&
+		!isTirLive();
 
 	$effect(() => {
 		void stateGame.gameType;
@@ -51,45 +37,24 @@
 		void stateGame.targetPickSlide;
 		void stateGame.drumShootActive;
 		void stateDuel.active;
-		void stateModal.modal;
+		void gameEntrance.showContent;
 		void gameEntrance.liftComplete;
-		void gameEntrance.buyBonusWarmReady;
-		void gameEntrance.buyBonusEverWarmed;
+		void gameEntrance.buyBonusFeatureEvictLock;
 
-		const settledBase =
-			stateGame.gameType === 'basegame' &&
-			!stateDuel.active &&
-			!stateGame.freeSpinIntroActive &&
-			!stateGame.transitionActive &&
-			!stateGame.targetPickOpen &&
-			!(stateGame.targetPickSlide > 0.001) &&
-			!stateGame.drumShootActive;
+		if (!gameEntrance.showContent) return;
 
-		if (settledBase) clearBuyBonusFeatureEvictLock();
-
-		const menuOpen = isBuyBonusFlowOpen();
-
-		if (menuOpen) {
-			cancelRemount();
-			if (!areBuyBonusSpinesReady()) void ensureBuyBonusWarm();
-			return;
+		// Post-feature: lock blocks keepBuyWarm — HTTP can warm under lock; clear soon so park remounts.
+		if (gameEntrance.buyBonusFeatureEvictLock) {
+			if (!isSettledBasegame()) return;
+			void startBuyBonusFlowPreload();
+			const timer = setTimeout(() => {
+				clearBuyBonusFeatureEvictLock();
+				void startBuyBonusFlowPreload();
+			}, buyBonusWarmAfterFeatureMs());
+			return () => clearTimeout(timer);
 		}
 
-		if (!shouldKeepBuyBonusWarm()) {
-			cancelRemount();
-			suspendBuyBonusSpineBitmapDecode();
-			releaseBuyBonusSharedStage();
-			return;
-		}
-
-		if (!gameEntrance.liftComplete) return;
-
-		if (areBuyBonusSpinesReady() || gameEntrance.buyBonusWarmReady) {
-			cancelRemount();
-			return;
-		}
-
-		// After lift, upload overlay GL so the first Buy tap is instant.
-		scheduleRemount();
+		if (!shouldKeepBuyBonusWarm()) return;
+		void startBuyBonusFlowPreload();
 	});
 </script>

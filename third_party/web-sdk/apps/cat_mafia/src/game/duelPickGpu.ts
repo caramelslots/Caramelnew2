@@ -38,6 +38,9 @@ export const trackDuelPickSpinePlayer = (player: SpinePlayer) => {
 	livePlayers.add(player);
 };
 
+/** Live HTML SpinePlayers for the debug memory bar (canvas + atlas VRAM). */
+export const getLiveDuelPickSpinePlayers = (): readonly SpinePlayer[] => [...livePlayers];
+
 export const releaseAllDuelPickSpinePlayers = () => {
 	for (const player of [...livePlayers]) disposeDuelPickSpinePlayer(player);
 	livePlayers.clear();
