@@ -38,7 +38,7 @@
 		class:preparing={isPreparingBuy}
 		class:phone-dim={phoneDim}
 		aria-hidden={!isVisible}
-		inert={!isVisible}
+		inert={!isVisible && !isPreparingBuy}
 		data-test="buy-bonus-modal-shell"
 	>
 		<div
@@ -98,12 +98,12 @@
 			background: rgba(0, 0, 0, 0.5);
 		}
 
-		/* Layout card hosts while spines flush — invisible, no blur. */
+		/* Instant feedback on tap: dim while spines flush, then reveal cards. */
 		&.preparing:not(.active) {
-			opacity: 0;
+			opacity: 1;
 			visibility: visible;
-			pointer-events: none;
-			background: transparent;
+			pointer-events: auto;
+			background: rgba(0, 0, 0, 0.5);
 			backdrop-filter: none;
 			-webkit-backdrop-filter: none;
 		}

@@ -159,23 +159,18 @@
 		stateUi.menuOpen = !stateUi.menuOpen;
 	};
 
-	let buyBonusOpening = $state(false);
+	const buyFlowOpen = $derived(
+		stateModal.modal?.name === 'buyBonus' ||
+			stateModal.modal?.name === 'buyBonusConfirm' ||
+			stateModal.modal?.name === 'buyDuelPick',
+	);
 
 	const onBuyBonusPress = () => {
-		if (buyDisabled || buyBonusOpening) return;
-		buyBonusOpening = true;
+		if (buyDisabled || buyFlowOpen) return;
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
-		void (async () => {
-			try {
-				await prepareBuyBonusMenu();
-				stateModal.modal = { name: 'buyBonus' };
-			} catch (error) {
-				console.error('[buyBonus] prepare failed', error);
-				stateModal.modal = { name: 'buyBonus' };
-			} finally {
-				buyBonusOpening = false;
-			}
-		})();
+		// Open immediately — shell shows dim while spines flush (no tap blocked on prepare).
+		stateModal.modal = { name: 'buyBonus' };
+		void prepareBuyBonusMenu();
 	};
 
 	const onDecreasePress = () => {
@@ -449,6 +444,11 @@
 			filter: brightness(0.9);
 		}
 
+		&:focus,
+		&:focus-visible {
+			outline: none;
+		}
+
 		&:disabled {
 			cursor: not-allowed;
 			pointer-events: none;
@@ -465,6 +465,11 @@
 
 	.hud-icon-btn[data-test='buy-bonus-panel-button'] {
 		background-size: 100% 100%;
+
+		/* No filter — brightness paints a dark rectangle around the octagon art. */
+		&:active:not(:disabled) {
+			filter: none;
+		}
 	}
 
 	.hud-buy-bonus-hit {

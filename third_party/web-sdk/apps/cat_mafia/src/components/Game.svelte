@@ -73,6 +73,7 @@
 	import CashStacksPortraitHudOverlay from './CashStacksPortraitHudOverlay.svelte';
 	import DevCheats from './DevCheats.svelte';
 	import DevButtons from './DevButtons.svelte';
+	import PixiTextureMemoryOverlay from './PixiTextureMemoryOverlay.svelte';
 	import { FadeContainer } from 'components-pixi';
 
 	const context = getContext();
@@ -85,7 +86,9 @@
 	});
 
 	$effect(() => {
-		if (!context.stateApp.loaded || BuyBonusModalShell) return;
+		if (BuyBonusModalShell) return;
+		// Prefetch as soon as the game is playable so the first Buy Bonus tap isn’t a no-op.
+		if (!context.stateApp.loaded && !gameEntrance.showContent) return;
 		void import('./BuyBonusModalShell.svelte').then((mod) => {
 			BuyBonusModalShell = mod.default;
 		});
@@ -311,6 +314,7 @@
 <FreeSpinIntro />
 <DevCheats />
 <DevButtons />
+<PixiTextureMemoryOverlay />
 
 <style lang="scss">
 	.pixi-stage {

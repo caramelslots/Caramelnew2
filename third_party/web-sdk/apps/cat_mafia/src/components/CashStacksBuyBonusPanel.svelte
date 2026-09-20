@@ -15,7 +15,6 @@
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { prepareBuyBonusMenu } from '../game/buyBonusSharedPixi';
-	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
 	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
 	import { getContextLayout } from 'utils-layout';
 
@@ -31,6 +30,11 @@
 	);
 
 	const buyDisabled = $derived(!context.stateXstateDerived.isIdle());
+	const buyFlowOpen = $derived(
+		stateModal.modal?.name === 'buyBonus' ||
+			stateModal.modal?.name === 'buyBonusConfirm' ||
+			stateModal.modal?.name === 'buyDuelPick',
+	);
 
 	const panelStyle = $derived.by(() => {
 		const top = portraitBuyPanelCanvasTop(stateLayoutDerived);
@@ -38,24 +42,18 @@
 		return `left:${left}px;top:${top}px;transform:translate(-50%,0)`;
 	});
 
-	let opening = $state(false);
-
 	const onBuyBonusPress = () => {
-		if (buyDisabled || opening) return;
-		opening = true;
+		if (buyDisabled || buyFlowOpen) return;
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
-		void (async () => {
-			try {
-				await prepareBuyBonusMenu();
-				stateModal.modal = { name: 'buyBonus' };
-			} catch (error) {
-				console.error('[buyBonus] prepare failed', error);
-				stateModal.modal = { name: 'buyBonus' };
-			} finally {
-				opening = false;
-			}
-		})();
+		// Open immediately — shell shows dim while spines flush (no tap blocked on prepare).
+		stateModal.modal = { name: 'buyBonus' };
+		void prepareBuyBonusMenu();
 	};
+
+	// Soft warm as soon as the button is on screen (warm is idempotent / shared).
+	$effect(() => {
+		if (show && !gameEntrance.buyBonusWarmReady) void prepareBuyBonusMenu();
+	});
 
 	const buyBonusBgUrl = HUD_ASSETS.buyBonusPanel;
 	const buyBonusLabel = $derived(context.i18nDerived.buyBonusPanelButton());
@@ -113,19 +111,29 @@
 		box-sizing: border-box;
 		border: 0;
 		padding: 0;
+		appearance: none;
+		-webkit-appearance: none;
 		background-color: transparent;
 		background-repeat: no-repeat;
 		background-position: center;
 		background-size: 100% 100%;
 		cursor: pointer;
+		outline: none;
+		-webkit-tap-highlight-color: transparent;
+		touch-action: manipulation;
+		user-select: none;
 		transition:
-			filter 0.15s,
 			opacity 0.15s,
 			transform 0.1s;
 
+		&:focus,
+		&:focus-visible {
+			outline: none;
+		}
+
 		&:active:not(:disabled) {
+			/* Scale only — filter creates a dark rectangular layer around the octagon art. */
 			transform: scale(0.97);
-			filter: brightness(0.9);
 		}
 
 		&:disabled {
@@ -139,5 +147,6 @@
 		position: absolute;
 		inset: 0;
 		display: block;
+		pointer-events: none;
 	}
 </style>
