@@ -34,7 +34,10 @@
 
 	import {
 		BITMAP_FONT_SCALE,
+		BOARD_MASK_OVERFLOW,
 		BOARD_MASK_SPIN_OVERFLOW,
+		DESK_BOTTOM_MASK_SLACK_PX,
+		DESK_BOTTOM_PULL_PX,
 		SYMBOL_SIZE,
 		WIN_HUD_COUNT_UP_MS,
 		WIN_HUD_FONT_SIZE,
@@ -84,11 +87,22 @@
 	});
 
 	const reelsActive = $derived(stack.board.some((reel) => reel.reelState.motion !== 'stopped'));
-	// Stencil Graphics — dual-safe (Sprite BoardMask corrupts dog desk to ~3 columns).
-	// Bottom stays tight via BOARD_MASK_SPIN_OVERFLOW so symbols don't bleed into
-	// the transparent nameplate slot under the playfield.
-	const maskTop = $derived(reelsActive ? BOARD_MASK_SPIN_OVERFLOW.top : 0);
-	const maskBottom = $derived(reelsActive ? BOARD_MASK_SPIN_OVERFLOW.bottom : 0);
+	/**
+	 * Stencil Graphics — dual Sprite BoardMasks still clip the dog desk to ~3
+	 * columns even with per-instance feather textures. Match base BoardMask hole
+	 * math (spin/idle overflow + desk bottom pull/slack) so bounce/spin stay clipped.
+	 */
+	const maskTop = $derived(
+		reelsActive ? BOARD_MASK_SPIN_OVERFLOW.top : BOARD_MASK_OVERFLOW.top,
+	);
+	const maskBottom = $derived(
+		Math.max(
+			0,
+			(reelsActive ? BOARD_MASK_SPIN_OVERFLOW.bottom : BOARD_MASK_OVERFLOW.bottom) -
+				DESK_BOTTOM_PULL_PX +
+				DESK_BOTTOM_MASK_SLACK_PX,
+		),
+	);
 	const drawDuelMask = $derived((g: PIXI.Graphics) => {
 		g.rect(
 			-SYMBOL_SIZE,
@@ -223,6 +237,7 @@
 {:else if props.layer === 'board'}
 	<MainContainer>
 		<BoardContainer {layout} disableCatZoom>
+			<!-- Graphics stencil (dual-safe). Hole matches base BoardMask geometry. -->
 			<Container>
 				<Graphics isMask draw={drawDuelMask} />
 				<BoardBase board={stack.board} duelSide={props.side} />

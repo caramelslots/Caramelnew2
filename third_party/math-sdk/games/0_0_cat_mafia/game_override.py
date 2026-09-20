@@ -484,8 +484,12 @@ class GameStateOverride(GameExecutables):
 
         Rows stay natural — coin multipliers depend on the symbols underneath,
         so the old forced all-low row is gone. RTP re-tunes via optimization.
+        Duel never uses paw (Normal-bonus SW rules per desk); skip entirely so
+        a force_paw fence cannot wipe sticky SW columns.
         """
         if self.gametype != self.config.basegame_type:
+            return
+        if self.is_duel_betmode() or getattr(self, "_duel_active_side", None):
             return
         conditions = self.get_current_distribution_conditions()
         if not (conditions.get("force_paw") or self.criteria == "paw"):
@@ -509,9 +513,16 @@ class GameStateOverride(GameExecutables):
         SW now lands naturally from BR0 strips (the force_sw_expand fence is
         gone). Curtain logic is unchanged: resolve_base_spin_features still
         requires the SW to sit on a winning payline. Runs only for the
-        basegame gametype — FS rules (sticky columns) are untouched.
+        basegame gametype — FS and Duel sticky columns are untouched (Duel
+        keeps basegame gametype but stamps full sticky SW like freegame;
+        collapsing those cells to one SW made curtains look full while
+        paylines only saw a single wild cell).
         """
         if self.gametype != self.config.basegame_type:
+            return
+        # Duel: same sticky-column rules as bonus FS — do not collapse a
+        # stamped SW curtain down to one lying cell.
+        if self.is_duel_betmode() or getattr(self, "_duel_active_side", None):
             return
 
         hits = find_super_wilds(self.board)
@@ -1049,7 +1060,12 @@ class GameStateOverride(GameExecutables):
         phase1_wins: list | None = None,
         phase1_total: float | None = None,
     ) -> str:
-        """Duel: sticky SW with Normal-style payline gate (per side). Super untouched."""
+        """Duel desk SW — same rules as bonus Normal FS, per side.
+
+        Cat and dog each keep their own sticky_sw. New curtain only when SW
+        sat on a winning payline (not Super's ungated expand). Sticky product
+        applies when columns are already open. No bullets / paw on duel.
+        """
         new_hits = self._collect_new_lying_sw_hits()
         new_hits = self._apply_sw_sticky_line_gate(new_hits, strip=False)
 

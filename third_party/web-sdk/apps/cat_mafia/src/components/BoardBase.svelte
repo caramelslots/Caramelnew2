@@ -86,9 +86,9 @@
 	const isPawName = (name: string) => name === 'PB' || name === 'PS' || name === 'PG';
 	/**
 	 * Resting / landing paw above the gold rails.
-	 * While the reel is spinning (`spin` / motion spinning) stay on the masked
-	 * board so the coin clips away at the playfield edges instead of floating
-	 * over the frame into the street.
+	 * Stay on the masked board until the reel is fully stopped — during
+	 * `bouncing` symbols can still sit past the playfield edge; lifting them
+	 * early lets them paint over the desk frame (esp. intermittent in Duel).
 	 */
 	const isPawCoinAboveFrame = (
 		reelSymbol: ReelLike['reelState']['symbols'][number],
@@ -97,11 +97,13 @@
 		!targetPickParking &&
 		isPawName(reelSymbol.rawSymbol.name) &&
 		reelSymbol.symbolState !== 'spin' &&
-		reelMotion !== 'spinning';
+		reelMotion === 'stopped';
 
 	/**
 	 * Resting tiles above the gold rails / desk frame (BoardFullColumnLayer).
-	 * Spinning tiles stay masked so they clip at the playfield edges.
+	 * Only lift once the reel is stopped — `bouncing` still scrolls under the
+	 * BoardMask (same as base spin runway). Lifting on `!== spinning` let
+	 * mid-settle cells escape the mask and flash outside the desk.
 	 * Disabled during target-pick park and while an SW curtain covers the reel
 	 * (otherwise a 4-tile stack flashes under the Spine curtain).
 	 * Win / idle-bounce / paw layers own their states — excluded here to avoid
@@ -118,7 +120,7 @@
 		if (isMysteryFx(reelSymbol.symbolState)) return false;
 		if (isAboveRails(reelSymbol.symbolState)) return false;
 		if (isPawCoinAboveFrame(reelSymbol, reelMotion)) return false;
-		return reelSymbol.symbolState !== 'spin' && reelMotion !== 'spinning';
+		return reelSymbol.symbolState !== 'spin' && reelMotion === 'stopped';
 	};
 
 	const matchesLayer = (
