@@ -82,7 +82,9 @@ export const createBoardFeatherMaskTexture = (params: BoardFeatherMaskParams): P
 	}
 
 	ctx.putImageData(imageData, 0, 0);
-	return PIXI.Texture.from(canvas);
+	const texture = PIXI.Texture.from(canvas);
+	if (!texture.source.label) texture.source.label = 'boardFeatherMask';
+	return texture;
 };
 
 export const destroyBoardFeatherMaskTexture = (texture: PIXI.Texture | null | undefined) => {

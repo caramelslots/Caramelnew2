@@ -28,6 +28,7 @@
 	import EnableMascotCatSkinMemory from './EnableMascotCatSkinMemory.svelte';
 	import EnableTirGpuMemory from './EnableTirGpuMemory.svelte';
 	import EnableFeatureGpuMemory from './EnableFeatureGpuMemory.svelte';
+	import EnableCanvasTextGpuGuard from './EnableCanvasTextGpuGuard.svelte';
 	import EnableBuyBonusWarmLifecycle from './EnableBuyBonusWarmLifecycle.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
 	import EnableBoardIdleBounce from './EnableBoardIdleBounce.svelte';
@@ -154,6 +155,7 @@
 		<EnableMascotCatSkinMemory />
 		<EnableTirGpuMemory />
 		<EnableFeatureGpuMemory />
+		<EnableCanvasTextGpuGuard />
 		<EnableBuyBonusWarmLifecycle />
 		<EnableHotkey />
 		<EnableGameActor />

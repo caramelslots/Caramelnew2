@@ -11,7 +11,9 @@
 		ensureFeatureKeysLoaded,
 		FS_CARTRIDGE_KEYS,
 		FS_OUTLINE_KEYS,
+		FS_POPUP_KEYS,
 		shouldKeepDuelMascotGpu,
+		shouldKeepFsPopupGpu,
 		shouldKeepOutlineReelGpu,
 		unloadFeatureKeys,
 	} from '../game/featureGpuMemory';
@@ -34,6 +36,8 @@
 			context.stateGame.freeSpinIntroActive;
 		const wantDog = shouldKeepDuelMascotGpu(isPortrait);
 		const wantOutline = shouldKeepOutlineReelGpu();
+		const wantFsPopup = shouldKeepFsPopupGpu();
+		void context.stateGame.winOverlayActive;
 
 		const gen = ++syncGen;
 		void (async () => {
@@ -70,6 +74,28 @@
 					const latest = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
 					if (DUEL_MASCOT_KEYS.some((key) => key in latest)) {
 						app.stateApp.loadedAssets = unloadFeatureKeys(DUEL_MASCOT_KEYS, latest);
+					}
+				}
+			}
+
+			if (gen !== syncGen) return;
+			if (wantFsPopup) {
+				const patch = await ensureFeatureKeysLoaded(
+					FS_POPUP_KEYS,
+					(app.stateApp.loadedAssets ?? {}) as Record<string, unknown>,
+				);
+				if (gen !== syncGen) return;
+				if (patch) {
+					app.stateApp.loadedAssets = { ...app.stateApp.loadedAssets, ...patch };
+				}
+			} else {
+				const loaded = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
+				if (FS_POPUP_KEYS.some((key) => key in loaded)) {
+					await waitAnimationFrames(2);
+					if (gen !== syncGen) return;
+					const latest = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
+					if (FS_POPUP_KEYS.some((key) => key in latest) && !shouldKeepFsPopupGpu()) {
+						app.stateApp.loadedAssets = unloadFeatureKeys(FS_POPUP_KEYS, latest);
 					}
 				}
 			}

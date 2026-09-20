@@ -6,13 +6,14 @@
 	Ref. designer_assets/spin_button_new / spine_2.png
 -->
 <script lang="ts">
-	import { Container, Sprite, Text } from 'pixi-svelte';
+	import { Container, Sprite } from 'pixi-svelte';
 	import { Button, type ButtonProps } from 'components-pixi';
 	import { OnHotkey } from 'components-shared';
 	import { stateBet, stateBetDerived } from 'state-shared';
 	import { stateSlots } from 'utils-slots';
 
 	import { canAffordSpin } from '../game/buyBonusBalance';
+	import TightCanvasText from './TightCanvasText.svelte';
 	import { isLockedBonusHud } from '../game/activeFeature';
 	import { isAnyMenuOpen } from '../game/isAnyMenuOpen';
 	import { isLoaderScreenBlockingSpin } from '../game/isLoaderScreenBlockingSpin';
@@ -101,7 +102,7 @@
 							{...UI_SPRITE_RENDER}
 						/>
 						{#if hasCounter}
-							<Text
+							<TightCanvasText
 								anchor={0.5}
 								x={0}
 								y={counterOffsetY}

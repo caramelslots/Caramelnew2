@@ -216,6 +216,7 @@ const liftRegionNative = (
 	ctx.imageSmoothingEnabled = false;
 	ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
 	const next = Texture.from(canvas);
+	if (!next.source.label) next.source.label = region.name;
 	const Page = page.constructor as new (name: string) => TextureAtlasPage;
 	const sharpPage = new Page(`${page.name}:${region.name}`);
 	sharpPage.width = sw;

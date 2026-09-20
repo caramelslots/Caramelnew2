@@ -1,6 +1,6 @@
 <!--
 	Buy-bonus overlay WebGL:
-	- First session: no warm on Continue — first Buy press loads via prepareBuyBonusMenu.
+	- After lift: warm so the first Buy tap is instant.
 	- After a bought bonus / FS: evict while not base, remount when settled.
 	- Character pick / confirm screens are not warmed here.
 -->
@@ -28,9 +28,10 @@
 		remountTimer = undefined;
 	};
 
-	const scheduleRemount = () => {
+	const scheduleRemount = (delayMs?: number) => {
 		if (remountTimer !== undefined) return;
 		if (areBuyBonusSpinesReady()) return;
+		const wait = delayMs ?? (gameEntrance.buyBonusEverWarmed ? buyBonusWarmAfterFeatureMs() : 80);
 		remountTimer = setTimeout(() => {
 			remountTimer = undefined;
 			if (!shouldKeepBuyBonusWarm()) return;
@@ -39,7 +40,7 @@
 					gameEntrance.buyBonusEverWarmed = true;
 				}
 			});
-		}, buyBonusWarmAfterFeatureMs());
+		}, wait);
 	};
 
 	$effect(() => {
@@ -88,9 +89,7 @@
 			return;
 		}
 
-		// Do not warm until the player has opened Buy Bonus at least once.
-		if (!gameEntrance.buyBonusEverWarmed) return;
-
+		// After lift, upload overlay GL so the first Buy tap is instant.
 		scheduleRemount();
 	});
 </script>

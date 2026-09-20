@@ -68,6 +68,12 @@
 		spinesMounted = true;
 		let cancelled = false;
 		void (async () => {
+			if (areBuyBonusSpinesReady()) {
+				panelReady = true;
+				revealedOnce = true;
+				flushBuyBonusSharedStage();
+				return;
+			}
 			await tick();
 			if (cancelled) return;
 			try {

@@ -11,6 +11,7 @@
 
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { releaseCanvasTextGpu } from '../game/pixiTextureMemory';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
 	import {
 		drawSuperWildBoardClipMask,
@@ -44,6 +45,27 @@
 		void context.stateGame.stickySwByReel;
 		void context.stateGame.superWildCurtains;
 		ensureSwCurtainsForBoard();
+	});
+
+	let hadCurtains = false;
+	$effect(() => {
+		if (props.duelSide) return;
+		if (curtains.length > 0) {
+			hadCurtains = true;
+			return;
+		}
+		if (!hadCurtains) return;
+		hadCurtains = false;
+		const pixi = context.stateApp.pixiApplication ?? null;
+		let cancelled = false;
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				if (!cancelled) releaseCanvasTextGpu(pixi);
+			});
+		});
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	const columnBox = $derived(getSuperWildColumnBoxMetrics());

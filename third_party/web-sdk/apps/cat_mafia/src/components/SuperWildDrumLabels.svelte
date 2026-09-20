@@ -3,7 +3,7 @@
 	Labels are shuffled before spin; the wheel lands on the cell that already shows the math mult.
 -->
 <script lang="ts">
-	import { Container, SpineSlot, Text } from 'pixi-svelte';
+	import { Container, SpineSlot } from 'pixi-svelte';
 
 	import {
 		SUPER_WILD_DRUM_LABEL_RADIUS,
@@ -12,6 +12,7 @@
 		superWildPointerSectorIndex,
 		superWildWheelSectorMidDeg,
 	} from '../game/superWildHtmlSpine';
+	import TightCanvasText from './TightCanvasText.svelte';
 
 	type Props = {
 		wheelLanded: boolean;
@@ -54,7 +55,7 @@
 			{@const lx = Math.sin(a) * labelRadius}
 			{@const ly = Math.cos(a) * labelRadius}
 			<Container x={lx} y={ly} rotation={-a + Math.PI}>
-				<Text
+				<TightCanvasText
 					text={`×${label}`}
 					anchor={0.5}
 					style={{

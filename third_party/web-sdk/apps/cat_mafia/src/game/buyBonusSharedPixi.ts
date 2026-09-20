@@ -15,6 +15,7 @@ import {
 	buyBonusNormalMascotUrls,
 	buyBonusSpineUrls,
 	getBuyBonusPixiTransform,
+	getBuyBonusSpineBitmap,
 	releaseBuyBonusSpineBitmaps,
 	resumeBuyBonusSpineBitmapDecode,
 	startBuyBonusSpineBitmapDecode,
@@ -67,12 +68,15 @@ const buyBonusAssetUrls = () =>
 		return [urls.atlas, urls.skeleton, ...urls.images];
 	});
 
-const buyBonusMascotAssetUrls = () => {
-	const mascot = buyBonusNormalMascotUrls();
-	return [mascot.atlas, mascot.skeleton, ...mascot.images];
-};
+const overlayOnlyUrls = () => buyBonusAssetUrls();
 
-const allBuyBonusReloadUrls = () => [...new Set([...buyBonusAssetUrls(), ...buyBonusMascotAssetUrls()])];
+const evictCachedUrl = (url: string) => {
+	try {
+		if (Cache.has(url)) Cache.remove(url);
+	} catch {
+		/* already gone */
+	}
+};
 
 const destroyCachedAtlasGpu = (atlasUrl: string) => {
 	let atlas: TextureAtlas | undefined;
@@ -107,28 +111,39 @@ const atlasPagesLive = (atlasUrl: string) => {
 };
 
 const variantTexturesLive = (variant: BuyBonusSpineVariant) => {
+	if (!app) return false;
 	if (!atlasPagesLive(buyBonusSpineUrls(variant).atlas)) return false;
 	if (variant === 'normal' && !atlasPagesLive(buyBonusNormalMascotUrls().atlas)) return false;
 	return true;
 };
 
-/** Overlay GL was destroyed — drop Cache entries so the next app can re-upload. */
+/**
+ * Drop overlay-only atlas Cache after a WebGL teardown.
+ * Never destroy(true) the shared white mascot — that atlas is the main-game cat.
+ */
 const purgeBuyBonusAssetCache = async () => {
-	const urls = allBuyBonusReloadUrls();
+	const urls = overlayOnlyUrls();
 	for (const url of urls) destroyCachedAtlasGpu(url);
 	try {
 		await PIXI.Assets.unload(urls);
 	} catch {
 		/* cache already empty */
 	}
-	for (const url of urls) {
-		try {
-			if (Cache.has(url)) Cache.remove(url);
-		} catch {
-			/* already gone */
-		}
-	}
+	for (const url of urls) evictCachedUrl(url);
 	atlasesDirty = false;
+};
+
+const atlasImagesFromBitmaps = (imageUrls: readonly string[]) => {
+	const images: Record<string, PIXI.TextureSource> = {};
+	for (const url of imageUrls) {
+		const bitmap = getBuyBonusSpineBitmap(url);
+		if (!bitmap) continue;
+		const file = url.replace(/^.*\//, '');
+		const source = PIXI.Texture.from(bitmap).source;
+		source.label = file;
+		images[file] = source;
+	}
+	return Object.keys(images).length > 0 ? images : null;
 };
 
 const dropDeadSpine = (variant: BuyBonusSpineVariant) => {
@@ -293,8 +308,13 @@ const withBuyBonusAssets = async <T>(fn: () => Promise<T>): Promise<T> => {
 const loadBuyBonusAtlasAndSkeleton = async (variant: BuyBonusSpineVariant) => {
 	const urls = buyBonusSpineUrls(variant);
 	await withBuyBonusAssets(async () => {
-		if (atlasesDirty) await purgeBuyBonusAssetCache();
-		await PIXI.Assets.load([urls.atlas, urls.skeleton]);
+		if (atlasesDirty || !atlasPagesLive(urls.atlas)) await purgeBuyBonusAssetCache();
+		const images = atlasImagesFromBitmaps(urls.images);
+		if (images) {
+			await PIXI.Assets.load([{ src: urls.atlas, data: { images } }, urls.skeleton]);
+		} else {
+			await PIXI.Assets.load([urls.atlas, urls.skeleton]);
+		}
 	});
 };
 
@@ -423,6 +443,10 @@ const loadSpine = (variant: BuyBonusSpineVariant) => {
 				root.visible = false;
 				createdApp.stage.addChild(root);
 				spines.set(variant, root);
+				if (!variantTexturesLive(variant)) {
+					dropDeadSpine(variant);
+					throw new Error('buyBonus normal textures not live');
+				}
 				return root;
 			}
 
@@ -437,6 +461,10 @@ const loadSpine = (variant: BuyBonusSpineVariant) => {
 			spine.visible = false;
 			createdApp.stage.addChild(spine);
 			spines.set(variant, spine);
+			if (!variantTexturesLive(variant)) {
+				dropDeadSpine(variant);
+				throw new Error('buyBonus card textures not live');
+			}
 			return spine;
 		} catch (error) {
 			console.error('[buyBonus] Spine.from failed', variant, error);
@@ -675,18 +703,7 @@ const unloadBuyBonusAssets = async () => {
 	atlasesDirty = true;
 	await withBuyBonusAssets(async () => {
 		if (app || spines.size > 0) return;
-		try {
-			await PIXI.Assets.unload(buyBonusAssetUrls());
-		} catch {
-			/* cache already empty / mid-recreate */
-		}
-		for (const url of buyBonusAssetUrls()) {
-			try {
-				if (Cache.has(url)) Cache.remove(url);
-			} catch {
-				/* already gone */
-			}
-		}
+		await purgeBuyBonusAssetCache();
 	});
 };
 

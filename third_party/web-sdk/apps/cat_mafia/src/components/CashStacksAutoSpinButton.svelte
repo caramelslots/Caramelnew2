@@ -10,13 +10,14 @@
 	Portrait/mobile: ui/autoplay/autoplay_mobile.webp (квадратная иконка).
 -->
 <script lang="ts">
-	import { Container, Sprite, Text } from 'pixi-svelte';
+	import { Container, Sprite } from 'pixi-svelte';
 	import { Button } from 'components-pixi';
 	import { stateBet, stateBetDerived, stateModal } from 'state-shared';
 
 	import { AUTOPLAY_PILL_BASE, PORTRAIT_UTIL_ICON_BASE } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { UI_SPRITE_RENDER, uiScaledSize, type UiSizeScaleProps } from '../game/uiButtonSize';
+	import TightCanvasText from './TightCanvasText.svelte';
 
 	type Props = {
 		anchor?: number;
@@ -74,7 +75,7 @@
 				{...UI_SPRITE_RENDER}
 			/>
 			{#if showLabel}
-				<Text
+				<TightCanvasText
 					anchor={0.5}
 					text={label}
 					style={{

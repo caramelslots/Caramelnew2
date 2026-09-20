@@ -6,13 +6,14 @@
 	import { Tween } from 'svelte/motion';
 	import { sineOut } from 'svelte/easing';
 	import { untrack } from 'svelte';
-	import { Container, Text } from 'pixi-svelte';
+	import { Container } from 'pixi-svelte';
 
 	import {
 		SUPER_WILD_RESULT_BADGE_FADE_MS,
 		SUPER_WILD_RESULT_BADGE_Y_FRAC,
 		superWildResultBadgeFontFrac,
 	} from '../game/superWildHtmlSpine';
+	import TightCanvasText from './TightCanvasText.svelte';
 
 	type Props = {
 		visible: boolean;
@@ -61,7 +62,7 @@
 		alpha={alpha.current}
 		scale={popScale.current}
 	>
-		<Text
+		<TightCanvasText
 			text={`×${props.mult}`}
 			anchor={0.5}
 			style={{

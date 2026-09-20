@@ -18,11 +18,14 @@ export const FS_CARTRIDGE_KEYS = ['BT', 'BTImg'] as const;
 export const DUEL_MASCOT_KEYS = ['mascotDog'] as const;
 /** Column anticipation VFX — basegame B/BD slow only. */
 export const FS_OUTLINE_KEYS = ['outlineReel'] as const;
+/** FS / duel outro panel (`total_win` / fs total) — not base VRAM. */
+export const FS_POPUP_KEYS = ['fsPopup'] as const;
 
 /** Skip these in post-lift batch 4 — they are feature-only. */
 export const BATCH4_DEFERRED_KEYS = [
 	...FS_CARTRIDGE_KEYS,
 	...DUEL_MASCOT_KEYS,
+	...FS_POPUP_KEYS,
 	'mascotCat',
 	'shotBullet',
 	'targetBoardFlip',
@@ -60,6 +63,15 @@ export const shouldKeepDuelMascotGpu = (isPortrait = false) => {
 export const shouldKeepOutlineReelGpu = () =>
 	devPreview.forceShowBonusReelAllColumns ||
 	!(stateGame.gameType === 'freegame' && stateGame.transitionGameType !== 'basegame');
+
+/** total_win spine — load for FS / duel outro, drop on settled base. */
+export const shouldKeepFsPopupGpu = () =>
+	stateGame.gameType === 'freegame' ||
+	stateGame.transitionGameType === 'freegame' ||
+	stateGame.freeSpinIntroActive ||
+	stateGame.winOverlayActive ||
+	stateDuel.active ||
+	stateDuel.phase !== 'idle';
 
 const spineSrcUrls = (key: string): string[] => {
 	const entry = assets[key as keyof typeof assets];

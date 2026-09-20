@@ -10,7 +10,6 @@ import { getProcessed } from '../../../../packages/pixi-svelte/src/lib/assetLoad
 
 import assets from './assets';
 import {
-	downscalePhoneSpineAtlases,
 	forgetCappedAtlasImageSources,
 	isPhoneForAtlasDownscale,
 	PHONE_SPINE_ATLAS_MAX_EDGE,
@@ -205,7 +204,6 @@ export const ensureTirPixiLoaded = async (
 			return null;
 		}
 		tirGpuParked = false;
-		downscalePhoneSpineAtlases();
 		return patch;
 	});
 

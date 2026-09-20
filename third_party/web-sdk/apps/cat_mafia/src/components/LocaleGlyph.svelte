@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { BitmapText, Text, type BitmapTextProps } from 'pixi-svelte';
+	import { BitmapText, type BitmapTextProps } from 'pixi-svelte';
+	import TightCanvasText from './TightCanvasText.svelte';
 	import { stateI18n } from 'state-shared';
 
 	import {
@@ -65,5 +66,5 @@
 {#if useBitmap}
 	<BitmapText {...props} style={resolvedStyle} />
 {:else if localeFontReady}
-	<Text {...props} style={resolvedStyle} />
+	<TightCanvasText {...props} style={resolvedStyle} />
 {/if}
