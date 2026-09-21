@@ -4,7 +4,8 @@
 	Feature buttons play real math books (synced from 0_0_cat_mafia) via
 	playBet — same path as Storybook / production book playback.
 
-	Toggle: Shift+D
+	Toggle: Shift+D. Language, social mode, and the GPU RAM overlay live
+	inside Session. Categories collapse; state is remembered.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
@@ -60,6 +61,8 @@
 		STAKE_LOCALES,
 	} from '../game/devLang';
 	import { setGameSocialMode } from '../game/devSocial';
+	import { pixiMemoryHud, setRamOverlayVisible } from '../game/pixiTextureMemoryHud.svelte';
+	import DevAccordion from './DevAccordion.svelte';
 	import baseEvents from '../stories/data/base_events';
 	import baseBooks from '../stories/data/base_books';
 	import bonusBooks from '../stories/data/bonus_books';
@@ -75,6 +78,7 @@
 	import type { WinLevel } from '../game/winLevelMap';
 	import type { BookEvent } from '../game/typesBookEvent';
 	import type { GameType, RawSymbol, SymbolName } from '../game/types';
+	import { evalDevMathBoard } from '../game/evalDevMathBoard';
 	import config from '../game/config';
 	import {
 		getDuelInitialVisibleBoard,
@@ -88,8 +92,95 @@
 	} from '../game/stateDuelBoards.svelte';
 
 	let open = $state(false);
-	let langOpen = $state(false);
 	let busy = $state(false);
+	let menuQuery = $state('');
+	let langDrawer = $state(false);
+	const ACCORDION_KEY = 'catmafia.dev.accordions';
+	const DEFAULT_OPEN_ACCORDIONS = ['books'] as const;
+
+	type AccordionId =
+		| 'books'
+		| 'paws'
+		| 'superwild'
+		| 'board'
+		| 'characters'
+		| 'stage'
+		| 'wins'
+		| 'ui';
+
+	const ACCORDION_META: { id: AccordionId; title: string; keys: string }[] = [
+		{ id: 'books', title: 'Math books', keys: 'book spin bonus duel boost bullet shoot fs tour' },
+		{ id: 'paws', title: 'Paw coins', keys: 'paw pb ps pg coin hat' },
+		{ id: 'superwild', title: 'Super Wild', keys: 'sw curtain sticky wild column drum' },
+		{ id: 'board', title: 'Board', keys: 'reel speed bonus outline' },
+		{ id: 'characters', title: 'Characters', keys: 'cat dog mascot symbol anim clip' },
+		{ id: 'stage', title: 'Stage', keys: 'frame chrome duel target shoot cabinet bullet fly drum' },
+		{ id: 'wins', title: 'Wins', keys: 'win level precision hud stack payline coin' },
+		{ id: 'ui', title: 'UI & loading', keys: 'loading cards progress fs intro outro modal funds' },
+	];
+
+	const readOpenAccordions = (): Set<AccordionId> => {
+		try {
+			const raw = globalThis.localStorage?.getItem(ACCORDION_KEY);
+			if (!raw) return new Set(DEFAULT_OPEN_ACCORDIONS);
+			const parsed = JSON.parse(raw) as unknown;
+			if (!Array.isArray(parsed)) return new Set(DEFAULT_OPEN_ACCORDIONS);
+			const allowed = new Set(ACCORDION_META.map((m) => m.id));
+			const next = parsed.filter((id): id is AccordionId => allowed.has(id as AccordionId));
+			return new Set(next);
+		} catch {
+			return new Set(DEFAULT_OPEN_ACCORDIONS);
+		}
+	};
+
+	let openAccordions = $state<Set<AccordionId>>(readOpenAccordions());
+
+	const persistAccordions = (next: Set<AccordionId>) => {
+		try {
+			globalThis.localStorage?.setItem(ACCORDION_KEY, JSON.stringify([...next]));
+		} catch {
+			/* ignore */
+		}
+	};
+
+	const isAccOpen = (id: AccordionId) => openAccordions.has(id);
+
+	const toggleAccordion = (id: AccordionId) => {
+		const next = new Set(openAccordions);
+		if (next.has(id)) next.delete(id);
+		else next.add(id);
+		openAccordions = next;
+		persistAccordions(next);
+	};
+
+	const setAllAccordions = (expanded: boolean) => {
+		openAccordions = expanded
+			? new Set(ACCORDION_META.map((m) => m.id))
+			: new Set();
+		persistAccordions(openAccordions);
+	};
+
+	const menuQueryNorm = $derived(menuQuery.trim().toLowerCase());
+	const accordionVisible = $derived(
+		ACCORDION_META.filter(
+			(m) =>
+				!menuQueryNorm ||
+				m.title.toLowerCase().includes(menuQueryNorm) ||
+				m.keys.includes(menuQueryNorm) ||
+				m.id.includes(menuQueryNorm),
+		),
+	);
+	const showAccordion = (id: AccordionId) =>
+		accordionVisible.some((m) => m.id === id);
+	const accordionForcedOpen = $derived(menuQueryNorm.length > 0);
+
+	const currentLangLabel = $derived(
+		isInvalidTestLang(getRawUrlLang())
+			? `${getRawUrlLang().toUpperCase()}→EN`
+			: stateI18n.i18n.locale.toUpperCase(),
+	);
+	const socialOn = $derived(stateUrlDerived.social());
+	const rawUrlLang = $derived(getRawUrlLang());
 	let fsCounterPreview = $state(false);
 	/** Selected symbol in Symbol Anims section (clips shown below). */
 	let symbolAnimGroupId = $state<string | null>('L1');
@@ -787,6 +878,438 @@
 			} as Parameters<typeof playBet>[0]);
 		});
 
+	type SwQaCell = { name: string; wild?: boolean; multiplier?: number };
+	type SwQaLine = {
+		symbol: string;
+		kind: number;
+		lineIndex: number;
+		/** Visible [reel, row] cells that pay. */
+		vis: [number, number][];
+	};
+	type SwQaSpec = {
+		id: string;
+		label: string;
+		title: string;
+		mode?: BetModeKey;
+		board: SwQaCell[][];
+		/** Already-open sticky reels (0-based) — painted full-column SW before the spin. */
+		stickyReels?: { reel: number; mult: number }[];
+		/** New lying SW that should open a curtain this spin. */
+		expand?: { reel: number; row: number; mult: number }[];
+		phase1: SwQaLine[];
+		phase2: SwQaLine[];
+	};
+
+	const swCell = (name: string, wild = false): SwQaCell =>
+		wild ? { name: 'SW', wild: true, multiplier: 1 } : { name };
+
+	const swCol = (names: string[]): SwQaCell[] => names.map((n) => swCell(n, n === 'SW'));
+
+	const SW_QA_H2_TOP: SwQaLine = {
+		symbol: 'H2',
+		kind: 5,
+		lineIndex: 1,
+		vis: [0, 1, 2, 3, 4].map((reel) => [reel, 0]),
+	};
+	const SW_QA_JACK_V: SwQaLine = {
+		symbol: 'L4',
+		kind: 3,
+		lineIndex: 7,
+		vis: [
+			[0, 3],
+			[1, 2],
+			[2, 1],
+		],
+	};
+	const SW_QA_H2_STEP: SwQaLine = {
+		symbol: 'H2',
+		kind: 3,
+		lineIndex: 15,
+		vis: [
+			[0, 0],
+			[1, 0],
+			[2, 1],
+		],
+	};
+
+	/** Screenshot-style 5×4: guns on top, Jacks on payline 7, SW on reel 2. */
+	const swShotBoard = (reel2: string[]): SwQaCell[][] => [
+		swCol(['H2', 'L1', 'L3', 'L4']),
+		swCol(['H2', 'L2', 'L4', 'L1']),
+		swCol(reel2),
+		swCol(['H2', 'L4', 'L1', 'L3']),
+		swCol(['H2', 'L4', 'L2', 'H4']),
+	];
+
+	const SW_CURTAIN_QA: SwQaSpec[] = [
+		{
+			id: 'extra-lines',
+			label: 'Curtain · extra lines',
+			title: 'Screenshot: phase-1 only top H2×5. After curtain, Jack V (7) + extra H2 (15) must play.',
+			board: swShotBoard(['SW', 'L2', 'L3', 'L4']),
+			expand: [{ reel: 2, row: 0, mult: 4 }],
+			phase1: [SW_QA_H2_TOP],
+			phase2: [SW_QA_H2_TOP, SW_QA_JACK_V, SW_QA_H2_STEP],
+		},
+		{
+			id: 'middle-lie',
+			label: 'Lie · middle row',
+			title: 'SW sits on row 2: phase-1 is Jack V + H2 step. After curtain the top H2×5 appears.',
+			board: swShotBoard(['L2', 'SW', 'L3', 'L4']),
+			expand: [{ reel: 2, row: 1, mult: 4 }],
+			phase1: [SW_QA_JACK_V, SW_QA_H2_STEP],
+			phase2: [SW_QA_H2_TOP, SW_QA_JACK_V, SW_QA_H2_STEP],
+		},
+		{
+			id: 'bottom-lie',
+			label: 'Lie · bottom row',
+			title: 'SW on the bottom of col 3, on payline 4. After curtain the top H2×5 appears.',
+			board: [
+				swCol(['H2', 'L1', 'L3', 'L4']),
+				swCol(['H2', 'L2', 'L4', 'L4']),
+				swCol(['L2', 'L2', 'L3', 'SW']),
+				swCol(['H2', 'L4', 'L1', 'L3']),
+				swCol(['H2', 'L4', 'L2', 'H4']),
+			],
+			expand: [{ reel: 2, row: 3, mult: 2 }],
+			phase1: [
+				{
+					symbol: 'L4',
+					kind: 3,
+					lineIndex: 4,
+					vis: [
+						[0, 3],
+						[1, 3],
+						[2, 3],
+					],
+				},
+			],
+			phase2: [
+				SW_QA_H2_TOP,
+				SW_QA_JACK_V,
+				{
+					symbol: 'L4',
+					kind: 3,
+					lineIndex: 4,
+					vis: [
+						[0, 3],
+						[1, 3],
+						[2, 3],
+					],
+				},
+			],
+		},
+		{
+			id: 'base-no-expand',
+			label: 'Base · no curtain',
+			title: 'Control: SW is off every winning line. Curtain must NOT open, Jack V must NOT play.',
+			board: swShotBoard(['L2', 'L2', 'L3', 'SW']),
+			phase1: [],
+			phase2: [],
+		},
+		{
+			id: 'col1',
+			label: 'Col 1 · extra',
+			title: 'Leftmost SW: phase-1 is top H2. After curtain, row 2 becomes a full L3 line.',
+			board: [
+				swCol(['SW', 'L1', 'H4', 'L4']),
+				swCol(['H2', 'L2', 'L3', 'L1']),
+				swCol(['H2', 'L4', 'L3', 'L4']),
+				swCol(['H2', 'L4', 'L3', 'L3']),
+				swCol(['H2', 'L4', 'L3', 'H4']),
+			],
+			expand: [{ reel: 0, row: 0, mult: 4 }],
+			phase1: [SW_QA_H2_TOP],
+			phase2: [
+				SW_QA_H2_TOP,
+				{
+					symbol: 'L3',
+					kind: 5,
+					lineIndex: 3,
+					vis: [0, 1, 2, 3, 4].map((reel) => [reel, 2]),
+				},
+			],
+		},
+		{
+			id: 'col5',
+			label: 'Col 5 · extra',
+			title: 'Rightmost SW: phase-1 top H2×5 + Jacks ×4. After curtain Jacks grow to ×5.',
+			board: [
+				swCol(['H2', 'L4', 'L3', 'L1']),
+				swCol(['H2', 'L4', 'L3', 'L2']),
+				swCol(['H2', 'L4', 'L3', 'L4']),
+				swCol(['H2', 'L4', 'L3', 'L3']),
+				swCol(['SW', 'L2', 'L1', 'H4']),
+			],
+			expand: [{ reel: 4, row: 0, mult: 4 }],
+			phase1: [
+				SW_QA_H2_TOP,
+				{
+					symbol: 'L4',
+					kind: 4,
+					lineIndex: 2,
+					vis: [0, 1, 2, 3].map((reel) => [reel, 1]),
+				},
+			],
+			phase2: [
+				SW_QA_H2_TOP,
+				{
+					symbol: 'L4',
+					kind: 5,
+					lineIndex: 2,
+					vis: [0, 1, 2, 3, 4].map((reel) => [reel, 1]),
+				},
+			],
+		},
+		{
+			id: 'normal-fs',
+			label: 'Normal FS · extra',
+			title: 'Same screenshot extra-lines case inside Normal FS.',
+			mode: 'bonus_normal',
+			board: swShotBoard(['SW', 'L2', 'L3', 'L4']),
+			expand: [{ reel: 2, row: 0, mult: 4 }],
+			phase1: [SW_QA_H2_TOP],
+			phase2: [SW_QA_H2_TOP, SW_QA_JACK_V, SW_QA_H2_STEP],
+		},
+		{
+			id: 'super-ungated',
+			label: 'Super · no phase-1',
+			title: 'Super Bonus: SW not on a phase-1 line, curtain still opens, then full-column lines play.',
+			mode: 'bonus_super',
+			board: swShotBoard(['L2', 'L2', 'L3', 'SW']),
+			expand: [{ reel: 2, row: 3, mult: 4 }],
+			phase1: [],
+			phase2: [SW_QA_H2_TOP, SW_QA_JACK_V, SW_QA_H2_STEP],
+		},
+		{
+			id: 'sticky-open',
+			label: 'Sticky · all rows',
+			title: 'Sticky column already open: first winInfo already uses all 4 rows as wild.',
+			mode: 'bonus_super',
+			board: swShotBoard(['SW', 'SW', 'SW', 'SW']),
+			stickyReels: [{ reel: 2, mult: 4 }],
+			phase1: [],
+			phase2: [SW_QA_H2_TOP, SW_QA_JACK_V, SW_QA_H2_STEP],
+		},
+		{
+			id: 'sticky-plus-new',
+			label: 'Sticky + new SW',
+			title: 'Col 3 already sticky. New SW on col 5 opens; phase-2 must use both full columns.',
+			mode: 'bonus_super',
+			board: [
+				swCol(['H2', 'L4', 'L3', 'L1']),
+				swCol(['H2', 'L4', 'L3', 'L2']),
+				swCol(['SW', 'SW', 'SW', 'SW']),
+				swCol(['H2', 'L4', 'L3', 'L3']),
+				swCol(['SW', 'L2', 'L1', 'H4']),
+			],
+			stickyReels: [{ reel: 2, mult: 2 }],
+			expand: [{ reel: 4, row: 0, mult: 4 }],
+			phase1: [
+				SW_QA_H2_TOP,
+				{
+					symbol: 'L4',
+					kind: 4,
+					lineIndex: 2,
+					vis: [0, 1, 2, 3].map((reel) => [reel, 1]),
+				},
+			],
+			phase2: [
+				SW_QA_H2_TOP,
+				{
+					symbol: 'L4',
+					kind: 5,
+					lineIndex: 2,
+					vis: [0, 1, 2, 3, 4].map((reel) => [reel, 1]),
+				},
+			],
+		},
+		{
+			id: 'two-curtains',
+			label: 'Two curtains',
+			title: 'Two new SW columns (2 and 4) on the top line. After both open, Jacks through the middle.',
+			mode: 'bonus_normal',
+			board: [
+				swCol(['H2', 'L1', 'L3', 'L4']),
+				swCol(['SW', 'L2', 'L4', 'L1']),
+				swCol(['H2', 'L4', 'L3', 'L4']),
+				swCol(['SW', 'L4', 'L1', 'L3']),
+				swCol(['H2', 'L4', 'L2', 'H4']),
+			],
+			expand: [
+				{ reel: 1, row: 0, mult: 2 },
+				{ reel: 3, row: 0, mult: 4 },
+			],
+			phase1: [SW_QA_H2_TOP],
+			phase2: [
+				SW_QA_H2_TOP,
+				{
+					symbol: 'L4',
+					kind: 4,
+					lineIndex: 7,
+					vis: [
+						[0, 3],
+						[1, 2],
+						[2, 1],
+						[3, 2],
+					],
+				},
+			],
+		},
+		{
+			id: 'v-shape',
+			label: 'V-line · then more',
+			title: 'Phase-1 is payline 5 (V through SW). After curtain, the flat top H2×5 must also play.',
+			board: [
+				swCol(['H2', 'L1', 'L3', 'L4']),
+				swCol(['H2', 'H2', 'L4', 'L1']),
+				swCol(['L2', 'L3', 'SW', 'L4']),
+				swCol(['H2', 'H2', 'L1', 'L3']),
+				swCol(['H2', 'L4', 'L2', 'H4']),
+			],
+			expand: [{ reel: 2, row: 2, mult: 4 }],
+			phase1: [
+				{
+					symbol: 'H2',
+					kind: 5,
+					lineIndex: 5,
+					vis: [
+						[0, 0],
+						[1, 1],
+						[2, 2],
+						[3, 1],
+						[4, 0],
+					],
+				},
+			],
+			phase2: [
+				{
+					symbol: 'H2',
+					kind: 5,
+					lineIndex: 5,
+					vis: [
+						[0, 0],
+						[1, 1],
+						[2, 2],
+						[3, 1],
+						[4, 0],
+					],
+				},
+				SW_QA_H2_TOP,
+			],
+		},
+		{
+			id: 'super-gated',
+			label: 'Super · extra lines',
+			title: 'Same screenshot extra-lines case inside Super FS (phase-1 gates, then full column).',
+			mode: 'bonus_super',
+			board: swShotBoard(['SW', 'L2', 'L3', 'L4']),
+			expand: [{ reel: 2, row: 0, mult: 4 }],
+			phase1: [SW_QA_H2_TOP],
+			phase2: [SW_QA_H2_TOP, SW_QA_JACK_V, SW_QA_H2_STEP],
+		},
+		{
+			id: 'two-sticky',
+			label: 'Two sticky',
+			title: 'Cols 2 and 4 already open: first winInfo already uses both full columns as wild.',
+			mode: 'bonus_super',
+			board: [
+				swCol(['H2', 'L4', 'L3', 'L1']),
+				swCol(['SW', 'SW', 'SW', 'SW']),
+				swCol(['H2', 'L4', 'L3', 'L4']),
+				swCol(['SW', 'SW', 'SW', 'SW']),
+				swCol(['H2', 'L4', 'L3', 'H4']),
+			],
+			stickyReels: [
+				{ reel: 1, mult: 2 },
+				{ reel: 3, mult: 4 },
+			],
+			phase1: [],
+			phase2: [
+				SW_QA_H2_TOP,
+				{
+					symbol: 'L4',
+					kind: 5,
+					lineIndex: 2,
+					vis: [0, 1, 2, 3, 4].map((reel) => [reel, 1]),
+				},
+			],
+		},
+		{
+			id: 'flat-row2',
+			label: 'Lie · row 3 flat',
+			title: 'SW on payline 3 (flat row 3). After curtain the top H2×5 must also play.',
+			board: [
+				swCol(['H2', 'L1', 'L3', 'L4']),
+				swCol(['H2', 'L2', 'L3', 'L1']),
+				swCol(['L2', 'L4', 'SW', 'L4']),
+				swCol(['H2', 'L4', 'L3', 'L3']),
+				swCol(['H2', 'L4', 'L3', 'H4']),
+			],
+			expand: [{ reel: 2, row: 2, mult: 4 }],
+			phase1: [
+				{
+					symbol: 'L3',
+					kind: 5,
+					lineIndex: 3,
+					vis: [0, 1, 2, 3, 4].map((reel) => [reel, 2]),
+				},
+			],
+			phase2: [
+				SW_QA_H2_TOP,
+				{
+					symbol: 'L3',
+					kind: 5,
+					lineIndex: 3,
+					vis: [0, 1, 2, 3, 4].map((reel) => [reel, 2]),
+				},
+			],
+		},
+	];
+
+	const playSwCurtainQa = (spec: SwQaSpec) =>
+		guard(async () => {
+			const mode: BetModeKey = spec.mode ?? 'BASE';
+			applyBetMode(mode);
+			const isFs = mode === 'bonus_normal' || mode === 'bonus_super';
+			stateGame.gameType = isFs ? 'freegame' : 'basegame';
+			stateGame.stickySwByReel = Object.fromEntries(
+				(spec.stickyReels ?? []).map((s) => [s.reel, s.mult]),
+			);
+			stateGame.stickySwOpened =
+				(spec.stickyReels?.length ?? 0) > 0 || mode === 'bonus_super';
+			stateGame.stickySwIntroPending = false;
+			stateGame.swSpineHideReels = {};
+			if (!isFs) stateGame.bonusMode = null;
+			stateBet.winBookEventAmount = 0;
+
+			const board = spec.board.map((reel) => reel.map((cell) => ({ ...cell })));
+			const math = await evalDevMathBoard({
+				board,
+				mode,
+				sticky: spec.stickyReels ?? [],
+				expand: spec.expand ?? [],
+			});
+			const mathEvents = math.events.filter((e) => e.type !== 'reveal');
+			const events: BookEvent[] = [
+				reveal(board, isFs ? 'freegame' : 'basegame'),
+				...mathEvents.map((e, i) => asEvent({ ...e, index: i + 1 })),
+			];
+			// eslint-disable-next-line no-console
+			console.log(
+				`[DEV] SW curtain QA math (${spec.id}): ${spec.title} ` +
+					`p1=[${math.lines.phase1.join(',')}] p2=[${math.lines.phase2.join(',')}] ` +
+					`payout=${math.payoutMultiplier}`,
+			);
+
+			await playBet({
+				id: -1,
+				payoutMultiplier: math.payoutMultiplier,
+				events,
+				state: events,
+			} as Parameters<typeof playBet>[0]);
+		});
+
 	const playSwBaseBook = () =>
 		playMathBook(
 			pickBook(
@@ -935,8 +1458,8 @@
 		});
 
 	/**
-	 * Under-board WIN stacker debug — same path as bonus FS (`setTotalWin` while
-	 * `gameType === 'freegame'` → `winHudCountUpPending` → HUD tween).
+	 * Under-board WIN stacker debug — FS HUD tween via `forceWinHudCountUp`,
+	 * without flipping `gameType` (that would load bonus GPU / white cat).
 	 * Bet $0.50 → 1 book = $0.005 (useful with forced 3dp).
 	 */
 	const WIN_STACK_DEBUG_BET = 0.5;
@@ -948,25 +1471,35 @@
 			devPreview.winForceFractionDigits = fractionDigits;
 			stateBetDerived.setBetAmount(WIN_STACK_DEBUG_BET);
 			stateBet.wageredBetAmount = WIN_STACK_DEBUG_BET;
-			// Bonus-mode gate inside maybeRequestWinHudCountUp / setTotalWin.
-			stateGame.gameType = 'freegame';
+			if (stateGame.gameType === 'freegame' && !stateGame.bonusMode && !stateDuel.active) {
+				stateGame.gameType = 'basegame';
+			}
 			const from = stateBet.winBookEventAmount;
 			const to = from + WIN_STACK_DEBUG_ADD;
 			const dpLabel = fractionDigits == null ? 'currency-dp' : `${fractionDigits}dp`;
 			// eslint-disable-next-line no-console
 			console.log(
-				`[DEV] WIN stack count-up (FS path, ${dpLabel}): bet=$${WIN_STACK_DEBUG_BET} book ${from}→${to} ` +
+				`[DEV] WIN stack count-up (${dpLabel}): bet=$${WIN_STACK_DEBUG_BET} book ${from}→${to} ` +
 					`(1 book=$${WIN_STACK_DEBUG_BET / 100})`,
 			);
-			await playBookEvent(asEvent({ type: 'setTotalWin', amount: to }), {
-				bookEvents: [],
-			});
+			devPreview.forceWinHudCountUp = true;
+			try {
+				await playBookEvent(asEvent({ type: 'setTotalWin', amount: to }), {
+					bookEvents: [],
+				});
+			} finally {
+				devPreview.forceWinHudCountUp = false;
+			}
 		});
 
 	const resetWinHudStack = () => {
 		stateGame.winHudCountUpPending = false;
 		stateBet.winBookEventAmount = 0;
 		devPreview.winForceFractionDigits = null;
+		devPreview.forceWinHudCountUp = false;
+		if (stateGame.gameType === 'freegame' && !stateGame.bonusMode && !stateDuel.active) {
+			stateGame.gameType = 'basegame';
+		}
 		// eslint-disable-next-line no-console
 		console.log('[DEV] WIN stack reset');
 	};
@@ -1320,78 +1853,107 @@
 </script>
 
 <div class="dev-panel" class:dev-panel--open={open} class:dev-panel--hidden={!SHOW_DEV_PANEL}>
-	<button class="dev-toggle" onclick={() => (open = !open)} type="button">
-		{open ? 'DEV ▴' : 'DEV ▾'}
-	</button>
-
 	<button
-		class="dev-toggle lang-toggle"
-		class:lang-toggle--open={langOpen}
+		class="dev-toggle"
+		onclick={() => (open = !open)}
 		type="button"
-		onclick={() => (langOpen = !langOpen)}
+		title="Shift+D"
+		aria-expanded={open}
 	>
-		LANG {langOpen ? '▴' : '▾'}
-		{isInvalidTestLang(getRawUrlLang())
-			? `${getRawUrlLang().toUpperCase()}→EN`
-			: stateI18n.i18n.locale.toUpperCase()}
+		<span>DEV {open ? '▴' : '▾'}</span>
+		<span class="dev-toggle__meta">
+			{currentLangLabel}
+			·
+			{socialOn ? 'SOC' : 'CASH'}
+			{#if pixiMemoryHud.overlay}
+				· RAM
+			{/if}
+		</span>
 	</button>
-
-	<button
-		class="dev-toggle social-toggle"
-		class:social-toggle--on={stateUrlDerived.social()}
-		type="button"
-		title="Toggle ?social=true (Stake.us social casino UI strings)"
-		onclick={() => setGameSocialMode(!stateUrlDerived.social())}
-	>
-		SOCIAL {stateUrlDerived.social() ? 'ON' : 'OFF'}
-	</button>
-
-	{#if langOpen}
-		{@const rawLang = getRawUrlLang()}
-		<div class="lang-body">
-			{#each STAKE_LOCALES as lang (lang)}
-				<button
-					type="button"
-					class:active={!isInvalidTestLang(rawLang) && stateI18n.i18n.locale === lang}
-					onclick={() => setGameLanguage(lang)}
-				>
-					{LANG_LABELS[lang]}
-				</button>
-			{/each}
-			{#each INVALID_TEST_LOCALES as lang (lang)}
-				<button
-					type="button"
-					class:active={rawLang === lang}
-					title="Unsupported locale — should fall back to English"
-					onclick={() => setGameLanguage(lang)}
-				>
-					{INVALID_LANG_LABELS[lang]}
-				</button>
-			{/each}
-		</div>
-	{/if}
 
 	{#if open}
 		<div class="dev-body" onwheel={(e) => e.stopPropagation()}>
-			<section>
-				<h4>Loading</h4>
-				<div class="grid">
-					<button
-						type="button"
-						class:active={devPreview.loaderProgress}
-						onclick={showLoaderProgressPreview}
-					>
-						Show Progress
-					</button>
-					<button type="button" onclick={showLoadingCardsPreview}>
-						Show Cards
-					</button>
-					<button type="button" onclick={hideLoadingScreenPreview}>
-						Hide Loading
-					</button>
+			<div class="dev-stick">
+			<div class="dev-chrome">
+				<button
+					type="button"
+					class:active={pixiMemoryHud.overlay}
+					title="Pin GPU memory HUD in the top-right. Tap its header to expand or collapse the list."
+					onclick={() => setRamOverlayVisible(!pixiMemoryHud.overlay)}
+				>
+					RAM {pixiMemoryHud.overlay ? 'ON' : 'OFF'}
+				</button>
+				<button
+					type="button"
+					class:active={socialOn}
+					title="Toggle ?social=true (Stake.us social casino strings). Reloads."
+					onclick={() => setGameSocialMode(!socialOn)}
+				>
+					Social {socialOn ? 'ON' : 'OFF'}
+				</button>
+				<button
+					type="button"
+					class:active={langDrawer}
+					title="Switch locale via ?lang=. Reloads."
+					onclick={() => (langDrawer = !langDrawer)}
+				>
+					{currentLangLabel} {langDrawer ? '▴' : '▾'}
+				</button>
+			</div>
+			{#if langDrawer}
+				<div class="grid grid--4 lang-drawer">
+					{#each STAKE_LOCALES as lang (lang)}
+						<button
+							type="button"
+							class:active={!isInvalidTestLang(rawUrlLang) && stateI18n.i18n.locale === lang}
+							onclick={() => setGameLanguage(lang)}
+						>
+							{LANG_LABELS[lang]}
+						</button>
+					{/each}
+					{#each INVALID_TEST_LOCALES as lang (lang)}
+						<button
+							type="button"
+							class:active={rawUrlLang === lang}
+							title="Unsupported locale — should fall back to English"
+							onclick={() => setGameLanguage(lang)}
+						>
+							{INVALID_LANG_LABELS[lang]}
+						</button>
+					{/each}
 				</div>
-			</section>
+			{/if}
+			<div class="dev-toolbar">
+				<label class="dev-search">
+					<span class="sr-only">Filter tools</span>
+					<input
+						type="search"
+						placeholder="Filter tools…"
+						bind:value={menuQuery}
+						autocomplete="off"
+						spellcheck="false"
+					/>
+				</label>
+				<button type="button" class="dev-toolbar__btn" onclick={() => setAllAccordions(true)}>
+					All
+				</button>
+				<button type="button" class="dev-toolbar__btn" onclick={() => setAllAccordions(false)}>
+					None
+				</button>
+			</div>
+			</div>
 
+			{#if accordionVisible.length === 0}
+				<p class="subhint">No matching tools</p>
+			{/if}
+
+			{#if showAccordion('books')}
+				<DevAccordion
+					title="Math books"
+					badge={String(allBooks.length)}
+					open={accordionForcedOpen || isAccOpen('books')}
+					onToggle={() => toggleAccordion('books')}
+				>
 			<section>
 				<h4>Meowfia Books</h4>
 				<p class="subhint">Real math books via playBet ({allBooks.length} total)</p>
@@ -1502,7 +2064,15 @@
 					</button>
 				</div>
 			</section>
+				</DevAccordion>
+			{/if}
 
+			{#if showAccordion('paws')}
+				<DevAccordion
+					title="Paw coins"
+					open={accordionForcedOpen || isAccOpen('paws')}
+					onToggle={() => toggleAccordion('paws')}
+				>
 			<section>
 				<h4>Paw Coins</h4>
 				<p class="subhint">Random board each click — paw lands on a random cell, converts its rows (PB 1 / PS 2 / PG 3), coins fly to the hat. Tier per symbol: lows x1, H3/H4 x2, H1/H2 x3.</p>
@@ -1533,12 +2103,35 @@
 					</button>
 				</div>
 			</section>
+				</DevAccordion>
+			{/if}
 
+			{#if showAccordion('superwild')}
+				<DevAccordion
+					title="Super Wild"
+					open={accordionForcedOpen || isAccOpen('superwild')}
+					onToggle={() => toggleAccordion('superwild')}
+				>
 			<section>
 				<h4>Super Wild</h4>
 				<p class="subhint">
 					Two-beat additive: phase1 snap → curtain → phase2 count-up on HUD (base + FS). Duel banks do the same under each desk.
 				</p>
+				<p class="subhint" style="margin-top: 6px">
+					Curtain QA plays the live math engine (`get_lines` + two-beat SW), not a hand-built win list.
+				</p>
+				<div class="grid">
+					{#each SW_CURTAIN_QA as spec (spec.id)}
+						<button
+							type="button"
+							disabled={busy}
+							title={spec.title}
+							onclick={() => playSwCurtainQa(spec)}
+						>
+							{spec.label}
+						</button>
+					{/each}
+				</div>
 				<div class="grid">
 					<button
 						type="button"
@@ -1624,7 +2217,15 @@
 					{/each}
 				</div>
 			</section>
+				</DevAccordion>
+			{/if}
 
+			{#if showAccordion('board')}
+				<DevAccordion
+					title="Board"
+					open={accordionForcedOpen || isAccOpen('board')}
+					onToggle={() => toggleAccordion('board')}
+				>
 			<section>
 				<h4>Reel Speed</h4>
 				<div class="grid">
@@ -1659,7 +2260,15 @@
 					</button>
 				</div>
 			</section>
+				</DevAccordion>
+			{/if}
 
+			{#if showAccordion('characters')}
+				<DevAccordion
+					title="Characters"
+					open={accordionForcedOpen || isAccOpen('characters')}
+					onToggle={() => toggleAccordion('characters')}
+				>
 			<section>
 				<h4>Cat Mascot Anims</h4>
 				<div class="grid">
@@ -1760,7 +2369,15 @@
 					</div>
 				{/if}
 			</section>
+				</DevAccordion>
+			{/if}
 
+			{#if showAccordion('stage')}
+				<DevAccordion
+					title="Stage"
+					open={accordionForcedOpen || isAccOpen('stage')}
+					onToggle={() => toggleAccordion('stage')}
+				>
 			<section>
 				<h4>Board Frame</h4>
 				<p class="subhint">Desk crest glow (`animation`) — same pulse as lines / BT / paw.</p>
@@ -1901,7 +2518,15 @@
 					</button>
 				</div>
 			</section>
+				</DevAccordion>
+			{/if}
 
+			{#if showAccordion('wins')}
+				<DevAccordion
+					title="Wins"
+					open={accordionForcedOpen || isAccOpen('wins')}
+					onToggle={() => toggleAccordion('wins')}
+				>
 			<section>
 				<h4>Win Levels</h4>
 				<div class="grid">
@@ -1995,6 +2620,33 @@
 					</button>
 				</div>
 			</section>
+				</DevAccordion>
+			{/if}
+
+			{#if showAccordion('ui')}
+				<DevAccordion
+					title="UI & loading"
+					open={accordionForcedOpen || isAccOpen('ui')}
+					onToggle={() => toggleAccordion('ui')}
+				>
+			<section>
+				<h4>Loading</h4>
+				<div class="grid">
+					<button
+						type="button"
+						class:active={devPreview.loaderProgress}
+						onclick={showLoaderProgressPreview}
+					>
+						Show Progress
+					</button>
+					<button type="button" onclick={showLoadingCardsPreview}>
+						Show Cards
+					</button>
+					<button type="button" onclick={hideLoadingScreenPreview}>
+						Hide Loading
+					</button>
+				</div>
+			</section>
 
 			<section>
 				<h4>FS UI</h4>
@@ -2051,8 +2703,10 @@
 					</button>
 				</div>
 			</section>
+				</DevAccordion>
+			{/if}
 
-			<p class="hint">Shift+D — toggle · books from 0_0_cat_mafia</p>
+			<p class="hint">Shift+D · tools from 0_0_cat_mafia</p>
 		</div>
 	{/if}
 </div>
@@ -2074,9 +2728,12 @@
 	}
 
 	.dev-toggle {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 8px;
 		background: rgba(37, 99, 235, 0.92);
 		color: #fff;
-		padding: 4px 10px;
+		padding: 5px 10px;
 		border: none;
 		font-family: inherit;
 		font-size: 12px;
@@ -2089,69 +2746,23 @@
 	.dev-toggle:hover {
 		background: rgba(29, 78, 216, 0.95);
 	}
-
-	.lang-toggle {
-		display: block;
-		margin-top: 4px;
-		background: rgba(124, 58, 237, 0.92);
-	}
-	.lang-toggle:hover {
-		background: rgba(109, 40, 217, 0.95);
-	}
-	.lang-toggle--open {
-		background: rgba(91, 33, 182, 0.95);
-	}
-
-	.social-toggle {
-		display: block;
-		margin-top: 4px;
-		background: rgba(5, 150, 105, 0.92);
-	}
-	.social-toggle:hover {
-		background: rgba(4, 120, 87, 0.95);
-	}
-	.social-toggle--on {
-		background: rgba(234, 88, 12, 0.92);
-	}
-	.social-toggle--on:hover {
-		background: rgba(194, 65, 12, 0.95);
-	}
-
-	.lang-body {
-		margin-top: 4px;
-		background: rgba(15, 23, 42, 0.94);
-		border: 1px solid rgba(167, 139, 250, 0.45);
-		border-radius: 8px;
-		padding: 6px;
-		display: grid;
-		grid-template-columns: repeat(4, 1fr);
-		gap: 4px;
-		min-width: 240px;
-		max-width: 280px;
-		max-height: 200px;
-		overflow-y: auto;
-		box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
-	}
-
-	.lang-body button {
-		background: rgba(30, 41, 59, 0.95);
-		color: #f1f5f9;
-		border: 1px solid rgba(71, 85, 105, 0.7);
-		padding: 5px 4px;
-		font-family: inherit;
+	.dev-toggle__meta {
 		font-size: 10px;
-		font-weight: 700;
+		font-weight: 600;
 		letter-spacing: 0.04em;
-		border-radius: 4px;
-		cursor: pointer;
+		opacity: 0.8;
 	}
-	.lang-body button:hover {
-		background: rgba(124, 58, 237, 0.35);
-		border-color: rgba(167, 139, 250, 0.85);
-	}
-	.lang-body button.active {
-		background: rgba(34, 197, 94, 0.45);
-		border-color: rgba(74, 222, 128, 0.9);
+
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
 	}
 
 	.dev-body {
@@ -2159,11 +2770,9 @@
 		background: rgba(15, 23, 42, 0.94);
 		border: 1px solid rgba(59, 130, 246, 0.45);
 		border-radius: 8px;
-		padding: 10px 10px 6px;
-		min-width: 260px;
-		max-width: 300px;
-		/* Leave room for DEV / LANG / SOCIAL toggles above the panel. */
-		max-height: calc(100vh - 120px);
+		padding: 8px 10px 6px;
+		width: min(340px, calc(100vw - 16px));
+		max-height: calc(100vh - 56px);
 		overflow-y: auto;
 		overscroll-behavior: contain;
 		scrollbar-gutter: stable;
@@ -2178,20 +2787,131 @@
 		border-radius: 4px;
 	}
 
+	.dev-stick {
+		position: sticky;
+		top: 0;
+		z-index: 1;
+		margin: -8px -10px 6px;
+		padding: 8px 10px 6px;
+		background: rgba(15, 23, 42, 0.97);
+		border-bottom: 1px solid rgba(51, 65, 85, 0.85);
+	}
+
+	.dev-chrome {
+		display: grid;
+		grid-template-columns: 1fr 1fr 1fr;
+		gap: 4px;
+		margin-bottom: 6px;
+	}
+
+	.lang-drawer {
+		margin-bottom: 6px;
+	}
+
+	.dev-toolbar {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		margin-bottom: 6px;
+	}
+
+	.dev-search {
+		flex: 1;
+		min-width: 0;
+	}
+	.dev-search input {
+		width: 100%;
+		box-sizing: border-box;
+		background: rgba(15, 23, 42, 0.9);
+		color: #e2e8f0;
+		border: 1px solid rgba(71, 85, 105, 0.8);
+		border-radius: 4px;
+		padding: 5px 8px;
+		font-family: inherit;
+		font-size: 11px;
+	}
+	.dev-search input::placeholder {
+		color: #64748b;
+	}
+	.dev-search input:focus {
+		outline: none;
+		border-color: rgba(96, 165, 250, 0.85);
+	}
+
+	.dev-toolbar__btn {
+		flex: none;
+		min-width: 40px;
+	}
+
+	.dev-body :global(.acc) {
+		border-bottom: 1px solid rgba(51, 65, 85, 0.85);
+	}
+	.dev-body :global(.acc:last-of-type) {
+		border-bottom: 0;
+	}
+	.dev-body :global(button.acc-head) {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		width: 100%;
+		margin: 0;
+		padding: 8px 2px;
+		background: transparent;
+		border: none;
+		border-radius: 0;
+		color: #93c5fd;
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		text-align: left;
+	}
+	.dev-body :global(button.acc-head:hover:not(:disabled)) {
+		background: rgba(59, 130, 246, 0.12);
+		border-color: transparent;
+	}
+	.dev-body :global(.acc--open button.acc-head) {
+		color: #bfdbfe;
+	}
+	.dev-body :global(.acc-head__title) {
+		flex: 1;
+		min-width: 0;
+	}
+	.dev-body :global(.acc-head__badge) {
+		flex: none;
+		font-size: 9px;
+		font-weight: 600;
+		letter-spacing: 0.04em;
+		text-transform: none;
+		color: #94a3b8;
+	}
+	.dev-body :global(.acc-head__chevron) {
+		flex: none;
+		opacity: 0.7;
+		font-size: 11px;
+	}
+	.dev-body :global(.acc-body) {
+		padding: 0 0 10px;
+	}
+
 	.dev-body section {
 		margin-bottom: 10px;
 	}
 	.dev-body section:last-of-type {
-		margin-bottom: 4px;
+		margin-bottom: 0;
 	}
 
 	.dev-body h4 {
-		margin: 0 0 4px;
+		margin: 8px 0 4px;
 		font-size: 10px;
 		font-weight: 700;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
-		color: #93c5fd;
+		color: #64748b;
+	}
+	.dev-body :global(.acc-body > h4:first-child),
+	.dev-body section:first-child h4 {
+		margin-top: 0;
 	}
 
 	.subhint {
@@ -2208,6 +2928,10 @@
 
 	.grid--3 {
 		grid-template-columns: 1fr 1fr 1fr;
+	}
+
+	.grid--4 {
+		grid-template-columns: repeat(4, 1fr);
 	}
 
 	.grid--5 {
@@ -2245,7 +2969,7 @@
 	}
 
 	.hint {
-		margin: 4px 0 0;
+		margin: 6px 0 0;
 		font-size: 9px;
 		color: #64748b;
 		text-align: center;

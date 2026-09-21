@@ -1,12 +1,9 @@
 <!--
-	Overlay: estimated Pixi texture / atlas footprint (not system RAM).
-	Top-30 + totals refresh every animation frame.
-	Accordion: tap header to collapse / expand.
-	Visible in prod builds too (Stake debug) — remove when done.
+	Optional HUD: estimated Pixi texture / atlas footprint (not system RAM).
+	Pinned from Dev menu → RAM ON. Starts collapsed; tap the header to expand the list.
+	Samples on an interval, not every animation frame.
 -->
 <script lang="ts">
-	import { onMount } from 'svelte';
-
 	import { getContextApp } from 'pixi-svelte';
 
 	import {
@@ -14,35 +11,31 @@
 		formatMb,
 		type PixiTextureMemoryStats,
 	} from '../game/pixiTextureMemory';
+	import { pixiMemoryHud } from '../game/pixiTextureMemoryHud.svelte';
+
+	const SAMPLE_MS = 250;
 
 	const app = getContextApp();
 
 	let stats = $state<PixiTextureMemoryStats | null>(null);
-	let open = $state(true);
+	let open = $state(false);
 
 	const toggle = () => {
 		open = !open;
 	};
 
-	onMount(() => {
-		let raf = 0;
-		let alive = true;
-
-		const tick = () => {
-			if (!alive) return;
+	$effect(() => {
+		if (!pixiMemoryHud.overlay) return;
+		const sample = () => {
 			stats = estimatePixiTextureMemory(app.stateApp.pixiApplication ?? null);
-			raf = requestAnimationFrame(tick);
 		};
-
-		raf = requestAnimationFrame(tick);
-		return () => {
-			alive = false;
-			cancelAnimationFrame(raf);
-		};
+		sample();
+		const id = setInterval(sample, SAMPLE_MS);
+		return () => clearInterval(id);
 	});
 </script>
 
-{#if stats}
+{#if pixiMemoryHud.overlay && stats}
 	<div
 		class="pixi-mem"
 		class:pixi-mem--collapsed={!open}

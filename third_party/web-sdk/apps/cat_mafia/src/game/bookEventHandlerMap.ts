@@ -333,7 +333,7 @@ const paylineAmountWithStickyProduct = ({
  */
 const maybeRequestWinHudCountUp = (nextAmount: number, force = false) => {
 	if (nextAmount <= stateBet.winBookEventAmount + 0.01) return;
-	if (force || stateGame.gameType === 'freegame') {
+	if (force || stateGame.gameType === 'freegame' || devPreview.forceWinHudCountUp) {
 		stateGame.winHudCountUpPending = true;
 	}
 };
@@ -956,8 +956,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		if (!bookEvent.wins?.length) return;
 
-		ensureSwCurtainsForBoard();
-
 		let eventIndex = bookEvents.indexOf(bookEvent);
 		if (eventIndex < 0 && 'index' in bookEvent) {
 			eventIndex = bookEvents.findIndex(
@@ -982,6 +980,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// поэтому фоновой таймер затемнения здесь не запускаем.
 		const pawResolveFollows =
 			eventIndex >= 0 && hasPawResolveBeforeNextReveal(bookEvents, bookEvent);
+
+		// Phase-1 before a new curtain: keep the lying SW as a single tile.
+		// Snapping a full curtain here made the column look wild while lines
+		// still only used the original cell.
+		if (isPostSwExpand || !swExpandFollows) {
+			ensureSwCurtainsForBoard();
+		}
 
 		if (isPostSwExpand) {
 			// Normal FS: phase-2 lines only after a real phase-1 win (SW in a line).
@@ -1402,13 +1407,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				return;
 			}
 
+			const hasNewCurtain = bookEvent.expands.some((expand) => sticky[expand.reel] == null);
 			const willShowCurtain = bookEvent.expands.some(
 				(expand) =>
 					!(
 						duelSwRowsOnReel(side, expand.reel) >= BOARD_DIMENSIONS.y || sticky[expand.reel] != null
 					),
 			);
-			if (willShowCurtain) {
+			if (hasNewCurtain) {
 				await waitForGameSpeed(SW_PHASE1_HOLD_MS, stateGame.gameSpeed);
 				clearWinSpotlight();
 			}
@@ -1475,6 +1481,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Base / Super new open: hold phase-1 paylines (or empty beat), then clear
 		// before curtain so the post-expand winInfo reads as a distinct second beat.
 		// Super opens even when phase-1 winInfo is missing (no line-gate).
+		// Clear whenever this event opens a reel that is not already sticky —
+		// even if the board already looks like a full SW column (otherwise
+		// phase-1 lines stay on a decorative curtain).
+		const hasNewCurtain = bookEvent.expands.some(
+			(expand) => stateGame.stickySwByReel[expand.reel] == null,
+		);
 		const willShowCurtain = bookEvent.expands.some((expand) => {
 			const reel = stateGame.board[expand.reel];
 			let swRows = 0;
@@ -1483,7 +1495,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			}
 			return !(swRows >= BOARD_DIMENSIONS.y || stateGame.stickySwByReel[expand.reel] != null);
 		});
-		if (willShowCurtain) {
+		if (hasNewCurtain) {
 			await waitForGameSpeed(SW_PHASE1_HOLD_MS, stateGame.gameSpeed);
 			clearWinSpotlight();
 		}

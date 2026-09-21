@@ -53,9 +53,6 @@
 	const isNormal = variant === 'normal';
 	const ready = $derived(isNormal ? bgReady && fgReady && mascotReady : fgReady);
 
-	/** Card atlases: normal is PMA; super/duel exports omit pma (straight alpha). */
-	const framePremultiplied = variant === 'normal';
-
 	const NORMAL_BG_SLOT = 'normal_background';
 
 	/** BG: only street. FG: everything except street. Animation restores slots — re-apply each frame. */
@@ -99,8 +96,9 @@
 			showControls: false,
 			showLoading: false,
 			backgroundColor: '#00000000',
-			premultipliedAlpha: framePremultiplied,
-			mipmaps: true,
+			premultipliedAlpha: false,
+			// Tight atlas packing — mipmaps mix neighbouring regions into gold-trim ghosts.
+			mipmaps: false,
 			alpha: true,
 			defaultMix: 0,
 			viewport: {

@@ -60,4 +60,9 @@ export const devPreview = $state({
 	 * DevButtons "WIN Stack · 3dp" sets 3 to QA count-up with millicents visible.
 	 */
 	winForceFractionDigits: null as null | number,
+	/**
+	 * One-shot: setTotalWin uses the FS HUD count-up path without flipping
+	 * `gameType` (avoids mascot skin / feature GPU load).
+	 */
+	forceWinHudCountUp: false,
 });

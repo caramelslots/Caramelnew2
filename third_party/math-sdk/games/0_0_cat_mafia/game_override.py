@@ -1002,9 +1002,10 @@ class GameStateOverride(GameExecutables):
     def resolve_fs_spin_features(self) -> None:
         """FS: multi sticky SW; bullets on main FS only.
 
-        Super: SW expands whenever present (no payline gate); phase-2 winInfo
-        only when the new curtain reel participates in a post-expand win.
+        Super: SW expands whenever present (no payline gate).
         Normal: sticky only when SW participated in a winning line (base gate + sticky).
+        After any new curtain opens, the full column is wild — phase-2 re-eval
+        is the same in Super / Normal / base.
         """
         new_hits = self._collect_new_lying_sw_hits()
         if self._sw_sticky_requires_winning_line():
@@ -1012,24 +1013,19 @@ class GameStateOverride(GameExecutables):
 
         if new_hits:
             # New lying SW (Normal/Super): same two-beat as base —
-            # phase-1 lines → curtain → phase-2 full re-eval (same lines may replay + new).
-            # Super: phase-2 winInfo only when the newly opened reel sits on a win
-            # (curtain still opens without a payline gate).
+            # phase-1 lines → curtain → phase-2 full-column re-eval.
             phase1_wins = list(self.win_data.get("wins") or [])
             phase1_total = float(self.win_data.get("totalWin") or 0)
             expands_new, _ = expand_sw_columns(self.board, self.create_symbol, new_hits)
-            new_reels = {int(e["reel"]) for e in expands_new}
             for e in expands_new:
                 self.sticky_sw[int(e["reel"])] = int(e["mult"])
             self._sync_sw_padding()
             product = product_of_mults(self.sticky_sw.values())
             super_wild_expand_event(self, self._sticky_expands_payload(), product)
-            require_new = new_reels if self.is_super_bonus() else None
             self._emit_sw_reeval_wins(
                 product,
                 phase1_wins,
                 phase1_total,
-                require_new_reels=require_new,
             )
             self._pending_sw_expands = []
             self._pending_sw_product = 1
@@ -1143,37 +1139,24 @@ class GameStateOverride(GameExecutables):
         self._pending_sw_expands = []
         self._pending_sw_product = 1
 
-    @staticmethod
-    def _win_data_uses_reels(win_data: dict, reels: set[int]) -> bool:
-        """True if any winning position lies on one of the given reels."""
-        if not reels:
-            return False
-        for win in win_data.get("wins") or []:
-            for p in win.get("positions") or []:
-                if int(p["reel"]) in reels:
-                    return True
-        return False
-
     def _emit_sw_reeval_wins(
         self,
         product: int,
         phase1_wins: list | None = None,
         phase1_total: float | None = None,
-        require_new_reels: set[int] | None = None,
     ) -> None:
         """Re-eval after SW expand; emit phase-2 winInfo (same lines may replay + new).
 
-        winInfo + setWin celebrate phase2_total only (raw × sticky product).
-        spin_win / setTotalWin / RGS = phase1_total + phase2_total (additive).
-
-        Super FS may pass require_new_reels: if none of those reels appear in
-        phase-2 wins, skip phase-2 winInfo (no line reactivation) and keep
-        phase-1 credit scaled by the pre-expand sticky product only.
+        Open curtain = full-column wild on every row. Same in base / Normal /
+        Super / Duel. winInfo + setWin celebrate phase2_total only (raw × sticky
+        product). spin_win / setTotalWin / RGS = phase1_total + phase2_total
+        (additive).
         """
         from src.events.event_constants import EventConstants
         from src.events.events import set_total_event, win_info_event
 
         p1 = max(0.0, float(phase1_total or 0))
+        _ = phase1_wins  # lines already emitted in phase 1; not filtered here
 
         saved = self._neutralize_board_sw_mults()
         try:
@@ -1184,27 +1167,6 @@ class GameStateOverride(GameExecutables):
             )
         finally:
             self._restore_board_sw_mults(saved)
-
-        if require_new_reels is not None and not self._win_data_uses_reels(
-            self.win_data, require_new_reels
-        ):
-            # New Super curtain opened off the wins — expand stays, no phase-2 beat.
-            # Keep phase-1 credit; scale by pre-expand sticky product only (exclude
-            # the new non-participating curtain mult from payout).
-            self.win_data = {
-                "totalWin": p1,
-                "wins": list(phase1_wins or []),
-            }
-            pending_prod = int(getattr(self, "_pending_sw_product", 1) or 1)
-            if pending_prod > 1 and self.win_manager.spin_win > 0:
-                self._apply_super_product_after_preexpand()
-            else:
-                self._pending_sw_expands = []
-                self._pending_sw_product = 1
-                set_total_event(self)
-            return
-
-        _ = phase1_wins  # lines already emitted in phase 1; not filtered here
 
         raw_total = float(self.win_data.get("totalWin") or 0)
         prod = max(1, int(product))

@@ -156,7 +156,8 @@ def build_paw_resolve(board, bet: float = 1.0) -> tuple[list[dict], list[dict], 
 def expand_sw_columns(board, create_symbol, sw_hits: list[dict]) -> tuple[list[dict], int]:
     """Fill SW reel(s) with SW wilds at that mult. Returns (expands, productMult).
 
-    One expand per reel; multiple reels → product of multipliers.
+    One expand per reel; every row on those reels becomes a substituting wild.
+    Multiple reels → product of multipliers.
     """
     by_reel: dict[int, dict] = {}
     for h in sw_hits:
@@ -207,7 +208,7 @@ def stamp_expanded_sw_column(
     mult: int,
     row: int = 0,
 ) -> dict:
-    """Paint a full reel as expanded Super Wild."""
+    """Paint a full reel as expanded Super Wild (every row is a substituting wild)."""
     mult = max(2, int(mult))
     for r in range(len(board[reel])):
         board[reel][r] = create_symbol("SW")

@@ -60,15 +60,15 @@ def check_additive_unit() -> None:
     print("OK unit additive (base + duel)")
 
 
-def check_super_skip_phase2_when_new_reel_unused() -> None:
-    """Super: expand without phase-2 winInfo when new curtain reel is off the wins."""
+def check_super_always_emits_phase2() -> None:
+    """Open curtain always re-evals as a full-column wild — Super does not skip phase-2."""
     config = GameConfig()
     gs = GameState(config)
     gs.reset_seed(0)
     gs.reset_book()
     gs.gametype = config.freegame_type
     gs.fs_profile = "bonus_super"
-    gs.sticky_sw = {1: 2}  # pre-expand sticky (pending product ×2)
+    gs.sticky_sw = {1: 2, 3: 3}
     gs._pending_sw_product = 2
     gs._pending_sw_expands = []
     gs.win_manager.reset_spin_win()
@@ -89,9 +89,9 @@ def check_super_skip_phase2_when_new_reel_unused() -> None:
             },
         }
     ]
-    # Phase-2 board wins only use reels 0/1 — new curtain on reel 3 is unused.
+    # Same lines as phase-1 (new curtain reel unused) — still emit phase-2.
     phase2_raw = 0.10
-    product = 6  # would include new ×3 if we paid phase-2
+    product = 6
     orig = Lines.get_lines
 
     def fake_get_lines(board, config, global_multiplier=1):
@@ -119,40 +119,61 @@ def check_super_skip_phase2_when_new_reel_unused() -> None:
         gs.win_data = {"totalWin": phase1, "wins": list(phase1_wins)}
         gs.board = [[gs.create_symbol("L1") for _ in range(4)] for _ in range(5)]
         n_before = len(gs.book.events)
-        gs._emit_sw_reeval_wins(
-            product,
-            phase1_wins=phase1_wins,
-            phase1_total=phase1,
-            require_new_reels={3},
-        )
-        types = [e.get("type") for e in gs.book.events[n_before:]]
-        assert "winInfo" not in types, types
-        # Pre-expand sticky product applied once (no additive phase-2).
-        assert round(float(gs.win_manager.spin_win), 2) == 0.20
-        assert round(float(gs.win_data["totalWin"]), 2) == 0.20
-
-        # Participating new reel → phase-2 winInfo as usual.
-        gs.reset_book()
-        gs.sticky_sw = {1: 2, 3: 3}
-        gs._pending_sw_product = 2
-        gs.win_manager.reset_spin_win()
-        gs.win_manager.running_bet_win = 0.0
-        gs.win_manager.update_spinwin(phase1)
-        gs.win_data = {"totalWin": phase1, "wins": list(phase1_wins)}
-        n_before = len(gs.book.events)
-        gs._emit_sw_reeval_wins(
-            product,
-            phase1_wins=phase1_wins,
-            phase1_total=phase1,
-            require_new_reels={0},  # reel 0 is in phase-2 wins
-        )
+        gs._emit_sw_reeval_wins(product, phase1_wins=phase1_wins, phase1_total=phase1)
         types = [e.get("type") for e in gs.book.events[n_before:]]
         assert "winInfo" in types, types
         assert round(float(gs.win_data["totalWin"]), 2) == 0.60  # 0.10 * 6
         assert round(float(gs.win_manager.spin_win), 2) == 0.70  # 0.10 + 0.60
     finally:
         Lines.get_lines = orig
-    print("OK unit super skip phase-2 when new reel unused")
+    print("OK unit super always emits phase-2")
+
+
+def check_curtain_full_column_extra_lines() -> None:
+    """Lying SW is one cell; after expand, other rows of the column are wild too."""
+    from game_features import expand_sw_columns, find_super_wilds
+
+    config = GameConfig()
+    gs = GameState(config)
+    gs.reset_seed(0)
+    gs.betmode = "base"
+    gs.criteria = "basegame"
+    gs.gametype = config.basegame_type
+
+    # Screenshot board: H2×5 on the top row through a lying SW at reel 2 row 0.
+    # Payline 7 (J-J-SW) only exists once the whole column is wild.
+    names = [
+        ["H2", "L1", "L3", "L4"],
+        ["H2", "L2", "L4", "L1"],
+        ["SW", "L2", "L3", "L4"],
+        ["H2", "L4", "L1", "L3"],
+        ["H2", "L4", "L2", "B"],
+    ]
+    gs.board = [
+        [gs.create_symbol(names[reel][row]) for row in range(4)] for reel in range(5)
+    ]
+
+    saved = gs._neutralize_board_sw_mults()
+    try:
+        phase1 = Lines.get_lines(gs.board, config)
+    finally:
+        gs._restore_board_sw_mults(saved)
+    p1_lines = {int(w["meta"]["lineIndex"]) for w in phase1["wins"]}
+    assert 1 in p1_lines, p1_lines
+    assert 7 not in p1_lines, p1_lines
+
+    expand_sw_columns(gs.board, gs.create_symbol, find_super_wilds(gs.board))
+    assert all(cell.name == "SW" for cell in gs.board[2])
+
+    saved = gs._neutralize_board_sw_mults()
+    try:
+        phase2 = Lines.get_lines(gs.board, config)
+    finally:
+        gs._restore_board_sw_mults(saved)
+    p2_lines = {int(w["meta"]["lineIndex"]) for w in phase2["wins"]}
+    assert 1 in p2_lines, p2_lines
+    assert 7 in p2_lines, p2_lines
+    print("OK curtain full-column extra lines (payline 7 after expand)")
 
 
 def segment_spins(events: list[dict]) -> list[list[dict]]:
@@ -213,7 +234,7 @@ def check_super_live(n: int = 200) -> None:
             wins_before = [k for k, t in enumerate(types) if t == "winInfo" and k < exp_i]
             wins_after = [k for k, t in enumerate(types) if t == "winInfo" and k > exp_i]
             if not wins_after:
-                # Allowed in Super when the new curtain reel is off phase-2 wins.
+                # Empty post-expand board (no 3-oak even with the full-column wild).
                 expand_no_phase2 += 1
                 continue
             if not wins_before:
@@ -316,6 +337,7 @@ def check_base_sw_expand(n: int = 80) -> None:
 
 if __name__ == "__main__":
     check_additive_unit()
-    check_super_skip_phase2_when_new_reel_unused()
+    check_super_always_emits_phase2()
+    check_curtain_full_column_extra_lines()
     check_base_sw_expand()
     check_super_live()

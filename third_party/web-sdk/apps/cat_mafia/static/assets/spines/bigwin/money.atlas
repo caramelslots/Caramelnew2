@@ -1,7 +1,6 @@
 money.webp
 size:1024,1024
 filter:Linear,Linear
-pma:true
 scale:0.25
 banknotes_1
 bounds:504,30,45,36
