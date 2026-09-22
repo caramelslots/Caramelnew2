@@ -197,8 +197,9 @@ export const getSymbolInfo = ({
 	if (rawSymbol.name === 'M' && state === 'mysteryCollapse') {
 		return MYSTERY_COLLAPSE_SPINE;
 	}
-	// Turbo 3: skip land bounce — fast spin is already near-instant; bounce at 2×
-	// is still hard to tell apart from Turbo 2, so land goes straight to static.
+	// Turbo 3: skip land bounce visually for the frame before ReelSymbol settles
+	// `land` → `static` (same speed gate). Do not leave cells parked on `land`
+	// while this shortcut is active — mid-win turbo toggles would remount land/win.
 	if (state === 'land' && stateGame.gameSpeed === 3) {
 		return SYMBOL_INFO_MAP[rawSymbol.name].static;
 	}

@@ -324,7 +324,7 @@ export default {
 		src: {
 			atlas: assetUrl('assets/spines/transition/transition.atlas'),
 			skeleton: assetUrl('assets/spines/transition/transition.json'),
-			scale: 2,
+			scale: 0.1,
 		},
 	},
 	/** Full-body cat — white (freegame / duel). Ref. designer_assets/cat_render/white. */

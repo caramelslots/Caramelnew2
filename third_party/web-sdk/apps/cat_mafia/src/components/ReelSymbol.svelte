@@ -265,6 +265,18 @@
 		});
 	});
 
+	// Turbo 3 skips the land bounce in getSymbolInfo (renders static). Mirror that
+	// in symbolState — otherwise cells stay `land` while idle is frozen under win
+	// spotlight, and toggling gameSpeed remounts them onto land/win clips mid-lines.
+	$effect(() => {
+		if (props.reelSymbol.symbolState !== 'land' || stateGame.gameSpeed !== 3) return;
+		untrack(() => {
+			if (props.reelSymbol.symbolState !== 'land') return;
+			props.reelSymbol.oncomplete();
+			props.reelSymbol.symbolState = 'static';
+		});
+	});
+
 	const finishWinBounce = () => {
 		if (props.reelSymbol.symbolState === 'win') {
 			props.reelSymbol.oncomplete();

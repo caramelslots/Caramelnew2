@@ -52,14 +52,10 @@
 		paylineRows: number[] | null;
 		color: number;
 		progress: number;
-		/** 1 while shown, eases to 0 after hide / clear. */
-		opacity: number;
 		startTime: number;
-		fadeStart: number | null;
 	};
 
 	const ENERGY_ORANGE = 0xff8800;
-	const FADE_MS = 560;
 	const SAMPLES_PER_SEGMENT = 28;
 	const TAPER_MIN = 0.42;
 	const TAPER_MAX = 1.0;
@@ -80,28 +76,13 @@
 	let activeLines = $state<ActiveLine[]>([]);
 	let animTime = $state(0);
 
-	const intersectionFade = $derived(
-		activeLines.reduce((min, line) => Math.min(min, line.opacity), 1),
-	);
-
 	let raf = 0;
 	const tick = (now: number) => {
 		animTime = now * 0.001;
-		const keep: ActiveLine[] = [];
 		for (const line of activeLines) {
-			if (line.fadeStart == null) {
-				line.progress = Math.min(1, (now - line.startTime) / PAYLINE_DRAW_DURATION_MS);
-				line.opacity = 1;
-				keep.push(line);
-				continue;
-			}
-			const t = Math.min(1, (now - line.fadeStart) / FADE_MS);
-			const s = t * t * (3 - 2 * t);
-			line.opacity = 1 - s;
-			if (t < 1) keep.push(line);
+			line.progress = Math.min(1, (now - line.startTime) / PAYLINE_DRAW_DURATION_MS);
 		}
-		if (keep.length !== activeLines.length) activeLines = keep;
-		if (keep.length > 0) {
+		if (activeLines.length > 0) {
 			raf = requestAnimationFrame(tick);
 		} else {
 			raf = 0;
@@ -128,9 +109,7 @@
 				paylineRows: paylineRows ?? null,
 				color: color ?? ENERGY_ORANGE,
 				progress: 0,
-				opacity: 1,
 				startTime: performance.now(),
-				fadeStart: null,
 			});
 			activeLines = next;
 			ensureLoop();
@@ -141,22 +120,14 @@
 			} else if (side) {
 				return;
 			}
-			const now = performance.now();
-			for (const line of activeLines) {
-				if (line.lineIndex === lineIndex && line.fadeStart == null) line.fadeStart = now;
-			}
-			ensureLoop();
+			activeLines = activeLines.filter((l) => l.lineIndex !== lineIndex);
 		},
 		paylineClearAll: (event) => {
 			const side = event && 'side' in event ? event.side : undefined;
 			if (side) {
 				if (props.side !== side) return;
 			}
-			const now = performance.now();
-			for (const line of activeLines) {
-				if (line.fadeStart == null) line.fadeStart = now;
-			}
-			ensureLoop();
+			activeLines = [];
 		},
 	});
 
@@ -534,8 +505,8 @@
 </script>
 
 {#each activeLines as line (line.lineIndex)}
-	<Graphics blendMode="add" alpha={line.opacity} draw={drawLine(line)} />
+	<Graphics blendMode="add" draw={drawLine(line)} />
 {/each}
 {#if intersectionPoints.length > 0}
-	<Graphics blendMode="add" alpha={intersectionFade} draw={drawIntersections} />
+	<Graphics blendMode="add" draw={drawIntersections} />
 {/if}
