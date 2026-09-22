@@ -368,6 +368,14 @@ export default {
 		type: 'audio',
 		src: assetUrl('assets/audio/sounds.json'),
 	},
+	musicMain: {
+		type: 'audio',
+		src: assetUrl('assets/audio/music_main.json'),
+	},
+	musicBonus: {
+		type: 'audio',
+		src: assetUrl('assets/audio/music_bonus.json'),
+	},
 	betPlus: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/ui/bet/plus.webp'),

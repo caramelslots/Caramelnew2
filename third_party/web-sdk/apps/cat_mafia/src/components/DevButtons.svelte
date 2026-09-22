@@ -116,7 +116,7 @@
 		{ id: 'characters', title: 'Characters', keys: 'cat dog mascot symbol anim clip' },
 		{ id: 'stage', title: 'Stage', keys: 'frame chrome duel target shoot cabinet bullet fly drum' },
 		{ id: 'wins', title: 'Wins', keys: 'win level precision hud stack payline coin' },
-		{ id: 'ui', title: 'UI & loading', keys: 'loading cards progress fs intro outro modal funds' },
+		{ id: 'ui', title: 'UI & loading', keys: 'loading cards progress fs intro outro modal funds transition' },
 	];
 
 	const readOpenAccordions = (): Set<AccordionId> => {
@@ -1761,6 +1761,12 @@
 			eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
 		});
 
+	/** Play cover spine only — no gameType / theme switch. */
+	const playTransitionPreview = () =>
+		guard(async () => {
+			await eventEmitter.broadcastAsync({ type: 'transition' });
+		});
+
 	let loaderProgressTimer: ReturnType<typeof setInterval> | null = null;
 
 	const stopLoaderProgressTimer = () => {
@@ -2658,6 +2664,14 @@
 						onclick={playFsCounterPreview}
 					>
 						{fsCounterPreview ? 'FS Counter: ON' : 'FS Counter'}
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="Play transition spine (no theme switch)"
+						onclick={playTransitionPreview}
+					>
+						Transition
 					</button>
 					<button type="button" disabled={busy} onclick={() => playFsIntroPreview(8)}>
 						FS Intro (8)

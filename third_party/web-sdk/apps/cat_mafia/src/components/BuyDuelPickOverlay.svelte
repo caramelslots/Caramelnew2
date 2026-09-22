@@ -23,6 +23,7 @@
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
 	import { BUY_BONUS_ASSETS, startFsCongPreload } from '../game/uiHtmlAssetManifest';
 	import { DUEL_PICK_CARD } from '../game/duelAssets';
+	import ArchedRibbonTitle from './ArchedRibbonTitle.svelte';
 	import DuelPickMascot from './DuelPickMascot.svelte';
 
 	const context = getContext();
@@ -125,7 +126,9 @@
 	<img class="panel-bg" src={bgUrl} alt="" draggable="false" loading="eager" />
 
 	<div class="panel-content">
-		<h2 class="pick-title" class:hidden={pendingSide != null}>{context.i18nDerived.duelPickTitle()}</h2>
+		<h2 class="pick-title" class:hidden={pendingSide != null}>
+			<ArchedRibbonTitle text={context.i18nDerived.duelPickTitle()} archDeg={18} />
+		</h2>
 
 		<!-- Keep both Spine mascots mounted across pick ↔ confirm so they never reload. -->
 		<section
@@ -170,7 +173,9 @@
 							alt=""
 							draggable="false"
 						/>
-						<span class="pick-card-name">{sideTitle(side as DuelSide)}</span>
+						<span class="pick-card-name">
+							<ArchedRibbonTitle text={sideTitle(side as DuelSide)} archDeg={28} />
+						</span>
 						<span
 							class="pick-card-tag"
 							class:card-tag-knewave={knewaveFontReady}
@@ -230,6 +235,8 @@
 		--bb-card-price-fs: calc(var(--panel-width) * 0.048);
 		--bb-action-fs: calc(var(--panel-width) * 0.034);
 		--bb-title-fs: calc(var(--panel-width) * 0.048);
+		/* Same tracking as FreeSpinIntro CONGRATULATIONS / NORMAL BONUS. */
+		--bb-title-tracking: 1.2;
 		font-family: v-bind(HUD_BALANCE_BET_FONT_FAMILY);
 		position: relative;
 		z-index: 10;
@@ -255,16 +262,12 @@
 
 	.pick-title {
 		position: absolute;
-		top: 12%;
-		left: 8%;
-		right: 8%;
+		top: 11%;
+		left: 10%;
+		right: 10%;
+		height: 10%;
 		margin: 0;
-		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
 		font-size: var(--bb-title-fs);
-		letter-spacing: 0.06em;
-		text-align: center;
-		color: #f6e8c8;
-		text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
 		pointer-events: none;
 
 		&.hidden {
@@ -347,7 +350,8 @@
 		}
 
 		.pick-card-name {
-			font-size: clamp(1.15rem, 14cqw, 2.05rem);
+			--bb-card-title-fs: clamp(1.15rem, 14cqw, 2.05rem);
+			font-size: var(--bb-card-title-fs);
 		}
 
 		.pick-card-tag {
@@ -423,25 +427,17 @@
 
 	.pick-card-name {
 		position: absolute;
-		left: 10%;
-		right: 10%;
-		top: 0.4%;
-		height: 10%;
+		left: 6%;
+		right: 6%;
+		top: 0.8%;
+		height: 12%;
 		z-index: 3;
-		display: flex;
-		align-items: center;
-		justify-content: center;
+		margin: 0;
 		padding: 0;
-		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
-		font-size: clamp(0.75rem, 10cqw, 1.35rem);
-		letter-spacing: 0.12em;
-		line-height: 1;
-		color: #f8ecd0;
-		text-shadow:
-			0 1px 0 rgba(40, 18, 8, 0.85),
-			0 2px 6px rgba(0, 0, 0, 0.55);
+		/* Same proxima-nova as FreeSpinIntro CONGRATULATIONS / NORMAL BONUS. */
+		--bb-card-title-fs: clamp(0.75rem, 10cqw, 1.35rem);
+		font-size: var(--bb-card-title-fs);
 		pointer-events: none;
-		text-transform: uppercase;
 	}
 
 	.pick-card-tag {
@@ -587,7 +583,8 @@
 		}
 
 		.pick-card-name {
-			font-size: clamp(1.05rem, 14cqw, 1.9rem);
+			--bb-card-title-fs: clamp(1.05rem, 14cqw, 1.9rem);
+			font-size: var(--bb-card-title-fs);
 		}
 
 		.pick-card-tag {
@@ -606,7 +603,8 @@
 			height: 70%;
 
 			.pick-card-name {
-				font-size: clamp(1.4rem, 17cqw, 2.45rem);
+				--bb-card-title-fs: clamp(1.4rem, 17cqw, 2.45rem);
+				font-size: var(--bb-card-title-fs);
 			}
 
 			.pick-card-tag {
@@ -637,7 +635,8 @@
 			height: 70%;
 
 			.pick-card-name {
-				font-size: clamp(0.95rem, 13cqw, 1.55rem);
+				--bb-card-title-fs: clamp(0.95rem, 13cqw, 1.55rem);
+				font-size: var(--bb-card-title-fs);
 			}
 
 			.pick-card-tag {
@@ -651,7 +650,8 @@
 		}
 
 		.pick-card-name {
-			font-size: clamp(0.65rem, 10cqw, 1.1rem);
+			--bb-card-title-fs: clamp(0.65rem, 10cqw, 1.1rem);
+			font-size: var(--bb-card-title-fs);
 		}
 
 		.pick-card-tag {
@@ -677,7 +677,8 @@
 		}
 
 		.pick-card-name {
-			font-size: clamp(0.55rem, 10cqw, 0.85rem);
+			--bb-card-title-fs: clamp(0.55rem, 10cqw, 0.85rem);
+			font-size: var(--bb-card-title-fs);
 		}
 
 		.pick-card-tag {
@@ -697,7 +698,8 @@
 			height: 70%;
 
 			.pick-card-name {
-				font-size: clamp(0.8rem, 13cqw, 1.25rem);
+				--bb-card-title-fs: clamp(0.8rem, 13cqw, 1.25rem);
+				font-size: var(--bb-card-title-fs);
 			}
 
 			.pick-card-tag {

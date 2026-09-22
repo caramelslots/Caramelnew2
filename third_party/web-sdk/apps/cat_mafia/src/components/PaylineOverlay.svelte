@@ -52,13 +52,15 @@
 		paylineRows: number[] | null;
 		color: number;
 		progress: number;
+		/** 1 while shown, eases to 0 after hide / clear. */
+		opacity: number;
 		startTime: number;
+		fadeStart: number | null;
 	};
 
 	const ENERGY_ORANGE = 0xff8800;
-	const CYCLE_MS = 1600;
-	const SAMPLES_PER_SEGMENT = 14;
-	const PATH_CHUNKS = 14;
+	const FADE_MS = 560;
+	const SAMPLES_PER_SEGMENT = 28;
 	const TAPER_MIN = 0.42;
 	const TAPER_MAX = 1.0;
 	/** Доля пути у каждого края для плавного нарастания / убывания толщины. */
@@ -71,21 +73,35 @@
 
 	// Soft orange bloom + hot core — two strokes that read like the old 6-pass stack.
 	const GLOW_LAYERS: { width: number; color: number; alpha: number }[] = [
-		{ width: 26, color: 0xff5500, alpha: 0.16 },
+		{ width: 12, color: 0xff5500, alpha: 0.09 },
 		{ width: 5, color: 0xfff6cc, alpha: 1.0 },
 	];
 
 	let activeLines = $state<ActiveLine[]>([]);
 	let animTime = $state(0);
 
+	const intersectionFade = $derived(
+		activeLines.reduce((min, line) => Math.min(min, line.opacity), 1),
+	);
+
 	let raf = 0;
 	const tick = (now: number) => {
 		animTime = now * 0.001;
+		const keep: ActiveLine[] = [];
 		for (const line of activeLines) {
-			const elapsed = (now - line.startTime) % CYCLE_MS;
-			line.progress = Math.min(1, elapsed / PAYLINE_DRAW_DURATION_MS);
+			if (line.fadeStart == null) {
+				line.progress = Math.min(1, (now - line.startTime) / PAYLINE_DRAW_DURATION_MS);
+				line.opacity = 1;
+				keep.push(line);
+				continue;
+			}
+			const t = Math.min(1, (now - line.fadeStart) / FADE_MS);
+			const s = t * t * (3 - 2 * t);
+			line.opacity = 1 - s;
+			if (t < 1) keep.push(line);
 		}
-		if (activeLines.length > 0) {
+		if (keep.length !== activeLines.length) activeLines = keep;
+		if (keep.length > 0) {
 			raf = requestAnimationFrame(tick);
 		} else {
 			raf = 0;
@@ -112,7 +128,9 @@
 				paylineRows: paylineRows ?? null,
 				color: color ?? ENERGY_ORANGE,
 				progress: 0,
+				opacity: 1,
 				startTime: performance.now(),
+				fadeStart: null,
 			});
 			activeLines = next;
 			ensureLoop();
@@ -123,14 +141,22 @@
 			} else if (side) {
 				return;
 			}
-			activeLines = activeLines.filter((l) => l.lineIndex !== lineIndex);
+			const now = performance.now();
+			for (const line of activeLines) {
+				if (line.lineIndex === lineIndex && line.fadeStart == null) line.fadeStart = now;
+			}
+			ensureLoop();
 		},
 		paylineClearAll: (event) => {
 			const side = event && 'side' in event ? event.side : undefined;
 			if (side) {
 				if (props.side !== side) return;
 			}
-			activeLines = [];
+			const now = performance.now();
+			for (const line of activeLines) {
+				if (line.fadeStart == null) line.fadeStart = now;
+			}
+			ensureLoop();
 		},
 	});
 
@@ -341,27 +367,18 @@
 		g: PIXI.Graphics,
 		points: Point[],
 		segLens: number[],
-		total: number,
 		target: number,
 	) => {
-		if (total <= 0 || target <= 0) return;
-		const chunkLen = total / PATH_CHUNKS;
-		for (let c = 0; c < PATH_CHUNKS; c++) {
-			const arcStart = c * chunkLen;
-			const arcEnd = Math.min((c + 1) * chunkLen, target);
-			if (arcEnd <= arcStart) continue;
-			const midT = (arcStart + arcEnd) * 0.5 / total;
-			const scale = taperScale(midT);
-			for (const layer of GLOW_LAYERS) {
-				traceSubPath(g, points, segLens, arcStart, arcEnd);
-				g.stroke({
-					color: layer.color,
-					width: layer.width * scale,
-					alpha: layer.alpha,
-					cap: 'round',
-					join: 'round',
-				});
-			}
+		if (target <= 0) return;
+		for (const layer of GLOW_LAYERS) {
+			traceSubPath(g, points, segLens, 0, target);
+			g.stroke({
+				color: layer.color,
+				width: layer.width,
+				alpha: layer.alpha,
+				cap: 'round',
+				join: 'round',
+			});
 		}
 	};
 
@@ -378,9 +395,9 @@
 		const pulseFast = 0.6 + 0.4 * Math.sin(phase * 2.8 + 0.9);
 		const rotation = time * 2.1 + nodeSeed * 0.65;
 
-		g.circle(x, y, 26 * pulse).fill({ color: 0xff4400, alpha: 0.09 * intensity * pulseFast });
-		g.circle(x, y, 17 * pulse).fill({ color: 0xff8800, alpha: 0.22 * intensity * pulse });
-		g.circle(x, y, 10 * pulseFast).fill({ color: 0xffcc44, alpha: 0.48 * intensity * pulseFast });
+		g.circle(x, y, 12 * pulse).fill({ color: 0xff4400, alpha: 0.045 * intensity * pulseFast });
+		g.circle(x, y, 8 * pulse).fill({ color: 0xff8800, alpha: 0.1 * intensity * pulse });
+		g.circle(x, y, 5.5 * pulseFast).fill({ color: 0xffcc44, alpha: 0.28 * intensity * pulseFast });
 		g.circle(x, y, 4.5 * pulse).fill({ color: 0xffffff, alpha: (0.78 + 0.22 * pulseFast) * intensity });
 
 		for (let i = 0; i < SPARKLE_RAY_COUNT; i++) {
@@ -410,44 +427,14 @@
 		}
 	};
 
-	const isWinningAnchor = (
-		reel: number,
-		paylineRows: number[] | null,
-		positions: Position[],
-	) => {
-		if (!paylineRows) return positions.some((p) => p.reel === reel);
-		const paddedRow = paylineRows[reel] + 1;
-		return positions.some((p) => p.reel === reel && p.row === paddedRow);
-	};
-
-	const isBendAnchor = (reel: number, paylineRows: number[] | null) => {
-		if (!paylineRows || paylineRows.length < 2) return true;
-		if (reel === 0 || reel === paylineRows.length - 1) return true;
-		const row = paylineRows[reel];
-		return row !== paylineRows[reel - 1] || row !== paylineRows[reel + 1];
-	};
-
-	const sparkleIntensity = (
-		reel: number,
-		paylineRows: number[] | null,
-		positions: Position[],
-	) => {
-		const winning = isWinningAnchor(reel, paylineRows, positions);
-		const bend = isBendAnchor(reel, paylineRows);
-		if (winning && bend) return 1.3;
-		if (winning) return 1.15;
-		if (bend) return 1.0;
-		return 0.45;
-	};
-
 	const drawIntersectionFlare = (g: PIXI.Graphics, x: number, y: number, time: number, seed: number) => {
 		const phase = time * 6 + seed * 1.7;
 		const pulse = 0.68 + 0.32 * Math.sin(phase * 1.8);
 		const rotation = time * 2.6 + seed;
 
-		g.circle(x, y, 30 * pulse).fill({ color: 0xff3300, alpha: 0.1 * pulse });
-		g.circle(x, y, 20 * pulse).fill({ color: 0xff9900, alpha: 0.26 * pulse });
-		g.circle(x, y, 11 * pulse).fill({ color: 0xffee66, alpha: 0.58 + 0.2 * pulse });
+		g.circle(x, y, 14 * pulse).fill({ color: 0xff3300, alpha: 0.05 * pulse });
+		g.circle(x, y, 9 * pulse).fill({ color: 0xff9900, alpha: 0.12 * pulse });
+		g.circle(x, y, 6 * pulse).fill({ color: 0xffee66, alpha: 0.32 + 0.12 * pulse });
 		g.circle(x, y, 5).fill({ color: 0xffffff, alpha: 0.88 + 0.12 * pulse });
 
 		for (let i = 0; i < 6; i++) {
@@ -499,7 +486,7 @@
 		pointAtArcLength(points, segLens, target).point.x;
 
 	const drawLine = (line: ActiveLine) => (g: PIXI.Graphics) => {
-		const { positions, progress } = line;
+		const { progress } = line;
 		const anchors = getLineAnchors(line);
 		if (anchors.length === 0) return;
 
@@ -515,12 +502,12 @@
 		const { segLens, total } = buildSegLens(points);
 		const target = total * easeInOutCubic(progress);
 
-		drawTaperedGlow(g, points, segLens, total, target);
+		drawTaperedGlow(g, points, segLens, target);
 
 		if (progress < 1 && target > 0) {
 			const tip = pointAtArcLength(points, segLens, target);
 			const tipScale = taperScale(tip.tAlong);
-			g.circle(tip.point.x, tip.point.y, 10 * tipScale).fill({ color: 0xffcc44, alpha: 0.45 });
+			g.circle(tip.point.x, tip.point.y, 6 * tipScale).fill({ color: 0xffcc44, alpha: 0.22 });
 			g.circle(tip.point.x, tip.point.y, 5 * tipScale).fill({ color: 0xffffff, alpha: 0.85 });
 		}
 
@@ -528,14 +515,7 @@
 		for (let reel = 0; reel < anchors.length; reel++) {
 			const anchor = anchors[reel];
 			if (anchor.x > frontX + 0.5) continue;
-			drawSparkleNode(
-				g,
-				anchor.x,
-				anchor.y,
-				animTime,
-				line.lineIndex * 11 + reel,
-				sparkleIntensity(reel, line.paylineRows, positions),
-			);
+			drawSparkleNode(g, anchor.x, anchor.y, animTime, line.lineIndex * 11 + reel);
 		}
 	};
 
@@ -554,8 +534,8 @@
 </script>
 
 {#each activeLines as line (line.lineIndex)}
-	<Graphics blendMode="add" draw={drawLine(line)} />
+	<Graphics blendMode="add" alpha={line.opacity} draw={drawLine(line)} />
 {/each}
 {#if intersectionPoints.length > 0}
-	<Graphics blendMode="add" draw={drawIntersections} />
+	<Graphics blendMode="add" alpha={intersectionFade} draw={drawIntersections} />
 {/if}

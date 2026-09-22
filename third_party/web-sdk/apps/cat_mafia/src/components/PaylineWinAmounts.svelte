@@ -21,6 +21,9 @@
 </script>
 
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { Container } from 'pixi-svelte';
+
 	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
 
 	import {
@@ -39,8 +42,42 @@
 	const props: Props = $props();
 	const context = getContext();
 
+	const AMOUNT_FADE_MS = 560;
+
 	let activeAmount = $state<number | null>(null);
 	let activeAnchor = $state<PaylineWinAmountAnchor | null>(null);
+	let opacity = $state(1);
+	let fadeStart: number | null = null;
+	let fadeRaf = 0;
+
+	const fadeTick = (now: number) => {
+		if (fadeStart == null || activeAmount == null) {
+			fadeRaf = 0;
+			return;
+		}
+		const t = Math.min(1, (now - fadeStart) / AMOUNT_FADE_MS);
+		const s = t * t * (3 - 2 * t);
+		opacity = 1 - s;
+		if (t < 1) {
+			fadeRaf = requestAnimationFrame(fadeTick);
+			return;
+		}
+		activeAmount = null;
+		activeAnchor = null;
+		fadeStart = null;
+		opacity = 1;
+		fadeRaf = 0;
+	};
+
+	const beginAmountFade = () => {
+		if (activeAmount == null || fadeStart != null) return;
+		fadeStart = performance.now();
+		if (fadeRaf === 0) fadeRaf = requestAnimationFrame(fadeTick);
+	};
+
+	onMount(() => () => {
+		if (fadeRaf !== 0) cancelAnimationFrame(fadeRaf);
+	});
 
 	const amountStyle = {
 		fontSize: PAYLINE_WIN_AMOUNT_FONT_SIZE * BITMAP_FONT_SCALE,
@@ -71,6 +108,8 @@
 			} else if (event.side) {
 				return;
 			}
+			fadeStart = null;
+			opacity = 1;
 			activeAmount = event.amount;
 			activeAnchor = event.anchor;
 		},
@@ -79,30 +118,30 @@
 			if (side) {
 				if (props.side !== side) return;
 			}
-			activeAmount = null;
-			activeAnchor = null;
+			beginAmountFade();
 		},
 		paylineClearAll: (event) => {
 			const side = event && 'side' in event ? event.side : undefined;
 			if (side) {
 				if (props.side !== side) return;
 			}
-			activeAmount = null;
-			activeAnchor = null;
+			beginAmountFade();
 		},
 	});
 </script>
 
 {#if activeAmount != null && activeAnchor && anchorLayout}
-	<ResponsiveCurrencyBitmapText
-		anchor={0.5}
-		eventMode="none"
-		x={anchorLayout.x}
-		y={anchorLayout.y}
-		amount={activeAmount}
-		bookEvent
-		bodyFontVariant="prostoi"
-		maxWidth={anchorLayout.maxWidth}
-		style={amountStyle}
-	/>
+	<Container alpha={opacity}>
+		<ResponsiveCurrencyBitmapText
+			anchor={0.5}
+			eventMode="none"
+			x={anchorLayout.x}
+			y={anchorLayout.y}
+			amount={activeAmount}
+			bookEvent
+			bodyFontVariant="prostoi"
+			maxWidth={anchorLayout.maxWidth}
+			style={amountStyle}
+		/>
+	</Container>
 {/if}

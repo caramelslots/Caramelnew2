@@ -147,13 +147,22 @@ function expandDependencies() {
 				}
 			}
 
-			// sounds.json references audio files
-			if (rel === 'audio/sounds.json') {
+			// audio json manifests reference audio files via src[]
+			if (rel === 'audio/sounds.json' || rel === 'audio/music_main.json' || rel === 'audio/music_bonus.json') {
 				try {
 					const json = JSON.parse(text);
-					const urls = JSON.stringify(json);
-					for (const fmt of ['sounds.ogg', 'sounds.mp3', 'sounds.m4a', 'sounds.ac3']) {
-						if (urls.includes(fmt) || true) {
+					const srcList = Array.isArray(json.src) ? json.src : [];
+					for (const src of srcList) {
+						const base = String(src).split('/').pop();
+						if (base) {
+							const before = referencedPaths.size;
+							addRef(`audio/${base}`);
+							if (referencedPaths.size > before) changed = true;
+						}
+					}
+					// legacy companion formats for sounds.mp3
+					if (rel === 'audio/sounds.json') {
+						for (const fmt of ['sounds.ogg', 'sounds.m4a', 'sounds.ac3']) {
 							const before = referencedPaths.size;
 							addRef(`audio/${fmt}`);
 							if (referencedPaths.size > before) changed = true;

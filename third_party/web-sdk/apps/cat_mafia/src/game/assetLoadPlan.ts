@@ -9,6 +9,8 @@ export const LOADER_BATCH_1_KEYS = [
 	'mainBackground',
 	'boardFrame',
 	'sound',
+	'musicMain',
+	'musicBonus',
 	'transition',
 	'prostoiWhiteFont',
 	'H1',

@@ -7,6 +7,7 @@ import { createPlayer, type Player } from './createPlayer.svelte';
 import { createPlayMusic } from './createPlayMusic.svelte';
 import { createPlayLoop } from './createPlayLoop.svelte';
 import { createPlayOnce } from './createPlayOnce.svelte';
+import { createMultiHowl, mergeLoadedAudio } from './createMultiHowl';
 import type { FadeOptions, RateOptions, StopOptions } from './types';
 
 function createSound<TSoundName extends string>() {
@@ -23,15 +24,11 @@ function createSound<TSoundName extends string>() {
 		once: Player<TSoundName, PlayOnce>;
 	};
 
-	const load = (loadedAudioValue: LoadedAudio<TSoundName>) => {
-		// loadedAudio
-		loadedAudio = loadedAudioValue;
+	const load = (loadedAudioValue: LoadedAudio<TSoundName> | LoadedAudio<TSoundName>[]) => {
+		const packs = Array.isArray(loadedAudioValue) ? loadedAudioValue : [loadedAudioValue];
+		loadedAudio = mergeLoadedAudio<TSoundName>(packs);
 
-		const howl = new Howl({
-			src: loadedAudio.src,
-			sprite: loadedAudio.sprite,
-			volume: 1,
-		});
+		const howl = createMultiHowl(packs);
 		// players
 		players = {
 			music: createPlayer<TSoundName, PlayMusic>({ loadedAudio, loop: true, howl, createPlay: createPlayMusic<TSoundName> }), // prettier-ignore
@@ -51,9 +48,8 @@ function createSound<TSoundName extends string>() {
 			document.removeEventListener('visibilitychange', onVisibilityStateChange);
 
 			if (players) {
+				// music/loop/once share one Howl (or MultiHowl) instance
 				players.music.howl.unload();
-				players.loop.howl.unload();
-				players.once.howl.unload();
 			}
 		};
 

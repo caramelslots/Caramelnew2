@@ -9,10 +9,13 @@
 	const context = getContext();
 
 	onMount(() => {
-		const loadedAudio = $state.snapshot(
-			context.stateApp.loadedAssets['sound'],
-		) as LoadedAudio<SoundName>;
-		const { destroy } = sound.load(loadedAudio);
+		const loadedAssets = $state.snapshot(context.stateApp.loadedAssets);
+		const packs = [
+			loadedAssets['musicMain'],
+			loadedAssets['musicBonus'],
+			loadedAssets['sound'],
+		] as LoadedAudio<SoundName>[];
+		const { destroy } = sound.load(packs);
 
 		return () => {
 			// Equivalent to onDestroy(); Leave this comment for searching.

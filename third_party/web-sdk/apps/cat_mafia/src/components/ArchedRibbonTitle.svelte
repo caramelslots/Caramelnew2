@@ -56,7 +56,7 @@
 		if (typeof document !== 'undefined') {
 			const ctx = document.createElement('canvas').getContext('2d');
 			if (ctx) {
-				ctx.font = `900 ${sizePx}px proxima-nova, sans-serif`;
+				ctx.font = `800 ${sizePx}px proxima-nova, sans-serif`;
 				for (const char of chars) {
 					const raw = Math.max(
 						ctx.measureText(char === ' ' ? '\u00a0' : char).width,
