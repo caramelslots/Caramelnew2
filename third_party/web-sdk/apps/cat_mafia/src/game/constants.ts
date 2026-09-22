@@ -1230,12 +1230,8 @@ export const DESKTOP_UI_LAYOUT = {
 export const PORTRAIT_UI_LAYOUT = {
 	refWidth: 800,
 	refHeight: 1422,
-	/** Gap from live desk bottom → WIN centre (ref px, + = down). Primary portrait tune. */
-	winBelowBoardGap: 42,
 	/** Buy/boost row top offset from board bottom (ref px, independent of WIN). */
 	buyPanelBelowBoard: 112,
-	/** Fine WIN nudge after winBelowBoardGap (ref px, + = down, − = up). */
-	winNudgeDown: 0,
 	/** Spin stack anchor below board when buy/boost hidden (free spins). */
 	freeSpinsSpinBelowBoard: 48,
 	/** Util-row center offset from screen bottom (ref px; ≈ iconRadius + 12px margin). */
@@ -1736,6 +1732,13 @@ export const MASCOT_TRANSITION_FADE_MS = 300;
 
 /** When the cloud transition starts becoming opaque (~0.3s in the 1.5s spine). */
 export const TRANSITION_THEME_SWITCH_DELAY_MS = 193;
+
+/**
+ * FS entry: keep the tir gallery (incl. animated flip target) until steam is
+ * fully covering the board centre. Earlier dismiss (~THEME_SWITCH) made the
+ * open target pop out before the cloud hid it.
+ */
+export const TRANSITION_TIR_DISMISS_DELAY_MS = 480;
 
 /**
  * Loader still → Pixi street swap under the opening cloud (later than theme

@@ -98,7 +98,8 @@
 			await ensureSkin(visible, gen);
 			if (gen !== syncGen) return;
 			context.stateGame.mascotCatSpineKey = visible;
-			await waitAnimationFrames(2);
+			// Wait for SpineProvider remount before dropping the idle atlas.
+			await waitAnimationFrames(6);
 			if (gen !== syncGen) return;
 			dropIdleSkin(visible);
 		})();

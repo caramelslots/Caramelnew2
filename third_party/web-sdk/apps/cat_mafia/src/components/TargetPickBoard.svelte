@@ -5,6 +5,7 @@
 <script lang="ts">
 	import { getContext } from '../game/context';
 	import { isPopoutSmallViewport } from '../game/constants';
+	import { stateGame } from '../game/stateGame.svelte';
 	import {
 		TARGET_BOARD_CONTENT,
 		TARGET_BOARD_SLOTS,
@@ -42,6 +43,10 @@
 	);
 	const spineSeat = $derived(props.spineSeat ?? null);
 	const spineNonce = $derived(props.spineNonce ?? 0);
+	/** Pixi flip still mounted (incl. held last frame until dismiss). */
+	const flippingSeats = $derived(
+		new Set(stateGame.targetShotFlips.map((f) => f.seatIndex)),
+	);
 
 	const syncPromptSize = () => {
 		const w = root?.clientWidth ?? 0;
@@ -109,7 +114,8 @@
 
 	{#each TARGET_BOARD_SLOTS as slot, i (i)}
 		{@const isFlipped = props.flipped[i] === true}
-		{@const isSpinning = spineSeat === i && spineNonce > 0}
+		{@const isSpinning =
+			(spineSeat === i && spineNonce > 0) || flippingSeats.has(i)}
 		<button
 			type="button"
 			class="target"
@@ -121,8 +127,8 @@
 			onclick={() => onClick(i)}
 			aria-label={`Target ${i + 1}`}
 		>
-			<!-- Stands + idle discs are Pixi (under the mascot). HTML keeps
-			     hit targets and the FS back face after flip. -->
+			<!-- Stands + idle discs are Pixi (under the mascot). HTML FS back
+			     only after dismiss clears the Pixi flip — not mid-hold. -->
 			{#if isFlipped && !isSpinning}
 				<span class="disc">
 					<span class="face back" style={`background-image:url('${TARGET_BOARD_SPRITES.back}')`}>

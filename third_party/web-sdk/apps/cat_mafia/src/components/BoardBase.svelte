@@ -20,7 +20,7 @@
 	type Props = {
 		/** When true, render only mystery reveal/collapse VFX (unmasked layer). */
 		mysteryFx?: boolean;
-		/** When true, render idle-tease / win pops (above the gold rails). */
+		/** When true, render idle-tease pops (above the gold rails, under paylines). */
 		idleBounce?: boolean;
 		/** When true, render landed PB/PS/PG above the gold rails (not while spinning). */
 		pawCoin?: boolean;
@@ -30,6 +30,11 @@
 		 * Spinning tiles stay on the masked board.
 		 */
 		fullColumn?: boolean;
+		/**
+		 * Winning cells (`win` / `winLift` / spotlight `postWinStatic`).
+		 * Drawn above the payline so the stroke passes under symbols that hit.
+		 */
+		abovePayline?: boolean;
 		/** Override reel board (Duel dual desks). Defaults to main stateGame.board. */
 		board?: ReelLike[];
 		/** Duel desk — SW × badge reads that side's sticky map. */
@@ -71,17 +76,20 @@
 	};
 
 	/**
-	 * Win celebrate + idle tease — above gold rails (BoardIdleBounceLayer).
-	 * `win` / `winLift` always lift so H3 flame/rays aren't clipped by dividers.
-	 * `postWinStatic` stays above only while spotlight is on — after clear,
-	 * celebrate cells snap back to `static` (idle) via clearWinSpotlight.
+	 * Idle tease stays under the payline. Winning cells are lifted separately
+	 * (`abovePayline`) so the stroke passes underneath them.
 	 */
-	const isAboveRails = (state: SymbolState) =>
+	const isIdleTease = (state: SymbolState) => !targetPickParking && state === 'idleBounce';
+
+	const isWinAboveLine = (state: SymbolState) =>
 		!targetPickParking &&
-		(state === 'idleBounce' ||
-			state === 'winLift' ||
-			state === 'win' ||
-			(state === 'postWinStatic' && spotlightHolding));
+		(state === 'winLift' || state === 'win' || (state === 'postWinStatic' && spotlightHolding));
+
+	/**
+	 * Win celebrate + idle tease — above gold rails, off the masked board.
+	 * `postWinStatic` stays lifted only while spotlight is on.
+	 */
+	const isAboveRails = (state: SymbolState) => isIdleTease(state) || isWinAboveLine(state);
 
 	const isPawName = (name: string) => name === 'PB' || name === 'PS' || name === 'PG';
 	/**
@@ -130,7 +138,8 @@
 	) => {
 		const state = reelSymbol.symbolState;
 		if (props.mysteryFx) return isMysteryFx(state);
-		if (props.idleBounce) return isAboveRails(state);
+		if (props.abovePayline) return isWinAboveLine(state);
+		if (props.idleBounce) return isIdleTease(state);
 		if (props.pawCoin) return isPawCoinAboveFrame(reelSymbol, reelMotion);
 		if (props.fullColumn) return isFullColumnAboveFrame(reelSymbol, reelMotion, reelIndex);
 		return (

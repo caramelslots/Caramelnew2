@@ -15,10 +15,11 @@
 	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
 
 	import { BITMAP_FONT_SCALE, WIN_HUD_COUNT_UP_MS, WIN_HUD_FONT_SIZE } from '../game/constants';
-	import { portraitScaleY, portraitWinHudLocalY } from '../game/portraitHudLayout';
+	import { portraitScaleY } from '../game/portraitHudLayout';
 	import { getContext } from '../game/context';
 	import { scaleMsByGameSpeed } from '../game/gameSpeed';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { getWinHudLocalPos } from '../game/winHudLayout';
 	import { getContextLayout } from 'utils-layout';
 
 	type Props = {
@@ -34,13 +35,8 @@
 	const H = $derived(ml.height);
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
 
-	/** Left of screen center so WIN sits with the gold nameplate. */
-	const WIN_HUD_X_OFFSET_RATIO = -0.012;
-
-	const winHudPos = $derived({
-		x: W * (0.5 + WIN_HUD_X_OFFSET_RATIO),
-		y: portraitWinHudLocalY(stateLayoutDerived, boardLayout),
-	});
+	/** Same board-fraction seat as desktop / duel (locks to the nameplate). */
+	const winHudPos = $derived(getWinHudLocalPos(boardLayout));
 
 	const winAmountTween = new Tween(stateBet.winBookEventAmount);
 	let hudTweenTarget: number | null = null;
@@ -103,7 +99,7 @@
 					prefix={context.i18nDerived.win().toUpperCase()}
 					amount={displayWinAmount}
 					bookEvent
-					maxWidth={W * 0.9}
+					maxWidth={boardLayout.visualWidth * 0.96}
 					minScale={0.5}
 					labelGap={winLabelGap}
 					style={WIN_TEXT_STYLE}

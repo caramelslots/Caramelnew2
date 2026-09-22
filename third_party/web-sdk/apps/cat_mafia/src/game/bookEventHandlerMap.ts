@@ -38,6 +38,7 @@ import {
 	MYSTERY_REVEAL_POST_DELAY_MS,
 	WIN_SPOTLIGHT_CLEAR_DELAY_MS,
 	TRANSITION_THEME_SWITCH_DELAY_MS,
+	TRANSITION_TIR_DISMISS_DELAY_MS,
 	WIN_HUD_COUNT_UP_MS,
 } from './constants';
 import { SUPER_WILD_PRESENT_MS, SUPER_WILD_STICKY_PRESENT_MS } from './superWildHtmlSpine';
@@ -1217,12 +1218,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateUi.freeSpinCounterTotal = bookEvent.totalFs;
 
 		// Steam covers the gallery, snap tir UI off, THEN night/mascot/drum.
+		// Wait past THEME_SWITCH so the animated flip target isn't visible
+		// popping out under a still-thin cloud.
 		const transitionPromise = eventEmitter.broadcastAsync({
 			type: 'transition',
 			gameType: 'freegame',
 			deferThemeSwitch: true,
 		});
-		await waitForTimeout(TRANSITION_THEME_SWITCH_DELAY_MS);
+		await waitForTimeout(TRANSITION_TIR_DISMISS_DELAY_MS);
 		await dismissTirAndUnloadGpu();
 		await waitAnimationFrames(3);
 		eventEmitter.broadcast({ type: 'transitionApplyTheme' });

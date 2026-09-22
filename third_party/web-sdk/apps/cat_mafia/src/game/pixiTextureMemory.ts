@@ -259,100 +259,23 @@ export const estimatePixiTextureMemory = (app?: Application | null): PixiTexture
 	};
 };
 
-type CanvasTextRenderer = {
-	canvasText?: {
-		reset?: () => void;
-		unload?: () => void;
-	};
-};
-
 /**
- * Drop Pixi CanvasText atlas pages left after Super Wild `Text` unmounts.
- * Does not touch named Assets (webp / labeled caps).
+ * Soft-park only. Pixi `canvasText.reset()` / `unload()` frees atlas TextureSources
+ * while HUD / SW `TightCanvasText` BindGroups still reference them →
+ * `Cannot read properties of null (reading '_resourceId')` and a frozen stage.
+ * Intentionally a no-op until a safe orphan sweep exists.
  */
-export const releaseCanvasTextGpu = (app?: Application | null) => {
-	const canvasText = (app?.renderer as CanvasTextRenderer | undefined)?.canvasText;
-	if (!canvasText) return;
-	try {
-		if (typeof canvasText.reset === 'function') canvasText.reset();
-		else if (typeof canvasText.unload === 'function') canvasText.unload();
-	} catch {
-		/* renderer already torn down */
-	}
-};
-
-const CANVAS_TEXT_ATLAS_DIMS = new Set([
-	'512x512',
-	'1024x512',
-	'1024x1024',
-	'2048x512',
-	'2048x1024',
-]);
-
-const sourceHasName = (source: TextureSource): boolean => {
-	if (source.label && !source.label.startsWith('tex#')) return true;
-	if (source._sourceOrigin) return true;
-	const resource = source.resource;
-	return Boolean(
-		resource &&
-			typeof resource === 'object' &&
-			'src' in resource &&
-			typeof (resource as { src?: unknown }).src === 'string' &&
-			(resource as { src: string }).src,
-	);
-};
-
-const isCanvasResource = (resource: unknown): boolean => {
-	if (!resource || typeof resource !== 'object') return false;
-	if (resource instanceof HTMLCanvasElement) return true;
-	return typeof OffscreenCanvas !== 'undefined' && resource instanceof OffscreenCanvas;
-};
-
-const isUnlabeledCanvasAtlas = (source: TextureSource): boolean => {
-	if (!source || source.destroyed) return false;
-	if (sourceHasName(source)) return false;
-	if (!isCanvasResource(source.resource)) return false;
-	const dim = `${source.pixelWidth | 0}x${source.pixelHeight | 0}`;
-	return CANVAS_TEXT_ATLAS_DIMS.has(dim);
-};
-
-const collectManagedSources = (app?: Application | null): TextureSource[] => {
-	const managed = (
-		app?.renderer as unknown as { texture?: { managedTextures?: TextureSource[] } } | undefined
-	)?.texture?.managedTextures;
-	return Array.isArray(managed) ? managed.filter((source) => source && !source.destroyed) : [];
-};
-
-const collectCachedSourceUids = (): Set<number> => {
-	const keep = new Set<number>();
-	const cache = getCacheMap();
-	if (!cache) return keep;
-	const into = new Map<number, TextureSource>();
-	for (const value of cache.values()) addSource(into, value);
-	for (const source of into.values()) keep.add(source.uid);
-	return keep;
+export const releaseCanvasTextGpu = (_app?: Application | null) => {
+	/* no-op */
 };
 
 /** Arabic HUD may keep one live CanvasText page. More than that is leftover tex#. */
 export const MAX_LIVE_CANVAS_TEXT_ATLASES = 1;
 
 /**
- * Base / bonus normal / duel: drop leaked CanvasText pages (tex# 4 MB).
- * Named webps, *-cap downscales, and feather masks are left alone.
+ * Was meant to drop leaked CanvasText atlas pages after mode / curtain changes.
+ * Hard reset/destroy races live BindGroups — keep as a no-op for stability.
  */
-export const releaseExcessCanvasTextGpu = (app?: Application | null) => {
-	const unlabeled = collectManagedSources(app).filter(isUnlabeledCanvasAtlas);
-	if (unlabeled.length <= MAX_LIVE_CANVAS_TEXT_ATLASES) return;
-
-	releaseCanvasTextGpu(app);
-
-	const cached = collectCachedSourceUids();
-	for (const source of unlabeled) {
-		if (source.destroyed || cached.has(source.uid)) continue;
-		try {
-			source.destroy();
-		} catch {
-			/* already released */
-		}
-	}
+export const releaseExcessCanvasTextGpu = (_app?: Application | null) => {
+	/* no-op — do not reset/destroy CanvasText GPU while the stage is live */
 };

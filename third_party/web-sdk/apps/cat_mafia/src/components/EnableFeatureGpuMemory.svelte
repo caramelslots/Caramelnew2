@@ -12,6 +12,7 @@
 		FS_CARTRIDGE_KEYS,
 		FS_OUTLINE_KEYS,
 		FS_POPUP_KEYS,
+		FS_POPUP_UNLOAD_DELAY_FRAMES,
 		shouldKeepDuelMascotGpu,
 		shouldKeepFsPopupGpu,
 		shouldKeepOutlineReelGpu,
@@ -87,7 +88,9 @@
 			} else {
 				const loaded = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
 				if (FS_POPUP_KEYS.some((key) => key in loaded)) {
-					await waitAnimationFrames(2);
+					// Wait for FreeSpinAnimation unmount before Assets.unload —
+					// too-early drop caused missing-key + `_resourceId` freezes.
+					await waitAnimationFrames(FS_POPUP_UNLOAD_DELAY_FRAMES);
 					if (gen !== syncGen) return;
 					const latest = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
 					if (FS_POPUP_KEYS.some((key) => key in latest) && !shouldKeepFsPopupGpu()) {

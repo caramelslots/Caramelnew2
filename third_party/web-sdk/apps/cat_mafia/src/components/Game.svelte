@@ -60,7 +60,6 @@
 	import TargetShootOverlay from './TargetShootOverlay.svelte';
 	import TargetShootDevOverlay from './TargetShootDevOverlay.svelte';
 	import TargetShotTrailHtml from './TargetShotTrailHtml.svelte';
-	import TargetFlipLabelHtml from './TargetFlipLabelHtml.svelte';
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinCounterPortraitHtml from './FreeSpinCounterPortraitHtml.svelte';
@@ -318,7 +317,6 @@
 <TargetShootOverlay />
 <TargetShootDevOverlay />
 <TargetShotTrailHtml />
-<TargetFlipLabelHtml />
 <FreeSpinIntro />
 <DevCheats />
 <DevButtons />

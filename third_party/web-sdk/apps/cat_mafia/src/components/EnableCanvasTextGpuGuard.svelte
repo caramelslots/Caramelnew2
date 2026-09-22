@@ -1,7 +1,8 @@
 <!--
-	Base, bonus normal, and duel must not keep leftover CanvasText atlas
-	pages (unlabeled tex# ~4 MB). Super drum labels are BitmapText now;
-	this sweeps orphans after mode / curtain changes.
+	CanvasText VRAM guard (historically reset/destroy unlabeled atlases).
+	Hard GPU drops raced live TightCanvasText BindGroups → `_resourceId` freeze
+	on FS Super Press-to-Continue. Sweep is a no-op; keep the effect for future
+	safe orphan detection without changing call sites.
 -->
 <script lang="ts">
 	import { getContextApp } from 'pixi-svelte';

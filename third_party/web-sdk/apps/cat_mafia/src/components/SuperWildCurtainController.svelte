@@ -154,7 +154,39 @@
 		'forearm1',
 		'forearm2',
 	]);
+	/**
+	 * Designer `win` / idle mix flash sunburst + green glows behind the cat
+	 * when the × drum lands. Keep them only for payline `activation` (👍).
+	 */
+	const SUPPRESS_BEHIND_CAT_GLOW_SLOTS = [
+		'Circle_rays_22',
+		'glow_green5',
+		'glow_green6',
+		'glow_green7',
+		'glow_green8',
+		'WILD_glow',
+		'WILD_glow copy',
+		'WILD_glow copy 2',
+		'WILD_glow copy 3',
+	] as const;
 	const HAND_ABOVE_WHEEL_NATIVE_S = SUPER_WILD_WIN_HAND_ABOVE_WHEEL_NATIVE_MS / 1000;
+
+	/** Kill mid-`win` / idle-mix ray flash; leave `activation` VFX alone. */
+	const suppressBehindCatGlow = () => {
+		if (activating) return;
+		const skeleton = spine.skeleton;
+		if (!skeleton) return;
+		for (const name of SUPPRESS_BEHIND_CAT_GLOW_SLOTS) {
+			const slot = skeleton.findSlot(name);
+			if (slot) slot.color.a = 0;
+		}
+		const vfx = skeleton.findBone('vfx');
+		if (vfx) {
+			vfx.scaleX = 1e-5;
+			vfx.scaleY = 1e-5;
+		}
+	};
+
 	const applyHandWheelDrawOrder = () => {
 		const skeleton = spine.skeleton;
 		if (!skeleton) return;
@@ -536,6 +568,8 @@
 			applyHandWheelDrawOrder();
 			// Replace Spine `win` shake with a plain spin-time wiggle.
 			applyPointerRotation(s, wheelSpinning);
+			// After anim apply — hide win/idle sunburst behind the cat (not activation).
+			suppressBehindCatGlow();
 		};
 		return () => {
 			clearAllTimers();

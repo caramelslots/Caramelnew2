@@ -42,7 +42,6 @@
 		WIN_HUD_COUNT_UP_MS,
 		WIN_HUD_FONT_SIZE,
 		isPopoutSmallViewport,
-		isPopoutViewport,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
 	import { computeDuelScreenLayout, getDuelPixiBoardLayout } from '../game/duelLayout';
@@ -50,6 +49,7 @@
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
 	import { getDuelBoardStack } from '../game/stateDuelBoards.svelte';
 	import { stateGame, type ReelSymbol } from '../game/stateGame.svelte';
+	import { getWinHudLocalPos } from '../game/winHudLayout';
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardFrame from './BoardFrame.svelte';
 	import BoardBase from './BoardBase.svelte';
@@ -165,17 +165,10 @@
 	});
 	const displayBankAmount = $derived(Math.round(bankTween.current));
 
-	/** Place WIN on the desk nameplate (same idea as base UiCashStacksLayout). */
+	/** Place WIN on the desk nameplate — board-fraction seat (same as base HUD). */
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
-	const isPopout = $derived(isPopoutViewport(canvasSizes));
-	const isPortrait = $derived(context.stateLayoutDerived.layoutType() === 'portrait');
-	/** Gap under playfield center → nameplate WIN (larger = lower on plate). PC only nudge. */
-	const winBelowBoardGap = $derived(isPortrait ? 34 : 34);
-	const winHudPos = $derived({
-		x: layout.x,
-		y: layout.y + layout.height * 0.5 * layout.scale + winBelowBoardGap * layout.scale,
-	});
+	const winHudPos = $derived(getWinHudLocalPos(layout));
 	/**
 	 * Popout S uses a much smaller mainLayout.scale — keep game-space font large
 	 * so on-screen WIN stays readable on the nameplate (0.45 was microscopic).
@@ -274,6 +267,7 @@
 	<MainContainer>
 		<BoardContainer {layout} disableCatZoom>
 			<PaylineOverlay side={props.side} />
+			<BoardBase abovePayline board={stack.board} duelSide={props.side} />
 			<PaylineWinAmounts side={props.side} />
 		</BoardContainer>
 	</MainContainer>
@@ -287,7 +281,7 @@
 				prefix={context.i18nDerived.win().toUpperCase()}
 				amount={displayBankAmount}
 				bookEvent
-				maxWidth={layout.width * layout.scale * 0.96}
+				maxWidth={layout.visualWidth * 0.96}
 				minScale={0.5}
 				labelGap={winLabelGap}
 				style={WIN_TEXT_STYLE}

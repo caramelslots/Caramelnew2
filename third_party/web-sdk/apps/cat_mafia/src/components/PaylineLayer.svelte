@@ -1,5 +1,6 @@
 <script lang="ts">
 	import BoardContainer from './BoardContainer.svelte';
+	import BoardBase from './BoardBase.svelte';
 	import PaylineOverlay from './PaylineOverlay.svelte';
 	import PaylineWinAmounts from './PaylineWinAmounts.svelte';
 	import { getContext } from '../game/context';
@@ -16,6 +17,7 @@
 {#if show}
 	<BoardContainer>
 		<PaylineOverlay />
+		<BoardBase abovePayline />
 		<PaylineWinAmounts />
 	</BoardContainer>
 {/if}

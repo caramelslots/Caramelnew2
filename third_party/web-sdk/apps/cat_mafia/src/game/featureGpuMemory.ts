@@ -4,8 +4,6 @@
  */
 
 import { Assets } from 'pixi.js';
-import type { TextureAtlas } from '@esotericsoftware/spine-core';
-import { SpineTexture } from '@esotericsoftware/spine-pixi-v8';
 import { stateBet, stateModal } from 'state-shared';
 import { getProcessed } from '../../../../packages/pixi-svelte/src/lib/assetLoad';
 
@@ -85,25 +83,6 @@ const spriteSrcUrl = (key: string): string | undefined => {
 	return typeof entry.src === 'string' ? entry.src : undefined;
 };
 
-const destroyAtlasGpuTextures = (atlasUrl: string) => {
-	let atlas: TextureAtlas | undefined;
-	try {
-		atlas = Assets.get(atlasUrl) as TextureAtlas | undefined;
-	} catch {
-		return;
-	}
-	if (!atlas?.pages?.length) return;
-	for (const page of atlas.pages) {
-		const pixiTex = (page.texture as SpineTexture | null)?.texture;
-		if (!pixiTex) continue;
-		try {
-			pixiTex.destroy(true);
-		} catch {
-			/* already released */
-		}
-	}
-};
-
 export const ensureFeatureKeyLoaded = async (
 	key: FeatureGpuKey,
 	loadedAssets: Record<string, unknown>,
@@ -139,6 +118,11 @@ export const ensureFeatureKeyLoaded = async (
 	return null;
 };
 
+/**
+ * Unload feature keys from `loadedAssets` + Assets cache.
+ * Does **not** call `destroy(true)` on atlas pages — that races live Spine/BindGroup
+ * and freezes the main Pixi ticker with `_resourceId` null errors.
+ */
 export const unloadFeatureKeys = (
 	keys: readonly FeatureGpuKey[],
 	loadedAssets: Record<string, unknown>,
@@ -148,8 +132,6 @@ export const unloadFeatureKeys = (
 		if (!(key in next)) continue;
 		const entry = assets[key];
 		if (entry?.type === 'spine') {
-			const atlasUrl = (entry.src as { atlas?: string })?.atlas;
-			if (atlasUrl) destroyAtlasGpuTextures(atlasUrl);
 			const urls = spineSrcUrls(key);
 			if (urls.length > 0) {
 				void Assets.unload(urls).catch(() => undefined);
@@ -175,3 +157,19 @@ export const ensureFeatureKeysLoaded = async (
 	}
 	return Object.keys(patch).length > 0 ? patch : null;
 };
+
+type LoadedAssetsBag = {
+	loadedAssets?: Record<string, unknown>;
+};
+
+/** Ensure `fsPopup` is in loadedAssets before FreeSpinAnimation mounts. */
+export const ensureFsPopupReady = async (stateApp: LoadedAssetsBag) => {
+	const loaded = (stateApp.loadedAssets ?? {}) as Record<string, unknown>;
+	if (loaded.fsPopup) return;
+	const patch = await ensureFeatureKeysLoaded(FS_POPUP_KEYS, loaded);
+	if (!patch) return;
+	stateApp.loadedAssets = { ...(stateApp.loadedAssets ?? {}), ...patch };
+};
+
+/** Frames to wait after keep→false before unloading fsPopup (outro unmount). */
+export const FS_POPUP_UNLOAD_DELAY_FRAMES = 6;

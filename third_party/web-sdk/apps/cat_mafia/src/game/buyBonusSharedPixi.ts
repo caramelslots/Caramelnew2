@@ -83,25 +83,6 @@ const evictCachedUrl = (url: string) => {
 	}
 };
 
-const destroyCachedAtlasGpu = (atlasUrl: string) => {
-	let atlas: TextureAtlas | undefined;
-	try {
-		atlas = PIXI.Assets.get(atlasUrl) as TextureAtlas | undefined;
-	} catch {
-		return;
-	}
-	if (!atlas?.pages?.length) return;
-	for (const page of atlas.pages) {
-		const pixiTex = (page.texture as SpineTexture | null)?.texture;
-		if (!pixiTex) continue;
-		try {
-			pixiTex.destroy(true);
-		} catch {
-			/* already released */
-		}
-	}
-};
-
 const atlasPagesLive = (atlasUrl: string) => {
 	try {
 		const atlas = PIXI.Assets.get(atlasUrl) as TextureAtlas | undefined;
@@ -124,11 +105,11 @@ const variantTexturesLive = (variant: BuyBonusSpineVariant) => {
 
 /**
  * Drop overlay-only atlas Cache after a WebGL teardown.
- * Never destroy(true) the shared white mascot — that atlas is the main-game cat.
+ * Never destroy(true) — that races the main Pixi BindGroups (`_resourceId`).
+ * Never touch the shared white mascot atlas (main-game cat).
  */
 const purgeBuyBonusAssetCache = async () => {
 	const urls = overlayOnlyUrls();
-	for (const url of urls) destroyCachedAtlasGpu(url);
 	try {
 		await PIXI.Assets.unload(urls);
 	} catch {

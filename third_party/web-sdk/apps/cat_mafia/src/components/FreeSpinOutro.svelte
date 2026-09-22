@@ -33,6 +33,7 @@
 	import ArchedLocaleText from './ArchedLocaleText.svelte';
 	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
 	import { scaleMsByGameSpeed } from '../game/gameSpeed';
+	import { ensureFsPopupReady } from '../game/featureGpuMemory';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { getFsOutroTotalWinText } from '../game/fsOutroBannerText';
 	import { stopWinLevelCountUpSounds } from '../game/bookEventHandlerMap';
@@ -50,6 +51,8 @@
 	let finishingOutro = $state(false);
 	let closing = $state(false);
 
+	const fsPopupReady = $derived(Boolean(context.stateApp.loadedAssets?.['fsPopup']));
+
 	const finishOutro = async () => {
 		if (finishingOutro) return;
 		finishingOutro = true;
@@ -63,11 +66,12 @@
 	};
 
 	context.eventEmitter.subscribeOnMount({
-		freeSpinOutroShow: () => {
+		freeSpinOutroShow: async () => {
 			show = true;
 			closing = false;
 			// Raise the Pixi stage over HTML HUD (spin / bet / balance).
 			stateGame.winOverlayActive = true;
+			await ensureFsPopupReady(context.stateApp);
 		},
 		freeSpinOutroHide: async () => {
 			show = false;
@@ -78,12 +82,13 @@
 		freeSpinOutroCountUp: async (emitterEvent) => {
 			finishingOutro = false;
 			closing = false;
+			stateGame.winOverlayActive = true;
+			await ensureFsPopupReady(context.stateApp);
 			waitForTimeout(scaleMsByGameSpeed(1000, stateGame.gameSpeed)).then(() => {
 				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });
 			});
 			winAmount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
-			stateGame.winOverlayActive = true;
 			stateGame.overlayDimAlpha = FS_OUTRO_DIM_ALPHA;
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},
@@ -91,7 +96,7 @@
 </script>
 
 <FadeContainer {show} zIndex={10}>
-	{#if winLevelData}
+	{#if winLevelData && fsPopupReady}
 		{@const duration = winLevelData.presentDuration}
 		{#key winAmount}
 			<WinCountUpProvider

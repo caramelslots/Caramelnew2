@@ -18,18 +18,13 @@
 	import UiCashStacksPortraitLayout from './UiCashStacksPortraitLayout.svelte';
 	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
 
-	import {
-		BITMAP_FONT_SCALE,
-		isPopoutSmallViewport,
-		isPopoutViewport,
-		WIN_HUD_COUNT_UP_MS,
-		WIN_HUD_FONT_SIZE,
-	} from '../game/constants';
+	import { BITMAP_FONT_SCALE, WIN_HUD_COUNT_UP_MS, WIN_HUD_FONT_SIZE } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { scaleMsByGameSpeed } from '../game/gameSpeed';
 	import { isAnyMenuOpen } from '../game/isAnyMenuOpen';
 	import { isLoaderScreenBlockingSpin } from '../game/isLoaderScreenBlockingSpin';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { getWinHudLocalPos } from '../game/winHudLayout';
 	import { getContextLayout } from 'utils-layout';
 
 	type Props = {
@@ -40,35 +35,14 @@
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 	const layoutType = $derived(stateLayoutDerived.layoutType());
-	const canvasSizes = $derived(stateLayoutDerived.canvasSizes());
-	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
-	const isPopout = $derived(isPopoutViewport(canvasSizes));
 	const useDesktopHud = $derived(layoutType !== 'portrait');
 	const spaceHoldDisabled = $derived(
 		isAnyMenuOpen() || isLoaderScreenBlockingSpin(context.stateLayout.showLoadingScreen),
 	);
 
-	const WIN_BELOW_BOARD_GAP = 80;
-	/** PC / laptop only — sit below the gold nameplate, slightly left of screen center. */
-	const WIN_HUD_DESKTOP_NUDGE = { x: -28, y: 4 } as const;
-	/** Popout L / S — raise WIN off the nameplate (S uses a larger game-px lift: scale is half of L). */
-	const WIN_HUD_POPOUT_L_NUDGE = { x: 0, y: -5 } as const;
-	const WIN_HUD_POPOUT_S_NUDGE = { x: 0, y: -5 } as const;
-	const ml = $derived(stateLayoutDerived.mainLayout());
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
-	const winHudNudge = $derived(
-		isPopoutSmall
-			? WIN_HUD_POPOUT_S_NUDGE
-			: isPopout
-				? WIN_HUD_POPOUT_L_NUDGE
-				: layoutType === 'desktop'
-					? WIN_HUD_DESKTOP_NUDGE
-					: { x: 0, y: 0 },
-	);
-	const winHudPos = $derived({
-		x: ml.width * 0.5 + winHudNudge.x,
-		y: boardLayout.y + boardLayout.height * 0.5 + WIN_BELOW_BOARD_GAP + winHudNudge.y,
-	});
+	/** Board-fraction anchor — same relative seat on desktop / laptop / popout. */
+	const winHudPos = $derived(getWinHudLocalPos(boardLayout));
 
 	/**
 	 * Under-board WIN: snap by default. Book handlers set `winHudCountUpPending`
@@ -141,7 +115,7 @@
 						prefix={context.i18nDerived.win().toUpperCase()}
 						amount={displayWinAmount}
 						bookEvent
-						maxWidth={boardLayout.width * 0.96}
+						maxWidth={boardLayout.visualWidth * 0.96}
 						minScale={0.5}
 						labelGap={winLabelGap}
 						style={WIN_TEXT_STYLE}

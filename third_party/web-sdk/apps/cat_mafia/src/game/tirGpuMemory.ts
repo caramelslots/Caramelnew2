@@ -98,25 +98,6 @@ const atlasPagesLive = (atlasUrl: string) => {
 	}
 };
 
-const destroyAtlasGpuTextures = (atlasUrl: string) => {
-	let atlas: TextureAtlas | undefined;
-	try {
-		atlas = Assets.get(atlasUrl) as TextureAtlas | undefined;
-	} catch {
-		return;
-	}
-	if (!atlas?.pages?.length) return;
-	for (const page of atlas.pages) {
-		const pixiTex = (page.texture as SpineTexture | null)?.texture;
-		if (!pixiTex) continue;
-		try {
-			pixiTex.destroy(true);
-		} catch {
-			/* already released */
-		}
-	}
-};
-
 export const isTirPixiLive = (opts: {
 	targetPickOpen: boolean;
 	targetPickSlide: number;
@@ -137,7 +118,8 @@ const unloadTirSpineKey = (
 	const urls = spineSrcUrls(key);
 	const atlasUrl = (assets[key] as { src?: { atlas?: string } })?.src?.atlas;
 	if (atlasUrl) {
-		destroyAtlasGpuTextures(atlasUrl);
+		// Assets.unload / cache evict only — destroy(true) races main-stage BindGroups
+		// when TIR drops under steam / before FS intro (Press to Continue → freeze).
 		forgetCappedAtlasImageSources(atlasUrl);
 	}
 	if (urls.length > 0) void evictCachedUrls(urls);
@@ -175,7 +157,6 @@ export const ensureTirPixiLoaded = async (
 			const loadSrc = spineSrcUrls(key);
 			const atlasUrl = (entry.src as { atlas?: string })?.atlas;
 			if (atlasUrl && !atlasPagesLive(atlasUrl)) {
-				destroyAtlasGpuTextures(atlasUrl);
 				await evictCachedUrls(loadSrc);
 			}
 
@@ -237,7 +218,6 @@ export const unloadTirPixiGpuAsync = async (
 			const urls = spineSrcUrls(key);
 			const atlasUrl = (assets[key] as { src?: { atlas?: string } })?.src?.atlas;
 			if (atlasUrl) {
-				destroyAtlasGpuTextures(atlasUrl);
 				forgetCappedAtlasImageSources(atlasUrl);
 			}
 			await evictCachedUrls(urls);

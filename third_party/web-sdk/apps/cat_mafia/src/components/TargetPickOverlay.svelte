@@ -249,10 +249,13 @@
 		});
 		onSpineResolve = null;
 
+		// Mark flipped for hit-lock / cabinet disc hide, but keep the Pixi flip
+		// spine on its last frame until `targetPickDismiss`. Clearing flips here
+		// handed off to the HTML FS face — when steam raises the Pixi stage
+		// above HTML (`above-html-ui`), that face vanished while the wood board
+		// and other discs stayed visible.
 		flipped = flipped.map((v, i) => (i === index ? true : v));
 		spineSeat = null;
-		stateGame.targetShotFlips = [];
-		stateGame.targetShotFlipLabels = {};
 
 		await mascotAfterShot;
 		stateGame.mascotPose = 'idle';

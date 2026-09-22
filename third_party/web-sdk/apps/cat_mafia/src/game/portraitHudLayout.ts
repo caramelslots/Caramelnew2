@@ -81,17 +81,6 @@ export const portraitHudBoardBottomLocal = (layoutDerived: LayoutDerived) => {
 	return ml.height * 0.5 + offsetY + halfH;
 };
 
-/** WIN label Y — anchored to live board bottom (same idea as desktop UiCashStacksLayout). */
-export const portraitWinHudLocalY = (
-	layoutDerived: LayoutDerived,
-	boardLayout: { y: number; visualHeight: number },
-) => {
-	const H = layoutDerived.mainLayout().height;
-	const gap = portraitScaleY(PORTRAIT_UI_LAYOUT.winBelowBoardGap, H);
-	const nudge = portraitScaleY(PORTRAIT_UI_LAYOUT.winNudgeDown, H);
-	return boardLayout.y + boardLayout.visualHeight / 2 + gap + nudge;
-};
-
 export type PortraitHudCanvas = {
 	buyPanelBottomCanvas: number;
 	spin: {

@@ -4,8 +4,6 @@
  */
 
 import { Assets } from 'pixi.js';
-import type { TextureAtlas } from '@esotericsoftware/spine-core';
-import { SpineTexture } from '@esotericsoftware/spine-pixi-v8';
 import { getProcessed } from '../../../../packages/pixi-svelte/src/lib/assetLoad';
 
 import assets from './assets';
@@ -58,32 +56,13 @@ export const ensureMascotCatSpineLoaded = async (
 	return processed as Record<string, unknown>;
 };
 
-const destroyAtlasGpuTextures = (atlasUrl: string) => {
-	let atlas: TextureAtlas | undefined;
-	try {
-		atlas = Assets.get(atlasUrl) as TextureAtlas | undefined;
-	} catch {
-		return;
-	}
-	if (!atlas?.pages?.length) return;
-	for (const page of atlas.pages) {
-		const pixiTex = (page.texture as SpineTexture | null)?.texture;
-		if (!pixiTex) continue;
-		try {
-			pixiTex.destroy(true);
-		} catch {
-			/* already released */
-		}
-	}
-};
-
 export const unloadMascotCatSpine = (
 	key: MascotCatSpineKey,
 	loadedAssets: Record<string, unknown>,
 ): Record<string, unknown> => {
 	if (!(key in loadedAssets)) return loadedAssets;
-	const atlasUrl = (assets[key].src as { atlas?: string }).atlas;
-	if (atlasUrl) destroyAtlasGpuTextures(atlasUrl);
+	// Assets.unload only — never destroy(true) while BindGroups may still hold
+	// the atlas (FS theme swap / intro dismiss → `_resourceId` freeze).
 	const urls = spineSrcUrls(key);
 	if (urls.length > 0) {
 		void Assets.unload(urls).catch(() => undefined);
