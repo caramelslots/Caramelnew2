@@ -4,7 +4,9 @@
 	`duelDog` uses the dog skeleton on the left desk (faces right toward the boards).
 -->
 <script lang="ts">
-	import { Container, SpineProvider, getContextApp } from 'pixi-svelte';
+	import { Container, Rectangle, SpineProvider, getContextApp } from 'pixi-svelte';
+
+	import { CAT_MEOW_SOUNDS, DOG_BARK_SOUNDS } from '../game/sound';
 
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
@@ -151,6 +153,27 @@
 			: null,
 	);
 
+	/** Body column only — the left overscan would cover the board edge. */
+	const pressHit = $derived(
+		box
+			? {
+					x: box.bodyLeft - box.left - box.width / 2,
+					y: -box.height / 2,
+					width: box.bodyWidth,
+					height: box.height,
+				}
+			: null,
+	);
+
+	let vocalIndex = 0;
+
+	const onMascotPress = () => {
+		const bank = useDogSpine ? DOG_BARK_SOUNDS : CAT_MEOW_SOUNDS;
+		const name = bank[vocalIndex % bank.length];
+		vocalIndex += 1;
+		context.eventEmitter.broadcast({ type: 'soundOnce', name, forcePlay: true });
+	};
+
 	let entranceDone = $state(false);
 	let alpha = $state(0);
 	let fadeRaf = 0;
@@ -218,6 +241,19 @@
 		zIndex={props.zIndex ?? 5}
 		sortableChildren
 	>
+		{#if pressHit}
+			<Rectangle
+				x={pressHit.x}
+				y={pressHit.y}
+				width={pressHit.width}
+				height={pressHit.height}
+				backgroundAlpha={0.001}
+				eventMode="static"
+				cursor="pointer"
+				zIndex={2}
+				onclick={onMascotPress}
+			/>
+		{/if}
 		<SpineProvider
 			key={spineKey}
 			x={transform.spineX}

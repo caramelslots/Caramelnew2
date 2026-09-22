@@ -9,7 +9,6 @@
 	import { BITMAP_FONT_SCALE, FONT_PROSTOI } from '../game/constants';
 	import type { SymbolState, RawSymbol } from '../game/types';
 	import type { DuelSide } from '../game/stateDuel.svelte';
-	import { getContext } from '../game/context';
 
 	type Props = {
 		x?: number;
@@ -29,7 +28,6 @@
 	};
 
 	const props: Props = $props();
-	const context = getContext();
 	const symbolInfo = $derived(getSymbolInfo({ rawSymbol: props.rawSymbol, state: props.state }));
 	const isSprite = $derived(symbolInfo.type === 'sprite');
 	const isCoinPaw = $derived(symbolInfo.type === 'coinPaw');
@@ -61,14 +59,7 @@
 		duelSide={props.duelSide}
 		x={props.x}
 		y={props.y}
-		listener={{
-			complete: props.oncomplete,
-			event: (_, event) => {
-				if (event.data?.name === 'wildExplode') {
-					context.eventEmitter?.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
-				}
-			},
-		}}
+		listener={{ complete: props.oncomplete }}
 	/>
 {/if}
 

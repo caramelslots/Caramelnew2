@@ -58,9 +58,13 @@
 		},
 		stopButtonClick: () => {
 			stopDisabled = true;
+			// Short-circuit remaining reel travel (same as SDK ButtonTurbo on stop).
+			stateBet.isTurbo = true;
 		},
 		stopButtonEnable: () => {
 			stopDisabled = false;
+			// Restore speed-tier turbo; keep Space-hold turbo if still held.
+			stateBet.isTurbo = stateBet.isSpaceHold || isSdkTurboSpin(stateGame.gameSpeed);
 		},
 	});
 
@@ -144,6 +148,8 @@
 		if (isAutoSpinModalOpen) return !canAffordSpin();
 		if (context.stateXstateDerived.isIdle()) return !canAffordSpin();
 		if (hasAutoBetCounter) return betKey === 'stop_disabled';
+		// Base game only: Space / Spin can finish the in-progress reel spin.
+		if (stateGame.gameType === 'basegame') return betKey === 'stop_disabled';
 		return true;
 	});
 

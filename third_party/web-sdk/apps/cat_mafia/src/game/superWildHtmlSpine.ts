@@ -122,6 +122,27 @@ export const SUPER_WILD_STICKY_PRESENT_MS =
 	SUPER_WILD_WIN_MS * SUPER_WILD_WIN_WHEEL_START_FRAC +
 	SUPER_WILD_WHEEL_SPIN_MS;
 /**
+ * Drum-rattle onset inside `sfx_wild_open_spin`.
+ * The clip's first ~0.55s is the curtain whoosh (peak ~250ms); the rattle
+ * starts here and runs through the wheel spin.
+ */
+const SUPER_WILD_SPIN_SOUND_ONSET_MS = 1620;
+/** Start the clip this long after `expanding`, so the rattle meets the drum. */
+export const SUPER_WILD_OPEN_SPIN_SOUND_DELAY_MS = Math.max(
+	0,
+	SUPER_WILD_OPEN_MS +
+		SUPER_WILD_OPEN_IDLE_MS +
+		SUPER_WILD_WIN_MS * SUPER_WILD_WIN_WHEEL_START_FRAC -
+		SUPER_WILD_SPIN_SOUND_ONSET_MS,
+);
+/** Drop-in has no `open` — the same rattle already lines up with the wheel. */
+export const SUPER_WILD_DROP_IN_SPIN_SOUND_DELAY_MS = Math.max(
+	0,
+	SUPER_WILD_STICKY_DROP_IN_MS +
+		SUPER_WILD_WIN_MS * SUPER_WILD_WIN_WHEEL_START_FRAC -
+		SUPER_WILD_SPIN_SOUND_ONSET_MS,
+);
+/**
  * Base next-spin: idle curtain slides under the board mask while reels scroll
  * (solid Spine art — never swaps to a 4-tile Wild.webp stack).
  * Duration is derived from reelSpinSpeed × DIST so the curtain keeps pace

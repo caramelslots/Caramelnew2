@@ -443,9 +443,9 @@ const boardRaw = () =>
 	board.map((reel) => reel.reelState.symbols.map((reelSymbol) => reelSymbol.rawSymbol));
 
 const scatterLandIndex = () => {
-	if (stateGame.scatterCounter > 5) return 5;
+	if (stateGame.scatterCounter >= 4) return 4;
 	if (stateGame.scatterCounter < 1) return 1;
-	return stateGame.scatterCounter as 1 | 2 | 3 | 4 | 5;
+	return stateGame.scatterCounter as 1 | 2 | 3 | 4;
 };
 
 /** True while any reel is scrolling or landing (pre-spin, spin, bounce). */

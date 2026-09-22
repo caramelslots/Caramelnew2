@@ -173,7 +173,7 @@
 
 		// Wait for the `gun_shot` muzzle-flash beat before launching the projectile.
 		await wait(TARGET_SHOT_MUZZLE_DELAY_MS);
-		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_soot', forcePlay: true });
 
 		let seatCx = 0;
 		let seatCy = 0;
@@ -206,7 +206,9 @@
 				flyMs: curve.flyMs,
 			};
 			stateGame.targetShotFlight = nextFlight;
+			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_bullet_fly', forcePlay: true });
 			await wait(curve.flyMs);
+			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_target_hit', forcePlay: true });
 			// Keep flight through impact so Pixi stage stays above HTML seats
 			// (HTML overlay used to clear prop immediately; SpinePlayer kept going).
 			const landedNonce = nextFlight.nonce;
@@ -222,6 +224,7 @@
 
 		// Flip with the explosion burst (~67ms into `explosion_bullet`), not on land.
 		await wait(TARGET_SHOT_EXPLOSION_START_MS);
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_target_spining', forcePlay: true });
 		phase = 'reveal';
 		spineSeat = index;
 		spineNonce += 1;
@@ -301,6 +304,8 @@
 			// Draw / aim as soon as target mode starts — parallel with the board slide,
 			// not after the targets have finished arriving.
 			stateGame.mascotPose = 'gunStatIdle';
+			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_lift_targets' });
+			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_revolver_in' });
 			const mascotAimReady = (async () => {
 				await wait(MASCOT_GUN_STAT_IDLE_MS);
 				stateGame.mascotPose = 'aim';

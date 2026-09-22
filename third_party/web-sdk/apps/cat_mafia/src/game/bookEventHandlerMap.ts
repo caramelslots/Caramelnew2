@@ -41,7 +41,12 @@ import {
 	TRANSITION_TIR_DISMISS_DELAY_MS,
 	WIN_HUD_COUNT_UP_MS,
 } from './constants';
-import { SUPER_WILD_PRESENT_MS, SUPER_WILD_STICKY_PRESENT_MS } from './superWildHtmlSpine';
+import {
+	SUPER_WILD_DROP_IN_SPIN_SOUND_DELAY_MS,
+	SUPER_WILD_OPEN_SPIN_SOUND_DELAY_MS,
+	SUPER_WILD_PRESENT_MS,
+	SUPER_WILD_STICKY_PRESENT_MS,
+} from './superWildHtmlSpine';
 import { ensureSwCurtainsForBoard } from './swCurtainGuard';
 import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
 import { startFsCongPreload } from './uiHtmlAssetManifest';
@@ -303,6 +308,18 @@ const setDuelSuperWildCurtain = (
 	stateDuel.superWildCurtains = list;
 };
 
+/** Whoosh with the curtain, rattle with the drum. Already-open columns stay silent. */
+const playWildOpenSpin = (delayMs: number) => {
+	const fire = () =>
+		eventEmitter.broadcast({
+			type: 'soundOnce',
+			name: 'sfx_wild_open_spin',
+			forcePlay: true,
+		});
+	if (delayMs <= 0) fire();
+	else setTimeout(fire, delayMs);
+};
+
 /**
  * winInfo amounts are evaluated with SW mults neutralized.
  * Lying SW = plain wild → show raw totalWin on phase-1 (no upcoming product).
@@ -477,6 +494,7 @@ const applyStickySwPreExpanded = async () => {
 		stateGame.superWildCurtains = makeCurtains(intro ? 'dropIn' : 'done');
 		if (intro) stateGame.stickySwIntroPending = false;
 		if (intro) {
+			playWildOpenSpin(SUPER_WILD_DROP_IN_SPIN_SOUND_DELAY_MS);
 			await waitForTimeout(SUPER_WILD_STICKY_PRESENT_MS);
 			for (const reel of stickyReels) {
 				expandSuperWildColumn(reel, stateGame.stickySwByReel[reel] || 2);
@@ -755,7 +773,6 @@ export const stopWinLevelCountUpSounds = () => {
 		'bgm_winlevel_superwin',
 		'bgm_winlevel_epic',
 		'bgm_winlevel_max',
-		'bgm_winlevel_mega',
 	] as const) {
 		eventEmitter.broadcast({ type: 'soundStop', name });
 	}
@@ -1428,6 +1445,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 				if (!alreadyOpen) {
 					setDuelSuperWildCurtain(side, expand.reel, expand.mult, 'expanding', expand.row);
+					playWildOpenSpin(SUPER_WILD_OPEN_SPIN_SOUND_DELAY_MS);
 					await waitForTimeout(SUPER_WILD_PRESENT_MS);
 				}
 				expandDuelSuperWildColumn(getDuelBoardStack(side), expand.reel, expand.mult);
@@ -1441,7 +1459,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				setDuelSuperWildCurtain(side, expand.reel, expand.mult, 'done', expand.row);
 			}
 
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
 			await waitForGameSpeed(SW_OPEN_SETTLE_MS, stateGame.gameSpeed);
 			// Keep opened curtain spine visible (idle) until the next reveal.
 			if (willShowCurtain) {
@@ -1521,6 +1538,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 					'expanding',
 					lyingSwOriginRow(expand.reel, expand.row),
 				);
+				playWildOpenSpin(SUPER_WILD_OPEN_SPIN_SOUND_DELAY_MS);
 				await waitForTimeout(SUPER_WILD_PRESENT_MS);
 			}
 			expandSuperWildColumn(expand.reel, expand.mult);
@@ -1537,7 +1555,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			setBaseSuperWildCurtain(expand.reel, expand.mult, 'done', expand.row);
 		}
 
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
 		await waitForGameSpeed(SW_OPEN_SETTLE_MS, stateGame.gameSpeed);
 		// Keep opened curtain spine visible (idle) until the next reveal.
 		if (willShowCurtain) {
@@ -1560,11 +1577,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				chamber: stateGame.drumCount + i,
 				key: baseKey + i,
 			}));
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 			eventEmitter.broadcast({ type: 'boardFramePulse' });
 			await waitForTimeout(BULLET_FLY_LEAD_MS);
 
 			stateGame.mascotPose = 'gunStart';
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_revolver_open' });
 			const gunStarted = performance.now();
 			await waitForTimeout(Math.max(0, BULLET_FLY_CATCH_MS - BULLET_DISAPPEAR_EARLY_MS));
 			stateGame.bulletFly = null;
@@ -1575,6 +1592,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 			// Seat drum UI when each clip finishes (`gun_start` = 1st, `load` = extras).
 			const seatNextChamber = () => {
+				eventEmitter.broadcast({
+					type: 'soundOnce',
+					name: 'sfx_revolver_load',
+					forcePlay: true,
+				});
 				stateGame.drumCount = Math.min(DRUM_MAX, stateGame.drumCount + 1);
 				const seated = getDrumLastFilledChamberIndex(stateGame.drumCount);
 				if (seated !== null) {
@@ -1717,7 +1739,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Mascot clips always play at 1× (not turbo-scaled); waits match wall-clock clip length.
 		stateGame.pawCoinBagVisible = true;
 		stateGame.mascotPose = 'hatCatch';
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 		eventEmitter.broadcast({ type: 'boardFramePulse' });
 		// Wait until brim-out shake hold (~1.90s), then fly coins into the hat.
 		// Hat clip is truncated here so it does NOT return until coins land.
@@ -1787,6 +1808,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			stateDuel.playerSide = preservedSide;
 		} else {
 			eventEmitter.broadcast({ type: 'duelPickShow' });
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 			await eventEmitter.broadcastAsync({ type: 'duelPickUpdate' });
 			eventEmitter.broadcast({ type: 'duelPickHide' });
 		}
@@ -2156,7 +2178,6 @@ export const playMysteryRevealBatch = async (bookEvents: BookEventOfType<'myster
 	// question mark for a guaranteed window before the reveal.
 	await waitForGameSpeed(MYSTERY_REVEAL_PRE_DELAY_MS, stateGame.gameSpeed);
 
-	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_win' });
 	await eventEmitter.broadcastAsync({
 		type: 'boardMysteryRevealBatch',
 		reveals: bookEvents.map((bookEvent) => ({

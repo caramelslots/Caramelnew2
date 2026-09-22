@@ -321,7 +321,7 @@
 		})();
 
 		await wait(TARGET_SHOT_MUZZLE_DELAY_MS);
-		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_soot', forcePlay: true });
 
 		// Drum shake+advance only after `gun_shot` finishes — still parallel with flip.
 		drumCyclePromise = (async () => {
@@ -368,7 +368,9 @@
 				flyMs: curve.flyMs,
 			};
 			stateGame.targetShotFlight = nextFlight;
+			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_bullet_fly', forcePlay: true });
 			await wait(curve.flyMs);
+			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_target_hit', forcePlay: true });
 			const landedNonce = nextFlight.nonce;
 			void (async () => {
 				await wait(TARGET_SHOT_IMPACT_MS);
@@ -381,6 +383,7 @@
 		}
 
 		await wait(TARGET_SHOT_EXPLOSION_START_MS);
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_target_spining', forcePlay: true });
 		const center = shootBoard?.getSeatCenter(index);
 		beginSeatFlip({
 			index,
@@ -460,6 +463,8 @@
 			show = true;
 
 			stateGame.mascotPose = 'gunStatIdle';
+			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_lift_targets' });
+			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_revolver_in' });
 			const mascotAimReady = (async () => {
 				await wait(MASCOT_GUN_STAT_IDLE_MS);
 				stateGame.mascotPose = 'aim';

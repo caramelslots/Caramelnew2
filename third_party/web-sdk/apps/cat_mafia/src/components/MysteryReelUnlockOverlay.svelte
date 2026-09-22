@@ -40,14 +40,6 @@
 			rewardSpins = event.rewardSpins;
 			visible = true;
 
-			// Звук celebration. Используем существующий sfx_winlevel_substantial
-			// (premium "you won" звон) — позже можно заменить на dedicated
-			// sfx_mystery_unlock когда audio asset будет добавлен.
-			context.eventEmitter.broadcast({
-				type: 'soundOnce',
-				name: 'sfx_winlevel_substantial',
-			});
-
 			await new Promise((resolve) => setTimeout(resolve, HOLD_MS));
 			visible = false;
 			// Ждём пока outro fade закончится — тогда event-handler в

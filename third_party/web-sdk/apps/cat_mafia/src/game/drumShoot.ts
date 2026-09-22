@@ -8,6 +8,7 @@ import {
 	isDrumChamberLive,
 	withDrumBulletOrient,
 } from './revolverDrumLayout';
+import { eventEmitter } from './eventEmitter';
 import { stateGame } from './stateGame.svelte';
 
 /** Left/right drum kick duration — keep in sync with `.cylinder.shake` CSS. */
@@ -25,6 +26,11 @@ export const syncDrumLoadRotation = () => {
 
 /** Rotate one chamber CCW (decreasing CSS degrees). */
 const spinDrumCcw = async (wait: WaitFn) => {
+	eventEmitter.broadcast({
+		type: 'soundOnce',
+		name: 'sfx_revolver_barrell_spining',
+		forcePlay: true,
+	});
 	stateGame.drumRotationDeg -= DRUM_STEP_DEG;
 	await wait(DRUM_SPIN_MS);
 };

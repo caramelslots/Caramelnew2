@@ -221,6 +221,7 @@
 		})();
 
 		await wait(TARGET_SHOT_MUZZLE_DELAY_MS);
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_soot', forcePlay: true });
 
 		if (hit) {
 			flipAnim = pickTargetFlipAnim({ x: hit.offsetX, y: hit.offsetY });
@@ -249,7 +250,9 @@
 				svgPath: curve.svgPath,
 				flyMs: curve.flyMs,
 			};
+			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_bullet_fly', forcePlay: true });
 			await wait(curve.flyMs);
+			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_target_hit', forcePlay: true });
 		} else {
 			await wait(480);
 		}
@@ -258,6 +261,7 @@
 
 		// Flip with the explosion burst (~67ms into `explosion_bullet`), not on land.
 		await wait(TARGET_SHOT_EXPLOSION_START_MS);
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_target_spining', forcePlay: true });
 		spineSeat = index;
 		spineNonce += 1;
 		const flipMs = TARGET_BOARD_PICK_FLIP_MS_BY_ANIM[flipAnim];

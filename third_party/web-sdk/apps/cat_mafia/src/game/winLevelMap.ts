@@ -2,17 +2,17 @@ import { SECOND } from 'constants-shared/time';
 
 /**
  * BGM segment lengths in `static/assets/audio/sounds.json` (ms).
- * Source timestamps (mm:ss.mmm):
- *   Big          03:25.130 → 03:31.492
- *   Super        03:31.970 → 03:38.377  (audible ~6407 ms; file span includes pre-Epic gap)
- *   Epic         03:39.034 → 03:45.359
- *   Sensational  03:45.893 → 03:55.287  (loops during count-up)
+ * SOUNDS_MEOWFIA.opus (see designer_assets/SOUND_MAP_MEOWFIA.md):
+ *   Big          00:01.000 → 00:07.433
+ *   Super        00:08.500 → 00:14.957
+ *   Epic         00:16.000 → 00:22.361
+ *   Sensational  00:24.000 → 00:33.457  (loops during count-up)
  */
 export const WIN_BGM_MS = {
-	big: 6362,
-	superwin: 6407,
-	epic: 6325,
-	sensational: 9394,
+	big: 6433,
+	superwin: 6457,
+	epic: 6361,
+	sensational: 9457,
 } as const;
 
 /** Cumulative ladder time through Epic (Big + Super + Epic). */

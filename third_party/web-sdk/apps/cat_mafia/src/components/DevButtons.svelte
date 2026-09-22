@@ -270,6 +270,7 @@
 		await new Promise((r) => setTimeout(r, BULLET_FLY_LEAD_MS));
 
 		stateGame.mascotPose = 'gunStart';
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_revolver_open' });
 		const gunStarted = performance.now();
 		await new Promise((r) =>
 			setTimeout(r, Math.max(0, BULLET_FLY_CATCH_MS - BULLET_DISAPPEAR_EARLY_MS)),
@@ -283,6 +284,7 @@
 
 		// Seat drum UI when each clip finishes (`gun_start` = 1st, `load` = extras).
 		const seatNextChamber = () => {
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_revolver_load', forcePlay: true });
 			stateGame.drumCount = Math.min(DRUM_MAX_PREVIEW, stateGame.drumCount + 1);
 			const seated = getDrumLastFilledChamberIndex(stateGame.drumCount);
 			if (seated !== null) {
@@ -459,6 +461,7 @@
 		}
 
 		stateGame.mascotPose = 'gunStatIdle';
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_revolver_in' });
 		await new Promise((r) => setTimeout(r, MASCOT_GUN_STAT_IDLE_MS));
 		stateGame.mascotPose = 'aim';
 		await new Promise((r) => setTimeout(r, MASCOT_GUN_SHOT_AIM_MS));
@@ -469,6 +472,7 @@
 
 			stateGame.mascotPose = 'shoot';
 			stateGame.mascotAnimToken += 1;
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_soot', forcePlay: true });
 			await new Promise((r) => setTimeout(r, MASCOT_GUN_SHOT_MS));
 
 			await playDrumChamberShot((ms) => new Promise((r) => setTimeout(r, ms)));

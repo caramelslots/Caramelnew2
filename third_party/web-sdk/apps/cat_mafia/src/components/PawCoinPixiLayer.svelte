@@ -29,6 +29,7 @@
 		MASCOT_COIN_FLY_STAGGER_MS,
 	} from '../game/mascotHtmlSpine';
 	import { gameSpeedMultFor } from '../game/gameSpeed';
+	import { COIN_TURN_SOUNDS } from '../game/sound';
 	import { COIN_PAW_SPINE_SIZE_RATIOS } from '../game/coinSpriteSheet';
 	import { coinPawSkinForTier } from '../game/coinHtmlSpine';
 	import { stateDuel } from '../game/stateDuel.svelte';
@@ -87,6 +88,10 @@
 	const flyDurationMs = $derived(MASCOT_COIN_FLY_DURATION_MS / speedMult);
 	const flyStaggerMs = $derived(MASCOT_COIN_FLY_STAGGER_MS / speedMult);
 	const anticipateMs = $derived(MASCOT_COIN_ANTICIPATE_MS / speedMult);
+	/** Pull the coin-turn tick forward so it lands on the pop, not after it. */
+	const APPEAR_SOUND_LEAD_MS = 160;
+	/** Brim entry in `flyState` (`t > 0.8`, sink from 0.85). */
+	const HAT_HIT_FLY_T = 0.82;
 
 	let flyNow = $state(0);
 	let flyOrigin = $state<number | null>(null);
@@ -99,9 +104,15 @@
 		const origin = performance.now();
 		flyOrigin = origin;
 		flyNow = origin;
+		const hitAt = anticipateMs + flyDurationMs * HAT_HIT_FLY_T;
+		let playedHit = false;
 		let raf = 0;
 		const tick = (now: number) => {
 			flyNow = now;
+			if (!playedHit && now - origin >= hitAt) {
+				playedHit = true;
+				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_coins_fly_in_hat' });
+			}
 			raf = requestAnimationFrame(tick);
 		};
 		raf = requestAnimationFrame(tick);
@@ -113,6 +124,7 @@
 
 	$effect(() => {
 		const list = cells;
+		const speed = speedMult;
 		if (list.length === 0) {
 			appearOrigin = null;
 			return;
@@ -121,14 +133,24 @@
 		appearOrigin = origin;
 		appearNow = origin;
 		const maxDelay = Math.max(...list.map((c) => c.appearDelayMs));
+		const played = new Set<number>();
 		let raf = 0;
 		const tick = (now: number) => {
 			appearNow = now;
-			if (now - origin < maxDelay + 100) {
+			const elapsed = now - origin;
+			for (let i = 0; i < list.length; i++) {
+				if (played.has(i)) continue;
+				const at = list[i].appearDelayMs / speed - APPEAR_SOUND_LEAD_MS;
+				if (elapsed < at) continue;
+				played.add(i);
+				const name = COIN_TURN_SOUNDS[i % COIN_TURN_SOUNDS.length];
+				context.eventEmitter.broadcast({ type: 'soundOnce', name, forcePlay: true });
+			}
+			if (elapsed < maxDelay / speed + 100) {
 				raf = requestAnimationFrame(tick);
 			}
 		};
-		raf = requestAnimationFrame(tick);
+		tick(origin);
 		return () => cancelAnimationFrame(raf);
 	});
 

@@ -8,56 +8,82 @@ export type MusicName =
 	| 'bgm_winlevel_big'
 	| 'bgm_winlevel_epic'
 	| 'bgm_winlevel_max'
-	| 'bgm_winlevel_mega'
 	| 'bgm_winlevel_superwin';
 
+/** Sprites in `static/assets/audio/sounds.json` (SOUNDS_MEOWFIA.opus). */
 export type SoundEffectName =
 	| 'jng_intro_fs'
-	| 'sfx_cat_slow'
 	| 'sfx_bigwin_coinloop'
 	| 'sfx_btn_general'
 	| 'sfx_btn_minus'
 	| 'sfx_btn_plus'
 	| 'sfx_btn_spin'
+	| 'sfx_bullet_fly'
+	| 'sfx_cat_1'
+	| 'sfx_cat_2'
+	| 'sfx_cat_3'
+	| 'sfx_cat_4'
+	| 'sfx_cat_5'
+	| 'sfx_cat_slow'
+	| 'sfx_coin_1'
+	| 'sfx_coin_2'
+	| 'sfx_coin_3'
+	| 'sfx_coin_4'
+	| 'sfx_coin_5'
+	| 'sfx_coins_fly_in_hat'
+	| 'sfx_dog_1'
+	| 'sfx_dog_2'
+	| 'sfx_dog_3'
+	| 'sfx_dog_4'
+	| 'sfx_dog_5'
+	| 'sfx_dog_6'
 	| 'sfx_fs_respins'
-	| 'sfx_multiplier_combine_a'
-	| 'sfx_multiplier_combine_b'
-	| 'sfx_multiplier_explosion_a'
-	| 'sfx_multiplier_explosion_b'
-	| 'sfx_multiplier_explosion_c'
+	| 'sfx_lift_targets'
 	| 'sfx_multiplier_landing'
-	| 'sfx_multiplier_reset'
-	| 'sfx_multiplier_up'
-	| 'sfx_multiplier_update'
-	| 'sfx_multiplier_win'
 	| 'sfx_reel_stop_1'
-	| 'sfx_reel_stop_2'
-	| 'sfx_reel_stop_3'
-	| 'sfx_reel_stop_4'
-	| 'sfx_reel_stop_5'
-	| 'sfx_royals_landing'
-	| 'sfx_scatter_reveal'
+	| 'sfx_revolver_barrell_spining'
+	| 'sfx_revolver_in'
+	| 'sfx_revolver_load'
+	| 'sfx_revolver_open'
 	| 'sfx_scatter_stop_1'
 	| 'sfx_scatter_stop_2'
 	| 'sfx_scatter_stop_3'
 	| 'sfx_scatter_stop_4'
-	| 'sfx_scatter_stop_5'
-	| 'sfx_scatter_win'
 	| 'sfx_scatter_win_v2'
+	| 'sfx_soot'
 	| 'sfx_superfreespin'
-	| 'sfx_symbols_landing'
-	| 'sfx_wild_explode'
-	| 'sfx_winlevel_end'
-	| 'sfx_winlevel_nice'
-	| 'sfx_winlevel_small'
-	| 'sfx_winlevel_standard'
-	| 'sfx_winlevel_substantial'
-	| 'sfx_youwon_panel'
+	| 'sfx_target_hit'
+	| 'sfx_target_spining'
 	| 'sfx_transition_steam'
-	| 'tumble_win_1'
-	| 'tumble_win_2'
-	| 'tumble_win_3'
-	| 'tumble_win_4';
+	| 'sfx_wild_open_spin'
+	| 'sfx_winlevel_small'
+	| 'sfx_youwon_panel';
+
+/** Paw-coin flip, one voice per appearing coin (cycles after five). */
+export const COIN_TURN_SOUNDS = [
+	'sfx_coin_1',
+	'sfx_coin_2',
+	'sfx_coin_3',
+	'sfx_coin_4',
+	'sfx_coin_5',
+] as const satisfies readonly SoundEffectName[];
+
+export const CAT_MEOW_SOUNDS = [
+	'sfx_cat_1',
+	'sfx_cat_2',
+	'sfx_cat_3',
+	'sfx_cat_4',
+	'sfx_cat_5',
+] as const satisfies readonly SoundEffectName[];
+
+export const DOG_BARK_SOUNDS = [
+	'sfx_dog_1',
+	'sfx_dog_2',
+	'sfx_dog_3',
+	'sfx_dog_4',
+	'sfx_dog_5',
+	'sfx_dog_6',
+] as const satisfies readonly SoundEffectName[];
 
 export type SoundName = MusicName | SoundEffectName;
 
