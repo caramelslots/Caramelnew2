@@ -46,6 +46,9 @@
 		skin={symbolInfo.skin}
 		clip={symbolInfo.clip}
 		sizeRatio={symbolInfo.sizeRatios.width}
+		offsetX={'offsetX' in symbolInfo ? symbolInfo.offsetX : undefined}
+		inViewport={props.inViewport}
+		duelSide={props.duelSide}
 		oncomplete={props.oncomplete}
 	/>
 {:else if isSprite}

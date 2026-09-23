@@ -22,7 +22,8 @@
 
 	const props: Props = $props();
 
-	const LETTER_SPACING_EM = 0.06;
+	/** Same tracking as under-board WIN (`WinHudHtmlOverlay`). */
+	const LETTER_SPACING_EM = 0.08;
 
 	const formatParts = (bookAmount: number) => {
 		const parts = amountToLayoutParts(bookAmount, {
@@ -89,16 +90,19 @@
 </span>
 
 <style lang="scss">
+	/* Match under-board WIN face exactly (`WinHudHtmlOverlay`). */
 	.duel-bank-total {
 		display: inline-flex;
 		align-items: baseline;
 		justify-content: center;
-		gap: 0.3em;
+		gap: 0.35em;
 		max-width: 100%;
 		overflow: hidden;
 		white-space: nowrap;
 		pointer-events: none;
 		user-select: none;
+		filter: drop-shadow(0 1px 0 #e8c878) drop-shadow(0 3px 0 #4a3008)
+			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
 	}
 
 	.duel-bank-prefix,
@@ -106,17 +110,14 @@
 		font-family: 'proxima-nova', sans-serif;
 		font-weight: 800;
 		font-synthesis: none;
-		letter-spacing: 0.06em;
+		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		line-height: 1;
-		color: #e0a838;
-		paint-order: stroke fill;
-		-webkit-font-smoothing: antialiased;
-		-webkit-text-stroke: 0.045em rgba(40, 18, 4, 0.94);
-		text-shadow:
-			0 0.04em 0 rgba(200, 150, 60, 0.45),
-			0 0.08em 0 rgba(70, 42, 8, 0.9),
-			0 0.12em 0.2em rgba(0, 0, 0, 0.5);
+		color: #e8b84a;
+		background: linear-gradient(180deg, #f0d070 0%, #e0a838 38%, #c07014 72%, #8a4e0c 100%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
 	}
 
 	.duel-bank-amount {

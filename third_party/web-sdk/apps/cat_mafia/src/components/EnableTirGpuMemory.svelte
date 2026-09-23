@@ -11,6 +11,7 @@
 		ensureTirPixiLoaded,
 		isTirPixiLive,
 		TIR_SPINE_KEYS,
+		TIR_UNLOAD_DELAY_FRAMES,
 		unloadTirPixiGpuAsync,
 		waitAnimationFrames,
 	} from '../game/tirGpuMemory';
@@ -60,7 +61,7 @@
 		if (devPreview.forceShowTargetBoard) return;
 
 		void (async () => {
-			await waitAnimationFrames(2);
+			await waitAnimationFrames(TIR_UNLOAD_DELAY_FRAMES);
 			if (gen !== syncGen) return;
 			if (liveNow()) return;
 			if (devPreview.forceShowTargetBoard) return;

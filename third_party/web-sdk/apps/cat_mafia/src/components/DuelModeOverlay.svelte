@@ -34,7 +34,7 @@
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
-	import { computeDuelScreenLayout, getDuelSpinCounterPos } from '../game/duelLayout';
+	import { computeDuelScreenLayout, getDuelSpinCounterBox } from '../game/duelLayout';
 	import {
 		DUEL_BANK_SCALE,
 		DUEL_BANK_SCALE_PAW_SRC,
@@ -44,6 +44,7 @@
 		DUEL_PICK_CARD,
 	} from '../game/duelAssets';
 	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
+	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
 	import PressToContinueHtml from './PressToContinueHtml.svelte';
 	import DuelPickMascot from './DuelPickMascot.svelte';
 	import DuelBankTotalBitmapHtml from './DuelBankTotalBitmapHtml.svelte';
@@ -68,8 +69,9 @@
 			boardLayout: baseBoardLayout,
 		}),
 	);
-	const dogCounterPos = $derived(getDuelSpinCounterPos(duelLayout, 'dog'));
-	const catCounterPos = $derived(getDuelSpinCounterPos(duelLayout, 'cat'));
+	const dogCounterBox = $derived(getDuelSpinCounterBox(duelLayout, 'dog'));
+	const catCounterBox = $derived(getDuelSpinCounterBox(duelLayout, 'cat'));
+	const plaqueUrl = HUD_ASSETS.autoplay;
 
 	let pickShow = $state(false);
 	let outroShow = $state(false);
@@ -109,10 +111,10 @@
 		if (sum <= 0) return 0.5;
 		return dog / sum;
 	});
-	/** Combined dog+cat bank (book cents) — plaque WIN $… (same copy as under-desk HUD). */
+	/** Combined dog+cat bank (book cents) — scale plaque shows TOTAL $… */
 	const combinedBankCents = $derived(stateDuel.dogTotal + stateDuel.catTotal);
 	const combinedBankAmount = $derived(money(combinedBankCents));
-	const combinedBankWinPrefix = $derived(context.i18nDerived.win().toUpperCase());
+	const combinedBankWinPrefix = 'TOTAL';
 	/** Paw centre: dog lead → left, cat lead → right; 50/50 pinned to VS. */
 	const bankPawLeftFrac = $derived.by(() => {
 		const share = dogBankShare;
@@ -222,59 +224,45 @@
 		data-test="duel-mode-overlay"
 		transition:fade={{ duration: 220 }}
 	>
-		<header class="duel-header">
-			<span class="title">DUEL</span>
-			{#if stateDuel.playerSide && stateDuel.phase === 'playing'}
-				<span class="playing-as" data-test="duel-playing-as">
-					{stateDuel.playerSide === 'cat' ? 'YOU · CAT' : 'YOU · DOG'}
-				</span>
-			{/if}
-		</header>
+		{#if !isPortrait}
+			<header class="duel-header">
+				<span class="title">DUEL</span>
+			</header>
+		{/if}
 
 		<div
 			class="counter dog-counter"
 			class:active={stateDuel.activeSide === 'dog'}
-			class:player={stateDuel.playerSide === 'dog'}
-			style:left="{dogCounterPos.left}px"
-			style:top="{dogCounterPos.top}px"
+			style:left="{dogCounterBox.left}px"
+			style:top="{dogCounterBox.top}px"
+			style:width="{dogCounterBox.width}px"
+			style:height="{dogCounterBox.height}px"
+			style:font-size="{dogCounterBox.fontSize}px"
+			style:background-image="url('{plaqueUrl}')"
 			data-test="duel-counter-dog"
+			aria-label="{stateDuel.dogSpinIndex}/{stateDuel.totalSpinsPerSide}"
 		>
-			{#if stateDuel.playerSide === 'dog'}
-				<span class="you-badge">YOU</span>
-			{/if}
-			<span class="counter-label">DOG</span>
 			<span class="counter-value">{stateDuel.dogSpinIndex}/{stateDuel.totalSpinsPerSide}</span>
 		</div>
-
-		{#if isPortrait}
-			<div
-				class="vs-badge"
-				style:left="{duelLayout.dogCenter.x}px"
-				style:top="{(duelLayout.dogCenter.y + duelLayout.catCenter.y) / 2}px"
-				aria-hidden="true"
-			>
-				VS
-			</div>
-		{/if}
 
 		<div
 			class="counter cat-counter"
 			class:active={stateDuel.activeSide === 'cat'}
-			class:player={stateDuel.playerSide === 'cat'}
-			style:left="{catCounterPos.left}px"
-			style:top="{catCounterPos.top}px"
+			style:left="{catCounterBox.left}px"
+			style:top="{catCounterBox.top}px"
+			style:width="{catCounterBox.width}px"
+			style:height="{catCounterBox.height}px"
+			style:font-size="{catCounterBox.fontSize}px"
+			style:background-image="url('{plaqueUrl}')"
 			data-test="duel-counter-cat"
+			aria-label="{stateDuel.catSpinIndex}/{stateDuel.totalSpinsPerSide}"
 		>
-			{#if stateDuel.playerSide === 'cat'}
-				<span class="you-badge">YOU</span>
-			{/if}
-			<span class="counter-label">CAT</span>
 			<span class="counter-value">{stateDuel.catSpinIndex}/{stateDuel.totalSpinsPerSide}</span>
 		</div>
 
 		{#if isPortrait}
 			<img
-				class="board-face top-right"
+				class="board-face top-right face-flip"
 				src={DUEL_DOG_FACE_AVATAR_SRC}
 				alt=""
 				draggable="false"
@@ -289,7 +277,7 @@
 					portraitAvatarSize * 0.18}px"
 			/>
 			<img
-				class="board-face bottom-left"
+				class="board-face bottom-left face-flip"
 				src={DUEL_CAT_FACE_AVATAR_SRC}
 				alt=""
 				draggable="false"
@@ -482,75 +470,62 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 0.25rem;
-		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
-		color: #f6e8c8;
 		z-index: 2;
+		pointer-events: none;
+		/* Same face as under-board WIN (`WinHudHtmlOverlay`). */
+		filter: drop-shadow(0 1px 0 #e8c878) drop-shadow(0 3px 0 #4a3008)
+			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
 	}
 
 	.duel-header .title {
-		letter-spacing: 0.22em;
-		font-size: clamp(1.15rem, 2.4vw, 1.55rem);
-		text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
-	}
-
-	.playing-as {
-		padding: 0.18rem 0.7rem;
-		border-radius: 999px;
-		font-size: 0.85rem;
+		font-family: 'proxima-nova', sans-serif;
+		font-weight: 800;
+		font-synthesis: none;
 		letter-spacing: 0.12em;
-		background: rgba(18, 10, 28, 0.82);
-		border: 1px solid rgba(255, 220, 140, 0.45);
+		font-size: clamp(1.85rem, 4.3vw, 3.35rem);
+		text-transform: uppercase;
+		line-height: 1;
+		color: #e8b84a;
+		background: linear-gradient(180deg, #f0d070 0%, #e0a838 38%, #c07014 72%, #8a4e0c 100%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
 	}
 
 	.counter {
 		position: absolute;
 		z-index: 2;
+		box-sizing: border-box;
 		display: flex;
 		align-items: center;
-		gap: 0.4rem;
-		padding: 0.28rem 0.65rem;
-		border-radius: 999px;
-		background: rgba(18, 10, 28, 0.82);
-		border: 1px solid rgba(255, 220, 140, 0.35);
+		justify-content: center;
+		padding: 0;
+		border: 0;
+		border-radius: 0;
+		background: transparent;
+		background-size: 100% 100%;
+		background-repeat: no-repeat;
+		background-position: center;
 		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
 		color: #f6e6c2;
-		line-height: 1.1;
-		/* Center the pill on the gold-rail anchor so taller portrait pills don't drift. */
-		transform: translateY(-50%);
+		line-height: 1;
+		/* Centre plaque on gold-rail anchor (same as phone FS autoplay frame). */
+		transform: translate(-50%, -50%);
+		pointer-events: none;
 	}
 
 	.counter.active {
-		border-color: rgba(255, 230, 160, 0.75);
 		filter: brightness(1.08);
 	}
 
-	.counter.player {
-		border-color: rgba(255, 210, 120, 0.95);
-		box-shadow:
-			0 0 0 1px rgba(255, 200, 100, 0.35),
-			0 0 14px rgba(255, 180, 60, 0.35);
-	}
-
-	.you-badge {
-		font-size: 0.7rem;
-		letter-spacing: 0.08em;
-		padding: 0.1rem 0.35rem;
-		border-radius: 999px;
-		background: rgba(255, 200, 90, 0.22);
-		border: 1px solid rgba(255, 220, 140, 0.55);
-		color: #ffe7a0;
-	}
-
-	.counter-label {
-		font-size: 0.85rem;
-		letter-spacing: 0.06em;
-		opacity: 0.9;
-		text-transform: uppercase;
-	}
-
 	.counter-value {
-		font-size: 1.05rem;
+		flex-shrink: 0;
 		font-variant-numeric: tabular-nums;
+		letter-spacing: 0.04em;
+		text-shadow:
+			0 0 8px rgba(255, 200, 100, 0.45),
+			0 2px 4px rgba(0, 0, 0, 0.9);
+		white-space: nowrap;
 	}
 
 	.duel-root.portrait .duel-header {
@@ -563,61 +538,14 @@
 		letter-spacing: 0.18em;
 	}
 
-	.duel-root.portrait .playing-as {
-		font-size: clamp(0.95rem, 3.8vw, 1.15rem);
-		padding: 0.22rem 0.85rem;
-	}
-
-	.duel-root.portrait .counter {
-		gap: 0.45rem;
-		padding: 0.4rem 0.85rem;
-	}
-
-	.duel-root.portrait .you-badge {
-		font-size: 0.8rem;
-		padding: 0.12rem 0.4rem;
-	}
-
-	.duel-root.portrait .counter-label {
-		font-size: clamp(0.95rem, 3.6vw, 1.15rem);
-	}
-
-	.duel-root.portrait .counter-value {
-		font-size: clamp(1.15rem, 4.2vw, 1.4rem);
-	}
-
 	.duel-root.popout-s .duel-header {
 		top: 0.2vh;
 		gap: 0.1rem;
 	}
 
 	.duel-root.popout-s .duel-header .title {
-		font-size: 0.7rem;
-		letter-spacing: 0.14em;
-	}
-
-	.duel-root.popout-s .playing-as {
-		font-size: 0.45rem;
-		padding: 0.05rem 0.35rem;
-		letter-spacing: 0.06em;
-	}
-
-	.duel-root.popout-s .counter {
-		gap: 0.2rem;
-		padding: 0.08rem 0.35rem;
-	}
-
-	.duel-root.popout-s .you-badge {
-		font-size: 0.35rem;
-		padding: 0.02rem 0.18rem;
-	}
-
-	.duel-root.popout-s .counter-label {
-		font-size: 0.45rem;
-	}
-
-	.duel-root.popout-s .counter-value {
-		font-size: 0.55rem;
+		font-size: clamp(1.1rem, 4.5vh, 1.6rem);
+		letter-spacing: 0.1em;
 	}
 
 	.board-face {
@@ -635,23 +563,11 @@
 		background: #2a1810;
 	}
 
-	.vs-badge {
-		position: absolute;
-		transform: translate(-50%, -50%);
-		width: 2.2rem;
-		height: 2.2rem;
-		border-radius: 50%;
-		display: grid;
-		place-items: center;
-		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
-		font-size: 0.7rem;
-		letter-spacing: 0.08em;
-		color: #f6e8c8;
-		background: rgba(20, 12, 30, 0.88);
-		border: 1px solid rgba(255, 220, 140, 0.4);
-		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
-		z-index: 2;
+	/* Static face art faces outward — mirror so dog looks left, cat looks right (toward desks). */
+	.board-face.face-flip {
+		transform: scaleX(-1);
 	}
+
 
 	.bank-ratio {
 		position: absolute;
@@ -683,6 +599,7 @@
 		filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.55));
 	}
 
+	/* Layout slot only — TOTAL/$ text keeps proxima-nova via DuelBankTotalBitmapHtml. */
 	.bank-ratio-total {
 		position: absolute;
 		left: calc(var(--plaque-left, 0.3) * 100%);
@@ -692,38 +609,12 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.38em;
 		margin: 0;
 		padding: 0 0.15em;
 		box-sizing: border-box;
-		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
-		font-weight: 400;
-		font-size: clamp(0.7rem, 3vh, 1.25rem);
-		letter-spacing: 0.04em;
-		line-height: 1;
-		text-align: center;
-		white-space: nowrap;
-		color: #ffcc44;
-		text-shadow:
-			0 0 8px rgba(255, 196, 48, 0.45),
-			0 1px 0 rgba(92, 58, 8, 0.75),
-			0 2px 6px rgba(0, 0, 0, 0.7);
 		pointer-events: none;
 		user-select: none;
-		/* WIN sum inside the plaque — scale art stays put. */
 		transform: translateY(0%);
-	}
-
-	.bank-ratio-total-label {
-		text-transform: uppercase;
-	}
-
-	.bank-ratio-total-amount {
-		font-weight: 400;
-	}
-
-	.duel-root.popout-s .bank-ratio-total {
-		font-size: clamp(0.62rem, 3.2vh, 1rem);
 	}
 
 .duel-modal {

@@ -34,11 +34,11 @@ export const i18nDerived = {
 	normalBonus: () => t('NORMAL_BONUS'),
 	superBonus: () => t('SUPER_BONUS'),
 	duelBonus: () => t('DUEL_BONUS'),
-	duelIntroRule1: (n: number) => t('DUEL_INTRO_RULE_1', { n }),
+	duelIntroRule1: () => t('DUEL_INTRO_RULE_1'),
 	duelIntroYourSide: (side: string) => t('DUEL_INTRO_YOUR_SIDE', { side }),
 	duelSideCat: () => t('DUEL_SIDE_CAT'),
 	duelSideDog: () => t('DUEL_SIDE_DOG'),
-	duelIntroRule2: (n: number) => t('DUEL_INTRO_RULE_2', { n }),
+	duelIntroRule2: () => t('DUEL_INTRO_RULE_2'),
 	duelIntroRule3: () => t('DUEL_INTRO_RULE_3'),
 	duelOutroLossTitle: () => t('DUEL_OUTRO_LOSS_TITLE'),
 	/** Labels only — amounts render separately as big gold numbers. */

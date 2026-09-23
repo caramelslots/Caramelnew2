@@ -112,6 +112,7 @@ export const isTirPixiLive = (opts: {
 const unloadTirSpineKey = (
 	key: TirSpineKey,
 	loadedAssets: Record<string, unknown>,
+	evictAssets: boolean,
 ): Record<string, unknown> => {
 	if (!(key in loadedAssets)) return loadedAssets;
 
@@ -122,20 +123,32 @@ const unloadTirSpineKey = (
 		// when TIR drops under steam / before FS intro (Press to Continue → freeze).
 		forgetCappedAtlasImageSources(atlasUrl);
 	}
-	if (urls.length > 0) void evictCachedUrls(urls);
+	// Desktop: park keys only. Assets.unload still frees TextureSources while
+	// Sprite/Spine BindGroups can linger → `Cannot read … 'alphaMode'`.
+	if (evictAssets && urls.length > 0) void evictCachedUrls(urls);
 
 	const next = { ...loadedAssets };
 	delete next[key];
 	return next;
 };
 
+/**
+ * Frames after tir UI unmount before Assets.unload.
+ * Too few → BindGroups still hold TextureSources → `alphaMode` / `_resourceId` null.
+ */
+export const TIR_UNLOAD_DELAY_FRAMES = 8;
+
 export const unloadTirPixiGpu = (loadedAssets: Record<string, unknown>): Record<string, unknown> => {
 	tirGpuParked = true;
+	const evictAssets = isPhoneForAtlasDownscale();
 	let next = loadedAssets;
 	for (const key of TIR_SPINE_KEYS) {
-		next = unloadTirSpineKey(key, next);
+		next = unloadTirSpineKey(key, next, evictAssets);
 	}
-	if (TIR_SPRITE_URLS.length > 0) void evictCachedUrls(TIR_SPRITE_URLS);
+	// Phone only: desktop keeps Assets cache (park via loadedAssets delete above).
+	if (evictAssets && TIR_SPRITE_URLS.length > 0) {
+		void evictCachedUrls(TIR_SPRITE_URLS);
+	}
 	return next;
 };
 
@@ -204,13 +217,15 @@ export const waitAnimationFrames = (n = 2) =>
 
 /**
  * Awaitable TIR GPU drop after the cabinet is off-screen.
- * Phone: destroy atlas textures + Assets.unload. Desktop: UI already gone; skip unload.
+ * Phone: Assets.unload after a multi-frame barrier.
+ * Desktop: park `loadedAssets` keys only — skip Assets.unload (BindGroup race).
  */
 export const unloadTirPixiGpuAsync = async (
 	loadedAssets: Record<string, unknown>,
 ): Promise<Record<string, unknown>> =>
 	withTirAssets(async () => {
 		tirGpuParked = true;
+		const evictAssets = isPhoneForAtlasDownscale();
 		let next = loadedAssets;
 
 		for (const key of TIR_SPINE_KEYS) {
@@ -220,12 +235,12 @@ export const unloadTirPixiGpuAsync = async (
 			if (atlasUrl) {
 				forgetCappedAtlasImageSources(atlasUrl);
 			}
-			await evictCachedUrls(urls);
+			if (evictAssets) await evictCachedUrls(urls);
 			next = { ...next };
 			delete next[key];
 		}
 
-		await evictCachedUrls(TIR_SPRITE_URLS);
+		if (evictAssets) await evictCachedUrls(TIR_SPRITE_URLS);
 		return next;
 	});
 
@@ -247,7 +262,8 @@ export const dismissTirAndUnloadGpu = async (opts?: DismissTirOptions) => {
 		eventEmitter.broadcast({ type: 'targetPickDismiss' });
 	}
 
-	await waitAnimationFrames(2);
+	// Let Sprite/Spine leave the stage + BindGroups before Assets.unload (phone).
+	await waitAnimationFrames(TIR_UNLOAD_DELAY_FRAMES);
 
 	if (
 		isTirPixiLive({

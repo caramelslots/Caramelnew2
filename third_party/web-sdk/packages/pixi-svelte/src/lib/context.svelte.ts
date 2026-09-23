@@ -3,6 +3,8 @@ import { setContext, getContext, onMount } from 'svelte';
 import * as SPINE_PIXI from '@esotericsoftware/spine-pixi-v8';
 
 import './patchSpinePipe';
+import './patchBindGroup';
+import './patchMaskFilter';
 
 import type { App as ContextApp } from './createApp.svelte';
 

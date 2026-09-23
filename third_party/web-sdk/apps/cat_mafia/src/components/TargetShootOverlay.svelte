@@ -49,7 +49,7 @@
 	} from '../game/shotBulletAssets';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { startFsCongPreload } from '../game/uiHtmlAssetManifest';
-	import { dismissTirAndUnloadGpu, ensureTirPixiInApp, PHONE_MAX_PARALLEL_TIR_FLIPS, waitAnimationFrames } from '../game/tirGpuMemory';
+	import { dismissTirAndUnloadGpu, ensureTirPixiInApp, PHONE_MAX_PARALLEL_TIR_FLIPS, TIR_UNLOAD_DELAY_FRAMES, waitAnimationFrames } from '../game/tirGpuMemory';
 	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
 	import {
 		TARGET_BOARD_PICK_FLIP_MS_BY_ANIM,
@@ -192,10 +192,12 @@
 		stateGame.targetPickOpen = false;
 		stateGame.targetPickSeatMode = 'six';
 		show = false;
+		// One frame so flip/cabinet sprites leave the stage before the unload barrier.
+		await waitAnimationFrames(1);
 		// Keep HTML drum until extra intro is gone — remounting Pixi drum
 		// under the 2K plaque still spikes phone memory.
 		await dismissTirAndUnloadGpu({ uiAlreadyDismissed: true });
-		await waitAnimationFrames(isPhoneForAtlasDownscale() ? 5 : 3);
+		await waitAnimationFrames(isPhoneForAtlasDownscale() ? TIR_UNLOAD_DELAY_FRAMES : 3);
 
 		if (extraFs > 0) {
 			await startFsCongPreload();

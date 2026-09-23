@@ -237,18 +237,35 @@ const duelMascotSize = (layout: DuelScreenLayout) => {
 	return { w, h };
 };
 
-/** Spin-counter pill — top-left of each desk; fractions so phones stay aligned. */
-export const getDuelSpinCounterPos = (layout: DuelScreenLayout, side: 'cat' | 'dog') => {
+/**
+ * Duel spin counter — same autoplay.webp plaque as phone FS (number only),
+ * anchored on the top gold rail to the right of each desk.
+ */
+export const getDuelSpinCounterBox = (layout: DuelScreenLayout, side: 'cat' | 'dog') => {
 	const center = side === 'cat' ? layout.catCenter : layout.dogCenter;
-	const deskLeft = center.x - layout.boardWidth * 0.5;
 	const deskTop = center.y - layout.boardHeight * 0.5;
-	// Anchor on the top gold rail (not a fixed px inset — that drifts by phone size).
-	const railY = layout.isPortrait ? layout.boardHeight * 0.042 : layout.boardHeight * 0.06;
-	const leftNudge = layout.isPortrait ? layout.boardWidth * 0.012 : 4;
+	const width = layout.boardWidth * PORTRAIT_FS_COUNTER_WIDTH_FRAC;
+	const height = width / AUTOPLAY_PILL_ASPECT;
+	const railYFrac = layout.isPortrait
+		? PORTRAIT_FS_COUNTER_CENTER_Y_FRAC
+		: Math.max(PORTRAIT_FS_COUNTER_CENTER_Y_FRAC, 0.06);
+	// Phone: FS plaque on the left of each desk; landscape keeps it on the right.
+	const offsetXFrac = layout.isPortrait
+		? -PORTRAIT_FS_COUNTER_OFFSET_X_FRAC
+		: PORTRAIT_FS_COUNTER_OFFSET_X_FRAC;
 	return {
-		left: deskLeft - leftNudge,
-		top: deskTop + railY,
+		left: center.x + layout.boardWidth * offsetXFrac,
+		top: deskTop + layout.boardHeight * railYFrac,
+		width,
+		height,
+		fontSize: height * 0.42,
 	};
+};
+
+/** @deprecated Prefer getDuelSpinCounterBox. */
+export const getDuelSpinCounterPos = (layout: DuelScreenLayout, side: 'cat' | 'dog') => {
+	const box = getDuelSpinCounterBox(layout, side);
+	return { left: box.left, top: box.top };
 };
 
 /**

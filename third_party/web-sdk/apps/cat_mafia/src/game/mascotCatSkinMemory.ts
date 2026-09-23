@@ -7,6 +7,7 @@ import { Assets } from 'pixi.js';
 import { getProcessed } from '../../../../packages/pixi-svelte/src/lib/assetLoad';
 
 import assets from './assets';
+import { isPhoneForAtlasDownscale } from './phoneSpineAtlasDownscale';
 import type { GameType } from './types';
 
 export const MASCOT_CAT_SPINE_WHITE = 'mascotCat' as const;
@@ -61,11 +62,13 @@ export const unloadMascotCatSpine = (
 	loadedAssets: Record<string, unknown>,
 ): Record<string, unknown> => {
 	if (!(key in loadedAssets)) return loadedAssets;
-	// Assets.unload only — never destroy(true) while BindGroups may still hold
-	// the atlas (FS theme swap / intro dismiss → `_resourceId` freeze).
-	const urls = spineSrcUrls(key);
-	if (urls.length > 0) {
-		void Assets.unload(urls).catch(() => undefined);
+	// Never destroy(true). Desktop: park only — Assets.unload still races batch
+	// BindGroups (idle bounce / mascot loop → `_resourceId` freeze). Phone: unload.
+	if (isPhoneForAtlasDownscale()) {
+		const urls = spineSrcUrls(key);
+		if (urls.length > 0) {
+			void Assets.unload(urls).catch(() => undefined);
+		}
 	}
 	const next = { ...loadedAssets };
 	delete next[key];

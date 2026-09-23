@@ -77,7 +77,16 @@
 
 	$effect(() => {
 		const f = flight;
-		if (!f || f.nonce < 1) return;
+		if (!f || f.nonce < 1) {
+			// Parent cleared flight (board close) — drop local spine before tir unload.
+			clearRaf();
+			clearImpactTimer();
+			phase = 'idle';
+			bulletAlpha = 0;
+			useImpactAnchor = false;
+			live = null;
+			return;
+		}
 		if (f.nonce === activeNonce && phase !== 'idle') return;
 
 		clearRaf();

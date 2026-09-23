@@ -118,7 +118,7 @@
 		{ id: 'characters', title: 'Characters', keys: 'cat dog mascot symbol anim clip' },
 		{ id: 'stage', title: 'Stage', keys: 'frame chrome duel target shoot cabinet bullet fly drum' },
 		{ id: 'wins', title: 'Wins', keys: 'win level precision hud stack payline coin' },
-		{ id: 'ui', title: 'UI & loading', keys: 'loading cards progress fs intro outro modal funds transition' },
+		{ id: 'ui', title: 'UI & loading', keys: 'loading cards progress fs intro outro duel modal funds transition' },
 	];
 
 	const readOpenAccordions = (): Set<AccordionId> => {
@@ -1746,6 +1746,17 @@
 			eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
 		});
 
+	/** Duel rules splash (Cat/Dog gets N spins) — Press to continue. */
+	const playDuelIntroPreview = (totalSpinsPerSide = 10) =>
+		guard(async () => {
+			eventEmitter.broadcast({ type: 'duelIntroShow' });
+			await eventEmitter.broadcastAsync({
+				type: 'duelIntroUpdate',
+				totalSpinsPerSide,
+			});
+			eventEmitter.broadcast({ type: 'duelIntroHide' });
+		});
+
 	/** Play cover spine only — no gameType / theme switch. */
 	const playTransitionPreview = () =>
 		guard(async () => {
@@ -2670,6 +2681,20 @@
 					</button>
 					<button type="button" disabled={busy} onclick={() => playFsEnd(6, 75_000)}>
 						FS End (Big)
+					</button>
+				</div>
+			</section>
+
+			<section>
+				<h4>Duel UI</h4>
+				<div class="grid">
+					<button
+						type="button"
+						disabled={busy}
+						title="Rules splash before duel: Cat/Dog get N spins"
+						onclick={() => playDuelIntroPreview(10)}
+					>
+						Duel Intro (10)
 					</button>
 				</div>
 			</section>

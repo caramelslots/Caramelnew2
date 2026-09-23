@@ -52,7 +52,7 @@
 		"sfx_cat_5": [157000, 500]
 	},
 	"src": [
-		"./assets/audio/SOUNDS_MEOWFIA.opus"
+		"./assets/audio/SOUNDS_MEOWFIA.mp3"
 	],
 	"config": {
 		"bgm_winlevel_big": { "volume": 1 },

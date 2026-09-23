@@ -33,15 +33,14 @@
 	const isPopout = $derived(isPopoutViewport(canvasSizes) && !isPopoutSmall);
 
 	let show = $state(false);
-	let totalSpinsPerSide = $state(10);
 	let oncomplete = $state(() => {});
 	let winnerEl = $state<HTMLParagraphElement | undefined>();
 	let winnerSlotEl = $state<HTMLDivElement | undefined>();
 	/** Shrink long locales so the punchline stays inside the gold frame. */
 	let winnerFitScale = $state(1);
 
-	const ruleCat = $derived(context.i18nDerived.duelIntroRule1(totalSpinsPerSide));
-	const ruleDog = $derived(context.i18nDerived.duelIntroRule2(totalSpinsPerSide));
+	const ruleCat = $derived(context.i18nDerived.duelIntroRule1());
+	const ruleDog = $derived(context.i18nDerived.duelIntroRule2());
 	const ruleWinner = $derived(context.i18nDerived.duelIntroRule3());
 
 	const MIN_WINNER_FIT = 0.55;
@@ -92,8 +91,7 @@
 			show = false;
 			stateGame.duelIntroActive = false;
 		},
-		duelIntroUpdate: async (event) => {
-			totalSpinsPerSide = event.totalSpinsPerSide;
+		duelIntroUpdate: async () => {
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},
 	});
@@ -221,8 +219,8 @@
 		width: 100%;
 		padding: 0 2%;
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.032);
-		font-weight: 700;
+		font-size: calc(var(--panel-width) * 0.042);
+		font-weight: 800;
 		line-height: 1.25;
 		letter-spacing: 0.02em;
 		color: #f8e6c4;
@@ -251,7 +249,8 @@
 		min-width: calc(var(--panel-width) * 0.08);
 		padding: 0.14em 0.5em;
 		border-radius: 999px;
-		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
+		font-family: 'proxima-nova', sans-serif;
+		font-weight: 800;
 		font-size: calc(var(--panel-width) * 0.024);
 		letter-spacing: 0.14em;
 		color: #ffe7a0;
@@ -293,9 +292,9 @@
 		width: max-content;
 		max-width: none;
 		padding: 0;
-		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
+		font-family: 'proxima-nova', sans-serif;
 		font-size: calc(var(--panel-width) * 0.04);
-		font-weight: 400;
+		font-weight: 800;
 		line-height: 1.12;
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
@@ -321,11 +320,11 @@
 		}
 
 		.rule-line {
-			font-size: calc(var(--panel-width) * 0.034);
+			font-size: calc(var(--panel-width) * 0.044);
 		}
 
 		.rule-winner {
-			font-size: calc(var(--panel-width) * 0.042);
+			font-size: calc(var(--panel-width) * 0.046);
 		}
 	}
 
@@ -344,15 +343,15 @@
 		}
 
 		.rule-line {
-			font-size: calc(var(--panel-width) * 0.034);
+			font-size: calc(var(--panel-width) * 0.044);
 		}
 
 		.rule-vs {
-			font-size: calc(var(--panel-width) * 0.026);
+			font-size: calc(var(--panel-width) * 0.028);
 		}
 
 		.rule-winner {
-			font-size: calc(var(--panel-width) * 0.038);
+			font-size: calc(var(--panel-width) * 0.042);
 		}
 	}
 

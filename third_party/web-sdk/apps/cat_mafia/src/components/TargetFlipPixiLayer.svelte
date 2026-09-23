@@ -106,7 +106,11 @@
 	});
 
 	$effect(() => {
-		if (!needsBack) return;
+		if (!needsBack) {
+			// Drop shared back ref before tir Assets.unload (destroyed source → alphaMode).
+			backTex = PIXI.Texture.EMPTY;
+			return;
+		}
 		if (backTex !== PIXI.Texture.EMPTY) return;
 		const url = TARGET_BOARD_SPRITES.back;
 		let cancelled = false;

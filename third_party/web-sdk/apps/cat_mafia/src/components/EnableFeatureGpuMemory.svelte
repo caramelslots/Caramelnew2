@@ -66,7 +66,7 @@
 			} else {
 				const loaded = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
 				if (DUEL_MASCOT_KEYS.some((key) => key in loaded)) {
-					await waitAnimationFrames(2);
+					await waitAnimationFrames(FS_POPUP_UNLOAD_DELAY_FRAMES);
 					if (gen !== syncGen) return;
 					const latest = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
 					if (DUEL_MASCOT_KEYS.some((key) => key in latest)) {
@@ -112,7 +112,12 @@
 			} else {
 				const loaded = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
 				if (FS_OUTLINE_KEYS.some((key) => key in loaded)) {
-					app.stateApp.loadedAssets = unloadFeatureKeys(FS_OUTLINE_KEYS, loaded);
+					await waitAnimationFrames(FS_POPUP_UNLOAD_DELAY_FRAMES);
+					if (gen !== syncGen) return;
+					const latest = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
+					if (FS_OUTLINE_KEYS.some((key) => key in latest) && !shouldKeepOutlineReelGpu()) {
+						app.stateApp.loadedAssets = unloadFeatureKeys(FS_OUTLINE_KEYS, latest);
+					}
 				}
 			}
 		})();

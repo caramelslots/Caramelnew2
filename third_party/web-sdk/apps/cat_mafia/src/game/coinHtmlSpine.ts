@@ -39,6 +39,7 @@ const COIN_PAW_VIEWPORT_ANIMS = {
 	appear: COIN_PAW_SPINE_VIEWPORT,
 	appear_flash: COIN_PAW_SPINE_VIEWPORT,
 	flash: COIN_PAW_SPINE_VIEWPORT,
+	idle: COIN_PAW_SPINE_VIEWPORT,
 	main_coin_fast: COIN_PAW_SPINE_VIEWPORT,
 	main_coin_slow: COIN_PAW_SPINE_VIEWPORT,
 } as const;

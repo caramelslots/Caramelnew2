@@ -1764,8 +1764,8 @@ export const MYSTERY_REVEAL_ANIMATION = 'Mystery/explosion';
 /**
  * Paw-coin board symbols — rendered by SymbolCoinPaw.svelte from the LIVE
  * coins spine (`assets/spines/symbols/coins/coins.*`, skins coin_bronze/silver/gold),
- * same 60fps source as the HTML paw overlay. `clip: 'loop'` is the frozen
- * rest face (main_coin_slow frame 0 — no constant motion on the board),
+ * same 60fps source as the HTML paw overlay. `clip: 'loop'` plays Spine
+ * `idle` while living idle is active (frozen off-turn like other symbols),
  * `clip: 'appear'` is the one-shot pop-in flip with flash (appear_flash)
  * played on land/bounce.
  * The coin disc occupies ≈272×295 of the 472×485 skeleton (bake viewport
@@ -1773,11 +1773,14 @@ export const MYSTERY_REVEAL_ANIMATION = 'Mystery/explosion';
  * land the disc at the shared on-cell fill (0.85 × 100px).
  */
 const PAW_COIN_SIZE_RATIOS = { width: 0.85 * (472 / 272), height: 0.85 * (485 / 295) };
+/** Nudge board paw disc left — Spine AABB sits slightly right of cell centre. */
+const PAW_COIN_OFFSET_X = -6;
 const makePawCoinRender = (skin: 'bronze' | 'silver' | 'gold', clip: 'loop' | 'appear') => ({
 	type: 'coinPaw' as const,
 	skin,
 	clip,
 	sizeRatios: PAW_COIN_SIZE_RATIOS,
+	offsetX: PAW_COIN_OFFSET_X,
 });
 const pawCoinBronze = makePawCoinRender('bronze', 'loop');
 const pawCoinSilver = makePawCoinRender('silver', 'loop');

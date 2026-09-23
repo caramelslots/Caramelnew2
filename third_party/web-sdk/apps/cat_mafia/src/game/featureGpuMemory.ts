@@ -9,6 +9,7 @@ import { getProcessed } from '../../../../packages/pixi-svelte/src/lib/assetLoad
 
 import assets from './assets';
 import { devPreview } from './devPreview.svelte';
+import { isPhoneForAtlasDownscale } from './phoneSpineAtlasDownscale';
 import { stateGame } from './stateGame.svelte';
 import { isDuelBetMode, stateDuel } from './stateDuel.svelte';
 
@@ -119,26 +120,30 @@ export const ensureFeatureKeyLoaded = async (
 };
 
 /**
- * Unload feature keys from `loadedAssets` + Assets cache.
- * Does **not** call `destroy(true)` on atlas pages — that races live Spine/BindGroup
- * and freezes the main Pixi ticker with `_resourceId` null errors.
+ * Drop feature keys from `loadedAssets`.
+ * Desktop: park only — `Assets.unload` still destroys TextureSources while batch
+ * BindGroups hold them → `_resourceId` / `alphaMode` null (often mid-idle).
+ * Phone: unload after the caller’s frame barrier (VRAM).
  */
 export const unloadFeatureKeys = (
 	keys: readonly FeatureGpuKey[],
 	loadedAssets: Record<string, unknown>,
 ): Record<string, unknown> => {
+	const evictAssets = isPhoneForAtlasDownscale();
 	let next = loadedAssets;
 	for (const key of keys) {
 		if (!(key in next)) continue;
 		const entry = assets[key];
-		if (entry?.type === 'spine') {
-			const urls = spineSrcUrls(key);
-			if (urls.length > 0) {
-				void Assets.unload(urls).catch(() => undefined);
+		if (evictAssets) {
+			if (entry?.type === 'spine') {
+				const urls = spineSrcUrls(key);
+				if (urls.length > 0) {
+					void Assets.unload(urls).catch(() => undefined);
+				}
+			} else {
+				const url = spriteSrcUrl(key);
+				if (url) void Assets.unload(url).catch(() => undefined);
 			}
-		} else {
-			const url = spriteSrcUrl(key);
-			if (url) void Assets.unload(url).catch(() => undefined);
 		}
 		next = { ...next };
 		delete next[key];

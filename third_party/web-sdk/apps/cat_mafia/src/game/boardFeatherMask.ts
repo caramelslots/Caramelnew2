@@ -18,6 +18,32 @@ const smoothstep = (t: number) => {
 	return x * x * (3 - 2 * x);
 };
 
+/** Frames after swap before GPU destroy — AlphaMask BindGroups must flush first. */
+const FEATHER_MASK_DESTROY_DELAY_FRAMES = 8;
+
+const pendingDestroy = new Set<PIXI.Texture>();
+
+const scheduleDestroy = (texture: PIXI.Texture) => {
+	if (pendingDestroy.has(texture)) return;
+	pendingDestroy.add(texture);
+	let left = FEATHER_MASK_DESTROY_DELAY_FRAMES;
+	const tick = () => {
+		left -= 1;
+		if (left > 0) {
+			requestAnimationFrame(tick);
+			return;
+		}
+		pendingDestroy.delete(texture);
+		if (texture.destroyed) return;
+		try {
+			texture.destroy(true);
+		} catch {
+			/* already released */
+		}
+	};
+	requestAnimationFrame(tick);
+};
+
 /**
  * Build an alpha-gradient mask texture (white RGB, soft alpha at mask edges).
  *
@@ -87,7 +113,11 @@ export const createBoardFeatherMaskTexture = (params: BoardFeatherMaskParams): P
 	return texture;
 };
 
+/**
+ * Free a feather mask after AlphaMask / BindGroups have dropped it.
+ * Immediate `destroy(true)` on bonus entry (mask size change) races the pipe.
+ */
 export const destroyBoardFeatherMaskTexture = (texture: PIXI.Texture | null | undefined) => {
-	if (!texture || texture === PIXI.Texture.WHITE) return;
-	texture.destroy(true);
+	if (!texture || texture === PIXI.Texture.WHITE || texture.destroyed) return;
+	scheduleDestroy(texture);
 };

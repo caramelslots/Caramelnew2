@@ -91,15 +91,19 @@
 		background-repeat: no-repeat;
 		background-position: center;
 		transform: translate(-50%, -50%);
-		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
+		font-family: 'proxima-nova', sans-serif;
+		font-weight: 800;
 		color: #f6e6c2;
 		line-height: 1;
 	}
 
 	.counter-value {
 		flex-shrink: 0;
-		font-variant-numeric: tabular-nums;
-		letter-spacing: 0.04em;
+		font-family: 'proxima-nova', sans-serif;
+		font-weight: 800;
+		font-synthesis: none;
+		font-variant-numeric: tabular-nums lining-nums;
+		letter-spacing: 0.06em;
 		text-shadow:
 			0 0 8px rgba(255, 200, 100, 0.45),
 			0 2px 4px rgba(0, 0, 0, 0.9);

@@ -76,7 +76,7 @@
 					context.stateGame.mascotCatSpineKey = MASCOT_CAT_SPINE_GRAY;
 					return;
 				}
-				await waitAnimationFrames(2);
+				await waitAnimationFrames(8);
 				if (gen !== syncGen) return;
 				loaded = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
 				if (MASCOT_CAT_SPINE_WHITE in loaded && !isBuyBonusWhiteMascotGpuLive()) {
@@ -99,7 +99,7 @@
 			if (gen !== syncGen) return;
 			context.stateGame.mascotCatSpineKey = visible;
 			// Wait for SpineProvider remount before dropping the idle atlas.
-			await waitAnimationFrames(6);
+			await waitAnimationFrames(8);
 			if (gen !== syncGen) return;
 			dropIdleSkin(visible);
 		})();

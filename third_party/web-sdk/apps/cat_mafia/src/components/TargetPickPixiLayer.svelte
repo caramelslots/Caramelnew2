@@ -144,13 +144,8 @@
 	};
 
 	const releaseLocalTextures = () => {
-		if (wood !== PIXI.Texture.EMPTY) {
-			try {
-				wood.destroy(false);
-			} catch {
-				/* GPU already released */
-			}
-		}
+		// Do not destroy Asset-backed textures here — Sprite BindGroups may still
+		// reference them for a frame; tir unload / park handles GPU next.
 		wood = PIXI.Texture.EMPTY;
 		holder = PIXI.Texture.EMPTY;
 		front = PIXI.Texture.EMPTY;

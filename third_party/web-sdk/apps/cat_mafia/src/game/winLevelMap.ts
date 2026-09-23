@@ -2,7 +2,7 @@ import { SECOND } from 'constants-shared/time';
 
 /**
  * BGM segment lengths in `static/assets/audio/sounds.json` (ms).
- * SOUNDS_MEOWFIA.opus (see designer_assets/SOUND_MAP_MEOWFIA.md):
+ * SOUNDS_MEOWFIA.mp3 (see designer_assets/SOUND_MAP_MEOWFIA.md):
  *   Big          00:01.000 → 00:07.433
  *   Super        00:08.500 → 00:14.957
  *   Epic         00:16.000 → 00:22.361

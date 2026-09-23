@@ -430,8 +430,8 @@
 			: 0xffffff}
 	>
 		<!-- Sprites: key by asset so H1Img→L3Img swaps cleanly (cheap remount).
-		     Paw coins: key by skin+clip so land(appear) → static(loop) remounts
-		     onto a clean frozen face instead of a stuck appear_flash frame.
+		     Paw coins: key by skin+clip so land(appear) → static(idle) remounts
+		     onto a clean idle loop instead of a stuck appear_flash frame.
 		     Spines: key by asset + clip + loop so win (one-shot) → postWinStatic
 		     (looping) remounts and keeps celebrating instead of freezing on the
 		     last bright frame. -->

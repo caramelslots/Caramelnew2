@@ -10,7 +10,7 @@ export type MusicName =
 	| 'bgm_winlevel_max'
 	| 'bgm_winlevel_superwin';
 
-/** Sprites in `static/assets/audio/sounds.json` (SOUNDS_MEOWFIA.opus). */
+/** Sprites in `static/assets/audio/sounds.json` (SOUNDS_MEOWFIA.mp3). */
 export type SoundEffectName =
 	| 'jng_intro_fs'
 	| 'sfx_bigwin_coinloop'
