@@ -345,15 +345,12 @@ const paylineAmountWithStickyProduct = ({
 };
 
 /**
- * Under-board WIN count-up:
- * - Bonus FS: any HUD increase (each spin / feature top-up).
- * - Base: only when `force` (right after SW curtain).
+ * Under-board WIN count-up on any HUD increase (base game + bonus FS).
+ * `force` is kept for call sites (post-SW) — same as any other increase now.
  */
-const maybeRequestWinHudCountUp = (nextAmount: number, force = false) => {
+const maybeRequestWinHudCountUp = (nextAmount: number, _force = false) => {
 	if (nextAmount <= stateBet.winBookEventAmount + 0.01) return;
-	if (force || stateGame.gameType === 'freegame' || devPreview.forceWinHudCountUp) {
-		stateGame.winHudCountUpPending = true;
-	}
+	stateGame.winHudCountUpPending = true;
 };
 
 /** Fill a reel column with Super Wild (padded visible rows). Always hide tiles. */
