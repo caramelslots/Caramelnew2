@@ -88,13 +88,8 @@
 	const flyDurationMs = $derived(MASCOT_COIN_FLY_DURATION_MS / speedMult);
 	const flyStaggerMs = $derived(MASCOT_COIN_FLY_STAGGER_MS / speedMult);
 	const anticipateMs = $derived(MASCOT_COIN_ANTICIPATE_MS / speedMult);
-	/** Pull the coin-turn tick forward so it lands on the pop, not after it. */
-	const APPEAR_SOUND_LEAD_MS = 160;
-	/**
-	 * `appear_flash` settle: second flip is edge-on at 0.535s, rotation stops
-	 * at 0.662s. Play the coin's voice again when it sits.
-	 */
-	const APPEAR_LAND_MS = 660;
+	/** `appear_flash` pop — the coin is visible here, not at the clip start. */
+	const APPEAR_POP_MS = 160;
 	/** Brim entry in `flyState` (`t > 0.8`, sink from 0.85). */
 	const HAT_HIT_FLY_T = 0.82;
 
@@ -139,29 +134,19 @@
 		appearNow = origin;
 		const maxDelay = Math.max(...list.map((c) => c.appearDelayMs));
 		const played = new Set<number>();
-		const landed = new Set<number>();
 		let raf = 0;
 		const tick = (now: number) => {
 			appearNow = now;
 			const elapsed = now - origin;
 			for (let i = 0; i < list.length; i++) {
+				if (played.has(i)) continue;
+				const at = (list[i].appearDelayMs + APPEAR_POP_MS) / speed;
+				if (elapsed < at) continue;
+				played.add(i);
 				const name = COIN_TURN_SOUNDS[i % COIN_TURN_SOUNDS.length];
-				if (!played.has(i)) {
-					const at = list[i].appearDelayMs / speed - APPEAR_SOUND_LEAD_MS;
-					if (elapsed >= at) {
-						played.add(i);
-						context.eventEmitter.broadcast({ type: 'soundOnce', name, forcePlay: true });
-					}
-				}
-				if (!landed.has(i)) {
-					const at = (list[i].appearDelayMs + APPEAR_LAND_MS) / speed;
-					if (elapsed >= at) {
-						landed.add(i);
-						context.eventEmitter.broadcast({ type: 'soundOnce', name, forcePlay: true });
-					}
-				}
+				context.eventEmitter.broadcast({ type: 'soundOnce', name, forcePlay: true });
 			}
-			if (elapsed < (maxDelay + APPEAR_LAND_MS) / speed + 80) {
+			if (elapsed < (maxDelay + APPEAR_POP_MS) / speed + 80) {
 				raf = requestAnimationFrame(tick);
 			}
 		};

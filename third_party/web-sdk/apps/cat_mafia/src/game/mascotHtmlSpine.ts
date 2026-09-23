@@ -257,6 +257,36 @@ export const MASCOT_DOG_SPINE_VIEWPORT = {
 } as const satisfies MascotSpineViewport;
 
 /**
+ * Click circle in spine world (Y-up), on the upper body.
+ * Projected with the viewport scale, so the same bone stays under the
+ * circle on every layout — base, portrait, popout, duel.
+ * Cat point matches the tuned base-game circle (0.2× box height, nudged
+ * left of the body column). Dog uses the same fraction of its frame.
+ */
+export const MASCOT_CAT_PRESS = { x: 56, y: 1250, radius: 661 } as const;
+export const MASCOT_DOG_PRESS = { x: -10, y: 40, radius: 461 } as const;
+
+export const spinePressToLocal = (
+	box: MascotScreenBox,
+	viewport: MascotSpineViewport,
+	press: { x: number; y: number; radius: number },
+) => {
+	const scale = getMascotPixiTransform(box, viewport).scale;
+	const vpCx = viewport.x + viewport.width * 0.5;
+	const vpCy = viewport.y + viewport.height * 0.5;
+	const cx = (press.x - vpCx) * scale;
+	const cy = (vpCy - press.y) * scale;
+	const radius = press.radius * scale;
+	return {
+		x: cx - radius,
+		y: cy - radius,
+		width: radius * 2,
+		height: radius * 2,
+		radius,
+	};
+};
+
+/**
  * Pixi transform that matches HTML SpinePlayer framing inside `box`
  * (fit-height + viewport pads). Apply `mirror` as Container.scale.x = -1.
  *

@@ -118,14 +118,30 @@ const withReelScrollSpeedMult = <T extends typeof SPIN_OPTIONS_DEFAULT>(
 	};
 };
 
+/** Next `sfx_coin_*` for the next reel that lands a paw coin this spin. */
+let pawCoinColumnSound = 0;
+const pawCoinSoundedReels = new Set<number>();
+const pawCoinLandTimers: ReturnType<typeof setTimeout>[] = [];
+/** Board `appear_flash` pop after the reel has stopped. Spine stays at 1×. */
+const PAW_COIN_LAND_POP_MS = 160;
+
+export const resetPawCoinColumnSounds = () => {
+	pawCoinColumnSound = 0;
+	pawCoinSoundedReels.clear();
+	for (const timer of pawCoinLandTimers) clearTimeout(timer);
+	pawCoinLandTimers.length = 0;
+};
+
 const onSymbolLand = ({
 	rawSymbol,
 	symbolIndex = 0,
 	activeSymbolCount = BOARD_DIMENSIONS.y,
+	reelIndex = 0,
 }: {
 	rawSymbol: RawSymbol;
 	symbolIndex?: number;
 	activeSymbolCount?: number;
+	reelIndex?: number;
 }) => {
 	if (!isVisibleBoardSymbolIndex(symbolIndex, activeSymbolCount)) return;
 
@@ -147,14 +163,17 @@ const onSymbolLand = ({
 	}
 
 	if (rawSymbol.name === 'PB' || rawSymbol.name === 'PS' || rawSymbol.name === 'PG') {
-		const name = COIN_TURN_SOUNDS[pawCoinLandSound % COIN_TURN_SOUNDS.length];
-		pawCoinLandSound += 1;
-		eventEmitter.broadcast({ type: 'soundOnce', name, forcePlay: true });
+		if (pawCoinSoundedReels.has(reelIndex)) return;
+		pawCoinSoundedReels.add(reelIndex);
+		const name = COIN_TURN_SOUNDS[pawCoinColumnSound % COIN_TURN_SOUNDS.length];
+		pawCoinColumnSound += 1;
+		pawCoinLandTimers.push(
+			setTimeout(() => {
+				eventEmitter.broadcast({ type: 'soundOnce', name });
+			}, PAW_COIN_LAND_POP_MS),
+		);
 	}
 };
-
-/** Cycles `sfx_coin_1`…`5` across paw-coin reel lands in one spin. */
-let pawCoinLandSound = 0;
 
 /** End slow-down / zoom once the spin's max bonus count has landed; snap remaining slow reels. */
 const cancelCatSlowIfMaxBonusesReached = () => {
@@ -192,7 +211,7 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 				}
 			}
 		},
-		onSymbolLand,
+		onSymbolLand: (args) => onSymbolLand({ ...args, reelIndex }),
 	});
 
 	reel.reelState.spinOptions = () => {

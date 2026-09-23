@@ -4,6 +4,7 @@
 	`duelDog` uses the dog skeleton on the left desk (faces right toward the boards).
 -->
 <script lang="ts">
+	import { Circle } from 'pixi.js';
 	import { Container, Rectangle, SpineProvider, getContextApp } from 'pixi-svelte';
 
 	import { CAT_MEOW_SOUNDS, DOG_BARK_SOUNDS } from '../game/sound';
@@ -32,8 +33,11 @@
 		getMascotPortraitScreenBox,
 		getMascotScreenBox,
 		getMascotPixiTransform,
+		MASCOT_CAT_PRESS,
+		MASCOT_DOG_PRESS,
 		MASCOT_DOG_SPINE_VIEWPORT,
 		MASCOT_SPINE_VIEWPORT,
+		spinePressToLocal,
 		type MascotPose,
 		type MascotScreenBox,
 	} from '../game/mascotHtmlSpine';
@@ -153,21 +157,26 @@
 			: null,
 	);
 
-	/** Body column only — the left overscan would cover the board edge. */
+	/** Ignore repeat presses so meows and barks cannot stack. */
+	const PRESS_COOLDOWN_MS = 1000;
+
 	const pressHit = $derived(
 		box
-			? {
-					x: box.bodyLeft - box.left - box.width / 2,
-					y: -box.height / 2,
-					width: box.bodyWidth,
-					height: box.height,
-				}
+			? spinePressToLocal(
+					box,
+					useDogSpine ? MASCOT_DOG_SPINE_VIEWPORT : MASCOT_SPINE_VIEWPORT,
+					useDogSpine ? MASCOT_DOG_PRESS : MASCOT_CAT_PRESS,
+				)
 			: null,
 	);
 
 	let vocalIndex = 0;
+	let vocalLockedUntil = 0;
 
 	const onMascotPress = () => {
+		const now = performance.now();
+		if (now < vocalLockedUntil) return;
+		vocalLockedUntil = now + PRESS_COOLDOWN_MS;
 		const bank = useDogSpine ? DOG_BARK_SOUNDS : CAT_MEOW_SOUNDS;
 		const name = bank[vocalIndex % bank.length];
 		vocalIndex += 1;
@@ -247,7 +256,9 @@
 				y={pressHit.y}
 				width={pressHit.width}
 				height={pressHit.height}
+				borderRadius={pressHit.radius}
 				backgroundAlpha={0.001}
+				hitArea={new Circle(pressHit.radius, pressHit.radius, pressHit.radius)}
 				eventMode="static"
 				cursor="pointer"
 				zIndex={2}

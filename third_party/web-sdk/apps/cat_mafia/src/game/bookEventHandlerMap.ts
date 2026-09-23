@@ -6,7 +6,7 @@ import { stateBet, stateUi } from 'state-shared';
 import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
-import { stateGame, stateGameDerived } from './stateGame.svelte';
+import { resetPawCoinColumnSounds, stateGame, stateGameDerived } from './stateGame.svelte';
 import { stateLayoutDerived } from './stateLayout';
 import { devPreview } from './devPreview.svelte';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
@@ -934,6 +934,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				phase: 'dismiss' as const,
 			}));
 		}
+		resetPawCoinColumnSounds();
 		try {
 			await stateGameDerived.enhancedBoard.spin({
 				revealEvent,
