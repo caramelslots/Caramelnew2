@@ -32,6 +32,7 @@
 
 	import assets from '../game/assets';
 	import { getContext } from '../game/context';
+	import { CAT_MEOW_SOUNDS, DOG_BARK_SOUNDS } from '../game/sound';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
 	import { computeDuelScreenLayout, getDuelSpinCounterBox } from '../game/duelLayout';
@@ -102,6 +103,22 @@
 	const underCloud = $derived(stateGame.transitionActive);
 	const portraitAvatarSize = $derived(Math.round(Math.min(88, duelLayout.boardWidth * 0.28)));
 	const pickOpen = $derived(pickShow && !underCloud);
+	const PORTRAIT_VOCAL_COOLDOWN_MS = 1000;
+	let portraitCatVocal = 0;
+	let portraitDogVocal = 0;
+	let portraitVocalLockedUntil = 0;
+
+	const playPortraitVocal = (side: 'cat' | 'dog') => {
+		const now = performance.now();
+		if (now < portraitVocalLockedUntil) return;
+		portraitVocalLockedUntil = now + PORTRAIT_VOCAL_COOLDOWN_MS;
+		const bank = side === 'dog' ? DOG_BARK_SOUNDS : CAT_MEOW_SOUNDS;
+		const index = side === 'dog' ? portraitDogVocal : portraitCatVocal;
+		const name = bank[index % bank.length];
+		if (side === 'dog') portraitDogVocal += 1;
+		else portraitCatVocal += 1;
+		context.eventEmitter.broadcast({ type: 'soundOnce', name, forcePlay: true });
+	};
 
 	/** Dog share of combined banks (0..1). Both zero → 50/50. */
 	const dogBankShare = $derived.by(() => {
@@ -261,12 +278,10 @@
 		</div>
 
 		{#if isPortrait}
-			<img
+			<button
+				type="button"
 				class="board-face top-right face-flip"
-				src={DUEL_DOG_FACE_AVATAR_SRC}
-				alt=""
-				draggable="false"
-				aria-hidden="true"
+				aria-label={context.i18nDerived.duelSideDog()}
 				style:width="{portraitAvatarSize}px"
 				style:height="{portraitAvatarSize}px"
 				style:left="{duelLayout.dogCenter.x +
@@ -275,13 +290,13 @@
 				style:top="{duelLayout.dogCenter.y -
 					duelLayout.boardHeight * 0.5 -
 					portraitAvatarSize * 0.18}px"
-			/>
-			<img
+				style:background-image="url('{DUEL_DOG_FACE_AVATAR_SRC}')"
+				onclick={() => playPortraitVocal('dog')}
+			></button>
+			<button
+				type="button"
 				class="board-face bottom-left face-flip"
-				src={DUEL_CAT_FACE_AVATAR_SRC}
-				alt=""
-				draggable="false"
-				aria-hidden="true"
+				aria-label={context.i18nDerived.duelSideCat()}
 				style:width="{portraitAvatarSize}px"
 				style:height="{portraitAvatarSize}px"
 				style:left="{duelLayout.catCenter.x -
@@ -290,7 +305,9 @@
 				style:top="{duelLayout.catCenter.y +
 					duelLayout.boardHeight * 0.5 -
 					portraitAvatarSize * 0.72}px"
-			/>
+				style:background-image="url('{DUEL_CAT_FACE_AVATAR_SRC}')"
+				onclick={() => playPortraitVocal('cat')}
+			></button>
 		{/if}
 
 		{#if !isPortrait}
@@ -551,16 +568,20 @@
 	.board-face {
 		position: absolute;
 		z-index: 4;
+		padding: 0;
 		border-radius: 50%;
-		object-fit: cover;
-		object-position: center 28%;
-		pointer-events: none;
+		background-color: #2a1810;
+		background-size: cover;
+		background-position: center 28%;
+		background-repeat: no-repeat;
+		cursor: pointer;
+		pointer-events: auto;
 		user-select: none;
+		-webkit-tap-highlight-color: transparent;
 		border: 2px solid rgba(255, 214, 120, 0.85);
 		box-shadow:
 			0 4px 14px rgba(0, 0, 0, 0.45),
 			0 0 0 1px rgba(0, 0, 0, 0.35);
-		background: #2a1810;
 	}
 
 	/* Static face art faces outward — mirror so dog looks left, cat looks right (toward desks). */
