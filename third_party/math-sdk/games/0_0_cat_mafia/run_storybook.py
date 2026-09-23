@@ -7,14 +7,14 @@
   - быстро запускалось (одиночный thread, ~30-100 sims per mode)
   - каждый mode дал представительный набор book outcomes для storybook
 
-NB: Это НЕ production-sim. Для прода используйте `run.py` с большими
+NB: Это НЕ production-sim. Для прода используйте `run_m6.py`
 числами и `compression=True`.
 
 ВАЖНО про consistency с RGS publish (DEMO_ISSUES.md / BUG-001):
   `create_books()` всегда перезаписывает `library/publish_files/
   lookUpTable_<mode>_0.csv` свежим LUT'ом из текущего sim-merge
   (см. write_data.py:250-256, fix для Stake RGS publish).
-  Если run_storybook запускается ПОСЛЕ run.py (M5/M6/Mn), без защиты
+  Если run_storybook запускается ПОСЛЕ run_m5.py / run_m6.py, без защиты
   это сломает publish-consistency: books_*.jsonl.zst (1e5 sim) останутся
   старыми, а LUT_*_0.csv станет от storybook (~30-100 sim) → Stake CLI:
   "lookup table CSV payouts do not match payoutMultiplier value in event
@@ -114,4 +114,4 @@ if __name__ == "__main__":
 
     print("\nDone. Published .json books для storybook:")
     print(f"  {gamestate.output_files.book_path}")
-    print(f"\npublish_files (для RGS) — НЕ тронут, по-прежнему от run.py.")
+    print(f"\npublish_files (для RGS) — НЕ тронут, по-прежнему от run_m5/run_m6.")

@@ -145,15 +145,29 @@ def _bonus_super_scaling():
 
 
 def _bonus_duel_cat_scaling():
-    """Buy Duel as CAT (cost 150×): ~50% zero, ~50% wins with E[win|win]≈288 (~1.9× buy)."""
+    """Buy Duel as CAT (cost 150×): SMOOTH · VH payout body.
+
+    Peak just above buy (150–180×), monotonic decline; crush <150× wins.
+    Target P(<150|win)≈2%, E[win|win]≈288. See
+    CatMafia_Duel_SMOOTH_VH_Implementation_Plan.md / tools/duel_smooth_vh_targets.json.
+    """
     return ConstructScaling(
         [
             {"criteria": "duel_lose", "scale_factor": 1.0, "win_range": (0, 0), "probability": 1.0},
-            {"criteria": "duel_win", "scale_factor": 1.4, "win_range": (1, 40), "probability": 1.0},
-            {"criteria": "duel_win", "scale_factor": 1.55, "win_range": (40, 100), "probability": 1.0},
-            {"criteria": "duel_win", "scale_factor": 1.2, "win_range": (100, 220), "probability": 1.0},
-            {"criteria": "duel_win", "scale_factor": 0.7, "win_range": (220, 700), "probability": 1.0},
-            {"criteria": "duel_win", "scale_factor": 0.35, "win_range": (700, 2500), "probability": 1.0},
+            # Crush below-buy mass (was heavily upscaled)
+            {"criteria": "duel_win", "scale_factor": 0.12, "win_range": (1, 75), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 0.22, "win_range": (75, 150), "probability": 1.0},
+            # Peak + declining cascade
+            {"criteria": "duel_win", "scale_factor": 2.35, "win_range": (150, 180), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 2.05, "win_range": (180, 220), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 1.65, "win_range": (220, 280), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 1.35, "win_range": (280, 350), "probability": 1.0},
+            # Kill old 350–450 hump
+            {"criteria": "duel_win", "scale_factor": 0.72, "win_range": (350, 450), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 0.90, "win_range": (450, 550), "probability": 1.0},
+            # EV pad so peak-at-buy still hits E≈288
+            {"criteria": "duel_win", "scale_factor": 1.25, "win_range": (550, 700), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 0.22, "win_range": (700, 2500), "probability": 1.0},
             {"criteria": "duel_win", "scale_factor": 0.05, "win_range": (2500, 25000), "probability": 1.0},
             {"criteria": "wincap_max", "scale_factor": 1.0, "win_range": (25000, 25000), "probability": 1.0},
         ]
@@ -161,16 +175,30 @@ def _bonus_duel_cat_scaling():
 
 
 def _bonus_duel_dog_scaling():
-    """Buy Duel as DOG (cost 150×): ~75% zero, ~25% wins with E[win|win]≈576 (~3.8× buy)."""
+    """Buy Duel as DOG (cost 150×): SMOOTH · VH long cascade.
+
+    Peak just above buy; kill $1k–1.5k hump; decline through mid/high so
+    E[win|win]≈574 holds. See CatMafia_Duel_SMOOTH_VH_Implementation_Plan.md.
+    """
     return ConstructScaling(
         [
             {"criteria": "duel_lose", "scale_factor": 1.0, "win_range": (0, 0), "probability": 1.0},
-            {"criteria": "duel_win", "scale_factor": 1.1, "win_range": (1, 60), "probability": 1.0},
-            {"criteria": "duel_win", "scale_factor": 1.45, "win_range": (60, 160), "probability": 1.0},
-            {"criteria": "duel_win", "scale_factor": 1.35, "win_range": (160, 350), "probability": 1.0},
-            {"criteria": "duel_win", "scale_factor": 0.95, "win_range": (350, 900), "probability": 1.0},
-            {"criteria": "duel_win", "scale_factor": 0.45, "win_range": (900, 3500), "probability": 1.0},
-            {"criteria": "duel_win", "scale_factor": 0.08, "win_range": (3500, 25000), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 0.10, "win_range": (1, 75), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 0.18, "win_range": (75, 150), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 2.10, "win_range": (150, 180), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 1.85, "win_range": (180, 220), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 1.55, "win_range": (220, 280), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 1.35, "win_range": (280, 350), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 1.20, "win_range": (350, 450), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 1.10, "win_range": (450, 550), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 1.00, "win_range": (550, 700), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 0.95, "win_range": (700, 1000), "probability": 1.0},
+            # Was over-weighted (~19% of wins) — force decline
+            {"criteria": "duel_win", "scale_factor": 0.35, "win_range": (1000, 1500), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 0.55, "win_range": (1500, 2000), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 0.85, "win_range": (2000, 2500), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 1.05, "win_range": (2500, 5000), "probability": 1.0},
+            {"criteria": "duel_win", "scale_factor": 0.08, "win_range": (5000, 25000), "probability": 1.0},
             {"criteria": "wincap_max", "scale_factor": 1.0, "win_range": (25000, 25000), "probability": 1.0},
         ]
     ).return_dict()
@@ -290,10 +318,11 @@ class OptimizationSetup:
                 },
                 "scaling": _bonus_duel_cat_scaling(),
                 "parameters": _bonus_parameters(),
+                # SMOOTH · VH: pull mass to peak just above buy (150–180×).
                 "distribution_bias": ConstructFenceBias(
                     applied_criteria=["duel_win"],
-                    bias_ranges=[(40.0, 120.0)],
-                    bias_weights=[0.40],
+                    bias_ranges=[(150.0, 180.0)],
+                    bias_weights=[0.45],
                 ).return_dict(),
             },
             "bonus_duel_dog": {
@@ -306,7 +335,7 @@ class OptimizationSetup:
                         av_win=wincaps["bonus_duel_dog"],
                         search_conditions=wincaps["bonus_duel_dog"],
                     ).return_dict(),
-                    # ~25% wins (hr=4), ~75% lose (hr=4/3); E[win|win]≈190.
+                    # ~25% wins (hr=4), ~75% lose (hr=4/3); E[win|win]≈574 with SMOOTH body.
                     "duel_lose": ConstructConditions(
                         rtp=0.0, hr=4.0 / 3.0, av_win=0.0, search_conditions=0.0
                     ).return_dict(),
@@ -314,9 +343,10 @@ class OptimizationSetup:
                 },
                 "scaling": _bonus_duel_dog_scaling(),
                 "parameters": _bonus_parameters(),
+                # SMOOTH · VH: peak above buy — do NOT bias toward the old $1k–1.5k hump.
                 "distribution_bias": ConstructFenceBias(
                     applied_criteria=["duel_win"],
-                    bias_ranges=[(90.0, 280.0)],
+                    bias_ranges=[(150.0, 220.0)],
                     bias_weights=[0.40],
                 ).return_dict(),
             },

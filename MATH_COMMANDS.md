@@ -39,32 +39,16 @@ PY=/tmp/csmath_venv/bin/python
 
 ## 1. M5 — intermediate sim (1e5 per mode, ~10-20 мин)
 
+Быстрый smoke перед полным пайплайном:
+
 ```bash
 NUM_SIMS=200 $PY run_small.py
 ```
 
-```bash
-$PY run.py 2>&1 | tee /tmp/m5.log
-```
-
-Проверка результата:
+Полный пайплайн (sim + opt + enforce + checks) на **100 000** sims/mode:
 
 ```bash
-grep "^Thread 0 finished" /tmp/m5.log | tail -5     # последние RTP
-grep -E "AssertionError|Error|Traceback" /tmp/m5.log # на всякий
-```
-
-После M5 → выполни **§4 Sync** для storybook fixtures.
-
----
-
-## 1b. Duel only (`bonus_duel_cat` ~50% / `bonus_duel_dog` ~25%)
-
-```bash
-NUM_SIMS=200 $PY run_bonus_duel.py 2>&1 | tee /tmp/m5_bonus_duel.log
-# one side: MODE=bonus_duel_dog NUM_SIMS=200 $PY run_bonus_duel.py
-$PY tools/assert_duel_invariants.py
-# fixtures: $PY run_storybook.py && $PY sync_to_web_sdk.py
+$PY run_m5.py 2>&1 | tee /tmp/m5.log
 ```
 
 ---
@@ -73,20 +57,11 @@ $PY tools/assert_duel_invariants.py
 
 Когда: финальная итерация перед публикацией на Stake RGS.
 
-`run.py` уже на **1e6** per mode. Запуск:
+Полный пайплайн на **1 000 000** sims/mode:
 
 ```bash
-$PY run.py 2>&1 | tee /tmp/m6.log
+$PY run_m6.py 2>&1 | tee /tmp/m6.log
 ```
-
-Проверка прогресса (~2-4 ч):
-
-```bash
-grep "^Thread 0 finished" /tmp/m6.log | tail -5
-grep -E "AssertionError|Error|Traceback" /tmp/m6.log
-```
-
-После M6 → §3 Resample → §4 Sync.
 
 ---
 
@@ -107,18 +82,21 @@ cp -r library/publish_files library/publish_files_backup_pre_resample
 
 ## 4. Применение resample (генерация unbiased books)
 
+Две команды — выбирай по размеру sim, из которого делался backup (§3):
+
+### 4a. M5 — 100 000 books на режим (~быстро, для итераций)
+
 ```bash
-$PY tools/resample_books.py
+$PY tools/resample_books.py --100k
 ```
 
-Что произойдёт:
+Когда: после M5 (§1), acceptance scan, storybook sync.
 
-- читает из `library/publish_files_backup_pre_resample/` (свежий backup из §3)
-- пишет в `library/publish_files/` resampled books (unbiased)
-- обновляет `library/configs/books_*.verification.json`
+### 4b. M6 / production — 1 000 000 books на режим (перед Stake RGS)
 
-⚠️ **Не вызывай resample БЕЗ предварительного §3** — иначе он перезатрёт
-свежие `publish_files` resample'ом из старого snapshot'а.
+```bash
+$PY tools/resample_books.py --1m
+```
 
 ---
 
@@ -130,14 +108,5 @@ $PY tools/resample_books.py
 ```bash
 $PY run_storybook.py && $PY sync_to_web_sdk.py
 ```
-
-Что делает:
-
-- `run_storybook.py` — генерит ~30-100 books на режим в `library/books/*.json`
-  (использует текущий `game_config.py` / `game_override.py`).
-  ⚠️ **Защищён**: не трогает `publish_files/` (snapshot+restore внутри).
-- `sync_to_web_sdk.py` — копирует `.json` → `apps/daloniil_test/src/stories/data/*.ts`.
-
-После — Vite HMR подхватит. Если демка открыта, обнови вкладку (Cmd-Shift-R).
 
 ---

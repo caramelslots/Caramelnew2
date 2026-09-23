@@ -25,7 +25,8 @@ Quick start
   # storybook fixtures → web-sdk apps/cat_mafia
   $PY run_storybook.py && $PY sync_to_web_sdk.py
 
-  # larger sim (dev): edit run.py num_sim_args then
-  $PY run.py
+  # full pipeline
+  $PY run_m5.py    # 100k/mode (~10-20 min)
+  $PY run_m6.py    # 1M/mode (~2-4 h, production)
 
 See repo MATH_COMMANDS.md (adapt paths from 0_0_daloniil_test → 0_0_cat_mafia).

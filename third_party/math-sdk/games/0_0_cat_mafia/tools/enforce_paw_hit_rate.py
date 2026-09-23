@@ -29,7 +29,7 @@ Usage:
       --paw 0.03 --sw 0.03 --hit 0.3708 --rtp 0.9601
   # if you already resampled, patch the backup then resample again:
   $PY tools/enforce_paw_hit_rate.py --mode base --lut-dir library/publish_files_backup_pre_resample ...
-  $PY tools/resample_books.py
+  $PY tools/resample_books.py --100k   # or --1m after M6
 """
 
 from __future__ import annotations

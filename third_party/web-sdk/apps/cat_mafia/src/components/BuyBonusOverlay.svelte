@@ -784,11 +784,11 @@
 
 	.features-section {
 		position: absolute;
-		top: 76.2%;
+		top: 78.4%;
 		left: 50%;
 		right: auto;
 		width: 82%;
-		height: 11.4%;
+		height: 7%;
 		transform: translateX(-50%);
 		display: flex;
 		align-items: center;
@@ -1072,12 +1072,12 @@
 		}
 
 		.features-section {
-			top: 76.2%;
+			top: 78.4%;
 			left: 50%;
 			right: auto;
 			width: 82%;
 			transform: translateX(-50%);
-			height: 11.4%;
+			height: 7%;
 			padding: 0;
 		}
 
@@ -1231,12 +1231,12 @@
 		}
 
 		.features-section {
-			top: 76.2%;
+			top: 78.4%;
 			left: 50%;
 			right: auto;
 			width: 84%;
 			transform: translateX(-50%);
-			height: 11.4%;
+			height: 7%;
 			padding: 0;
 			overflow: visible;
 		}
@@ -1383,12 +1383,12 @@
 		}
 
 		.features-section {
-			top: 76.2%;
+			top: 78.4%;
 			left: 50%;
 			right: auto;
 			width: 82%;
 			transform: translateX(-50%);
-			height: 11.4%;
+			height: 7%;
 			padding: 0;
 		}
 
@@ -1531,12 +1531,12 @@
 		}
 
 		.features-section {
-			top: 76.2%;
+			top: 78.4%;
 			left: 50%;
 			right: auto;
 			width: 82%;
 			transform: translateX(-50%);
-			height: 11.4%;
+			height: 7%;
 			padding: 0;
 		}
 

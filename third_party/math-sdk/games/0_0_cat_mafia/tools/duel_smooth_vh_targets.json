@@ -1,0 +1,41 @@
+{
+  "cost": 150,
+  "notes": "SMOOTH · VH targets from CatMafia_Duel_SMOOTH_VH_Implementation_Plan.md. Shares are % of duel_win / paying sessions (payout>0). Lose rate is separate (cat ~50%, dog ~25%).",
+  "bonus_duel_cat": {
+    "p_win": 0.5,
+    "e_win": 288.0,
+    "p_below_150_given_win": 0.02,
+    "bands": [
+      {"lo": 0.1, "hi": 150, "share": 0.02, "label": "<150"},
+      {"lo": 150, "hi": 180, "share": 0.237, "label": "150-180"},
+      {"lo": 180, "hi": 220, "share": 0.193, "label": "180-220"},
+      {"lo": 220, "hi": 280, "share": 0.158, "label": "220-280"},
+      {"lo": 280, "hi": 350, "share": 0.129, "label": "280-350"},
+      {"lo": 350, "hi": 450, "share": 0.105, "label": "350-450"},
+      {"lo": 450, "hi": 550, "share": 0.086, "label": "450-550"},
+      {"lo": 550, "hi": 700, "share": 0.07, "label": "550-700"},
+      {"lo": 700, "hi": 25000, "share": 0.002, "label": "700+", "flexible": true}
+    ]
+  },
+  "bonus_duel_dog": {
+    "p_win": 0.25,
+    "e_win": 574.0,
+    "p_below_150_given_win": 0.02,
+    "bands": [
+      {"lo": 0.1, "hi": 150, "share": 0.02, "label": "<150"},
+      {"lo": 150, "hi": 180, "share": 0.167, "label": "150-180"},
+      {"lo": 180, "hi": 220, "share": 0.143, "label": "180-220"},
+      {"lo": 220, "hi": 280, "share": 0.122, "label": "220-280"},
+      {"lo": 280, "hi": 350, "share": 0.105, "label": "280-350"},
+      {"lo": 350, "hi": 450, "share": 0.09, "label": "350-450"},
+      {"lo": 450, "hi": 550, "share": 0.077, "label": "450-550"},
+      {"lo": 550, "hi": 700, "share": 0.066, "label": "550-700"},
+      {"lo": 700, "hi": 1000, "share": 0.056, "label": "700-1000"},
+      {"lo": 1000, "hi": 1500, "share": 0.048, "label": "1000-1500"},
+      {"lo": 1500, "hi": 2000, "share": 0.041, "label": "1500-2000"},
+      {"lo": 2000, "hi": 2500, "share": 0.035, "label": "2000-2500"},
+      {"lo": 2500, "hi": 5000, "share": 0.03, "label": "2500-5000"},
+      {"lo": 5000, "hi": 25000, "share": 0.00024, "label": "5000+", "flexible": true}
+    ]
+  }
+}

@@ -22,7 +22,8 @@ After resample:
 Usage
 =====
     cd third_party/math-sdk/games/0_0_cat_mafia
-    PYTHONPATH=../..:. /tmp/csmath_venv/bin/python tools/resample_books.py
+    PYTHONPATH=../..:. /tmp/csmath_venv/bin/python tools/resample_books.py --100k   # after M5
+    PYTHONPATH=../..:. /tmp/csmath_venv/bin/python tools/resample_books.py --1m     # after M6 / prod
 
 Originals are NOT touched by this script — see
 `library/publish_files_backup_pre_resample/` for the snapshot taken before
@@ -32,6 +33,7 @@ running. The new files are written directly to `library/publish_files/` and
 
 from __future__ import annotations
 
+import argparse
 import _pickle
 import csv
 import hashlib
@@ -49,14 +51,24 @@ SOURCE = ROOT / "library" / "publish_files_backup_pre_resample"
 CONFIGS = ROOT / "library" / "configs"
 
 # Cat Mafia modes only (no special_spins — that mode exists only in Wok Fury).
-TARGET_COUNTS = {
-    "base":          100_000,
-    "bonus_boost":   100_000,
-    "bonus_normal":  100_000,
-    "bonus_super":   100_000,
-    "bonus_duel_cat":    100_000,
-    "bonus_duel_dog":    100_000,
+MODES = (
+    "base",
+    "bonus_boost",
+    "bonus_normal",
+    "bonus_super",
+    "bonus_duel_cat",
+    "bonus_duel_dog",
+)
+
+RESAMPLE_PRESETS = {
+    "100k": 100_000,   # M5 — intermediate sim, faster iteration
+    "1m": 1_000_000,   # M6 — production publish to Stake RGS
 }
+
+
+def target_counts_for(preset: str) -> dict[str, int]:
+    n = RESAMPLE_PRESETS[preset]
+    return {mode: n for mode in MODES}
 
 COST_MAP = {
     "base":          1,
@@ -299,7 +311,7 @@ def refresh_backup_from_publish() -> None:
     """
     SOURCE.mkdir(parents=True, exist_ok=True)
     copied = 0
-    for mode in TARGET_COUNTS:
+    for mode in MODES:
         lut = PUBLISH / f"lookUpTable_{mode}_0.csv"
         books = PUBLISH / f"books_{mode}.jsonl.zst"
         if not lut.exists() or not books.exists():
@@ -319,7 +331,34 @@ def refresh_backup_from_publish() -> None:
         print("  (no weighted publish LUTs copied — resampling from existing backup)")
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Resample weighted publish LUTs into equal-weight books.",
+    )
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        "--100k",
+        dest="preset",
+        action="store_const",
+        const="100k",
+        help="100 000 books per mode (after M5)",
+    )
+    group.add_argument(
+        "--1m",
+        dest="preset",
+        action="store_const",
+        const="1m",
+        help="1 000 000 books per mode (after M6 / production)",
+    )
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
+    target_counts = target_counts_for(args.preset)
+    n_per_mode = next(iter(target_counts.values()))
+    print(f"Resample preset: {args.preset} ({n_per_mode:,} books per mode)")
+
     print("Refreshing backup_pre_resample from publish_files (weighted only)...")
     refresh_backup_from_publish()
     if not SOURCE.is_dir():
@@ -329,7 +368,7 @@ def main():
         )
     rng = random.Random(SEED)
     results = []
-    for mode, n in TARGET_COUNTS.items():
+    for mode, n in target_counts.items():
         results.append(resample(mode, n, rng))
 
     print()

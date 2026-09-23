@@ -1,4 +1,4 @@
-"""Small all-modes sim — same as run.py, but tiny N and no opt/analysis.
+"""Small all-modes sim — same modes as run_m5/run_m6, but tiny N and no opt/analysis.
 
 Usage (from this directory):
   export PYTHONPATH=../..:.
