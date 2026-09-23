@@ -1621,6 +1621,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			}
 
 			stateGame.mascotPose = 'gunEndLoad';
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_revolver_barrell_spining' });
 			await waitForTimeout(MASCOT_GUN_END_LOAD_MS);
 			stateGame.mascotPose = 'idle';
 			await waitForGameSpeed(BULLET_FLY_GAP_MS, stateGame.gameSpeed);

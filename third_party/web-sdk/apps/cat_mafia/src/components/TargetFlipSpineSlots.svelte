@@ -1,7 +1,10 @@
 <!--
 	Keep front/back/edge slots; drive FS label visibility from the `front` bone
-	(same windows as HTML TargetFlipSpine). `edge` is the side strip — without it
-	flips look like a flat scaleY squash.
+	+ live `back` attachment (same idea as HTML TargetFlipSpine). `edge` is the
+	side strip — without it flips look like a flat scaleY squash.
+
+	Reward text only while the wood `back` face is up — never on the bullseye
+	`front`. Same value the whole flip; abs scale so glyphs do not mirror.
 -->
 <script lang="ts">
 	import { onDestroy } from 'svelte';
@@ -9,8 +12,6 @@
 
 	type Props = {
 		slots: readonly string[];
-		backA: readonly [number, number];
-		backB: number;
 		backOpen: number;
 		onFrame: (scaleX: number, scaleY: number, visible: boolean) => void;
 	};
@@ -36,15 +37,16 @@
 	const tick = () => {
 		const skel = spine.skeleton;
 		const bone = skel?.findBone('front');
-		const t = spine.state?.getCurrent(0)?.trackTime ?? 0;
-		if (!bone) {
+		if (!bone || !skel) {
 			props.onFrame(1, 1, false);
 		} else {
-			const onBack =
-				(t >= props.backA[0] && t < props.backA[1]) || t >= props.backB;
-			const open =
-				Math.abs(bone.scaleY) >= props.backOpen && Math.abs(bone.scaleX) >= props.backOpen;
-			props.onFrame(bone.scaleX, bone.scaleY, onBack && open);
+			const sx = bone.scaleX;
+			const sy = bone.scaleY;
+			const open = Math.abs(sy) >= props.backOpen && Math.abs(sx) >= props.backOpen;
+			// Live attachment — works for v3 and v4 without hardcoded time windows.
+			const onBack = skel.findSlot('back')?.getAttachment() != null;
+			const visible = onBack && open;
+			props.onFrame(Math.abs(sx) || 1, Math.abs(sy) || 1, visible);
 		}
 		raf = requestAnimationFrame(tick);
 	};

@@ -2,29 +2,21 @@
 	UiCashStacksLayout.svelte — кастомный layout для Wok Fury.
 	  - BuyBonus  : CashStacksBuyBonusPanel (HTML)
 	  - HUD bar + spin cluster : CashStacksDesktopHudOverlay (HTML), кроме portrait
-	  - WIN — Pixi под доской
+	  - WIN — WinHudHtmlOverlay (proxima-nova, same as FS intro Congratulations)
 	Portrait — UiCashStacksPortraitLayout (+ CashStacksPortraitHudOverlay).
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { Tween } from 'svelte/motion';
 
-	import { stateBet } from 'state-shared';
-	import { MainContainer } from 'components-layout';
-	import { Container } from 'pixi-svelte';
 	import { EnableSpaceHold } from 'components-shared';
 
 	import UiFadeContainer from 'components-ui-pixi/src/components/UiFadeContainer.svelte';
 	import UiCashStacksPortraitLayout from './UiCashStacksPortraitLayout.svelte';
-	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
+	import { Container } from 'pixi-svelte';
 
-	import { BITMAP_FONT_SCALE, WIN_HUD_COUNT_UP_MS, WIN_HUD_FONT_SIZE } from '../game/constants';
 	import { getContext } from '../game/context';
-	import { scaleMsByGameSpeed } from '../game/gameSpeed';
 	import { isAnyMenuOpen } from '../game/isAnyMenuOpen';
 	import { isLoaderScreenBlockingSpin } from '../game/isLoaderScreenBlockingSpin';
-	import { stateGame } from '../game/stateGame.svelte';
-	import { getWinHudLocalPos } from '../game/winHudLayout';
 	import { getContextLayout } from 'utils-layout';
 
 	type Props = {
@@ -39,60 +31,6 @@
 	const spaceHoldDisabled = $derived(
 		isAnyMenuOpen() || isLoaderScreenBlockingSpin(context.stateLayout.showLoadingScreen),
 	);
-
-	const boardLayout = $derived(context.stateGameDerived.boardLayout());
-	/** Board-fraction anchor — same relative seat on desktop / laptop / popout. */
-	const winHudPos = $derived(getWinHudLocalPos(boardLayout));
-
-	/**
-	 * Under-board WIN: snap by default. Book handlers set `winHudCountUpPending`
-	 * for bonus FS (any increase) or base post-SW — we tween that increase, then
-	 * ignore follow-up writes to the same target so setTotalWin cannot kill the tween.
-	 */
-	const winAmountTween = new Tween(stateBet.winBookEventAmount);
-	let hudTweenTarget: number | null = null;
-	$effect(() => {
-		const target = stateBet.winBookEventAmount;
-		const wantCountUp = stateGame.winHudCountUpPending;
-		const from = winAmountTween.current;
-
-		if (target <= 0 || target + 0.01 < from) {
-			// Pending rise from a zero HUD: keep the flag for the amount write
-			// (same-tick or next). Clearing here made first FS / debug stack snap.
-			if (wantCountUp && target <= 0 && from <= 0) return;
-			if (stateGame.winHudCountUpPending) stateGame.winHudCountUpPending = false;
-			hudTweenTarget = null;
-			winAmountTween.set(target, { duration: 0 });
-			return;
-		}
-
-		if (wantCountUp && target > from + 0.01) {
-			stateGame.winHudCountUpPending = false;
-			hudTweenTarget = target;
-			winAmountTween.set(target, {
-				duration: scaleMsByGameSpeed(WIN_HUD_COUNT_UP_MS, stateGame.gameSpeed),
-			});
-			return;
-		}
-
-		// Same cumulative write (setWin then setTotalWin) or flag-clear re-entry —
-		// do not snap over an in-flight post-SW count-up.
-		if (hudTweenTarget != null && Math.abs(target - hudTweenTarget) < 0.01) {
-			return;
-		}
-
-		hudTweenTarget = null;
-		winAmountTween.set(target, { duration: 0 });
-	});
-	const displayWinAmount = $derived(Math.round(winAmountTween.current));
-	const showWin = $derived(stateBet.winBookEventAmount > 0 || displayWinAmount > 0);
-
-	const WIN_TEXT_STYLE = {
-		fontSize: WIN_HUD_FONT_SIZE * BITMAP_FONT_SCALE,
-		fontWeight: 'bold' as const,
-		letterSpacing: 1,
-	};
-	const winLabelGap = WIN_HUD_FONT_SIZE * BITMAP_FONT_SCALE * 0.78;
 </script>
 
 <EnableSpaceHold disabled={spaceHoldDisabled} />
@@ -104,25 +42,6 @@
 				{@render props.logo()}
 			{/if}
 		</Container>
-
-		{#if showWin}
-			<MainContainer>
-				<Container x={winHudPos.x} y={winHudPos.y} zIndex={20}>
-					<ResponsiveCurrencyBitmapText
-						anchor={0.5}
-						bodyFontVariant="prostoi"
-						eventMode="none"
-						prefix={context.i18nDerived.win().toUpperCase()}
-						amount={displayWinAmount}
-						bookEvent
-						maxWidth={boardLayout.visualWidth * 0.96}
-						minScale={0.5}
-						labelGap={winLabelGap}
-						style={WIN_TEXT_STYLE}
-					/>
-				</Container>
-			</MainContainer>
-		{/if}
 	</UiFadeContainer>
 {:else if layoutType === 'portrait'}
 	<UiCashStacksPortraitLayout>

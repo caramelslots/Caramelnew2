@@ -177,8 +177,6 @@
 		spinningSeats = new Set();
 		stateGame.targetPickSpinningSeats = [];
 		stateGame.targetShotFlight = null;
-		stateGame.targetShotFlips = [];
-		stateGame.targetShotFlipLabels = {};
 		// Out of ammo — only now hide the gun.
 		stateGame.mascotPose = 'gunShotEnd';
 		await wait(MASCOT_GUN_SHOT_END_MS);
@@ -187,6 +185,10 @@
 
 		await tweenSlide(0);
 
+		// Drop settled Pixi faces only after the board is gone — clearing earlier
+		// flashed an HTML face with different font metrics.
+		stateGame.targetShotFlips = [];
+		stateGame.targetShotFlipLabels = {};
 		stateGame.targetPickOpen = false;
 		stateGame.targetPickSeatMode = 'six';
 		show = false;
@@ -225,10 +227,15 @@
 	const settleFlip = (index: number, flipNonce: number) => {
 		flipped = flipped.map((v, i) => (i === index ? true : v));
 		spinningSeats = new Set([...spinningSeats].filter((i) => i !== index));
-		stateGame.targetShotFlips = stateGame.targetShotFlips.filter((f) => f.nonce !== flipNonce);
-		const labels = { ...stateGame.targetShotFlipLabels };
-		delete labels[flipNonce];
-		stateGame.targetShotFlipLabels = labels;
+		// Keep the same Pixi label (settled wood back) — do not hand off to HTML
+		// or the FS digits jump in size/stroke when the spine unmounts.
+		stateGame.targetShotFlips = stateGame.targetShotFlips.map((f) =>
+			f.nonce === flipNonce ? { ...f, settled: true } : f,
+		);
+		stateGame.targetShotFlipLabels = {
+			...stateGame.targetShotFlipLabels,
+			[flipNonce]: { visible: true, scaleX: 1, scaleY: 1 },
+		};
 		reservedSeats = new Set([...reservedSeats].filter((i) => i !== index));
 	};
 
@@ -464,7 +471,6 @@
 
 			stateGame.mascotPose = 'gunStatIdle';
 			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_lift_targets' });
-			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_revolver_in' });
 			const mascotAimReady = (async () => {
 				await wait(MASCOT_GUN_STAT_IDLE_MS);
 				stateGame.mascotPose = 'aim';

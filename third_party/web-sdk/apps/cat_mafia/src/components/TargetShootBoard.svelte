@@ -1,10 +1,12 @@
 <!--
 	Stage E shoot board: 9 HTML hit seats on background_9.webp (3×3 shelves).
-	Flip FX in Pixi (TargetFlipPixiLayer); HTML keeps the reward face after flip.
+	Flip FX + settled FS faces stay in Pixi (TargetFlipPixiLayer) so typography
+	does not jump after the clip. HTML only handles hit targets.
 -->
 <script lang="ts">
 	import { getContext } from '../game/context';
 	import { isPopoutSmallViewport } from '../game/constants';
+	import { stateGame } from '../game/stateGame.svelte';
 	import {
 		TARGET_BOARD_SPRITES,
 		TARGET_SHOOT_CONTENT,
@@ -16,7 +18,7 @@
 	import { randomTargetHitOffset } from '../game/shotBulletAssets';
 
 	type Props = {
-		/** Per-seat reward (0–3). Shown after flip. */
+		/** Per-seat reward (0–3). */
 		values: number[];
 		flipped: boolean[];
 		spinningSeats?: ReadonlySet<number> | number[];
@@ -35,6 +37,14 @@
 		if (!raw) return new Set<number>();
 		return raw instanceof Set ? raw : new Set(raw);
 	});
+	/** Pixi still owns the face (spinning or settled hold). */
+	const pixiFaceSeats = $derived(
+		new Set(
+			stateGame.targetShotFlips
+				.map((f) => f.seatIndex)
+				.filter((i): i is number => i != null),
+		),
+	);
 	const seatW = `${TARGET_SHOOT_SEAT_WIDTH_FRAC * 100}%`;
 
 	/** Stable plaque size from layout — avoids ResizeObserver first-paint jump. */
@@ -66,8 +76,6 @@
 			`--seat-w:${seatW}`,
 		].join(';'),
 	);
-
-	const rewardLabel = (r: number) => (r <= 0 ? '-' : `+${r}`);
 
 	export function getSeatCenter(index: number): { x: number; y: number } | null {
 		const el = root?.querySelector<HTMLElement>(`[data-seat="${index}"]`);
@@ -108,8 +116,7 @@
 
 	{#each TARGET_SHOOT_SLOTS as slot, i (i)}
 		{@const isFlipped = props.flipped[i] === true}
-		{@const isSpinning = spinningSet.has(i)}
-		{@const reward = props.values[i] ?? 0}
+		{@const isSpinning = spinningSet.has(i) || pixiFaceSeats.has(i)}
 		<button
 			type="button"
 			class="target"
@@ -120,20 +127,7 @@
 			disabled={locked || isFlipped || isSpinning}
 			onclick={() => onClick(i)}
 			aria-label={`Target ${i + 1}`}
-		>
-			{#if isFlipped && !isSpinning}
-				<span class="disc">
-					<span class="face back" style={`background-image:url('${TARGET_BOARD_SPRITES.back}')`}>
-						<span class="fs">
-							<span class="fs-num">{rewardLabel(reward)}</span>
-							{#if reward > 0}
-								<span class="fs-label">FS</span>
-							{/if}
-						</span>
-					</span>
-				</span>
-			{/if}
-		</button>
+		></button>
 	{/each}
 </div>
 
@@ -182,66 +176,5 @@
 
 	.target:disabled {
 		cursor: default;
-	}
-
-	.disc {
-		position: absolute;
-		inset: 0;
-		z-index: 1;
-		border-radius: 50%;
-		transform: translateY(-18%);
-	}
-
-	.face {
-		position: absolute;
-		inset: 0;
-		border-radius: 50%;
-		background-size: 100% 100%;
-		background-repeat: no-repeat;
-		background-position: center;
-	}
-
-	.back {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.fs {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		line-height: 1;
-		color: #f0d78c;
-		text-shadow:
-			0 1px 0 rgba(0, 0, 0, 0.55),
-			0 2px 8px rgba(0, 0, 0, 0.85);
-		user-select: none;
-	}
-
-	.fs-num {
-		font-family: 'proxima-nova', sans-serif;
-		/* Match TargetFlipSpine so the count doesn't jump after the flip. */
-		font-size: clamp(1.35rem, 3.8vw, 2.35rem);
-		font-weight: 800;
-	}
-
-	.fs-label {
-		font-family: 'proxima-nova', sans-serif;
-		font-size: clamp(0.55rem, 1.4vw, 0.75rem);
-		letter-spacing: 0.14em;
-		margin-top: 0.12em;
-	}
-
-	/* Phone: slightly larger FS digits on the disc. */
-	@media (max-width: 500px), ((hover: none) and (pointer: coarse) and (max-width: 900px)) {
-		.fs-num {
-			font-size: clamp(1.55rem, 4.5vw, 2.55rem);
-		}
-
-		.fs-label {
-			font-size: clamp(0.62rem, 1.65vw, 0.85rem);
-		}
 	}
 </style>

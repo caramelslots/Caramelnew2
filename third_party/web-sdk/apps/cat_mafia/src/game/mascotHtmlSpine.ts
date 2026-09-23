@@ -66,9 +66,26 @@ export const MASCOT_GUN_START_MS = 2530;
 export const MASCOT_LOAD_MS = 670;
 export const MASCOT_GUN_END_LOAD_MS = 1130;
 export const MASCOT_GUN_STAT_IDLE_MS = 1430;
+/** First whoosh inside `sfx_revolver_in` (~0.08 / 0.28 / 0.52s). */
+export const REVOLVER_IN_ATTACK_MS = 80;
+/**
+ * `gun_shot_stat_idle`: gun leaves the hip and swings out.
+ * Scale pop at 0.67s is before this — the whoosh belongs on the swing.
+ */
+export const MASCOT_GUN_DRAW_SWING_MS = 733;
+/**
+ * `idle_gyn`: pistol flips. Revolver spins 1.40–1.80s; the palm snaps
+ * at 1.567s and 1.733s. The earlier scale-up (0.67s) is not a flip.
+ */
+export const MASCOT_IDLE_GYN_FLIP_MS = 1567;
 export const MASCOT_GUN_SHOT_AIM_MS = 1670;
 export const MASCOT_GUN_SHOT_MS = 530;
 export const MASCOT_GUN_SHOT_END_MS = 1500;
+/**
+ * `gun_shot_end`: the put-away spin starts here (0.40–0.80s).
+ * The scale-down at 1.13s is after the gun has already left — too late for the whoosh.
+ */
+export const MASCOT_GUN_HOLSTER_MS = 400;
 /**
  * Where paw-coins land while the hat is held out (idle3 brim-out / shake pose).
  * Fractions of the full mascot HTML box (includes left overscan). Measured by

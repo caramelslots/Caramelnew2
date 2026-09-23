@@ -1,42 +1,112 @@
 /**
- * Under-board WIN label — locked to the desk nameplate via board-size fractions
- * (same idea as barrel_rim / fsCounterLayout).
+ * Under-board WIN label — locked to the desk nameplate centre using the same
+ * desk-slot math as BoardFrame (DESK_PARCHMENT + DESK_BOTTOM_PULL).
  *
- * Tuned so desktop (BOARD_LAYOUT_SCALE.desktop) matches the previous
- * `height/2 + 84` game-px spot; other layouts inherit the same relative seat.
+ * Fractions of playfield height drift when the bottom rail is pulled; this
+ * tracks the gold plate itself so PC / laptop / popout / phone stay put.
  */
-import { BOARD_LAYOUT_SCALE, BOARD_SIZES } from './constants';
-
-/** On-screen board size at the PC reference scale. */
-const REF_BOARD_W = BOARD_SIZES.width * BOARD_LAYOUT_SCALE.desktop;
-const REF_BOARD_H = BOARD_SIZES.height * BOARD_LAYOUT_SCALE.desktop;
-
-/**
- * Gap from playfield bottom → WIN centre as a fraction of visualHeight.
- * Desktop was `unscaled half + 84` ≈ visualHalf + 40 @ scale 1.22.
- */
-const WIN_BELOW_BOTTOM_FRAC = 40 / REF_BOARD_H;
-
-/**
- * Horizontal offset from board centre as a fraction of visualWidth.
- * Desktop was layout-center − 28 → board.x − 8 @ offset.x −20.
- */
-const WIN_X_OFFSET_FRAC = -8 / REF_BOARD_W;
+import {
+	BOARD_FRAME_OFFSET,
+	BOARD_LAYOUT_SCALE,
+	DESK_BOTTOM_PULL_PX,
+	DESK_PARCHMENT,
+	DESK_PARCHMENT_PADDING,
+	DESK_VISUAL_OFFSET_Y,
+	WIN_HUD_FONT_SIZE,
+	BITMAP_FONT_SCALE,
+} from './constants';
+import { DUEL_NAMEPLATE } from './duelLayout';
 
 type BoardLayoutLike = {
 	x: number;
 	y: number;
-	visualWidth: number;
-	visualHeight: number;
+	width: number;
+	height: number;
+	scale: number;
+	pivot: { x: number; y: number };
 };
 
-/** MainContainer-local centre for under-board WIN text. */
-export const getWinHudLocalPos = (board: BoardLayoutLike) => ({
-	x: board.x + board.visualWidth * WIN_X_OFFSET_FRAC,
-	y: board.y + board.visualHeight * (0.5 + WIN_BELOW_BOTTOM_FRAC),
+type MainLayoutLike = {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	scale: number;
+};
+
+/** Fine optical nudge inside the plate (fraction of pulled nameplate height, + = down). */
+const WIN_IN_PLATE_Y_NUDGE_FRAC = 0.78;
+const WIN_IN_PLATE_X_NUDGE_FRAC = 0;
+
+/** Font size as a fraction of on-screen nameplate height (proxima-nova matches FS intro). */
+const WIN_FONT_OF_PLATE_H = 1.12;
+
+const deskSlotSize = (board: BoardLayoutLike) => ({
+	width: (board.width * DESK_PARCHMENT_PADDING.width) / DESK_PARCHMENT.widthFrac,
+	height: (board.height * DESK_PARCHMENT_PADDING.height) / DESK_PARCHMENT.heightFrac,
 });
 
+/** Unscaled desk-slot centre in board pivot space (matches BoardFrame). */
+const deskSlotCenterLocal = (board: BoardLayoutLike, slot: { width: number; height: number }) => {
+	const frameX = board.pivot.x + BOARD_FRAME_OFFSET.x;
+	const frameY = board.pivot.y + BOARD_FRAME_OFFSET.y;
+	return {
+		x: frameX - DESK_PARCHMENT.offsetXFrac * slot.width - board.pivot.x,
+		y: frameY - DESK_PARCHMENT.offsetYFrac * slot.height + DESK_VISUAL_OFFSET_Y - board.pivot.y,
+	};
+};
+
+/**
+ * MainContainer-local centre for under-board WIN text — sits on the nameplate
+ * dark fill, not a fixed gap under the playfield.
+ */
+export const getWinHudLocalPos = (board: BoardLayoutLike) => {
+	const slot = deskSlotSize(board);
+	const slotCenter = deskSlotCenterLocal(board, slot);
+	const pulledH = slot.height - DESK_BOTTOM_PULL_PX;
+
+	const fx = DUEL_NAMEPLATE.left + DUEL_NAMEPLATE.width * 0.5;
+	const fy = DUEL_NAMEPLATE.top + DUEL_NAMEPLATE.height * 0.5;
+
+	// Top-anchored DESK_BOTTOM_PULL — top rail fixed, bottom (nameplate) lifts.
+	const localX = slotCenter.x + (fx - 0.5) * slot.width;
+	const localY = slotCenter.y - slot.height * 0.5 + fy * pulledH;
+
+	const plateH = DUEL_NAMEPLATE.height * pulledH * board.scale;
+	const plateW = DUEL_NAMEPLATE.width * slot.width * board.scale;
+
+	return {
+		x: board.x + localX * board.scale + plateW * WIN_IN_PLATE_X_NUDGE_FRAC,
+		y: board.y + localY * board.scale + plateH * WIN_IN_PLATE_Y_NUDGE_FRAC,
+		maxWidth: plateW * 0.92,
+		plateHeight: plateH,
+	};
+};
+
+/** Screen CSS box for the HTML under-board WIN (proxima-nova). */
+export const getWinHudScreenBox = (opts: {
+	mainLayout: MainLayoutLike;
+	boardLayout: BoardLayoutLike;
+}) => {
+	const local = getWinHudLocalPos(opts.boardLayout);
+	const ml = opts.mainLayout;
+	const s = ml.scale;
+	const plateHScreen = local.plateHeight * s;
+	return {
+		centerX: ml.x + (local.x - ml.width * 0.5) * s,
+		centerY: ml.y + (local.y - ml.height * 0.5) * s,
+		maxWidth: local.maxWidth * s,
+		fontSize: Math.max(10, plateHScreen * WIN_FONT_OF_PLATE_H),
+	};
+};
+
+/** @deprecated Prefer plate-relative sizing via getWinHudScreenBox. */
+export const getWinHudFontSize = (boardScale: number) =>
+	WIN_HUD_FONT_SIZE * BITMAP_FONT_SCALE * (boardScale / BOARD_LAYOUT_SCALE.desktop);
+
 export const WIN_HUD_LAYOUT = {
-	BELOW_BOTTOM_FRAC: WIN_BELOW_BOTTOM_FRAC,
-	X_OFFSET_FRAC: WIN_X_OFFSET_FRAC,
+	NAMEPLATE: DUEL_NAMEPLATE,
+	IN_PLATE_Y_NUDGE_FRAC: WIN_IN_PLATE_Y_NUDGE_FRAC,
+	IN_PLATE_X_NUDGE_FRAC: WIN_IN_PLATE_X_NUDGE_FRAC,
+	FONT_OF_PLATE_H: WIN_FONT_OF_PLATE_H,
 } as const;

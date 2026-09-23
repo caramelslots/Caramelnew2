@@ -64,6 +64,7 @@
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinCounterPortraitHtml from './FreeSpinCounterPortraitHtml.svelte';
 	import BoardNeonLogoHtmlOverlay from './BoardNeonLogoHtmlOverlay.svelte';
+	import WinHudHtmlOverlay from './WinHudHtmlOverlay.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
 	import DuelModeOverlay from './DuelModeOverlay.svelte';
@@ -199,8 +200,6 @@
 					<DuelPixiBoard side="cat" layer="nameplate" />
 					<DuelPixiBoard side="dog" layer="paylines" />
 					<DuelPixiBoard side="cat" layer="paylines" />
-					<DuelPixiBoard side="dog" layer="win" />
-					<DuelPixiBoard side="cat" layer="win" />
 				{:else}
 					<Container zIndex={-3}>
 						<MainContainer>
@@ -309,6 +308,7 @@
 </div>
 <FreeSpinCounterPortraitHtml />
 <BoardNeonLogoHtmlOverlay />
+<WinHudHtmlOverlay />
 <!-- Duel HTML chrome (pick / counters / outro). Desks + mascots + paw coins are Pixi. -->
 <DuelModeOverlay />
 <DuelIntro />

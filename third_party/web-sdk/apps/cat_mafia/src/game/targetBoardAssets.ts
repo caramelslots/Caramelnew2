@@ -199,6 +199,11 @@ export type TargetShotFlipFx = {
 	y: number;
 	/** Seat box size (px) — disc fills this. */
 	size: number;
+	/**
+	 * Animation finished — hold wood back + FS label in Pixi (no spine).
+	 * Avoids handing off to HTML (font/stroke jump) and frees the flip spine.
+	 */
+	settled?: boolean;
 };
 
 export type TargetShotFlipLabelFx = {
@@ -206,6 +211,16 @@ export type TargetShotFlipLabelFx = {
 	scaleX: number;
 	scaleY: number;
 };
+
+/** Same formulas as TargetFlipPixiLayer — keep HTML fallback in sync if used. */
+export const targetFaceNumFontPx = (seatSize: number) =>
+	Math.round(Math.max(14, seatSize * 0.42));
+export const targetFaceFsFontPx = (seatSize: number) =>
+	Math.round(Math.max(8, seatSize * 0.16));
+export const targetFaceNumStrokePx = (seatSize: number) =>
+	Math.max(2, Math.round(seatSize * 0.04));
+export const targetFaceFsStrokePx = (seatSize: number) =>
+	Math.max(1, Math.round(seatSize * 0.02));
 
 /**
  * Fit flip viewport into a seat-sized box; disc center at local origin.

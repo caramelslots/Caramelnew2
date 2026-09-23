@@ -155,8 +155,9 @@
 		'forearm2',
 	]);
 	/**
-	 * Designer `win` / idle mix flash sunburst + green glows behind the cat
-	 * when the × drum lands. Keep them only for payline `activation` (👍).
+	 * Idle-mix / settled flash of sunburst + green glows behind the cat when
+	 * the × badge pins. Keep authored VFX during `win`, drum spin, and
+	 * payline `activation` (👍).
 	 */
 	const SUPPRESS_BEHIND_CAT_GLOW_SLOTS = [
 		'Circle_rays_22',
@@ -171,9 +172,9 @@
 	] as const;
 	const HAND_ABOVE_WHEEL_NATIVE_S = SUPER_WILD_WIN_HAND_ABOVE_WHEEL_NATIVE_MS / 1000;
 
-	/** Kill mid-`win` / idle-mix ray flash; leave `activation` VFX alone. */
+	/** Hide settled/idle ray flash only — allow win + wheel spin + activation. */
 	const suppressBehindCatGlow = () => {
-		if (activating) return;
+		if (activating || catWinding || wheelSpinning) return;
 		const skeleton = spine.skeleton;
 		if (!skeleton) return;
 		for (const name of SUPPRESS_BEHIND_CAT_GLOW_SLOTS) {

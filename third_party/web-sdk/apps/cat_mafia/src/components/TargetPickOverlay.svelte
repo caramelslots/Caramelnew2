@@ -238,7 +238,7 @@
 				nonce: spineNonce,
 				seatIndex: index,
 				anim: flipAnim,
-				value: faceValues[index] ?? awardedFs,
+				value: awardedFs,
 				x: seatCx || pickBoard?.getSeatCenter(index)?.x || 0,
 				y: seatCy || pickBoard?.getSeatCenter(index)?.y || 0,
 				size,
@@ -252,13 +252,18 @@
 		});
 		onSpineResolve = null;
 
-		// Mark flipped for hit-lock / cabinet disc hide, but keep the Pixi flip
-		// spine on its last frame until `targetPickDismiss`. Clearing flips here
-		// handed off to the HTML FS face — when steam raises the Pixi stage
-		// above HTML (`above-html-ui`), that face vanished while the wood board
-		// and other discs stayed visible.
+		// Mark flipped for hit-lock / cabinet disc hide, but keep the Pixi FS
+		// label (settled wood back — same TightCanvasText as during the spin).
+		// Handing off to HTML made the digits jump in size after the clip.
 		flipped = flipped.map((v, i) => (i === index ? true : v));
 		spineSeat = null;
+		stateGame.targetShotFlips = stateGame.targetShotFlips.map((f) =>
+			f.nonce === spineNonce ? { ...f, settled: true } : f,
+		);
+		stateGame.targetShotFlipLabels = {
+			...stateGame.targetShotFlipLabels,
+			[spineNonce]: { visible: true, scaleX: 1, scaleY: 1 },
+		};
 
 		await mascotAfterShot;
 		stateGame.mascotPose = 'idle';
@@ -305,7 +310,6 @@
 			// not after the targets have finished arriving.
 			stateGame.mascotPose = 'gunStatIdle';
 			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_lift_targets' });
-			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_revolver_in' });
 			const mascotAimReady = (async () => {
 				await wait(MASCOT_GUN_STAT_IDLE_MS);
 				stateGame.mascotPose = 'aim';

@@ -8,16 +8,22 @@
 
 	import {
 		MASCOT_COIN_FLY_WAIT_MS,
+		MASCOT_GUN_DRAW_SWING_MS,
+		MASCOT_GUN_HOLSTER_MS,
 		MASCOT_HAT_DURATION_S,
 		MASCOT_HAT_HOLD_TIME_S,
+		MASCOT_IDLE_GYN_FLIP_MS,
 		MASCOT_IDLE_VARIANTS,
 		MASCOT_POSE_PLAYBACK,
+		REVOLVER_IN_ATTACK_MS,
 		nextMascotIdleVariantDelayMs,
 		pickMascotIdleVariant,
 		type MascotDevPreview,
 		type MascotPose,
 		type MascotSpineAnimation,
 	} from '../game/mascotHtmlSpine';
+	import { eventEmitter } from '../game/eventEmitter';
+	import { stateGame } from '../game/stateGame.svelte';
 
 	type Props = {
 		pose: MascotPose;
@@ -43,6 +49,7 @@
 	let forceIdle3HoldTimer: ReturnType<typeof setTimeout> | undefined;
 	/** Win like/applause already played for this pose — don't restart after idle return. */
 	let settledWinReaction: MascotPose | undefined;
+	let revolverWhooshTimers: ReturnType<typeof setTimeout>[] = [];
 
 	const hideSmileSlot = () => {
 		const skeleton = spine.skeleton;
@@ -121,6 +128,43 @@
 		state.apply(skeleton);
 		hideSmileSlot();
 		if (animation === 'gun_start') hideGunStartCartridge();
+		armRevolverWhooshes(animation);
+	};
+
+	const clearRevolverWhooshes = () => {
+		for (const timer of revolverWhooshTimers) clearTimeout(timer);
+		revolverWhooshTimers = [];
+	};
+
+	/** `sfx_revolver_in` on the flip itself, not on the earlier scale-up. */
+	const scheduleRevolverWhoosh = (atMs: number) => {
+		const delay = Math.max(0, atMs - REVOLVER_IN_ATTACK_MS);
+		revolverWhooshTimers.push(
+			setTimeout(() => {
+				eventEmitter.broadcast({
+					type: 'soundOnce',
+					name: 'sfx_revolver_in',
+					forcePlay: true,
+				});
+			}, delay),
+		);
+	};
+
+	const armRevolverWhooshes = (animation: MascotSpineAnimation) => {
+		clearRevolverWhooshes();
+		if (animation === 'gun_shot_stat_idle') {
+			// Target-shoot round: the whoosh is the holster, not the draw.
+			if (stateGame.drumShootActive) return;
+			scheduleRevolverWhoosh(MASCOT_GUN_DRAW_SWING_MS);
+			return;
+		}
+		if (animation === 'gun_shot_end' && stateGame.drumShootActive) {
+			scheduleRevolverWhoosh(MASCOT_GUN_HOLSTER_MS);
+			return;
+		}
+		if (animation === 'idle_gyn') {
+			scheduleRevolverWhoosh(MASCOT_IDLE_GYN_FLIP_MS);
+		}
 	};
 
 	const holdCurrentClipEnd = () => {
@@ -166,6 +210,7 @@
 
 	const resetIdleVariants = () => {
 		clearIdleVariantTimer();
+		clearRevolverWhooshes();
 		idleVariantPlaying = false;
 	};
 

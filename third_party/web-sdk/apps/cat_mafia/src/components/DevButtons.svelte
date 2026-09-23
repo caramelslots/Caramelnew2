@@ -308,6 +308,7 @@
 			seatNextChamber();
 		}
 		stateGame.mascotPose = 'gunEndLoad';
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_revolver_barrell_spining' });
 		await new Promise((r) => setTimeout(r, MASCOT_GUN_END_LOAD_MS));
 		stateGame.mascotPose = 'idle';
 		await new Promise((r) => setTimeout(r, 400));
@@ -461,7 +462,6 @@
 		}
 
 		stateGame.mascotPose = 'gunStatIdle';
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_revolver_in' });
 		await new Promise((r) => setTimeout(r, MASCOT_GUN_STAT_IDLE_MS));
 		stateGame.mascotPose = 'aim';
 		await new Promise((r) => setTimeout(r, MASCOT_GUN_SHOT_AIM_MS));

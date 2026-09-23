@@ -73,6 +73,7 @@ import type { GameType, RawSymbol, SymbolName, SymbolState } from './types';
 import { stateLayoutDerived } from './stateLayout';
 import { winLevelMap } from './winLevelMap';
 import { eventEmitter } from './eventEmitter';
+import { COIN_TURN_SOUNDS } from './sound';
 import {
 	SYMBOL_SIZE,
 	BOARD_SIZES,
@@ -144,7 +145,16 @@ const onSymbolLand = ({
 			name: 'sfx_multiplier_landing',
 		});
 	}
+
+	if (rawSymbol.name === 'PB' || rawSymbol.name === 'PS' || rawSymbol.name === 'PG') {
+		const name = COIN_TURN_SOUNDS[pawCoinLandSound % COIN_TURN_SOUNDS.length];
+		pawCoinLandSound += 1;
+		eventEmitter.broadcast({ type: 'soundOnce', name, forcePlay: true });
+	}
 };
+
+/** Cycles `sfx_coin_1`…`5` across paw-coin reel lands in one spin. */
+let pawCoinLandSound = 0;
 
 /** End slow-down / zoom once the spin's max bonus count has landed; snap remaining slow reels. */
 const cancelCatSlowIfMaxBonusesReached = () => {

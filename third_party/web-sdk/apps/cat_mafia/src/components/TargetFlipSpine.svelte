@@ -49,10 +49,7 @@
 	let finished = false;
 	let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
 
-	/** v4 attachment windows (seconds): back 0.10–0.35 and 0.64–end. */
-	const BACK_A = [0.1, 0.3485] as const;
-	const BACK_B = 0.6382;
-	/** Wait until the back face is mostly open — avoids the number on the front. */
+	/** Face mostly open — skip the edge-on squash. */
 	const BACK_OPEN = 0.45;
 
 	const syncFs = (spinePlayer: SpinePlayer) => {
@@ -60,16 +57,17 @@
 			fsStyle = 'opacity:0';
 			return;
 		}
-		const bone = spinePlayer.skeleton?.findBone('front');
-		if (!bone) {
+		const skel = spinePlayer.skeleton;
+		const bone = skel?.findBone('front');
+		if (!bone || !skel) {
 			fsStyle = 'opacity:0';
 			return;
 		}
-		const t = spinePlayer.animationState?.getCurrent(0)?.trackTime ?? 0;
-		const onBack = (t >= BACK_A[0] && t < BACK_A[1]) || t >= BACK_B;
-		const sx = bone.scaleX;
-		const sy = bone.scaleY;
-		const open = Math.abs(sy) >= BACK_OPEN && Math.abs(sx) >= BACK_OPEN;
+		const sx = Math.abs(bone.scaleX) || 1;
+		const sy = Math.abs(bone.scaleY) || 1;
+		const open = sy >= BACK_OPEN && sx >= BACK_OPEN;
+		// Only on the wood `back` face — never on the bullseye `front`.
+		const onBack = skel.findSlot('back')?.getAttachment() != null;
 		const visible = onBack && open;
 		fsStyle = [
 			`opacity:${visible ? 1 : 0}`,

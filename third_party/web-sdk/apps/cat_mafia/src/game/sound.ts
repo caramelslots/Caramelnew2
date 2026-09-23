@@ -59,7 +59,7 @@ export type SoundEffectName =
 	| 'sfx_winlevel_small'
 	| 'sfx_youwon_panel';
 
-/** Paw-coin flip, one voice per appearing coin (cycles after five). */
+/** Paw-coin voices. One per coin on the flip, and again when that coin lands. */
 export const COIN_TURN_SOUNDS = [
 	'sfx_coin_1',
 	'sfx_coin_2',

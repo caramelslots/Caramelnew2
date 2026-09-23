@@ -1,10 +1,13 @@
 <!--
-	Pixi Canvas Text, but GPU pages stay small.
+	Pixi CanvasText, but GPU pages stay small.
 
 	Pixi pads each string to nextPow2(measure × resolution). Super Wild
 	labels at ~196px × DPR 2–3 become 1024² (4 MB) per style. Bake at a
 	capped font size with resolution 1, then scale the object to the
 	visual size.
+
+	Tir target faces pass a higher maxBakePx / bakeResolution — only a few
+	labels, and upscaling 64px glyphs looks muddy on the wood disc.
 -->
 <script lang="ts">
 	import { Text } from 'pixi-svelte';
@@ -17,6 +20,8 @@
 
 	type Props = TextOptions & {
 		maxBakePx?: number;
+		/** Override CanvasText resolution (default 1). */
+		bakeResolution?: number;
 		onresize?: (sizes: { width: number; height: number }) => void;
 	};
 
@@ -25,6 +30,7 @@
 	const visualSize = $derived(Math.max(1, Number(props.style?.fontSize) || 24));
 	const bakeSize = $derived(Math.min(visualSize, props.maxBakePx ?? CANVAS_TEXT_MAX_BAKE_PX));
 	const fit = $derived(visualSize / bakeSize);
+	const bakeResolution = $derived(Math.max(1, props.bakeResolution ?? 1));
 
 	const bakeStyle = $derived.by(() => {
 		const style = { ...(props.style ?? {}), fontSize: bakeSize };
@@ -50,5 +56,5 @@
 	{...props}
 	style={bakeStyle}
 	{scale}
-	resolution={1}
+	resolution={bakeResolution}
 />
