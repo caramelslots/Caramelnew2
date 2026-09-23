@@ -45,7 +45,9 @@
 		BULLET_DISAPPEAR_EARLY_MS,
 		BULLET_FLY_CATCH_MS,
 		BULLET_FLY_LEAD_MS,
+		WIN_HUD_COUNT_UP_MS,
 	} from '../game/constants';
+	import { waitForGameSpeed } from '../game/gameSpeed';
 	import {
 		getDrumLastFilledChamberIndex,
 		withDrumBulletOrient,
@@ -1425,45 +1427,27 @@
 
 	const playSmallWin = () => playSetWin(3, 5 * x);
 
-	const playWinPrecisionDemo = (bookAmount: number, label: string) =>
+	const playWinPrecisionDemo = (bookAmount: number, label: string, fractionDigits: number) =>
 		guard(async () => {
 			stateBetDerived.setBetAmount(1);
 			stateBet.wageredBetAmount = 1;
-			const winInfo = {
-				type: 'winInfo' as const,
-				totalWin: bookAmount,
-				wins: [
-					{
-						symbol: 'H1',
-						kind: 3,
-						win: bookAmount,
-						positions: [
-							{ reel: 0, row: 1 },
-							{ reel: 1, row: 1 },
-							{ reel: 2, row: 1 },
-						],
-						meta: {
-							lineIndex: 1,
-							multiplier: 1,
-							winWithoutMult: bookAmount,
-							globalMult: 1,
-							lineMultiplier: 1.0,
-						},
-					},
-				],
-			};
+			devPreview.winForceFractionDigits = fractionDigits;
+			devPreview.forceWinHudCountUp = true;
+			stateGame.winHudCountUpPending = false;
+			stateBet.winBookEventAmount = 0;
+			// Let the HUD snap to 0 before counting up (otherwise tween starts mid-value).
+			await waitForGameSpeed(32, stateGame.gameSpeed);
 			// eslint-disable-next-line no-console
-			console.log(`[DEV] ${label}: bet=$1 book=${bookAmount}`);
-			await playBookEvents([reveal(LINE_WIN_BOARD), asEvent(winInfo)]);
+			console.log(`[DEV] ${label}: bet=$1 book=${bookAmount} (${fractionDigits}dp count-up)`);
+			stateGame.winHudCountUpPending = true;
 			stateBet.winBookEventAmount = bookAmount;
-			await playBookEvent(asEvent({ type: 'setWin', amount: bookAmount, winLevel: 3 }), {
-				bookEvents: [],
-			});
+			await waitForGameSpeed(WIN_HUD_COUNT_UP_MS, stateGame.gameSpeed);
+			devPreview.forceWinHudCountUp = false;
 		});
 
 	/**
-	 * Under-board WIN stacker debug — FS HUD tween via `forceWinHudCountUp`,
-	 * without flipping `gameType` (that would load bonus GPU / white cat).
+	 * Under-board WIN stacker debug — drives WinHudHtmlOverlay count-up directly
+	 * (same pending flag as setTotalWin / FS), without flipping gameType.
 	 * Bet $0.50 → 1 book = $0.005 (useful with forced 3dp).
 	 */
 	const WIN_STACK_DEBUG_BET = 0.5;
@@ -1487,13 +1471,10 @@
 					`(1 book=$${WIN_STACK_DEBUG_BET / 100})`,
 			);
 			devPreview.forceWinHudCountUp = true;
-			try {
-				await playBookEvent(asEvent({ type: 'setTotalWin', amount: to }), {
-					bookEvents: [],
-				});
-			} finally {
-				devPreview.forceWinHudCountUp = false;
-			}
+			stateGame.winHudCountUpPending = true;
+			stateBet.winBookEventAmount = to;
+			await waitForGameSpeed(WIN_HUD_COUNT_UP_MS, stateGame.gameSpeed);
+			devPreview.forceWinHudCountUp = false;
 		});
 
 	const resetWinHudStack = () => {
@@ -2556,8 +2537,9 @@
 			<section>
 				<h4>Win Precision (QA)</h4>
 				<p class="subhint">
-					FS count-up via setTotalWin. +40 = currency dp (USD 2). +40 · 3dp forces three
-					fraction digits ($0.005 steps @ $0.50 bet) to verify L/R stability.
+					Under-board WIN count-up (HTML proxima-nova). +40 = currency dp (USD 2). +40 · 3dp
+					forces three fraction digits ($0.005 steps @ $0.50 bet). Precision buttons count
+					from 0 with forced dp.
 				</p>
 				<div class="grid">
 					<button
@@ -2589,14 +2571,14 @@
 					<button
 						type="button"
 						disabled={busy}
-						onclick={() => playWinPrecisionDemo(7.5, 'Win $0.075')}
+						onclick={() => playWinPrecisionDemo(7.5, 'Win $0.075', 3)}
 					>
 						Win $0.075
 					</button>
 					<button
 						type="button"
 						disabled={busy}
-						onclick={() => playWinPrecisionDemo(12.3456, 'Win $0.123456')}
+						onclick={() => playWinPrecisionDemo(12.3456, 'Win $0.123456', 6)}
 					>
 						Win $0.123456
 					</button>

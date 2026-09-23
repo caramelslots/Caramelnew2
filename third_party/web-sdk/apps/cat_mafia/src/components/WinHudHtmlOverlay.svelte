@@ -1,15 +1,18 @@
 <!--
 	Under-board WIN — proxima-nova + gold gradient (same face as FS intro
 	CONGRATULATIONS). Anchored to the desk nameplate via getWinHudScreenBox.
+	Count-up: fixed amount slot + tabular-nums so the label does not jitter.
 -->
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { Tween } from 'svelte/motion';
-	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { stateBet } from 'state-shared';
 
 	import { WIN_HUD_COUNT_UP_MS } from '../game/constants';
 	import { getContext } from '../game/context';
+	import { amountToLayoutParts } from '../game/currencyTextSegments';
 	import { computeDuelScreenLayout, getDuelPixiBoardLayout } from '../game/duelLayout';
+	import { devPreview } from '../game/devPreview.svelte';
 	import { scaleMsByGameSpeed } from '../game/gameSpeed';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
@@ -17,6 +20,39 @@
 	import { getWinHudScreenBox } from '../game/winHudLayout';
 
 	const context = getContext();
+
+	const LETTER_SPACING_EM = 0.08;
+
+	/** Prefix + amount split — amount sits in a locked-width slot during count-up. */
+	const formatWinParts = (bookAmount: number, prefix: string) => {
+		const parts = amountToLayoutParts(bookAmount, {
+			bookEvent: true,
+			prefix,
+			fractionDigits: devPreview.winForceFractionDigits,
+		});
+		return {
+			prefix: parts.label.trim(),
+			amount: `${parts.before}${parts.symbol}${parts.after}`,
+		};
+	};
+
+	const measureAmountPx = (text: string, fontSize: number) => {
+		if (typeof document === 'undefined' || fontSize <= 0 || !text) return 0;
+		const canvas = document.createElement('canvas');
+		const ctx = canvas.getContext('2d');
+		if (!ctx) return text.length * fontSize * 0.55;
+		ctx.font = `800 ${fontSize}px proxima-nova, sans-serif`;
+		const base = ctx.measureText(text).width;
+		const tracking = Math.max(0, text.length - 1) * fontSize * LETTER_SPACING_EM;
+		return Math.ceil(base + tracking);
+	};
+
+	/** Keep amount slot ≥ widest of live / tween-target / book target (no shrink jitter). */
+	const amountSlotPx = (liveBook: number, targetBook: number, fontSize: number, prefix: string) => {
+		const live = formatWinParts(liveBook, prefix).amount;
+		const end = formatWinParts(targetBook, prefix).amount;
+		return Math.max(measureAmountPx(live, fontSize), measureAmountPx(end, fontSize));
+	};
 
 	let uiVisible = $state(true);
 	context.eventEmitter.subscribeOnMount({
@@ -69,14 +105,18 @@
 			: null,
 	);
 
-	/** Base-game under-board WIN count-up. */
+	/**
+	 * Under-board WIN: snap by default. Book handlers set `winHudCountUpPending`
+	 * for bonus FS (any increase) or base post-SW — we tween that increase.
+	 * `untrack(from)` so tween frames do not re-enter this effect and snap.
+	 */
 	const winTween = new Tween(stateBet.winBookEventAmount);
 	let winTweenTarget: number | null = null;
 	$effect(() => {
 		if (duelActive) return;
 		const target = stateBet.winBookEventAmount;
 		const wantCountUp = stateGame.winHudCountUpPending;
-		const from = winTween.current;
+		const from = untrack(() => winTween.current);
 
 		if (target <= 0 || target + 0.01 < from) {
 			if (wantCountUp && target <= 0 && from <= 0) return;
@@ -101,29 +141,26 @@
 		winTween.set(target, { duration: 0 });
 	});
 
-	const displayWin = $derived(Math.round(winTween.current));
 	const showBaseWin = $derived(
 		!duelActive &&
 			gameEntrance.showContent &&
-			(stateBet.winBookEventAmount > 0 || displayWin > 0),
+			(stateBet.winBookEventAmount > 0 || winTween.current > 0),
 	);
 
-	/** Duel side-bank count-ups. */
-	const dogTween = new Tween(0);
-	const catTween = new Tween(0);
+	const dogTween = new Tween(stateDuel.dogTotal);
+	const catTween = new Tween(stateDuel.catTotal);
 	let dogTweenTarget: number | null = null;
 	let catTweenTarget: number | null = null;
 
 	const runSideTween = (
 		side: DuelSide,
 		tween: Tween<number>,
-		getTarget: () => number,
-		getTweenTarget: () => number | null,
-		setTweenTarget: (v: number | null) => void,
+		target: number,
+		wantCountUp: boolean,
+		marked: number | null,
+		setMarked: (v: number | null) => void,
 	) => {
-		const target = getTarget();
-		const wantCountUp = stateDuel.winHudCountUpPendingBySide[side];
-		const from = tween.current;
+		const from = untrack(() => tween.current);
 
 		const clearFlag = () => {
 			if (!stateDuel.winHudCountUpPendingBySide[side]) return;
@@ -132,24 +169,23 @@
 
 		if (target <= 0 || target + 0.01 < from) {
 			clearFlag();
-			setTweenTarget(null);
+			setMarked(null);
 			tween.set(target, { duration: 0 });
 			return;
 		}
 
 		if (wantCountUp && target > from + 0.01) {
 			clearFlag();
-			setTweenTarget(target);
+			setMarked(target);
 			tween.set(target, {
 				duration: scaleMsByGameSpeed(WIN_HUD_COUNT_UP_MS, stateGame.gameSpeed),
 			});
 			return;
 		}
 
-		const marked = getTweenTarget();
 		if (marked != null && Math.abs(target - marked) < 0.01) return;
 
-		setTweenTarget(null);
+		setMarked(null);
 		tween.set(target, { duration: 0 });
 	};
 
@@ -158,8 +194,9 @@
 		runSideTween(
 			'dog',
 			dogTween,
-			() => stateDuel.dogTotal,
-			() => dogTweenTarget,
+			stateDuel.dogTotal,
+			stateDuel.winHudCountUpPendingBySide.dog,
+			dogTweenTarget,
 			(v) => {
 				dogTweenTarget = v;
 			},
@@ -170,25 +207,51 @@
 		runSideTween(
 			'cat',
 			catTween,
-			() => stateDuel.catTotal,
-			() => catTweenTarget,
+			stateDuel.catTotal,
+			stateDuel.winHudCountUpPendingBySide.cat,
+			catTweenTarget,
 			(v) => {
 				catTweenTarget = v;
 			},
 		);
 	});
 
-	const displayDog = $derived(Math.round(dogTween.current));
-	const displayCat = $derived(Math.round(catTween.current));
 	const showDuelWin = $derived(duelActive && gameEntrance.showContent);
 
 	const winPrefix = $derived(context.i18nDerived.win().toUpperCase());
-	const formatWin = (amount: number) =>
-		`${winPrefix} ${bookEventAmountToCurrencyString(amount)}`;
 
-	const baseLabel = $derived(formatWin(displayWin));
-	const dogLabel = $derived(formatWin(displayDog));
-	const catLabel = $derived(formatWin(displayCat));
+	const baseParts = $derived(formatWinParts(winTween.current, winPrefix));
+	const dogParts = $derived(formatWinParts(dogTween.current, winPrefix));
+	const catParts = $derived(formatWinParts(catTween.current, winPrefix));
+
+	const baseAmountMinW = $derived(
+		amountSlotPx(
+			winTween.current,
+			winTweenTarget ?? stateBet.winBookEventAmount,
+			baseBox?.fontSize ?? 0,
+			winPrefix,
+		),
+	);
+	const dogAmountMinW = $derived(
+		dogBox
+			? amountSlotPx(
+					dogTween.current,
+					dogTweenTarget ?? stateDuel.dogTotal,
+					dogBox.fontSize,
+					winPrefix,
+				)
+			: 0,
+	);
+	const catAmountMinW = $derived(
+		catBox
+			? amountSlotPx(
+					catTween.current,
+					catTweenTarget ?? stateDuel.catTotal,
+					catBox.fontSize,
+					winPrefix,
+				)
+			: 0,
+	);
 </script>
 
 {#if showBaseWin && baseBox}
@@ -201,7 +264,12 @@
 		style:font-size="{baseBox.fontSize}px"
 		aria-hidden="true"
 	>
-		<span class="win-hud-text">{baseLabel}</span>
+		<span class="win-hud-text">
+			{#if baseParts.prefix}
+				<span class="win-hud-prefix">{baseParts.prefix}</span>
+			{/if}
+			<span class="win-hud-amount" style:min-width="{baseAmountMinW}px">{baseParts.amount}</span>
+		</span>
 	</div>
 {/if}
 
@@ -215,7 +283,12 @@
 		style:font-size="{dogBox.fontSize}px"
 		aria-hidden="true"
 	>
-		<span class="win-hud-text">{dogLabel}</span>
+		<span class="win-hud-text">
+			{#if dogParts.prefix}
+				<span class="win-hud-prefix">{dogParts.prefix}</span>
+			{/if}
+			<span class="win-hud-amount" style:min-width="{dogAmountMinW}px">{dogParts.amount}</span>
+		</span>
 	</div>
 	<div
 		class="win-hud"
@@ -226,7 +299,12 @@
 		style:font-size="{catBox.fontSize}px"
 		aria-hidden="true"
 	>
-		<span class="win-hud-text">{catLabel}</span>
+		<span class="win-hud-text">
+			{#if catParts.prefix}
+				<span class="win-hud-prefix">{catParts.prefix}</span>
+			{/if}
+			<span class="win-hud-amount" style:min-width="{catAmountMinW}px">{catParts.amount}</span>
+		</span>
 	</div>
 {/if}
 
@@ -247,24 +325,39 @@
 		opacity: 0;
 	}
 
-	/* Same face as FreeSpinIntro .congratulations / .number */
 	.win-hud-text {
-		display: block;
+		display: inline-flex;
+		align-items: baseline;
+		justify-content: center;
+		gap: 0.35em;
+		max-width: 100%;
 		overflow: hidden;
-		text-overflow: ellipsis;
 		white-space: nowrap;
+		filter: drop-shadow(0 1px 0 #e8c878) drop-shadow(0 3px 0 #4a3008)
+			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
+	}
+
+	.win-hud-prefix,
+	.win-hud-amount {
 		font-family: 'proxima-nova', sans-serif;
 		font-weight: 800;
 		font-synthesis: none;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		line-height: 1;
-		color: #ffe28a;
-		background: linear-gradient(180deg, #fff6c8 0%, #ffd56a 38%, #e8a020 72%, #b8730f 100%);
+		color: #e8b84a;
+		/* Slightly darker gold than FS intro Congratulations — WIN-only. */
+		background: linear-gradient(180deg, #f0d070 0%, #e0a838 38%, #c07014 72%, #8a4e0c 100%);
 		-webkit-background-clip: text;
 		background-clip: text;
 		-webkit-text-fill-color: transparent;
-		filter: drop-shadow(0 1px 0 #fff3b0) drop-shadow(0 3px 0 #5a3a0e)
-			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
+	}
+
+	/* Locked width + tabular digits → amount grows in place, prefix stays put. */
+	.win-hud-amount {
+		display: inline-block;
+		flex: 0 0 auto;
+		text-align: right;
+		font-variant-numeric: tabular-nums lining-nums;
 	}
 </style>
