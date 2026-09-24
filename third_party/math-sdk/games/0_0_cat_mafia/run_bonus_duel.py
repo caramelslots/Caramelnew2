@@ -7,10 +7,12 @@ Usage (from this directory):
 
 Dev smoke (small N): set NUM_SIMS=200 before running.
 Optional: MODE=bonus_duel_cat|bonus_duel_dog to run one side only.
+Threads: NUM_THREADS=20 (create_books), RUST_THREADS=20 (opt only).
 
-Sim-time (default ON):
-  DUEL_LOSE_MIRROR=1  — lose pots follow SMOOTH · VH (payout still 0)
-  DUEL_INTRIGUE=1     — S1–S4 path via package reorder (+scale); board↔win stays honest
+Sim-time (default):
+  DUEL_INTRIGUE=1      — stamp intrigueShape from honest path (no reorder/scale/pad)
+  DUEL_COMP_QUOTAS=1   — retry empty loses / steamroll wins toward bank TARGET windows
+  DUEL_LOSE_MIRROR=0   — off; do not inflate banks after sim
 
 After intrigue/board fix — duel-only pipeline (no full M5): see MATH_COMMANDS.md §3c.
 After opt (weighted LUT), before resample — SMOOTH · VH body check / fix:
@@ -34,8 +36,8 @@ from src.write_data.write_configs import generate_configs
 
 
 if __name__ == "__main__":
-    num_threads = 1
-    rust_threads = 20
+    num_threads = int(os.environ.get("NUM_THREADS", "20"))
+    rust_threads = int(os.environ.get("RUST_THREADS", "20"))
     batching_size = 500
     compression = True
     n = int(os.environ.get("NUM_SIMS", str(int(1e5))))

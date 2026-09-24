@@ -180,6 +180,11 @@ class GameStateOverride(GameExecutables):
             if self.is_duel_betmode():
                 if getattr(self, "duel_cat_total", None) == getattr(self, "duel_dog_total", None):
                     self.repeat = True
+                    return
+                # Competition quotas: empty lose / steamroll win → re-roll (no nested retries).
+                if not getattr(self, "duel_comp_ok", True):
+                    self.repeat = True
+                    return
 
     def draw_board(self, emit_event: bool = True, trigger_symbol: str = "scatter") -> None:
         conditions = self.get_current_distribution_conditions()

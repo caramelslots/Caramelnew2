@@ -20,7 +20,8 @@ MODE_DOG = "bonus_duel_dog"
 
 
 def lose_mirror_enabled() -> bool:
-    return os.environ.get("DUEL_LOSE_MIRROR", "1") != "0"
+    # Default OFF: inflating banks after sim breaks board↔bank honesty.
+    return os.environ.get("DUEL_LOSE_MIRROR", "0") != "0"
 
 
 def _q(value: float) -> float:

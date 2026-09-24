@@ -186,10 +186,24 @@ FR1_ZW_WEIGHTS = [
 ]
 
 
+# BR_DUEL — buy-duel only. Same symbol set / paytable as BR0 (honest lines),
+# but denser lows so BOTH sides more often bank mid wins over 10×10 spins.
+# Goal: fewer empty/steamroll sessions for competition floors — not fake pads.
+# No B (duel strips bonus symbols in enforce anyway). SW kept for real curtains.
+BR_DUEL_WEIGHTS = [
+    {"L1": 52, "L2": 52, "L3": 52, "L4": 52, "H4": 5, "H3": 7, "H2": 9, "H1": 11, "SW": 2},
+    {"L1": 52, "L2": 52, "L3": 52, "L4": 52, "H4": 5, "H3": 7, "H2": 9, "H1": 11, "SW": 2},
+    {"L1": 52, "L2": 52, "L3": 52, "L4": 52, "H4": 5, "H3": 7, "H2": 9, "H1": 11, "SW": 2},
+    {"L1": 52, "L2": 52, "L3": 52, "L4": 52, "H4": 5, "H3": 7, "H2": 9, "H1": 11, "SW": 2},
+    {"L1": 52, "L2": 52, "L3": 52, "L4": 52, "H4": 5, "H3": 7, "H2": 9, "H1": 11, "SW": 2},
+]
+
+
 STRIPS = [
     ("BR0", BR0_WEIGHTS, 220, 1001),
     ("BR1", BR1_WEIGHTS, 220, 1002),
     ("BR2", BR2_WEIGHTS, 220, 1003),
+    ("BR_DUEL", BR_DUEL_WEIGHTS, 220, 1010),
     ("BR0_ZW", BR0_ZW_WEIGHTS, 220, 1101),
     ("BR1_ZW", BR1_ZW_WEIGHTS, 220, 1102),
     ("BR2_ZW", BR2_ZW_WEIGHTS, 220, 1103),

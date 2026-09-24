@@ -318,7 +318,7 @@ Web: **без** display-маппинга; только честный playback b
 
 | Риск | Митигация |
 |---|---|
-| Reshape ломает согласованность board↔win | v1: переставлять/рескейлить spin-win amounts при валидных событиях; или упрощённый pad+reorder без смены бордов |
+| Reshape ломает согласованность board↔win | **locked:** только reorder пакетов + `bankPad` до finals; **никогда** не scale `wins[]` / line amounts |
 | Случайно сменить winner | assert sign(totals) и `duelEnd.winner` |
 | Раздуть оба банка → уехать от SMOOTH | finals frozen **до** path reshape; не пересчитывать `payout` / `victoryAmount` заново с «красивых» банков |
 | Слишком много late steals → ощущение скрипта | вес S3 ограничить; миксовать S1/S2 |

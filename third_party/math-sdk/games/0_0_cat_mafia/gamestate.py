@@ -7,8 +7,8 @@ from src.events.events import reveal_event
 from game_override import GameStateOverride
 from game_events import duel_start_event, duel_bank_update_event, duel_end_event
 from src.events.events import set_total_event
-from duel_smooth_victory import maybe_mirror_lose_pot, bands_for_mode, mode_from_player_side
 from duel_intrigue import apply_duel_intrigue_to_book
+from duel_competition import competition_accept, competition_enabled
 
 
 class GameState(GameStateOverride):
@@ -38,12 +38,69 @@ class GameState(GameStateOverride):
             self.check_repeat()
         self.imprint_wins()
 
+    def _run_duel_spin_loop(self, player_side: str, total_spins: int) -> tuple[float, float]:
+        """Honest cat/dog spins; returns (dog_total, cat_total)."""
+        dog_total = 0.0
+        cat_total = 0.0
+        self.wincap_triggered = False
+        self.duel_sticky_sw = {"cat": {}, "dog": {}}
+
+        for spin_index in range(1, total_spins + 1):
+            if self.wincap_triggered:
+                break
+            for side in ("cat", "dog"):
+                if self.wincap_triggered:
+                    break
+                spin_win = self.run_duel_side_spin(side, spin_index)
+                if side == "cat":
+                    cat_total = round(cat_total + spin_win, 2)
+                    side_total = cat_total
+                else:
+                    dog_total = round(dog_total + spin_win, 2)
+                    side_total = dog_total
+
+                duel_bank_update_event(
+                    self,
+                    side=side,
+                    spin_win=spin_win,
+                    side_total=side_total,
+                    dog_total=dog_total,
+                    cat_total=cat_total,
+                )
+
+                projected = round(dog_total + cat_total, 2)
+                player_ahead = (
+                    cat_total > dog_total
+                    if player_side == "cat"
+                    else dog_total > cat_total
+                )
+                if projected >= self._fence_win_cap() and player_ahead:
+                    self.wincap_triggered = True
+                    break
+
+        return dog_total, cat_total
+
+    def _duel_force_skip_retry(self) -> bool:
+        """force_wincap / broken conditions must not be rejection-resampled."""
+        try:
+            cond = self.get_current_distribution_conditions() or {}
+        except Exception:  # noqa: BLE001
+            return True
+        if not isinstance(cond, dict):
+            return True
+        return bool(cond.get("force_wincap"))
+
     def run_duel(self, sim, simulation_seed=None):
-        """Buy Duel session: 10 pairs of (cat, dog) base-rule spins → compare banks."""
+        """Buy Duel session: 10 pairs of (cat, dog) base-rule spins → compare banks.
+
+        Competition quotas do NOT nest retries here — empty/steamroll outcomes set
+        duel_comp_ok=False and check_repeat re-rolls (same loop as win/lose fences).
+        """
         self.reset_seed(sim)
         self.repeat = True
         total_spins = 10
         player_side = self.resolve_duel_player_side()
+        mode = str(getattr(self, "betmode", "") or "")
 
         while self.repeat:
             self.reset_book()
@@ -53,6 +110,7 @@ class GameState(GameStateOverride):
             self.duel_payout = 0.0
             self.duel_player_side = player_side
             self.duel_player_won = False
+            self.duel_comp_ok = True
             self.wincap_triggered = False
             self.duel_sticky_sw = {"cat": {}, "dog": {}}
 
@@ -66,69 +124,31 @@ class GameState(GameStateOverride):
                 player_side=player_side,
             )
 
-            dog_total = 0.0
-            cat_total = 0.0
-
-            for spin_index in range(1, total_spins + 1):
-                if self.wincap_triggered:
-                    break
-                for side in ("cat", "dog"):
-                    if self.wincap_triggered:
-                        break
-                    spin_win = self.run_duel_side_spin(side, spin_index)
-                    if side == "cat":
-                        cat_total = round(cat_total + spin_win, 2)
-                        side_total = cat_total
-                    else:
-                        dog_total = round(dog_total + spin_win, 2)
-                        side_total = dog_total
-
-                    duel_bank_update_event(
-                        self,
-                        side=side,
-                        spin_win=spin_win,
-                        side_total=side_total,
-                        dog_total=dog_total,
-                        cat_total=cat_total,
-                    )
-
-                    # Soft/hard fence: stop once combined banks already exceed cap on a
-                    # winning path (player's side ahead). Losing path payout stays 0.
-                    projected = round(dog_total + cat_total, 2)
-                    player_ahead = (
-                        cat_total > dog_total
-                        if player_side == "cat"
-                        else dog_total > cat_total
-                    )
-                    if projected >= self._fence_win_cap() and player_ahead:
-                        self.wincap_triggered = True
-                        break
-
+            dog_total, cat_total = self._run_duel_spin_loop(player_side, total_spins)
             winner, payout = self.settle_duel_payout(dog_total, cat_total)
 
-            # B.0.1 lose-mirror: on lose, reshape pot to SMOOTH · VH (payout stays 0).
-            # Skip force_wincap paths (player win at criteria).
-            rng = random.Random((int(sim) * 1000003 + 17) & 0xFFFFFFFF)
-            if not self.duel_player_won:
-                mode = mode_from_player_side(self.duel_player_side or player_side)
-                dog_m, cat_m, _target = maybe_mirror_lose_pot(
-                    self.duel_dog_total,
-                    self.duel_cat_total,
-                    winner,
-                    player_won=False,
-                    player_side=self.duel_player_side or player_side,
-                    rng=rng,
-                    bands=bands_for_mode(mode),
+            # Soft filter: reject empty loses / steamroll wins via outer check_repeat.
+            if competition_enabled() and not self._duel_force_skip_retry():
+                self.duel_comp_ok = competition_accept(
+                    mode=mode,
+                    player_won=bool(self.duel_player_won),
+                    dog_total=self.duel_dog_total,
+                    cat_total=self.duel_cat_total,
+                    player_side=player_side,
                 )
-                winner, payout = self.settle_duel_payout(dog_m, cat_m)
+            else:
+                self.duel_comp_ok = True
 
-            # Phase A: rewrite spin/bank timeline for intrigue; finals frozen.
-            apply_duel_intrigue_to_book(
+            # Classify honest path only — never reorder/scale/pad banks or wins.
+            rng = random.Random((int(sim) * 1000003 + 17) & 0xFFFFFFFF)
+            intrigue_shape = apply_duel_intrigue_to_book(
                 self.book.events,
                 dog_total=self.duel_dog_total,
                 cat_total=self.duel_cat_total,
-                winner=winner,
+                winner=self.duel_winner or winner,
                 rng=rng,
+                player_side=self.duel_player_side,
+                player_won=self.duel_player_won,
             )
 
             win_level = None
@@ -142,11 +162,12 @@ class GameState(GameStateOverride):
                 self,
                 dog_total=self.duel_dog_total,
                 cat_total=self.duel_cat_total,
-                winner=winner,
+                winner=self.duel_winner or winner,
                 payout=payout,
                 win_level=win_level,
                 player_side=self.duel_player_side,
                 player_won=self.duel_player_won,
+                intrigue_shape=intrigue_shape,
             )
 
             self.evaluate_finalwin()

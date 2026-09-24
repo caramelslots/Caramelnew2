@@ -131,6 +131,11 @@ class GameConfig(Config):
         self.base_sw_mult_weights = {
             2: 790, 4: 130, 6: 50, 8: 30, 25: 20, 50: 10, 75: 5,
         }
+        # Duel curtains: same ×2–×8 ladder, no ultra ×25/×50/×75 — keeps honest SW
+        # but cuts one-side sticky steamrolls so both banks can stay competitive.
+        self.duel_sw_mult_weights = {
+            2: 700, 4: 180, 6: 80, 8: 40,
+        }
         # Paw-coin type split inside the (unchanged) ~3% paw fence quota.
         # Bronze 1 row / silver 2 rows / gold 3 rows — gold is rarest.
         self.paw_tier_weights = {"PB": 60, "PS": 30, "PG": 10}
@@ -147,6 +152,7 @@ class GameConfig(Config):
         reels = {
             "BR0": "BR0.csv",
             "BR1": "BR1.csv",
+            "BR_DUEL": "BR_DUEL.csv",
             "BR0_ZW": "BR0_ZW.csv",
             "BR1_ZW": "BR1_ZW.csv",
             "FR0": "FR0.csv",
@@ -275,16 +281,17 @@ class GameConfig(Config):
         }
 
         # Duel: 20 base-rule spins (cat→dog ×10). No FS / scatters / paw / bullets.
+        # BR_DUEL = denser honest lows (same paytable); milder curtain mults.
         duel_condition = {
-            "reel_weights": {self.basegame_type: {"BR0": 1}},
-            "mult_values": {self.basegame_type: dict(self.base_sw_mult_weights)},
+            "reel_weights": {self.basegame_type: {"BR_DUEL": 1}},
+            "mult_values": {self.basegame_type: dict(self.duel_sw_mult_weights)},
             "force_wincap": False,
             "force_freegame": False,
             "duel_mode": True,
         }
         duel_wincap_condition = {
-            "reel_weights": {self.basegame_type: {"BR0": 1}},
-            "mult_values": {self.basegame_type: dict(self.base_sw_mult_weights)},
+            "reel_weights": {self.basegame_type: {"BR_DUEL": 1}},
+            "mult_values": {self.basegame_type: dict(self.duel_sw_mult_weights)},
             "force_wincap": True,
             "force_freegame": False,
             "duel_mode": True,

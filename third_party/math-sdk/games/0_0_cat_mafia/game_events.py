@@ -262,6 +262,7 @@ def duel_end_event(
     win_level: int | None = None,
     player_side: str | None = None,
     player_won: bool | None = None,
+    intrigue_shape: str | None = None,
 ) -> None:
     event = {
         "index": len(gamestate.book.events),
@@ -277,4 +278,6 @@ def duel_end_event(
         event["playerWon"] = bool(player_won)
     if win_level is not None:
         event["winLevel"] = int(win_level)
+    if intrigue_shape:
+        event["intrigueShape"] = str(intrigue_shape)
     gamestate.book.add_event(event)

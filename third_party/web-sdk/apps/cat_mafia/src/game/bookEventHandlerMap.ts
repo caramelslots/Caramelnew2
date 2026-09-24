@@ -184,10 +184,13 @@ const playDuelWinLines = async (
 	broadcastCurtainActivation(wins, side);
 
 	const anchorWin = wins[0];
+	// Always show paytable line sum — never a scaled totalWin that drifted from symbols.
+	const lineSum = wins.reduce((s, w) => s + (Number(w.win) || 0), 0);
+	const amount = lineSum > 0 ? lineSum : totalWin;
 	eventEmitter.broadcast({
 		type: 'paylineWinAmountShow',
 		side,
-		amount: totalWin,
+		amount,
 		anchor: {
 			lineIndex: anchorWin.meta?.lineIndex ?? 0,
 			positions: anchorWin.positions,

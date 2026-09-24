@@ -1,16 +1,11 @@
-"""Phase A — mathematical duel intrigue (S1–S4 path reshape).
+"""Duel intrigue — classify honest paths only (no path mutation).
 
-Finals (winner, dogTotal, catTotal, payout) stay frozen.
+Core invariant (never break):
+  board → paytable lines → spinWin → bank.
+  Sticky SW / phase1–phase2 stay in natural sim order (same as bonus_normal).
 
-Honesty rule (board ↔ win):
-  We never rewrite spinWin on top of an unrelated board.
-  1) If lose-mirror / fence changed finals, uniformly scale each side's spin
-     packages (spinWin, wins[].win, phase1, bank delta) so amounts stay tied
-     to the same symbols.
-  2) Reorder whole spin packages per side to approximate the scenario curve.
-  3) Rebuild bank cumulatives from the reordered (scaled) package amounts.
-
-Board symbols and line wins always travel together with their spinWin.
+This module stamps an intrigue *shape* on duelStart/duelEnd from the honest
+bank path. It must not reorder packages, scale wins[], or bankPad.
 """
 
 from __future__ import annotations
@@ -20,11 +15,32 @@ import os
 import random
 from typing import Any
 
+# |dog−cat| / pot bands for finish classification
+CLOSE_GAP_FRAC = 0.20
+MEDIUM_GAP_FRAC = 0.50  # (CLOSE, MEDIUM]; above → BLOWOUT
+
+SHAPE_CLOSE_WIN = "CLOSE_WIN"
+SHAPE_MEDIUM_WIN = "MEDIUM_WIN"
+SHAPE_BLOWOUT_WIN = "BLOWOUT_WIN"
+SHAPE_CLOSE_LOSE = "CLOSE_LOSE"
+SHAPE_MEDIUM_LOSE = "MEDIUM_LOSE"
+SHAPE_BLOWOUT_LOSE = "BLOWOUT_LOSE"
+SHAPE_LEAD_THEN_LOSE = "LEAD_THEN_LOSE"
+
+
+def finish_band(gap_frac: float) -> str:
+    if gap_frac <= CLOSE_GAP_FRAC:
+        return "CLOSE"
+    if gap_frac <= MEDIUM_GAP_FRAC:
+        return "MEDIUM"
+    return "BLOWOUT"
+
+# Legacy S1–S4 weights kept for unused reshape helpers below (disabled).
 SCENARIO_WEIGHTS = {
-    "S1": 0.45,  # Close fight
-    "S2": 0.25,  # False lead (loser ahead mid)
-    "S3": 0.20,  # Late steal / finish drama
-    "S4": 0.10,  # Blowout (rare)
+    "S1": 0.45,
+    "S2": 0.25,
+    "S3": 0.20,
+    "S4": 0.10,
 }
 
 # Events that belong to one side-spin package (start → bank update inclusive).
@@ -39,7 +55,65 @@ _SIDE_EVENT_TYPES = {
 
 
 def intrigue_enabled() -> bool:
+    """When on: stamp intrigueShape from honest path. Never mutates boards/wins."""
     return os.environ.get("DUEL_INTRIGUE", "1") != "0"
+
+
+def _player_ahead(cat_cents: int, dog_cents: int, player_side: str) -> bool | None:
+    if cat_cents == dog_cents:
+        return None
+    if player_side == "cat":
+        return cat_cents > dog_cents
+    return dog_cents > cat_cents
+
+
+def _bank_path_cents(events: list[dict]) -> list[tuple[int, int]]:
+    pts: list[tuple[int, int]] = []
+    for e in events:
+        if isinstance(e, dict) and e.get("type") == "duelBankUpdate":
+            pts.append((int(e.get("catTotal") or 0), int(e.get("dogTotal") or 0)))
+    return pts
+
+
+def classify_duel_shape(
+    events: list[dict],
+    *,
+    player_side: str,
+    player_won: bool,
+    dog_total: float,
+    cat_total: float,
+) -> str:
+    """Label honest duel story. Does not change any amounts.
+
+    Finish bands: CLOSE ≤20%, MEDIUM 20–50%, BLOWOUT >50% of pot.
+    LEAD_THEN_LOSE overrides lose band when player led before the end.
+    """
+    pot = max(0.0, float(dog_total) + float(cat_total))
+    gap = abs(float(dog_total) - float(cat_total))
+    gap_frac = (gap / pot) if pot > 0 else 0.0
+    band = finish_band(gap_frac)
+
+    pts = _bank_path_cents(events)
+    lead_then_lose = False
+    if not player_won and pts:
+        for cat_c, dog_c in pts[:-1]:
+            if _player_ahead(cat_c, dog_c, player_side) is True:
+                lead_then_lose = True
+                break
+
+    if lead_then_lose:
+        return SHAPE_LEAD_THEN_LOSE
+    if player_won:
+        return {
+            "CLOSE": SHAPE_CLOSE_WIN,
+            "MEDIUM": SHAPE_MEDIUM_WIN,
+            "BLOWOUT": SHAPE_BLOWOUT_WIN,
+        }[band]
+    return {
+        "CLOSE": SHAPE_CLOSE_LOSE,
+        "MEDIUM": SHAPE_MEDIUM_LOSE,
+        "BLOWOUT": SHAPE_BLOWOUT_LOSE,
+    }[band]
 
 
 def choose_scenario(rng: random.Random) -> str:
@@ -322,24 +396,14 @@ def _scale_win_rows(rows: list | None, factor: float) -> list | None:
 
 
 def _scale_package(pkg: list[dict], factor: float) -> None:
-    """Uniformly scale all money fields in a spin package (keeps board↔win ratio)."""
-    if abs(factor - 1.0) < 1e-12:
-        return
+    """DISABLED for line honesty — do not scale wins[] to fake paytable amounts.
+
+    Kept as a no-op (except clearing stale bank cumulatives) so callers that
+    still invoke it cannot break board↔win. Use bank pads instead.
+    """
+    del factor  # unused — scaling money fields is forbidden
     for e in pkg:
-        t = e.get("type")
-        if t in {"duelSpin", "duelSpinWin", "duelBankUpdate"}:
-            if "spinWin" in e:
-                e["spinWin"] = _scale_cents(e["spinWin"], factor)
-            if "totalWin" in e:
-                e["totalWin"] = _scale_cents(e["totalWin"], factor)
-            if "phase1TotalWin" in e:
-                e["phase1TotalWin"] = _scale_cents(e["phase1TotalWin"], factor)
-            if "wins" in e:
-                e["wins"] = _scale_win_rows(e.get("wins"), factor)
-            if "phase1Wins" in e:
-                e["phase1Wins"] = _scale_win_rows(e.get("phase1Wins"), factor)
-        if t == "duelBankUpdate":
-            # side/dog/cat totals rebuilt after reorder; clear stale cumulatives.
+        if e.get("type") == "duelBankUpdate":
             for k in ("sideTotal", "dogTotal", "catTotal"):
                 if k in e:
                     e[k] = 0
@@ -548,29 +612,74 @@ def _sync_package_line_amounts(pkg: list[dict]) -> float:
 
 
 def _scale_packages_to_total(pkgs: list[list[dict]], target_total: float) -> None:
+    """No-op for amounts — line wins stay paytable-honest.
+
+    Only syncs spinWin from wins[] and clears stale bank cumulatives.
+    Finals are reached later via `_pad_banks_to_finals` on bank totals.
+    """
+    del target_total
     for p in pkgs:
         _sync_package_line_amounts(p)
-    amounts = [_package_amount(p) for p in pkgs]
-    s = _q(sum(amounts))
-    target_total = _q(target_total)
-    if s <= 1e-9:
-        return
-    factor = target_total / s
-    if abs(factor - 1.0) > 1e-12:
-        for p in pkgs:
-            _scale_package(p, factor)
-            _sync_package_line_amounts(p)
-    amounts2 = [_package_amount(p) for p in pkgs]
-    drift = _q(target_total - sum(amounts2))
-    if abs(drift) < 0.05 or not pkgs:
-        return
-    for p in reversed(pkgs):
-        a = _package_amount(p)
-        if a <= 0:
+        for e in p:
+            if e.get("type") == "duelBankUpdate":
+                for k in ("sideTotal", "dogTotal", "catTotal"):
+                    if k in e:
+                        e[k] = 0
+
+
+def _pad_banks_to_finals(events: list[dict], dog_total: float, cat_total: float) -> None:
+    """Add residual pot to last bank updates without touching line wins[].
+
+    Used when lose-mirror / wincap fence changed finals vs sum of honest spins.
+    Payline labels stay paytable-correct; bank meters still hit frozen totals.
+    """
+    dog_c = int(round(_q(dog_total) * 100))
+    cat_c = int(round(_q(cat_total) * 100))
+
+    banks: list[dict] = []
+    last_cat = None
+    last_dog = None
+    run_dog = 0
+    run_cat = 0
+    for e in events:
+        if not isinstance(e, dict) or e.get("type") != "duelBankUpdate":
             continue
-        _scale_package(p, (a + drift) / a)
-        _sync_package_line_amounts(p)
-        break
+        banks.append(e)
+        e.pop("bankPad", None)
+        sw = int(e.get("spinWin") or 0)
+        side = e.get("side")
+        if side == "cat":
+            run_cat += sw
+            last_cat = e
+        elif side == "dog":
+            run_dog += sw
+            last_dog = e
+        e["catTotal"] = run_cat
+        e["dogTotal"] = run_dog
+        e["sideTotal"] = run_cat if side == "cat" else run_dog
+
+    c_pad = cat_c - run_cat
+    d_pad = dog_c - run_dog
+    if last_cat is not None and c_pad != 0:
+        last_cat["bankPad"] = c_pad
+    if last_dog is not None and d_pad != 0:
+        last_dog["bankPad"] = d_pad
+
+    run_dog = 0
+    run_cat = 0
+    for e in banks:
+        sw = int(e.get("spinWin") or 0)
+        pad = int(e.get("bankPad") or 0)
+        side = e.get("side")
+        if side == "cat":
+            run_cat += sw + pad
+        elif side == "dog":
+            run_dog += sw + pad
+        e["catTotal"] = run_cat
+        e["dogTotal"] = run_dog
+        e["sideTotal"] = run_cat if side == "cat" else run_dog
+
+    _clamp_path_finals(events, dog_total, cat_total)
 
 
 def patch_book_path_reorder(
@@ -580,11 +689,12 @@ def patch_book_path_reorder(
     cat_total: float,
     dog_total: float,
 ) -> list[dict]:
-    """Scale packages to finals, reorder to targets, rebuild bank path."""
+    """Reorder packages toward targets; keep line wins honest; pad banks to finals."""
     prefix, cat_pkgs, dog_pkgs, suffix = _split_duel_timeline(events)
     if not cat_pkgs and not dog_pkgs:
         return events
 
+    # Sync spinWin from wins[] only — never scale paytable amounts.
     _scale_packages_to_total(cat_pkgs, cat_total)
     _scale_packages_to_total(dog_pkgs, dog_total)
 
@@ -595,7 +705,9 @@ def patch_book_path_reorder(
     cat_pkgs = [cat_pkgs[i] for i in cat_order] if cat_order else cat_pkgs
     dog_pkgs = [dog_pkgs[i] for i in dog_order] if dog_order else dog_pkgs
 
-    return _rebuild_events(prefix, cat_pkgs, dog_pkgs, suffix)
+    out = _rebuild_events(prefix, cat_pkgs, dog_pkgs, suffix)
+    _pad_banks_to_finals(out, dog_total, cat_total)
+    return out
 
 
 def patch_book_path(
@@ -653,49 +765,46 @@ def apply_duel_intrigue_to_book(
     rng: random.Random,
     scenario: str | None = None,
     reshape: bool = True,
+    player_side: str | None = None,
+    player_won: bool | None = None,
 ) -> str | None:
-    """Reshape path in-place via package reorder (+scale). Returns scenario id."""
+    """Stamp intrigue shape from the honest path. Never mutates boards/wins/banks.
+
+    `reshape` / `scenario` / `rng` / `winner` kept for call-site compatibility;
+    path rewrite is permanently disabled.
+    """
+    del winner, rng, scenario, reshape  # path mutation disabled
     if not intrigue_enabled():
         return None
 
-    # Work on the live list object (Book.events).
     dict_events = [e for e in events if isinstance(e, dict)]
-    if len(dict_events) != len(events):
+    if not dict_events:
         return None
 
-    cat_wins, dog_wins = extract_spin_wins(dict_events)
-    if not cat_wins and not dog_wins:
-        return None
+    side = player_side or "cat"
+    won = bool(player_won) if player_won is not None else False
+    # Prefer live duelEnd fields if already present (rare); else args / settle.
+    end = next((e for e in dict_events if e.get("type") == "duelEnd"), None)
+    if end is not None:
+        if end.get("playerSide") is not None:
+            side = str(end.get("playerSide"))
+        if end.get("playerWon") is not None:
+            won = bool(end.get("playerWon"))
 
-    cat_t, dog_t = _q(cat_total), _q(dog_total)
-    used = scenario or ("SCALE" if not reshape else choose_scenario(rng))
+    shape = classify_duel_shape(
+        dict_events,
+        player_side=side,
+        player_won=won,
+        dog_total=dog_total,
+        cat_total=cat_total,
+    )
 
-    if reshape:
-        # Targets only guide reorder; actual amounts stay package-native (after scale).
-        cat_targets, dog_targets = reshape_spin_wins(
-            _fix_sum(list(cat_wins), cat_t) if cat_wins else cat_wins,
-            _fix_sum(list(dog_wins), dog_t) if dog_wins else dog_wins,
-            winner,
-            used,
-            rng,
-        )
-    else:
-        used = "SCALE"
-        cat_targets, dog_targets = list(cat_wins), list(dog_wins)
-
-    new_events = patch_book_path_reorder(dict_events, cat_targets, dog_targets, cat_t, dog_t)
-
-    # Replace contents of original list (gamestate.book.events).
-    events[:] = new_events
-
-    # Clamp final bank cumulatives to frozen settle totals (kill 0.1× rounding drift).
-    _clamp_path_finals(events, dog_t, cat_t)
-
-    for e in events:
-        if isinstance(e, dict) and e.get("type") == "duelStart":
-            e["intrigueScenario"] = used
+    for e in dict_events:
+        if e.get("type") == "duelStart":
+            e["intrigueShape"] = shape
+            e["intrigueScenario"] = shape  # metrics tools still read this key
             break
-    return used
+    return shape
 
 
 def _clamp_path_finals(events: list[dict], dog_total: float, cat_total: float) -> None:
