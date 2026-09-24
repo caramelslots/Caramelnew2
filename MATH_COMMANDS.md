@@ -32,12 +32,11 @@ export PYTHONPATH=../..:.
 PY=/tmp/csmath_venv/bin/python
 ```
 
-> Все следующие блоки **используют эти переменные**. Сначала запусти этот
-> блок (или склей с командой ниже через `&&`).
+---
 
 ---
 
-## 1. M5 — intermediate sim (1e5 per mode, ~10-20 мин)
+## 1. M5 — intermediate sim (1e5 per mode, ~5-15 мин)
 
 Быстрый smoke перед полным пайплайном:
 
@@ -45,7 +44,7 @@ PY=/tmp/csmath_venv/bin/python
 NUM_SIMS=200 $PY run_small.py
 ```
 
-Полный пайплайн (sim + opt + enforce + checks) на **100 000** sims/mode:
+Или вручную только sim (100 000 sims/mode):
 
 ```bash
 $PY run_m5.py 2>&1 | tee /tmp/m5.log
@@ -55,58 +54,78 @@ $PY run_m5.py 2>&1 | tee /tmp/m5.log
 
 ## 2. M6 — production sim (1e6 per mode, ~2-4 часа)
 
-Когда: финальная итерация перед публикацией на Stake RGS.
-
-Полный пайплайн на **1 000 000** sims/mode:
-
 ```bash
 $PY run_m6.py 2>&1 | tee /tmp/m6.log
 ```
 
+После M6 вручную — тот же порядок: **backup → duel enforce (§3b) → resample --1m**.
+
 ---
 
-## 3. Создание свежего resample (обновление backup'а)
+## 3. Backup weighted publish (до resample)
 
-Когда: перед публикацией в Stake RGS, чтобы их dashboard показывал
-правильный RTP (~96%) вместо biased значения от forced-criteria sampling.
-
-⚠️ Делай **сразу после M5/M6**, пока `publish_files/` свежий.
+Когда: сразу после M5/M6, пока `publish_files/` ещё **weighted** (не equal-weight).
 
 ```bash
-# 1. Сохранить свежий publish_files как новый backup для resa mple
 rm -rf library/publish_files_backup_pre_resample
 cp -r library/publish_files library/publish_files_backup_pre_resample
 ```
 
 ---
 
-## 4. Применение resample (генерация unbiased books)
+## 3b. Duel SMOOTH · VH — enforce win-тела (обязательно)
 
-Две команды — выбирай по размеру sim, из которого делался backup (§3):
+После §3, до §4:
 
-### 4a. M5 — 100 000 books на режим (~быстро, для итераций)
+```bash
+$PY tools/match_duel_win_body.py --mode bonus_duel_cat \
+  --lut-dir library/publish_files_backup_pre_resample --skip-lose &
+pid_cat=$!
+$PY tools/match_duel_win_body.py --mode bonus_duel_dog \
+  --lut-dir library/publish_files_backup_pre_resample --skip-lose &
+pid_dog=$!
+wait $pid_cat $pid_dog
+
+cp library/publish_files_backup_pre_resample/lookUpTable_bonus_duel_cat_0.csv library/publish_files/
+cp library/publish_files_backup_pre_resample/lookUpTable_bonus_duel_dog_0.csv library/publish_files/
+```
+
+---
+
+## 4. Resample (equal-weight books для RGS / sampler)
+
+Две команды — по размеру sim, из которого делался backup (§3 + §3b).
+Modes resample'ятся **параллельно** (default: `min(число modes, CPU count)`).
+
+### 4a. M5 — 100 000 books на режим
 
 ```bash
 $PY tools/resample_books.py --100k
 ```
 
-Когда: после M5 (§1), acceptance scan, storybook sync.
+`resample_books` сам подхватит weighted backup (equal-weight publish не затирает backup).
 
-### 4b. M6 / production — 1 000 000 books на режим (перед Stake RGS)
+Опции:
+
+```bash
+$PY tools/resample_books.py --100k --jobs 1          # последовательно (debug)
+$PY tools/resample_books.py --100k --jobs 6          # явно 6 workers
+```
+
+### 4b. M6 / production — 1 000 000 books на режим
 
 ```bash
 $PY tools/resample_books.py --1m
 ```
 
+Те же `--jobs` / `--modes` работают и для `--1m`.
+
 ---
 
-## 5. Sync math → web (storybook fixtures для демки)
+## 5. Sync math → web (storybook fixtures)
 
-Когда: после M5/M6/resample, чтобы Storybook stories показывали
-актуальные books.
+Когда: после resample, чтобы Storybook / Vite видели актуальные books.
 
 ```bash
 $PY run_storybook.py && $PY sync_to_web_sdk.py
 ```
-
----

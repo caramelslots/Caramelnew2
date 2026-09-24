@@ -39,8 +39,10 @@ import csv
 import hashlib
 import io
 import json
+import os
 import random
 import shutil
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 import zstandard as zstd
@@ -66,9 +68,10 @@ RESAMPLE_PRESETS = {
 }
 
 
-def target_counts_for(preset: str) -> dict[str, int]:
+def target_counts_for(preset: str, modes: tuple[str, ...] | None = None) -> dict[str, int]:
     n = RESAMPLE_PRESETS[preset]
-    return {mode: n for mode in MODES}
+    use = modes if modes is not None else MODES
+    return {mode: n for mode in use}
 
 COST_MAP = {
     "base":          1,
@@ -303,7 +306,7 @@ def _lut_is_equal_weight(path: Path) -> bool:
     return weights == {1} or (weights and max(weights) <= 2)
 
 
-def refresh_backup_from_publish() -> None:
+def refresh_backup_from_publish(modes: tuple[str, ...] | None = None) -> None:
     """Copy weighted publish LUT+books → backup so resample uses latest opt/fix.
 
     Skips modes whose publish LUT is already equal-weight (already resampled),
@@ -311,7 +314,7 @@ def refresh_backup_from_publish() -> None:
     """
     SOURCE.mkdir(parents=True, exist_ok=True)
     copied = 0
-    for mode in MODES:
+    for mode in modes if modes is not None else MODES:
         lut = PUBLISH / f"lookUpTable_{mode}_0.csv"
         books = PUBLISH / f"books_{mode}.jsonl.zst"
         if not lut.exists() or not books.exists():
@@ -350,26 +353,77 @@ def parse_args() -> argparse.Namespace:
         const="1m",
         help="1 000 000 books per mode (after M6 / production)",
     )
+    parser.add_argument(
+        "--modes",
+        default="",
+        help="Comma-separated modes only (e.g. bonus_duel_cat,bonus_duel_dog). Default: all.",
+    )
+    parser.add_argument(
+        "--jobs",
+        type=int,
+        default=0,
+        help="Parallel mode workers (default: min(mode count, CPU count)). Use 1 to disable.",
+    )
     return parser.parse_args()
+
+
+def _default_jobs(n_modes: int) -> int:
+    cpus = os.cpu_count() or 4
+    return max(1, min(n_modes, cpus))
+
+
+def _run_resample_modes(target_counts: dict[str, int], jobs: int) -> list[dict]:
+    items = list(target_counts.items())
+    if jobs <= 1 or len(items) <= 1:
+        rng = random.Random(SEED)
+        return [resample(mode, n, rng) for mode, n in items]
+
+    workers = min(jobs, len(items))
+    print(f"Parallel resample: {workers} workers for {len(items)} mode(s)")
+    results: list[dict] = []
+    errors: list[str] = []
+    with ProcessPoolExecutor(max_workers=workers) as pool:
+        futures = {
+            pool.submit(resample, mode, n, random.Random(SEED)): mode
+            for mode, n in items
+        }
+        for fut in as_completed(futures):
+            mode = futures[fut]
+            try:
+                results.append(fut.result())
+            except Exception as exc:
+                errors.append(f"{mode}: {exc}")
+    if errors:
+        raise SystemExit("resample failed:\n  " + "\n  ".join(errors))
+    order = {m: i for i, m in enumerate(MODES)}
+    results.sort(key=lambda r: order.get(r["mode"], 999))
+    return results
 
 
 def main():
     args = parse_args()
-    target_counts = target_counts_for(args.preset)
+    modes: tuple[str, ...] | None = None
+    if args.modes.strip():
+        modes = tuple(m.strip() for m in args.modes.split(",") if m.strip())
+        unknown = [m for m in modes if m not in MODES]
+        if unknown:
+            raise SystemExit(f"Unknown modes: {unknown}; allowed: {list(MODES)}")
+    target_counts = target_counts_for(args.preset, modes)
     n_per_mode = next(iter(target_counts.values()))
-    print(f"Resample preset: {args.preset} ({n_per_mode:,} books per mode)")
+    print(
+        f"Resample preset: {args.preset} ({n_per_mode:,} books per mode) "
+        f"modes={list(target_counts)}"
+    )
 
     print("Refreshing backup_pre_resample from publish_files (weighted only)...")
-    refresh_backup_from_publish()
+    refresh_backup_from_publish(modes)
     if not SOURCE.is_dir():
         raise SystemExit(
             f"Missing source directory: {SOURCE}\n"
             "Run optimization so library/publish_files has weighted LUTs first."
         )
-    rng = random.Random(SEED)
-    results = []
-    for mode, n in target_counts.items():
-        results.append(resample(mode, n, rng))
+    jobs = args.jobs if args.jobs > 0 else _default_jobs(len(target_counts))
+    results = _run_resample_modes(target_counts, jobs)
 
     print()
     print("=" * 70)

@@ -262,7 +262,7 @@
 				eventMode="static"
 				cursor="pointer"
 				zIndex={2}
-				onclick={onMascotPress}
+				onpointertap={onMascotPress}
 			/>
 		{/if}
 		<SpineProvider

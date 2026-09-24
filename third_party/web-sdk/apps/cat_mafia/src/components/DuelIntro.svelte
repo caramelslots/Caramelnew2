@@ -34,23 +34,31 @@
 
 	let show = $state(false);
 	let oncomplete = $state(() => {});
+	let catEl = $state<HTMLParagraphElement | undefined>();
+	let catSlotEl = $state<HTMLDivElement | undefined>();
+	let dogEl = $state<HTMLParagraphElement | undefined>();
+	let dogSlotEl = $state<HTMLDivElement | undefined>();
 	let winnerEl = $state<HTMLParagraphElement | undefined>();
 	let winnerSlotEl = $state<HTMLDivElement | undefined>();
-	/** Shrink long locales so the punchline stays inside the gold frame. */
+	/** Shrink long locales so copy stays inside the gold frame. */
+	let catFitScale = $state(1);
+	let dogFitScale = $state(1);
 	let winnerFitScale = $state(1);
 
 	const ruleCat = $derived(context.i18nDerived.duelIntroRule1());
 	const ruleDog = $derived(context.i18nDerived.duelIntroRule2());
 	const ruleWinner = $derived(context.i18nDerived.duelIntroRule3());
 
-	const MIN_WINNER_FIT = 0.55;
+	const MIN_LINE_FIT = 0.55;
 
-	const refitWinner = () => {
-		const el = winnerEl;
-		const slot = winnerSlotEl;
+	const refitLine = (
+		el: HTMLParagraphElement | undefined,
+		slot: HTMLDivElement | undefined,
+		setScale: (scale: number) => void,
+	) => {
 		if (!el || !slot) return;
 
-		winnerFitScale = 1;
+		setScale(1);
 		el.style.transform = 'scale(1)';
 
 		const maxW = slot.clientWidth;
@@ -59,23 +67,32 @@
 		const natural = el.scrollWidth;
 		if (natural <= 0) return;
 
-		winnerFitScale = Math.min(1, Math.max(MIN_WINNER_FIT, maxW / natural));
-		el.style.transform = `scale(${winnerFitScale})`;
+		const scale = Math.min(1, Math.max(MIN_LINE_FIT, maxW / natural));
+		setScale(scale);
+		el.style.transform = `scale(${scale})`;
+	};
+
+	const refitAllLines = () => {
+		refitLine(catEl, catSlotEl, (scale) => (catFitScale = scale));
+		refitLine(dogEl, dogSlotEl, (scale) => (dogFitScale = scale));
+		refitLine(winnerEl, winnerSlotEl, (scale) => (winnerFitScale = scale));
 	};
 
 	$effect(() => {
 		if (!show) return;
+		ruleCat;
+		ruleDog;
 		ruleWinner;
 		canvasSizes.width;
 		canvasSizes.height;
-		requestAnimationFrame(() => requestAnimationFrame(refitWinner));
+		requestAnimationFrame(() => requestAnimationFrame(refitAllLines));
 	});
 
 	$effect(() => {
-		const slot = winnerSlotEl;
-		if (!slot || !show) return;
-		const observer = new ResizeObserver(() => refitWinner());
-		observer.observe(slot);
+		const slots = [catSlotEl, dogSlotEl, winnerSlotEl].filter(Boolean) as HTMLDivElement[];
+		if (slots.length === 0 || !show) return;
+		const observer = new ResizeObserver(() => refitAllLines());
+		for (const slot of slots) observer.observe(slot);
 		return () => observer.disconnect();
 	});
 
@@ -125,13 +142,28 @@
 
 			<div class="board-content">
 				<div class="content-safe">
-					<p class="rule-line cat">{ruleCat}</p>
-					<span class="rule-vs" aria-hidden="true">VS</span>
-					<p class="rule-line dog">{ruleDog}</p>
-					<div class="rule-divider" aria-hidden="true"></div>
-					<div class="rule-winner-slot" bind:this={winnerSlotEl}>
+					<div class="rule-line-slot" bind:this={catSlotEl}>
 						<p
-							class="rule-winner"
+							class="rule-line"
+							bind:this={catEl}
+							style:transform="scale({catFitScale})"
+						>
+							{ruleCat}
+						</p>
+					</div>
+					<div class="rule-line-slot" bind:this={dogSlotEl}>
+						<p
+							class="rule-line"
+							bind:this={dogEl}
+							style:transform="scale({dogFitScale})"
+						>
+							{ruleDog}
+						</p>
+					</div>
+					<div class="rule-divider" aria-hidden="true"></div>
+					<div class="rule-line-slot rule-line-slot--winner" bind:this={winnerSlotEl}>
+						<p
+							class="rule-line rule-line--winner"
 							bind:this={winnerEl}
 							style:transform="scale({winnerFitScale})"
 						>
@@ -214,52 +246,42 @@
 		overflow: hidden;
 	}
 
+	.rule-line-slot {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: hidden;
+		box-sizing: border-box;
+	}
+
+	/* Same face as FreeSpinIntro CONGRATULATIONS (proxima-nova + gold gradient). */
 	.rule-line {
 		margin: 0;
-		width: 100%;
-		padding: 0 2%;
+		width: max-content;
+		max-width: none;
+		padding: 0;
 		font-family: 'proxima-nova', sans-serif;
 		font-size: calc(var(--panel-width) * 0.042);
 		font-weight: 800;
 		line-height: 1.25;
 		letter-spacing: 0.02em;
-		color: #f8e6c4;
-		text-shadow:
-			0 1px 0 #000,
-			1px 1px 3px rgba(0, 0, 0, 0.9),
-			0 0 18px rgba(255, 210, 120, 0.18);
+		transform-origin: center center;
+		white-space: nowrap;
+		color: #ffe28a;
+		background: linear-gradient(180deg, #fff6c8 0%, #ffd56a 38%, #e8a020 72%, #b8730f 100%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+		filter: drop-shadow(0 1px 0 #fff3b0) drop-shadow(0 3px 0 #5a3a0e)
+			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
 	}
 
-	.rule-line.cat {
-		color: #ffe2b0;
-	}
-
-	.rule-line.dog {
-		color: #dce8ff;
-		text-shadow:
-			0 1px 0 #000,
-			1px 1px 3px rgba(0, 0, 0, 0.9),
-			0 0 18px rgba(140, 180, 255, 0.2);
-	}
-
-	.rule-vs {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		min-width: calc(var(--panel-width) * 0.08);
-		padding: 0.14em 0.5em;
-		border-radius: 999px;
-		font-family: 'proxima-nova', sans-serif;
-		font-weight: 800;
-		font-size: calc(var(--panel-width) * 0.024);
-		letter-spacing: 0.14em;
-		color: #ffe7a0;
-		background: rgba(18, 10, 28, 0.78);
-		border: 1px solid rgba(255, 214, 120, 0.45);
-		box-shadow:
-			0 0 14px rgba(255, 190, 60, 0.22),
-			inset 0 1px 0 rgba(255, 240, 200, 0.12);
-		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+	.rule-line--winner {
+		font-size: calc(var(--panel-width) * 0.04);
+		line-height: 1.12;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
 	}
 
 	.rule-divider {
@@ -278,35 +300,6 @@
 		box-shadow: 0 0 12px rgba(255, 190, 60, 0.35);
 	}
 
-	.rule-winner-slot {
-		width: 100%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		overflow: hidden;
-		box-sizing: border-box;
-	}
-
-	.rule-winner {
-		margin: 0;
-		width: max-content;
-		max-width: none;
-		padding: 0;
-		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.04);
-		font-weight: 800;
-		line-height: 1.12;
-		letter-spacing: 0.05em;
-		text-transform: uppercase;
-		white-space: nowrap;
-		transform-origin: center center;
-		color: #ffe28a;
-		text-shadow:
-			0 1px 0 #fff3b0,
-			0 2px 0 #5a3a0e,
-			0 5px 12px rgba(0, 0, 0, 0.55);
-	}
-
 	.board.portrait:not(.popout-l):not(.popout-s) {
 		--panel-width: min(920px, 100vw);
 		transform: scale(1.12);
@@ -323,7 +316,7 @@
 			font-size: calc(var(--panel-width) * 0.044);
 		}
 
-		.rule-winner {
+		.rule-line--winner {
 			font-size: calc(var(--panel-width) * 0.046);
 		}
 	}
@@ -346,11 +339,7 @@
 			font-size: calc(var(--panel-width) * 0.044);
 		}
 
-		.rule-vs {
-			font-size: calc(var(--panel-width) * 0.028);
-		}
-
-		.rule-winner {
+		.rule-line--winner {
 			font-size: calc(var(--panel-width) * 0.042);
 		}
 	}

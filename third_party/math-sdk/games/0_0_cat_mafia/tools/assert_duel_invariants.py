@@ -119,6 +119,25 @@ def check_book(book: dict) -> list[str]:
             bad = _board_names(e.get("board")) & FORBIDDEN
             if bad:
                 errors.append(f"forbidden symbols on duelSpin: {bad}")
+            # Board ↔ amount: line wins must match the amount shown for this beat.
+            wins = e.get("wins")
+            if wins:
+                summed = sum(int(w.get("win") or 0) for w in wins if isinstance(w, dict))
+                shown = int(e.get("totalWin") if e.get("totalWin") is not None else e.get("spinWin") or 0)
+                if not e.get("swTwoBeat") and abs(summed - shown) > 1:
+                    errors.append(
+                        f"duelSpin side={e.get('side')} spin={e.get('spinIndex')}: "
+                        f"sum(wins)={summed} != spin/totalWin={shown}"
+                    )
+            p1 = e.get("phase1Wins")
+            if p1 and e.get("phase1TotalWin") is not None:
+                summed = sum(int(w.get("win") or 0) for w in p1 if isinstance(w, dict))
+                shown = int(e.get("phase1TotalWin") or 0)
+                if abs(summed - shown) > 1:
+                    errors.append(
+                        f"duelSpin phase1 side={e.get('side')} spin={e.get('spinIndex')}: "
+                        f"sum(phase1Wins)={summed} != phase1TotalWin={shown}"
+                    )
         if e.get("type") in {"pawCoinResolve", "bulletCollect", "freeSpinTrigger", "freeSpinTargetPick"}:
             errors.append(f"forbidden event {e.get('type')}")
         if e.get("type") == "superWildExpand" and "side" not in e:
@@ -127,6 +146,21 @@ def check_book(book: dict) -> list[str]:
             sw = e.get("side")
             if sw not in {"cat", "dog"}:
                 errors.append(f"bad duelSpinWin side {sw!r}")
+            wins = e.get("wins")
+            if wins:
+                summed = sum(int(w.get("win") or 0) for w in wins if isinstance(w, dict))
+                # Phase-2 beat: totalWin is phase-2 lines; spinWin is full bank credit.
+                shown = int(
+                    e["totalWin"]
+                    if e.get("totalWin") is not None
+                    else e.get("spinWin")
+                    or 0
+                )
+                if abs(summed - shown) > 1:
+                    errors.append(
+                        f"duelSpinWin side={e.get('side')} spin={e.get('spinIndex')}: "
+                        f"sum(wins)={summed} != totalWin={shown}"
+                    )
 
     end = next((e for e in events if isinstance(e, dict) and e.get("type") == "duelEnd"), None)
     if end:
@@ -151,6 +185,24 @@ def check_book(book: dict) -> list[str]:
         # RGS: LUT / event payouts are multiplier×100 in steps of 10.
         if int(payout) % 10 != 0:
             errors.append(f"payout {payout} not multiple of 10 (RGS step)")
+
+        # Path sums: last bank update totals must match duelEnd.
+        banks = [e for e in events if isinstance(e, dict) and e.get("type") == "duelBankUpdate"]
+        if banks:
+            last = banks[-1]
+            if int(last.get("dogTotal") or 0) != int(dog):
+                errors.append(
+                    f"path dogTotal {last.get('dogTotal')} != duelEnd.dogTotal {dog}"
+                )
+            if int(last.get("catTotal") or 0) != int(cat):
+                errors.append(
+                    f"path catTotal {last.get('catTotal')} != duelEnd.catTotal {cat}"
+                )
+            # Winner consistent with final banks.
+            ld, lc = int(last.get("dogTotal") or 0), int(last.get("catTotal") or 0)
+            path_winner = "cat" if lc > ld else "dog" if ld > lc else None
+            if path_winner and winner and path_winner != winner:
+                errors.append(f"path winner {path_winner} != duelEnd.winner {winner}")
 
     pm = book.get("payoutMultiplier")
     if end is not None and pm is not None:

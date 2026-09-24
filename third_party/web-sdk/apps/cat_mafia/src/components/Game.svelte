@@ -75,6 +75,7 @@
 	import CashStacksBuyBonusPanel from './CashStacksBuyBonusPanel.svelte';
 	import CashStacksDesktopHudOverlay from './CashStacksDesktopHudOverlay.svelte';
 	import CashStacksPortraitHudOverlay from './CashStacksPortraitHudOverlay.svelte';
+	import MascotPressHtmlOverlay from './MascotPressHtmlOverlay.svelte';
 	import DevCheats from './DevCheats.svelte';
 	import DevButtons from './DevButtons.svelte';
 	import PixiTextureMemoryOverlay from './PixiTextureMemoryOverlay.svelte';
@@ -299,6 +300,7 @@
 <CashStacksBuyBonusPanel />
 <CashStacksDesktopHudOverlay />
 <CashStacksPortraitHudOverlay />
+<MascotPressHtmlOverlay />
 <CashStacksMenuOverlay />
 {#if BuyBonusModalShell}
 	<BuyBonusModalShell />

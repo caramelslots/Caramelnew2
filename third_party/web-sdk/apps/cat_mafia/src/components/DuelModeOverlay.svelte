@@ -523,8 +523,6 @@
 		background-size: 100% 100%;
 		background-repeat: no-repeat;
 		background-position: center;
-		font-family: 'Reggae One', 'Philosopher', Georgia, serif;
-		color: #f6e6c2;
 		line-height: 1;
 		/* Centre plaque on gold-rail anchor (same as phone FS autoplay frame). */
 		transform: translate(-50%, -50%);
@@ -535,13 +533,21 @@
 		filter: brightness(1.08);
 	}
 
+	/* Same face as under-board WIN (`WinHudHtmlOverlay`). */
 	.counter-value {
 		flex-shrink: 0;
-		font-variant-numeric: tabular-nums;
+		font-family: 'proxima-nova', sans-serif;
+		font-weight: 800;
+		font-synthesis: none;
+		font-variant-numeric: tabular-nums lining-nums;
 		letter-spacing: 0.04em;
-		text-shadow:
-			0 0 8px rgba(255, 200, 100, 0.45),
-			0 2px 4px rgba(0, 0, 0, 0.9);
+		color: #e8b84a;
+		background: linear-gradient(180deg, #f0d070 0%, #e0a838 38%, #c07014 72%, #8a4e0c 100%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+		filter: drop-shadow(0 1px 0 #e8c878) drop-shadow(0 3px 0 #4a3008)
+			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
 		white-space: nowrap;
 	}
 
@@ -566,8 +572,9 @@
 	}
 
 	.board-face {
-		position: absolute;
-		z-index: 4;
+		/* fixed + above HUD (44) so phone taps aren't lost under the portrait overlay. */
+		position: fixed;
+		z-index: 46;
 		padding: 0;
 		border-radius: 50%;
 		background-color: #2a1810;
@@ -578,6 +585,7 @@
 		pointer-events: auto;
 		user-select: none;
 		-webkit-tap-highlight-color: transparent;
+		touch-action: manipulation;
 		border: 2px solid rgba(255, 214, 120, 0.85);
 		box-shadow:
 			0 4px 14px rgba(0, 0, 0, 0.45),

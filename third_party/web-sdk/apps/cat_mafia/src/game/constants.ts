@@ -123,7 +123,7 @@ export const PAYLINE_WIN_AMOUNT_FONT_SIZE = 42;
 /** Vertical offset above the payline center (ref px). */
 export const PAYLINE_WIN_AMOUNT_ABOVE_LINE_OFFSET = 36;
 
-/** Prostoi white bitmap size for "Press to continue" (ref px before BITMAP_FONT_SCALE). */
+/** "Press to continue" HTML label (ref px at 1280×720, scaled by mainLayout.scale). */
 export const PRESS_TO_CONTINUE_FONT_SIZE = 38;
 /** Distance from bottom of main layout (ref px). */
 export const PRESS_TO_CONTINUE_BOTTOM_OFFSET = 18;

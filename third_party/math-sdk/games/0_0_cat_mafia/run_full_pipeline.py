@@ -32,7 +32,7 @@ def run_full_pipeline(
     label: str,
     resample_preset: ResamplePreset,
 ) -> None:
-    num_threads = 1
+    num_threads = 20
     rust_threads = 20
     batching_size = 2000
     compression = True

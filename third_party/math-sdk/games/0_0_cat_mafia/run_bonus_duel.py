@@ -8,12 +8,19 @@ Usage (from this directory):
 Dev smoke (small N): set NUM_SIMS=200 before running.
 Optional: MODE=bonus_duel_cat|bonus_duel_dog to run one side only.
 
+Sim-time (default ON):
+  DUEL_LOSE_MIRROR=1  — lose pots follow SMOOTH · VH (payout still 0)
+  DUEL_INTRIGUE=1     — S1–S4 path via package reorder (+scale); board↔win stays honest
+
+After intrigue/board fix — duel-only pipeline (no full M5): see MATH_COMMANDS.md §3c.
 After opt (weighted LUT), before resample — SMOOTH · VH body check / fix:
   $PY tools/duel_payout_histogram.py --lut-dir library/publish_files
   $PY tools/match_duel_win_body.py --mode bonus_duel_cat --lut-dir library/publish_files
   $PY tools/match_duel_win_body.py --mode bonus_duel_dog --lut-dir library/publish_files
-  # then tools/resample_books.py --100k  (or copy to backup_pre_resample first)
-See CatMafia_Duel_SMOOTH_VH_Implementation_Plan.md phase B.
+  $PY tools/duel_intrigue_metrics.py
+  $PY tools/assert_duel_invariants.py
+  $PY tools/resample_books.py --100k --modes bonus_duel_cat,bonus_duel_dog
+See CatMafia_Duel_SMOOTH_VH_Implementation_Plan.md phases B + A.
 """
 
 import os
@@ -62,6 +69,7 @@ if __name__ == "__main__":
         generate_configs(gamestate)
     print("=== done ===")
     print(
-        "Next (SMOOTH · VH): duel_payout_histogram.py → "
-        "match_duel_win_body.py on weighted LUT → resample_books.py"
+        "Next (SMOOTH · VH + intrigue): duel_payout_histogram.py → "
+        "match_duel_win_body.py (win+lose) → duel_intrigue_metrics.py → "
+        "assert_duel_invariants.py → resample_books.py"
     )

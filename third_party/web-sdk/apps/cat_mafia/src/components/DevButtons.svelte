@@ -949,6 +949,88 @@
 
 	const SW_CURTAIN_QA: SwQaSpec[] = [
 		{
+			id: 'perline-screenshot-no-hit',
+			label: 'Per-line · no hit R5',
+			title:
+				'Super: sticky ×4 on col3, lying SW on col5. A–A through col3 only → phase1≈0.8, expand, NO phase-2 (math gate).',
+			mode: 'bonus_super',
+			board: [
+				swCol(['L4', 'H3', 'H4', 'L1']),
+				swCol(['H4', 'H1', 'L2', 'L1']),
+				swCol(['SW', 'SW', 'SW', 'SW']),
+				swCol(['H3', 'L4', 'H3', 'H3']),
+				swCol(['SW', 'L2', 'L2', 'L2']),
+			],
+			stickyReels: [{ reel: 2, mult: 4 }],
+			expand: [{ reel: 4, row: 0, mult: 4 }],
+			phase1: [
+				{
+					symbol: 'L1',
+					kind: 3,
+					lineIndex: 4,
+					vis: [
+						[0, 3],
+						[1, 3],
+						[2, 3],
+					],
+				},
+				{
+					symbol: 'L1',
+					kind: 3,
+					lineIndex: 16,
+					vis: [
+						[0, 3],
+						[1, 3],
+						[2, 2],
+					],
+				},
+			],
+			phase2: [],
+		},
+		{
+			id: 'perline-hit-r5',
+			label: 'Per-line · hit R5',
+			title:
+				'Same as no-hit but L1 on col4 bottom → line through col5 after expand → phase-2; × of col5 only on lines that hit it.',
+			mode: 'bonus_super',
+			board: [
+				swCol(['L4', 'H3', 'H4', 'L1']),
+				swCol(['H4', 'H1', 'L2', 'L1']),
+				swCol(['SW', 'SW', 'SW', 'SW']),
+				swCol(['H3', 'L4', 'H3', 'L1']),
+				swCol(['SW', 'L2', 'L2', 'L2']),
+			],
+			stickyReels: [{ reel: 2, mult: 4 }],
+			expand: [{ reel: 4, row: 0, mult: 4 }],
+			phase1: [
+				{
+					symbol: 'L1',
+					kind: 4,
+					lineIndex: 4,
+					vis: [
+						[0, 3],
+						[1, 3],
+						[2, 3],
+						[3, 3],
+					],
+				},
+			],
+			phase2: [
+				{
+					symbol: 'L1',
+					kind: 5,
+					lineIndex: 4,
+					vis: [
+						[0, 3],
+						[1, 3],
+						[2, 3],
+						[3, 3],
+						[4, 3],
+					],
+				},
+			],
+		},
+		{
 			id: 'extra-lines',
 			label: 'Curtain · extra lines',
 			title: 'Screenshot: phase-1 only top H2×5. After curtain, Jack V (7) + extra H2 (15) must play.',
@@ -2121,6 +2203,7 @@
 				</p>
 				<p class="subhint" style="margin-top: 6px">
 					Curtain QA plays the live math engine (`get_lines` + two-beat SW), not a hand-built win list.
+					Per-line sticky ×: «no hit R5» / «hit R5» are the Super second-curtain contract boards.
 				</p>
 				<div class="grid">
 					{#each SW_CURTAIN_QA as spec (spec.id)}

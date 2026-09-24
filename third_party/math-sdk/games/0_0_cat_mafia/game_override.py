@@ -35,7 +35,9 @@ from game_features import (
     keep_one_sw_per_reel,
     cap_lying_sw_on_board,
     pick_sticky_sw_column,
+    apply_sticky_mults_to_wins,
     product_of_mults,
+    wins_hit_any_reel,
 )
 
 
@@ -329,6 +331,7 @@ class GameStateOverride(GameExecutables):
                     self.config,
                     global_multiplier=self.global_multiplier,
                 )
+                apply_sticky_mults_to_wins(self.win_data, self.sticky_sw)
                 self.win_manager.update_spinwin(float(self.win_data.get("totalWin") or 0))
             finally:
                 self._restore_board_sw_mults(saved)
@@ -361,9 +364,30 @@ class GameStateOverride(GameExecutables):
             else:
                 self._resolve_duel_sw_features(side)
 
+            # Board lines are authoritative: never bank a spinWin that disagrees
+            # with sum(wins) (Lines/totalWin drift or stale manager state).
+            wins_payload = list(self.win_data.get("wins") or [])
+            lines_total = round(
+                sum(float(w.get("win") or 0) for w in wins_payload),
+                2,
+            )
+            if wins_payload:
+                self.win_data["totalWin"] = lines_total
+
             spin_win = round(float(self.win_manager.spin_win), 2)
-            wins_payload = list(self.win_data.get("wins") or []) if spin_win > 0 else []
-            total_win = float(self.win_data.get("totalWin") or spin_win) if spin_win > 0 else 0.0
+            if sw_mode == "new_sw":
+                # Two-beat: manager holds phase1+phase2; win_data is phase-2 only.
+                phase1 = round(float(phase1_total or 0), 2)
+                phase2 = lines_total
+                spin_win = round(phase1 + phase2, 2)
+                self.win_manager.set_spin_win(spin_win)
+                total_win = phase2 if phase2 > 0 else spin_win
+            else:
+                if wins_payload:
+                    spin_win = lines_total
+                    self.win_manager.set_spin_win(spin_win)
+                total_win = float(self.win_data.get("totalWin") or spin_win) if spin_win > 0 else 0.0
+                wins_payload = wins_payload if spin_win > 0 else []
 
             if sw_mode == "new_sw":
                 if wins_payload and total_win > 0:
@@ -460,6 +484,17 @@ class GameStateOverride(GameExecutables):
 
             cap = self._fence_win_cap()
             payout = q(min(payout, cap))
+
+            # Soft/hard early fence can leave banks above capped payout — scale
+            # banks down so duelEnd.dog+cat == payout (assert / UI / intrigue).
+            if player_won and payout > 0:
+                pot = q(dog_total + cat_total)
+                if pot > payout + 0.05:
+                    from duel_smooth_victory import scale_banks_to_pot
+
+                    dog_total, cat_total = scale_banks_to_pot(
+                        dog_total, cat_total, winner, payout
+                    )
 
         self.duel_dog_total = dog_total
         self.duel_cat_total = cat_total
@@ -775,7 +810,7 @@ class GameStateOverride(GameExecutables):
             self.board[reel][row].assign_attribute({"multiplier": int(mult)})
 
     def evaluate_lines_board(self, emit: bool = True):
-        """Lines eval with SW as wild only; SW product applied later in feature resolve.
+        """Lines eval: SW as wild (lying cloaked ×1); open sticky × applied per-line.
 
         emit=False: compute win_data / spin_win only (Normal FS strips non-winning SW
         before reveal, then emit_line_wins_after_reveal()).
@@ -787,6 +822,7 @@ class GameStateOverride(GameExecutables):
                 self.config,
                 global_multiplier=self.global_multiplier,
             )
+            apply_sticky_mults_to_wins(self.win_data, getattr(self, "sticky_sw", {}) or {})
             Lines.record_lines_wins(self)
             self.win_manager.update_spinwin(self.win_data["totalWin"])
             if emit:
@@ -1013,23 +1049,25 @@ class GameStateOverride(GameExecutables):
 
         if new_hits:
             # New lying SW (Normal/Super): same two-beat as base —
-            # phase-1 lines → curtain → phase-2 full-column re-eval.
+            # phase-1 lines → curtain → phase-2 full-column re-eval (gated).
             phase1_wins = list(self.win_data.get("wins") or [])
             phase1_total = float(self.win_data.get("totalWin") or 0)
             expands_new, _ = expand_sw_columns(self.board, self.create_symbol, new_hits)
+            new_reels = {int(e["reel"]) for e in expands_new}
             for e in expands_new:
                 self.sticky_sw[int(e["reel"])] = int(e["mult"])
             self._sync_sw_padding()
             product = product_of_mults(self.sticky_sw.values())
             super_wild_expand_event(self, self._sticky_expands_payload(), product)
             self._emit_sw_reeval_wins(
-                product,
-                phase1_wins,
-                phase1_total,
+                phase1_wins=phase1_wins,
+                phase1_total=phase1_total,
+                new_reels=new_reels,
             )
             self._pending_sw_expands = []
             self._pending_sw_product = 1
         elif self.sticky_sw:
+            # Phase-1 already applied per-line sticky × in evaluate_lines_board.
             self._apply_super_product_after_preexpand()
 
         if not self.fs_extra_phase:
@@ -1067,6 +1105,7 @@ class GameStateOverride(GameExecutables):
 
         if new_hits:
             expands_new, _ = expand_sw_columns(self.board, self.create_symbol, new_hits)
+            new_reels = {int(e["reel"]) for e in expands_new}
             for e in expands_new:
                 self.sticky_sw[int(e["reel"])] = int(e["mult"])
             self._sync_sw_padding()
@@ -1078,9 +1117,9 @@ class GameStateOverride(GameExecutables):
                 duel_side=side,
             )
             self._emit_duel_sw_reeval_wins(
-                product,
                 phase1_wins=phase1_wins,
                 phase1_total=phase1_total,
+                new_reels=new_reels,
             )
             self._pending_sw_expands = []
             self._pending_sw_product = 1
@@ -1093,70 +1132,35 @@ class GameStateOverride(GameExecutables):
         return "none"
 
     def _apply_duel_super_product_after_preexpand(self, side: str) -> None:
-        """Sticky already open: apply product once — no expand event, no second line pass."""
-        _ = side  # duel books carry side on spin events, not on product scaling
-        product = int(getattr(self, "_pending_sw_product", 1) or 1)
-        if not self.sticky_sw:
-            self._pending_sw_expands = []
-            self._pending_sw_product = 1
-            return
-        if product <= 1:
-            self._pending_sw_expands = []
-            self._pending_sw_product = 1
-            return
-        if self.win_manager.spin_win > 0:
-            scaled = round(self.win_manager.spin_win * product, 2)
-            self.win_manager.set_spin_win(scaled)
-            ratio = scaled / float(self.win_data.get("totalWin") or scaled) if scaled > 0 else 1
-            self.win_data["totalWin"] = scaled
-            for win in self.win_data.get("wins") or []:
-                win["win"] = round(float(win.get("win") or 0) * ratio, 2)
+        """Sticky already open: per-line × already in evaluate — no second pass."""
+        _ = side
         self._pending_sw_expands = []
         self._pending_sw_product = 1
 
     def _apply_super_product_after_preexpand(self) -> None:
-        """Sticky already open: apply product to spin win once — no second winInfo / expand."""
-        product = int(getattr(self, "_pending_sw_product", 1) or 1)
-        if not self.sticky_sw:
-            self._pending_sw_expands = []
-            self._pending_sw_product = 1
-            return
-        if product <= 1:
-            self._pending_sw_expands = []
-            self._pending_sw_product = 1
-            return
-        if self.win_manager.spin_win > 0:
-            from src.events.events import set_win_event, set_total_event
-
-            scaled = round(self.win_manager.spin_win * product, 2)
-            ratio = scaled / float(self.win_data.get("totalWin") or scaled) if scaled > 0 else 1
-            self.win_manager.set_spin_win(scaled)
-            self.win_data["totalWin"] = scaled
-            for win in self.win_data.get("wins") or []:
-                win["win"] = round(float(win.get("win") or 0) * ratio, 2)
-            set_win_event(self)
-            set_total_event(self)
+        """Sticky already open: per-line × already in evaluate_lines_board — no rescale."""
         self._pending_sw_expands = []
         self._pending_sw_product = 1
 
     def _emit_sw_reeval_wins(
         self,
-        product: int,
         phase1_wins: list | None = None,
         phase1_total: float | None = None,
+        new_reels=None,
+        product: int | None = None,
     ) -> None:
-        """Re-eval after SW expand; emit phase-2 winInfo (same lines may replay + new).
+        """Re-eval after SW expand; emit phase-2 only if a new curtain reel is in a win.
 
-        Open curtain = full-column wild on every row. Same in base / Normal /
-        Super / Duel. winInfo + setWin celebrate phase2_total only (raw × sticky
-        product). spin_win / setTotalWin / RGS = phase1_total + phase2_total
-        (additive).
+        Per-line sticky × (not global product). spin_win = phase1 + phase2 (additive)
+        when phase-2 emits; else spin_win stays phase1.
         """
         from src.events.event_constants import EventConstants
         from src.events.events import set_total_event, win_info_event
 
+        _ = product  # expand event still carries product for UI; payout is per-line
         p1 = max(0.0, float(phase1_total or 0))
-        _ = phase1_wins  # lines already emitted in phase 1; not filtered here
+        _ = phase1_wins
+        new_reel_set = {int(r) for r in (new_reels or [])}
 
         saved = self._neutralize_board_sw_mults()
         try:
@@ -1168,13 +1172,16 @@ class GameStateOverride(GameExecutables):
         finally:
             self._restore_board_sw_mults(saved)
 
-        raw_total = float(self.win_data.get("totalWin") or 0)
-        prod = max(1, int(product))
-        phase2_total = round(raw_total * prod, 2)
-        if prod > 1 and raw_total > 0:
-            self.win_data["totalWin"] = phase2_total
-            for win in self.win_data.get("wins") or []:
-                win["win"] = round(float(win.get("win") or 0) * prod, 2)
+        apply_sticky_mults_to_wins(self.win_data, getattr(self, "sticky_sw", {}) or {})
+        phase2_total = float(self.win_data.get("totalWin") or 0)
+
+        # Gate: new curtain must sit on at least one winning line.
+        if new_reel_set and not wins_hit_any_reel(self.win_data.get("wins"), new_reel_set):
+            cap = self._fence_win_cap()
+            self.win_manager.set_spin_win(round(min(p1, cap), 2))
+            self.win_data = {"totalWin": 0.0, "wins": []}
+            set_total_event(self)
+            return
 
         cap = self._fence_win_cap()
         spin_payout = round(min(p1 + phase2_total, cap), 2)
@@ -1183,7 +1190,6 @@ class GameStateOverride(GameExecutables):
             Lines.record_lines_wins(self)
             win_info_event(self)
             self.evaluate_wincap()
-            # Big-win / setWin = this beat only (phase 2), not cumulative spin.
             if not self.wincap_triggered:
                 self.book.add_event(
                     {
@@ -1200,18 +1206,20 @@ class GameStateOverride(GameExecutables):
                 )
             set_total_event(self)
         else:
-            # Expand happened but phase 2 empty — keep phase-1 credit on spin_win / total.
             set_total_event(self)
 
     def _emit_duel_sw_reeval_wins(
         self,
-        product: int,
         phase1_wins: list | None = None,
         phase1_total: float | None = None,
+        new_reels=None,
+        product: int | None = None,
     ) -> None:
-        """Re-eval after SW expand for duel — additive spin_win, phase-2 lines only in win_data."""
+        """Re-eval after SW expand for duel — per-line sticky ×; gate on new reel hit."""
+        _ = product
         _ = phase1_wins
         p1 = max(0.0, float(phase1_total or 0))
+        new_reel_set = {int(r) for r in (new_reels or [])}
 
         saved = self._neutralize_board_sw_mults()
         try:
@@ -1223,13 +1231,14 @@ class GameStateOverride(GameExecutables):
         finally:
             self._restore_board_sw_mults(saved)
 
-        raw_total = float(self.win_data.get("totalWin") or 0)
-        prod = max(1, int(product))
-        phase2_total = round(raw_total * prod, 2)
-        if prod > 1 and raw_total > 0:
-            self.win_data["totalWin"] = phase2_total
-            for win in self.win_data.get("wins") or []:
-                win["win"] = round(float(win.get("win") or 0) * prod, 2)
+        apply_sticky_mults_to_wins(self.win_data, getattr(self, "sticky_sw", {}) or {})
+        phase2_total = float(self.win_data.get("totalWin") or 0)
+
+        if new_reel_set and not wins_hit_any_reel(self.win_data.get("wins"), new_reel_set):
+            cap = self._fence_win_cap()
+            self.win_manager.set_spin_win(round(min(p1, cap), 2))
+            self.win_data = {"totalWin": 0.0, "wins": []}
+            return
 
         cap = self._fence_win_cap()
         spin_payout = round(min(p1 + phase2_total, cap), 2)
@@ -1242,13 +1251,21 @@ class GameStateOverride(GameExecutables):
         self._last_sw_expands = expands
         if not expands:
             return
+        # Base: expanded columns become sticky for per-line × on phase-2.
+        new_reels = set()
+        for e in expands:
+            reel = int(e["reel"])
+            new_reels.add(reel)
+            self.sticky_sw[reel] = int(e["mult"])
         phase1_wins = list(self.win_data.get("wins") or [])
         phase1_total = float(self.win_data.get("totalWin") or 0)
-        # Curtain before post-expand winInfo so basegame can show two beats:
-        # lying-SW lines → expand → re-eval lines (× product).
         super_wild_expand_event(self, expands, product)
         if re_eval:
-            self._emit_sw_reeval_wins(product, phase1_wins, phase1_total)
+            self._emit_sw_reeval_wins(
+                phase1_wins=phase1_wins,
+                phase1_total=phase1_total,
+                new_reels=new_reels,
+            )
 
     def _apply_paw_resolve(self) -> None:
         paws, rows, total = build_paw_resolve(self.board, bet=1.0)

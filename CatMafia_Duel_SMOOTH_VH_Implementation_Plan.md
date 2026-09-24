@@ -1,8 +1,8 @@
 # Cat Mafia — план реализации: Duel SMOOTH · VH + математическая интрига
 
-Дата: 2026-09-23 (дополнено: **фаза A — math intrigue**)  
+Дата: 2026-09-23 (дополнено: **фаза A — math intrigue**; **симметрия win/lose по сумме победы**)  
 Scope: `third_party/math-sdk/games/0_0_cat_mafia` (математика). Web UI показывает **правдивые** book totals (без fake banks).  
-Статус: **фаза B в работе** — TARGET json + histogram + scaling/bias + enforce tool готовы; нужен M5.
+Статус: **фаза B+A код готов** (lose-mirror + S1–S4 intrigue в sim; histogram/enforce win+lose; metrics/asserts). Нужен полный M5 → histogram → enforce → resample → accept.
 
 Связанные документы:
 - `CatMafia_Duel_Intrigue_And_Wins_Plan.md` — стратегия / целевые каскады
@@ -16,13 +16,14 @@ Scope: `third_party/math-sdk/games/0_0_cat_mafia` (математика). Web UI
 
 | Фаза | Название | Суть | Когда |
 |---|---|---|---|
-| **B** | SMOOTH · VH | Форма **финальных** выплат при победе | **Сначала** |
-| **A** | Math intrigue | Форма **гонки банков** по спинам при тех же финалах | **После accept B** |
+| **B** | SMOOTH · VH | Форма **финальной суммы победы** — и когда выиграл игрок, и когда выиграл оппонент | **Сначала** |
+| **A** | Math intrigue | Форма **гонки банков** по спинам (оба копится) при тех же финалах | **После accept B** |
 
 Инварианты на обе фазы:
-- P(win) cat ≈ 50% / dog ≈ 25% — **не менять**
-- RTP ≈ 0.96, max `×25000` rarity — **не ломать**
-- После B: каскад выплат SMOOTH · VH — фаза A **не должна** его откатить
+- P(win) cat ≈ 50% / dog ≈ 25% — **не менять** (кто победил — отдельные шансы)
+- Каскад **величины** победы SMOOTH · VH — **симметричен** для win и lose (см. B.0.1)
+- RTP ≈ 0.96, max `×25000` rarity — **не ломать** (на lose игроку по-прежнему `payout = 0`)
+- После B: каскад SMOOTH · VH на win **и** на lose-victory — фаза A **не должна** его откатить
 - UI не подменяет цифры: интрига только в math book events
 
 ---
@@ -31,23 +32,57 @@ Scope: `third_party/math-sdk/games/0_0_cat_mafia` (математика). Web UI
 
 ## B.0 Цель
 
-Заменить текущую форму `duel_win` в `bonus_duel_cat` и `bonus_duel_dog` на **SMOOTH · VH**:
+Заменить текущую форму **суммы победы сессии** в `bonus_duel_cat` и `bonus_duel_dog` на **SMOOTH · VH**.
+
+На `duel_win` это по-прежнему `payout` игрока (= `dogTotal + catTotal` по settle).  
+На `duel_lose` игроку платим `0`, но **величина победы оппонента** (тот же смысл суммы боя — см. B.0.1) живёт в **том же каскаде весов**.
 
 | Правило | Значение |
 |---|---|
-| P(`payout < 150×` \| win) | **≈ 2%** |
-| Пик | **`150–180×`** (сразу над buy `150×`) — самый частый win |
+| P(`victory < 150×` \| исход с победителем) | **≈ 2%** (и win, и lose) |
+| Пик | **`150–180×`** (сразу над buy `150×`) — самый частый размер победы |
 | Форма | Монотонный спад: чем больше ×, тем реже |
-| RTP | ≈ **0.96** |
-| P(win) | cat ≈ **50%**, dog ≈ **25%** |
+| RTP | ≈ **0.96** (lose не платит игроку) |
+| P(player win) | cat ≈ **50%**, dog ≈ **25%** |
 | Max `×25000` | Редкость **не режем** (~1 / 100k buys) |
-| E[win\|win] | cat ≈ **288×**, dog ≈ **574×** |
+| E[payout\|player win] | cat ≈ **288×**, dog ≈ **574×** |
 
 ---
 
-## B.1 Целевые каскады (% среди wins)
+## B.0.1 Симметрия win / lose (зафиксировано продуктово)
 
-### Cat (E≈288×)
+**Проигрыш должен ощущаться как победа другого человека**, не как «пустота и ноль на экране».
+
+Пример: если среди твоих побед ~3% дают ~`$1500`, то среди твоих проигрышей ~3% должны выглядеть как «оппонент сорвал ~`$1500`». Те же веса — **в обе стороны**.
+
+| Исход | Деньги игроку | Что таргетим каскадом SMOOTH · VH |
+|---|---|---|
+| `duel_win` | `payout` (= pot `dog+cat`) | распределение `payout` среди wins |
+| `duel_lose` | `0` | распределение **той же метрики победы** среди loses |
+
+**Метрика победы на lose (рабочее определение):**  
+`victoryAmount = dogTotal + catTotal` (тот же pot, что стал бы payout при победе игрока).  
+Альтернатива при приёмке/отладке: `max(dogTotal, catTotal)` — только если pot окажется слишком шумным; по умолчанию якорь = **pot**.
+
+**Что это не меняет:**
+- hit-rate: кто победил — по-прежнему ~50%/25%;
+- RTP: lose = `0` игроку;
+- правило settle / нет ничьи.
+
+**Что это меняет в B:**
+- histogram / TARGET / enforce смотрят **два** каскада: `% среди wins` и `% среди loses` по `victoryAmount`;
+- допуски те же (±2 п.п. тело, ±0.5 на `<150`, монотонность);
+- цель: `P(victory ∈ band | lose) ≈ P(payout ∈ band | win)` для каждого бенда SMOOTH · VH.
+
+**Связь с фазой A:** B задаёт *какой величины был бой/победа*; A задаёт *как оба банка копились в конкуренции*, чтобы проигрыш не был «нас разнесли 900 vs 12 с первого спина», а «у нас тоже копилось — чуть не хватило».
+
+---
+
+## B.1 Целевые каскады (% среди wins **и** среди loses)
+
+Таблицы ниже — TARGET для **величины победы**. На win считаем по `payout`; на lose — по `victoryAmount` (B.0.1). Доли **одинаковые** в обоих срезах.
+
+### Cat (E≈288× среди player wins)
 
 | Band (×bet) | TARGET %wins |
 |---|---|
@@ -63,7 +98,7 @@ Scope: `third_party/math-sdk/games/0_0_cat_mafia` (математика). Web UI
 
 Допуск: ±2 п.п. на бендах тела ≥5%; ±0.5 п.п. на `<150`; монотонность обязательна.
 
-### Dog (E≈574×)
+### Dog (E≈574× среди player wins; тот же каскад % среди loses)
 
 | Band (×bet) | TARGET %wins |
 |---|---|
@@ -90,10 +125,10 @@ Scope: `third_party/math-sdk/games/0_0_cat_mafia` (математика). Web UI
 |---|---|
 | `game_optimization.py` | `_bonus_duel_*_scaling`, `distribution_bias` |
 | `game_config.py` | квоты/hr — **по умолчанию не трогать** |
-| `tools/match_duel_win_body.py` (новый) | post-opt выравнивание LUT по бендам |
-| `tools/duel_payout_histogram.py` (новый) | приёмка vs TARGET |
+| `tools/match_duel_win_body.py` (новый) | post-opt выравнивание LUT по бендам (**win + lose victory**) |
+| `tools/duel_payout_histogram.py` (новый) | приёмка vs TARGET (**отдельно win / lose**) |
 | `run_m5.py` / `run_bonus_duel.py` / pipeline | подключить enforce |
-| Web / settle | **не в scope B** |
+| Web / settle | **не в scope B** (lose всё ещё `payout = 0`) |
 
 ---
 
@@ -102,11 +137,11 @@ Scope: `third_party/math-sdk/games/0_0_cat_mafia` (математика). Web UI
 ```
 Sim books (duel_win / duel_lose / wincap)
         ↓
-Optimizer (scaling + bias)     ← Слой 1
+Optimizer (scaling + bias)     ← Слой 1 (сейчас в основном win-payout)
         ↓
 Weighted LUT
         ↓
-Enforce match_duel_win_body    ← Слой 2
+Enforce match body             ← Слой 2: win payout + lose victoryAmount
         ↓
 RTP / hit-rate checks
         ↓
@@ -115,18 +150,24 @@ resample → publish + storybook
 
 **Scaling / bias (направление):** давить `<150`, усиливать пик `(150–180)/(150–220)`, убывающий scale вверх по каскаду; cat bias с `(40–120)` → `(150–220)`; dog bias с `(90–280)` → `(150–220)`, убрать кормёжку горба `~$1k–1.5k`.
 
-**Enforce:** двигать вес только внутри `duel_win` между бендами; hit-rate / max / RTP в допуске.
+**Enforce:**
+- внутри `duel_win` — веса по бендам `payout` (как уже спланировано);
+- внутри `duel_lose` — веса по бендам `victoryAmount` (= pot), **зеркало** того же TARGET;
+- не смешивать win↔lose (hit-rate не сдвигать);
+- hit-rate / max / RTP в допуске.
+
+> Практическая заметка: opt сегодня кормит по `payout`, поэтому lose-каскад почти наверняка дотянется **enforce / post-pass на totals** (подогнать pot при сохранении `winner` и `payout=0`). Это всё ещё scope B, не A.
 
 ---
 
 ## B.4 Шаги работ
 
-0. Histogram + TARGET json + базлайн текущего publish  
-1. Opt scaling/bias cat+dog  
-2. M5 duel-only → сверка каскада  
-3. Enforce при необходимости  
+0. Histogram + TARGET json + базлайн текущего publish (**win payout + lose pot**)  
+1. Opt scaling/bias cat+dog (win-тело)  
+2. M5 duel-only → сверка каскада win  
+3. Enforce win-body + **lose victoryAmount** при необходимости  
 4. Resample + publish  
-5. Storybook / sync + smoke  
+5. Storybook / sync + smoke (win **и** типичный lose)  
 6. **Accept B** → (опц. M6) → старт фазы A  
 
 ---
@@ -134,27 +175,31 @@ resample → publish + storybook
 ## B.5 Чеклист приёмки B
 
 - [ ] P(`<150`|win) ≈ 2% (cat и dog)
-- [ ] Пик `150–180` — максимальная доля тела
+- [ ] Пик `150–180` — максимальная доля тела (**среди wins**)
 - [ ] Монотонный спад; cat без горба `350–450`; dog без горба `1000–1500`
+- [ ] **Lose-зеркало:** тот же каскад по `victoryAmount` среди `duel_lose` (± тот же допуск)
 - [ ] RTP 0.959–0.961; P(win) 50%/25%; E[win|win] ~288 / ~574
 - [ ] Max ~1/100k buys; `assert_duel_invariants` OK
+- [ ] Storybook: типичный lose с «жирным» pot / close lose — не сухой ноль по ощущению
 
 ---
 
 # ФАЗА A — Математическая интрига (гонка банков)
 
 > Старт **только после Accept B**.  
-> Согласовано в обсуждении: реальная интрига в book, не UI-подмена; шансы победы и форма финальных выплат из B **сохраняются**.
+> Согласовано в обсуждении: реальная интрига в book, не UI-подмена; шансы *кто* победил и каскад *величины* победы (win **и** lose) из B **сохраняются**.
 
 ## A.0 Цель
 
-Игрок до последних спинов не уверен, кто победит — потому что **реальные** `dogTotal` / `catTotal` держат бой близким и/или с переломами, а не из‑за фейковых цифр на экране.
+Игрок до последних спинов не уверен, кто победит — потому что **реальные** `dogTotal` / `catTotal` **оба копится в конкуренции**, держат бой близким и/или с переломами, а не из‑за фейковых цифр на экране.
+
+Проигрыш в A — продолжение B.0.1: не «нас размазали в ноль», а **глупость / почти**, при том что у нас тоже рос баланс.
 
 Пример (продуктовый паттерн, не буквальный скрипт):
 
 > Долго кот ведёт ~300, собака ~120 → под конец собака лутает крупный спин +500 → исход решается в финале.
 
-Финал книги (`winner`, `payout`, сумма банков при победе игрока) остаётся согласованным с фазой B.
+Финал книги (`winner`, `payout`, `victoryAmount` / pot) остаётся согласованным с фазой B (включая lose-зеркало).
 
 ---
 
@@ -163,7 +208,8 @@ resample → publish + storybook
 | Параметр | Правило |
 |---|---|
 | P(player win) | cat ~50% / dog ~25% — без подкрутки |
-| Распределение финальных payout (SMOOTH · VH) | регресс-чек после A |
+| Распределение финальных `payout` \| win (SMOOTH · VH) | регресс-чек после A |
+| Распределение `victoryAmount` \| lose (зеркало B.0.1) | регресс-чек после A |
 | RTP / max rarity | в допуске B |
 | UI | показывает book totals as-is (без theatrical display) |
 | Ничья | по-прежнему невозможна |
@@ -248,7 +294,7 @@ Web: **без** display-маппинга; только честный playback b
 | P(хотя бы 1 lead-change за сессию) | **≥ ~40%** |
 | P(ранний blowout: gap>0.5 уже к спину 4) | **≤ ~15%** |
 | Доля S4 Blowout | ~10% (±5) |
-| Регресс B | каскад %wins / P(<150\|win) / RTP / P(win) в допуске B |
+| Регресс B | каскад %wins **и** %loses(victory) / P(<150) / RTP / P(win) в допуске B |
 
 Точные числа gap — подкрутить после первого M5 с reshape.
 
@@ -274,7 +320,7 @@ Web: **без** display-маппинга; только честный playback b
 |---|---|
 | Reshape ломает согласованность board↔win | v1: переставлять/рескейлить spin-win amounts при валидных событиях; или упрощённый pad+reorder без смены бордов |
 | Случайно сменить winner | assert sign(totals) и `duelEnd.winner` |
-| Раздуть оба банка → уехать от SMOOTH payout | finals frozen **до** path reshape; payout не пересчитывать заново с «красивых» банков |
+| Раздуть оба банка → уехать от SMOOTH | finals frozen **до** path reshape; не пересчитывать `payout` / `victoryAmount` заново с «красивых» банков |
 | Слишком много late steals → ощущение скрипта | вес S3 ограничить; миксовать S1/S2 |
 | Регресс гистограммы B | обязательный histogram check после A |
 
@@ -283,16 +329,17 @@ Web: **без** display-маппинга; только честный playback b
 # Сводка пайплайна (B + A)
 
 ```
-ФАЗА B                          ФАЗА A
-opt scaling/bias                capture winner + totals + payout
-     ↓                               ↓
-enforce win-body bands          choose S1–S4
-     ↓                               ↓
-accept payout shape             reshape spin timeline
-     ↓                               ↓
-                          assert path + regress B
-                                 ↓
-                    M6 + resample (финал к Stake)
+ФАЗА B                                      ФАЗА A
+opt scaling/bias                            capture winner + totals + payout
+     ↓                                           ↓
+enforce win payout bands                    choose S1–S4
++ lose victoryAmount bands                       ↓
+     ↓                                      reshape spin timeline
+accept victory shape (win ↔ lose)           (оба банка копится)
+     ↓                                           ↓
+                                  assert path + regress B (win+lose)
+                                                 ↓
+                                    M6 + resample (финал к Stake)
 ```
 
 ---
@@ -320,8 +367,90 @@ accept payout shape             reshape spin timeline
 
 ---
 
-## Следующий шаг
+## План доведения до TARGET (статус после M5+resample 2026-09-24)
 
-1. Реализовать **фазу B** (шаги B.4 / 0→6).  
-2. После Accept B — спека curves S1–S4 и **фаза A**.  
-3. UI-фейк банков не делаем.
+### Что уже ок (не ломать)
+- RTP ≈ 0.9601, P(win) cat~50% / dog~25%
+- E[win|win] ≈ 288 / 576
+- **Lose-зеркало** pot ≈ SMOOTH · VH (±1 п.п.)
+- Assert path sums / duelEnd — зелёный
+- Доли сценариев S1–S4 ≈ 45/25/20/10
+
+### Что не ок
+1. **Win-тело** — не SMOOTH: cat горб `220–350`, dog горб `450–550` (~58%); пик `150–180` пустой  
+2. **Интрига пути** — ярлыки S1–S4 есть, но mid-gap ~0.9, early blowout ~75–80% (бой не близкий)
+
+---
+
+### Этап 1 — Win-тело (приоритет B)
+
+**Цель:** каскад %wins = TARGET (± допуск плана B.5).
+
+| # | Действие | Где |
+|---|---|---|
+| 1.1 | Enforce на **weighted** LUT (не publish equal-weight) | `library/publish_files_backup_pre_resample` |
+| 1.2 | `match_duel_win_body.py` cat + dog (win bands; lose можно `--skip-lose` — уже ок) | tools |
+| 1.3 | Histogram dry-check на backup | `duel_payout_histogram.py --lut-dir …backup…` |
+| 1.4 | Если band coverage пустая (некуда двигать вес) — усилить opt scaling/bias и/или досеять books в пик `150–180`, повторить M5 duel-only | `game_optimization.py` |
+| 1.5 | `resample_books.py --100k` → новый publish | tools |
+| 1.6 | Accept B: histogram wins ≈ TARGET, lose регресс, RTP/P(win) | checklist B.5 |
+
+Команды (из игры):
+```bash
+$PY tools/match_duel_win_body.py --mode bonus_duel_cat --lut-dir library/publish_files_backup_pre_resample
+$PY tools/match_duel_win_body.py --mode bonus_duel_dog --lut-dir library/publish_files_backup_pre_resample
+$PY tools/duel_payout_histogram.py --lut-dir library/publish_files_backup_pre_resample
+# если ок → copy backup→publish или resample из backup
+$PY tools/resample_books.py --100k
+$PY tools/duel_payout_histogram.py --lut-dir library/publish_files
+```
+
+**Критерий выхода этапа 1:** пик `150–180` максимальный; монотонный спад; cat без горба `220–350`; dog без горба `450–550`; P(&lt;150|win)≈2%.
+
+---
+
+### Этап 2 — Интрига пути (фаза A, после Accept B или параллельно на копии)
+
+**Цель:** mid-gap ≤ ~0.30, early blowout ≤ ~20%, lead-change ≥ ~40% (dog тоже).
+
+| # | Действие | Суть |
+|---|---|---|
+| 2.1 | Починить `_progress_curves` / mid-lead fixes в `duel_intrigue.py` | S1: держать оба ~lockstep до спинов 8–10; S2: лузер ahead mid **абсолютно**; реже S4 |
+| 2.2 | Учитывать **асимметрию финалов** (winner pot >> loser) | Нельзя «близко mid», если loser final крошечный — pad loser mid, крупные куски winner в конец (уже идея S3) |
+| 2.3 | Юнит-тест метрик на 200–500 in-proc books | `duel_intrigue_metrics` mid_gap / early_bo |
+| 2.4 | M5 duel-only (или post-pass reshape на существующих books, если finals frozen) | не откатить win-тело этапа 1 |
+| 2.5 | Регресс B (histogram wins+loses) + Accept A | A.4 + B.5 |
+
+**Критерий выхода этапа 2:** метрики A.4 зелёные; сценарии остаются ~45/25/20/10; payout/pot каскады не уехали.
+
+---
+
+### Этап 3 — Dev / sampler
+- `run_storybook.py && sync_to_web_sdk.py` после Accept B (и снова после A)
+- В sampler: win mid / peak / lose fat pot / close lose
+
+### Этап 4 — M6 (когда B+A accepted)
+- Один общий M6 + resample --1m перед Stake
+
+---
+
+### Порядок работ (рекомендуемый)
+
+```
+1) Enforce win-body на backup → histogram → resample     ← сейчас
+2) Accept B (wins + lose регресс)
+3) Fix intrigue curves → smoke metrics → M5 duel
+4) Accept A + storybook
+5) M6
+```
+
+Lose-зеркало и RTP **не пересобирать с нуля**, только регрессить после каждого шага.
+
+---
+
+## Следующий шаг (прямо сейчас)
+
+1. Прогнать **этап 1** (enforce на `publish_files_backup_pre_resample`).  
+2. Если enforce упирается в пустые бенды — чинить opt/seed, не resample вслепую.  
+3. Потом этап 2 (кривые интриги).  
+4. UI-фейк банков не делаем.

@@ -321,28 +321,16 @@ const playWildOpenSpin = (delayMs: number) => {
 };
 
 /**
- * winInfo amounts are evaluated with SW mults neutralized.
- * Lying SW = plain wild → show raw totalWin on phase-1 (no upcoming product).
- * Open sticky columns already carry × — scale by stickyProduct for sticky-only /
- * phase-1 lines that pass through existing sticky.
- * Phase-2 book totals already include full productMult.
+ * winInfo amounts already include per-line sticky × from math.
+ * Do not multiply again by stickyProduct (that was the old global product).
  */
 const paylineAmountWithStickyProduct = ({
 	totalWin,
-	isPostSwExpand,
-	stickyProduct,
 }: {
 	totalWin: number;
 	isPostSwExpand: boolean;
 	stickyProduct: number;
-}) => {
-	if (totalWin <= 0) return totalWin;
-	// Phase-2 book totals already include productMult — do not double.
-	if (isPostSwExpand) return totalWin;
-	// Already-open sticky product (not the lying SW that will open this spin).
-	if (stickyProduct > 1) return Math.round(totalWin * stickyProduct);
-	return totalWin;
-};
+}) => totalWin;
 
 /**
  * Under-board WIN count-up on any HUD increase (base game + bonus FS).

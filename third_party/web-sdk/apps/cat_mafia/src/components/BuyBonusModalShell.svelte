@@ -17,7 +17,6 @@
 	import { startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
 	import { releaseAllBuyBonusCardSpinePlayers } from '../game/buyBonusCardGpu';
 	import { releaseAllDuelPickSpinePlayers } from '../game/duelPickGpu';
-	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
 
@@ -54,7 +53,6 @@
 	const isPreparingBuy = $derived(showBuyPanel && !gameEntrance.buyBonusPanelReady);
 	/** Park warm hosts off-screen with real layout size so WebGL can compile. */
 	const isWarmParked = $derived(mountBuyPanel && !showBuyPanel);
-	const phoneDim = isPhoneForAtlasDownscale();
 
 	/** Opening buy flow after a feature must drop the eviction lock or warm never returns. */
 	$effect(() => {
@@ -78,7 +76,6 @@
 		class:active={isVisible}
 		class:preparing={isPreparingBuy}
 		class:warm={isWarmParked}
-		class:phone-dim={phoneDim}
 		aria-hidden={!isVisible}
 		inert={!isVisible && !isPreparingBuy}
 		data-test="buy-bonus-modal-shell"
@@ -138,13 +135,6 @@
 			background: rgba(0, 0, 0, 0.5);
 			backdrop-filter: blur(30px);
 			-webkit-backdrop-filter: blur(30px);
-		}
-
-		/* iOS: blur + two WebGL contexts Jetsams on open. 50% dim, no holes. */
-		&.active.phone-dim {
-			backdrop-filter: none;
-			-webkit-backdrop-filter: none;
-			background: rgba(0, 0, 0, 0.5);
 		}
 
 		/* Instant feedback on tap: dim while spines flush, then reveal cards. */

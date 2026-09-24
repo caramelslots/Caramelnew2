@@ -1,10 +1,14 @@
 """Cat Mafia game-state — base + free-spin + Duel loops."""
 
+import random
+
 from src.events.events import reveal_event
 
 from game_override import GameStateOverride
 from game_events import duel_start_event, duel_bank_update_event, duel_end_event
 from src.events.events import set_total_event
+from duel_smooth_victory import maybe_mirror_lose_pot, bands_for_mode, mode_from_player_side
+from duel_intrigue import apply_duel_intrigue_to_book
 
 
 class GameState(GameStateOverride):
@@ -101,6 +105,32 @@ class GameState(GameStateOverride):
                         break
 
             winner, payout = self.settle_duel_payout(dog_total, cat_total)
+
+            # B.0.1 lose-mirror: on lose, reshape pot to SMOOTH · VH (payout stays 0).
+            # Skip force_wincap paths (player win at criteria).
+            rng = random.Random((int(sim) * 1000003 + 17) & 0xFFFFFFFF)
+            if not self.duel_player_won:
+                mode = mode_from_player_side(self.duel_player_side or player_side)
+                dog_m, cat_m, _target = maybe_mirror_lose_pot(
+                    self.duel_dog_total,
+                    self.duel_cat_total,
+                    winner,
+                    player_won=False,
+                    player_side=self.duel_player_side or player_side,
+                    rng=rng,
+                    bands=bands_for_mode(mode),
+                )
+                winner, payout = self.settle_duel_payout(dog_m, cat_m)
+
+            # Phase A: rewrite spin/bank timeline for intrigue; finals frozen.
+            apply_duel_intrigue_to_book(
+                self.book.events,
+                dog_total=self.duel_dog_total,
+                cat_total=self.duel_cat_total,
+                winner=winner,
+                rng=rng,
+            )
+
             win_level = None
             if payout > 0:
                 try:

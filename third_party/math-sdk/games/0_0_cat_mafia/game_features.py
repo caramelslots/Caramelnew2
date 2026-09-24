@@ -201,6 +201,57 @@ def product_of_mults(mults) -> int:
     return product if product > 0 else 1
 
 
+def sticky_mult_for_positions(positions, sticky_sw) -> int:
+    """Product of sticky-curtain × only for reels that appear in this line's positions."""
+    if not sticky_sw:
+        return 1
+    hit = {int(p["reel"]) for p in (positions or [])}
+    product = 1
+    for reel, mult in sticky_sw.items():
+        if int(reel) in hit:
+            product *= max(1, int(mult))
+    return product if product > 0 else 1
+
+
+def apply_sticky_mults_to_wins(win_data: dict, sticky_sw) -> dict:
+    """Scale each win by sticky columns it hits; recompute totalWin. Mutates win_data.
+
+    Lying SW is cloaked (×1) and not in sticky_sw — open curtains only.
+    Always sets totalWin = sum(wins) so board lines stay authoritative.
+    """
+    wins = list(win_data.get("wins") or [])
+    if not wins:
+        win_data["totalWin"] = 0.0
+        return win_data
+    total = 0.0
+    if sticky_sw:
+        for win in wins:
+            raw = float(win.get("win") or 0)
+            mult = sticky_mult_for_positions(win.get("positions"), sticky_sw)
+            if mult > 1:
+                win["win"] = round(raw * mult, 2)
+                meta = dict(win.get("meta") or {})
+                meta["stickyMult"] = int(mult)
+                win["meta"] = meta
+            total += float(win.get("win") or 0)
+    else:
+        total = sum(float(w.get("win") or 0) for w in wins)
+    win_data["totalWin"] = round(total, 2)
+    return win_data
+
+
+def wins_hit_any_reel(wins, reels) -> bool:
+    """True if any win position sits on one of the given reels."""
+    want = {int(r) for r in (reels or [])}
+    if not want:
+        return False
+    for win in wins or []:
+        for p in win.get("positions") or []:
+            if int(p["reel"]) in want:
+                return True
+    return False
+
+
 def stamp_expanded_sw_column(
     board,
     create_symbol,

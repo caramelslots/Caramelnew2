@@ -1,6 +1,6 @@
 {
   "cost": 150,
-  "notes": "SMOOTH · VH targets from CatMafia_Duel_SMOOTH_VH_Implementation_Plan.md. Shares are % of duel_win / paying sessions (payout>0). Lose rate is separate (cat ~50%, dog ~25%).",
+  "notes": "SMOOTH · VH targets from CatMafia_Duel_SMOOTH_VH_Implementation_Plan.md. Shares apply to (1) payout among duel_win and (2) victory pot dog+cat among duel_lose (lose-mirror). Hit-rate who-wins is separate (cat ~50%, dog ~25%).",
   "bonus_duel_cat": {
     "p_win": 0.5,
     "e_win": 288.0,
