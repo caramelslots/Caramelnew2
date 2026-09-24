@@ -1,0 +1,337 @@
+<script lang="ts">
+	import { onDestroy, onMount, tick } from 'svelte';
+	import { backOut } from 'svelte/easing';
+	import { Tween } from 'svelte/motion';
+	import { untrack } from 'svelte';
+
+	import LoaderCardHtml from './LoaderCardHtml.svelte';
+	import PressToContinueHtml from './PressToContinueHtml.svelte';
+	import { getContext } from '../game/context';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { GAME_INFO_SYMBOL_IMAGES } from '../game/gameInfoSymbols';
+	import { LOADER_NEON_LOGO_URL, LOADER_SCREEN_IMAGE_URLS } from '../game/loaderCardAssets';
+	import {
+		destroyLoaderCardBonusPixi,
+		flushLoaderCardBonusStage,
+		whenLoaderCardBonusReady,
+	} from '../game/loaderCardBonusPixi';
+	import {
+		LOADER_CARD_COUNT,
+		computeLoaderCardsAnchor,
+		computeLoaderCarouselMetrics,
+		computeLoaderLogoMetrics,
+		computeLoaderRowMetrics,
+		computeLoaderScreenPosition,
+		shouldUseLoaderCarousel,
+	} from '../game/loaderCardsHtmlLayout';
+	import { preloadHtmlImages } from '../game/preloadHtmlImages';
+
+	const SNAP_MS = 520;
+	const AUTO_HOLD_MS = 3000;
+	const AUTO_START_DELAY_MS = 900;
+
+	const context = getContext();
+
+	// Cards after bootstrap dismisses + assets load; stay mounted during lift.
+	const show = $derived(
+		context.stateLayout.showLoadingScreen &&
+			context.stateApp.loaded &&
+			gameEntrance.bootstrapDismissed &&
+			(gameEntrance.loadingCardsVisible || gameEntrance.loaderExitActive),
+	);
+	const assetsReady = $derived(context.stateApp.loaded);
+	const useCarousel = $derived(shouldUseLoaderCarousel(context.stateLayoutDerived));
+	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
+
+	const anchor = $derived(computeLoaderCardsAnchor(context.stateLayoutDerived));
+	const rowMetrics = $derived(computeLoaderRowMetrics(anchor.layoutWidth, anchor.scale));
+	const carouselMetrics = $derived(
+		computeLoaderCarouselMetrics(
+			anchor.layoutWidth,
+			anchor.scale,
+			canvasSizes.width,
+			canvasSizes.height,
+		),
+	);
+
+	const logoMetrics = $derived(computeLoaderLogoMetrics(context.stateLayoutDerived));
+	const cardHeight = $derived(
+		useCarousel ? carouselMetrics.cardHeight : rowMetrics.cardHeight,
+	);
+	const screenPos = $derived(
+		computeLoaderScreenPosition(context.stateLayoutDerived, cardHeight, logoMetrics),
+	);
+
+	const logoStyle = $derived(
+		`width:${logoMetrics.width}px;height:${logoMetrics.height}px;margin-bottom:${logoMetrics.gap}px;transform:translateX(-50%) translateY(${logoMetrics.lift}px);`,
+	);
+
+	let activeIndex = $state(0);
+	let autoAdvanceTimer: ReturnType<typeof setTimeout> | undefined;
+	/** Hide logo+cards until WebPs and Spine B can paint together. */
+	let contentReady = $state(false);
+
+	const trackOffset = new Tween(0);
+
+	const trackX = $derived.by(() => {
+		if (!useCarousel) return 0;
+		return trackOffset.current;
+	});
+
+	const trackStyle = $derived.by(() => {
+		if (!useCarousel) return '';
+		return `transform:translateX(${trackX}px);`;
+	});
+
+	const clampIndex = (index: number) => Math.max(0, Math.min(LOADER_CARD_COUNT - 1, index));
+
+	const overlayStyle = $derived(
+		`left:${screenPos.centerX}px;top:${screenPos.centerY}px;transform:translate(-50%,-50%);`,
+	);
+
+	const snapToIndex = (index: number, animate = true) => {
+		const nextIndex = clampIndex(index);
+		activeIndex = nextIndex;
+
+		if (animate) {
+			void trackOffset.set(-nextIndex * carouselMetrics.slideStep, {
+				duration: SNAP_MS,
+				easing: backOut,
+			});
+			return;
+		}
+
+		void trackOffset.set(-nextIndex * carouselMetrics.slideStep, { duration: 0 });
+	};
+
+	const clearAutoAdvance = () => {
+		if (autoAdvanceTimer !== undefined) {
+			clearTimeout(autoAdvanceTimer);
+			autoAdvanceTimer = undefined;
+		}
+	};
+
+	const scheduleAutoAdvance = (delay = AUTO_HOLD_MS) => {
+		if (!useCarousel) return;
+		clearAutoAdvance();
+		autoAdvanceTimer = setTimeout(() => {
+			snapToIndex((activeIndex + 1) % LOADER_CARD_COUNT);
+			scheduleAutoAdvance();
+		}, delay);
+	};
+
+	const screenImageUrls = [...LOADER_SCREEN_IMAGE_URLS, GAME_INFO_SYMBOL_IMAGES.B] as const;
+
+	onMount(() => {
+		clearAutoAdvance();
+		void preloadHtmlImages([...screenImageUrls], {
+			priority: [LOADER_NEON_LOGO_URL, LOADER_SCREEN_IMAGE_URLS[0]!, GAME_INFO_SYMBOL_IMAGES.B],
+			concurrency: 2,
+		});
+	});
+
+	onDestroy(() => {
+		clearAutoAdvance();
+		destroyLoaderCardBonusPixi();
+	});
+
+	$effect(() => {
+		if (!show) {
+			contentReady = false;
+			destroyLoaderCardBonusPixi();
+			return;
+		}
+
+		// During Continue lift the overlay stays mounted — keep cards + bonus
+		// spine as-is. Do not destroy WebGL or flip contentReady off.
+		const lifting =
+			gameEntrance.loaderExitActive ||
+			gameEntrance.introFading ||
+			!gameEntrance.loadingCardsVisible;
+		if (lifting) return;
+
+		if (contentReady) return;
+		let cancelled = false;
+		void (async () => {
+			// Mount card hosts first so Spine can bind while images finish.
+			await tick();
+			await Promise.all([
+				preloadHtmlImages([...screenImageUrls], { concurrency: 4 }),
+				whenLoaderCardBonusReady(),
+			]);
+			flushLoaderCardBonusStage();
+			await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+			if (cancelled) return;
+			contentReady = true;
+		})();
+		return () => {
+			cancelled = true;
+		};
+	});
+
+	$effect(() => {
+		if (!useCarousel) return;
+		const step = carouselMetrics.slideStep;
+		untrack(() => {
+			void trackOffset.set(-activeIndex * step, { duration: 0 });
+		});
+	});
+
+	// Keep card 1 visible while assets load; reset when press-to-continue unlocks.
+	$effect(() => {
+		if (!show || !useCarousel) return;
+		untrack(() => {
+			if (!assetsReady) {
+				snapToIndex(0, false);
+			}
+		});
+	});
+
+	$effect(() => {
+		if (!show || !useCarousel || !assetsReady || !contentReady || gameEntrance.loaderExitActive) {
+			clearAutoAdvance();
+			return;
+		}
+		untrack(() => {
+			snapToIndex(0, false);
+		});
+		scheduleAutoAdvance(AUTO_START_DELAY_MS);
+		return clearAutoAdvance;
+	});
+</script>
+
+{#if show}
+	<div
+		class="loader-cards-overlay"
+		class:ready={contentReady}
+		data-loader-cards-prepare={contentReady ? undefined : ''}
+		style={overlayStyle}
+		aria-hidden={!show}
+	>
+		<div class="loader-cards-stack">
+			<!-- daloniil_test: NeonForegroundOverlay (Spine). Here: same slot, HTML WebP. -->
+			<div class="loader-neon-logo-placeholder" style={logoStyle}>
+				<img class="loader-neon-logo" src={LOADER_NEON_LOGO_URL} alt="" draggable="false" />
+			</div>
+			{#if useCarousel}
+			<div
+				class="carousel-viewport"
+				style:width="{carouselMetrics.viewportWidth}px"
+				style:height="{carouselMetrics.cardHeight}px"
+			>
+				<div class="carousel-track" style={trackStyle}>
+					{#each Array(LOADER_CARD_COUNT) as _, index (index)}
+						<div class="carousel-slide" style:width="{carouselMetrics.slideWidth}px">
+							<LoaderCardHtml
+								{index}
+								cardIndex={index}
+								cardWidth={carouselMetrics.cardWidth}
+								carousel
+								isActive={index === activeIndex}
+								bounceKey={activeIndex}
+							/>
+						</div>
+					{/each}
+				</div>
+			</div>
+		{:else}
+			<div
+				class="cards-row"
+				style:width="{rowMetrics.rowWidth}px"
+				style:gap="{rowMetrics.gap}px"
+			>
+				{#each Array(LOADER_CARD_COUNT) as _, index (index)}
+					<LoaderCardHtml
+						cardIndex={index}
+						cardWidth={rowMetrics.cardWidth}
+						{index}
+						animate={contentReady}
+					/>
+				{/each}
+			</div>
+		{/if}
+		</div>
+	</div>
+	<!--
+		Sibling of the cards box — label must not sit under a transform ancestor.
+		Space / tap handlers live in LoaderContinueHandlers.
+	-->
+	<div class="loader-press-to-continue">
+		{#if gameEntrance.loadingCardsVisible && assetsReady && contentReady}
+			<PressToContinueHtml contained />
+		{/if}
+	</div>
+{/if}
+
+<style lang="scss">
+	.loader-neon-logo-placeholder {
+		position: absolute;
+		left: 50%;
+		bottom: 100%;
+		display: block;
+		pointer-events: none;
+	}
+
+	.loader-neon-logo {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		user-select: none;
+		pointer-events: none;
+	}
+
+	.loader-cards-stack {
+		position: relative;
+	}
+
+	.loader-cards-overlay {
+		position: absolute;
+		z-index: 44;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: none;
+		user-select: none;
+		overflow: visible;
+		opacity: 0;
+
+		&.ready {
+			opacity: 1;
+		}
+	}
+
+	.loader-press-to-continue {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 46;
+		pointer-events: none;
+	}
+
+	.cards-row {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		overflow: visible;
+	}
+
+	.carousel-viewport {
+		overflow: hidden;
+	}
+
+	.carousel-track {
+		display: flex;
+		align-items: center;
+		will-change: transform;
+	}
+
+	.carousel-slide {
+		flex: 0 0 auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 100%;
+	}
+</style>

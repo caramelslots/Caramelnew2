@@ -196,10 +196,15 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	// Updates pool items in-place instead of replacing the array.
 	// Takes a flat layout of raw symbols — no intermediate ReelSymbol[] allocations.
 	//   - rawSymbol and symbolIndex are set directly from layout
-	//   - symbolState is NOT touched — managed by updateAllReelSymbolState
+	//   - optional prepend: new rows above the board are `spin` (WebP); the
+	//     on-screen tail keeps its Spine state so rest symbols scroll off
+	//     without snapping to static in place.
 	//   - pool items beyond layout.length get a large symbolIndex → inFrame = false
 	//   - pool grows (push) only when an anticipated spin exceeds pre-allocated size
-	const updateSymbolsPool = (layout: TRawSymbol[]) => {
+	const updateSymbolsPool = (
+		layout: TRawSymbol[],
+		prepend?: { spinHeadCount: number; tailStates: TSymbolState[] },
+	) => {
 		const newLen = layout.length;
 
 		// Grow only when needed (anticipated spin exceeds pre-allocated pool size)
@@ -232,6 +237,18 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			if (reelState.symbols[i].symbolIndex !== i) {
 				reelState.symbols[i].symbolIndex = i;
 			}
+			if (prepend) {
+				if (i < prepend.spinHeadCount) {
+					if (reelState.symbols[i].symbolState !== 'spin') {
+						reelState.symbols[i].symbolState = 'spin' as TSymbolState;
+					}
+				} else {
+					const kept = prepend.tailStates[i - prepend.spinHeadCount];
+					if (kept !== undefined && reelState.symbols[i].symbolState !== kept) {
+						reelState.symbols[i].symbolState = kept;
+					}
+				}
+			}
 		}
 
 		// Deactivate items beyond the new layout — but only those that are NOT
@@ -255,6 +272,14 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	// If an `await` sits between them, Svelte can flush a render with the new
 	// symbols still at the old reel position — i.e. symbols visibly "swap in
 	// place" on the board before the reel snaps offscreen.
+	const snapshotSymbolStates = (start: number, count: number) => {
+		const states: TSymbolState[] = [];
+		for (let i = 0; i < count; i++) {
+			states.push(reelState.symbols[start + i]?.symbolState ?? ('spin' as TSymbolState));
+		}
+		return states;
+	};
+
 	const addPadding = (paddingSizeValue: number) => {
 		const paddingRawSymbols = getPaddingRawSymbols({
 			paddingRawReel,
@@ -263,7 +288,11 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		});
 		// Build flat layout: [target, padding, prev] — all plain TRawSymbol[], no $state allocation
 		const layout: TRawSymbol[] = [...targetRawSymbols, ...paddingRawSymbols, ...prevRawSymbols];
-		updateSymbolsPool(layout);
+		const spinHeadCount = targetRawSymbols.length + paddingRawSymbols.length;
+		updateSymbolsPool(layout, {
+			spinHeadCount,
+			tailStates: snapshotSymbolStates(0, prevRawSymbols.length),
+		});
 
 		const topY =
 			defaultY -
@@ -455,7 +484,10 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		});
 		const currentContent = reelState.symbols.slice(0, count).map((reelSymbol) => reelSymbol.rawSymbol);
 		const layout: TRawSymbol[] = [newRow, ...currentContent.slice(0, -1)];
-		updateSymbolsPool(layout);
+		updateSymbolsPool(layout, {
+			spinHeadCount: 1,
+			tailStates: snapshotSymbolStates(0, count - 1),
+		});
 		placeY(reelY.current - h);
 	};
 
@@ -503,8 +535,6 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 				hasSignaledReady = true;
 				if (!started) {
 					reelState.motion = 'spinning';
-					// Don't block the next hold chunk on batched symbolState flips.
-					void updateAllReelSymbolState('spin');
 					started = true;
 				}
 				// Hold-phase: keep scrolling in fixed row chunks while RGS responds.
@@ -550,16 +580,16 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		const isSpinning = reelState.motion === 'spinning';
 		const symbolHeight = reelOptions.symbolHeight;
 
-		// Enter spin state BEFORE pool swap / placeY so per-symbol win offsets
-		// (bounce Y / scale / dim) are not baked into handoff reposition math.
+		// Keep currently-visible Spine on the tail; only prepended rows enter `spin`.
 		if (!isSpinning) {
 			reelState.motion = 'spinning';
-			void updateAllReelSymbolState('spin');
 		}
 
 		const applyLegacySeamlessPrepend = () => {
+			const count = reelState.activeSymbolCount;
+			const tailStates = snapshotSymbolStates(0, count);
 			const currentContent = reelState.symbols
-				.slice(0, reelState.activeSymbolCount)
+				.slice(0, count)
 				.map((reelSymbol) => reelSymbol.rawSymbol);
 			const paddingRawSymbols = getPaddingRawSymbols({
 				paddingRawReel,
@@ -572,7 +602,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 				...paddingRawSymbols,
 				...currentContent,
 			];
-			updateSymbolsPool(layout);
+			updateSymbolsPool(layout, { spinHeadCount: prependCount, tailStates });
 			placeY(reelY.current - prependCount * symbolHeight);
 		};
 
@@ -613,8 +643,13 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 					0,
 					Math.round((defaultY - reelY.current) / symbolHeight),
 				);
+				const visibleEnd = reelState.activeSymbolCount;
+				const tailStates = snapshotSymbolStates(
+					dropCount,
+					Math.max(0, visibleEnd - dropCount),
+				);
 				const visibleContent = reelState.symbols
-					.slice(dropCount, reelState.activeSymbolCount)
+					.slice(dropCount, visibleEnd)
 					.map((reelSymbol) => reelSymbol.rawSymbol);
 
 				// Filler rows between the result block and the still-visible symbols,
@@ -637,7 +672,10 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 					...fillerRawSymbols,
 					...visibleContent,
 				];
-				updateSymbolsPool(layout);
+				updateSymbolsPool(layout, {
+					spinHeadCount: targetRawSymbols.length + fillerCount,
+					tailStates,
+				});
 				// Exact seamless anchor: keep the first kept symbol (old index
 				// `dropCount`) at its current screen position — a whole-symbol shift,
 				// so the move is invisible.

@@ -1,0 +1,1600 @@
+<!--
+	BuyBonusOverlay.svelte — меню «Купить функцию» по designer_assets/bonus_buy_board.png.
+	Открывается при stateModal.modal?.name === 'buyBonus'. Масштабируется через
+	--panel-width для desktop, portrait, popout L (800×450) и popout S (400×225).
+-->
+<script lang="ts">
+	import { onDestroy } from 'svelte';
+	import { stateModal, stateBet, stateBetDerived, stateConfig } from 'state-shared';
+	import { stateBonus } from 'components-ui-html/src/stateBonus.svelte';
+	import { numberToCurrencyString } from 'utils-shared/amount';
+
+	import { clearActiveFeature } from '../game/activeFeature';
+	import {
+		buyNormalCostMultiplier,
+		buySuperCostMultiplier,
+		buyDuelCostMultiplier,
+		canAffordBuyBonus,
+	} from '../game/buyBonusBalance';
+	import {
+		isPopoutSmallViewport,
+		isPopoutViewport,
+		HUD_BALANCE_BET_FONT_FAMILY,
+	} from '../game/constants';
+	import { ensureKnewaveFontLoaded } from '../game/knewaveFont';
+	import { getContext } from '../game/context';
+	import { getContextLayout } from 'utils-layout';
+
+	import {
+		areBuyBonusMenuCardsReady,
+		subscribeBuyBonusCardsReady,
+	} from '../game/buyBonusCardGpu';
+	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS, HUD_ASSETS, startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import ArchedRibbonTitle from './ArchedRibbonTitle.svelte';
+	import BuyBonusCardSpine from './BuyBonusCardSpine.svelte';
+	import CashStacksFeatureToggles from './CashStacksFeatureToggles.svelte';
+	import FitCardText from './FitCardText.svelte';
+
+	const context = getContext();
+	const { stateLayoutDerived } = getContextLayout();
+
+	let knewaveFontReady = $state(false);
+	let cardsReady = $state(areBuyBonusMenuCardsReady());
+
+	const bgUrl = BUY_BONUS_ASSETS.menuBg;
+	const closeIconUrl = AUTOSPIN_ASSETS.close;
+	const minusUrl = HUD_ASSETS.betMinus;
+	const plusUrl = HUD_ASSETS.betPlus;
+
+	const isOpen = $derived(stateModal.modal?.name === 'buyBonus');
+	const isConfirmOpen = $derived(stateModal.modal?.name === 'buyBonusConfirm');
+	const confirmIsSuper = $derived(stateBonus.selectedBetModeKey === 'bonus_super');
+
+	$effect(() => {
+		cardsReady = areBuyBonusMenuCardsReady();
+		return subscribeBuyBonusCardsReady(() => {
+			cardsReady = areBuyBonusMenuCardsReady();
+		});
+	});
+
+	/** Never flash empty board — keep ready sticky while spines stay warm (confirm ↔ back). */
+	$effect(() => {
+		const painted = cardsReady;
+		gameEntrance.buyBonusWarmReady = painted;
+		if (painted) {
+			gameEntrance.buyBonusEverWarmed = true;
+			gameEntrance.buyBonusPanelReady = true;
+		}
+	});
+
+	onDestroy(() => {
+		gameEntrance.buyBonusPanelReady = false;
+	});
+
+	$effect(() => {
+		void startBuyBonusFlowPreload();
+	});
+
+	$effect(() => {
+		let cancelled = false;
+		void ensureKnewaveFontLoaded().then(() => {
+			if (!cancelled) knewaveFontReady = true;
+		});
+		return () => {
+			cancelled = true;
+		};
+	});
+
+	const layoutType = $derived(stateLayoutDerived.layoutType());
+	const isPortrait = $derived(layoutType === 'portrait');
+	const canvasSizes = $derived(stateLayoutDerived.canvasSizes());
+	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
+	const isPopout = $derived(isPopoutViewport(canvasSizes) && !isPopoutSmall);
+
+	type BonusVariant = 'normal' | 'super' | 'duel';
+
+	const normalPrice = $derived(
+		numberToCurrencyString(stateBet.betAmount * buyNormalCostMultiplier()),
+	);
+	const superPrice = $derived(
+		numberToCurrencyString(stateBet.betAmount * buySuperCostMultiplier()),
+	);
+	const duelPrice = $derived(numberToCurrencyString(stateBet.betAmount * buyDuelCostMultiplier()));
+	const currentBet = $derived(numberToCurrencyString(stateBet.betAmount));
+	const canBuyNormal = $derived(canAffordBuyBonus(buyNormalCostMultiplier()));
+	const canBuySuper = $derived(canAffordBuyBonus(buySuperCostMultiplier()));
+	const canBuyDuel = $derived(canAffordBuyBonus(buyDuelCostMultiplier()));
+	const featureTogglesDisabled = $derived(!context.stateXstateDerived.isIdle());
+
+	const betOptions = $derived([...stateConfig.betAmountOptions].sort((a, b) => a - b));
+	const minBet = $derived(stateConfig.minBet > 0 ? stateConfig.minBet : betOptions[0]);
+	const maxBet = $derived(
+		stateConfig.maxBet > 0 ? stateConfig.maxBet : betOptions[betOptions.length - 1],
+	);
+	const canDecrease = $derived(stateBet.betAmount > minBet);
+	const canIncrease = $derived(stateBet.betAmount < maxBet);
+
+	const decreaseBet = () => {
+		const prev = [...betOptions].reverse().find((opt) => opt < stateBet.betAmount);
+		if (prev != null) {
+			stateBetDerived.setBetAmount(prev);
+			context.eventEmitter.broadcast({ type: 'soundPressMinus' });
+		}
+	};
+
+	const increaseBet = () => {
+		const next = betOptions.find((opt) => opt > stateBet.betAmount);
+		if (next != null) {
+			stateBetDerived.setBetAmount(next);
+			context.eventEmitter.broadcast({ type: 'soundPressPlus' });
+		}
+	};
+
+	const onBuy = (variant: BonusVariant) => {
+		const costMult =
+			variant === 'normal'
+				? buyNormalCostMultiplier()
+				: variant === 'super'
+					? buySuperCostMultiplier()
+					: buyDuelCostMultiplier();
+		if (!canAffordBuyBonus(costMult)) return;
+		clearActiveFeature();
+		if (variant === 'duel') {
+			stateModal.modal = { name: 'buyDuelPick' };
+			context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+			return;
+		}
+		stateBonus.selectedBetModeKey = variant === 'normal' ? 'bonus_normal' : 'bonus_super';
+		stateModal.modal = { name: 'buyBonusConfirm' };
+		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
+	};
+
+	const close = () => {
+		stateModal.modal = null;
+	};
+</script>
+
+<div
+	class="buy-bonus-panel"
+	class:portrait={isPortrait}
+	class:popout-l={isPopout}
+	class:popout-s={isPopoutSmall}
+	class:ready={isOpen}
+	data-test="buy-bonus-overlay"
+	aria-hidden={!isOpen}
+>
+	<img class="panel-bg" src={bgUrl} alt="" draggable="false" loading="eager" />
+
+	<div class="panel-content">
+		<header class="panel-header">
+			<!-- panel-title hidden by design -->
+			<button
+				type="button"
+				class="close-button"
+				onclick={close}
+				aria-label="close"
+				data-test="buy-bonus-close"
+			>
+				<img class="close-icon" src={closeIconUrl} alt="" draggable="false" />
+			</button>
+		</header>
+
+		<p class="panel-subtitle" data-test="buy-bonus-title" hidden>
+			{context.i18nDerived.buyBonusTitle()}
+		</p>
+
+		<section class="cards-section" data-buy-bonus-spine-layer aria-label="bonus options">
+			<button
+				type="button"
+				class="card card-normal"
+				data-test="bonus-card-normal"
+				disabled={!canBuyNormal}
+				onclick={() => onBuy('normal')}
+				aria-label={context.i18nDerived.normalBonus()}
+			>
+				<BuyBonusCardSpine variant="normal" active={isOpen || (isConfirmOpen && !confirmIsSuper)} />
+				<div class="card-content">
+					<div class="card-title">
+						<ArchedRibbonTitle text={context.i18nDerived.normalBonus()} />
+					</div>
+					<div class="card-desc card-desc-stacked">
+						<span class="desc-spin-count" class:card-count-knewave={knewaveFontReady}
+							>{context.i18nDerived.buyNormalDescCount()}</span
+						>
+						<FitCardText
+							variant="spin-label"
+							text={context.i18nDerived.buyNormalDescSpins()}
+							maxLines={2}
+						/>
+					</div>
+					<div class="card-price-wrap">
+						<span class="card-price" data-test="bonus-price-normal" x-apple-data-detectors="false"
+							>{normalPrice}</span
+						>
+					</div>
+				</div>
+			</button>
+
+			<button
+				type="button"
+				class="card card-super"
+				data-test="bonus-card-super"
+				disabled={!canBuySuper}
+				onclick={() => onBuy('super')}
+				aria-label={context.i18nDerived.superBonus()}
+			>
+				<BuyBonusCardSpine variant="super" active={isOpen || (isConfirmOpen && confirmIsSuper)} />
+				<div class="card-content">
+					<div class="card-title">
+						<ArchedRibbonTitle text={context.i18nDerived.superBonus()} archDeg={30} />
+					</div>
+					<div class="card-desc card-desc-stacked">
+						<span class="desc-spin-count" class:card-count-knewave={knewaveFontReady}
+							>{context.i18nDerived.buySuperDescCount()}</span
+						>
+						<FitCardText
+							variant="spin-label"
+							text={context.i18nDerived.buySuperDescSpins()}
+							maxLines={2}
+						/>
+					</div>
+					<div class="card-price-wrap">
+						<span class="card-price" data-test="bonus-price-super" x-apple-data-detectors="false"
+							>{superPrice}</span
+						>
+					</div>
+				</div>
+			</button>
+
+			<button
+				type="button"
+				class="card card-duel"
+				data-test="bonus-card-duel"
+				disabled={!canBuyDuel}
+				onclick={() => onBuy('duel')}
+				aria-label={context.i18nDerived.duelBonus()}
+			>
+				<BuyBonusCardSpine variant="duel" active={isOpen} />
+				<div class="card-content">
+					<div class="card-price-wrap">
+						<span class="card-price" data-test="bonus-price-duel" x-apple-data-detectors="false"
+							>{duelPrice}</span
+						>
+					</div>
+				</div>
+			</button>
+		</section>
+
+		<section class="features-section" aria-label={context.i18nDerived.autoplayFeatures()}>
+			<CashStacksFeatureToggles
+				features={['bonus_boost']}
+				disabled={featureTogglesDisabled}
+				showMenuCatIcon
+				noHoverBg
+			/>
+		</section>
+
+		<footer class="bet-adjuster">
+			<button
+				type="button"
+				class="bet-btn"
+				style:background-image="url('{minusUrl}')"
+				onclick={decreaseBet}
+				disabled={!canDecrease}
+				aria-label={context.i18nDerived.ariaDecreaseAmount()}
+				data-test="bet-decrease"
+			></button>
+			<div class="bet-display">
+				<span class="bet-value" data-test="bet-value">{currentBet}</span>
+			</div>
+			<button
+				type="button"
+				class="bet-btn"
+				style:background-image="url('{plusUrl}')"
+				onclick={increaseBet}
+				disabled={!canIncrease}
+				aria-label={context.i18nDerived.ariaIncreaseAmount()}
+				data-test="bet-increase"
+			></button>
+		</footer>
+	</div>
+</div>
+
+<style lang="scss">
+	@use './buyBonusPanelDimensions.scss' as *;
+	@import url('https://fonts.googleapis.com/css2?family=Philosopher:wght@700&family=Reggae+One&display=swap');
+
+	.buy-bonus-panel {
+		// Declarations before mixin: mixin ends with @media nests (mixed-decls).
+		--bb-card-price-fs: calc(var(--panel-width) * 0.032);
+		--bb-buy-btn-fs: calc(var(--panel-width) * 0.02);
+		/* Letter density for NORMAL BONUS / GUARANTEED WILD. 1 = natural, 0.55 = tight. */
+		--bb-title-tracking: 1.2;
+		font-family: v-bind(HUD_BALANCE_BET_FONT_FAMILY);
+		position: relative;
+		z-index: 10;
+		pointer-events: auto;
+		opacity: 0;
+		@include buy-bonus-panel-dimensions(true);
+
+		&.ready {
+			opacity: 1;
+		}
+	}
+
+	.panel-bg {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: fill;
+		pointer-events: none;
+		user-select: none;
+		/* Shadow on the PNG only — a filter on the panel rasterizes WebGL and smears the top on iOS. */
+		filter: drop-shadow(0 16px 42px rgba(0, 0, 0, 0.65));
+	}
+
+	.panel-content {
+		position: absolute;
+		inset: 0;
+	}
+
+	.panel-header {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		height: 12%;
+		display: block;
+		padding: 0;
+		box-sizing: border-box;
+		pointer-events: none;
+	}
+
+	.panel-title {
+		margin: calc(var(--panel-width) * 0.072) 0 0;
+		grid-column: 1;
+		width: 100%;
+		font-family: inherit;
+		font-size: calc(var(--panel-width) * 0.062);
+		font-style: italic;
+		font-weight: 900;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: #e8b4ff;
+		text-shadow:
+			0 0 8px rgba(255, 80, 220, 0.85),
+			0 0 16px rgba(180, 60, 255, 0.55),
+			0 2px 6px rgba(0, 0, 0, 0.85);
+		text-align: center;
+		line-height: 1.05;
+		pointer-events: none;
+	}
+
+	.close-button {
+		position: absolute;
+		top: 45%;
+		right: -1.2%;
+		width: calc(var(--panel-width) * 0.115);
+		height: calc(var(--panel-width) * 0.115);
+		padding: 0;
+		border: 0;
+		background: transparent;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		pointer-events: auto;
+		transition:
+			transform 0.12s,
+			filter 0.12s;
+
+		&:hover {
+			filter: brightness(1.12);
+			transform: scale(1.06);
+		}
+
+		&:active {
+			transform: scale(0.96);
+		}
+	}
+
+	.close-icon {
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.panel-subtitle {
+		display: none;
+		position: absolute;
+		top: 21.5%;
+		left: 50%;
+		transform: translateX(calc(-50% - var(--panel-width) * 0.01));
+		margin: 0;
+		width: 72%;
+		font-family: inherit;
+		font-size: calc(var(--panel-width) * 0.032);
+		font-style: italic;
+		font-weight: 900;
+		text-transform: uppercase;
+		color: #d4b44a;
+		text-shadow:
+			0 1px 0 rgba(0, 0, 0, 0.85),
+			0 2px 6px rgba(0, 0, 0, 0.65);
+		line-height: 1.1;
+		letter-spacing: 0.03em;
+		text-align: center;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		pointer-events: none;
+		user-select: none;
+	}
+
+	.cards-section {
+		position: absolute;
+		top: 10.8%;
+		left: 50%;
+		width: 90%;
+		height: 67.6%;
+		transform: translateX(-50%);
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		grid-template-rows: auto auto;
+		justify-items: stretch;
+		align-content: start;
+		column-gap: calc(var(--panel-width) * 0.018);
+		row-gap: calc(var(--panel-width) * 0.016);
+		box-sizing: border-box;
+		overflow: visible;
+
+		:global(.buy-bonus-shared-spine-canvas) {
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			pointer-events: none;
+			z-index: 0;
+			/* No CSS filter — filters on transparent WebGL canvases re-composite
+			   alpha incorrectly and make opaque Spine layers look see-through. */
+		}
+	}
+
+	.card {
+		position: relative;
+		/* No z-index — a stacking context here paints over the shared spine canvas. */
+		min-width: 0;
+		overflow: visible;
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		font-family: inherit;
+		text-align: left;
+		transition: transform 0.1s;
+
+		&:active:not(:disabled) {
+			transform: scale(0.97);
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+			pointer-events: none;
+		}
+	}
+
+	.card-normal,
+	.card-super {
+		grid-row: 1;
+		align-self: start;
+		width: 100%;
+		height: auto;
+		aspect-ratio: 2325 / 3322;
+		container-type: inline-size;
+		container-name: bonus-card;
+		--bb-card-price-fs: 8.9cqw;
+	}
+
+	.card-duel {
+		grid-column: 1 / -1;
+		grid-row: 2;
+		align-self: start;
+		width: 100%;
+		height: auto;
+		aspect-ratio: 4230 / 1480;
+		container-type: inline-size;
+		container-name: bonus-card-duel;
+		--bb-card-price-fs: 4.3cqw;
+	}
+
+	.card-content {
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		pointer-events: none;
+	}
+
+	.card-title {
+		position: absolute;
+		top: 1.8%;
+		left: 6%;
+		right: 6%;
+		height: 13%;
+		margin: 0;
+		--bb-card-title-fs: calc(var(--panel-width) * 0.026);
+		font-size: var(--bb-card-title-fs);
+	}
+
+	.card-normal .card-title,
+	.card-super .card-title {
+		top: 0.5%;
+	}
+
+	.card-title.card-label-knewave {
+		font-family: 'Knewave', sans-serif;
+		font-style: normal;
+		font-weight: 400;
+		letter-spacing: 0;
+		paint-order: stroke fill;
+		-webkit-font-smoothing: antialiased;
+	}
+
+	.card-normal .card-title.card-label-knewave,
+	.card-duel .card-title.card-label-knewave,
+	.card-super .card-title.card-label-knewave {
+		-webkit-text-stroke: calc(var(--bb-card-title-fs) * 0.034) rgba(58, 32, 14, 0.92);
+		text-shadow: 0 calc(var(--bb-card-title-fs) * 0.045) calc(var(--bb-card-title-fs) * 0.055)
+			rgba(0, 0, 0, 0.55);
+	}
+
+	.card .card-desc.card-desc-stacked .desc-spin-count.card-count-knewave {
+		font-family: 'Knewave', sans-serif;
+		font-style: normal;
+		font-weight: 400;
+		letter-spacing: 0;
+	}
+
+	.card-desc {
+		position: absolute;
+		top: 56%;
+		left: 10%;
+		right: 10%;
+		height: 16%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-family: inherit;
+		font-size: calc(var(--panel-width) * 0.0135);
+		line-height: 1.15;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.015em;
+		text-align: center;
+		overflow: visible;
+	}
+
+	.card .card-desc.card-desc-stacked {
+		top: 66.5%;
+		left: 8%;
+		right: 8%;
+		height: 16%;
+		flex-direction: column;
+		justify-content: flex-start;
+		align-items: center;
+		--bb-desc-count-fs: 20.5cqw;
+		--bb-desc-count-stroke: calc(var(--bb-desc-count-fs) * 0.08);
+		--bb-desc-spin-label-fs: 9.1cqw;
+		--bb-desc-spin-label-stroke: calc(var(--bb-desc-spin-label-fs) * 0.08);
+		--bb-desc-trigger-fs: calc(var(--panel-width) * 0.013);
+		--bb-desc-trigger-stroke: calc(var(--bb-desc-trigger-fs) * 0.092);
+		--bb-desc-gap-count-label: calc(var(--bb-desc-count-fs) * 0.12);
+		--bb-desc-gap-label-trigger: calc(var(--bb-desc-spin-label-fs) * 0.28);
+		--bb-knewave-stroke-weight: 0.034;
+		--bb-knewave-count-stroke-weight: 0.072;
+		gap: 0;
+		text-transform: uppercase;
+		font-size: inherit;
+		overflow: visible;
+	}
+
+	.card .card-desc.card-desc-stacked .desc-spin-count {
+		font-size: var(--bb-desc-count-fs);
+		font-weight: 900;
+		line-height: 0.85;
+		letter-spacing: -0.02em;
+		flex-shrink: 0;
+		margin: 0 0 var(--bb-desc-gap-count-label);
+		color: inherit;
+		display: inline-block;
+		paint-order: stroke fill;
+		-webkit-font-smoothing: antialiased;
+	}
+
+	.card-normal .card-desc.card-desc-stacked .desc-spin-count,
+	.card-super .card-desc.card-desc-stacked .desc-spin-count {
+		-webkit-text-stroke: var(--bb-desc-count-stroke) rgba(48, 22, 6, 0.92);
+		text-shadow:
+			0 calc(var(--bb-desc-count-fs) * 0.04) 0 rgba(48, 22, 6, 0.75),
+			0 calc(var(--bb-desc-count-fs) * 0.07) calc(var(--bb-desc-count-fs) * 0.1) rgba(0, 0, 0, 0.5);
+	}
+
+	.card-normal .card-desc.card-desc-stacked .desc-spin-count.card-count-knewave,
+	.card-super .card-desc.card-desc-stacked .desc-spin-count.card-count-knewave {
+		-webkit-text-stroke: calc(var(--bb-desc-count-fs) * var(--bb-knewave-count-stroke-weight))
+			rgba(48, 22, 6, 0.94);
+		text-shadow:
+			0 calc(var(--bb-desc-count-fs) * 0.04) 0 rgba(48, 22, 6, 0.75),
+			0 calc(var(--bb-desc-count-fs) * 0.07) calc(var(--bb-desc-count-fs) * 0.1) rgba(0, 0, 0, 0.5);
+	}
+
+	.card .card-desc.card-desc-stacked :global(.fit-card-text__inner) {
+		color: inherit;
+		display: inline-block;
+		paint-order: stroke fill;
+		-webkit-font-smoothing: antialiased;
+	}
+
+	.card-normal .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-spin-label),
+	.card-super .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-spin-label) {
+		-webkit-text-stroke: var(--bb-desc-spin-label-stroke) rgba(48, 22, 6, 0.92);
+		text-shadow:
+			0 calc(var(--bb-desc-spin-label-fs) * 0.04) 0 rgba(48, 22, 6, 0.75),
+			0 calc(var(--bb-desc-spin-label-fs) * 0.07) calc(var(--bb-desc-spin-label-fs) * 0.1)
+				rgba(0, 0, 0, 0.5);
+	}
+
+	.card-normal .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-trigger) {
+		-webkit-text-stroke: var(--bb-desc-trigger-stroke) rgba(255, 244, 225, 0.96);
+		text-shadow:
+			0 calc(var(--bb-desc-trigger-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
+			0 calc(var(--bb-desc-trigger-fs) * 0.055) calc(var(--bb-desc-trigger-fs) * 0.09)
+				rgba(0, 0, 0, 0.38),
+			0 0 calc(var(--bb-desc-trigger-fs) * 0.12) rgba(255, 228, 185, 0.42);
+	}
+
+	.card-super .card-desc.card-desc-stacked :global(.fit-card-text__inner.desc-trigger) {
+		-webkit-text-stroke: var(--bb-desc-trigger-stroke) rgba(255, 244, 225, 0.96);
+		text-shadow:
+			0 calc(var(--bb-desc-trigger-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
+			0 calc(var(--bb-desc-trigger-fs) * 0.07) calc(var(--bb-desc-trigger-fs) * 0.1)
+				rgba(0, 0, 0, 0.66),
+			0 0 calc(var(--bb-desc-trigger-fs) * 0.12) rgba(255, 228, 185, 0.38);
+	}
+
+	.card-normal
+		.card-desc.card-desc-stacked
+		:global(.fit-card-text--knewave .fit-card-text__inner.desc-spin-label),
+	.card-super
+		.card-desc.card-desc-stacked
+		:global(.fit-card-text--knewave .fit-card-text__inner.desc-spin-label) {
+		-webkit-text-stroke: calc(var(--bb-desc-spin-label-fs) * var(--bb-knewave-count-stroke-weight))
+			rgba(48, 22, 6, 0.94);
+		text-shadow:
+			0 calc(var(--bb-desc-spin-label-fs) * 0.04) 0 rgba(48, 22, 6, 0.75),
+			0 calc(var(--bb-desc-spin-label-fs) * 0.07) calc(var(--bb-desc-spin-label-fs) * 0.1)
+				rgba(0, 0, 0, 0.5);
+	}
+
+	.card-normal
+		.card-desc.card-desc-stacked
+		:global(.fit-card-text--knewave .fit-card-text__inner.desc-trigger) {
+		-webkit-text-stroke: calc(var(--bb-desc-trigger-fs) * var(--bb-knewave-count-stroke-weight))
+			rgba(255, 244, 225, 0.96);
+		text-shadow:
+			0 calc(var(--bb-desc-trigger-fs) * 0.03) 0 rgba(72, 42, 18, 0.62),
+			0 calc(var(--bb-desc-trigger-fs) * 0.055) calc(var(--bb-desc-trigger-fs) * 0.09)
+				rgba(0, 0, 0, 0.38);
+	}
+
+	.card-super
+		.card-desc.card-desc-stacked
+		:global(.fit-card-text--knewave .fit-card-text__inner.desc-trigger) {
+		-webkit-text-stroke: calc(var(--bb-desc-trigger-fs) * var(--bb-knewave-count-stroke-weight))
+			rgba(45, 12, 6, 0.94);
+		text-shadow:
+			0 calc(var(--bb-desc-trigger-fs) * 0.04) 0 rgba(0, 0, 0, 0.82),
+			0 calc(var(--bb-desc-trigger-fs) * 0.07) calc(var(--bb-desc-trigger-fs) * 0.1)
+				rgba(0, 0, 0, 0.66);
+	}
+
+	.card .card-desc.card-desc-stacked :global(.fit-card-text--spin-label) {
+		margin: 0 0 var(--bb-desc-gap-label-trigger);
+	}
+
+	.card-normal .card-desc,
+	.card-super .card-desc {
+		color: #f3d27a;
+		text-shadow:
+			0 2px 0 rgba(58, 28, 8, 0.88),
+			0 3px 8px rgba(0, 0, 0, 0.55);
+	}
+
+	.card-price-wrap {
+		position: absolute;
+		left: 14%;
+		right: 14%;
+		bottom: 0.6%;
+		width: auto;
+		height: 12.5%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		box-sizing: border-box;
+		transform: none;
+	}
+
+	.card-duel .card-title {
+		top: 18%;
+		left: 28%;
+		right: 28%;
+		height: 28%;
+		font-size: calc(var(--panel-width) * 0.039);
+	}
+
+	.card-normal .card-price-wrap,
+	.card-super .card-price-wrap {
+		left: 14%;
+		right: 14%;
+		bottom: 0.6%;
+		width: auto;
+		height: 12.5%;
+		transform: none;
+	}
+
+	.card-duel .card-price-wrap {
+		left: 36%;
+		right: 36%;
+		width: auto;
+		height: 22%;
+		bottom: 5.8%;
+		transform: none;
+	}
+
+	.card-price {
+		font-family: inherit;
+		font-size: var(--bb-card-price-fs);
+		font-weight: 900;
+		letter-spacing: 0;
+		text-align: center;
+		line-height: 1;
+		display: block;
+		width: auto;
+		color: #1a1208;
+		-webkit-text-fill-color: #1a1208;
+		text-shadow: 0 1px 0 rgba(255, 236, 190, 0.45);
+		text-decoration: none;
+		transform: translate(0.14em, 0.26em);
+	}
+
+	.card-price :global(a) {
+		color: inherit;
+		-webkit-text-fill-color: inherit;
+		text-decoration: none;
+	}
+
+	.card-duel .card-price {
+		transform: translate(0.02em, 0.36em);
+	}
+
+	.features-section {
+		position: absolute;
+		top: 78.4%;
+		left: 50%;
+		right: auto;
+		width: 82%;
+		height: 7%;
+		transform: translateX(-50%);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		box-sizing: border-box;
+		overflow: visible;
+	}
+
+	.features-section :global(.feature-row) {
+		width: 100%;
+		max-width: 100%;
+		height: 100%;
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr) auto;
+		align-items: center;
+		justify-content: stretch;
+		padding: 0;
+		column-gap: calc(var(--panel-width) * 0.028);
+		background: transparent;
+		border: 0;
+		border-radius: 0;
+		gap: 0;
+		box-sizing: border-box;
+
+		&:hover:not(:disabled),
+		&:active:not(:disabled) {
+			background: transparent;
+			filter: none;
+			transform: none;
+		}
+	}
+
+	.features-section :global(.feature-cat-icon) {
+		grid-column: 1;
+		justify-self: start;
+		align-self: center;
+		width: calc(var(--panel-width) * 0.096);
+		height: calc(var(--panel-width) * 0.096);
+		max-height: 100%;
+		object-fit: contain;
+		pointer-events: none;
+		user-select: none;
+		transform: none;
+	}
+
+	.features-section :global(.feature-info) {
+		grid-column: 2;
+		justify-self: stretch;
+		align-self: center;
+		align-items: center;
+		text-align: center;
+		min-width: 0;
+		max-width: 100%;
+		margin-left: 0;
+		padding-top: 0;
+		gap: calc(var(--panel-width) * 0.006);
+		overflow: visible;
+	}
+
+	.features-section :global(.feature-row.compact .feature-name),
+	.features-section :global(.feature-row .feature-name) {
+		font-family: inherit;
+		font-size: calc(var(--panel-width) * 0.038);
+		font-style: normal;
+		font-weight: 800;
+		text-transform: uppercase;
+		color: #f4ecd8;
+		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75);
+		line-height: 1.05;
+		letter-spacing: 0.04em;
+		max-width: 100%;
+		overflow: visible;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.features-section :global(.feature-cost) {
+		font-family: inherit;
+		font-size: calc(var(--panel-width) * 0.026);
+		font-weight: 800;
+		color: #4ade80;
+		letter-spacing: 0.03em;
+		line-height: 1.05;
+		text-transform: uppercase;
+		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+		max-width: 100%;
+		overflow: visible;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.features-section :global(.feature-toggle) {
+		grid-column: 3;
+		justify-self: end;
+		align-self: center;
+		width: calc(var(--panel-width) * 0.098);
+		height: calc(var(--panel-width) * 0.05);
+		flex-shrink: 0;
+		background: #2c2c2c;
+		box-shadow:
+			inset 0 2px 4px rgba(0, 0, 0, 0.7),
+			0 1px 0 rgba(255, 255, 255, 0.08);
+		transform: none;
+		margin-right: 0;
+	}
+
+	.features-section :global(.feature-toggle.on) {
+		background: #4ade80;
+	}
+
+	.features-section :global(.feature-toggle .knob) {
+		width: calc(var(--panel-width) * 0.04);
+		height: calc(var(--panel-width) * 0.04);
+		top: calc((var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2);
+		left: calc((var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2);
+		background: #6a6a6a;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+	}
+
+	.features-section :global(.feature-toggle.on .knob) {
+		left: calc(
+			var(--panel-width) * 0.098 - var(--panel-width) * 0.04 -
+				(var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2
+		);
+		background: #fff;
+	}
+
+	.bet-adjuster {
+		position: absolute;
+		top: 83%;
+		left: 50%;
+		right: auto;
+		width: 68%;
+		height: 11%;
+		transform: translateX(-50%);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: calc(var(--panel-width) * 0.028);
+		box-sizing: border-box;
+	}
+
+	.bet-btn {
+		width: calc(var(--panel-width) * 0.128);
+		height: calc(var(--panel-width) * 0.128);
+		padding: 0;
+		border: 0;
+		background-color: transparent;
+		background-repeat: no-repeat;
+		background-position: center;
+		background-size: contain;
+		cursor: pointer;
+		transition:
+			transform 0.1s,
+			filter 0.12s,
+			opacity 0.12s;
+
+		&:hover:not(:disabled) {
+			filter: brightness(1.1);
+			transform: scale(1.04);
+		}
+
+		&:active:not(:disabled) {
+			transform: scale(0.96);
+		}
+
+		&:disabled {
+			opacity: 0.45;
+			cursor: not-allowed;
+			pointer-events: none;
+		}
+	}
+
+	.bet-display {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: calc(var(--panel-width) * 0.004);
+		min-width: calc(var(--panel-width) * 0.28);
+	}
+
+	.bet-label {
+		font-family: inherit;
+		font-size: calc(var(--panel-width) * 0.026);
+		font-weight: 800;
+		line-height: 1;
+		color: #d4b44a;
+		letter-spacing: 0.08em;
+		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.75);
+	}
+
+	.bet-value {
+		font-family: inherit;
+		font-size: calc(var(--panel-width) * 0.06);
+		font-weight: 900;
+		line-height: 1;
+		margin-top: 0;
+		color: #f0d078;
+		text-shadow:
+			0 2px 0 rgba(48, 22, 6, 0.7),
+			0 3px 8px rgba(0, 0, 0, 0.55);
+	}
+
+	/* Desktop — компактные карточки, Bonus Boost в золотой рамке */
+	.buy-bonus-panel:not(.portrait):not(.popout-l):not(.popout-s) {
+		.panel-title {
+			display: none;
+		}
+
+		--bb-card-price-fs: calc(var(--panel-width) * 0.038);
+		--bb-buy-btn-fs: calc(var(--panel-width) * 0.021);
+
+		.close-button {
+			top: 45%;
+			right: -1.2%;
+			width: calc(var(--panel-width) * 0.112);
+			height: calc(var(--panel-width) * 0.112);
+			margin: 0;
+		}
+
+		.cards-section {
+			top: 10.8%;
+			left: 50%;
+			width: 90%;
+			height: 67.6%;
+			column-gap: calc(var(--panel-width) * 0.018);
+			row-gap: calc(var(--panel-width) * 0.016);
+		}
+
+		.card-price-wrap {
+			left: 14%;
+			right: 14%;
+			bottom: 0.6%;
+			height: 12.5%;
+			width: auto;
+			transform: none;
+		}
+
+		.card-normal .card-price-wrap,
+		.card-super .card-price-wrap {
+			left: 14%;
+			right: 14%;
+			bottom: 0.6%;
+			width: auto;
+			height: 12.5%;
+			transform: none;
+		}
+
+		.card-duel .card-price-wrap {
+			left: 36%;
+			right: 36%;
+			bottom: 5.8%;
+			height: 22%;
+			width: auto;
+			transform: none;
+		}
+
+		.bet-adjuster {
+			top: 83%;
+			left: 50%;
+			right: auto;
+			width: 68%;
+			transform: translateX(-50%);
+			height: 11%;
+			gap: calc(var(--panel-width) * 0.022);
+		}
+
+		.bet-btn {
+			width: calc(var(--panel-width) * 0.112);
+			height: calc(var(--panel-width) * 0.112);
+		}
+
+		.bet-display {
+			min-width: calc(var(--panel-width) * 0.22);
+		}
+
+		.bet-value {
+			font-size: calc(var(--panel-width) * 0.056);
+		}
+
+		.features-section {
+			top: 78.4%;
+			left: 50%;
+			right: auto;
+			width: 82%;
+			transform: translateX(-50%);
+			height: 7%;
+			padding: 0;
+		}
+
+		.features-section :global(.feature-row) {
+			width: 100%;
+			height: 100%;
+			padding: 0;
+			grid-template-columns: auto minmax(0, 1fr) auto;
+		}
+
+		.features-section :global(.feature-cat-icon) {
+			width: calc(var(--panel-width) * 0.096);
+			height: calc(var(--panel-width) * 0.096);
+		}
+
+		.features-section :global(.feature-info) {
+			margin-left: 0;
+			align-items: center;
+			text-align: center;
+			gap: calc(var(--panel-width) * 0.006);
+		}
+
+		.features-section :global(.feature-row .feature-name) {
+			font-size: calc(var(--panel-width) * 0.038);
+			font-style: normal;
+			color: #f4ecd8;
+			line-height: 1.05;
+		}
+
+		.panel-subtitle {
+			font-size: calc(var(--panel-width) * 0.026);
+			line-height: 1.08;
+		}
+
+		.features-section :global(.feature-cost) {
+			font-size: calc(var(--panel-width) * 0.026);
+			color: #4ade80;
+			line-height: 1.05;
+		}
+
+		.features-section :global(.feature-toggle) {
+			width: calc(var(--panel-width) * 0.098);
+			height: calc(var(--panel-width) * 0.05);
+			margin-right: 0;
+		}
+
+		.features-section :global(.feature-toggle .knob) {
+			width: calc(var(--panel-width) * 0.04);
+			height: calc(var(--panel-width) * 0.04);
+			top: calc((var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2);
+			left: calc((var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2);
+		}
+
+		.features-section :global(.feature-toggle.on .knob) {
+			left: calc(
+				var(--panel-width) * 0.098 - var(--panel-width) * 0.04 -
+					(var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2
+			);
+		}
+	}
+
+	/* Portrait mobile */
+	.buy-bonus-panel.portrait:not(.popout-l):not(.popout-s) {
+		--bb-card-price-fs: calc(var(--panel-width) * 0.046);
+		--bb-buy-btn-fs: calc(var(--panel-width) * 0.032);
+
+		.panel-bg {
+			width: 100%;
+			top: 0;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			transform: none;
+		}
+
+		.panel-title {
+			display: none;
+		}
+
+		.panel-header {
+			height: 12%;
+		}
+
+		.close-button {
+			position: absolute;
+			top: 45%;
+			right: -1.2%;
+			width: calc(var(--panel-width) * 0.116);
+			height: calc(var(--panel-width) * 0.116);
+			margin: 0;
+		}
+
+		.cards-section {
+			top: 10.8%;
+			left: 50%;
+			width: 90%;
+			height: 67.6%;
+			column-gap: calc(var(--panel-width) * 0.018);
+			row-gap: calc(var(--panel-width) * 0.016);
+		}
+
+		.card-price-wrap {
+			left: 14%;
+			right: 14%;
+			bottom: 0.6%;
+			height: 12.5%;
+			width: auto;
+			transform: none;
+		}
+
+		.card-normal .card-price-wrap,
+		.card-super .card-price-wrap {
+			left: 14%;
+			right: 14%;
+			bottom: 0.6%;
+			width: auto;
+			height: 12.5%;
+			transform: none;
+		}
+
+		.card-duel .card-price-wrap {
+			left: 36%;
+			right: 36%;
+			bottom: 5.8%;
+			height: 22%;
+			width: auto;
+			transform: none;
+		}
+
+		.bet-adjuster {
+			top: 83%;
+			left: 50%;
+			right: auto;
+			width: 68%;
+			transform: translateX(-50%);
+			height: 11%;
+			gap: calc(var(--panel-width) * 0.022);
+		}
+
+		.bet-btn {
+			width: calc(var(--panel-width) * 0.12);
+			height: calc(var(--panel-width) * 0.12);
+		}
+
+		.bet-display {
+			min-width: calc(var(--panel-width) * 0.26);
+		}
+
+		.bet-value {
+			font-size: calc(var(--panel-width) * 0.058);
+		}
+
+		.features-section {
+			top: 78.4%;
+			left: 50%;
+			right: auto;
+			width: 84%;
+			transform: translateX(-50%);
+			height: 7%;
+			padding: 0;
+			overflow: visible;
+		}
+
+		.features-section :global(.feature-cat-icon) {
+			width: calc(var(--panel-width) * 0.098) !important;
+			height: calc(var(--panel-width) * 0.098) !important;
+			min-width: calc(var(--panel-width) * 0.098) !important;
+			min-height: calc(var(--panel-width) * 0.098) !important;
+			transform: none;
+			flex-shrink: 0 !important;
+		}
+
+		.features-section :global(.feature-row) {
+			width: 100%;
+			height: 100%;
+			padding: 0;
+			grid-template-columns: auto minmax(0, 1fr) auto;
+			overflow: visible;
+		}
+
+		.features-section :global(.feature-info) {
+			margin-left: 0;
+			align-items: center;
+			text-align: center;
+			gap: calc(var(--panel-width) * 0.006);
+		}
+
+		.features-section :global(.feature-row .feature-name) {
+			font-size: calc(var(--panel-width) * 0.04);
+			font-style: normal;
+			color: #f4ecd8;
+			line-height: 1.05;
+		}
+
+		.panel-subtitle {
+			font-size: calc(var(--panel-width) * 0.036);
+			line-height: 1.08;
+		}
+
+		.features-section :global(.feature-cost) {
+			font-size: calc(var(--panel-width) * 0.028);
+			color: #4ade80;
+			line-height: 1.05;
+		}
+
+		.features-section :global(.feature-toggle) {
+			width: calc(var(--panel-width) * 0.102);
+			height: calc(var(--panel-width) * 0.052);
+			margin-right: 0;
+		}
+
+		.features-section :global(.feature-toggle .knob) {
+			width: calc(var(--panel-width) * 0.042);
+			height: calc(var(--panel-width) * 0.042);
+			top: calc((var(--panel-width) * 0.052 - var(--panel-width) * 0.042) / 2);
+			left: calc((var(--panel-width) * 0.052 - var(--panel-width) * 0.042) / 2);
+		}
+
+		.features-section :global(.feature-toggle.on .knob) {
+			left: calc(
+				var(--panel-width) * 0.102 - var(--panel-width) * 0.042 -
+					(var(--panel-width) * 0.052 - var(--panel-width) * 0.042) / 2
+			);
+		}
+	}
+
+	/* Stake popout L — 800×450 (laptop embed) */
+	.buy-bonus-panel.popout-l {
+		filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.6));
+		--bb-card-price-fs: calc(var(--panel-width) * 0.038);
+		--bb-buy-btn-fs: calc(var(--panel-width) * 0.024);
+
+		.panel-title {
+			display: none;
+		}
+
+		.close-button {
+			top: 45%;
+			right: -1.2%;
+			width: calc(var(--panel-width) * 0.112);
+			height: calc(var(--panel-width) * 0.112);
+			margin: 0;
+		}
+
+		.cards-section {
+			top: 10.8%;
+			left: 50%;
+			width: 90%;
+			height: 67.6%;
+			column-gap: calc(var(--panel-width) * 0.018);
+			row-gap: calc(var(--panel-width) * 0.016);
+		}
+
+		.card-price-wrap {
+			left: 14%;
+			right: 14%;
+			bottom: 0.6%;
+			height: 12.5%;
+			width: auto;
+			transform: none;
+		}
+
+		.card-normal .card-price-wrap,
+		.card-super .card-price-wrap {
+			left: 14%;
+			right: 14%;
+			bottom: 0.6%;
+			width: auto;
+			height: 12.5%;
+			transform: none;
+		}
+
+		.card-duel .card-price-wrap {
+			left: 36%;
+			right: 36%;
+			bottom: 5.8%;
+			height: 22%;
+			width: auto;
+			transform: none;
+		}
+
+		.bet-adjuster {
+			top: 83%;
+			left: 50%;
+			right: auto;
+			width: 68%;
+			transform: translateX(-50%);
+			height: 11%;
+			gap: calc(var(--panel-width) * 0.022);
+		}
+
+		.bet-btn {
+			width: calc(var(--panel-width) * 0.112);
+			height: calc(var(--panel-width) * 0.112);
+		}
+
+		.bet-display {
+			min-width: calc(var(--panel-width) * 0.2);
+		}
+
+		.bet-value {
+			font-size: calc(var(--panel-width) * 0.054);
+		}
+
+		.features-section {
+			top: 78.4%;
+			left: 50%;
+			right: auto;
+			width: 82%;
+			transform: translateX(-50%);
+			height: 7%;
+			padding: 0;
+		}
+
+		.features-section :global(.feature-row) {
+			width: 100%;
+			height: 100%;
+			padding: 0;
+			grid-template-columns: auto minmax(0, 1fr) auto;
+		}
+
+		.features-section :global(.feature-cat-icon) {
+			width: calc(var(--panel-width) * 0.096);
+			height: calc(var(--panel-width) * 0.096);
+		}
+
+		.features-section :global(.feature-info) {
+			margin-left: 0;
+			align-items: center;
+			text-align: center;
+			gap: calc(var(--panel-width) * 0.006);
+		}
+
+		.features-section :global(.feature-row .feature-name) {
+			font-size: calc(var(--panel-width) * 0.038);
+			font-style: normal;
+			color: #f4ecd8;
+			line-height: 1.05;
+		}
+
+		.panel-subtitle {
+			font-size: calc(var(--panel-width) * 0.026);
+			line-height: 1.08;
+		}
+
+		.features-section :global(.feature-cost) {
+			font-size: calc(var(--panel-width) * 0.026);
+			color: #4ade80;
+			line-height: 1.05;
+		}
+
+		.features-section :global(.feature-toggle) {
+			width: calc(var(--panel-width) * 0.098);
+			height: calc(var(--panel-width) * 0.05);
+			margin-right: 0;
+		}
+
+		.features-section :global(.feature-toggle .knob) {
+			width: calc(var(--panel-width) * 0.04);
+			height: calc(var(--panel-width) * 0.04);
+			top: calc((var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2);
+			left: calc((var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2);
+		}
+
+		.features-section :global(.feature-toggle.on .knob) {
+			left: calc(
+				var(--panel-width) * 0.098 - var(--panel-width) * 0.04 -
+					(var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2
+			);
+		}
+	}
+
+	/* Stake popout S — 400×225 (те же пропорции что popout L, меньший --panel-width) */
+	.buy-bonus-panel.popout-s {
+		filter: drop-shadow(
+			0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.075) rgba(0, 0, 0, 0.55)
+		);
+		--bb-card-price-fs: calc(var(--panel-width) * 0.038);
+		--bb-buy-btn-fs: calc(var(--panel-width) * 0.024);
+
+		.panel-title {
+			display: none;
+		}
+
+		.close-button {
+			top: 45%;
+			right: -1.2%;
+			width: calc(var(--panel-width) * 0.112);
+			height: calc(var(--panel-width) * 0.112);
+			margin: 0;
+		}
+
+		.cards-section {
+			top: 10.8%;
+			left: 50%;
+			width: 90%;
+			height: 67.6%;
+			column-gap: calc(var(--panel-width) * 0.018);
+			row-gap: calc(var(--panel-width) * 0.016);
+		}
+
+		.card-price-wrap {
+			left: 14%;
+			right: 14%;
+			bottom: 0.6%;
+			height: 12.5%;
+			width: auto;
+			transform: none;
+		}
+
+		.card-normal .card-price-wrap,
+		.card-super .card-price-wrap {
+			left: 14%;
+			right: 14%;
+			bottom: 0.6%;
+			width: auto;
+			height: 12.5%;
+			transform: none;
+		}
+
+		.card-duel .card-price-wrap {
+			left: 36%;
+			right: 36%;
+			bottom: 5.8%;
+			height: 22%;
+			width: auto;
+			transform: none;
+		}
+
+		.bet-adjuster {
+			top: 83%;
+			left: 50%;
+			right: auto;
+			width: 68%;
+			transform: translateX(-50%);
+			height: 11%;
+			gap: calc(var(--panel-width) * 0.02);
+		}
+
+		.bet-btn {
+			width: calc(var(--panel-width) * 0.112);
+			height: calc(var(--panel-width) * 0.112);
+		}
+
+		.bet-display {
+			min-width: calc(var(--panel-width) * 0.2);
+		}
+
+		.bet-value {
+			font-size: calc(var(--panel-width) * 0.052);
+		}
+
+		.features-section {
+			top: 78.4%;
+			left: 50%;
+			right: auto;
+			width: 82%;
+			transform: translateX(-50%);
+			height: 7%;
+			padding: 0;
+		}
+
+		.features-section :global(.feature-row) {
+			width: 100%;
+			height: 100%;
+			padding: 0;
+			grid-template-columns: auto minmax(0, 1fr) auto;
+		}
+
+		.features-section :global(.feature-cat-icon) {
+			width: calc(var(--panel-width) * 0.096);
+			height: calc(var(--panel-width) * 0.096);
+		}
+
+		.features-section :global(.feature-info) {
+			margin-left: 0;
+			align-items: center;
+			text-align: center;
+			gap: calc(var(--panel-width) * 0.006);
+		}
+
+		.features-section :global(.feature-row .feature-name) {
+			font-size: calc(var(--panel-width) * 0.038);
+			font-style: normal;
+			color: #f4ecd8;
+			line-height: 1.05;
+		}
+
+		.panel-subtitle {
+			font-size: calc(var(--panel-width) * 0.026);
+			line-height: 1.08;
+		}
+
+		.features-section :global(.feature-cost) {
+			font-size: calc(var(--panel-width) * 0.026);
+			color: #4ade80;
+			line-height: 1.05;
+		}
+
+		.features-section :global(.feature-toggle) {
+			width: calc(var(--panel-width) * 0.098);
+			height: calc(var(--panel-width) * 0.05);
+			margin-right: 0;
+		}
+
+		.features-section :global(.feature-toggle .knob) {
+			width: calc(var(--panel-width) * 0.04);
+			height: calc(var(--panel-width) * 0.04);
+			top: calc((var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2);
+			left: calc((var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2);
+		}
+
+		.features-section :global(.feature-toggle.on .knob) {
+			left: calc(
+				var(--panel-width) * 0.098 - var(--panel-width) * 0.04 -
+					(var(--panel-width) * 0.05 - var(--panel-width) * 0.04) / 2
+			);
+		}
+	}
+</style>

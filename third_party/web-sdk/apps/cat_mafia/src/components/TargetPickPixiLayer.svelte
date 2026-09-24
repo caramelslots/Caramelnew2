@@ -1,0 +1,222 @@
+<!--
+	Cabinet + stands/discs ABOVE the slot spine, BELOW the mascot (Pixi z 6).
+	Hard clip keeps the plate inside the gold frame. HTML seats are hit-only.
+	Seat count follows targetPickSeatMode (6 entry / 9 Stage E).
+	Drop local texture refs when closed so FS entry can unload tir GPU.
+-->
+<script lang="ts">
+	import { BaseSprite, Container, Graphics } from 'pixi-svelte';
+	import * as PIXI from 'pixi.js';
+
+	import { stateGame } from '../game/stateGame.svelte';
+	import {
+		TARGET_BOARD_CONTENT,
+		TARGET_BOARD_NATIVE,
+		TARGET_BOARD_SLOTS,
+		TARGET_BOARD_SPRITES,
+		TARGET_PICK_DISC_LIFT_FRAC,
+		TARGET_PICK_HOLDER_ASPECT,
+		TARGET_PICK_HOLDER_TOP_FRAC,
+		TARGET_PICK_HOLDER_WIDTH_FRAC,
+		TARGET_PICK_SEAT_WIDTH_FRAC,
+		TARGET_SHOOT_CONTENT,
+		TARGET_SHOOT_NATIVE,
+		TARGET_SHOOT_SEAT_WIDTH_FRAC,
+		TARGET_SHOOT_SLOTS,
+		ensureTargetBoardSpritesInPixi,
+		isTargetBoardSpriteLive,
+		targetBoardSlotPoint,
+		targetPickInnerClip,
+	} from '../game/targetBoardAssets';
+	import BoardContainer from './BoardContainer.svelte';
+
+	const open = $derived(stateGame.targetPickOpen);
+	const clip = targetPickInnerClip();
+	const nine = $derived(stateGame.targetPickSeatMode === 'nine');
+	const slots = $derived(nine ? TARGET_SHOOT_SLOTS : TARGET_BOARD_SLOTS);
+	const seatWidthFrac = $derived(nine ? TARGET_SHOOT_SEAT_WIDTH_FRAC : TARGET_PICK_SEAT_WIDTH_FRAC);
+	const boardContent = $derived(nine ? TARGET_SHOOT_CONTENT : TARGET_BOARD_CONTENT);
+	const boardNative = $derived(nine ? TARGET_SHOOT_NATIVE : TARGET_BOARD_NATIVE);
+	const boardBgUrl = $derived(
+		nine ? TARGET_BOARD_SPRITES.background9 : TARGET_BOARD_SPRITES.background,
+	);
+
+	let wood = $state<PIXI.Texture>(PIXI.Texture.EMPTY);
+	let holder = $state<PIXI.Texture>(PIXI.Texture.EMPTY);
+	let front = $state<PIXI.Texture>(PIXI.Texture.EMPTY);
+	/** Last bg URL applied — skip rebind when reopening the same cabinet. */
+	let boundBgUrl = $state('');
+
+	const offsetY = $derived(clip.y + (stateGame.targetPickSlide - 1) * clip.height);
+	const ready = $derived(
+		wood !== PIXI.Texture.EMPTY &&
+			holder !== PIXI.Texture.EMPTY &&
+			front !== PIXI.Texture.EMPTY,
+	);
+
+	$effect(() => {
+		stateGame.targetPickCabinetReady = open && ready;
+	});
+
+	const seats = $derived.by(() => {
+		const size = clip.width * seatWidthFrac;
+		const holderW = size * TARGET_PICK_HOLDER_WIDTH_FRAC;
+		const holderH = holderW * TARGET_PICK_HOLDER_ASPECT;
+		const content = boardContent;
+		return slots.map((slot, i) => {
+			const p = targetBoardSlotPoint(
+				slot,
+				{ x: clip.x, y: 0, width: clip.width, height: clip.height },
+				content,
+			);
+			const flipped = stateGame.targetPickFlipped[i] === true;
+			const spinning =
+				stateGame.targetPickSpineSeat === i ||
+				stateGame.targetPickSpinningSeats.includes(i) ||
+				stateGame.targetShotFlips.some((f) => f.seatIndex === i);
+			return {
+				holderX: p.x - holderW / 2,
+				holderY: p.y - size / 2 + size * TARGET_PICK_HOLDER_TOP_FRAC - holderH / 2,
+				holderW,
+				holderH,
+				discX: p.x - size / 2,
+				discY: p.y - size / 2 - size * TARGET_PICK_DISC_LIFT_FRAC,
+				size,
+				showDisc: !flipped && !spinning,
+			};
+		});
+	});
+
+	const drawInnerMask = $derived((g: PIXI.Graphics) => {
+		g.clear();
+		g.rect(clip.x, clip.y, clip.width, clip.height);
+		g.fill(0xffffff);
+	});
+
+	const resolveTex = (loaded: unknown) =>
+		loaded instanceof PIXI.Texture ? loaded : PIXI.Texture.from(loaded as never);
+
+	const texFromCache = (url: string) => {
+		if (!isTargetBoardSpriteLive(url)) return null;
+		try {
+			return resolveTex(PIXI.Assets.get(url));
+		} catch {
+			return null;
+		}
+	};
+
+	const loadTex = async (url: string) => {
+		const cached = texFromCache(url);
+		if (cached) return cached;
+		const loaded = await PIXI.Assets.load(url);
+		const tex = resolveTex(loaded);
+		if (!isTargetBoardSpriteLive(url)) {
+			throw new Error(`tir sprite not live after load: ${url}`);
+		}
+		return tex;
+	};
+
+	const applyTextures = (
+		bg: PIXI.Texture,
+		h: PIXI.Texture,
+		f: PIXI.Texture,
+		native: { width: number; height: number },
+		content: { left: number; top: number; width: number; height: number },
+		bgUrl: string,
+	) => {
+		if (wood !== PIXI.Texture.EMPTY) {
+			try {
+				wood.destroy(false);
+			} catch {
+				/* previous frame */
+			}
+		}
+		const frame = new PIXI.Rectangle(
+			Math.round(content.left * native.width),
+			Math.round(content.top * native.height),
+			Math.round(content.width * native.width),
+			Math.round(content.height * native.height),
+		);
+		wood = new PIXI.Texture({ source: bg.source, frame });
+		holder = h;
+		front = f;
+		boundBgUrl = bgUrl;
+	};
+
+	const releaseLocalTextures = () => {
+		// Do not destroy Asset-backed textures here — Sprite BindGroups may still
+		// reference them for a frame; tir unload / park handles GPU next.
+		wood = PIXI.Texture.EMPTY;
+		holder = PIXI.Texture.EMPTY;
+		front = PIXI.Texture.EMPTY;
+		boundBgUrl = '';
+	};
+
+	$effect(() => {
+		if (!open) {
+			releaseLocalTextures();
+			return;
+		}
+
+		const bgUrl = boardBgUrl;
+		const native = boardNative;
+		const content = boardContent;
+		const needBind = boundBgUrl !== bgUrl || wood === PIXI.Texture.EMPTY;
+		if (!needBind) return;
+
+		let cancelled = false;
+		void (async () => {
+			try {
+				await ensureTargetBoardSpritesInPixi(nine ? 'nine' : 'six');
+				if (cancelled || !stateGame.targetPickOpen) return;
+				const cachedBg = texFromCache(bgUrl);
+				const cachedH = texFromCache(TARGET_BOARD_SPRITES.holder);
+				const cachedF = texFromCache(TARGET_BOARD_SPRITES.front);
+				const [bg, h, f] =
+					cachedBg && cachedH && cachedF
+						? [cachedBg, cachedH, cachedF]
+						: await Promise.all([
+								loadTex(bgUrl),
+								loadTex(TARGET_BOARD_SPRITES.holder),
+								loadTex(TARGET_BOARD_SPRITES.front),
+							]);
+				if (cancelled || !stateGame.targetPickOpen) return;
+				applyTextures(bg, h, f, native, content, bgUrl);
+			} catch (error) {
+				console.error('[tir] cabinet sprites failed to bind', error);
+			}
+		})();
+		return () => {
+			cancelled = true;
+		};
+	});
+</script>
+
+{#if open && ready}
+	<BoardContainer>
+		<Container>
+			<Graphics isMask draw={drawInnerMask} />
+			<Container y={offsetY}>
+				<BaseSprite texture={wood} x={clip.x} y={0} width={clip.width} height={clip.height} />
+				{#each seats as seat, i (i)}
+					<BaseSprite
+						texture={holder}
+						x={seat.holderX}
+						y={seat.holderY}
+						width={seat.holderW}
+						height={seat.holderH}
+					/>
+					{#if seat.showDisc}
+						<BaseSprite
+							texture={front}
+							x={seat.discX}
+							y={seat.discY}
+							width={seat.size}
+							height={seat.size}
+						/>
+					{/if}
+				{/each}
+			</Container>
+		</Container>
+	</BoardContainer>
+{/if}

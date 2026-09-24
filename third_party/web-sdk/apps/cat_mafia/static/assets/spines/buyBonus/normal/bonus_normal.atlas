@@ -1,0 +1,15 @@
+bonus_normal.webp
+size:888,888
+filter:Linear,Linear
+gradient_visual2
+bounds:441,2,436,349
+offsets:1,1,438,369
+normal_background
+bounds:441,353,431,533
+offsets:1,1,433,535
+normal_button
+bounds:2,218,315,70
+offsets:1,1,317,72
+normal_frame
+bounds:2,290,437,596
+offsets:1,1,439,598

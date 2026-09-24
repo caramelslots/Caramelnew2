@@ -25,6 +25,7 @@
 	import { isSdkTurboSpin } from '../game/gameSpeed';
 	import { getContextLayout } from 'utils-layout';
 	import { OnHotkey } from 'components-shared';
+	import { isAnyMenuOpen } from '../game/isAnyMenuOpen';
 
 	import HudBalanceBetLine from './HudBalanceBetLine.svelte';
 	import SpinHudButton from './SpinHudButton.svelte';
@@ -78,6 +79,7 @@
 	const pos = $derived(computeDesktopHudLayout(stateLayoutDerived, hudConfig));
 
 	const isAutoSpinModalOpen = $derived(stateModal.modal?.name === 'autoSpin');
+	const menuBlocksSpaceSpin = $derived(isAnyMenuOpen());
 	const hasAutoBetCounter = $derived(stateBetDerived.hasAutoBetCounter());
 	const hasCounter = $derived(stateBetDerived.hasAutoBetCounter());
 	const spinCounterText = $derived(
@@ -330,7 +332,7 @@
 		{#if !isFreeSpins && !isReplay}
 			<OnHotkey
 				hotkey="Space"
-				disabled={spinDisabled || !show || isAutoSpinModalOpen}
+				disabled={spinDisabled || !show || menuBlocksSpaceSpin}
 				onpress={onSpinPress}
 			/>
 			<SpinHudButton

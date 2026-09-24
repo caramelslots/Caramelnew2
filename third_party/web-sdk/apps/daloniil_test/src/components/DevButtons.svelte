@@ -28,7 +28,9 @@
 	import { playBet, playBookEvent, playBookEvents } from '../game/utils';
 	import { eventEmitter } from '../game/eventEmitter';
 	import { devPreview } from '../game/devPreview.svelte';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { stateLayout } from '../game/stateLayout';
 	import {
 		getRawUrlLang,
 		INVALID_LANG_LABELS,
@@ -70,7 +72,7 @@
 		Positions в мок-event'ах УЖЕ в padded-координатах (row=1..5 = visible
 		0..4), так что после padding позиции совпадают с ячейками.
 	*/
-	const padBoard = (visibleBoard: { name: string }[][], gameType: GameType): RawSymbol[][] => {
+	const padBoard = (visibleBoard: RawSymbol[][], gameType: GameType): RawSymbol[][] => {
 		const paddingReels = config.paddingReels[gameType];
 		return visibleBoard.map((reel, reelIndex) => {
 			const pad = paddingReels[reelIndex];
@@ -79,7 +81,7 @@
 	};
 
 	const reveal = (
-		visibleBoard: { name: string }[][],
+		visibleBoard: RawSymbol[][],
 		gameType: GameType = 'basegame',
 		paddingPositions: number[] = [10, 20, 5, 15, 8],
 	) =>
@@ -216,6 +218,51 @@
 		reel(['L2', 'H3', 'L4', 'L2', 'L1']),
 		reel(['H3', 'L3', 'L4', 'H1', 'H1']),
 	];
+
+	// FS Wild multipliers demo: top-row L3 + W×2 + W×5 → lineMult 7 (0.1× ×7 = $0.70 @ $1).
+	const WILD_MULT_FS_BOARD: RawSymbol[][] = [
+		[{ name: 'L3' }, { name: 'L2' }, { name: 'L4' }, { name: 'H2' }, { name: 'L1' }],
+		[
+			{ name: 'W', wild: true, multiplier: 2 },
+			{ name: 'L4' },
+			{ name: 'L2' },
+			{ name: 'H3' },
+			{ name: 'L4' },
+		],
+		[
+			{ name: 'W', wild: true, multiplier: 5 },
+			{ name: 'L1' },
+			{ name: 'L3' },
+			{ name: 'H4' },
+			{ name: 'L4' },
+		],
+		[{ name: 'L2' }, { name: 'H3' }, { name: 'L4' }, { name: 'L2' }, { name: 'L1' }],
+		[{ name: 'H3' }, { name: 'L3' }, { name: 'L4' }, { name: 'H1' }, { name: 'H1' }],
+	];
+
+	const WILD_MULT_FS_WIN_INFO = {
+		type: 'winInfo' as const,
+		totalWin: 70,
+		wins: [
+			{
+				symbol: 'L3',
+				kind: 3,
+				win: 70,
+				positions: [
+					{ reel: 0, row: 1 },
+					{ reel: 1, row: 1 },
+					{ reel: 2, row: 1 },
+				],
+				meta: {
+					lineIndex: 1,
+					multiplier: 7,
+					winWithoutMult: 10,
+					globalMult: 1,
+					lineMultiplier: 7,
+				},
+			},
+		],
+	};
 
 	// V-shape L1×5 (line 7 = [1,2,3,2,1] visible → padded [2,3,4,3,2]).
 	// Доска специально подобрана так, чтобы L1 реально лежал на V-позициях.
@@ -363,6 +410,25 @@
 	const playLineWin = () =>
 		guard(async () => {
 			await playBookEvents([reveal(LINE_WIN_BOARD), asEvent(baseEvents.winInfo)]);
+		});
+
+	/** FS board: L3 + Wild×2 + Wild×5 on top row — shows x2/x5 badges on Wilds. */
+	const playWildMultFsWin = () =>
+		guard(async () => {
+			eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
+			eventEmitter.broadcast({
+				type: 'freeSpinCounterUpdate',
+				current: 1,
+				total: 10,
+			});
+			await playBookEvents([
+				reveal(WILD_MULT_FS_BOARD, 'freegame'),
+				asEvent(WILD_MULT_FS_WIN_INFO),
+			]);
+			stateBet.winBookEventAmount = 70;
+			await playBookEvent(asEvent({ type: 'setWin', amount: 70, winLevel: 1 }), {
+				bookEvents: [],
+			});
 		});
 
 	const playVShapeWin = () =>
@@ -621,6 +687,54 @@
 			await playBet({ ...book, state: book.events } as Parameters<typeof playBet>[0]);
 		});
 
+	let loaderProgressTimer: ReturnType<typeof setInterval> | null = null;
+
+	const stopLoaderProgressTimer = () => {
+		if (loaderProgressTimer) {
+			clearInterval(loaderProgressTimer);
+			loaderProgressTimer = null;
+		}
+	};
+
+	/** Stage A: spine logo-loader + progress bar under the animation. */
+	const showLoaderProgressPreview = () => {
+		stopLoaderProgressTimer();
+		stateLayout.showLoadingScreen = false;
+		gameEntrance.loadingCardsVisible = false;
+		gameEntrance.preloadContent = true;
+		gameEntrance.showContent = false;
+		devPreview.loaderProgress = true;
+		devPreview.loaderProgressValue = 0;
+		loaderProgressTimer = setInterval(() => {
+			if (devPreview.loaderProgressValue >= 100) {
+				stopLoaderProgressTimer();
+				return;
+			}
+			devPreview.loaderProgressValue = Math.min(100, devPreview.loaderProgressValue + 2);
+		}, 40);
+	};
+
+	/** Stage B: info cards + Press to Continue. */
+	const showLoadingCardsPreview = () => {
+		stopLoaderProgressTimer();
+		devPreview.loaderProgress = false;
+		devPreview.loaderProgressValue = 0;
+		gameEntrance.showContent = false;
+		gameEntrance.loadingCardsVisible = true;
+		gameEntrance.preloadContent = true;
+		stateLayout.showLoadingScreen = true;
+	};
+
+	const hideLoadingScreenPreview = () => {
+		stopLoaderProgressTimer();
+		devPreview.loaderProgress = false;
+		devPreview.loaderProgressValue = 0;
+		gameEntrance.preloadContent = true;
+		gameEntrance.showContent = true;
+		gameEntrance.loadingCardsVisible = false;
+		stateLayout.showLoadingScreen = false;
+	};
+
 	onMount(() => {
 		const onKeyDown = (e: KeyboardEvent) => {
 			// Shift+D — раскладко-независимо через e.code.
@@ -687,7 +801,26 @@
 	{/if}
 
 	{#if open}
-		<div class="dev-body">
+		<div class="dev-body" onwheel={(e) => e.stopPropagation()}>
+			<section>
+				<h4>Loading</h4>
+				<div class="grid">
+					<button
+						type="button"
+						class:active={devPreview.loaderProgress}
+						onclick={showLoaderProgressPreview}
+					>
+						Show Progress
+					</button>
+					<button type="button" onclick={showLoadingCardsPreview}>
+						Show Cards
+					</button>
+					<button type="button" onclick={hideLoadingScreenPreview}>
+						Hide Loading
+					</button>
+				</div>
+			</section>
+
 			<section>
 				<h4>Reel Speed</h4>
 				<div class="grid">
@@ -767,6 +900,14 @@
 						onclick={playLineWin}
 					>
 						Line Win (3-of-a-kind)
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="FS: L3 + Wild×2 + Wild×5 → lineMult ×7, badges x2/x5 on Wilds"
+						onclick={playWildMultFsWin}
+					>
+						FS Wild ×2+×5
 					</button>
 					<button
 						type="button"

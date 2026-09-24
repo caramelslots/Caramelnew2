@@ -55,7 +55,8 @@ type Currency =
   | 'QAR' // Qatar Riyal
   | 'BHD' // Bahraini Dinar
   | 'XGC' // Stake US Gold Coin
-  | 'XSC'; // Stake US Stake Cash
+  | 'XSC' // Stake US Stake Cash
+  | 'XEC'; // Stake EU Social Cash (display as SC)
 
 type Balance = {
   amount: number;

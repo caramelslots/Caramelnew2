@@ -15,6 +15,15 @@
 		antialias?: boolean;
 		/** On phone portrait: cap resolution at 2.5 and disable MSAA. */
 		tuneForMobilePortrait?: boolean;
+		/**
+		 * Prefer WebGL on iOS/Android (including iPadOS masquerading as Mac).
+		 * Pixi 8 defaults to WebGPU, which is a common mobile context-loss crash.
+		 * Desktop keeps WebGPU. Ignored when `preference` is set.
+		 */
+		webglOnIosAndroid?: boolean;
+		preference?: 'webgl' | 'webgpu';
+		/** Cap `ticker.maxFPS` after init. Omit or 0 = uncapped. */
+		maxFps?: number;
 	};
 
 	const props: Props = $props();
@@ -22,6 +31,17 @@
 
 	let wrap: HTMLDivElement;
 	let initialised = $state(false);
+
+	const resolveGpuPreference = (): 'webgl' | 'webgpu' => {
+		if (props.preference) return props.preference;
+		if (!props.webglOnIosAndroid || typeof navigator === 'undefined') return 'webgpu';
+		const ua = navigator.userAgent;
+		const isIOS =
+			/iP(hone|ad|od)/.test(ua) ||
+			(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+		const isAndroid = /Android/i.test(ua);
+		return isIOS || isAndroid ? 'webgl' : 'webgpu';
+	};
 
 	const initialiseApplication = async () => {
 		PIXI.Assets.reset();
@@ -45,13 +65,18 @@
 			multiView: false,
 			antialias,
 			clearBeforeRender: true,
-			preference: 'webgpu',
+			preference: resolveGpuPreference(),
 			powerPreference: 'high-performance',
 			resolution,
 			resizeTo: window,
 		});
 
 		wrap.appendChild(context.stateApp.pixiApplication.canvas);
+
+		const maxFps = props.maxFps;
+		if (maxFps && maxFps > 0) {
+			context.stateApp.pixiApplication.ticker.maxFPS = maxFps;
+		}
 
 		// to prevent that you can't scroll the page with touch on the canvas. https://github.com/pixijs/pixijs/issues/4824
 		context.stateApp.pixiApplication.renderer.events.autoPreventDefault = false;

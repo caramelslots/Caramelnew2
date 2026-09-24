@@ -361,13 +361,6 @@ export default {
 			rtp: 0.9601,
 			max_win: 50000.0,
 		},
-		special_spins: {
-			cost: 30.0,
-			feature: true,
-			buyBonus: false,
-			rtp: 0.9601,
-			max_win: 50000.0,
-		},
 		bonus_normal: {
 			cost: 100.0,
 			feature: false,

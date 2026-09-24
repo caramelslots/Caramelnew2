@@ -16,9 +16,25 @@
 
 	const props: Props = $props();
 	const parentContext = getContextParent();
-	const spine = new SPINE_PIXI.Spine(props.spineData);
+	// Start frozen: Spine.autoUpdate setter always Ticker.shared.add()'s with no
+	// dedupe. Constructing with the default true, then propsSyncEffect writing
+	// autoUpdate=true again, double-registers internalUpdate → ~2× playback.
+	const spine = new SPINE_PIXI.Spine({
+		skeletonData: props.spineData,
+		autoUpdate: false,
+	});
 
-	propsSyncEffect({ props, target: spine, ignore: ['children'] });
+	propsSyncEffect({
+		props,
+		target: spine,
+		ignore: ['children', 'spineData', 'autoUpdate'],
+	});
+
+	// Sole registration path — guard so true→true never stacks listeners.
+	$effect(() => {
+		const next = props.autoUpdate ?? true;
+		if (spine.autoUpdate !== next) spine.autoUpdate = next;
+	});
 
 	parentContext.addToParent(spine);
 	setContextSpine(spine);

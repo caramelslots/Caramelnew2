@@ -1,0 +1,118 @@
+import {
+  STATIC_SPRITE_SPEC,
+  SYMBOL_TEXTURE_NATIVE_PX,
+  SYMBOL_TEXTURE_SOURCE_PX,
+  isAcceptedStaticSpriteSize,
+} from '../catalog/symbolSpecs'
+import type { AnimationRoleMap } from '../types'
+import { animationRoleWarnings } from '../pixi/animationRoles'
+
+export type LibraryReadiness = 'ready' | 'partial' | 'blocked'
+
+export type StaticSpriteInfo = {
+  url: string
+  fileName: string
+  width: number
+  height: number
+  format: string
+  approxBytes: number
+}
+
+export type LibrarySymbolStatus = {
+  readiness: LibraryReadiness
+  spineOk: boolean
+  staticOk: boolean
+  sizeOk: boolean
+  formatOk: boolean
+  warnings: string[]
+}
+
+export type LibrarySymbol = {
+  id: string
+  label: string
+  kind: 'catalog' | 'upload'
+  /** Spine pack for idle / land / win. */
+  spine: {
+    skeletonUrl: string
+    atlasUrl: string
+    textureUrl: string
+    textureFileName: string
+    atlasTextureName?: string
+  }
+  /** Reel static sprite (required for reel-ready). */
+  staticSprite: StaticSpriteInfo | null
+  /** Filled after first Spine load in preview. */
+  roles: AnimationRoleMap | null
+  animationNames: string[]
+  status: LibrarySymbolStatus
+  thumbUrl: string | null
+  revoke: () => void
+}
+
+export function computeLibraryStatus(args: {
+  hasSpine: boolean
+  staticSprite: StaticSpriteInfo | null
+  roles?: AnimationRoleMap | null
+}): LibrarySymbolStatus {
+  const warnings: string[] = []
+  const spineOk = args.hasSpine
+  if (!spineOk) warnings.push('Нет Spine-пакета (.json + .atlas + текстура).')
+
+  const staticSprite = args.staticSprite
+  const staticOk = Boolean(staticSprite)
+  if (!staticOk) {
+    warnings.push('Нет static-спрайта для барабана (нужен отдельный WebP).')
+  }
+
+  let formatOk = true
+  let sizeOk = true
+  if (staticSprite) {
+    formatOk = staticSprite.format === STATIC_SPRITE_SPEC.format
+    if (!formatOk) {
+      warnings.push(
+        `Static формат «${staticSprite.format}» — нужен ${STATIC_SPRITE_SPEC.format}.`,
+      )
+    }
+    sizeOk = isAcceptedStaticSpriteSize(staticSprite.width, staticSprite.height)
+    if (!sizeOk) {
+      warnings.push(
+        `Static ${staticSprite.width}×${staticSprite.height} — нужен квадрат ${SYMBOL_TEXTURE_SOURCE_PX.join(' или ')}.`,
+      )
+    } else if (staticSprite.width !== SYMBOL_TEXTURE_NATIVE_PX) {
+      warnings.push(
+        `Static ${staticSprite.width}×${staticSprite.height} — на барабане будет сжат до ${SYMBOL_TEXTURE_NATIVE_PX}×${SYMBOL_TEXTURE_NATIVE_PX}.`,
+      )
+    }
+  }
+
+  if (args.roles) {
+    warnings.push(...animationRoleWarnings(args.roles))
+  }
+
+  let readiness: LibraryReadiness = 'blocked'
+  if (spineOk && staticOk) {
+    readiness = formatOk && sizeOk ? 'ready' : 'partial'
+  } else if (spineOk || staticOk) {
+    readiness = 'partial'
+  }
+
+  return {
+    readiness,
+    spineOk,
+    staticOk,
+    sizeOk: staticOk ? sizeOk : false,
+    formatOk: staticOk ? formatOk : false,
+    warnings,
+  }
+}
+
+export function readinessLabel(readiness: LibraryReadiness): string {
+  switch (readiness) {
+    case 'ready':
+      return 'Ready'
+    case 'partial':
+      return 'Partial'
+    case 'blocked':
+      return 'Blocked'
+  }
+}

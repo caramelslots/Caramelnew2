@@ -11,4 +11,8 @@ export const devPreview = $state({
 	ladderFilled: 2,
 	/** preview the horizontal bar (bar_h) instead of the vertical one */
 	ladderHorizontal: false,
+	/** force BootstrapLoader (spine logo + progress bar) for DEV preview */
+	loaderProgress: false,
+	/** fake 0–100 progress while `loaderProgress` is on */
+	loaderProgressValue: 0,
 });
