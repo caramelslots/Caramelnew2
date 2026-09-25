@@ -11,6 +11,7 @@
 	import { isFreeSpinsActive } from '../game/activeFeature';
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { hudWinDimStyle } from '../game/hudWinDim';
 
 	const context = getContext();
 
@@ -39,7 +40,7 @@
 		}),
 	);
 
-	/** Base game only — never during bonus normal / super FS, duel, or FS congrats. */
+	const winDimStyle = $derived(hudWinDimStyle());
 	const show = $derived(
 		uiVisible &&
 			box.show &&
@@ -57,6 +58,7 @@
 		style:top="{box.top}px"
 		style:width="{box.width}px"
 		style:height="{box.height}px"
+		style={winDimStyle}
 		aria-hidden="true"
 	>
 		<img class="board-neon-logo-img" src={LOADER_NEON_LOGO_URL} alt="" draggable="false" />

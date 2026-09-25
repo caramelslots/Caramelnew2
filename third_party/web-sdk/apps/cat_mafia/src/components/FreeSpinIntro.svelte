@@ -21,14 +21,6 @@
 	import {
 		BOARD_DIMENSIONS,
 		BOARD_LAYOUT_OFFSETS,
-		FONT_KRUTOI,
-		FONT_KRUTOI_RU,
-		FONT_PROSTOI_HI,
-		FONT_KRUTOI_VI,
-		FONT_PROSTOI_WHITE_CJK,
-		FONT_PROSTOI_WHITE,
-		FONT_PROSTOI_WHITE_RU,
-		LOCALE_TEXT_FILL_GOLD,
 		SYMBOL_SIZE,
 	} from '../game/constants';
 	import assets from '../game/assets';
@@ -37,7 +29,6 @@
 	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { waitAnimationFrames } from '../game/tirGpuMemory';
-	import FsIntroBannerLabel from './FsIntroBannerLabel.svelte';
 	import PressToContinueHtml from './PressToContinueHtml.svelte';
 
 	const context = getContext();
@@ -81,6 +72,10 @@
 	 */
 	const CONGRATULATIONS_FIT_REF = 'CONGRATULATIONS!';
 	const CONGRATULATIONS_MIN_SCALE = 0.62;
+	/** YOU WON between side paws — proxima-nova face, same cream fill as prostoi white. */
+	const YOU_WON_SIZE_RATIO = 0.026;
+	const YOU_WON_MAX_WIDTH_RATIO = 0.3;
+	const YOU_WON_MIN_SCALE = 0.45;
 
 	const panelLayout = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
@@ -134,6 +129,8 @@
 	let dismissing = false;
 	let bannerEl = $state<HTMLParagraphElement | undefined>();
 	let bannerFitScale = $state(1);
+	let youWonEl = $state<HTMLParagraphElement | undefined>();
+	let youWonFitScale = $state(1);
 
 	const lang = $derived(stateUrlDerived.lang());
 	const congratulationsText = $derived(getFsOutroCongratulationsText(lang));
@@ -150,6 +147,17 @@
 			`top:${p.panelHeight * FREE_SPINS_Y_RATIO}px`,
 			`font-size:${fontPx}px`,
 			`transform:translate(-50%, -50%) scale(${bannerFitScale})`,
+		].join(';');
+	});
+
+	const youWonStyle = $derived.by(() => {
+		const p = panelLayout;
+		const fontPx = Math.max(14, Math.round(p.panelWidth * YOU_WON_SIZE_RATIO));
+		return [
+			`top:${p.panelHeight * YOU_WON_Y_RATIO}px`,
+			`font-size:${fontPx}px`,
+			`max-width:${p.panelWidth * YOU_WON_MAX_WIDTH_RATIO}px`,
+			`transform:translate(-50%, -50%) scale(${youWonFitScale})`,
 		].join(';');
 	});
 
@@ -290,6 +298,18 @@
 		bannerFitScale = width > limit ? Math.max(0.62, limit / width) : 1;
 	});
 
+	$effect(() => {
+		void youWonText;
+		void panelLayout.panelWidth;
+		const el = youWonEl;
+		if (!el) return;
+
+		el.style.transform = 'translate(-50%, -50%) scale(1)';
+		const limit = panelLayout.panelWidth * YOU_WON_MAX_WIDTH_RATIO;
+		const width = el.scrollWidth;
+		youWonFitScale = width > limit ? Math.max(YOU_WON_MIN_SCALE, limit / width) : 1;
+	});
+
 	const dismiss = () => {
 		if (!show || dismissing) return;
 		dismissing = true;
@@ -382,23 +402,7 @@
 						>
 					{/each}
 				</div>
-				<FsIntroBannerLabel
-					text={youWonText}
-					fontKrutoi={FONT_KRUTOI}
-					fontKrutoiRu={FONT_KRUTOI_RU}
-					fontProstoi={FONT_PROSTOI_WHITE}
-					fontProstoiRu={FONT_PROSTOI_WHITE_RU}
-					fontProstoiHi={FONT_PROSTOI_HI}
-					fontProstoiVi={FONT_KRUTOI_VI}
-					fontLocaleCjk={FONT_PROSTOI_WHITE_CJK}
-					sizeRatio={0.04}
-					yRatio={YOU_WON_Y_RATIO}
-					maxWidthRatio={0.3}
-					panelWidth={panelLayout.panelWidth}
-					panelHeight={panelLayout.panelHeight}
-					layoutScale={panelLayout.layoutScale}
-					fallbackFill={LOCALE_TEXT_FILL_GOLD}
-				/>
+				<p bind:this={youWonEl} class="you-won" style={youWonStyle}>{youWonText}</p>
 				<div
 					class="number"
 					class:number--extra={isExtraMode}
@@ -579,6 +583,29 @@
 		pointer-events: none;
 		filter: drop-shadow(0 1px 0 #fff3b0) drop-shadow(0 3px 0 #5a3a0e)
 			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
+	}
+
+	.you-won {
+		position: absolute;
+		left: 50%;
+		margin: 0;
+		padding: 0;
+		width: max-content;
+		transform: translate(-50%, -50%);
+		transform-origin: center center;
+		font-family: 'proxima-nova', sans-serif;
+		font-weight: 800;
+		letter-spacing: 0.04em;
+		line-height: 1.1;
+		text-align: center;
+		text-transform: uppercase;
+		white-space: nowrap;
+		/* Same cream + brown edge as prostoiWhite bitmap (former YOU WON face). */
+		color: #f5e6cc;
+		-webkit-text-stroke: 0.045em #3d2305;
+		paint-order: stroke fill;
+		user-select: none;
+		pointer-events: none;
 	}
 
 	.arch-char {

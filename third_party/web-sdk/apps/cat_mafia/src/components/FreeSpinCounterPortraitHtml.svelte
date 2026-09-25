@@ -11,6 +11,8 @@
 	import { getContext } from '../game/context';
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { stateGame } from '../game/stateGame.svelte';
+	import { hudWinDimStyle } from '../game/hudWinDim';
 	import { devPreview } from '../game/devPreview.svelte';
 	import { getPortraitFsCounterScreenBox } from '../game/duelLayout';
 	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
@@ -27,10 +29,12 @@
 	const forceShow = $derived(devPreview.forceShowFsBoardChrome);
 	const visible = $derived.by(() => {
 		if (!isPortrait || !gameEntrance.showContent) return false;
+		if (stateGame.fsOutroActive) return false;
 		if (stateDuel.active) return false;
 		if (forceShow) return true;
 		return show || stateUi.freeSpinCounterShow;
 	});
+	const winDimStyle = $derived(hudWinDimStyle());
 
 	const box = $derived(
 		getPortraitFsCounterScreenBox({
@@ -70,6 +74,7 @@
 		style:height="{box.height}px"
 		style:font-size="{box.fontSize}px"
 		style:background-image="url('{plaqueUrl}')"
+		style={winDimStyle}
 		data-test="fs-counter-portrait"
 		aria-label="{label} {value}"
 		aria-hidden="true"

@@ -13,8 +13,12 @@
 	} from '../game/constants';
 	import type { BigWinSpineAnimationMap } from '../game/winLevelMap';
 	import ArchedLocaleText from './ArchedLocaleText.svelte';
+	import BoardFrameSlotFilter from './BoardFrameSlotFilter.svelte';
 	import WinMoneyBanknotesOverlay from './WinMoneyBanknotesOverlay.svelte';
 	import WinMoneySpineTrack from './WinMoneySpineTrack.svelte';
+
+	/** Huge additive glow meshes — soft bloom toward the sides of the screen. */
+	const BIG_WIN_GLOW_SLOTS = ['glow_1', 'glow_2', 'glow_3', 'glow_4'] as const;
 
 	type Props = {
 		animationMap: BigWinSpineAnimationMap;
@@ -117,6 +121,7 @@
 <Container sortableChildren={true}>
 	<Container y={stackY} zIndex={0}>
 		<SpineProvider width={spineWidth} key="bigwin">
+			<BoardFrameSlotFilter hiddenSlots={BIG_WIN_GLOW_SLOTS} />
 			{#key props.animationMap.intro}
 				<WinMoneySpineTrack bind:this={moneyTrack} animationMap={props.animationMap} />
 			{/key}
@@ -129,6 +134,7 @@
 		{#if banknotesActive}
 			{#key props.animationMap.idle}
 				<SpineProvider width={spineWidth} key="bigwin">
+					<BoardFrameSlotFilter hiddenSlots={BIG_WIN_GLOW_SLOTS} />
 					<WinMoneyBanknotesOverlay
 						bind:this={banknotesOverlay}
 						animationName={props.animationMap.idle}

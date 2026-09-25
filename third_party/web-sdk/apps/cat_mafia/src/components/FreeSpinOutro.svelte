@@ -52,6 +52,7 @@
 		await fsAnimation?.playDisappear();
 		show = false;
 		stateGame.winOverlayActive = false;
+		stateGame.fsOutroActive = false;
 		stateGame.overlayDimAlpha = 0;
 		oncomplete();
 	};
@@ -60,20 +61,22 @@
 		freeSpinOutroShow: async () => {
 			show = true;
 			closing = false;
-			// Raise the Pixi stage over HTML HUD (spin / bet / balance).
 			stateGame.winOverlayActive = true;
+			stateGame.fsOutroActive = true;
 			await ensureFsPopupReady(context.stateApp);
 		},
 		freeSpinOutroHide: async () => {
 			show = false;
 			closing = false;
 			stateGame.winOverlayActive = false;
+			stateGame.fsOutroActive = false;
 			stateGame.overlayDimAlpha = 0;
 		},
 		freeSpinOutroCountUp: async (emitterEvent) => {
 			finishingOutro = false;
 			closing = false;
 			stateGame.winOverlayActive = true;
+			stateGame.fsOutroActive = true;
 			await ensureFsPopupReady(context.stateApp);
 			waitForTimeout(scaleMsByGameSpeed(1000, stateGame.gameSpeed)).then(() => {
 				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });

@@ -7,7 +7,6 @@ import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { resetPawCoinColumnSounds, stateGame, stateGameDerived } from './stateGame.svelte';
-import { stateLayoutDerived } from './stateLayout';
 import { devPreview } from './devPreview.svelte';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
@@ -100,9 +99,64 @@ import {
 /** Beat between the paw landing (appear_flash flip) and the row→coin conversion. */
 const PAW_COIN_CONVERT_DELAY_MS = 250;
 
-const DUEL_POST_SPIN_MS = 280;
+const DUEL_POST_SPIN_MS = 160;
 const FS_POST_SPIN_MS = 280;
-const DUEL_BETWEEN_SPINS_MS = 350;
+/** Beat after a no-win spin before the other desk scrolls. */
+const DUEL_BETWEEN_SPINS_MS = 180;
+/**
+ * When bank count-up already started with paylines, only a short handoff before
+ * the next book event (do not re-wait the full WIN_HUD tween).
+ */
+const DUEL_BANK_ALREADY_COUNTED_MS = 80;
+/**
+ * After SW curtain lands: short settle, then phase-2 lines. Celebrate is budgeted
+ * so the book does not wait full win spines (~2s) — that felt like dead air.
+ * These are longer than the first cut (was too snappy into the next desk).
+ */
+const DUEL_POST_SW_SETTLE_MS = 280;
+const DUEL_POST_SW_PHASE2_PRE_MS = 250;
+/**
+ * How long duel blocks on win/`activate` spines. Lines + celebrate start immediately;
+ * leftover clip plays in the background so the other desk is never gated on it.
+ */
+const DUEL_CELEBRATE_BUDGET_MS = 900;
+
+/** Next `duelBankUpdate` for this desk (skip expand / phase-2 win in between). */
+const findNextDuelBankUpdate = (
+	bookEvents: BookEvent[],
+	from: BookEvent,
+	side: DuelSide,
+): BookEventOfType<'duelBankUpdate'> | undefined => {
+	const start = bookEvents.indexOf(from);
+	if (start < 0) return;
+	for (let i = start + 1; i < bookEvents.length; i++) {
+		const event = bookEvents[i];
+		if (event.type === 'duelBankUpdate' && event.side === side) return event;
+		if (event.type === 'duelEnd') return;
+		// Another spin for this side without a bank update — stop looking.
+		if (event.type === 'duelSpin' && event.side === side) return;
+	}
+};
+
+/**
+ * Apply the upcoming bank totals and request HUD count-up now (with paylines),
+ * matching base `winInfo` — money must not wait for win spine clips to finish.
+ */
+const startDuelBankCountUpFromNext = (
+	bookEvents: BookEvent[],
+	from: BookEvent,
+	side: DuelSide,
+): boolean => {
+	const nextBank = findNextDuelBankUpdate(bookEvents, from, side);
+	if (!nextBank) return false;
+	const current = side === 'cat' ? stateDuel.catTotal : stateDuel.dogTotal;
+	const next = side === 'cat' ? nextBank.catTotal : nextBank.dogTotal;
+	if (next <= current + 0.01) return false;
+	stateDuel.winHudCountUpPendingBySide[side] = true;
+	stateDuel.dogTotal = nextBank.dogTotal;
+	stateDuel.catTotal = nextBank.catTotal;
+	return true;
+};
 
 const duelSwRowsOnReel = (side: DuelSide, reelIndex: number) => {
 	const stack = getDuelBoardStack(side);
@@ -146,6 +200,14 @@ const playDuelWinLines = async (
 	side: DuelSide,
 	wins: NonNullable<BookEventOfType<'duelSpin'>['wins']>,
 	totalWin: number,
+	opts?: {
+		/**
+		 * Cap how long we block on win/`activate` spines. Celebrate still starts;
+		 * book continues so the other desk is not stuck waiting on this desk.
+		 * Defaults to `DUEL_CELEBRATE_BUDGET_MS`.
+		 */
+		celebrateBudgetMs?: number;
+	},
 ) => {
 	if (!wins.length || totalWin <= 0) return;
 
@@ -158,11 +220,10 @@ const playDuelWinLines = async (
 
 	await waitForGameSpeed(WIN_INFO_PRE_DELAY_MS, stateGame.gameSpeed);
 
-	// Phone portrait: only one desk may celebrate at a time. Tear down the
-	// other board's lines / postWinStatic right before this side starts.
-	if (stateLayoutDerived.layoutType() === 'portrait') {
-		clearDuelSideWinPresentation(side === 'cat' ? 'dog' : 'cat');
-	}
+	// Always drop the other desk's celebrate before this one starts — otherwise
+	// a background win/`activate` from the previous desk still plays and the
+	// book feels gated on it when this desk is already ready.
+	clearDuelSideWinPresentation(side === 'cat' ? 'dog' : 'cat');
 
 	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 	eventEmitter.broadcast({ type: 'boardFramePulse', side });
@@ -200,11 +261,13 @@ const playDuelWinLines = async (
 		wins.flatMap((win) => win.positions),
 		(a, b) => a.reel === b.reel && a.row === b.row,
 	);
-	await eventEmitter.broadcastAsync({
+	const celebrate = eventEmitter.broadcastAsync({
 		type: 'duelBoardAnimateSymbols',
 		side,
 		symbolPositions: allPositions,
 	});
+	const budgetMs = opts?.celebrateBudgetMs ?? DUEL_CELEBRATE_BUDGET_MS;
+	await Promise.race([celebrate, waitForGameSpeed(budgetMs, stateGame.gameSpeed)]);
 
 	if (spotlightClearTimer !== null) clearTimeout(spotlightClearTimer);
 	spotlightClearTimer = setTimeout(
@@ -228,6 +291,14 @@ const resetBoardCelebrateToIdle = (board: typeof stateGame.board) => {
 				reelSymbol.symbolState === 'win' ||
 				reelSymbol.symbolState === 'postWinStatic'
 			) {
+				// Unblock any in-flight `waitForWinComplete` from a budgeted celebrate
+				// so a later spin on this desk does not inherit a stale oncomplete.
+				try {
+					reelSymbol.oncomplete();
+				} catch {
+					/* ignore */
+				}
+				reelSymbol.oncomplete = () => {};
 				reelSymbol.symbolState = 'static';
 			}
 		}
@@ -1447,10 +1518,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				setDuelSuperWildCurtain(side, expand.reel, expand.mult, 'done', expand.row);
 			}
 
-			await waitForGameSpeed(SW_OPEN_SETTLE_MS, stateGame.gameSpeed);
+			await waitForGameSpeed(DUEL_POST_SW_SETTLE_MS, stateGame.gameSpeed);
 			// Keep opened curtain spine visible (idle) until the next reveal.
 			if (willShowCurtain) {
-				await waitForGameSpeed(SW_PHASE2_PRE_MS, stateGame.gameSpeed);
+				await waitForGameSpeed(DUEL_POST_SW_PHASE2_PRE_MS, stateGame.gameSpeed);
 			}
 			return;
 		}
@@ -1831,7 +1902,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 	},
 
-	duelSpin: async (bookEvent: BookEventOfType<'duelSpin'>) => {
+	duelSpin: async (bookEvent: BookEventOfType<'duelSpin'>, { bookEvents }: BookEventContext) => {
 		const side = bookEvent.side;
 		const stack = getDuelBoardStack(side);
 		const sticky = stateDuel.stickySwByReel[side];
@@ -1924,15 +1995,17 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			// Phase-1 into the under-desk bank with count-up; full spin after curtain
 			// via duelBankUpdate (same донабор as bonus FS).
 			const phase1 = bookEvent.phase1TotalWin ?? 0;
+			const phase1HadLines = !!(bookEvent.phase1Wins?.length && phase1 > 0);
 			if (phase1 > 0) {
 				stateDuel.winHudCountUpPendingBySide[side] = true;
 				if (side === 'cat') stateDuel.catTotal += phase1;
 				else stateDuel.dogTotal += phase1;
 			}
-			if (bookEvent.phase1Wins && phase1 > 0) {
-				await playDuelWinLines(side, bookEvent.phase1Wins, phase1);
-			}
-			if (phase1 > 0) {
+			if (phase1HadLines) {
+				await playDuelWinLines(side, bookEvent.phase1Wins!, phase1);
+				// Count-up overlapped celebrate — do not re-wait full WIN_HUD.
+				await waitForGameSpeed(DUEL_POST_SPIN_MS, stateGame.gameSpeed);
+			} else if (phase1 > 0) {
 				await waitForGameSpeed(WIN_HUD_COUNT_UP_MS, stateGame.gameSpeed);
 			} else {
 				await waitForGameSpeed(DUEL_POST_SPIN_MS, stateGame.gameSpeed);
@@ -1947,20 +2020,30 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		const wins = bookEvent.wins ?? [];
 		const totalWin = bookEvent.totalWin ?? bookEvent.spinWin;
+		// Start bank tween with paylines (base winInfo pattern) — not after spines.
+		const bankStarted = startDuelBankCountUpFromNext(bookEvents, bookEvent, side);
 		if (wins.length > 0 && totalWin > 0) {
 			await playDuelWinLines(side, wins, totalWin);
+		} else if (bankStarted) {
+			await waitForGameSpeed(WIN_HUD_COUNT_UP_MS, stateGame.gameSpeed);
+			return;
 		}
 
 		await waitForGameSpeed(DUEL_POST_SPIN_MS, stateGame.gameSpeed);
 	},
 
-	duelSpinWin: async (bookEvent: BookEventOfType<'duelSpinWin'>) => {
+	duelSpinWin: async (
+		bookEvent: BookEventOfType<'duelSpinWin'>,
+		{ bookEvents }: BookEventContext,
+	) => {
 		const side = bookEvent.side;
 		const expandPending = stateDuel.superWildCurtains.some(
 			(c) => c.side === side && c.phase === 'expanding',
 		);
+		// Curtain already finished — skip the extra pre-beat (was stacking idle
+		// after SUPER_WILD_PRESENT).
 		if (!expandPending) {
-			await waitForGameSpeed(SW_SECOND_WIN_PRE_DELAY_MS, stateGame.gameSpeed);
+			await waitForGameSpeed(DUEL_POST_SW_PHASE2_PRE_MS, stateGame.gameSpeed);
 		}
 
 		if (bookEvent.spinWin > 0) {
@@ -1970,9 +2053,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		const wins = bookEvent.wins ?? [];
 		const totalWin = bookEvent.totalWin ?? bookEvent.spinWin;
+		const bankStarted = startDuelBankCountUpFromNext(bookEvents, bookEvent, side);
 		if (wins.length > 0 && totalWin > 0) {
 			eventEmitter.broadcast({ type: 'paylineClearAll', side });
+			// Same budget as normal duel wins — never gate the next desk on full spines.
 			await playDuelWinLines(side, wins, totalWin);
+		} else if (bankStarted) {
+			await waitForGameSpeed(WIN_HUD_COUNT_UP_MS, stateGame.gameSpeed);
+			return;
 		} else if (bookEvent.spinWin > 0) {
 			await waitForGameSpeed(DUEL_POST_SPIN_MS, stateGame.gameSpeed);
 			return;
@@ -2000,9 +2088,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		stateDuel.dogTotal = bookEvent.dogTotal;
 		stateDuel.catTotal = bookEvent.catTotal;
-		// Wait for count-up so the next spin does not cut the tween short.
+		// Count-up often already ran during paylines — only wait the full tween
+		// when this event is the first credit. Otherwise a short handoff beat.
 		await waitForGameSpeed(
-			didCountUp ? WIN_HUD_COUNT_UP_MS : DUEL_BETWEEN_SPINS_MS,
+			didCountUp
+				? WIN_HUD_COUNT_UP_MS
+				: bookEvent.spinWin > 0
+					? DUEL_BANK_ALREADY_COUNTED_MS
+					: DUEL_BETWEEN_SPINS_MS,
 			stateGame.gameSpeed,
 		);
 	},

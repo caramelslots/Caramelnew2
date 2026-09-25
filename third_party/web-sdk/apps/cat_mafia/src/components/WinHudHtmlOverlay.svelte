@@ -21,6 +21,7 @@
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { hudWinDimStyle } from '../game/hudWinDim';
 	import { getWinHudScreenBox } from '../game/winHudLayout';
 
 	const context = getContext();
@@ -216,6 +217,7 @@
 	const showBaseWin = $derived(
 		!duelActive &&
 			gameEntrance.showContent &&
+			!stateGame.fsOutroActive &&
 			(stateBet.winBookEventAmount > 0 || winTween.current > 0),
 	);
 
@@ -307,7 +309,10 @@
 		);
 	});
 
-	const showDuelWin = $derived(duelActive && gameEntrance.showContent);
+	const showDuelWin = $derived(
+		duelActive && gameEntrance.showContent && !stateGame.fsOutroActive,
+	);
+	const winDimStyle = $derived(hudWinDimStyle());
 
 	const winPrefix = $derived(context.i18nDerived.win().toUpperCase());
 
@@ -393,6 +398,7 @@
 		style:top="{baseBox.centerY}px"
 		style:max-width="{baseBox.maxWidth}px"
 		style:font-size="{baseFontSize}px"
+		style={winDimStyle}
 		aria-hidden="true"
 	>
 		<span class="win-hud-text">
@@ -412,6 +418,7 @@
 		style:top="{dogBox.centerY}px"
 		style:max-width="{dogBox.maxWidth}px"
 		style:font-size="{dogFontSize}px"
+		style={winDimStyle}
 		aria-hidden="true"
 	>
 		<span class="win-hud-text">
@@ -428,6 +435,7 @@
 		style:top="{catBox.centerY}px"
 		style:max-width="{catBox.maxWidth}px"
 		style:font-size="{catFontSize}px"
+		style={winDimStyle}
 		aria-hidden="true"
 	>
 		<span class="win-hud-text">

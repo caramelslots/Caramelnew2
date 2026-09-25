@@ -25,6 +25,7 @@
 	import { HUD_ASSETS, startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { isSdkTurboSpin } from '../game/gameSpeed';
+	import { hudWinDimStyle } from '../game/hudWinDim';
 	import { getContextLayout } from 'utils-layout';
 	import { OnHotkey } from 'components-shared';
 	import { isAnyMenuOpen } from '../game/isAnyMenuOpen';
@@ -77,11 +78,22 @@
 	const useDesktopHud = $derived(layoutType !== 'portrait');
 	const hudLocked = $derived(isLockedBonusHud());
 	const isReplay = $derived(stateUi.config.mode === 'replay');
-	const show = $derived(useDesktopHud && gameEntrance.showContent && uiVisible);
+	const show = $derived(
+		useDesktopHud &&
+			gameEntrance.showContent &&
+			uiVisible &&
+			!stateGame.fsOutroActive,
+	);
 	const spinPrewarmActive = $derived(
-		useDesktopHud && gameEntrance.preloadContent && uiVisible && !hudLocked,
+		useDesktopHud &&
+			gameEntrance.preloadContent &&
+			uiVisible &&
+			!hudLocked &&
+			!stateGame.fsOutroActive,
 	);
 	const overlayMounted = $derived(show || spinPrewarmActive);
+	const winDimStyle = $derived(hudWinDimStyle({ blockPointer: true }));
+	const winDimmed = $derived(stateGame.overlayDimAlpha > 0);
 
 	const hudConfig = $derived(resolveDesktopHudConfig(isPopoutSmall));
 	/** Bonus / duel / replay hide AUTO — pack BALANCE/BET against turbo. */
@@ -249,6 +261,8 @@
 		class:daloniil-ui-enter={show}
 		class:prewarm={!show}
 		class:in-lift={!gameEntrance.liftComplete}
+		class:win-dimmed={winDimmed}
+		style={winDimStyle}
 		aria-label="game controls"
 		aria-hidden={!show}
 	>

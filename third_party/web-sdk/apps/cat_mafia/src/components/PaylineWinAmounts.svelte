@@ -2,6 +2,7 @@
 	PaylineWinAmounts.svelte — single compact total above one payline.
 	Stake small-win UX: one amount over any winning line, not per-line labels.
 	Font: proxima-nova (same face as FS Intro CONGRATULATIONS / under-board WIN).
+	Motion: drops onto the line, holds ~0.5s, then falls down (does not wait for payline clear).
 -->
 <script lang="ts" module>
 	import type { Position } from '../game/types';
@@ -23,17 +24,26 @@
 
 <script lang="ts">
 	import { FillGradient } from 'pixi.js';
+	import { Tween } from 'svelte/motion';
+	import { backOut, cubicIn, cubicOut } from 'svelte/easing';
 	import { Container } from 'pixi-svelte';
 
 	import TightCanvasText from './TightCanvasText.svelte';
 
 	import {
 		PAYLINE_WIN_AMOUNT_ABOVE_LINE_OFFSET,
+		PAYLINE_WIN_AMOUNT_DROP_PX,
+		PAYLINE_WIN_AMOUNT_FALL_PX,
 		PAYLINE_WIN_AMOUNT_FONT_SIZE,
+		PAYLINE_WIN_AMOUNT_HOLD_MS,
+		PAYLINE_WIN_AMOUNT_IN_MS,
+		PAYLINE_WIN_AMOUNT_OUT_MS,
 		SYMBOL_SIZE,
 	} from '../game/constants';
 	import { amountToLayoutParts } from '../game/currencyTextSegments';
 	import { getContext } from '../game/context';
+	import { scaleMsByGameSpeed, waitForGameSpeed } from '../game/gameSpeed';
+	import { stateGame } from '../game/stateGame.svelte';
 	import { getSymbolX } from '../game/utils';
 
 	type Props = {
@@ -48,6 +58,14 @@
 	let activeAmount = $state<number | null>(null);
 	let activeAnchor = $state<PaylineWinAmountAnchor | null>(null);
 	let measuredWidth = $state(0);
+	/** Keep mounted through the fall-out so clear is not an instant pop. */
+	let mounted = $state(false);
+
+	const yOff = new Tween(0);
+	const popScale = new Tween(1);
+	const alpha = new Tween(1);
+	/** Bump to cancel an in-flight appear/dismiss when a new event arrives. */
+	let motionGen = 0;
 
 	/** Above BoardBase `abovePayline` symbols (z≈1) and SW badges nested under curtains. */
 	const amountZ = $derived(props.zIndex ?? 50);
@@ -116,6 +134,61 @@
 		return Math.min(1, anchorLayout.maxWidth / measuredWidth);
 	});
 
+	const drawScale = $derived(fitScale * popScale.current);
+
+	const playDropIn = async () => {
+		const gen = ++motionGen;
+		const ms = scaleMsByGameSpeed(PAYLINE_WIN_AMOUNT_IN_MS, stateGame.gameSpeed);
+		await Promise.all([
+			yOff.set(-PAYLINE_WIN_AMOUNT_DROP_PX, { duration: 0 }),
+			popScale.set(0.7, { duration: 0 }),
+			alpha.set(0, { duration: 0 }),
+		]);
+		if (gen !== motionGen) return;
+		void alpha.set(1, { duration: Math.round(ms * 0.4), easing: cubicOut });
+		void popScale.set(1, { duration: ms, easing: backOut });
+		await yOff.set(0, { duration: ms, easing: backOut });
+		if (gen !== motionGen) return;
+		// Rest on the line briefly, then leave on its own (don't wait for payline clear).
+		await waitForGameSpeed(PAYLINE_WIN_AMOUNT_HOLD_MS, stateGame.gameSpeed);
+		if (gen !== motionGen) return;
+		await playJumpOut(gen);
+	};
+
+	const playJumpOut = async (existingGen?: number) => {
+		const gen = existingGen ?? ++motionGen;
+		if (existingGen == null) motionGen = gen;
+		const ms = scaleMsByGameSpeed(PAYLINE_WIN_AMOUNT_OUT_MS, stateGame.gameSpeed);
+		void alpha.set(0, { duration: Math.round(ms * 0.9), easing: cubicIn });
+		void popScale.set(0.82, { duration: ms, easing: cubicIn });
+		await yOff.set(PAYLINE_WIN_AMOUNT_FALL_PX, { duration: ms, easing: cubicIn });
+		if (gen !== motionGen) return;
+		mounted = false;
+		activeAmount = null;
+		activeAnchor = null;
+		measuredWidth = 0;
+	};
+
+	const matchesSide = (side: 'cat' | 'dog' | undefined) => {
+		if (props.side) {
+			if (side) return side === props.side;
+			// Global clear (no side) still clears this desk.
+			return true;
+		}
+		// Base board ignores duel-scoped events.
+		return !side;
+	};
+
+	const clearAnimated = () => {
+		if (!mounted) {
+			activeAmount = null;
+			activeAnchor = null;
+			measuredWidth = 0;
+			return;
+		}
+		void playJumpOut();
+	};
+
 	context.eventEmitter.subscribeOnMount({
 		paylineWinAmountShow: (event) => {
 			if (props.side) {
@@ -126,32 +199,34 @@
 			measuredWidth = 0;
 			activeAmount = event.amount;
 			activeAnchor = event.anchor;
+			mounted = true;
+			void playDropIn();
 		},
 		paylineWinAmountClear: (event) => {
 			const side = event && 'side' in event ? event.side : undefined;
-			if (side) {
-				if (props.side !== side) return;
-			}
-			activeAmount = null;
-			activeAnchor = null;
-			measuredWidth = 0;
+			if (!matchesSide(side)) return;
+			clearAnimated();
 		},
 		paylineClearAll: (event) => {
 			const side = event && 'side' in event ? event.side : undefined;
 			if (side) {
 				if (props.side !== side) return;
 			}
-			activeAmount = null;
-			activeAnchor = null;
-			measuredWidth = 0;
+			clearAnimated();
 		},
 	});
 </script>
 
-{#if activeAmount != null && activeAnchor && anchorLayout && displayText}
+{#if mounted && activeAmount != null && activeAnchor && anchorLayout && displayText}
 	{#key displayText}
-		<Container x={anchorLayout.x} y={anchorLayout.y} zIndex={amountZ} eventMode="none">
-			<Container scale={fitScale}>
+		<Container
+			x={anchorLayout.x}
+			y={anchorLayout.y + yOff.current}
+			zIndex={amountZ}
+			alpha={alpha.current}
+			eventMode="none"
+		>
+			<Container scale={drawScale}>
 				<TightCanvasText
 					text={displayText}
 					anchor={0.5}

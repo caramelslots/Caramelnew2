@@ -291,13 +291,12 @@ export const stateGame = $state({
 	 * Portrait duel parks both skins — see EnableMascotCatSkinMemory.
 	 */
 	mascotCatSpineKey: 'mascotCatGray' as 'mascotCat' | 'mascotCatGray',
-	// Big-win overlay only — raises Pixi canvas above HTML HUD so celebration
-	// renders on top while the dim layer keeps controls visible underneath.
-	// Small/medium wins leave this false so the HUD stays at normal stacking.
+	// Big-win overlay — dim / idle gates. HUD stays above canvas (CSS-dimmed).
 	winOverlayActive: false,
-	// Matching CanvasSizeRectangle alpha (big win 0.5 / FS end 0.85). The HTML
-	// mascot sits outside Pixi, so it uses this to brightness-match the board.
+	// Matching CanvasSizeRectangle alpha (big win 0.5 / FS end 0.85).
 	overlayDimAlpha: 0,
+	/** Total Win (FS outro): raise Pixi over HTML HUD — safest clean cover. */
+	fsOutroActive: false,
 	// FS intro board is an HTML overlay.
 	freeSpinIntroActive: false,
 	// Duel rules splash (Press to continue) before cloud transition.

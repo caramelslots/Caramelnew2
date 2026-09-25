@@ -12,7 +12,11 @@
 		FS_OUTRO_TEXT_LAYOUT_FRAC,
 		getFsOutroSpineWidth,
 	} from '../game/constants';
+	import BoardFrameSlotFilter from './BoardFrameSlotFilter.svelte';
 	import FsPopupSpineController from './FsPopupSpineController.svelte';
+
+	/** Soft additive blooms — side blur under Total Win (same idea as big-win glows). */
+	const FS_OUTRO_GLOW_SLOTS = ['glow', 'orange_glow', 'orange_glow2'] as const;
 
 	type Props = {
 		title: Snippet<[{ width: number; height: number }]>;
@@ -49,6 +53,7 @@
 <MainContainer>
 	<Container x={mainLayout.width * 0.5} y={mainLayout.height * FS_OUTRO_POPUP_Y_FRAC}>
 		<SpineProvider key="fsPopup" width={spineWidth}>
+			<BoardFrameSlotFilter hiddenSlots={FS_OUTRO_GLOW_SLOTS} />
 			<FsPopupSpineController bind:this={controller} />
 			<SpineSlot slotName="total_win">
 				{@render props.title({ width: layoutRefWidth, height: layoutRefHeight })}

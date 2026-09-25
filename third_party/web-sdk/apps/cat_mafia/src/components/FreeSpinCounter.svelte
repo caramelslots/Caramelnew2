@@ -7,13 +7,15 @@
 
 <!--
 	Desktop FS spinboard (left of board) — proxima-nova + gold face
-	matching FS Intro Congratulations. Portrait uses FreeSpinCounterPortraitHtml.
+	matching under-board WIN. Portrait uses FreeSpinCounterPortraitHtml.
 -->
 <script lang="ts">
 	import assets from '../game/assets';
 	import { getContext } from '../game/context';
 	import { getDesktopFsCounterScreenBox } from '../game/fsCounterLayout';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { stateGame } from '../game/stateGame.svelte';
+	import { hudWinDimStyle } from '../game/hudWinDim';
 	import { getContextLayout } from 'utils-layout';
 	import { devPreview } from '../game/devPreview.svelte';
 
@@ -28,8 +30,12 @@
 
 	const forceShow = $derived(devPreview.forceShowFsBoardChrome);
 	const visible = $derived(
-		(show || forceShow) && !isPortrait && gameEntrance.showContent,
+		(show || forceShow) &&
+			!isPortrait &&
+			gameEntrance.showContent &&
+			!stateGame.fsOutroActive,
 	);
+	const winDimStyle = $derived(hudWinDimStyle());
 
 	const box = $derived(
 		getDesktopFsCounterScreenBox({
@@ -90,6 +96,7 @@
 		style:--fs-title-scale={titleScale}
 		style:--fs-counter-text-left="{box.textLeft}px"
 		style:--fs-counter-text-top="{box.textTop}px"
+		style={winDimStyle}
 		data-test="fs-counter-desktop"
 		aria-label="{titleText} {counterText}"
 		aria-hidden="true"
@@ -122,8 +129,8 @@
 		align-items: center;
 		transform: translate(-50%, -50%);
 		line-height: 1;
-		/* Same gold face as FS Intro Congratulations. */
-		filter: drop-shadow(0 1px 0 #fff3b0) drop-shadow(0 3px 0 #5a3a0e)
+		/* Same gold face as under-board WIN (`WinHudHtmlOverlay`). */
+		filter: drop-shadow(0 1px 0 #e8c878) drop-shadow(0 3px 0 #4a3008)
 			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
 	}
 
@@ -136,8 +143,8 @@
 		letter-spacing: 0.02em;
 		text-transform: uppercase;
 		white-space: nowrap;
-		color: #ffe28a;
-		background: linear-gradient(180deg, #fff6c8 0%, #ffd56a 38%, #e8a020 72%, #b8730f 100%);
+		color: #e8b84a;
+		background: linear-gradient(180deg, #f0d070 0%, #e0a838 38%, #c07014 72%, #8a4e0c 100%);
 		-webkit-background-clip: text;
 		background-clip: text;
 		-webkit-text-fill-color: transparent;

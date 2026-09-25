@@ -127,6 +127,14 @@ export const WIN_HUD_COUNT_UP_MS = 1100;
 export const PAYLINE_WIN_AMOUNT_FONT_SIZE = 42;
 /** Vertical offset above the payline center (ref px). */
 export const PAYLINE_WIN_AMOUNT_ABOVE_LINE_OFFSET = 36;
+/** Drop onto the line (appear) / fall down (dismiss). */
+export const PAYLINE_WIN_AMOUNT_IN_MS = 340;
+export const PAYLINE_WIN_AMOUNT_OUT_MS = 260;
+/** Hold on the line after landing, before auto fall-out (independent of payline clear). */
+export const PAYLINE_WIN_AMOUNT_HOLD_MS = 500;
+export const PAYLINE_WIN_AMOUNT_DROP_PX = 32;
+/** Fall below the line on dismiss (positive = down in board space). */
+export const PAYLINE_WIN_AMOUNT_FALL_PX = 48;
 
 /** "Press to continue" HTML label (ref px at 1280×720, scaled by mainLayout.scale). */
 export const PRESS_TO_CONTINUE_FONT_SIZE = 38;
@@ -1752,11 +1760,11 @@ export const TRANSITION_TIR_DISMISS_DELAY_MS = 480;
 export const LOADER_STREET_SWAP_DELAY_MS = 480;
 
 /**
- * Пауза после того, как выигрышные символы полностью отыграли анимацию,
- * перед снятием затемнения и скрытием paylines.
- * Даёт игроку момент полюбоваться результатом до следующего этапа.
+ * Пауза после win-celebrate перед снятием spotlight / paylines.
+ * Walk Fury держал 10s (без idle на символах). Здесь есть living idle /
+ * idleBounce — хватает ~3s, дальше доска сама «дышит».
  */
-export const WIN_SPOTLIGHT_CLEAR_DELAY_MS = 10_000;
+export const WIN_SPOTLIGHT_CLEAR_DELAY_MS = 1_000;
 
 /** Shared Mystery spine clip — designer combined skeleton has a single
  * explosion track for all reveal types, so synced and independent reveals

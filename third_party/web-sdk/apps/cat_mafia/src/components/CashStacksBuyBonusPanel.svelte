@@ -14,6 +14,7 @@
 	} from '../game/portraitHudLayout';
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { hudWinDimStyle } from '../game/hudWinDim';
 	import { HUD_ASSETS, startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
 	import { getContextLayout } from 'utils-layout';
 
@@ -35,10 +36,11 @@
 			stateModal.modal?.name === 'buyDuelPick',
 	);
 
+	const winDimStyle = $derived(hudWinDimStyle({ blockPointer: true }));
 	const panelStyle = $derived.by(() => {
 		const top = portraitBuyPanelCanvasTop(stateLayoutDerived);
 		const left = portraitBuyPanelCanvasCenterX(stateLayoutDerived);
-		return `left:${left}px;top:${top}px;transform:translate(-50%,0)`;
+		return `left:${left}px;top:${top}px;transform:translate(-50%,0);${winDimStyle}`;
 	});
 
 	const onBuyBonusPress = () => {

@@ -136,11 +136,12 @@
 <!--
   Bind stacking directly to state (no $effect lag). A delayed drop of Pixi
   after the cloud ends left the opaque canvas over the drum for a frame → pop-in.
+  Raise Pixi for FS cloud + Total Win. Big-win keeps HTML HUD above (CSS-dimmed).
 -->
 <div
 	class="pixi-stage"
 	class:above-html-ui={context.stateGame.transitionActive ||
-		context.stateGame.winOverlayActive}
+		context.stateGame.fsOutroActive}
 >
 	<GameApp
 		maxResolution={3}
@@ -329,7 +330,7 @@
 		position: relative;
 	}
 
-	/* HUD (z-index 40–45); raise Pixi only for cloud / win (not tir FX — that hid HUD). */
+	/* HUD (z-index 40–45); raise Pixi for FS cloud / Total Win. */
 	.html-underlays {
 		position: relative;
 		z-index: 40;
@@ -337,6 +338,11 @@
 
 	.pixi-stage.above-html-ui {
 		z-index: 100;
+	}
+
+	/* Opaque plate so translucent WebGL cannot ghost HTML chrome underneath. */
+	.pixi-stage.above-html-ui :global(canvas) {
+		background-color: #000;
 	}
 
 	:global(.daloniil-ui-enter) {
