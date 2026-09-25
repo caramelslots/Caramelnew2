@@ -643,7 +643,8 @@
 		box-sizing: border-box;
 		pointer-events: none;
 		user-select: none;
-		transform: translateY(0%);
+		/* Optical nudge — sit a touch higher in the plaque. */
+		transform: translateY(-1px);
 	}
 
 .duel-modal {

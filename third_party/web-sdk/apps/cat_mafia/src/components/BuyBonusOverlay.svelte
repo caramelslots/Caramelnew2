@@ -775,8 +775,8 @@
 	}
 
 	.card-duel .card-price {
-		/* Nudge a couple px left; slight up from previous down-nudge. */
-		transform: translate(-0.08em, 0.38em);
+		/* Nudge a couple px left; slight raise (~1px). */
+		transform: translate(-0.08em, calc(0.38em - 1px));
 	}
 
 	.features-section {
