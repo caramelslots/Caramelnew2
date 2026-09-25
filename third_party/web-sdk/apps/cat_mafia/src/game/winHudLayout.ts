@@ -78,7 +78,7 @@ export const getWinHudLocalPos = (board: BoardLayoutLike) => {
 	return {
 		x: board.x + localX * board.scale + plateW * WIN_IN_PLATE_X_NUDGE_FRAC,
 		y: board.y + localY * board.scale + plateH * WIN_IN_PLATE_Y_NUDGE_FRAC,
-		maxWidth: plateW * 0.92,
+		maxWidth: plateW * 0.98,
 		plateHeight: plateH,
 	};
 };

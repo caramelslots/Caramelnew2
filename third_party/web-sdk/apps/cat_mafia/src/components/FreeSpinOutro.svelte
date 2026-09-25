@@ -12,18 +12,10 @@
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 	import { CanvasSizeRectangle } from 'components-layout';
 	import { OnMount } from 'components-shared';
-	import { stateUrlDerived } from 'state-shared';
-
-	import { stateI18n } from 'state-shared';
 
 	import {
 		BITMAP_FONT_SCALE,
-		FONT_KRUTOI,
-		FONT_KRUTOI_RU,
-		FONT_PROSTOI_HI,
-		FONT_KRUTOI_VI,
-		FONT_KRUTOI_CJK,
-		fontForLocale,
+		FONT_MEOWFIA_BIGER,
 		FS_OUTRO_DIM_ALPHA,
 		FS_OUTRO_TOTAL_WIN_ARCH_DEG,
 		FS_OUTRO_TOTAL_WIN_TRACKING,
@@ -35,7 +27,6 @@
 	import { scaleMsByGameSpeed } from '../game/gameSpeed';
 	import { ensureFsPopupReady } from '../game/featureGpuMemory';
 	import { stateGame } from '../game/stateGame.svelte';
-	import { getFsOutroTotalWinText } from '../game/fsOutroBannerText';
 	import { stopWinLevelCountUpSounds } from '../game/bookEventHandlerMap';
 	import FreeSpinAnimation from './FreeSpinAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
@@ -121,25 +112,18 @@
 					{#key winAmount}
 						<FreeSpinAnimation bind:this={fsAnimation}>
 							{#snippet title({ width })}
-								{@const lang = stateUrlDerived.lang()}
-								<!-- `total_win` slot — arched like loader card 1 ribbon title. -->
+								<!-- `total_win` slot — Meowfia Biger Latin atlas (same as Big Win titles). -->
 								<ArchedLocaleText
 									y={-width * 0.4}
-									text={getFsOutroTotalWinText(lang)}
-									maxWidth={width * 5.8}
+									text="TOTAL WIN"
+									maxWidth={width * 8}
 									archDeg={FS_OUTRO_TOTAL_WIN_ARCH_DEG}
 									tracking={FS_OUTRO_TOTAL_WIN_TRACKING}
 									fallbackFill={LOCALE_TEXT_FILL_GOLD}
+									forceBitmap={true}
 									style={{
-										fontFamily: fontForLocale(
-											FONT_KRUTOI,
-											FONT_KRUTOI_RU,
-											stateI18n.i18n.locale,
-											FONT_PROSTOI_HI,
-											FONT_KRUTOI_VI,
-											FONT_KRUTOI_CJK,
-										),
-										fontSize: width * 1.18 * BITMAP_FONT_SCALE,
+										fontFamily: FONT_MEOWFIA_BIGER,
+										fontSize: width * 2.36 * BITMAP_FONT_SCALE,
 										align: 'center',
 										fontWeight: 'bold',
 										letterSpacing: 0,
@@ -147,16 +131,19 @@
 								/>
 							{/snippet}
 							{#snippet winAmount({ width })}
-								<!-- `sum` slot — empty gold plate; overlay currency count-up. -->
+								<!-- `sum` slot — empty gold plate; overlay currency count-up.
+								     Base size a bit larger; minScale lets huge amounts shrink to fit the plaque. -->
 								<ResponsiveCurrencyBitmapText
 									anchor={0.5}
 									y={-width * 0.1}
 									style={{
-										fontSize: width * 0.95 * BITMAP_FONT_SCALE,
+										fontSize: width * 1.2 * BITMAP_FONT_SCALE,
 									}}
 									amount={countUpAmount}
 									bookEvent
+									bodyFontVariant="meowfiaBiger"
 									maxWidth={width * 5.0}
+									minScale={0.18}
 								/>
 							{/snippet}
 						</FreeSpinAnimation>

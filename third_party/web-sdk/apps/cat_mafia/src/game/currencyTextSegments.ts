@@ -34,20 +34,21 @@ const pushSegment = (
  * Uses authenticate currency (including social XGC/XSC/XEC). Balance/Bet use numberToCurrencyString.
  * Win body uses fixed currency decimals (USD → 2) so HUD count-up width stays stable.
  * Optional `fractionDigits` overrides (DEV QA for 3dp count-up).
+ * Optional `significant` keeps real sub-cent digits (payline board labels).
  */
 export const amountToCurrencySegments = (
 	amount: number,
 	bookEvent = false,
 	fractionDigits?: number | null,
+	significant = false,
 ): CurrencyTextSegment[] => {
 	const value = bookEvent ? bookEventAmountToNormalisedAmount(amount) : amount;
 	const meta = getCurrencyMeta(stateBet.currency);
 	const segments: CurrencyTextSegment[] = [];
-	const body = formatWinAmountBody(
-		value,
-		stateBet.currency,
-		fractionDigits != null ? { fractionDigits } : undefined,
-	);
+	const body = formatWinAmountBody(value, stateBet.currency, {
+		...(fractionDigits != null ? { fractionDigits } : {}),
+		...(significant ? { significant: true } : {}),
+	});
 
 	if (meta.symbolAfter) {
 		pushSegment(segments, 'body', body);
@@ -83,12 +84,18 @@ export const segmentsToLayoutParts = (segments: CurrencyTextSegment[]): Currency
 
 export const amountToLayoutParts = (
 	amount: number,
-	options?: { bookEvent?: boolean; prefix?: string; fractionDigits?: number | null },
+	options?: {
+		bookEvent?: boolean;
+		prefix?: string;
+		fractionDigits?: number | null;
+		significant?: boolean;
+	},
 ): CurrencyLayoutParts => {
 	const segments = amountToCurrencySegments(
 		amount,
 		options?.bookEvent,
 		options?.fractionDigits,
+		options?.significant,
 	);
 	const { before, symbol, after } = segmentsToLayoutParts(segments);
 	return {

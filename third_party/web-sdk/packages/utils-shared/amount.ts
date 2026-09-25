@@ -97,6 +97,57 @@ export const bookEventAmountToNormalisedAmount = (bookEventAmount: number) => {
 	return winMicro / API_AMOUNT_MULTIPLIER;
 };
 
+/**
+ * How many fraction digits are needed to display `value` without truncating.
+ * Matches `formatWinAmountBody(..., { significant: true })` digit count.
+ */
+export const winAmountSignificantFractionDigits = (
+	value: number,
+	currency = stateBet.currency,
+): number => {
+	const meta = getCurrencyMeta(currency);
+	const minDigits = Math.max(0, meta.decimals);
+	const micros = Math.abs(toApiMicros(value));
+	const fracMicros = micros % API_AMOUNT_MULTIPLIER;
+
+	if (minDigits <= 0) {
+		if (fracMicros === 0) return 0;
+		let fracStr = String(fracMicros).padStart(WIN_AMOUNT_MAX_FRACTION_DIGITS, '0');
+		while (fracStr.endsWith('0')) fracStr = fracStr.slice(0, -1);
+		return fracStr.length;
+	}
+
+	const currencyUnit = 10 ** (WIN_AMOUNT_MAX_FRACTION_DIGITS - minDigits);
+	if (fracMicros % currencyUnit === 0) return minDigits;
+
+	let fracStr = String(fracMicros).padStart(WIN_AMOUNT_MAX_FRACTION_DIGITS, '0');
+	while (fracStr.length > minDigits && fracStr.endsWith('0')) {
+		fracStr = fracStr.slice(0, -1);
+	}
+	return Math.max(minDigits, fracStr.length);
+};
+
+/**
+ * HUD count-up: lock fraction digits to the max needed by from/to (no float-noise
+ * millionths), and skip animation when there aren't at least 2 steps at that unit
+ * (e.g. $0 → $0.001).
+ */
+export const resolveWinCountUpFormat = (
+	fromValue: number,
+	toValue: number,
+	currency = stateBet.currency,
+): { fractionDigits: number; canAnimate: boolean } => {
+	const fractionDigits = Math.max(
+		winAmountSignificantFractionDigits(fromValue, currency),
+		winAmountSignificantFractionDigits(toValue, currency),
+	);
+	const unitMicros = 10 ** (WIN_AMOUNT_MAX_FRACTION_DIGITS - fractionDigits);
+	const steps = Math.round(
+		Math.abs(toApiMicros(toValue) - toApiMicros(fromValue)) / Math.max(1, unitMicros),
+	);
+	return { fractionDigits, canAnimate: steps >= 2 };
+};
+
 const formatPlainAmount = (value: number, decimals: number) =>
 	value.toLocaleString(stateI18n.i18n.locale || 'en', {
 		minimumFractionDigits: decimals,
@@ -120,20 +171,18 @@ const formatWholeGrouped = (whole: number, locale: string) => {
 
 /**
  * Win amount body (no currency symbol).
- * Default: currency decimals (USD → 2, `$16.30`) so count-up width stays stable.
+ * Default: currency decimals (USD → 2, `$16.30`) so HUD count-up width stays stable.
  * Pass `fractionDigits` to force a fixed length (e.g. DEV QA for 3dp count-up).
+ * Pass `significant: true` to keep real sub-cent precision (`$0.0025`, `$12.3456`)
+ * without padding trailing zeros beyond currency decimals.
  */
 export const formatWinAmountBody = (
 	value: number,
 	currency = stateBet.currency,
-	options?: { fractionDigits?: number },
+	options?: { fractionDigits?: number; significant?: boolean },
 ) => {
 	const meta = getCurrencyMeta(currency);
 	const minDigits = Math.max(0, meta.decimals);
-	const digits =
-		options?.fractionDigits != null
-			? Math.max(0, Math.min(WIN_AMOUNT_MAX_FRACTION_DIGITS, Math.floor(options.fractionDigits)))
-			: minDigits;
 	const signedMicros = toApiMicros(value);
 	const sign = signedMicros < 0 ? '-' : '';
 	const micros = Math.abs(signedMicros);
@@ -141,6 +190,46 @@ export const formatWinAmountBody = (
 	const fracMicros = micros % API_AMOUNT_MULTIPLIER;
 
 	const wholeFormatted = () => formatWholeGrouped(whole, stateI18n.i18n.locale || 'en');
+
+	// Significant mode: currency decimals by default; expand only when the
+	// amount truly has sub-currency precision (payline / board win labels).
+	if (options?.significant && options?.fractionDigits == null) {
+		if (meta.decimals <= 0) {
+			if (fracMicros === 0) return `${sign}${wholeFormatted()}`;
+		}
+
+		const currencyUnit =
+			minDigits > 0 ? 10 ** (WIN_AMOUNT_MAX_FRACTION_DIGITS - minDigits) : API_AMOUNT_MULTIPLIER;
+		const hasSubCurrencyPrecision = minDigits > 0 && fracMicros % currencyUnit !== 0;
+
+		let fracStr: string;
+		if (!hasSubCurrencyPrecision) {
+			if (minDigits <= 0) {
+				if (fracMicros >= API_AMOUNT_MULTIPLIER / 2) whole += 1;
+				return `${sign}${wholeFormatted()}`;
+			}
+			let roundedFrac = Math.round(fracMicros / currencyUnit);
+			const fracMod = 10 ** minDigits;
+			if (roundedFrac >= fracMod) {
+				roundedFrac = 0;
+				whole += 1;
+			}
+			fracStr = String(roundedFrac).padStart(minDigits, '0');
+		} else {
+			fracStr = String(fracMicros).padStart(WIN_AMOUNT_MAX_FRACTION_DIGITS, '0');
+			while (fracStr.length > minDigits && fracStr.endsWith('0')) {
+				fracStr = fracStr.slice(0, -1);
+			}
+		}
+
+		if (!fracStr) return `${sign}${wholeFormatted()}`;
+		return `${sign}${wholeFormatted()}.${fracStr}`;
+	}
+
+	const digits =
+		options?.fractionDigits != null
+			? Math.max(0, Math.min(WIN_AMOUNT_MAX_FRACTION_DIGITS, Math.floor(options.fractionDigits)))
+			: minDigits;
 
 	if (digits <= 0) {
 		// JPY / XGC: whole units only (sub-unit dust rounds away via toApiMicros).

@@ -87,13 +87,14 @@ export const MASCOT_ASSETS = {
 
 const dedupeUrls = (urls: readonly string[]) => [...new Set(urls)];
 
-/** FreeSpinIntro HTML layers (`assets/sprites/fsCong/`). */
+/** FreeSpinIntro HTML layers (`assets/sprites/fsCong/`) + desktop FS spinboard. */
 export const FS_CONG_IMAGE_URLS = dedupeUrls([
 	assets.fsCongRays.src,
 	assets.fsCongBg.src,
 	assets.fsCongFrame.src,
 	assets.fsCongTextPaw.src,
 	assets.fsCongBoard.src,
+	assets.fsLeftCounterSpinboard.src,
 ]);
 
 /** HUD + settings + autoplay + buy bonus sprites shown soon after entering the game. */

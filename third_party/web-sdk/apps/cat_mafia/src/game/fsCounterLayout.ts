@@ -28,7 +28,15 @@ type BoardLayoutLike = {
 	visualHeight: number;
 };
 
-/** Screen px box for the PC FS spinboard (matches Pixi FreeSpinCounter). */
+/** Text anchor inside the spinboard (fraction of panel size). */
+const DESKTOP_TEXT_X_FRAC = 0.436;
+const DESKTOP_TEXT_Y_FRAC = 0.52;
+/** Proxima-nova size vs panel width. */
+const DESKTOP_FONT_WIDTH_FRAC = 0.11;
+/** Shrink text if wider than this fraction of the panel. */
+const DESKTOP_MAX_TEXT_WIDTH_FRAC = 0.72;
+
+/** Screen px box for the PC FS spinboard (HTML FreeSpinCounter). */
 export const getDesktopFsCounterScreenBox = (opts: {
 	mainLayout: MainLayoutLike;
 	boardLayout: BoardLayoutLike;
@@ -44,18 +52,24 @@ export const getDesktopFsCounterScreenBox = (opts: {
 		board.visualHeight * 0.5 +
 		board.visualHeight * DESKTOP_CHROME_CENTER_Y_FRAC -
 		panelH * 0.5;
+	const width = panelW * ml.scale;
+	const height = panelH * ml.scale;
 	return {
 		left: ml.x + (localX - ml.width * 0.5) * ml.scale,
 		top: ml.y + (localY - ml.height * 0.5) * ml.scale,
-		width: panelW * ml.scale,
-		height: panelH * ml.scale,
+		width,
+		height,
+		fontSize: Math.max(10, width * DESKTOP_FONT_WIDTH_FRAC),
+		textLeft: width * DESKTOP_TEXT_X_FRAC,
+		textTop: height * DESKTOP_TEXT_Y_FRAC,
+		maxTextWidth: width * DESKTOP_MAX_TEXT_WIDTH_FRAC,
 	};
 };
 
 export const DESKTOP_FS_COUNTER_LAYOUT = {
 	PANEL_RATIO: DESKTOP_PANEL_RATIO,
-	TEXT_X_FRAC: 0.436,
-	TEXT_Y_FRAC: 0.488,
+	TEXT_X_FRAC: DESKTOP_TEXT_X_FRAC,
+	TEXT_Y_FRAC: DESKTOP_TEXT_Y_FRAC,
 	MOUNT_OVERLAP: DESKTOP_MOUNT_OVERLAP,
 	CHROME_CENTER_Y_FRAC: DESKTOP_CHROME_CENTER_Y_FRAC,
 	PANEL_WIDTH_FRAC: DESKTOP_PANEL_WIDTH_FRAC,

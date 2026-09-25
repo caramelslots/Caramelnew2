@@ -13,7 +13,7 @@ import {
 	loaderCardsFixes,
 	socialGameInfoFixes,
 } from './data/cat-mafia-locale-fixes.mjs';
-import { buyBonusFixes, loaderCard2Fixes } from './data/locale-ui-patches.mjs';
+import { buyBonusFixes, duelUiFixes, loaderCard2Fixes } from './data/locale-ui-patches.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const gameDir = join(__dirname, 'data/game');
@@ -78,6 +78,9 @@ for (const file of readdirSync(gameDir)
 	}
 	if (buyBonusFixes[locale]) {
 		Object.assign(updated, buyBonusFixes[locale]);
+	}
+	if (duelUiFixes[locale]) {
+		Object.assign(updated, duelUiFixes[locale]);
 	}
 
 	writeFileSync(join(gameDir, file), toMjsObject(updated), 'utf8');

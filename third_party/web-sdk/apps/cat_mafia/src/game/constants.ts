@@ -10,10 +10,12 @@ export const SYMBOL_TEXTURE_NATIVE_PX = 196;
 /** Cap mainLayout.scale so reel symbols are not upscaled past texture density. */
 export const MAX_LAYOUT_SCALE = SYMBOL_TEXTURE_NATIVE_PX / SYMBOL_SIZE;
 
-/** Bitmap font families (prostoi = default gold text, krutoi = big/super/epic win). */
+/** Bitmap font families (prostoi = default gold text, krutoi = display UI). */
 export const FONT_PROSTOI = 'Reggae One Regular';
 export const FONT_PROSTOI_WHITE = 'Reggae One White';
 export const FONT_KRUTOI = 'Shojumaru';
+/** Big Win / Total Win banner titles — Latin display atlas (all locales). */
+export const FONT_MEOWFIA_BIGER = 'Meowfia Biger';
 /** Russian (Cyrillic) bitmap font variants. */
 export const FONT_PROSTOI_RU = 'Philosopher Bold';
 export const FONT_PROSTOI_WHITE_RU = 'Philosopher Bold White';
@@ -39,7 +41,10 @@ const DEVANAGARI_LOCALES = new Set(['hi']);
 export const FONT_PROSTOI_CJK = 'Asian Y Standard';
 export const FONT_PROSTOI_WHITE_CJK = 'Asian Y White';
 export const FONT_KRUTOI_CJK = FONT_PROSTOI_CJK;
-/** Arabic TTF fonts — prostoi / white share Medium; krutoi uses Black. */
+/**
+ * Arabic TTF fonts — prostoi / white use Medium; krutoi uses Black.
+ * Big/Epic win titles stay on the Latin krutoi bitmap (see WinAnimation).
+ */
 export const FONT_ARABIC_PROSTOI = 'Cairo Medium';
 export const FONT_ARABIC_KRUTOI = 'Cairo Black';
 
@@ -75,18 +80,13 @@ export const systemTextFontFamily = (locale: string): string => {
 	return SYSTEM_TEXT_FONT_FAMILY;
 };
 
-const isKrutoiBitmapFamily = (fontFamily: string): boolean =>
-	fontFamily === FONT_KRUTOI ||
-	fontFamily === FONT_KRUTOI_RU ||
-	fontFamily === FONT_KRUTOI_HI ||
-	fontFamily === FONT_KRUTOI_VI;
-
 export const LOCALE_TEXT_FILL_GOLD = '#ffcc44';
 export const LOCALE_TEXT_FILL_WHITE = '#ffffff';
 
 /**
  * Pick the correct bitmap font for the current locale.
  * `hi` / `vi` / `cjk` — optional locale-specific variants; krutoi on hi/vi/cjk reuses gold prostoi.
+ * Arabic script UI uses Cairo TTF; Latin Big/Epic titles use FONT_KRUTOI directly in WinAnimation.
  */
 export const fontForLocale = (
 	latin: string,
@@ -101,7 +101,12 @@ export const fontForLocale = (
 	if (locale === 'vi' && vi) return vi;
 	if (isCjkLocale(locale) && cjk) return cjk;
 	if (locale === 'ar') {
-		return isKrutoiBitmapFamily(latin) ? FONT_ARABIC_KRUTOI : FONT_ARABIC_PROSTOI;
+		return latin === FONT_KRUTOI ||
+			latin === FONT_KRUTOI_RU ||
+			latin === FONT_KRUTOI_HI ||
+			latin === FONT_KRUTOI_VI
+			? FONT_ARABIC_KRUTOI
+			: FONT_ARABIC_PROSTOI;
 	}
 	if (supportsBitmapFont(locale)) return latin;
 	return latin;
@@ -118,7 +123,7 @@ export const WIN_HUD_FONT_SIZE = 52;
 /** Under-board WIN / duel bank count-up duration (FS any increase; base post-SW). */
 export const WIN_HUD_COUNT_UP_MS = 1100;
 
-/** Prostoi bitmap size for per-line small-win amounts (ref px before BITMAP_FONT_SCALE). */
+/** Proxima-nova size for per-line small-win amounts (board-local px). */
 export const PAYLINE_WIN_AMOUNT_FONT_SIZE = 42;
 /** Vertical offset above the payline center (ref px). */
 export const PAYLINE_WIN_AMOUNT_ABOVE_LINE_OFFSET = 36;

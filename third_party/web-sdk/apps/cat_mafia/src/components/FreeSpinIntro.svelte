@@ -75,6 +75,12 @@
 	const CONGRATULATIONS_ARCH_DEG = 76;
 	/** Tight kerning — letter sides nearly touch (designer look). */
 	const CONGRATULATIONS_TRACKING = 0.2;
+	/**
+	 * EN reference for arch density. Longer locales (DE/…) shrink font so
+	 * letters keep EN-like spacing instead of squashing into the same chord.
+	 */
+	const CONGRATULATIONS_FIT_REF = 'CONGRATULATIONS!';
+	const CONGRATULATIONS_MIN_SCALE = 0.62;
 
 	const panelLayout = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
@@ -147,10 +153,37 @@
 		].join(';');
 	});
 
+	const measureCongratsAdvance = (text: string, fontPx: number) => {
+		if (typeof document === 'undefined' || fontPx <= 0 || !text) return text.length;
+		const canvas = document.createElement('canvas');
+		const ctx = canvas.getContext('2d');
+		if (!ctx) return text.length * fontPx * 0.55;
+		ctx.font = `800 ${fontPx}px proxima-nova, sans-serif`;
+		let total = 0;
+		for (const char of Array.from(text)) {
+			const raw = Math.max(ctx.measureText(char === ' ' ? '\u00a0' : char).width, fontPx * 0.2);
+			total += raw;
+		}
+		return total;
+	};
+
+	/** Font size after locale fit — never above EN design size. */
+	const congratulationsFontPx = $derived.by(() => {
+		const p = panelLayout;
+		const basePx = Math.max(14, Math.round(p.panelWidth * CONGRATULATIONS_SIZE_RATIO));
+		const refW = measureCongratsAdvance(CONGRATULATIONS_FIT_REF, basePx);
+		const textW = measureCongratsAdvance(congratulationsText, basePx);
+		if (textW <= refW || refW <= 0) return basePx;
+		const scale = Math.max(CONGRATULATIONS_MIN_SCALE, refW / textW);
+		return Math.max(12, Math.round(basePx * scale));
+	});
+
 	const congratulationsStyle = $derived.by(() => {
 		const p = panelLayout;
-		const fontPx = Math.max(14, Math.round(p.panelWidth * CONGRATULATIONS_SIZE_RATIO));
-		return [`top:${p.panelHeight * CONGRATULATIONS_Y_RATIO}px`, `font-size:${fontPx}px`].join(';');
+		return [
+			`top:${p.panelHeight * CONGRATULATIONS_Y_RATIO}px`,
+			`font-size:${congratulationsFontPx}px`,
+		].join(';');
 	});
 
 	/** Proxima-nova on a circular arc — spaced by glyph width so the bow stays smooth. */
@@ -160,7 +193,7 @@
 		if (n === 0) return [] as { char: string; x: number; y: number; rot: number }[];
 
 		const p = panelLayout;
-		const fontPx = Math.max(14, Math.round(p.panelWidth * CONGRATULATIONS_SIZE_RATIO));
+		const fontPx = congratulationsFontPx;
 		const chord = p.panelWidth * CONGRATULATIONS_CHORD_RATIO;
 		const halfRad = (CONGRATULATIONS_ARCH_DEG * Math.PI) / 360;
 		const radius = halfRad > 0.001 ? chord / (2 * Math.sin(halfRad)) : chord;
@@ -597,7 +630,9 @@
 		min-width: 2ch;
 		text-align: center;
 		font-variant-numeric: tabular-nums lining-nums;
-		font-feature-settings: 'tnum' 1, 'lnum' 1;
+		font-feature-settings:
+			'tnum' 1,
+			'lnum' 1;
 		font-kerning: none;
 	}
 
@@ -605,7 +640,8 @@
 		position: absolute;
 		right: 100%;
 		top: 50%;
-		margin-right: 0.04em;
+		/* Nudge toward the digits; digits stay centered in the plaque. */
+		margin-right: -0.3em;
 		transform: translateY(-50%);
 	}
 

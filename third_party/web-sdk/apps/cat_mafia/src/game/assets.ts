@@ -275,6 +275,11 @@ export default {
 		type: 'font',
 		src: assetUrl('assets/fonts/krutoiFont/krutoi_ru.fnt'),
 	},
+	/** Big Win / Total Win Latin banner titles (all locales). */
+	meowfiaBigerFont: {
+		type: 'font',
+		src: assetUrl('assets/fonts/meowfiaBigerFont/meowfia_biger.fnt'),
+	},
 	bigwin: {
 		type: 'spine',
 		src: {
@@ -314,7 +319,7 @@ export default {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/fsCong/fs_board.webp'),
 	},
-	/** Desktop FS plaque (Bonus / Super Bonus) — mounts to the left of the board. */
+	/** Desktop FS plaque (Bonus / Super Bonus) — HTML left of the board. */
 	fsLeftCounterSpinboard: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/fsLeftCounter/spinboard.webp'),

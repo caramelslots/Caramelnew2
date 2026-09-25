@@ -5,99 +5,60 @@
 		| { type: 'freeSpinCounterUpdate'; current?: number; total?: number };
 </script>
 
+<!--
+	Desktop FS spinboard (left of board) — proxima-nova + gold face
+	matching FS Intro Congratulations. Portrait uses FreeSpinCounterPortraitHtml.
+-->
 <script lang="ts">
-	import { MainContainer } from 'components-layout';
-	import { FadeContainer } from 'components-pixi';
-
+	import assets from '../game/assets';
 	import { getContext } from '../game/context';
+	import { getDesktopFsCounterScreenBox } from '../game/fsCounterLayout';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { getContextLayout } from 'utils-layout';
 	import { devPreview } from '../game/devPreview.svelte';
-	import {
-		BITMAP_FONT_SCALE,
-		FONT_PROSTOI,
-		FONT_PROSTOI_RU,
-		FONT_PROSTOI_HI,
-		FONT_PROSTOI_VI,
-		FONT_PROSTOI_CJK,
-		fontForLocale,
-		isArabicLocale,
-		LOCALE_TEXT_FILL_GOLD,
-	} from '../game/constants';
-	import { DESKTOP_FS_COUNTER_LAYOUT } from '../game/fsCounterLayout';
-	import LocaleGlyph from './LocaleGlyph.svelte';
-	import { anchorToPivot, BitmapText, Container, Sprite, type Sizes } from 'pixi-svelte';
-	import { stateI18n } from 'state-shared';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
 
-	const {
-		PANEL_RATIO: DESKTOP_PANEL_RATIO,
-		TEXT_X_FRAC: DESKTOP_TEXT_X_FRAC,
-		TEXT_Y_FRAC: DESKTOP_TEXT_Y_FRAC,
-		MOUNT_OVERLAP: DESKTOP_MOUNT_OVERLAP,
-		CHROME_CENTER_Y_FRAC: DESKTOP_CHROME_CENTER_Y_FRAC,
-		PANEL_WIDTH_FRAC: DESKTOP_PANEL_WIDTH_FRAC,
-	} = DESKTOP_FS_COUNTER_LAYOUT;
-
 	const isPortrait = $derived(stateLayoutDerived.layoutType() === 'portrait');
-	const boardLayout = $derived(context.stateGameDerived.boardLayout());
-
-	// Side chrome: size + mount against visual board so Popout scales like PC.
-	const desktopPanelWidth = $derived(boardLayout.visualWidth * DESKTOP_PANEL_WIDTH_FRAC);
-	const desktopPanelSizes = $derived({
-		width: desktopPanelWidth,
-		height: desktopPanelWidth / DESKTOP_PANEL_RATIO,
-	});
-	const desktopMountOverlap = $derived(DESKTOP_MOUNT_OVERLAP * boardLayout.scale);
-	const desktopPosition = $derived({
-		x:
-			boardLayout.x - boardLayout.visualWidth * 0.5 - desktopPanelSizes.width + desktopMountOverlap,
-		y:
-			boardLayout.y -
-			boardLayout.visualHeight * 0.5 +
-			boardLayout.visualHeight * DESKTOP_CHROME_CENTER_Y_FRAC -
-			desktopPanelSizes.height * 0.5,
-	});
-
-	const panelSizes = $derived(desktopPanelSizes);
-	const position = $derived(desktopPosition);
-	const textAnchor = $derived({
-		x: panelSizes.width * DESKTOP_TEXT_X_FRAC,
-		y: panelSizes.height * DESKTOP_TEXT_Y_FRAC,
-	});
-	const scale = 1;
-
-	const fontSize = $derived(desktopPanelWidth * (0.24 / 1.75) * BITMAP_FONT_SCALE);
-	const maxTextWidth = $derived(panelSizes.width * 0.72);
-	const minTextScale = 0.55;
-	const counterText = $derived(context.i18nDerived.fsCounterText(current, total));
-	const titleText = $derived(context.i18nDerived.fsCounterLabel());
-	const labelFont = $derived(
-		fontForLocale(
-			FONT_PROSTOI,
-			FONT_PROSTOI_RU,
-			stateI18n.i18n.locale,
-			FONT_PROSTOI_HI,
-			FONT_PROSTOI_VI,
-			FONT_PROSTOI_CJK,
-		),
-	);
-	/** Digits/separators always use prostoi bitmap — not Arabic TTF. */
-	const counterBitmapFont = $derived(
-		isArabicLocale(stateI18n.i18n.locale) ? FONT_PROSTOI : labelFont,
-	);
 
 	let show = $state(false);
 	let current = $state(0);
 	let total = $state(0);
-	let titleSizes: Sizes = $state({ width: 0, height: 0 });
-	let counterSizes: Sizes = $state({ width: 0, height: 0 });
 
 	const forceShow = $derived(devPreview.forceShowFsBoardChrome);
-	const visible = $derived((show || forceShow) && !isPortrait);
-	/** Instant under the cloud / during congrats — no pop-in after steam clears. */
-	const fadeMs = 0;
+	const visible = $derived(
+		(show || forceShow) && !isPortrait && gameEntrance.showContent,
+	);
+
+	const box = $derived(
+		getDesktopFsCounterScreenBox({
+			mainLayout: context.stateLayoutDerived.mainLayout(),
+			boardLayout: context.stateGameDerived.boardLayout(),
+		}),
+	);
+
+	const spinboardUrl = assets.fsLeftCounterSpinboard.src;
+	const titleText = $derived(context.i18nDerived.fsCounterLabel());
+	const counterText = $derived(context.i18nDerived.fsCounterText(current, total));
+
+	const MIN_TITLE_SCALE = 0.45;
+
+	const measureLinePx = (text: string, fontSize: number) => {
+		if (typeof document === 'undefined' || fontSize <= 0 || !text) return 0;
+		const canvas = document.createElement('canvas');
+		const ctx = canvas.getContext('2d');
+		if (!ctx) return text.length * fontSize * 0.55;
+		ctx.font = `800 ${fontSize}px proxima-nova, sans-serif`;
+		return Math.ceil(ctx.measureText(text).width);
+	};
+
+	/** Shrink Free Spins label only — counter digits stay full size. */
+	const titleScale = $derived.by(() => {
+		const fontSize = box.fontSize;
+		const titleW = Math.max(measureLinePx(titleText, fontSize), 1);
+		return Math.min(Math.max(box.maxTextWidth / titleW, MIN_TITLE_SCALE), 1);
+	});
 
 	$effect(() => {
 		if (!forceShow) return;
@@ -106,16 +67,6 @@
 			total = 10;
 		}
 	});
-
-	const contentWidth = $derived(Math.max(titleSizes.width, counterSizes.width, 1));
-	const textCenterX = $derived(contentWidth / 2);
-	const textScale = $derived(Math.min(Math.max(maxTextWidth / contentWidth, minTextScale), 1));
-
-	const textContainerSizes = $derived({
-		width: contentWidth,
-		height: titleSizes.height + counterSizes.height,
-	});
-	const counterPosition = $derived({ x: textCenterX, y: titleSizes.height });
 
 	context.eventEmitter.subscribeOnMount({
 		freeSpinCounterShow: () => (show = true),
@@ -127,40 +78,79 @@
 	});
 </script>
 
-<MainContainer>
-	<FadeContainer show={visible} duration={fadeMs} {...position} {scale}>
-		<Sprite key="fsLeftCounterSpinboard" {...panelSizes} />
-		<Container
-			x={textAnchor.x}
-			y={textAnchor.y}
-			scale={textScale}
-			pivot={anchorToPivot({
-				sizes: textContainerSizes,
-				anchor: { x: 0.5, y: 0.5 },
-			})}
-		>
-			<LocaleGlyph
-				text={titleText}
-				x={textCenterX}
-				anchor={{ x: 0.5, y: 0 }}
-				fallbackFill={LOCALE_TEXT_FILL_GOLD}
-				style={{
-					fontFamily: labelFont,
-					fontSize,
-					wordWrap: false,
-				}}
-				onresize={(sizes) => (titleSizes = sizes)}
-			/>
-			<BitmapText
-				text={counterText}
-				{...counterPosition}
-				anchor={{ x: 0.5, y: 0 }}
-				style={{
-					fontFamily: counterBitmapFont,
-					fontSize,
-				}}
-				onresize={(sizes) => (counterSizes = sizes)}
-			/>
-		</Container>
-	</FadeContainer>
-</MainContainer>
+{#if visible}
+	<div
+		class="fs-left-counter"
+		style:left="{box.left}px"
+		style:top="{box.top}px"
+		style:width="{box.width}px"
+		style:height="{box.height}px"
+		style:background-image="url('{spinboardUrl}')"
+		style:--fs-counter-font="{box.fontSize}px"
+		style:--fs-title-scale={titleScale}
+		style:--fs-counter-text-left="{box.textLeft}px"
+		style:--fs-counter-text-top="{box.textTop}px"
+		data-test="fs-counter-desktop"
+		aria-label="{titleText} {counterText}"
+		aria-hidden="true"
+	>
+		<div class="fs-left-counter-copy">
+			<span class="fs-left-counter-title">{titleText}</span>
+			<span class="fs-left-counter-value">{counterText}</span>
+		</div>
+	</div>
+{/if}
+
+<style lang="scss">
+	.fs-left-counter {
+		position: fixed;
+		z-index: 41;
+		pointer-events: none;
+		box-sizing: border-box;
+		background-size: 100% 100%;
+		background-repeat: no-repeat;
+		background-position: center;
+		user-select: none;
+	}
+
+	.fs-left-counter-copy {
+		position: absolute;
+		left: var(--fs-counter-text-left);
+		top: var(--fs-counter-text-top);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		transform: translate(-50%, -50%);
+		line-height: 1;
+		/* Same gold face as FS Intro Congratulations. */
+		filter: drop-shadow(0 1px 0 #fff3b0) drop-shadow(0 3px 0 #5a3a0e)
+			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
+	}
+
+	.fs-left-counter-title,
+	.fs-left-counter-value {
+		font-family: 'proxima-nova', sans-serif;
+		font-weight: 800;
+		font-synthesis: none;
+		font-size: var(--fs-counter-font);
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+		white-space: nowrap;
+		color: #ffe28a;
+		background: linear-gradient(180deg, #fff6c8 0%, #ffd56a 38%, #e8a020 72%, #b8730f 100%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+
+	.fs-left-counter-title {
+		transform: scale(var(--fs-title-scale));
+		transform-origin: center bottom;
+	}
+
+	.fs-left-counter-value {
+		margin-top: 0.18em;
+		font-variant-numeric: tabular-nums lining-nums;
+		font-feature-settings: 'tnum' 1, 'lnum' 1;
+	}
+</style>

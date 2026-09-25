@@ -1745,7 +1745,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			150;
 		await waitForGameSpeed(Math.max(MASCOT_COIN_FLY_WAIT_MS, lastCoinLandMs), stateGame.gameSpeed);
 
-		stateBet.winBookEventAmount += bookEvent.totalCoinWin;
+		// Under-board WIN: count up coin total the same way as setTotalWin / post-SW.
+		const nextHud = stateBet.winBookEventAmount + bookEvent.totalCoinWin;
+		maybeRequestWinHudCountUp(nextHud);
+		const willCountUp = stateGame.winHudCountUpPending;
+		stateBet.winBookEventAmount = nextHud;
+		if (willCountUp) {
+			await waitForGameSpeed(WIN_HUD_COUNT_UP_MS, stateGame.gameSpeed);
+		}
 		// Coins landed — resume hat forward so it finishes putting the hat back on.
 		stateGame.mascotPose = 'hatOn';
 		await waitForTimeout(MASCOT_HAT_ON_MS);

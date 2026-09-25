@@ -6,6 +6,10 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { Tween } from 'svelte/motion';
+	import {
+		bookEventAmountToNormalisedAmount,
+		resolveWinCountUpFormat,
+	} from 'utils-shared/amount';
 
 	import { WIN_HUD_COUNT_UP_MS } from '../game/constants';
 	import { amountToLayoutParts } from '../game/currencyTextSegments';
@@ -25,16 +29,34 @@
 	/** Same tracking as under-board WIN (`WinHudHtmlOverlay`). */
 	const LETTER_SPACING_EM = 0.08;
 
+	let countUpFractionDigits = $state<number | null>(null);
+
 	const formatParts = (bookAmount: number) => {
+		const forced = devPreview.winForceFractionDigits;
+		const digits = forced ?? countUpFractionDigits;
 		const parts = amountToLayoutParts(bookAmount, {
 			bookEvent: true,
 			prefix: props.prefix,
-			fractionDigits: devPreview.winForceFractionDigits,
+			fractionDigits: digits,
+			significant: digits == null,
 		});
 		return {
 			prefix: parts.label.trim(),
 			amount: `${parts.before}${parts.symbol}${parts.after}`,
 		};
+	};
+
+	const planCountUp = (fromBook: number, toBook: number) => {
+		if (devPreview.winForceFractionDigits != null) {
+			return {
+				fractionDigits: devPreview.winForceFractionDigits,
+				canAnimate: true,
+			};
+		}
+		return resolveWinCountUpFormat(
+			bookEventAmountToNormalisedAmount(fromBook),
+			bookEventAmountToNormalisedAmount(toBook),
+		);
 	};
 
 	const measureAmountPx = (text: string, fontSize: number) => {
@@ -55,24 +77,56 @@
 		const from = untrack(() => amountTween.current);
 		if (target <= 0 || target + 0.01 < from) {
 			tweenTarget = null;
+			countUpFractionDigits = null;
 			amountTween.set(target, { duration: 0 });
 			return;
 		}
 		if (target > from + 0.01) {
+			const plan = planCountUp(from, target);
+			if (!plan.canAnimate) {
+				tweenTarget = null;
+				countUpFractionDigits = null;
+				amountTween.set(target, { duration: 0 });
+				return;
+			}
 			tweenTarget = target;
+			countUpFractionDigits = plan.fractionDigits;
 			amountTween.set(target, {
 				duration: scaleMsByGameSpeed(WIN_HUD_COUNT_UP_MS, stateGame.gameSpeed),
 			});
 			return;
 		}
 		tweenTarget = null;
+		countUpFractionDigits = null;
 		amountTween.set(target, { duration: 0 });
 	});
 
 	const parts = $derived(formatParts(amountTween.current));
 	const fitW = $derived(Math.max(0, Math.floor(props.maxWidth)));
 	const fitH = $derived(Math.max(0, Math.floor(props.maxHeight)));
-	const fontSize = $derived(Math.max(10, Math.floor(fitH * 0.62)));
+	/** Gap between prefix and amount — must match `.duel-bank-total` CSS gap. */
+	const PREFIX_AMOUNT_GAP_EM = 0.35;
+	const baseFontSize = $derived(Math.max(10, Math.floor(fitH * 0.62)));
+	/**
+	 * Uniform fit: shrink prefix + amount together (same font-size) so the full
+	 * string stays inside the plaque without clipping either side.
+	 */
+	const fontSize = $derived.by(() => {
+		const base = baseFontSize;
+		if (base <= 0 || fitW <= 0) return 0;
+		const targetAmount = formatParts(tweenTarget ?? props.amount).amount;
+		const liveAmount = parts.amount;
+		const amountW = Math.max(
+			measureAmountPx(liveAmount, base),
+			measureAmountPx(targetAmount, base),
+		);
+		const prefixW = parts.prefix ? measureAmountPx(parts.prefix, base) : 0;
+		const gapW = parts.prefix ? base * PREFIX_AMOUNT_GAP_EM : 0;
+		const total = prefixW + gapW + amountW;
+		if (total <= 0) return base;
+		const scale = Math.min(1, fitW / total);
+		return Math.max(10, Math.floor(base * scale));
+	});
 	const amountMinW = $derived(
 		Math.max(
 			measureAmountPx(parts.amount, fontSize),
@@ -97,7 +151,6 @@
 		justify-content: center;
 		gap: 0.35em;
 		max-width: 100%;
-		overflow: hidden;
 		white-space: nowrap;
 		pointer-events: none;
 		user-select: none;

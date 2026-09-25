@@ -226,8 +226,10 @@
 									maxWidth={amountMaxWidth}
 									amount={countUpAmount}
 									bookEvent
+									bodyFontVariant="meowfiaBiger"
+									minScale={0.18}
 									style={{
-										fontSize: SYMBOL_SIZE * 7.6 * BITMAP_FONT_SCALE,
+										fontSize: SYMBOL_SIZE * 8.8 * BITMAP_FONT_SCALE,
 										align: 'center',
 										fontWeight: 'bold',
 										letterSpacing: 0,

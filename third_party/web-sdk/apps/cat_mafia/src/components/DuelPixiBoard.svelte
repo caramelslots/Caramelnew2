@@ -187,12 +187,14 @@
 		</BoardContainer>
 	</MainContainer>
 {:else if props.layer === 'paylines'}
-	<!-- Same as base PaylineLayer: above gold rails, not under the contour. -->
+	<!-- Same as base PaylineLayer: lines → win symbols → win amount on top. -->
 	<MainContainer>
 		<BoardContainer {layout} disableCatZoom>
 			<PaylineOverlay side={props.side} />
-			<BoardBase abovePayline board={stack.board} duelSide={props.side} />
-			<PaylineWinAmounts side={props.side} />
+			<Container zIndex={1}>
+				<BoardBase abovePayline board={stack.board} duelSide={props.side} />
+			</Container>
+			<PaylineWinAmounts side={props.side} zIndex={50} />
 		</BoardContainer>
 	</MainContainer>
 {/if}

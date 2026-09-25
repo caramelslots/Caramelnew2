@@ -44,6 +44,7 @@ export const LOADER_BATCH_2_KEYS = [
 	'prostoiWhiteFontRu',
 	'krutoiFont',
 	'krutoiFontRu',
+	'meowfiaBigerFont',
 	'babloFont',
 ] as const satisfies readonly (keyof typeof assets)[];
 
@@ -136,6 +137,7 @@ export const BATCH4_HTML_ONLY_KEYS = [
 	'fsCongFrame',
 	'fsCongTextPaw',
 	'fsCongBoard',
+	'fsLeftCounterSpinboard',
 ] as const satisfies readonly (typeof LOADER_BATCH_4_KEYS)[number][];
 
 export const LOADER_ASSET_BATCHES = [

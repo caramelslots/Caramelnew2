@@ -255,6 +255,11 @@
 		box-sizing: border-box;
 	}
 
+	/* Nudge the first rule line slightly above the centered stack. */
+	.rule-line-slot:first-child {
+		margin-top: calc(var(--panel-width) * -0.032);
+	}
+
 	/* Same face as FreeSpinIntro CONGRATULATIONS (proxima-nova + gold gradient). */
 	.rule-line {
 		margin: 0;
@@ -262,7 +267,7 @@
 		max-width: none;
 		padding: 0;
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.042);
+		font-size: calc(var(--panel-width) * 0.044);
 		font-weight: 800;
 		line-height: 1.25;
 		letter-spacing: 0.02em;
@@ -273,21 +278,24 @@
 		-webkit-background-clip: text;
 		background-clip: text;
 		-webkit-text-fill-color: transparent;
-		filter: drop-shadow(0 1px 0 #fff3b0) drop-shadow(0 3px 0 #5a3a0e)
-			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
+		filter: drop-shadow(0 1px 0 #fff3b0);
 	}
 
 	.rule-line--winner {
-		font-size: calc(var(--panel-width) * 0.04);
+		font-size: calc(var(--panel-width) * 0.042);
 		line-height: 1.12;
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
 	}
 
+	.rule-line-slot--winner {
+		margin-top: calc(var(--panel-width) * 0.018);
+	}
+
 	.rule-divider {
 		width: min(58%, 220px);
 		height: 2px;
-		margin: calc(var(--panel-width) * 0.008) 0 calc(var(--panel-width) * 0.004);
+		margin: calc(var(--panel-width) * 0.008) 0 calc(var(--panel-width) * 0.012);
 		border-radius: 999px;
 		background: linear-gradient(
 			90deg,
@@ -313,7 +321,7 @@
 		}
 
 		.rule-line {
-			font-size: calc(var(--panel-width) * 0.044);
+			font-size: calc(var(--panel-width) * 0.046);
 		}
 
 		.rule-line--winner {
@@ -336,11 +344,11 @@
 		}
 
 		.rule-line {
-			font-size: calc(var(--panel-width) * 0.044);
+			font-size: calc(var(--panel-width) * 0.046);
 		}
 
 		.rule-line--winner {
-			font-size: calc(var(--panel-width) * 0.042);
+			font-size: calc(var(--panel-width) * 0.044);
 		}
 	}
 

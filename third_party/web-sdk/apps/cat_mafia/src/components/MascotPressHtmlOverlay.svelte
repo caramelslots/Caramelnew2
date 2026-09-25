@@ -160,6 +160,7 @@
 				tabindex="-1"
 				aria-label="mascot meow"
 				data-test="mascot-press-cat"
+				onpointerdown={(e) => e.preventDefault()}
 				onclick={() => playVocal(false)}
 			></button>
 		{/if}
@@ -171,6 +172,7 @@
 				tabindex="-1"
 				aria-label="mascot bark"
 				data-test="mascot-press-dog"
+				onpointerdown={(e) => e.preventDefault()}
 				onclick={() => playVocal(true)}
 			></button>
 		{/if}
@@ -204,5 +206,16 @@
 		touch-action: manipulation;
 		appearance: none;
 		-webkit-appearance: none;
+		outline: none;
+		box-shadow: none;
+
+		&:focus,
+		&:focus-visible,
+		&:active {
+			outline: none;
+			box-shadow: none;
+			border: 0;
+			background: transparent;
+		}
 	}
 </style>

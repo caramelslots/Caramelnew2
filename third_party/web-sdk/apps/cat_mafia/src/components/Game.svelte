@@ -282,7 +282,6 @@
 				/>
 				<!-- Keep Win mounted during Duel so Big Win can play on Cat victory. -->
 				<Win />
-				<FreeSpinCounter />
 				<FreeSpinOutro />
 				<Transition />
 			</FadeContainer>
@@ -308,6 +307,7 @@
 <div class="html-underlays">
 	<RevolverDrumPlaceholder />
 </div>
+<FreeSpinCounter />
 <FreeSpinCounterPortraitHtml />
 <BoardNeonLogoHtmlOverlay />
 <WinHudHtmlOverlay />

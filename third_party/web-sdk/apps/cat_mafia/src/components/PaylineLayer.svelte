@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Container } from 'pixi-svelte';
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardBase from './BoardBase.svelte';
 	import PaylineOverlay from './PaylineOverlay.svelte';
@@ -16,8 +17,11 @@
 
 {#if show}
 	<BoardContainer>
+		<!-- Paint order + zIndex: lines → win/SW symbols → win amount (always on top). -->
 		<PaylineOverlay />
-		<BoardBase abovePayline />
-		<PaylineWinAmounts />
+		<Container zIndex={1}>
+			<BoardBase abovePayline />
+		</Container>
+		<PaylineWinAmounts zIndex={50} />
 	</BoardContainer>
 {/if}

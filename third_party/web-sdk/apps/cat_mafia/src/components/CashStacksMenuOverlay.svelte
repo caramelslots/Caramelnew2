@@ -31,6 +31,28 @@
 	const panelAnchor = $derived(computeMenuPanelAnchor(stateLayoutDerived));
 	const panelWidth = $derived(panelAnchor.width);
 
+	/** Header title must fit between paw (left) and close (right). */
+	const TITLE_LETTER_SPACING_EM = 0.04;
+	const TITLE_MIN_SCALE = 0.45;
+	const settingsTitle = $derived(context.i18nDerived.settingsMenuTitle());
+	const titleFontFrac = $derived(isPopoutSmall ? 0.085 : isPortrait ? 0.072 : 0.078);
+	const headerIconFrac = $derived(isPopoutSmall ? 0.155 : 0.14);
+	/** Content slot: full width − side padding − icons − gaps (matches .panel-header). */
+	const titleMaxWidth = $derived(panelWidth * (1 - 0.16 - 2 * headerIconFrac - 0.06) * 0.92);
+	const titleScale = $derived.by(() => {
+		const text = settingsTitle;
+		const fontSize = panelWidth * titleFontFrac;
+		if (typeof document === 'undefined' || fontSize <= 0 || !text) return 1;
+		const canvas = document.createElement('canvas');
+		const ctx = canvas.getContext('2d');
+		if (!ctx) return 1;
+		ctx.font = `800 ${fontSize}px proxima-nova, sans-serif`;
+		const glyphs = ctx.measureText(text).width;
+		const tracking = Math.max(0, text.length - 1) * fontSize * TITLE_LETTER_SPACING_EM;
+		const width = glyphs + tracking;
+		return Math.min(Math.max(titleMaxWidth / Math.max(width, 1), TITLE_MIN_SCALE), 1);
+	});
+
 	const menuButtonHit = $derived.by(() => {
 		if (isPortrait) {
 			const hud = computePortraitHudCanvas(stateLayoutDerived);
@@ -289,7 +311,7 @@
 				<div class="panel-content">
 					<header class="panel-header">
 						<img class="header-paw" src={pawIconUrl} alt="" draggable="false" />
-						<h3 class="panel-title">{context.i18nDerived.settingsMenuTitle()}</h3>
+						<h3 class="panel-title" style:font-size="{panelWidth * titleFontFrac * titleScale}px">{settingsTitle}</h3>
 						<button
 							type="button"
 							class="close-button"
@@ -526,6 +548,7 @@
 
 	.panel-title {
 		margin: 0;
+		max-width: 100%;
 		font-family: 'proxima-nova', sans-serif;
 		font-size: calc(var(--panel-width) * 0.078);
 		font-weight: 800;
@@ -538,6 +561,7 @@
 			0 2px 6px rgba(0, 0, 0, 0.65);
 		text-align: center;
 		line-height: 1.1;
+		white-space: nowrap;
 	}
 
 	.close-button {

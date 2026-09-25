@@ -23,6 +23,11 @@
 		y?: number;
 		fallbackFill?: string | number;
 		style: NonNullable<BitmapTextProps['style']>;
+		/**
+		 * Latin Big/Epic titles on Arabic — same krutoi bitmap + arc as other locales.
+		 * (Connected Arabic script still stays flat when this is false.)
+		 */
+		forceBitmap?: boolean;
 	};
 
 	const {
@@ -33,10 +38,11 @@
 		y = 0,
 		fallbackFill,
 		style,
+		forceBitmap = false,
 	}: Props = $props();
 
 	const locale = $derived(stateI18n.i18n.locale);
-	const useArch = $derived(!isArabicLocale(locale) && archDeg > 0);
+	const useArch = $derived((forceBitmap || !isArabicLocale(locale)) && archDeg > 0);
 
 	const baseFontSize = $derived(Number(style.fontSize) || 24);
 
@@ -114,6 +120,7 @@
 					anchor={0.5}
 					style={glyphStyle}
 					{fallbackFill}
+					{forceBitmap}
 				/>
 			</Container>
 		{/each}
@@ -125,6 +132,7 @@
 		{text}
 		{maxWidth}
 		{fallbackFill}
+		{forceBitmap}
 		{style}
 	/>
 {/if}

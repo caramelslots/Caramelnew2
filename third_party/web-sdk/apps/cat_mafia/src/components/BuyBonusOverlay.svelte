@@ -765,11 +765,17 @@
 		line-height: 1;
 		display: block;
 		width: auto;
-		color: #1a1208;
-		-webkit-text-fill-color: #1a1208;
+		color: #4a2c14;
+		-webkit-text-fill-color: #4a2c14;
 		text-shadow: 0 1px 0 rgba(255, 236, 190, 0.45);
 		text-decoration: none;
 		transform: translate(0.14em, 0.26em);
+	}
+
+	.card-normal .card-price,
+	.card-super .card-price {
+		/* Nudge a couple px left; slight down from previous up-nudge. */
+		transform: translate(0.02em, 0.18em);
 	}
 
 	.card-price :global(a) {
@@ -779,7 +785,8 @@
 	}
 
 	.card-duel .card-price {
-		transform: translate(0.02em, 0.36em);
+		/* Nudge a couple px left; slight up from previous down-nudge. */
+		transform: translate(-0.08em, 0.38em);
 	}
 
 	.features-section {

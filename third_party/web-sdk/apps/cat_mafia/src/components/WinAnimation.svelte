@@ -3,19 +3,13 @@
 
 	import { ColorMatrixFilter } from 'pixi.js';
 	import { Container, SpineProvider, SpineSlot } from 'pixi-svelte';
-	import { stateI18n } from 'state-shared';
 
 	import { getContext } from '../game/context';
 	import {
 		BITMAP_FONT_SCALE,
-		FONT_KRUTOI,
-		FONT_KRUTOI_CJK,
-		FONT_KRUTOI_RU,
-		FONT_KRUTOI_VI,
-		FONT_PROSTOI_HI,
+		FONT_MEOWFIA_BIGER,
 		LOCALE_TEXT_FILL_GOLD,
 		SYMBOL_SIZE,
-		fontForLocale,
 	} from '../game/constants';
 	import type { BigWinSpineAnimationMap } from '../game/winLevelMap';
 	import ArchedLocaleText from './ArchedLocaleText.svelte';
@@ -153,15 +147,10 @@
 					archDeg={titleArchDeg}
 					tracking={titleTracking}
 					fallbackFill={titleFallbackFill}
+					forceBitmap={true}
 					style={{
-						fontFamily: fontForLocale(
-							FONT_KRUTOI,
-							FONT_KRUTOI_RU,
-							stateI18n.i18n.locale,
-							FONT_PROSTOI_HI,
-							FONT_KRUTOI_VI,
-							FONT_KRUTOI_CJK,
-						),
+						// Meowfia Biger Latin atlas — same on every locale.
+						fontFamily: FONT_MEOWFIA_BIGER,
 						fontSize: titleFontSize,
 						align: 'center',
 						fontWeight: 'bold',

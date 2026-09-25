@@ -38,6 +38,7 @@ export const i18nDerived = {
 	duelIntroYourSide: (side: string) => t('DUEL_INTRO_YOUR_SIDE', { side }),
 	duelSideCat: () => t('DUEL_SIDE_CAT'),
 	duelSideDog: () => t('DUEL_SIDE_DOG'),
+	duelBankTotal: () => ts('DUEL_BANK_TOTAL'),
 	duelIntroRule2: () => t('DUEL_INTRO_RULE_2'),
 	duelIntroRule3: () => t('DUEL_INTRO_RULE_3'),
 	duelOutroLossTitle: () => t('DUEL_OUTRO_LOSS_TITLE'),
@@ -45,6 +46,7 @@ export const i18nDerived = {
 	duelOutroLossEnemy: () => t('DUEL_OUTRO_LOSS_ENEMY'),
 	duelOutroLossYou: () => t('DUEL_OUTRO_LOSS_YOU'),
 	duelPickTitle: () => t('DUEL_PICK_TITLE'),
+	duelPickBlurb: () => t('DUEL_PICK_BLURB'),
 	duelCatShortDesc: () => t('DUEL_CAT_SHORT_DESC'),
 	duelDogShortDesc: () => t('DUEL_DOG_SHORT_DESC'),
 	duelCatLongDesc: () => t('DUEL_CAT_LONG_DESC'),
@@ -95,7 +97,7 @@ export const i18nDerived = {
 	rtpLabel: () => t('RTP_LABEL'),
 	// Free Spins
 	fsCounterLabel: () => t('FS_COUNTER_LABEL'),
-	fsCounterText: (current: number, total: number) => `${current} ${t('FS_COUNTER_OF')} ${total}`,
+	fsCounterText: (current: number, total: number) => `${current}/${total}`,
 	fsRemaining: () => t('FS_REMAINING'),
 	extraSpins: () => t('EXTRA_SPINS'),
 	// Mystery Reel Meter (top-right HUD во FS)

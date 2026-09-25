@@ -47,6 +47,9 @@
 
 	let pendingSide = $state<DuelSide | null>(null);
 	let knewaveFontReady = $state(false);
+	let blurbBoxEl = $state<HTMLParagraphElement | undefined>();
+	let blurbInnerEl = $state<HTMLSpanElement | undefined>();
+	let blurbFontPx = $state<number | null>(null);
 
 	startMascotSpinePreload();
 
@@ -64,10 +67,77 @@
 		};
 	});
 
+	const pickBlurb = $derived(context.i18nDerived.duelPickBlurb());
+
+	const refitPickBlurb = () => {
+		const box = blurbBoxEl;
+		const inner = blurbInnerEl;
+		if (!box || !inner || pendingSide != null) return;
+
+		const maxW = box.clientWidth;
+		const maxH = box.clientHeight;
+		if (maxW <= 0 || maxH <= 0) return;
+
+		const baseFs = Number.parseFloat(getComputedStyle(box).fontSize);
+		if (!Number.isFinite(baseFs) || baseFs <= 0) return;
+
+		const lineHeight = 1.25;
+		const minFs = Math.max(10, baseFs * 0.42);
+
+		const fits = (fs: number) => {
+			inner.style.fontSize = `${fs}px`;
+			const threeLineCap = fs * lineHeight * 3;
+			const heightLimit = Math.min(maxH, threeLineCap);
+			return inner.scrollWidth <= maxW + 1 && inner.scrollHeight <= heightLimit + 1;
+		};
+
+		if (fits(baseFs)) {
+			blurbFontPx = baseFs;
+			return;
+		}
+
+		let lo = minFs;
+		let hi = baseFs;
+		for (let i = 0; i < 16; i++) {
+			const mid = (lo + hi) / 2;
+			if (fits(mid)) lo = mid;
+			else hi = mid;
+		}
+		blurbFontPx = lo;
+		inner.style.fontSize = `${lo}px`;
+	};
+
+	$effect(() => {
+		pickBlurb;
+		pendingSide;
+		isOpen;
+		isPortrait;
+		isPopout;
+		isPopoutSmall;
+		blurbFontPx = null;
+		requestAnimationFrame(() => requestAnimationFrame(refitPickBlurb));
+	});
+
+	$effect(() => {
+		const box = blurbBoxEl;
+		if (!box) return;
+		const observer = new ResizeObserver(() => refitPickBlurb());
+		observer.observe(box);
+		return () => observer.disconnect();
+	});
+
 	const sideTitle = (side: DuelSide) =>
 		side === 'cat' ? context.i18nDerived.duelSideCat() : context.i18nDerived.duelSideDog();
 	const sideShortDesc = (side: DuelSide) =>
 		side === 'cat' ? context.i18nDerived.duelCatShortDesc() : context.i18nDerived.duelDogShortDesc();
+	const sideLongDesc = (side: DuelSide) =>
+		side === 'cat' ? context.i18nDerived.duelCatLongDesc() : context.i18nDerived.duelDogLongDesc();
+	/** Split "A · B" into stacked lines so phrase halves wrap together. */
+	const sideLongDescLines = (side: DuelSide) => {
+		const raw = sideLongDesc(side).trim();
+		const parts = raw.split(/\s*·\s*/).map((p) => p.trim()).filter(Boolean);
+		return parts.length > 0 ? parts : [raw];
+	};
 
 	const backToBuyMenu = () => {
 		stateModal.modal = { name: 'buyBonus' };
@@ -176,13 +246,20 @@
 						<span class="pick-card-name">
 							<ArchedRibbonTitle text={sideTitle(side as DuelSide)} archDeg={28} />
 						</span>
-						<span
-							class="pick-card-tag"
-							class:card-tag-knewave={knewaveFontReady}
-							style:font-family={knewaveFontReady
-								? BUY_BONUS_CARD_KNEWAVE_FONT_FAMILY
-								: undefined}
-						>{sideShortDesc(side as DuelSide)}</span>
+						<span class="pick-card-meta">
+							<span
+								class="pick-card-tag"
+								class:card-tag-knewave={knewaveFontReady}
+								style:font-family={knewaveFontReady
+									? BUY_BONUS_CARD_KNEWAVE_FONT_FAMILY
+									: undefined}
+							>{sideShortDesc(side as DuelSide)}</span>
+							<span class="pick-card-sub">
+								{#each sideLongDescLines(side as DuelSide) as line (line)}
+									<span class="pick-card-sub-line">{line}</span>
+								{/each}
+							</span>
+						</span>
 						<span class="pick-card-price">{price}</span>
 					</span>
 				</button>
@@ -190,6 +267,13 @@
 		</section>
 
 		{#if pendingSide == null}
+			<p class="pick-blurb" bind:this={blurbBoxEl}>
+				<span
+					class="pick-blurb-inner"
+					bind:this={blurbInnerEl}
+					style:font-size={blurbFontPx != null ? `${blurbFontPx}px` : undefined}
+				>{pickBlurb}</span>
+			</p>
 			<footer class="pick-footer">
 				<button
 					type="button"
@@ -278,10 +362,10 @@
 
 	.cards-section {
 		position: absolute;
-		top: 24%;
+		top: 22%;
 		left: 50%;
 		width: 88%;
-		height: 52%;
+		height: 47%;
 		transform: translateX(-50%);
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -354,9 +438,16 @@
 			font-size: var(--bb-card-title-fs);
 		}
 
+		.pick-card-meta {
+			bottom: 13.8%;
+		}
+
 		.pick-card-tag {
 			font-size: clamp(1.2rem, 15cqw, 2.2rem);
-			bottom: 14.5%;
+		}
+
+		.pick-card-sub {
+			font-size: clamp(0.85rem, 10.5cqw, 1.55rem);
 		}
 
 		.pick-card-price {
@@ -440,12 +531,21 @@
 		pointer-events: none;
 	}
 
-	.pick-card-tag {
+	.pick-card-meta {
 		position: absolute;
-		left: 8%;
-		right: 8%;
-		bottom: 14.5%;
+		left: 6%;
+		right: 6%;
+		bottom: 13.8%;
 		z-index: 3;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 0.12em;
+		pointer-events: none;
+	}
+
+	.pick-card-tag {
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -461,11 +561,46 @@
 		text-shadow:
 			0 0.04em 0 rgba(48, 22, 6, 0.75),
 			0 0.07em 0.1em rgba(0, 0, 0, 0.5);
-		pointer-events: none;
 	}
 
 	.pick-card-tag.card-tag-knewave {
 		-webkit-text-stroke: 0.06em rgba(48, 22, 6, 0.94);
+	}
+
+	.pick-card-sub {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.06em;
+		max-width: 100%;
+		/* Same face + gold as ArchedRibbonTitle (DOG / CAT / CHOOSE YOUR SIDE). */
+		font-family: 'proxima-nova', sans-serif;
+		font-size: clamp(0.68rem, 8.4cqw, 1.3rem);
+		font-weight: 800;
+		line-height: 1.05;
+		letter-spacing: 0.02em;
+		text-align: center;
+		text-transform: none;
+		user-select: none;
+		pointer-events: none;
+		filter: drop-shadow(0 1px 0 #fff3b0) drop-shadow(0 2px 0 #5a3a0e)
+			drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+	}
+
+	.pick-card-sub-line {
+		display: block;
+		max-width: 100%;
+		white-space: nowrap;
+		font: inherit;
+		letter-spacing: inherit;
+		line-height: inherit;
+		text-align: center;
+		color: #ffe28a;
+		background: linear-gradient(180deg, #fff6c8 0%, #ffd56a 38%, #e8a020 72%, #b8730f 100%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
 	}
 
 	.pick-card-price {
@@ -487,11 +622,61 @@
 		letter-spacing: 0;
 		line-height: 1;
 		text-align: center;
-		color: #1a1208;
-		-webkit-text-fill-color: #1a1208;
+		color: #4a2c14;
+		-webkit-text-fill-color: #4a2c14;
 		text-shadow: 0 1px 0 rgba(255, 236, 190, 0.45);
 		pointer-events: none;
 		transform: translate(0.06em, 0.16em);
+	}
+
+	.pick-blurb {
+		position: absolute;
+		top: 69.5%;
+		left: 8%;
+		right: 8%;
+		height: 9.5%;
+		margin: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-sizing: border-box;
+		padding: 0 1.5%;
+		overflow: hidden;
+		/* Same face + gold as ArchedRibbonTitle (DOG / CAT / CHOOSE YOUR SIDE). */
+		font-family: 'proxima-nova', sans-serif;
+		font-size: calc(var(--panel-width) * 0.04);
+		font-weight: 800;
+		font-synthesis: none;
+		line-height: 1.25;
+		letter-spacing: 0.01em;
+		text-align: center;
+		user-select: none;
+		pointer-events: none;
+		filter: drop-shadow(0 1px 0 #fff3b0) drop-shadow(0 2px 0 #5a3a0e)
+			drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
+	}
+
+	.pick-blurb-inner {
+		display: block;
+		width: 100%;
+		max-width: 100%;
+		font-family: 'proxima-nova', sans-serif;
+		font-weight: 800;
+		font-synthesis: none;
+		line-height: inherit;
+		letter-spacing: inherit;
+		text-align: center;
+		white-space: normal;
+		overflow-wrap: break-word;
+		word-break: normal;
+		color: #ffe28a;
+		/* Repeat gold per line so wrapped text doesn't look like mixed faces. */
+		background-image: linear-gradient(180deg, #fff6c8 0%, #ffd56a 38%, #e8a020 72%, #b8730f 100%);
+		background-size: 100% 1.25em;
+		background-repeat: repeat-y;
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
 	}
 
 	.pick-footer {
@@ -576,9 +761,9 @@
 		--bb-title-fs: calc(var(--panel-width) * 0.052);
 
 		.cards-section {
-			top: 23.5%;
+			top: 21.5%;
 			width: 90%;
-			height: 52%;
+			height: 47%;
 			column-gap: calc(var(--panel-width) * 0.024);
 		}
 
@@ -587,9 +772,21 @@
 			font-size: var(--bb-card-title-fs);
 		}
 
+		.pick-card-meta {
+			bottom: 13.5%;
+		}
+
 		.pick-card-tag {
 			font-size: clamp(1.45rem, 18cqw, 2.5rem);
-			bottom: 14%;
+		}
+
+		.pick-card-sub {
+			font-size: clamp(0.95rem, 12.5cqw, 1.75rem);
+		}
+
+		.pick-blurb {
+			top: 69%;
+			font-size: calc(var(--panel-width) * 0.044);
 		}
 
 		.pick-footer {
@@ -607,9 +804,16 @@
 				font-size: var(--bb-card-title-fs);
 			}
 
+			.pick-card-meta {
+				bottom: 13.5%;
+			}
+
 			.pick-card-tag {
 				font-size: clamp(1.75rem, 21cqw, 3rem);
-				bottom: 14%;
+			}
+
+			.pick-card-sub {
+				font-size: clamp(1.15rem, 14.5cqw, 2.1rem);
 			}
 
 			.pick-card-price {
@@ -624,7 +828,7 @@
 		--bb-title-fs: calc(var(--panel-width) * 0.044);
 
 		.cards-section {
-			top: 23%;
+			top: 21%;
 			width: 88%;
 			column-gap: calc(var(--panel-width) * 0.022);
 		}
@@ -639,9 +843,16 @@
 				font-size: var(--bb-card-title-fs);
 			}
 
+			.pick-card-meta {
+				bottom: 13.8%;
+			}
+
 			.pick-card-tag {
 				font-size: clamp(1rem, 14cqw, 1.65rem);
-				bottom: 14.5%;
+			}
+
+			.pick-card-sub {
+				font-size: clamp(0.72rem, 9.5cqw, 1.15rem);
 			}
 
 			.pick-card-price {
@@ -654,9 +865,20 @@
 			font-size: var(--bb-card-title-fs);
 		}
 
+		.pick-card-meta {
+			bottom: 13.8%;
+		}
+
 		.pick-card-tag {
 			font-size: clamp(0.7rem, 11cqw, 1.1rem);
-			bottom: 14.5%;
+		}
+
+		.pick-card-sub {
+			font-size: clamp(0.52rem, 7.5cqw, 0.8rem);
+		}
+
+		.pick-blurb {
+			font-size: calc(var(--panel-width) * 0.034);
 		}
 	}
 
@@ -670,9 +892,9 @@
 		}
 
 		.cards-section {
-			top: 23%;
+			top: 21%;
 			width: 90%;
-			height: 52%;
+			height: 47%;
 			column-gap: calc(var(--panel-width) * 0.02);
 		}
 
@@ -681,9 +903,21 @@
 			font-size: var(--bb-card-title-fs);
 		}
 
+		.pick-card-meta {
+			bottom: 13%;
+		}
+
 		.pick-card-tag {
 			font-size: clamp(0.5rem, 11cqw, 0.75rem);
-			bottom: 13.5%;
+		}
+
+		.pick-card-sub {
+			font-size: clamp(0.38rem, 7.2cqw, 0.58rem);
+		}
+
+		.pick-blurb {
+			top: 69%;
+			font-size: calc(var(--panel-width) * 0.034);
 		}
 
 		.pick-footer {
@@ -702,9 +936,16 @@
 				font-size: var(--bb-card-title-fs);
 			}
 
+			.pick-card-meta {
+				bottom: 13%;
+			}
+
 			.pick-card-tag {
 				font-size: clamp(0.85rem, 14cqw, 1.35rem);
-				bottom: 13.5%;
+			}
+
+			.pick-card-sub {
+				font-size: clamp(0.55rem, 9.5cqw, 0.95rem);
 			}
 
 			.pick-card-price {

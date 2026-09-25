@@ -7,6 +7,7 @@
 	import {
 		FONT_BABLO,
 		FONT_KRUTOI,
+		FONT_MEOWFIA_BIGER,
 		FONT_PROSTOI,
 		FONT_PROSTOI_RU,
 		FONT_PROSTOI_HI,
@@ -17,14 +18,14 @@
 	} from '../game/constants';
 	import LocaleGlyph from './LocaleGlyph.svelte';
 
-	type BodyFontVariant = 'krutoi' | 'prostoi';
+	type BodyFontVariant = 'krutoi' | 'prostoi' | 'meowfiaBiger';
 
 	type Props = Omit<BitmapTextProps, 'text' | 'style' | 'scale' | 'onresize'> & {
 		maxWidth: number;
 		amount: number;
 		bookEvent?: boolean;
 		prefix?: string;
-		/** prostoi for small wins / HUD; krutoi (default) for big-win overlays. */
+		/** prostoi = small wins / HUD; krutoi = default overlays; meowfiaBiger = Big/Total Win. */
 		bodyFontVariant?: BodyFontVariant;
 		/** Gap between label prefix and amount (layout px, before responsive scale). */
 		labelGap?: number;
@@ -46,14 +47,28 @@
 	const labelText = $derived(parts.label.trimEnd());
 	const hasLabel = $derived(labelText.length > 0);
 
-	const isProstoi = $derived((props.bodyFontVariant ?? 'krutoi') === 'prostoi');
+	const bodyVariant = $derived(props.bodyFontVariant ?? 'krutoi');
 
-	/** Digits/separators always use the default latin bitmap (not locale variants). */
-	const digitFont = $derived(isProstoi ? FONT_PROSTOI : FONT_KRUTOI);
+	/** Digits/separators: latin bitmap chosen by variant (not locale prostoi atlases). */
+	const digitFont = $derived(
+		bodyVariant === 'prostoi'
+			? FONT_PROSTOI
+			: bodyVariant === 'meowfiaBiger'
+				? FONT_MEOWFIA_BIGER
+				: FONT_KRUTOI,
+	);
 
-	/** Localised labels (e.g. HUD "WIN") use prostoi per locale; krutoi stays latin. */
+	/**
+	 * Currency glyph: Meowfia Biger for Big/Total Win (includes `$`);
+	 * bablo otherwise (full multi-currency set).
+	 */
+	const symbolFont = $derived(
+		bodyVariant === 'meowfiaBiger' ? FONT_MEOWFIA_BIGER : FONT_BABLO,
+	);
+
+	/** Localised labels (e.g. HUD "WIN") use prostoi per locale; display variants stay latin. */
 	const labelFont = $derived(
-		isProstoi
+		bodyVariant === 'prostoi'
 			? fontForLocale(
 					FONT_PROSTOI,
 					FONT_PROSTOI_RU,
@@ -62,7 +77,9 @@
 					FONT_PROSTOI_VI,
 					FONT_PROSTOI_CJK,
 				)
-			: FONT_KRUTOI,
+			: bodyVariant === 'meowfiaBiger'
+				? FONT_MEOWFIA_BIGER
+				: FONT_KRUTOI,
 	);
 
 	const layoutStyle = $derived({
@@ -113,6 +130,7 @@
 			minFitScale,
 			props.style.fontSize,
 			digitFont,
+			symbolFont,
 			parts.symbol,
 			hasLabel ? '1' : '0',
 			parts.before ? '1' : '0',
@@ -193,7 +211,7 @@
 		{#if parts.symbol}
 			<BitmapText
 				text={parts.symbol}
-				style={{ ...layoutStyle, fontFamily: FONT_BABLO }}
+				style={{ ...layoutStyle, fontFamily: symbolFont }}
 				onresize={(s) => {
 					commitWidth('symbol', parts.symbol, s.width);
 				}}
@@ -244,7 +262,7 @@
 					y={0}
 					anchor={{ x: 0, y: anchorY }}
 					text={parts.symbol}
-					style={{ ...layoutStyle, fontFamily: FONT_BABLO }}
+					style={{ ...layoutStyle, fontFamily: symbolFont }}
 				/>
 			{/if}
 			{#if parts.after}

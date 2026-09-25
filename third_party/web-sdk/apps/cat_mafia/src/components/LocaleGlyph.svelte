@@ -18,13 +18,19 @@
 		style: Style;
 		/** PIXI Text fill when falling back off bitmap fonts. */
 		fallbackFill?: string | number;
+		/**
+		 * Use bitmap atlas even when the locale normally falls back to TTF
+		 * (e.g. Arabic Big/Epic titles — Latin words drawn with krutoi).
+		 */
+		forceBitmap?: boolean;
 	};
 
 	const props: Props = $props();
+	const { forceBitmap, fallbackFill: fallbackFillProp, style, ...bitmapProps } = $derived(props);
 
 	const locale = $derived(stateI18n.i18n.locale);
-	const useBitmap = $derived(supportsBitmapFont(locale));
-	const needsCustomFont = $derived(needsLocaleFontLoad(locale));
+	const useBitmap = $derived(Boolean(forceBitmap) || supportsBitmapFont(locale));
+	const needsCustomFont = $derived(needsLocaleFontLoad(locale) && !forceBitmap);
 
 	let localeFontReady = $state(!needsCustomFont);
 
@@ -44,19 +50,19 @@
 	});
 
 	const fallbackFill = $derived(
-		props.fallbackFill ?? props.style.fill ?? LOCALE_TEXT_FILL_WHITE,
+		fallbackFillProp ?? style.fill ?? LOCALE_TEXT_FILL_WHITE,
 	);
 
 	const resolvedStyle = $derived(
 		useBitmap
-			? props.style
+			? style
 			: isArabicLocale(locale)
 				? arabicLocaleTextStyle(
-						{ ...props.style, fontFamily: props.style.fontFamily },
+						{ ...style, fontFamily: style.fontFamily },
 						fallbackFill,
 					)
 				: {
-						...props.style,
+						...style,
 						fontFamily: systemTextFontFamily(locale),
 						fill: fallbackFill,
 					},
@@ -64,7 +70,7 @@
 </script>
 
 {#if useBitmap}
-	<BitmapText {...props} style={resolvedStyle} />
+	<BitmapText {...bitmapProps} style={resolvedStyle} />
 {:else if localeFontReady}
-	<TightCanvasText {...props} style={resolvedStyle} />
+	<TightCanvasText {...bitmapProps} style={resolvedStyle} />
 {/if}

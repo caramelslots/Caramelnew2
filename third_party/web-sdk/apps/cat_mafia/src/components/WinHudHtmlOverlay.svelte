@@ -7,6 +7,10 @@
 	import { untrack } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { stateBet } from 'state-shared';
+	import {
+		bookEventAmountToNormalisedAmount,
+		resolveWinCountUpFormat,
+	} from 'utils-shared/amount';
 
 	import { WIN_HUD_COUNT_UP_MS } from '../game/constants';
 	import { getContext } from '../game/context';
@@ -23,17 +27,43 @@
 
 	const LETTER_SPACING_EM = 0.08;
 
+	/**
+	 * While counting up, lock to the target's significant digit count so tween
+	 * floats do not invent millionths. Idle: significant (trim trailing zeros).
+	 */
+	let countUpFractionDigits = $state<number | null>(null);
+
 	/** Prefix + amount split — amount sits in a locked-width slot during count-up. */
-	const formatWinParts = (bookAmount: number, prefix: string) => {
+	const formatWinParts = (
+		bookAmount: number,
+		prefix: string,
+		lockedDigits: number | null = countUpFractionDigits,
+	) => {
+		const forced = devPreview.winForceFractionDigits;
+		const digits = forced ?? lockedDigits;
 		const parts = amountToLayoutParts(bookAmount, {
 			bookEvent: true,
 			prefix,
-			fractionDigits: devPreview.winForceFractionDigits,
+			fractionDigits: digits,
+			significant: digits == null,
 		});
 		return {
 			prefix: parts.label.trim(),
 			amount: `${parts.before}${parts.symbol}${parts.after}`,
 		};
+	};
+
+	const planCountUp = (fromBook: number, toBook: number) => {
+		if (devPreview.winForceFractionDigits != null) {
+			return {
+				fractionDigits: devPreview.winForceFractionDigits,
+				canAnimate: true,
+			};
+		}
+		return resolveWinCountUpFormat(
+			bookEventAmountToNormalisedAmount(fromBook),
+			bookEventAmountToNormalisedAmount(toBook),
+		);
 	};
 
 	const measureAmountPx = (text: string, fontSize: number) => {
@@ -52,6 +82,30 @@
 		const live = formatWinParts(liveBook, prefix).amount;
 		const end = formatWinParts(targetBook, prefix).amount;
 		return Math.max(measureAmountPx(live, fontSize), measureAmountPx(end, fontSize));
+	};
+
+	/** Gap between prefix and amount — must match `.win-hud-text` CSS gap. */
+	const PREFIX_AMOUNT_GAP_EM = 0.35;
+	/**
+	 * Uniform fit: shrink prefix + amount together (same font-size) so the full
+	 * string stays inside maxWidth without clipping either side.
+	 */
+	const fitFontSize = (
+		maxWidth: number,
+		baseFontSize: number,
+		liveBook: number,
+		targetBook: number,
+		prefix: string,
+	) => {
+		if (baseFontSize <= 0 || maxWidth <= 0) return 0;
+		const parts = formatWinParts(Math.max(liveBook, targetBook), prefix);
+		const prefixW = parts.prefix ? measureAmountPx(parts.prefix, baseFontSize) : 0;
+		const amountW = amountSlotPx(liveBook, targetBook, baseFontSize, prefix);
+		const gapW = parts.prefix ? baseFontSize * PREFIX_AMOUNT_GAP_EM : 0;
+		const total = prefixW + gapW + amountW;
+		if (total <= 0) return baseFontSize;
+		const scale = Math.min(1, maxWidth / total);
+		return Math.max(10, baseFontSize * scale);
 	};
 
 	let uiVisible = $state(true);
@@ -109,6 +163,7 @@
 	 * Under-board WIN: snap by default. Book handlers set `winHudCountUpPending`
 	 * for bonus FS (any increase) or base post-SW — we tween that increase.
 	 * `untrack(from)` so tween frames do not re-enter this effect and snap.
+	 * Digit lock: count-up uses the target's significant dp only (no float noise).
 	 */
 	const winTween = new Tween(stateBet.winBookEventAmount);
 	let winTweenTarget: number | null = null;
@@ -122,13 +177,22 @@
 			if (wantCountUp && target <= 0 && from <= 0) return;
 			if (stateGame.winHudCountUpPending) stateGame.winHudCountUpPending = false;
 			winTweenTarget = null;
+			countUpFractionDigits = null;
 			winTween.set(target, { duration: 0 });
 			return;
 		}
 
 		if (wantCountUp && target > from + 0.01) {
 			stateGame.winHudCountUpPending = false;
+			const plan = planCountUp(from, target);
+			if (!plan.canAnimate) {
+				winTweenTarget = null;
+				countUpFractionDigits = null;
+				winTween.set(target, { duration: 0 });
+				return;
+			}
 			winTweenTarget = target;
+			countUpFractionDigits = plan.fractionDigits;
 			winTween.set(target, {
 				duration: scaleMsByGameSpeed(WIN_HUD_COUNT_UP_MS, stateGame.gameSpeed),
 			});
@@ -138,6 +202,7 @@
 		if (winTweenTarget != null && Math.abs(target - winTweenTarget) < 0.01) return;
 
 		winTweenTarget = null;
+		countUpFractionDigits = null;
 		winTween.set(target, { duration: 0 });
 	});
 
@@ -151,6 +216,8 @@
 	const catTween = new Tween(stateDuel.catTotal);
 	let dogTweenTarget: number | null = null;
 	let catTweenTarget: number | null = null;
+	let dogCountUpDigits = $state<number | null>(null);
+	let catCountUpDigits = $state<number | null>(null);
 
 	const runSideTween = (
 		side: DuelSide,
@@ -159,6 +226,7 @@
 		wantCountUp: boolean,
 		marked: number | null,
 		setMarked: (v: number | null) => void,
+		setDigits: (v: number | null) => void,
 	) => {
 		const from = untrack(() => tween.current);
 
@@ -170,13 +238,22 @@
 		if (target <= 0 || target + 0.01 < from) {
 			clearFlag();
 			setMarked(null);
+			setDigits(null);
 			tween.set(target, { duration: 0 });
 			return;
 		}
 
 		if (wantCountUp && target > from + 0.01) {
 			clearFlag();
+			const plan = planCountUp(from, target);
+			if (!plan.canAnimate) {
+				setMarked(null);
+				setDigits(null);
+				tween.set(target, { duration: 0 });
+				return;
+			}
 			setMarked(target);
+			setDigits(plan.fractionDigits);
 			tween.set(target, {
 				duration: scaleMsByGameSpeed(WIN_HUD_COUNT_UP_MS, stateGame.gameSpeed),
 			});
@@ -186,6 +263,7 @@
 		if (marked != null && Math.abs(target - marked) < 0.01) return;
 
 		setMarked(null);
+		setDigits(null);
 		tween.set(target, { duration: 0 });
 	};
 
@@ -200,6 +278,9 @@
 			(v) => {
 				dogTweenTarget = v;
 			},
+			(v) => {
+				dogCountUpDigits = v;
+			},
 		);
 	});
 	$effect(() => {
@@ -213,6 +294,9 @@
 			(v) => {
 				catTweenTarget = v;
 			},
+			(v) => {
+				catCountUpDigits = v;
+			},
 		);
 	});
 
@@ -220,15 +304,49 @@
 
 	const winPrefix = $derived(context.i18nDerived.win().toUpperCase());
 
-	const baseParts = $derived(formatWinParts(winTween.current, winPrefix));
-	const dogParts = $derived(formatWinParts(dogTween.current, winPrefix));
-	const catParts = $derived(formatWinParts(catTween.current, winPrefix));
+	const baseParts = $derived(formatWinParts(winTween.current, winPrefix, countUpFractionDigits));
+	const dogParts = $derived(formatWinParts(dogTween.current, winPrefix, dogCountUpDigits));
+	const catParts = $derived(formatWinParts(catTween.current, winPrefix, catCountUpDigits));
+
+	const baseFontSize = $derived(
+		baseBox
+			? fitFontSize(
+					baseBox.maxWidth,
+					baseBox.fontSize,
+					winTween.current,
+					winTweenTarget ?? stateBet.winBookEventAmount,
+					winPrefix,
+				)
+			: 0,
+	);
+	const dogFontSize = $derived(
+		dogBox
+			? fitFontSize(
+					dogBox.maxWidth,
+					dogBox.fontSize,
+					dogTween.current,
+					dogTweenTarget ?? stateDuel.dogTotal,
+					winPrefix,
+				)
+			: 0,
+	);
+	const catFontSize = $derived(
+		catBox
+			? fitFontSize(
+					catBox.maxWidth,
+					catBox.fontSize,
+					catTween.current,
+					catTweenTarget ?? stateDuel.catTotal,
+					winPrefix,
+				)
+			: 0,
+	);
 
 	const baseAmountMinW = $derived(
 		amountSlotPx(
 			winTween.current,
 			winTweenTarget ?? stateBet.winBookEventAmount,
-			baseBox?.fontSize ?? 0,
+			baseFontSize,
 			winPrefix,
 		),
 	);
@@ -237,7 +355,7 @@
 			? amountSlotPx(
 					dogTween.current,
 					dogTweenTarget ?? stateDuel.dogTotal,
-					dogBox.fontSize,
+					dogFontSize,
 					winPrefix,
 				)
 			: 0,
@@ -247,7 +365,7 @@
 			? amountSlotPx(
 					catTween.current,
 					catTweenTarget ?? stateDuel.catTotal,
-					catBox.fontSize,
+					catFontSize,
 					winPrefix,
 				)
 			: 0,
@@ -261,7 +379,7 @@
 		style:left="{baseBox.centerX}px"
 		style:top="{baseBox.centerY}px"
 		style:max-width="{baseBox.maxWidth}px"
-		style:font-size="{baseBox.fontSize}px"
+		style:font-size="{baseFontSize}px"
 		aria-hidden="true"
 	>
 		<span class="win-hud-text">
@@ -280,7 +398,7 @@
 		style:left="{dogBox.centerX}px"
 		style:top="{dogBox.centerY}px"
 		style:max-width="{dogBox.maxWidth}px"
-		style:font-size="{dogBox.fontSize}px"
+		style:font-size="{dogFontSize}px"
 		aria-hidden="true"
 	>
 		<span class="win-hud-text">
@@ -296,7 +414,7 @@
 		style:left="{catBox.centerX}px"
 		style:top="{catBox.centerY}px"
 		style:max-width="{catBox.maxWidth}px"
-		style:font-size="{catBox.fontSize}px"
+		style:font-size="{catFontSize}px"
 		aria-hidden="true"
 	>
 		<span class="win-hud-text">
@@ -331,7 +449,6 @@
 		justify-content: center;
 		gap: 0.35em;
 		max-width: 100%;
-		overflow: hidden;
 		white-space: nowrap;
 		filter: drop-shadow(0 1px 0 #e8c878) drop-shadow(0 3px 0 #4a3008)
 			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));

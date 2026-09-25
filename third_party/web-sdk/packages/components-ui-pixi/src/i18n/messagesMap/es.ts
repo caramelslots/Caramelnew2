@@ -1,7 +1,7 @@
 export default {
 	AUDIO: 'AUDIO',
 	BALANCE: 'SALDO',
-	WIN: 'GANANCIA',
+	WIN: 'PREMIO',
 	BET: 'APUESTA',
 	STOP: 'PARAR',
 	'BUY BONUS': 'COMPRAR BONO',

@@ -131,7 +131,7 @@
 	/** Combined dog+cat bank (book cents) — scale plaque shows TOTAL $… */
 	const combinedBankCents = $derived(stateDuel.dogTotal + stateDuel.catTotal);
 	const combinedBankAmount = $derived(money(combinedBankCents));
-	const combinedBankWinPrefix = 'TOTAL';
+	const combinedBankWinPrefix = $derived(context.i18nDerived.duelBankTotal().toUpperCase());
 	/** Paw centre: dog lead → left, cat lead → right; 50/50 pinned to VS. */
 	const bankPawLeftFrac = $derived.by(() => {
 		const share = dogBankShare;
@@ -159,7 +159,7 @@
 		bankRatioLeft + (bankRatioFullWidth - bankRatioWidth) * 0.5,
 	);
 	const bankScaleHeight = $derived(bankRatioWidth / DUEL_BANK_SCALE.aspect);
-	const bankTotalMaxWidth = $derived(bankRatioWidth * DUEL_BANK_SCALE.plaqueWidth * 0.92);
+	const bankTotalMaxWidth = $derived(bankRatioWidth * DUEL_BANK_SCALE.plaqueWidth * 0.98);
 	const bankTotalMaxHeight = $derived(bankScaleHeight * DUEL_BANK_SCALE.plaqueHeight * 0.9);
 	/**
 	 * Anchor to desk bottoms (not HUD reserve) so the scale keeps the same
