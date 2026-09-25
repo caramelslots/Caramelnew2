@@ -78,9 +78,15 @@
 	};
 
 	/** Keep amount slot ≥ widest of live / tween-target / book target (no shrink jitter). */
-	const amountSlotPx = (liveBook: number, targetBook: number, fontSize: number, prefix: string) => {
-		const live = formatWinParts(liveBook, prefix).amount;
-		const end = formatWinParts(targetBook, prefix).amount;
+	const amountSlotPx = (
+		liveBook: number,
+		targetBook: number,
+		fontSize: number,
+		prefix: string,
+		lockedDigits: number | null = null,
+	) => {
+		const live = formatWinParts(liveBook, prefix, lockedDigits).amount;
+		const end = formatWinParts(targetBook, prefix, lockedDigits).amount;
 		return Math.max(measureAmountPx(live, fontSize), measureAmountPx(end, fontSize));
 	};
 
@@ -96,11 +102,12 @@
 		liveBook: number,
 		targetBook: number,
 		prefix: string,
+		lockedDigits: number | null = null,
 	) => {
 		if (baseFontSize <= 0 || maxWidth <= 0) return 0;
-		const parts = formatWinParts(Math.max(liveBook, targetBook), prefix);
+		const parts = formatWinParts(Math.max(liveBook, targetBook), prefix, lockedDigits);
 		const prefixW = parts.prefix ? measureAmountPx(parts.prefix, baseFontSize) : 0;
-		const amountW = amountSlotPx(liveBook, targetBook, baseFontSize, prefix);
+		const amountW = amountSlotPx(liveBook, targetBook, baseFontSize, prefix, lockedDigits);
 		const gapW = parts.prefix ? baseFontSize * PREFIX_AMOUNT_GAP_EM : 0;
 		const total = prefixW + gapW + amountW;
 		if (total <= 0) return baseFontSize;
@@ -316,6 +323,7 @@
 					winTween.current,
 					winTweenTarget ?? stateBet.winBookEventAmount,
 					winPrefix,
+					countUpFractionDigits,
 				)
 			: 0,
 	);
@@ -327,6 +335,7 @@
 					dogTween.current,
 					dogTweenTarget ?? stateDuel.dogTotal,
 					winPrefix,
+					dogCountUpDigits,
 				)
 			: 0,
 	);
@@ -338,6 +347,7 @@
 					catTween.current,
 					catTweenTarget ?? stateDuel.catTotal,
 					winPrefix,
+					catCountUpDigits,
 				)
 			: 0,
 	);
@@ -348,6 +358,7 @@
 			winTweenTarget ?? stateBet.winBookEventAmount,
 			baseFontSize,
 			winPrefix,
+			countUpFractionDigits,
 		),
 	);
 	const dogAmountMinW = $derived(
@@ -357,6 +368,7 @@
 					dogTweenTarget ?? stateDuel.dogTotal,
 					dogFontSize,
 					winPrefix,
+					dogCountUpDigits,
 				)
 			: 0,
 	);
@@ -367,6 +379,7 @@
 					catTweenTarget ?? stateDuel.catTotal,
 					catFontSize,
 					winPrefix,
+					catCountUpDigits,
 				)
 			: 0,
 	);

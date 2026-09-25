@@ -102,7 +102,6 @@ const PAW_COIN_CONVERT_DELAY_MS = 250;
 
 const DUEL_POST_SPIN_MS = 280;
 const FS_POST_SPIN_MS = 280;
-const DUEL_BANK_FLOW_MS = 700;
 const DUEL_BETWEEN_SPINS_MS = 350;
 
 const duelSwRowsOnReel = (side: DuelSide, reelIndex: number) => {
@@ -1844,7 +1843,15 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (side === 'cat') stateDuel.catSpinWin = 0;
 		else stateDuel.dogSpinWin = 0;
 
-		eventEmitter.broadcast({ type: 'paylineClearAll', side });
+		// Snap win/activate off the unmasked above-rails layer before scroll —
+		// otherwise celebrate cells leak above the desk mask (base does this in
+		// clearWinSpotlight / reveal). Cancel the delayed spotlight clear so it
+		// cannot fire mid-spin.
+		if (spotlightClearTimer !== null) {
+			clearTimeout(spotlightClearTimer);
+			spotlightClearTimer = null;
+		}
+		clearDuelSideWinPresentation(side);
 		stateDuel.winSpotlightSide = null;
 		// Keep sticky curtains through the spin (same as FS). Clearing them left a
 		// blank column: board SW stays alpha-0 via sticky while Spine is gone.
@@ -1979,11 +1986,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (bookEvent.side === 'cat') stateDuel.catSpinWin = bookEvent.spinWin;
 		else stateDuel.dogSpinWin = bookEvent.spinWin;
 
-		// Brief hold so WIN under the desk is readable, then bank totals update.
-		if (bookEvent.spinWin > 0) {
-			await waitForGameSpeed(DUEL_BANK_FLOW_MS, stateGame.gameSpeed);
-		}
-
+		// Same as FS `setTotalWin`: go straight into bank count-up — no pre-hold
+		// staring at the settled board before the HUD moves.
 		const side = bookEvent.side;
 		const current = side === 'cat' ? stateDuel.catTotal : stateDuel.dogTotal;
 		const next = side === 'cat' ? bookEvent.catTotal : bookEvent.dogTotal;

@@ -134,3 +134,116 @@
 		}
 	}
 }
+
+// Shared Back / Buy action buttons (cancel_button_bg & confirm_button_bg = 343×165).
+// Keep size + label size identical across buy confirm, duel pick, and duel confirm.
+
+@mixin buy-bonus-action-fs-default {
+	--bb-action-fs: calc(var(--panel-width) * 0.042);
+}
+
+@mixin buy-bonus-action-fs-desktop {
+	--bb-action-fs: calc(var(--panel-width) * 0.04);
+}
+
+@mixin buy-bonus-action-fs-portrait {
+	--bb-action-fs: calc(var(--panel-width) * 0.046);
+}
+
+@mixin buy-bonus-action-footer {
+	position: absolute;
+	top: 80%;
+	left: 12%;
+	right: 12%;
+	height: 11%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: calc(var(--panel-width) * 0.07);
+	box-sizing: border-box;
+}
+
+@mixin buy-bonus-action-btn {
+	flex: 0 0 auto;
+	box-sizing: border-box;
+	width: auto;
+	height: 100%;
+	max-height: 100%;
+	max-width: 48%;
+	aspect-ratio: #{"343 / 165"};
+	padding: 0;
+	margin: 0;
+	border: 0;
+	border-radius: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	background-color: transparent;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 100% 100%;
+	font-family: inherit;
+	font-size: var(--bb-action-fs);
+	font-weight: 900;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	line-height: 1;
+	text-align: center;
+	color: #f5e6c8;
+	text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+	transition:
+		transform 0.1s,
+		filter 0.15s,
+		opacity 0.15s;
+
+	&:hover:not(:disabled) {
+		filter: brightness(1.1);
+	}
+
+	&:active:not(:disabled) {
+		transform: translateY(1px);
+	}
+
+	&:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+		pointer-events: none;
+	}
+}
+
+// Card price labels — same size (relative to card) + weight on every buy/duel plate.
+$bb-card-price-fs-tall: 8.9cqw;
+$bb-card-price-fs-wide: 4.3cqw;
+// Buy-menu cards (normal / super / duel) are larger plates — slightly bigger type.
+$bb-card-price-fs-tall-menu: 10.2cqw;
+$bb-card-price-fs-wide-menu: 4.9cqw;
+
+@mixin buy-bonus-card-price-tall {
+	--bb-card-price-fs: #{$bb-card-price-fs-tall};
+}
+
+@mixin buy-bonus-card-price-wide {
+	--bb-card-price-fs: #{$bb-card-price-fs-wide};
+}
+
+@mixin buy-bonus-card-price-tall-menu {
+	--bb-card-price-fs: #{$bb-card-price-fs-tall-menu};
+}
+
+@mixin buy-bonus-card-price-wide-menu {
+	--bb-card-price-fs: #{$bb-card-price-fs-wide-menu};
+}
+
+@mixin buy-bonus-card-price-text {
+	font-family: inherit;
+	font-size: var(--bb-card-price-fs);
+	font-weight: 900;
+	letter-spacing: 0;
+	line-height: 1;
+	text-align: center;
+	color: #4a2c14;
+	-webkit-text-fill-color: #4a2c14;
+	text-shadow: 0 1px 0 rgba(255, 236, 190, 0.45);
+	text-decoration: none;
+}

@@ -233,8 +233,8 @@
 	.content-safe {
 		position: absolute;
 		top: 26%;
-		left: 15%;
-		right: 15%;
+		left: 20%;
+		right: 20%;
 		bottom: 28%;
 		display: flex;
 		flex-direction: column;
@@ -315,8 +315,8 @@
 
 		.content-safe {
 			top: 26%;
-			left: 15%;
-			right: 15%;
+			left: 20%;
+			right: 20%;
 			bottom: 28%;
 		}
 
@@ -338,8 +338,8 @@
 
 		.content-safe {
 			top: 26%;
-			left: 14%;
-			right: 14%;
+			left: 18%;
+			right: 18%;
 			bottom: 28%;
 		}
 

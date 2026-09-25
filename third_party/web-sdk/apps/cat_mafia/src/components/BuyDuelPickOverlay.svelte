@@ -316,8 +316,7 @@
 	@import url('https://fonts.googleapis.com/css2?family=Philosopher:wght@700&family=Reggae+One&display=swap');
 
 	.duel-pick-panel {
-		--bb-card-price-fs: calc(var(--panel-width) * 0.048);
-		--bb-action-fs: calc(var(--panel-width) * 0.034);
+		@include buy-bonus-action-fs-default;
 		--bb-title-fs: calc(var(--panel-width) * 0.048);
 		/* Same tracking as FreeSpinIntro CONGRATULATIONS / NORMAL BONUS. */
 		--bb-title-tracking: 1.2;
@@ -450,9 +449,6 @@
 			font-size: clamp(0.85rem, 10.5cqw, 1.55rem);
 		}
 
-		.pick-card-price {
-			font-size: calc(var(--panel-width) * 0.058);
-		}
 
 		/* Keep the other Spine alive off-stack without remounting. */
 		.side-card.is-parked {
@@ -474,6 +470,7 @@
 		aspect-ratio: 437 / 625;
 		container-type: size;
 		container-name: duel-pick-card;
+		@include buy-bonus-card-price-tall;
 		filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.45));
 	}
 
@@ -574,18 +571,22 @@
 		justify-content: center;
 		gap: 0.06em;
 		max-width: 100%;
-		/* Same face + gold as ArchedRibbonTitle (DOG / CAT / CHOOSE YOUR SIDE). */
 		font-family: 'proxima-nova', sans-serif;
 		font-size: clamp(0.68rem, 8.4cqw, 1.3rem);
 		font-weight: 800;
+		font-synthesis: none;
 		line-height: 1.05;
 		letter-spacing: 0.02em;
 		text-align: center;
 		text-transform: none;
+		color: #f0d9a8;
+		opacity: 0.92;
+		paint-order: stroke fill;
+		-webkit-font-smoothing: antialiased;
+		-webkit-text-stroke: 0.045em rgba(48, 22, 6, 0.9);
+		text-shadow: 0 0.05em 0.08em rgba(0, 0, 0, 0.45);
 		user-select: none;
 		pointer-events: none;
-		filter: drop-shadow(0 1px 0 #fff3b0) drop-shadow(0 2px 0 #5a3a0e)
-			drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
 	}
 
 	.pick-card-sub-line {
@@ -596,11 +597,11 @@
 		letter-spacing: inherit;
 		line-height: inherit;
 		text-align: center;
-		color: #ffe28a;
-		background: linear-gradient(180deg, #fff6c8 0%, #ffd56a 38%, #e8a020 72%, #b8730f 100%);
-		-webkit-background-clip: text;
-		background-clip: text;
-		-webkit-text-fill-color: transparent;
+		color: inherit;
+		-webkit-text-fill-color: inherit;
+		text-shadow: inherit;
+		-webkit-text-stroke: inherit;
+		paint-order: inherit;
 	}
 
 	.pick-card-price {
@@ -617,14 +618,7 @@
 		justify-content: center;
 		padding: 0;
 		box-sizing: border-box;
-		font-size: var(--bb-card-price-fs);
-		font-weight: 900;
-		letter-spacing: 0;
-		line-height: 1;
-		text-align: center;
-		color: #4a2c14;
-		-webkit-text-fill-color: #4a2c14;
-		text-shadow: 0 1px 0 rgba(255, 236, 190, 0.45);
+		@include buy-bonus-card-price-text;
 		pointer-events: none;
 		transform: translate(0.06em, 0.16em);
 	}
@@ -642,7 +636,6 @@
 		box-sizing: border-box;
 		padding: 0 1.5%;
 		overflow: hidden;
-		/* Same face + gold as ArchedRibbonTitle (DOG / CAT / CHOOSE YOUR SIDE). */
 		font-family: 'proxima-nova', sans-serif;
 		font-size: calc(var(--panel-width) * 0.04);
 		font-weight: 800;
@@ -650,10 +643,11 @@
 		line-height: 1.25;
 		letter-spacing: 0.01em;
 		text-align: center;
+		color: #f0d9a8;
+		opacity: 0.95;
+		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65);
 		user-select: none;
 		pointer-events: none;
-		filter: drop-shadow(0 1px 0 #fff3b0) drop-shadow(0 2px 0 #5a3a0e)
-			drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5));
 	}
 
 	.pick-blurb-inner {
@@ -669,26 +663,15 @@
 		white-space: normal;
 		overflow-wrap: break-word;
 		word-break: normal;
-		color: #ffe28a;
-		/* Repeat gold per line so wrapped text doesn't look like mixed faces. */
-		background-image: linear-gradient(180deg, #fff6c8 0%, #ffd56a 38%, #e8a020 72%, #b8730f 100%);
-		background-size: 100% 1.25em;
-		background-repeat: repeat-y;
-		-webkit-background-clip: text;
-		background-clip: text;
-		-webkit-text-fill-color: transparent;
+		color: inherit;
+		-webkit-text-fill-color: inherit;
+		text-shadow: inherit;
 	}
 
 	.pick-footer {
-		position: absolute;
-		top: 80%;
-		left: 28%;
-		right: 28%;
-		height: 11%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		box-sizing: border-box;
+		@include buy-bonus-action-footer;
+		/* Single Back — same button box as confirm pair; just centered alone. */
+		gap: 0;
 	}
 
 	.confirm-hero {
@@ -697,67 +680,19 @@
 	}
 
 	.confirm-actions {
-		position: absolute;
-		top: 80%;
-		left: 12%;
-		right: 12%;
-		height: 11%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: calc(var(--panel-width) * 0.07);
-		box-sizing: border-box;
+		@include buy-bonus-action-footer;
 	}
 
 	.action-btn {
-		flex: 1 1 0;
-		height: 100%;
-		max-width: 100%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 4% 4% 3%;
-		border: 0;
-		border-radius: 0;
-		cursor: pointer;
-		background-color: transparent;
-		background-repeat: no-repeat;
-		background-position: center;
-		background-size: 100% 100%;
-		font-family: inherit;
-		font-size: var(--bb-action-fs);
-		font-weight: 900;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-		line-height: 1;
-		color: #f5e6c8;
-		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
-		transition:
-			transform 0.1s,
-			filter 0.15s,
-			opacity 0.15s;
-
-		&:hover:not(:disabled) {
-			filter: brightness(1.1);
-		}
-
-		&:disabled {
-			opacity: 0.45;
-			cursor: not-allowed;
-		}
+		@include buy-bonus-action-btn;
 	}
 
-	.pick-footer .action-btn {
-		max-width: 100%;
-	}
-
-	.confirm-actions .action-btn {
-		max-width: 46%;
+	.duel-pick-panel:not(.portrait):not(.popout-l):not(.popout-s) {
+		@include buy-bonus-action-fs-desktop;
 	}
 
 	.duel-pick-panel.portrait:not(.popout-l):not(.popout-s) {
-		--bb-card-price-fs: calc(var(--panel-width) * 0.058);
-		--bb-action-fs: calc(var(--panel-width) * 0.038);
+		@include buy-bonus-action-fs-portrait;
 		--bb-title-fs: calc(var(--panel-width) * 0.052);
 
 		.cards-section {
@@ -789,9 +724,15 @@
 			font-size: calc(var(--panel-width) * 0.044);
 		}
 
+		.pick-footer,
+		.confirm-actions {
+			left: 10%;
+			right: 10%;
+			gap: calc(var(--panel-width) * 0.06);
+		}
+
 		.pick-footer {
-			left: 22%;
-			right: 22%;
+			gap: 0;
 		}
 
 		.cards-section.confirm-mode {
@@ -816,15 +757,11 @@
 				font-size: clamp(1.15rem, 14.5cqw, 2.1rem);
 			}
 
-			.pick-card-price {
-				font-size: calc(var(--panel-width) * 0.072);
-			}
 		}
 	}
 
 	.duel-pick-panel.popout-l {
-		--bb-card-price-fs: calc(var(--panel-width) * 0.052);
-		--bb-action-fs: calc(var(--panel-width) * 0.032);
+		@include buy-bonus-action-fs-desktop;
 		--bb-title-fs: calc(var(--panel-width) * 0.044);
 
 		.cards-section {
@@ -855,9 +792,6 @@
 				font-size: clamp(0.72rem, 9.5cqw, 1.15rem);
 			}
 
-			.pick-card-price {
-				font-size: calc(var(--panel-width) * 0.062);
-			}
 		}
 
 		.pick-card-name {
@@ -883,8 +817,7 @@
 	}
 
 	.duel-pick-panel.popout-s {
-		--bb-card-price-fs: calc(var(--panel-width) * 0.052);
-		--bb-action-fs: calc(var(--panel-width) * 0.032);
+		@include buy-bonus-action-fs-desktop;
 		--bb-title-fs: calc(var(--panel-width) * 0.042);
 
 		.pick-title {
@@ -920,12 +853,6 @@
 			font-size: calc(var(--panel-width) * 0.034);
 		}
 
-		.pick-footer {
-			left: 24%;
-			right: 24%;
-			height: 12%;
-		}
-
 		.cards-section.confirm-mode {
 			top: 10.5%;
 			width: 66%;
@@ -948,9 +875,6 @@
 				font-size: clamp(0.55rem, 9.5cqw, 0.95rem);
 			}
 
-			.pick-card-price {
-				font-size: calc(var(--panel-width) * 0.062);
-			}
 		}
 
 		.pick-card-mascot.mascot-dog :global(.pick-spine.fill) {
@@ -959,6 +883,16 @@
 
 		.pick-card-mascot.mascot-cat :global(.pick-spine.fill) {
 			transform: scale(1.55) translateY(5%);
+		}
+	}
+
+	@media (max-width: 600px) {
+		.duel-pick-panel:not(.popout-l):not(.popout-s) {
+			.pick-footer,
+			.confirm-actions {
+				top: 78%;
+				height: 12%;
+			}
 		}
 	}
 </style>

@@ -307,7 +307,6 @@
 
 	.buy-bonus-panel {
 		// Declarations before mixin: mixin ends with @media nests (mixed-decls).
-		--bb-card-price-fs: calc(var(--panel-width) * 0.032);
 		--bb-buy-btn-fs: calc(var(--panel-width) * 0.02);
 		/* Letter density for NORMAL BONUS / GUARANTEED WILD. 1 = natural, 0.55 = tight. */
 		--bb-title-tracking: 1.2;
@@ -497,7 +496,7 @@
 		aspect-ratio: 2325 / 3322;
 		container-type: inline-size;
 		container-name: bonus-card;
-		--bb-card-price-fs: 8.9cqw;
+		@include buy-bonus-card-price-tall-menu;
 	}
 
 	.card-duel {
@@ -509,7 +508,7 @@
 		aspect-ratio: 4230 / 1480;
 		container-type: inline-size;
 		container-name: bonus-card-duel;
-		--bb-card-price-fs: 4.3cqw;
+		@include buy-bonus-card-price-wide-menu;
 	}
 
 	.card-content {
@@ -757,18 +756,9 @@
 	}
 
 	.card-price {
-		font-family: inherit;
-		font-size: var(--bb-card-price-fs);
-		font-weight: 900;
-		letter-spacing: 0;
-		text-align: center;
-		line-height: 1;
+		@include buy-bonus-card-price-text;
 		display: block;
 		width: auto;
-		color: #4a2c14;
-		-webkit-text-fill-color: #4a2c14;
-		text-shadow: 0 1px 0 rgba(255, 236, 190, 0.45);
-		text-decoration: none;
 		transform: translate(0.14em, 0.26em);
 	}
 
@@ -1007,7 +997,6 @@
 			display: none;
 		}
 
-		--bb-card-price-fs: calc(var(--panel-width) * 0.038);
 		--bb-buy-btn-fs: calc(var(--panel-width) * 0.021);
 
 		.close-button {
@@ -1148,7 +1137,6 @@
 
 	/* Portrait mobile */
 	.buy-bonus-panel.portrait:not(.popout-l):not(.popout-s) {
-		--bb-card-price-fs: calc(var(--panel-width) * 0.046);
 		--bb-buy-btn-fs: calc(var(--panel-width) * 0.032);
 
 		.panel-bg {
@@ -1314,7 +1302,6 @@
 	/* Stake popout L — 800×450 (laptop embed) */
 	.buy-bonus-panel.popout-l {
 		filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.6));
-		--bb-card-price-fs: calc(var(--panel-width) * 0.038);
 		--bb-buy-btn-fs: calc(var(--panel-width) * 0.024);
 
 		.panel-title {
@@ -1462,7 +1449,6 @@
 		filter: drop-shadow(
 			0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.075) rgba(0, 0, 0, 0.55)
 		);
-		--bb-card-price-fs: calc(var(--panel-width) * 0.038);
 		--bb-buy-btn-fs: calc(var(--panel-width) * 0.024);
 
 		.panel-title {

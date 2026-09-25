@@ -214,7 +214,7 @@
 						y={context.stateGameDerived.boardLayout().y}
 					>
 						{#if currentTierData?.animation}
-							{@const amountMaxWidth = context.stateGameDerived.boardLayout().width * 1.4}
+							{@const amountMaxWidth = context.stateGameDerived.boardLayout().width * 2.8}
 							<WinAnimation
 								bind:this={winAnimation}
 								animationMap={currentTierData.animation}
@@ -229,7 +229,7 @@
 									bodyFontVariant="meowfiaBiger"
 									minScale={0.18}
 									style={{
-										fontSize: SYMBOL_SIZE * 8.8 * BITMAP_FONT_SCALE,
+										fontSize: SYMBOL_SIZE * 17.6 * BITMAP_FONT_SCALE,
 										align: 'center',
 										fontWeight: 'bold',
 										letterSpacing: 0,

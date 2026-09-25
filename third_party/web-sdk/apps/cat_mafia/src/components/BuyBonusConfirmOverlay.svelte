@@ -232,8 +232,7 @@
 
 	.confirm-panel {
 		// Declarations before mixin: mixin ends with @media nests (mixed-decls).
-		--bb-card-price-fs: calc(var(--panel-width) * 0.042);
-		--bb-confirm-action-fs: calc(var(--panel-width) * 0.028);
+		@include buy-bonus-action-fs-default;
 		--bb-title-tracking: 1.2;
 		font-family: v-bind(HUD_BALANCE_BET_FONT_FAMILY);
 		position: relative;
@@ -429,7 +428,7 @@
 		aspect-ratio: 2325 / 3322;
 		container-type: inline-size;
 		container-name: bonus-card;
-		--bb-card-price-fs: 8.9cqw;
+		@include buy-bonus-card-price-tall;
 	}
 
 	.card-content {
@@ -604,18 +603,9 @@
 	}
 
 	.card-price {
-		font-family: inherit;
-		font-size: var(--bb-card-price-fs);
-		font-weight: 900;
-		letter-spacing: 0;
-		text-align: center;
-		line-height: 1;
+		@include buy-bonus-card-price-text;
 		display: block;
 		width: auto;
-		color: #4a2c14;
-		-webkit-text-fill-color: #4a2c14;
-		text-shadow: 0 1px 0 rgba(255, 236, 190, 0.45);
-		text-decoration: none;
 		/* Nudge a couple px left; slight down from previous up-nudge. */
 		transform: translate(0.02em, 0.1em);
 	}
@@ -627,77 +617,16 @@
 	}
 
 	.confirm-actions {
-		position: absolute;
-		top: 80%;
-		left: 12%;
-		right: 12%;
-		height: 11%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: calc(var(--panel-width) * 0.07);
-		box-sizing: border-box;
+		@include buy-bonus-action-footer;
 	}
 
 	.action-btn {
-		flex: 1 1 0;
-		height: 100%;
-		max-width: 46%;
-		padding: 8% 4% 0;
-		border: 0;
-		border-radius: 0;
-		cursor: pointer;
-		background-color: transparent;
-		background-repeat: no-repeat;
-		background-position: center;
-		background-size: 100% 100%;
-		font-family: inherit;
-		font-size: var(--bb-confirm-action-fs);
-		font-weight: 900;
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
-		color: #f5e6c8;
-		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
-		transition:
-			transform 0.1s,
-			filter 0.15s,
-			opacity 0.15s;
-
-		&:hover:not(:disabled) {
-			filter: brightness(1.1);
-		}
-
-		&:active:not(:disabled) {
-			transform: translateY(1px);
-		}
-
-		&:disabled {
-			opacity: 0.45;
-			cursor: not-allowed;
-			pointer-events: none;
-		}
-	}
-
-	.cancel-btn,
-	.confirm-btn {
-		flex: 0 1 auto;
-		width: auto;
-		max-width: 48%;
-		aspect-ratio: 343 / 165;
-		padding: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: var(--bb-confirm-action-fs);
-		line-height: 1;
-		color: #f5e6c8;
-		text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+		@include buy-bonus-action-btn;
 	}
 
 	/* Desktop */
 	.confirm-panel:not(.portrait):not(.popout-l):not(.popout-s) {
-		--bb-card-price-fs: calc(var(--panel-width) * 0.048);
-		--bb-confirm-action-fs: calc(var(--panel-width) * 0.026);
+		@include buy-bonus-action-fs-desktop;
 
 		.close-button {
 			width: calc(var(--panel-width) * 0.112);
@@ -730,8 +659,7 @@
 
 	/* Portrait */
 	.confirm-panel.portrait:not(.popout-l):not(.popout-s) {
-		--bb-card-price-fs: calc(var(--panel-width) * 0.058);
-		--bb-confirm-action-fs: calc(var(--panel-width) * 0.032);
+		@include buy-bonus-action-fs-portrait;
 
 		.panel-bg {
 			width: 100%;
@@ -768,10 +696,8 @@
 		}
 
 		.confirm-actions {
-			top: 80%;
 			left: 10%;
 			right: 10%;
-			height: 11%;
 			gap: calc(var(--panel-width) * 0.06);
 		}
 	}
@@ -779,8 +705,7 @@
 	/* Popout L */
 	.confirm-panel.popout-l {
 		filter: drop-shadow(0 10px 28px rgba(0, 0, 0, 0.6));
-		--bb-card-price-fs: calc(var(--panel-width) * 0.048);
-		--bb-confirm-action-fs: calc(var(--panel-width) * 0.026);
+		@include buy-bonus-action-fs-desktop;
 
 		.close-button {
 			width: calc(var(--panel-width) * 0.112);
@@ -803,10 +728,6 @@
 			transform: none;
 		}
 
-		.confirm-actions {
-			top: 80%;
-			height: 11%;
-		}
 	}
 
 	/* Popout S */
@@ -814,8 +735,7 @@
 		filter: drop-shadow(
 			0 calc(var(--panel-width) * 0.025) calc(var(--panel-width) * 0.075) rgba(0, 0, 0, 0.55)
 		);
-		--bb-card-price-fs: calc(var(--panel-width) * 0.048);
-		--bb-confirm-action-fs: calc(var(--panel-width) * 0.026);
+		@include buy-bonus-action-fs-desktop;
 
 		.close-button {
 			width: calc(var(--panel-width) * 0.112);
@@ -838,12 +758,6 @@
 			transform: none;
 		}
 
-		.confirm-actions {
-			top: 80%;
-			left: 12%;
-			right: 12%;
-			height: 11%;
-		}
 	}
 
 	@media (max-width: 600px) {
