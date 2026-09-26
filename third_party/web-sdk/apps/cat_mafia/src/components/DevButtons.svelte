@@ -4,7 +4,7 @@
 	Feature buttons play real math books (synced from 0_0_cat_mafia) via
 	playBet — same path as Storybook / production book playback.
 
-	Toggle: Shift+D. Language, social mode, and the GPU RAM overlay live
+	Toggle: Shift+D. Language, social mode, FPS / GPU RAM overlays live
 	inside Session. Categories collapse; state is remembered.
 -->
 <script lang="ts">
@@ -64,6 +64,7 @@
 	} from '../game/devLang';
 	import { setGameSocialMode } from '../game/devSocial';
 	import { pixiMemoryHud, setRamOverlayVisible } from '../game/pixiTextureMemoryHud.svelte';
+	import { pixiFpsHud, setFpsOverlayVisible } from '../game/pixiFpsHud.svelte';
 	import DevAccordion from './DevAccordion.svelte';
 	import baseEvents from '../stories/data/base_events';
 	import baseBooks from '../stories/data/base_books';
@@ -1949,6 +1950,9 @@
 			{currentLangLabel}
 			·
 			{socialOn ? 'SOC' : 'CASH'}
+			{#if pixiFpsHud.overlay}
+				· FPS
+			{/if}
 			{#if pixiMemoryHud.overlay}
 				· RAM
 			{/if}
@@ -1959,6 +1963,14 @@
 		<div class="dev-body" onwheel={(e) => e.stopPropagation()}>
 			<div class="dev-stick">
 			<div class="dev-chrome">
+				<button
+					type="button"
+					class:active={pixiFpsHud.overlay}
+					title="Pin FPS HUD top-left (avg + 1s min + ticker cap)."
+					onclick={() => setFpsOverlayVisible(!pixiFpsHud.overlay)}
+				>
+					FPS {pixiFpsHud.overlay ? 'ON' : 'OFF'}
+				</button>
 				<button
 					type="button"
 					class:active={pixiMemoryHud.overlay}

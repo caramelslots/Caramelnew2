@@ -252,7 +252,6 @@ const ensureApp = (): Promise<PIXI.Application | undefined> => {
 		next.canvas.setAttribute('aria-hidden', 'true');
 		app = next;
 		if (!tickerBound) {
-			next.ticker.maxFPS = phone ? 30 : 60;
 			next.ticker.add(tickSharedStage);
 			tickerBound = true;
 		}

@@ -17,8 +17,6 @@
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { startLoadingIdleUiPreload } from '../game/uiHtmlAssetManifest';
 	import { GAME_ENTRANCE_MS } from '../game/constants';
-	import { PHONE_TICKER_MAX_FPS } from '../game/duelPhoneDpr';
-	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import EnableSound from './EnableSound.svelte';
 	import EnableSymbolTextureOptimization from './EnableSymbolTextureOptimization.svelte';
@@ -79,13 +77,13 @@
 	import DevCheats from './DevCheats.svelte';
 	import DevButtons from './DevButtons.svelte';
 	import PixiTextureMemoryOverlay from './PixiTextureMemoryOverlay.svelte';
+	import PixiFpsOverlay from './PixiFpsOverlay.svelte';
 	import { FadeContainer } from 'components-pixi';
 
 	/** Flip to `true` to show DevButtons / DevCheats / TargetShootDevOverlay again. */
 	const SHOW_DEV_UI = false;
 
 	const context = getContext();
-	const phoneTickerMaxFps = isPhoneForAtlasDownscale() ? PHONE_TICKER_MAX_FPS : undefined;
 
 	let BuyBonusModalShell = $state<Component | null>(null);
 
@@ -150,7 +148,6 @@
 		maxResolution={3}
 		tuneForMobilePortrait
 		webglOnIosAndroid
-		maxFps={phoneTickerMaxFps}
 	>
 		<EnableSound />
 		<EnableSymbolTextureOptimization />
@@ -330,6 +327,7 @@
 	<DevCheats />
 	<DevButtons />
 	<PixiTextureMemoryOverlay />
+	<PixiFpsOverlay />
 {/if}
 
 <style lang="scss">
