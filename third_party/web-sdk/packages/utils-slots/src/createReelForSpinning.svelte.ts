@@ -704,17 +704,20 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			}
 		}
 
-		// Start slideDown in this sync turn (before interruptible's async executor
-		// yields) so main-spin motion begins in the same frame as prepend placeY.
-		const slideDownTask = slideDown();
-
 		// Q: When to skip the slideDown?
-		// A: When it's preSpinning(isSpinning) and stop button is clicked(isTurbo) and is noStop is false
+		// A: Stop / Space set isTurbo — skip remaining travel when noStop is false.
+		// Do NOT require motion==='spinning': delayed reels (reelSpinDelay) may still
+		// be 'stopped' when a fast stop lands, and must slam with the rest.
+		// Do NOT start slideDown before the skip check — a kicked-off task kept
+		// scrolling after turbo skip / interrupt (left columns landed, right kept spinning).
 		if (noStop) {
-			await slideDownTask;
-		} else if (stateBet.isTurbo && isSpinning) {
+			await slideDown();
+		} else if (stateBet.isTurbo) {
 			// skip
 		} else {
+			// Start slideDown in this sync turn (before interruptible's async executor
+			// yields) so main-spin motion begins in the same frame as prepend placeY.
+			const slideDownTask = slideDown();
 			await interruptible.add(async () => {
 				await slideDownTask;
 			});
@@ -727,9 +730,13 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		await updateAllReelSymbolState('land');
 	};
 
+	/** Abort in-flight slide helpers when Space/stop interrupts the reel. */
+	const isSlideAborted = () => reelState.motion !== 'spinning';
+
 	const fastSpin = () =>
 		generalSpinWith({
 			slideDown: async () => {
+				if (isSlideAborted()) return;
 				const bounceSize = reelOptions.symbolHeight * reelState.spinOptions().reelBounceSizeMulti;
 
 				await slideY({
@@ -762,6 +769,9 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 					getTargetY: getMainSpinTargetY,
 					getSpeed: () => reelState.spinOptions().reelSpinSpeed,
 				});
+				// stop() flips motion out of spinning — do not start the approach tween
+				// or it keeps the column scrolling after interrupt.
+				if (isSlideAborted()) return;
 				await slideY({
 					reelY: defaultY + bounceSize,
 					speed: reelState.spinOptions().reelSpinSpeedBeforeBounce,
@@ -772,12 +782,14 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	const anticipatedSpin = () =>
 		generalSpinWith({
 			slideDown: async () => {
+				if (isSlideAborted()) return;
 				const bounceSize = reelOptions.symbolHeight * reelState.spinOptions().reelBounceSizeMulti;
 
 				await slideY({
 					reelY: getMainSpinTargetY(),
 					speed: reelState.spinOptions().reelSpinSpeed,
 				});
+				if (isSlideAborted()) return;
 				await slideY({
 					reelY: defaultY + bounceSize,
 					speed: reelState.spinOptions().reelSpinSpeedBeforeBounce,
@@ -849,6 +861,13 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	};
 
 	const stop = () => {
+		// Abort in-flight main-spin scroll before resolving interruptible waits —
+		// otherwise slideDynamic/slideY keep driving reelY after Space slam-stop.
+		// Skip during preSpin: isTurbo short-circuits the upcoming main slide instead.
+		if (reelState.motion === 'spinning' && !isPreSpinning) {
+			reelState.motion = 'bouncing';
+			reelY.set(reelY.current, { duration: 0 });
+		}
 		interruptible.interrupt();
 	};
 

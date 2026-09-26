@@ -36,7 +36,7 @@
 
 <script lang="ts">
 	import { tick } from 'svelte';
-	import { stateBetDerived } from 'state-shared';
+	import { stateBet, stateBetDerived } from 'state-shared';
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 	import { Container } from 'pixi-svelte';
 
@@ -140,7 +140,15 @@
 	};
 
 	context.eventEmitter.subscribeOnMount({
-		stopButtonClick: () => context.stateGameDerived.enhancedBoard.stop(),
+		stopButtonClick: () => {
+			// Space / Spin slam-stop: set turbo here too so skip works even if this
+			// handler runs before the HUD subscriber. Clear cat-slow so remaining
+			// columns are not armed when the trigger reel finishes early.
+			stateBet.isTurbo = true;
+			context.stateGame.catSlowTriggerReel = -1;
+			context.stateGame.catSlowReels = [];
+			context.stateGameDerived.enhancedBoard.stop();
+		},
 		boardSettle: ({ board }) => context.stateGameDerived.enhancedBoard.settle(board),
 		boardShow: () => (show = true),
 		boardHide: () => (show = false),
