@@ -81,6 +81,9 @@
 	import PixiTextureMemoryOverlay from './PixiTextureMemoryOverlay.svelte';
 	import { FadeContainer } from 'components-pixi';
 
+	/** Flip to `true` to show DevButtons / DevCheats / TargetShootDevOverlay again. */
+	const SHOW_DEV_UI = false;
+
 	const context = getContext();
 	const phoneTickerMaxFps = isPhoneForAtlasDownscale() ? PHONE_TICKER_MAX_FPS : undefined;
 
@@ -318,12 +321,16 @@
 <TargetBoardOverlay />
 <TargetPickOverlay />
 <TargetShootOverlay />
-<TargetShootDevOverlay />
+{#if SHOW_DEV_UI}
+	<TargetShootDevOverlay />
+{/if}
 <TargetShotTrailHtml />
 <FreeSpinIntro />
-<DevCheats />
-<DevButtons />
-<PixiTextureMemoryOverlay />
+{#if SHOW_DEV_UI}
+	<DevCheats />
+	<DevButtons />
+	<PixiTextureMemoryOverlay />
+{/if}
 
 <style lang="scss">
 	.pixi-stage {

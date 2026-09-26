@@ -4,7 +4,7 @@
 	`duelDog` uses the dog skeleton on the left desk (faces right toward the boards).
 -->
 <script lang="ts">
-	import { Circle } from 'pixi.js';
+	import { Circle, Polygon } from 'pixi.js';
 	import { Container, Rectangle, SpineProvider, getContextApp } from 'pixi-svelte';
 
 	import { CAT_MEOW_SOUNDS, DOG_BARK_SOUNDS } from '../game/sound';
@@ -33,10 +33,11 @@
 		getMascotPortraitScreenBox,
 		getMascotScreenBox,
 		getMascotPixiTransform,
-		MASCOT_CAT_PRESS,
+		MASCOT_CAT_PRESS_POLY,
 		MASCOT_DOG_PRESS,
 		MASCOT_DOG_SPINE_VIEWPORT,
 		MASCOT_SPINE_VIEWPORT,
+		spinePressPolyToLocal,
 		spinePressToLocal,
 		type MascotPose,
 		type MascotScreenBox,
@@ -160,15 +161,31 @@
 	/** Ignore repeat presses so meows and barks cannot stack. */
 	const PRESS_COOLDOWN_MS = 1000;
 
-	const pressHit = $derived(
-		box
-			? spinePressToLocal(
-					box,
-					useDogSpine ? MASCOT_DOG_SPINE_VIEWPORT : MASCOT_SPINE_VIEWPORT,
-					useDogSpine ? MASCOT_DOG_PRESS : MASCOT_CAT_PRESS,
-				)
-			: null,
-	);
+	const pressHit = $derived.by(() => {
+		if (!box) return null;
+		if (useDogSpine) {
+			const circle = spinePressToLocal(box, MASCOT_DOG_SPINE_VIEWPORT, MASCOT_DOG_PRESS);
+			return {
+				kind: 'circle' as const,
+				x: circle.x,
+				y: circle.y,
+				width: circle.width,
+				height: circle.height,
+				radius: circle.radius,
+				hitArea: new Circle(circle.radius, circle.radius, circle.radius),
+			};
+		}
+		const poly = spinePressPolyToLocal(box, MASCOT_SPINE_VIEWPORT, MASCOT_CAT_PRESS_POLY);
+		return {
+			kind: 'poly' as const,
+			x: poly.x,
+			y: poly.y,
+			width: poly.width,
+			height: poly.height,
+			radius: 0,
+			hitArea: new Polygon(poly.hitFlat),
+		};
+	});
 
 	let vocalIndex = 0;
 	let vocalLockedUntil = 0;
@@ -256,9 +273,9 @@
 				y={pressHit.y}
 				width={pressHit.width}
 				height={pressHit.height}
-				borderRadius={pressHit.radius}
+				borderRadius={pressHit.kind === 'circle' ? pressHit.radius : 0}
 				backgroundAlpha={0.001}
-				hitArea={new Circle(pressHit.radius, pressHit.radius, pressHit.radius)}
+				hitArea={pressHit.hitArea}
 				eventMode="static"
 				cursor="pointer"
 				zIndex={2}

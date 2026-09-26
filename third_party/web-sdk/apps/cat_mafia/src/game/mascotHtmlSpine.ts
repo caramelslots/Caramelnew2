@@ -257,26 +257,161 @@ export const MASCOT_DOG_SPINE_VIEWPORT = {
 } as const satisfies MascotSpineViewport;
 
 /**
- * Click circle in spine world (Y-up), on the upper body.
- * Projected with the viewport scale, so the same bone stays under the
- * circle on every layout — base, portrait, popout, duel.
- * Cat point matches the tuned base-game circle (0.2× box height, nudged
- * left of the body column). Dog uses the same fraction of its frame.
+ * Click targets in spine world (Y-up).
+ * Cat uses a full-body silhouette polygon. Dog keeps a simple circle.
  */
 export const MASCOT_CAT_PRESS = { x: 56, y: 1250, radius: 661 } as const;
 export const MASCOT_DOG_PRESS = { x: -10, y: 40, radius: 461 } as const;
+
+/**
+ * Cat meow hit silhouette in spine world (Y-up), clockwise.
+ * Full body: hat (with ears) → head → arms on hips → torso → paws.
+ * HUD bet (+) stays above this layer (z43 < z44), so overlap still prefers +.
+ */
+export const MASCOT_CAT_PRESS_POLY: readonly { readonly x: number; readonly y: number }[] = [
+	// Hat crown + ears (trimmed — no empty hit above the fedora)
+	{ x: 40, y: 2380 },
+	{ x: 220, y: 2320 },
+	{ x: 380, y: 2220 },
+	// Right brim / cheek
+	{ x: 480, y: 2050 },
+	{ x: 420, y: 1800 },
+	// Right shoulder + arm on hip
+	{ x: 560, y: 1500 },
+	{ x: 620, y: 1150 },
+	{ x: 520, y: 850 },
+	// Right hip / thigh
+	{ x: 400, y: 550 },
+	// Right paw
+	{ x: 280, y: 280 },
+	{ x: 80, y: 180 },
+	// Left paw
+	{ x: -120, y: 200 },
+	{ x: -280, y: 320 },
+	// Left hip / thigh
+	{ x: -380, y: 580 },
+	// Left arm on hip
+	{ x: -520, y: 900 },
+	{ x: -620, y: 1200 },
+	{ x: -560, y: 1550 },
+	// Left shoulder / cheek
+	{ x: -420, y: 1850 },
+	{ x: -480, y: 2080 },
+	// Left brim / ear
+	{ x: -300, y: 2240 },
+	{ x: -120, y: 2340 },
+];
+
+export type MascotPressPolyLocal = {
+	/** AABB top-left in mascot-container local space (same origin as spinePressToLocal). */
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	/** Points relative to AABB top-left — for Pixi.Polygon hitArea. */
+	hitFlat: number[];
+	/** CSS clip-path polygon(...) with % coords inside the AABB. */
+	clipPath: string;
+};
+
+export const spinePointToLocal = (
+	box: MascotScreenBox,
+	viewport: MascotSpineViewport,
+	point: { x: number; y: number },
+) => {
+	const scale = getMascotPixiTransform(box, viewport).scale;
+	const vpCx = viewport.x + viewport.width * 0.5;
+	const vpCy = viewport.y + viewport.height * 0.5;
+	return {
+		x: (point.x - vpCx) * scale,
+		y: (vpCy - point.y) * scale,
+	};
+};
+
+export const spinePressPolyToLocal = (
+	box: MascotScreenBox,
+	viewport: MascotSpineViewport,
+	poly: readonly { readonly x: number; readonly y: number }[] = MASCOT_CAT_PRESS_POLY,
+): MascotPressPolyLocal => {
+	const points = poly.map((p) => spinePointToLocal(box, viewport, p));
+	let minX = Infinity;
+	let minY = Infinity;
+	let maxX = -Infinity;
+	let maxY = -Infinity;
+	for (const p of points) {
+		minX = Math.min(minX, p.x);
+		minY = Math.min(minY, p.y);
+		maxX = Math.max(maxX, p.x);
+		maxY = Math.max(maxY, p.y);
+	}
+	const width = Math.max(1, maxX - minX);
+	const height = Math.max(1, maxY - minY);
+	const hitFlat: number[] = [];
+	const pctParts: string[] = [];
+	for (const p of points) {
+		const lx = p.x - minX;
+		const ly = p.y - minY;
+		hitFlat.push(lx, ly);
+		pctParts.push(`${(lx / width) * 100}% ${(ly / height) * 100}%`);
+	}
+	return {
+		x: minX,
+		y: minY,
+		width,
+		height,
+		hitFlat,
+		clipPath: `polygon(${pctParts.join(', ')})`,
+	};
+};
+
+/**
+ * Mascot box height (px) where the press radius is used at 1×.
+ * Smaller boxes (phones) shrink the hit circle so it stays on the torso.
+ */
+export const MASCOT_PRESS_RADIUS_REF_BOX_H = 520;
+
+/** Min/max multipliers applied on top of spine→screen projection. */
+export const MASCOT_PRESS_RADIUS_MULT_MIN = 0.62;
+export const MASCOT_PRESS_RADIUS_MULT_MAX = 1;
+
+/**
+ * On small boxes, lift the press center in spine Y (up) so a larger circle
+ * still clears the portrait HUD (+) under the mascot.
+ */
+export const MASCOT_PRESS_LIFT_REF_BOX_H = 520;
+export const MASCOT_PRESS_LIFT_MAX_SPINE = 480;
+
+/** Extra shrink for small mascot boxes — keeps the meow zone from swallowing the frame. */
+export const getMascotPressRadiusMult = (boxHeight: number) => {
+	if (boxHeight <= 0) return MASCOT_PRESS_RADIUS_MULT_MIN;
+	const raw = boxHeight / MASCOT_PRESS_RADIUS_REF_BOX_H;
+	return Math.min(
+		MASCOT_PRESS_RADIUS_MULT_MAX,
+		Math.max(MASCOT_PRESS_RADIUS_MULT_MIN, raw),
+	);
+};
+
+/** Spine-Y lift (higher = toward hat) that grows as the mascot box shrinks. */
+export const getMascotPressSpineLift = (boxHeight: number) => {
+	if (boxHeight >= MASCOT_PRESS_LIFT_REF_BOX_H) return 0;
+	if (boxHeight <= 0) return MASCOT_PRESS_LIFT_MAX_SPINE;
+	const t = 1 - boxHeight / MASCOT_PRESS_LIFT_REF_BOX_H;
+	return MASCOT_PRESS_LIFT_MAX_SPINE * Math.min(1, Math.max(0, t));
+};
 
 export const spinePressToLocal = (
 	box: MascotScreenBox,
 	viewport: MascotSpineViewport,
 	press: { x: number; y: number; radius: number },
+	radiusMult = getMascotPressRadiusMult(box.height),
 ) => {
 	const scale = getMascotPixiTransform(box, viewport).scale;
 	const vpCx = viewport.x + viewport.width * 0.5;
 	const vpCy = viewport.y + viewport.height * 0.5;
+	const pressY = press.y + getMascotPressSpineLift(box.height);
 	const cx = (press.x - vpCx) * scale;
-	const cy = (vpCy - press.y) * scale;
-	const radius = press.radius * scale;
+	const cy = (vpCy - pressY) * scale;
+	const radius = press.radius * scale * radiusMult;
 	return {
 		x: cx - radius,
 		y: cy - radius,

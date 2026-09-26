@@ -2,6 +2,9 @@
 	HTML tap targets for mascot meow/bark. Pixi hits sit under the HUD stacking
 	context (z44+); on phones those taps never reach the canvas. Same idea as
 	duel portrait `.board-face` buttons.
+
+	Cat uses a silhouette polygon (clip-path). Overlay sits under HUD (z43) so
+	bet (+) always wins when shapes overlap.
 -->
 <script lang="ts">
 	import { isPopoutViewport } from '../game/constants';
@@ -17,10 +20,11 @@
 		getMascotPortraitScreenBox,
 		getMascotScreenBox,
 		getMascotPixiTransform,
-		MASCOT_CAT_PRESS,
+		MASCOT_CAT_PRESS_POLY,
 		MASCOT_DOG_PRESS,
 		MASCOT_DOG_SPINE_VIEWPORT,
 		MASCOT_SPINE_VIEWPORT,
+		spinePressPolyToLocal,
 		spinePressToLocal,
 		type MascotScreenBox,
 	} from '../game/mascotHtmlSpine';
@@ -111,22 +115,28 @@
 		return getDuelDogMascotBox(duel);
 	});
 
-	const pressStyle = (
-		box: MascotScreenBox,
-		dog: boolean,
-	): string => {
-		const viewport = dog ? MASCOT_DOG_SPINE_VIEWPORT : MASCOT_SPINE_VIEWPORT;
-		const press = dog ? MASCOT_DOG_PRESS : MASCOT_CAT_PRESS;
-		const local = spinePressToLocal(box, viewport, press);
-		const t = getMascotPixiTransform(box, viewport);
+	const catPressStyle = $derived.by(() => {
+		if (!primaryBox) return '';
+		const local = spinePressPolyToLocal(primaryBox, MASCOT_SPINE_VIEWPORT, MASCOT_CAT_PRESS_POLY);
+		const t = getMascotPixiTransform(primaryBox, MASCOT_SPINE_VIEWPORT);
+		return [
+			`left:${t.x + local.x}px`,
+			`top:${t.y + local.y}px`,
+			`width:${local.width}px`,
+			`height:${local.height}px`,
+			`clip-path:${local.clipPath}`,
+		].join(';');
+	});
+
+	const dogPressStyle = $derived.by(() => {
+		if (!dogBox) return '';
+		const local = spinePressToLocal(dogBox, MASCOT_DOG_SPINE_VIEWPORT, MASCOT_DOG_PRESS);
+		const t = getMascotPixiTransform(dogBox, MASCOT_DOG_SPINE_VIEWPORT);
 		const cx = t.x + local.x + local.radius;
 		const cy = t.y + local.y + local.radius;
 		const d = local.radius * 2;
 		return `left:${cx}px;top:${cy}px;width:${d}px;height:${d}px`;
-	};
-
-	const primaryStyle = $derived(primaryBox ? pressStyle(primaryBox, false) : '');
-	const dogStyle = $derived(dogBox ? pressStyle(dogBox, true) : '');
+	});
 
 	const PRESS_COOLDOWN_MS = 1000;
 	let catVocalIndex = 0;
@@ -155,8 +165,8 @@
 		{#if showPrimary && primaryBox}
 			<button
 				type="button"
-				class="mascot-press-hit"
-				style={primaryStyle}
+				class="mascot-press-hit mascot-press-hit--cat"
+				style={catPressStyle}
 				tabindex="-1"
 				aria-label="mascot meow"
 				data-test="mascot-press-cat"
@@ -167,8 +177,8 @@
 		{#if showDuelDog && dogBox}
 			<button
 				type="button"
-				class="mascot-press-hit"
-				style={dogStyle}
+				class="mascot-press-hit mascot-press-hit--dog"
+				style={dogPressStyle}
 				tabindex="-1"
 				aria-label="mascot bark"
 				data-test="mascot-press-dog"
@@ -183,8 +193,8 @@
 	.mascot-press-overlay {
 		position: fixed;
 		inset: 0;
-		/* Above HUD (44) / Buy Bonus (45); only the circle captures taps. */
-		z-index: 46;
+		/* Under HUD (44): bet (+) keeps priority where shapes overlap. */
+		z-index: 43;
 		pointer-events: none;
 
 		&.in-lift {
@@ -194,12 +204,11 @@
 
 	.mascot-press-hit {
 		position: absolute;
-		transform: translate(-50%, -50%);
 		border: 0;
 		padding: 0;
 		margin: 0;
-		border-radius: 50%;
 		background: transparent;
+		box-shadow: none;
 		cursor: pointer;
 		pointer-events: auto;
 		-webkit-tap-highlight-color: transparent;
@@ -207,15 +216,25 @@
 		appearance: none;
 		-webkit-appearance: none;
 		outline: none;
-		box-shadow: none;
 
 		&:focus,
 		&:focus-visible,
 		&:active {
 			outline: none;
-			box-shadow: none;
 			border: 0;
 			background: transparent;
+			box-shadow: none;
 		}
+	}
+
+	.mascot-press-hit--cat {
+		/* top-left AABB + clip-path polygon (set inline) */
+		transform: none;
+		border-radius: 0;
+	}
+
+	.mascot-press-hit--dog {
+		transform: translate(-50%, -50%);
+		border-radius: 50%;
 	}
 </style>
