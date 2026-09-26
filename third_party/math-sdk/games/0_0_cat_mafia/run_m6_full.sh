@@ -119,9 +119,9 @@ else
     --out library/duel_targets_report_pre_resample.md
 fi
 
-# --- 4) Resample 1M (parallel modes) ---
-RESAMPLE_JOBS="${RESAMPLE_JOBS:-6}"
-step "4/8 resample_books.py --1m --jobs $RESAMPLE_JOBS"
+# --- 4) Resample 1M (low-mem by default for --1m; jobs=1 avoids parallel RAM/disk spike) ---
+RESAMPLE_JOBS="${RESAMPLE_JOBS:-1}"
+step "4/8 resample_books.py --1m --jobs $RESAMPLE_JOBS (low-mem auto)"
 "$PY" tools/resample_books.py --1m --jobs "$RESAMPLE_JOBS"
 
 # --- 4b) Post-resample gates ---

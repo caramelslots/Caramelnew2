@@ -6,6 +6,7 @@ Usage (from this directory):
 
 Optional:
   NUM_SIMS=1000          # default 200
+  NUM_THREADS=20         # default 20
   RUN_OPT=1              # also run optimizer (slower)
 """
 
@@ -21,6 +22,7 @@ from src.write_data.write_configs import generate_configs
 
 if __name__ == "__main__":
     n = int(os.environ.get("NUM_SIMS", "200"))
+    threads = int(os.environ.get("NUM_THREADS", "20"))
     run_opt = os.environ.get("RUN_OPT", "0") == "1"
 
     num_sim_args = {
@@ -38,13 +40,13 @@ if __name__ == "__main__":
     if run_opt:
         OptimizationSetup(config)
 
-    print("=== create_books", num_sim_args, "===")
+    print("=== create_books", num_sim_args, f"threads={threads}", "===")
     create_books(
         gamestate,
         config,
         num_sim_args,
         min(500, n),
-        1,
+        threads,
         True,
         False,
     )
@@ -52,7 +54,7 @@ if __name__ == "__main__":
 
     if run_opt:
         print("=== optimize ===")
-        OptimizationExecution().run_all_modes(config, target_modes, rust_threads=20)
+        OptimizationExecution().run_all_modes(config, target_modes, rust_threads=threads)
         generate_configs(gamestate)
 
     print("=== done (small all-modes) ===")

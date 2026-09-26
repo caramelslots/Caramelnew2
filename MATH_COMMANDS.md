@@ -123,12 +123,11 @@ Legacy-отдельно: `match_duel_win_body.py` / `match_duel_competition.py` 
 ## 3d. TARGET vs NOW — markdown report
 
 ```bash
-# publish (после resample) — основной документ
 $PY tools/report_duel_targets_md.py \
   --lut-dir library/publish_files \
   --out library/duel_targets_report.md
 
-# weighted pre-resample
+
 $PY tools/report_duel_targets_md.py \
   --lut-dir library/publish_files_backup_pre_resample \
   --out library/duel_targets_report_pre_resample.md
@@ -144,31 +143,32 @@ Modes resample'ятся **параллельно** (default: `min(число mod
 ### 4a. M5 — 100 000 books на режим
 
 ```bash
-$PY tools/resample_books.py --100k
+$PY tools/resample_books.py --100k --jobs 1
 ```
 
-Только duel после §3c:
+Только duel после joint:
 
 ```bash
-$PY tools/resample_books.py --100k --modes bonus_duel_cat,bonus_duel_dog
-```
-
-`resample_books` сам подхватит weighted backup (equal-weight publish не затирает backup).
-
-Опции:
-
-```bash
-$PY tools/resample_books.py --100k --jobs 1          # последовательно (debug)
-$PY tools/resample_books.py --100k --jobs 6          # явно 6 workers
+$PY tools/resample_books.py --100k --jobs 1 --modes bonus_duel_cat,bonus_duel_dog
 ```
 
 ### 4b. M6 / production — 1 000 000 books на режим
 
+**Важно:** duel books ~40GB JSON → ~260GB в RAM. `--1m` по умолчанию включает `--low-mem` (стрим на диск). На 128GB:
+
 ```bash
-$PY tools/resample_books.py --1m
+$PY tools/resample_books.py --1m --jobs 1
+# то же явно:
+$PY tools/resample_books.py --1m --jobs 1 --low-mem
 ```
 
-Те же `--jobs` / `--modes` работают и для `--1m`.
+Кастомный N (после `NUM_SIMS=10000 RUN_OPT=1 $PY run_small.py` + backup):
+
+```bash
+$PY tools/resample_books.py --target-n 10000 --jobs 1 --low-mem --modes base
+```
+
+Опции: `--modes`, `--jobs 1`, `--no-low-mem` (только если есть ~300GB RAM).
 
 ---
 
