@@ -719,6 +719,9 @@ const SPIN_OPTIONS_SHARED = {
 	// Start at a constant speed (no `backIn` wind-up burst) so the slot doesn't
 	// visibly "surge" to swap symbols at the start of the spin.
 	reelPreSpinWindup: false,
+	// Phone: finish off-screen Spine→WebP mounts before the first slide frame
+	// (and stagger per-reel preSpin). Cuts the "tap → hitch → surge" feel.
+	reelSpinMountSettleFrames: 2,
 	reelBounceSizeMulti: 0,
 	reelSettleSecondaryMulti: 0,
 	reelSettleSecondarySpeedMulti: 0,

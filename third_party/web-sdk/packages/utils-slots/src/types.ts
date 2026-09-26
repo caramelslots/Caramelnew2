@@ -110,6 +110,13 @@ export type SpinningReelSpinOptions = {
 	reelLandSquashY?: number;
 	reelLandSquashRecoveryMs?: number;
 	reelLandSquashStretchMulti?: number;
+	/**
+	 * After a spin-pool swap + `placeY` (Spine→WebP mounts off-screen), wait this
+	 * many animation frames before starting reel motion. Spreads GPU/texture work
+	 * away from the first motion frame — reduces the phone "tap → hitch → surge"
+	 * feel when static symbols are Spine and spin symbols are sprites. Default 0.
+	 */
+	reelSpinMountSettleFrames?: number;
 };
 
 export type CascadingReelSpinOptions = {

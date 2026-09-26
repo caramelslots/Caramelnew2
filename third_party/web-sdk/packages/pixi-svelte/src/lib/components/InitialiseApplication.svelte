@@ -13,7 +13,7 @@
 		// which is a major fill-rate cost. Undefined = no cap (previous behavior).
 		maxResolution?: number;
 		antialias?: boolean;
-		/** On phone portrait: cap resolution at 2.5 and disable MSAA. */
+		/** On phone portrait: cap resolution at 2 and disable MSAA. */
 		tuneForMobilePortrait?: boolean;
 		/**
 		 * Prefer WebGL on iOS/Android (including iPadOS masquerading as Mac).
@@ -54,7 +54,7 @@
 			window.innerHeight > window.innerWidth;
 		const mobileTuned = props.tuneForMobilePortrait && isPhonePortrait;
 		const maxRes =
-			mobileTuned && props.maxResolution ? Math.min(props.maxResolution, 2.5) : props.maxResolution;
+			mobileTuned && props.maxResolution ? Math.min(props.maxResolution, 2) : props.maxResolution;
 		const resolution = maxRes ? Math.min(dpr, maxRes) : dpr;
 		const antialias = props.antialias ?? !mobileTuned;
 		context.stateApp.pixiApplication = new PIXI.Application<PIXI.Renderer<HTMLCanvasElement>>();

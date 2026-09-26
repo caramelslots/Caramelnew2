@@ -559,6 +559,13 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		await waitForTimeout(reelState.spinOptions().reelSpinDelay * reelOptions.reelIndex);
 	};
 
+	const settleSpinMounts = async () => {
+		const frames = reelState.spinOptions().reelSpinMountSettleFrames ?? 0;
+		for (let i = 0; i < frames; i++) {
+			await waitForAnimationFrame();
+		}
+	};
+
 	const preSpin = async ({
 		isTurboBeforeAll,
 		preSpinPaddingReel,
@@ -571,7 +578,10 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		isPreSpinning = true;
 		hasSignaledReady = false;
 		reelState.spinType = isTurboBeforeAll ? 'fast' : 'normal';
+		// Atomic: new spin WebPs above + on-screen Spine/static tail stay put.
 		await preSpinPadding({ preSpinPaddingRawReel });
+		// Let off-screen spin sprites finish mounting before the first slide frame.
+		await settleSpinMounts();
 		if (!isTurboBeforeAll) await delaySpinByReelIndex();
 		preSpinSlideDownLoop({ isTurboBeforeAll, preSpinPaddingRawReel });
 	};
@@ -704,6 +714,9 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			}
 		}
 
+		// Same settle as preSpin: finish spin-sprite mounts before motion resumes.
+		await settleSpinMounts();
+
 		// Q: When to skip the slideDown?
 		// A: Stop / Space set isTurbo — skip remaining travel when noStop is false.
 		// Do NOT require motion==='spinning': delayed reels (reelSpinDelay) may still
@@ -715,8 +728,8 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		} else if (stateBet.isTurbo) {
 			// skip
 		} else {
-			// Start slideDown in this sync turn (before interruptible's async executor
-			// yields) so main-spin motion begins in the same frame as prepend placeY.
+			// Start slide after mount settle so motion is not coupled to the
+			// same frame as a heavy Spine→WebP pool swap.
 			const slideDownTask = slideDown();
 			await interruptible.add(async () => {
 				await slideDownTask;

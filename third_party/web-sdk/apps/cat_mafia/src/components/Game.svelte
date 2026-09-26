@@ -17,6 +17,8 @@
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { startLoadingIdleUiPreload } from '../game/uiHtmlAssetManifest';
 	import { GAME_ENTRANCE_MS } from '../game/constants';
+	import { PHONE_TICKER_MAX_FPS } from '../game/duelPhoneDpr';
+	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import EnableSound from './EnableSound.svelte';
 	import EnableSymbolTextureOptimization from './EnableSymbolTextureOptimization.svelte';
@@ -84,6 +86,7 @@
 	const SHOW_DEV_UI = false;
 
 	const context = getContext();
+	const phoneTickerMaxFps = isPhoneForAtlasDownscale() ? PHONE_TICKER_MAX_FPS : undefined;
 
 	let BuyBonusModalShell = $state<Component | null>(null);
 
@@ -148,6 +151,7 @@
 		maxResolution={3}
 		tuneForMobilePortrait
 		webglOnIosAndroid
+		maxFps={phoneTickerMaxFps}
 	>
 		<EnableSound />
 		<EnableSymbolTextureOptimization />
