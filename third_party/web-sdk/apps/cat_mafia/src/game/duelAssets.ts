@@ -11,6 +11,9 @@ export const DUEL_CAT_FACE_AVATAR_SRC = assetUrl('assets/sprites/duel/cat_face_a
 /** Phone duel corner portrait (dog face). */
 export const DUEL_DOG_FACE_AVATAR_SRC = assetUrl('assets/sprites/duel/dog_face_avatar.png');
 
+/** Landscape duel header wordmark (replaces PC “DUEL” text). */
+export const DUEL_LOGO_SRC = assetUrl('assets/sprites/duel/logo.webp');
+
 /** Ornate dog↔cat bank tug-of-war scale (1500×270). */
 export const DUEL_BANK_SCALE_SRC = assetUrl('assets/sprites/duel/scale.png');
 /** Paw diamond slider that rides the bank scale (89×94). */

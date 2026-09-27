@@ -83,7 +83,7 @@
 	import { FadeContainer } from 'components-pixi';
 
 	/** Flip to `true` to show DevButtons / DevCheats / TargetShootDevOverlay again. */
-	const SHOW_DEV_UI = false;
+	const SHOW_DEV_UI = true;
 
 	const context = getContext();
 	const phoneTickerMaxFps = isPhoneForAtlasDownscale() ? PHONE_TICKER_MAX_FPS : undefined;

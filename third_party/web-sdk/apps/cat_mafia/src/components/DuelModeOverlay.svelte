@@ -35,13 +35,14 @@
 	import { CAT_MEOW_SOUNDS, DOG_BARK_SOUNDS } from '../game/sound';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { stateDuel, type DuelSide } from '../game/stateDuel.svelte';
-	import { computeDuelScreenLayout, getDuelSpinCounterBox } from '../game/duelLayout';
+	import { computeDuelScreenLayout, getDuelLogoBox, getDuelSpinCounterBox } from '../game/duelLayout';
 	import {
 		DUEL_BANK_SCALE,
 		DUEL_BANK_SCALE_PAW_SRC,
 		DUEL_BANK_SCALE_SRC,
 		DUEL_CAT_FACE_AVATAR_SRC,
 		DUEL_DOG_FACE_AVATAR_SRC,
+		DUEL_LOGO_SRC,
 		DUEL_PICK_CARD,
 	} from '../game/duelAssets';
 	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
@@ -72,6 +73,12 @@
 	);
 	const dogCounterBox = $derived(getDuelSpinCounterBox(duelLayout, 'dog'));
 	const catCounterBox = $derived(getDuelSpinCounterBox(duelLayout, 'cat'));
+	const logoBox = $derived(
+		getDuelLogoBox(duelLayout, {
+			canvasWidth: canvasSizes.width,
+			canvasHeight: canvasSizes.height,
+		}),
+	);
 	const plaqueUrl = HUD_ASSETS.autoplay;
 
 	let pickShow = $state(false);
@@ -242,8 +249,19 @@
 		transition:fade={{ duration: 220 }}
 	>
 		{#if !isPortrait}
-			<header class="duel-header">
-				<span class="title">DUEL</span>
+			<header
+				class="duel-header"
+				style:left="{logoBox.left}px"
+				style:top="{logoBox.top}px"
+				style:width="{logoBox.width}px"
+			>
+				<img
+					class="title-logo"
+					src={DUEL_LOGO_SRC}
+					alt="DUEL"
+					draggable="false"
+					data-test="duel-title-logo"
+				/>
 			</header>
 		{/if}
 
@@ -480,33 +498,23 @@
 
 	.duel-header {
 		position: absolute;
-		top: 1.1vh;
-		left: 50%;
-		transform: translateX(-50%);
+		/* Centre X; top is logo vertical centre (from getDuelLogoBox). */
+		transform: translate(-50%, -50%);
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.25rem;
 		z-index: 2;
 		pointer-events: none;
-		/* Same face as under-board WIN (`WinHudHtmlOverlay`). */
-		filter: drop-shadow(0 1px 0 #e8c878) drop-shadow(0 3px 0 #4a3008)
-			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
 	}
 
-	.duel-header .title {
-		font-family: 'proxima-nova', sans-serif;
-		font-weight: 800;
-		font-synthesis: none;
-		letter-spacing: 0.12em;
-		font-size: clamp(1.85rem, 4.3vw, 3.35rem);
-		text-transform: uppercase;
-		line-height: 1;
-		color: #e8b84a;
-		background: linear-gradient(180deg, #f0d070 0%, #e0a838 38%, #c07014 72%, #8a4e0c 100%);
-		-webkit-background-clip: text;
-		background-clip: text;
-		-webkit-text-fill-color: transparent;
+	.duel-header .title-logo {
+		display: block;
+		width: 100%;
+		height: auto;
+		object-fit: contain;
+		user-select: none;
+		-webkit-user-drag: none;
+		filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
 	}
 
 	.counter {
@@ -552,23 +560,7 @@
 	}
 
 	.duel-root.portrait .duel-header {
-		top: 0.6vh;
-		gap: 0.35rem;
-	}
-
-	.duel-root.portrait .duel-header .title {
-		font-size: clamp(1.55rem, 7vw, 2.1rem);
-		letter-spacing: 0.18em;
-	}
-
-	.duel-root.popout-s .duel-header {
-		top: 0.2vh;
-		gap: 0.1rem;
-	}
-
-	.duel-root.popout-s .duel-header .title {
-		font-size: clamp(1.1rem, 4.5vh, 1.6rem);
-		letter-spacing: 0.1em;
+		display: none;
 	}
 
 	.board-face {

@@ -238,6 +238,62 @@ const duelMascotSize = (layout: DuelScreenLayout) => {
 };
 
 /**
+ * Landscape DUEL wordmark — locked to dual-desk geometry so position + size
+ * track the boards across every landscape / tablet / popout resolution.
+ *
+ * Preferred width = desk × WIDTH_FRAC, then clamped so the logo always fits
+ * in the band between the canvas top and the desk tops (critical for Popout S).
+ *
+ * GAP_ABOVE_DESK_FRAC: preferred space between logo bottom and desk top
+ * (of boardHeight; may be slightly negative to tuck into the top rail).
+ * Art is cropped logo.webp (900×343).
+ */
+export const DUEL_LOGO_WIDTH_FRAC = 0.52;
+export const DUEL_LOGO_GAP_ABOVE_DESK_FRAC = -0.02;
+export const DUEL_LOGO_ASPECT = 900 / 343;
+/** Min padding from the canvas top edge (px). */
+export const DUEL_LOGO_TOP_PAD_PX = 2;
+
+export const getDuelLogoBox = (
+	layout: DuelScreenLayout,
+	opts: { canvasWidth: number; canvasHeight: number },
+) => {
+	const deskTop =
+		Math.min(layout.dogCenter.y, layout.catCenter.y) - layout.boardHeight * 0.5;
+	const left = (layout.dogCenter.x + layout.catCenter.x) * 0.5;
+
+	/** Preferred bottom of the logo (may sit slightly into the desk top rail). */
+	const preferredBottom = deskTop - layout.boardHeight * DUEL_LOGO_GAP_ABOVE_DESK_FRAC;
+	const topPad = DUEL_LOGO_TOP_PAD_PX;
+	/** Hard ceiling for logo height — never spill off the top of the canvas. */
+	const maxHeight = Math.max(6, preferredBottom - topPad);
+
+	let width = layout.boardWidth * DUEL_LOGO_WIDTH_FRAC;
+	let height = width / DUEL_LOGO_ASPECT;
+
+	// Don't let the wordmark span more than ~half the canvas on tiny popouts.
+	const maxWidth = Math.min(opts.canvasWidth * 0.5, layout.boardWidth * 0.7);
+	if (width > maxWidth) {
+		width = maxWidth;
+		height = width / DUEL_LOGO_ASPECT;
+	}
+
+	if (height > maxHeight) {
+		height = maxHeight;
+		width = height * DUEL_LOGO_ASPECT;
+	}
+
+	// Prefer anchoring the bottom; if that would clip the top, centre in the free band.
+	let top = preferredBottom - height * 0.5;
+	const topEdge = top - height * 0.5;
+	if (topEdge < topPad) {
+		top = topPad + height * 0.5;
+	}
+
+	return { left, top, width, height };
+};
+
+/**
  * Duel spin counter — same autoplay.webp plaque as phone FS (number only),
  * anchored on the top gold rail to the right of each desk.
  */
