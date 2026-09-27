@@ -110,12 +110,12 @@ export const computeDuelScreenLayout = (opts: {
 
 	if (isPortrait) {
 		// Pack both desks into the phone playfield — minimize chrome reserves.
-		const hudReservePhone = Math.round(opts.canvasHeight * 0.12);
-		const topReservePhone = 36;
+		const hudReservePhone = Math.round(opts.canvasHeight * 0.09);
+		const topReservePhone = 18;
 		const availableH = Math.max(220, opts.canvasHeight - hudReservePhone - topReservePhone);
-		const gap = 2;
+		const gap = -16;
 		const maxBoardH = (availableH - gap) / 2;
-		const boardWidth = Math.min(opts.canvasWidth * 0.98, maxBoardH / aspect);
+		const boardWidth = Math.min(opts.canvasWidth * 1.02, maxBoardH / aspect);
 		const boardHeight = boardWidth * aspect;
 		const stackH = boardHeight * 2 + gap;
 		const startY = topReservePhone + Math.max(0, (availableH - stackH) / 2) + boardHeight / 2;
@@ -126,8 +126,9 @@ export const computeDuelScreenLayout = (opts: {
 			boardHeight,
 			gap,
 			vsSize: 0,
-			dogCenter: { x: cx, y: startY },
-			catCenter: { x: cx, y: startY + boardHeight + gap },
+			// Phone stack: cat on top, dog below.
+			catCenter: { x: cx, y: startY },
+			dogCenter: { x: cx, y: startY + boardHeight + gap },
 			hudReserve: hudReservePhone,
 			mascotOverhang: DUEL_MASCOT_OVERHANG,
 			mascotHeightScale: 1.15,

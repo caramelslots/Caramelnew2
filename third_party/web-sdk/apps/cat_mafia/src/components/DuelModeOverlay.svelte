@@ -298,33 +298,33 @@
 		{#if isPortrait}
 			<button
 				type="button"
-				class="board-face top-right face-flip"
-				aria-label={context.i18nDerived.duelSideDog()}
-				style:width="{portraitAvatarSize}px"
-				style:height="{portraitAvatarSize}px"
-				style:left="{duelLayout.dogCenter.x +
-					duelLayout.boardWidth * 0.5 -
-					portraitAvatarSize * 0.72}px"
-				style:top="{duelLayout.dogCenter.y -
-					duelLayout.boardHeight * 0.5 -
-					portraitAvatarSize * 0.18}px"
-				style:background-image="url('{DUEL_DOG_FACE_AVATAR_SRC}')"
-				onclick={() => playPortraitVocal('dog')}
-			></button>
-			<button
-				type="button"
-				class="board-face bottom-left face-flip"
+				class="board-face top-right"
 				aria-label={context.i18nDerived.duelSideCat()}
 				style:width="{portraitAvatarSize}px"
 				style:height="{portraitAvatarSize}px"
-				style:left="{duelLayout.catCenter.x -
+				style:left="{duelLayout.catCenter.x +
 					duelLayout.boardWidth * 0.5 -
-					portraitAvatarSize * 0.18}px"
-				style:top="{duelLayout.catCenter.y +
-					duelLayout.boardHeight * 0.5 -
 					portraitAvatarSize * 0.72}px"
+				style:top="{duelLayout.catCenter.y -
+					duelLayout.boardHeight * 0.5 -
+					portraitAvatarSize * 0.18}px"
 				style:background-image="url('{DUEL_CAT_FACE_AVATAR_SRC}')"
 				onclick={() => playPortraitVocal('cat')}
+			></button>
+			<button
+				type="button"
+				class="board-face bottom-left"
+				aria-label={context.i18nDerived.duelSideDog()}
+				style:width="{portraitAvatarSize}px"
+				style:height="{portraitAvatarSize}px"
+				style:left="{duelLayout.dogCenter.x -
+					duelLayout.boardWidth * 0.5 -
+					portraitAvatarSize * 0.18}px"
+				style:top="{duelLayout.dogCenter.y +
+					duelLayout.boardHeight * 0.5 -
+					portraitAvatarSize * 0.72}px"
+				style:background-image="url('{DUEL_DOG_FACE_AVATAR_SRC}')"
+				onclick={() => playPortraitVocal('dog')}
 			></button>
 		{/if}
 
@@ -568,25 +568,19 @@
 		position: fixed;
 		z-index: 46;
 		padding: 0;
+		border: 0;
 		border-radius: 50%;
-		background-color: #2a1810;
-		background-size: cover;
-		background-position: center 28%;
+		background-color: transparent;
+		/* Framed portrait art already includes the gold circle — show full medallion. */
+		background-size: contain;
+		background-position: center;
 		background-repeat: no-repeat;
 		cursor: pointer;
 		pointer-events: auto;
 		user-select: none;
 		-webkit-tap-highlight-color: transparent;
 		touch-action: manipulation;
-		border: 2px solid rgba(255, 214, 120, 0.85);
-		box-shadow:
-			0 4px 14px rgba(0, 0, 0, 0.45),
-			0 0 0 1px rgba(0, 0, 0, 0.35);
-	}
-
-	/* Static face art faces outward — mirror so dog looks left, cat looks right (toward desks). */
-	.board-face.face-flip {
-		transform: scaleX(-1);
+		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
 	}
 
 

@@ -17,6 +17,7 @@
 	import { Container } from 'pixi-svelte';
 	import { FadeContainer, WinCountUpProvider } from 'components-pixi';
 	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
+	import { createInterruptible } from 'utils-shared/interruptible';
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
 	import { OnMount } from 'components-shared';
 
@@ -51,10 +52,21 @@
 	// When non-null, calling it skips the current tier's wait and advances to the next tier.
 	// Null means we're on the final tier — click should finish the count-up instead.
 	let skipCurrentTier = $state<(() => void) | null>(null);
-	let winAnimation: { playOutro: () => Promise<void> } | undefined = $state();
+	let winAnimation: { playOutro: (options?: { instant?: boolean }) => Promise<void> } | undefined =
+		$state();
 
-	const finishWinPresentation = async () => {
-		await winAnimation?.playOutro();
+	/** Guards against double-dismiss (press + auto path after count-up). */
+	let dismissRequested = false;
+	/** Interruptible wait between count-up end and auto-dismiss. */
+	const postCountUpWait = createInterruptible();
+
+	const finishWinPresentation = async (options?: { instant?: boolean }) => {
+		if (dismissRequested) return;
+		dismissRequested = true;
+		clearTierTimers();
+		postCountUpWait.interrupt();
+		postCountUpWait.clear();
+		await winAnimation?.playOutro({ instant: options?.instant === true });
 		oncomplete();
 	};
 
@@ -172,6 +184,8 @@
 			stateGame.winOverlayActive = false;
 			stateGame.overlayDimAlpha = 0;
 			clearTierTimers();
+			postCountUpWait.interrupt();
+			postCountUpWait.clear();
 		},
 		winUpdate: async (emitterEvent) => {
 			amount = emitterEvent.amount;
@@ -182,6 +196,7 @@
 			stateGame.overlayDimAlpha = isBig ? BIG_WIN_DIM_ALPHA : 0;
 			currentTierIndex = 0;
 			winUpdateCount++;
+			dismissRequested = false;
 			startTierAdvancement(computeWinLadder(emitterEvent.winLevelData));
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},
@@ -201,9 +216,14 @@
 				<OnMount
 					onmount={async () => {
 						await startCountUp();
-						await waitForTimeout(
-							scaleMsByGameSpeed(WIN_SCREEN_POST_COUNT_UP_DELAY_MS, stateGame.gameSpeed),
+						if (dismissRequested) return;
+						await postCountUpWait.add(() =>
+							waitForTimeout(
+								scaleMsByGameSpeed(WIN_SCREEN_POST_COUNT_UP_DELAY_MS, stateGame.gameSpeed),
+							),
 						);
+						postCountUpWait.clear();
+						if (dismissRequested) return;
 						await finishWinPresentation();
 					}}
 				/>
@@ -257,14 +277,17 @@
 
 				<PressToContinue
 					onpress={() => {
+						if (dismissRequested) return;
 						if (countUpCompleted) {
-							void finishWinPresentation();
+							// Hold after count-up — skip delay / outro and dismiss.
+							void finishWinPresentation({ instant: true });
 						} else if (skipCurrentTier) {
-							// On an intermediate ladder tier — skip to the next one
+							// Intermediate ladder tier — advance Big → Super → Epic → …
 							skipCurrentTier();
 						} else {
-							// On the final tier — fast-forward the count-up
+							// Final ladder tier (or single-tier Big Win): snap amount and dismiss.
 							finishCountUp();
+							void finishWinPresentation({ instant: true });
 						}
 					}}
 				/>

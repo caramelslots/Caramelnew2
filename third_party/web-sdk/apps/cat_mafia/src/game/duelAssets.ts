@@ -7,9 +7,9 @@ const assetUrl = (path: string) =>
 	).href;
 
 /** Phone duel corner portrait (cat face). */
-export const DUEL_CAT_FACE_AVATAR_SRC = assetUrl('assets/sprites/duel/cat_face_avatar.png');
+export const DUEL_CAT_FACE_AVATAR_SRC = assetUrl('assets/sprites/duel/cat_face_avatar.webp');
 /** Phone duel corner portrait (dog face). */
-export const DUEL_DOG_FACE_AVATAR_SRC = assetUrl('assets/sprites/duel/dog_face_avatar.png');
+export const DUEL_DOG_FACE_AVATAR_SRC = assetUrl('assets/sprites/duel/dog_face_avatar.webp');
 
 /** Landscape duel header wordmark (replaces PC “DUEL” text). */
 export const DUEL_LOGO_SRC = assetUrl('assets/sprites/duel/logo.webp');

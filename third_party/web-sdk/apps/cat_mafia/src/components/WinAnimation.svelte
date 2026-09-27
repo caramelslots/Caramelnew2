@@ -1,5 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { untrack } from 'svelte';
+	import { Tween } from 'svelte/motion';
+	import { backOut, sineInOut } from 'svelte/easing';
 
 	import { ColorMatrixFilter } from 'pixi.js';
 	import { Container, SpineProvider, SpineSlot } from 'pixi-svelte';
@@ -20,6 +23,10 @@
 	/** Huge additive glow meshes — soft bloom toward the sides of the screen. */
 	const BIG_WIN_GLOW_SLOTS = ['glow_1', 'glow_2', 'glow_3', 'glow_4'] as const;
 
+	/** Double-beat scale pulse when the ladder title advances (Big → Super → …). */
+	const TITLE_PULSE_PEAK = 1.16;
+	const TITLE_PULSE_MID = 1.07;
+
 	type Props = {
 		animationMap: BigWinSpineAnimationMap;
 		/**
@@ -36,6 +43,30 @@
 	let banknotesOverlay: { finishAndWait: () => Promise<void> } | undefined = $state();
 	/** Flying notes from tier start until outro finishes. */
 	let banknotesActive = $state(true);
+
+	const titlePulseScale = new Tween(1);
+	let lastBannerText = '';
+
+	/** Pop + secondary throb whenever the ladder banner label changes. */
+	const pulseTitle = async () => {
+		await titlePulseScale.set(0.9, { duration: 0 });
+		await titlePulseScale.set(TITLE_PULSE_PEAK, { duration: 180, easing: backOut });
+		await titlePulseScale.set(0.97, { duration: 110, easing: sineInOut });
+		await titlePulseScale.set(TITLE_PULSE_MID, { duration: 130, easing: sineInOut });
+		await titlePulseScale.set(1, { duration: 150, easing: sineInOut });
+	};
+
+	$effect(() => {
+		const text = props.bannerOverrideText ?? '';
+		untrack(() => {
+			if (!text || text === lastBannerText) {
+				lastBannerText = text;
+				return;
+			}
+			lastBannerText = text;
+			void pulseTitle();
+		});
+	});
 
 	/** Money stack scale relative to the board plate. */
 	const spineWidth = $derived(context.stateGameDerived.boardLayout().width * 0.78);
@@ -105,8 +136,13 @@
 	 * Run stack outro (Sensational `paket_4_out`) while banknotes keep playing;
 	 * tear banknotes down only after outro finishes. Big/Super/Epic: finish the
 	 * current banknotes cycle instead.
+	 * `instant` cuts banknotes immediately (user skip on the final ladder tier).
 	 */
-	export async function playOutro(): Promise<void> {
+	export async function playOutro(options?: { instant?: boolean }): Promise<void> {
+		if (options?.instant) {
+			banknotesActive = false;
+			return;
+		}
 		const distinctOutro = props.animationMap.outro !== props.animationMap.idle;
 		if (distinctOutro) {
 			await moneyTrack?.playOutro();
@@ -145,8 +181,13 @@
 	</Container>
 
 	{#if props.bannerOverrideText}
-		{#key props.bannerOverrideText}
-			<Container y={titleY} zIndex={10} filters={titleFilters}>
+		<Container
+			y={titleY}
+			zIndex={10}
+			scale={titlePulseScale.current}
+			filters={titleFilters}
+		>
+			{#key props.bannerOverrideText}
 				<ArchedLocaleText
 					text={props.bannerOverrideText}
 					maxWidth={titleMaxWidth}
@@ -163,7 +204,7 @@
 						letterSpacing: 0,
 					}}
 				/>
-			</Container>
-		{/key}
+			{/key}
+		</Container>
 	{/if}
 </Container>
