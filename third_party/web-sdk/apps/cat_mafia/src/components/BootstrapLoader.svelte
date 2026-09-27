@@ -130,7 +130,7 @@
 			<div class="progress-track">
 				<div class="progress-fill" style:width="{progress}%"></div>
 			</div>
-			<span class="progress-label">{Math.round(progress)}%</span>
+			<span class="progress-label">Loading {Math.round(progress)}%</span>
 		</div>
 	</div>
 {/if}
@@ -187,7 +187,7 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.45rem;
+		gap: 0.35rem;
 		width: min(280px, 55vw);
 		pointer-events: none;
 		user-select: none;
@@ -195,40 +195,46 @@
 
 	.progress-track {
 		width: 100%;
-		height: 8px;
+		height: 9px;
 		border-radius: 999px;
-		background: rgba(255, 255, 255, 0.12);
+		background: rgba(18, 12, 8, 0.55);
 		overflow: hidden;
-		border: 1px solid rgba(255, 255, 255, 0.18);
+		box-shadow:
+			inset 0 1px 3px rgba(0, 0, 0, 0.45),
+			inset 0 0 0 1px rgba(255, 255, 255, 0.06);
 	}
 
 	.progress-fill {
 		height: 100%;
 		border-radius: inherit;
-		background: linear-gradient(90deg, #c9a24a, #f0d78c);
+		background: linear-gradient(90deg, #f58220 0%, #ffbf2e 62%, #ffd845 100%);
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
 		transition: width 360ms cubic-bezier(0.22, 1, 0.36, 1);
 	}
 
 	.progress-label {
 		font-family: 'proxima-nova', sans-serif;
-		font-size: 0.85rem;
-		letter-spacing: 0.06em;
-		color: rgba(255, 255, 255, 0.75);
+		font-size: 0.72rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.14em;
+		color: #ffffff;
+		margin-top: 0.15rem;
 	}
 
 	@media (max-width: 768px) and (orientation: portrait) {
 		.progress-wrap {
 			width: min(340px, 78vw);
-			gap: 0.6rem;
+			gap: 0.45rem;
 		}
 
 		.progress-track {
-			height: 14px;
-			border-width: 1.5px;
+			height: 12px;
 		}
 
 		.progress-label {
-			font-size: 1.05rem;
+			font-size: 0.82rem;
+			letter-spacing: 0.16em;
 		}
 	}
 </style>

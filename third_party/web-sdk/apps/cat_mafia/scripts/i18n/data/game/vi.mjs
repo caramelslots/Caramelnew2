@@ -53,8 +53,8 @@ export default {
 	LOADER_CARD_1_LINE_3: 'MUA NORMAL ×100 HOẶC SUPER ×200',
 	LOADER_CARD_1_LINE_4: 'CÙNG CẢNH CHỌN MỤC TIÊU',
 	LOADER_CARD_2_TITLE: 'THẮNG TỐI ĐA',
-	LOADER_CARD_2_LINE_1: 'GAME CƠ BẢN: TỐI ĐA 2.500× CƯỢC',
-	LOADER_CARD_2_LINE_2: 'CHẾ ĐỘ BONUS: TỐI ĐA 25.000× CƯỢC',
+	LOADER_CARD_2_LINE_1: 'THẮNG TỐI ĐA MEOWFIA TỚI',
+	LOADER_CARD_2_LINE_2: '25.000×',
 	LOADER_CARD_3_TITLE: 'REVOLVER',
 	LOADER_CARD_3_LINE_1: 'THU ĐẠN TRONG FREE SPIN (TỐI ĐA 6). SAU CÁC VÒNG CHÍNH',
 	LOADER_CARD_3_LINE_2: 'MÈO BẮN MỤC TIÊU CHO +1 / +2 / +3 FS THÊM',
@@ -131,4 +131,6 @@ export default {
 	DUEL_CAT_LONG_DESC: 'Cơ hội đều · trung bình thấp hơn',
 	DUEL_DOG_LONG_DESC: 'Rủi ro cao · thắng lớn',
 	DUEL_PICK_BLURB: 'Chọn phe và chơi nhân vật đó. Hai bảng quay - ngân hàng lớn hơn lấy cả hai.',
+	LOADER_CARD_2_LINE_3: 'KHI VỤ CƯỚP TRÚNG',
+	LOADER_CARD_2_LINE_4: 'TIỀN THƯỞNG BỨT TỐC',
 };

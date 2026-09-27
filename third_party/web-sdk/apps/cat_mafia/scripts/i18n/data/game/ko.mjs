@@ -53,8 +53,8 @@ export default {
 	LOADER_CARD_1_LINE_3: 'NORMAL ×100 또는 SUPER ×200 구매',
 	LOADER_CARD_1_LINE_4: '동일한 목표 선택 장면',
 	LOADER_CARD_2_TITLE: '최대 당첨',
-	LOADER_CARD_2_LINE_1: '기본 게임: 최대 2,500× 베팅',
-	LOADER_CARD_2_LINE_2: '보너스 모드: 최대 25,000× 베팅',
+	LOADER_CARD_2_LINE_1: 'MEOWFIA 최대 당첨',
+	LOADER_CARD_2_LINE_2: '25,000×',
 	LOADER_CARD_3_TITLE: '리볼버',
 	LOADER_CARD_3_LINE_1: '프리 스핀에서 총알 수집(최대 6). 메인 스핀 후',
 	LOADER_CARD_3_LINE_2: '고양이가 목표 사격 +1/+2/+3 추가 FS',
@@ -131,4 +131,6 @@ export default {
 	DUEL_CAT_LONG_DESC: '균등 기회 · 낮은 평균',
 	DUEL_DOG_LONG_DESC: '고위험 · 큰 당첨',
 	DUEL_PICK_BLURB: '진영을 고르고 그 캐릭터로 플레이. 두 보드가 돌아가며 더 큰 뱅크가 둘 다 가져갑니다.',
+	LOADER_CARD_2_LINE_3: '강탈이 터지면',
+	LOADER_CARD_2_LINE_4: '상금이 치솟을 수 있다',
 };

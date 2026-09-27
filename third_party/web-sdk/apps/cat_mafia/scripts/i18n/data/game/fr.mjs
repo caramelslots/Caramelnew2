@@ -113,8 +113,8 @@ export default {
 	TARGET_SHOOT_HINT_FIRING: 'Tir !',
 	TARGET_SHOOT_HINT_EXTRA: '+{n} free spins supplémentaires',
 	TARGET_SHOOT_HINT_NONE: 'Pas de spins supplémentaires',
-	LOADER_CARD_2_LINE_1: 'JEU DE BASE : JUSQU\'À 2 500× LA MISE',
-	LOADER_CARD_2_LINE_2: 'MODES BONUS : JUSQU\'À 25 000× LA MISE',
+	LOADER_CARD_2_LINE_1: 'GAIN MAX MEOWFIA JUSQU\'À',
+	LOADER_CARD_2_LINE_2: '25 000×',
 	DUEL_BONUS: 'DUEL BONUS',
 	DUEL_INTRO_RULE_1: 'Le Chat obtient 10 tours',
 	DUEL_INTRO_RULE_2: 'Le Chien obtient 10 tours',
@@ -131,4 +131,6 @@ export default {
 	DUEL_CAT_LONG_DESC: 'Chances égales · moyenne plus basse',
 	DUEL_DOG_LONG_DESC: 'Haut risque · gros gains',
 	DUEL_PICK_BLURB: 'Choisissez un camp et jouez ce personnage. Les deux plateaux tournent - la plus grosse banque prend les deux.',
+	LOADER_CARD_2_LINE_3: 'QUAND LE COUP PASSE',
+	LOADER_CARD_2_LINE_4: 'LE GAIN PEUT EXPLOSER',
 };

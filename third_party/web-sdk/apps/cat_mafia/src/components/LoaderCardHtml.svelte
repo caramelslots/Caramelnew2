@@ -97,9 +97,11 @@
 			</div>
 		{:else if contentIndex === 1}
 			<div class="card-body card-body--2">
-				<div class="line-block line-block--2-card">
+				<div class="line-block line-block--max-win">
 					<p class="line">{context.i18nDerived.loaderCard2Line1()}</p>
 					<p class="line highlight">{context.i18nDerived.loaderCard2Line2()}</p>
+					<p class="line">{context.i18nDerived.loaderCard2Line3()}</p>
+					<p class="line highlight">{context.i18nDerived.loaderCard2Line4()}</p>
 				</div>
 			</div>
 		{:else}
@@ -264,9 +266,10 @@
 		--line-block-gap: calc(var(--line-height) * 0.25);
 	}
 
-	.line-block--2-card {
-		top: calc(var(--card-height) * 0.62);
-		--line-block-gap: calc(var(--line-height) * 0.35);
+	/* MAX WIN: four lines in one column — no free-spin style split gap. */
+	.line-block--max-win {
+		top: calc(var(--card-height) * 0.582);
+		--line-block-gap: calc(var(--line-height) * 0.25);
 	}
 
 	.line-block--3 {

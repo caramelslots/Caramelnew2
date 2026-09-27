@@ -69,8 +69,8 @@ export default {
 	LOADER_CARD_1_LINE_3: 'КУПИТЕ NORMAL ×100 ИЛИ SUPER ×200',
 	LOADER_CARD_1_LINE_4: 'ТА ЖЕ СЦЕНА ВЫБОРА МИШЕНИ',
 	LOADER_CARD_2_TITLE: 'МАКС. ВЫИГРЫШ',
-	LOADER_CARD_2_LINE_1: 'БАЗОВАЯ ИГРА: ДО 2 500× СТАВКИ',
-	LOADER_CARD_2_LINE_2: 'БОНУСНЫЕ РЕЖИМЫ: ДО 25 000× СТАВКИ',
+	LOADER_CARD_2_LINE_1: 'МАКС. ВЫИГРЫШ В MEOWFIA ДО',
+	LOADER_CARD_2_LINE_2: '25 000×',
 	LOADER_CARD_3_TITLE: 'РЕВОЛЬВЕР',
 	LOADER_CARD_3_LINE_1: 'СОБИРАЙТЕ ПАТРОНЫ ВО ФРИСПИНАХ (МАКС. 6). ПОСЛЕ ОСНОВНЫХ СПИНОВ',
 	LOADER_CARD_3_LINE_2: 'КОТ СТРЕЛЯЕТ ПО МИШЕНЯМ ЗА +1 / +2 / +3 ДОП. FS',
@@ -131,4 +131,6 @@ export default {
 	TARGET_SHOOT_HINT_FIRING: 'Огонь!',
 	TARGET_SHOOT_HINT_EXTRA: '+{n} доп. фриспинов',
 	TARGET_SHOOT_HINT_NONE: 'Без доп. спинов',
+	LOADER_CARD_2_LINE_3: 'ЕСЛИ ЗАШЛО ПО КРУПНОМУ',
+	LOADER_CARD_2_LINE_4: 'КУШ МОЖЕТ ВЗЛЕТЕТЬ ВВЕРХ',
 };

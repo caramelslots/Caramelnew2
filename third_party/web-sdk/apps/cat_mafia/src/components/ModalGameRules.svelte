@@ -40,6 +40,7 @@
 	const paytableTitle = $derived(context.i18nDerived.gameInfoPaytableTitle());
 	const paytableNote = $derived(context.i18nDerived.gameInfoPaytableNote());
 	const controlsTitle = $derived(context.i18nDerived.gameInfoControlsTitle());
+	const betModesTitle = $derived(context.i18nDerived.gameInfoBetModesTitle());
 	const controlOverlayLabels = $derived({
 		buyBonus: context.i18nDerived.buyBonusPanelButton(),
 		bonusBoost: context.i18nDerived.bonusBoost(),
@@ -215,10 +216,12 @@
 								</div>
 							</section>
 						{:else}
-							<section class="section">
+							<section class="section" class:section-bet-modes={section.title === betModesTitle}>
 								<h3>{section.title}</h3>
 								{#each section.body.split('\n') as line, index (section.title + index)}
-									<p>{line}</p>
+									{#if line}
+										<p class:bet-mode-line={section.title === betModesTitle}>{line}</p>
+									{/if}
 								{/each}
 							</section>
 						{/if}
@@ -302,6 +305,18 @@
 
 	p:last-child {
 		margin-bottom: 0;
+	}
+
+	.section-bet-modes .bet-mode-line {
+		margin-top: 0.6rem;
+		padding: 0.55rem 0.65rem;
+		border-radius: 8px;
+		background: rgba(255, 255, 255, 0.05);
+		border-left: 3px solid rgba(255, 213, 74, 0.45);
+	}
+
+	.section-bet-modes .bet-mode-line:first-of-type {
+		margin-top: 0;
 	}
 
 	.paytable-note {

@@ -53,8 +53,8 @@ export default {
 	LOADER_CARD_1_LINE_3: '购买 NORMAL ×100 或 SUPER ×200',
 	LOADER_CARD_1_LINE_4: '相同的目标选择场景',
 	LOADER_CARD_2_TITLE: '最大赢奖',
-	LOADER_CARD_2_LINE_1: '基础游戏：最高 2,500× 投注',
-	LOADER_CARD_2_LINE_2: '奖励模式：最高 25,000× 投注',
+	LOADER_CARD_2_LINE_1: 'MEOWFIA 最大赢奖',
+	LOADER_CARD_2_LINE_2: '25,000×',
 	LOADER_CARD_3_TITLE: '左轮',
 	LOADER_CARD_3_LINE_1: '在免费旋转中收集子弹（最多 6）。主要旋转结束后',
 	LOADER_CARD_3_LINE_2: '猫射击目标获得 +1/+2/+3 额外 FS',
@@ -131,4 +131,6 @@ export default {
 	DUEL_CAT_LONG_DESC: '机会均等 · 平均偏低',
 	DUEL_DOG_LONG_DESC: '高风险 · 大奖',
 	DUEL_PICK_BLURB: '选择阵营并以该角色游玩。两块面板同时旋转--更大奖池拿走两边。',
+	LOADER_CARD_2_LINE_3: '大劫案得手时',
+	LOADER_CARD_2_LINE_4: '奖金可以直冲上限',
 };
