@@ -343,14 +343,15 @@
 		position: relative;
 	}
 
-	/* HUD (z-index 40–45); raise Pixi for FS cloud / Total Win. */
+	/* HUD (z-index 40–48); FreeSpinIntro / tir HTML ~60–72; menus ~9998–10001.
+	   Transition (+ FS Total Win) must sit above all of those for the full spine. */
 	.html-underlays {
 		position: relative;
 		z-index: 40;
 	}
 
 	.pixi-stage.above-html-ui {
-		z-index: 100;
+		z-index: 50000;
 	}
 
 	/* Opaque plate so translucent WebGL cannot ghost HTML chrome underneath. */

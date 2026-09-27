@@ -1691,8 +1691,8 @@ export const DRUM_ROTATE_MS = 380;
 /** Pause after bonus activate animation, before the next spin/reveal. */
 export const BONUS_WIN_POST_DELAY_MS = 400;
 
-/** Full cloud transition spine duration. */
-export const TRANSITION_DURATION_MS = 1800;
+/** Full transition spine duration (`transition` anim ≈ 1.4667s). */
+export const TRANSITION_DURATION_MS = 1467;
 
 /** Duplicate street plate dissolve (front loader bg). */
 export const LOADER_EXIT_BG_DURATION_MS = 300;
@@ -1747,14 +1747,17 @@ export const GAME_ENTRANCE_MS = LOADER_EXIT_BG_DURATION_MS;
 export const MASCOT_ENTRANCE_DELAY_MS = 100;
 
 /**
- * Mascot fade-out when the FS cloud transition starts (both directions). Must
- * finish before the cloud closes over the screen (~TRANSITION_THEME_SWITCH_DELAY_MS
+ * Mascot fade-out when the FS transition starts (both directions). Must
+ * finish before the cover closes over the screen (~TRANSITION_THEME_SWITCH_DELAY_MS
  * + margin); Game.svelte delays the pixi-stage z-flip by the same amount so the
  * fade is visible instead of a one-frame pop behind the opaque board.
  */
 export const MASCOT_TRANSITION_FADE_MS = 300;
 
-/** When the cloud transition starts becoming opaque (~0.3s in the 1.5s spine). */
+/**
+ * When the money flyby first covers the board (wave 1) — safe to swap theme /
+ * spawn FS counter, drum, duel chrome under the cover.
+ */
 export const TRANSITION_THEME_SWITCH_DELAY_MS = 193;
 
 /**
@@ -1765,8 +1768,8 @@ export const TRANSITION_THEME_SWITCH_DELAY_MS = 193;
 export const TRANSITION_TIR_DISMISS_DELAY_MS = 480;
 
 /**
- * Loader still → Pixi street swap under the opening cloud (later than theme
- * switch so steam is fully covering before the handoff).
+ * Loader still → Pixi street swap under the opening cover (later than theme
+ * switch so the flyby is covering before the handoff).
  */
 export const LOADER_STREET_SWAP_DELAY_MS = 480;
 
