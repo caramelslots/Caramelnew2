@@ -9,7 +9,10 @@
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { GAME_INFO_SYMBOL_IMAGES } from '../game/gameInfoSymbols';
-	import { LOADER_NEON_LOGO_URL, LOADER_SCREEN_IMAGE_URLS } from '../game/loaderCardAssets';
+	import {
+		LOADER_NEON_LOGO_URL,
+		loaderScreenImageUrls,
+	} from '../game/loaderCardAssets';
 	import {
 		destroyLoaderCardBonusPixi,
 		flushLoaderCardBonusStage,
@@ -120,12 +123,15 @@
 		}, delay);
 	};
 
-	const screenImageUrls = [...LOADER_SCREEN_IMAGE_URLS, GAME_INFO_SYMBOL_IMAGES.B] as const;
+	const screenImageUrls = $derived(
+		[...loaderScreenImageUrls(), GAME_INFO_SYMBOL_IMAGES.B] as const,
+	);
 
 	onMount(() => {
 		clearAutoAdvance();
-		void preloadHtmlImages([...screenImageUrls], {
-			priority: [LOADER_NEON_LOGO_URL, LOADER_SCREEN_IMAGE_URLS[0]!, GAME_INFO_SYMBOL_IMAGES.B],
+		const urls = screenImageUrls;
+		void preloadHtmlImages([...urls], {
+			priority: [LOADER_NEON_LOGO_URL, urls[0]!, GAME_INFO_SYMBOL_IMAGES.B],
 			concurrency: 2,
 		});
 	});

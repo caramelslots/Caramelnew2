@@ -2,7 +2,8 @@ import type { Asset, Assets } from 'pixi-svelte';
 
 import assets from './assets';
 import { isCjkLocale } from './constants';
-import { LOADER_SCREEN_IMAGE_URLS } from './loaderCardAssets';
+import { LOADER_CARD_2_SOCIAL_IMAGE_URL, LOADER_SCREEN_IMAGE_URLS } from './loaderCardAssets';
+import { isSocialMode } from './devSocial';
 
 /** Stake GIF screen — animated day/night spine, audio manifest, transition, press font, high symbols. */
 export const LOADER_BATCH_1_KEYS = [
@@ -196,6 +197,7 @@ export const getEntryLoadKeyCount = (locale: string) =>
 export const collectBatch1EarlyPreloadUrls = (): string[] => {
 	const urls = new Set(collectBatchHttpUrls(LOADER_BATCH_1_KEYS));
 	for (const url of LOADER_SCREEN_IMAGE_URLS) urls.add(url);
+	if (isSocialMode()) urls.add(LOADER_CARD_2_SOCIAL_IMAGE_URL);
 	return [...urls];
 };
 
