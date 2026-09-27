@@ -17,12 +17,14 @@
 	import { cubicOut, linear } from 'svelte/easing';
 	import { untrack } from 'svelte';
 	import { Container, Graphics, SpineProvider } from 'pixi-svelte';
+	import { waitForAnimationFrame } from 'utils-shared/wait';
 
 	import { SPIN_OPTIONS_DEFAULT } from '../game/constants';
 	import { getSymbolX } from '../game/utils';
 	import { gameSpeedMultFor } from '../game/gameSpeed';
 	import { stateGame } from '../game/stateGame.svelte';
 	import type { DuelSide } from '../game/stateDuel.svelte';
+	import { getDuelBoardStack } from '../game/stateDuelBoards.svelte';
 	import {
 		SUPER_WILD_OPEN0_ALIGN_Y_PX,
 		SUPER_WILD_OPEN_LAND_MS,
@@ -78,6 +80,56 @@
 	let drumSpinLabels = $state<number[]>(initialPrepared.labels);
 	let badgePinned = $state(initialLanded);
 	let prevPhase: Phase | null = null;
+	/** Bump to cancel an in-flight dismiss arm when phase leaves `dismiss`. */
+	let dismissArmToken = 0;
+
+	const reelMotionForDismiss = () => {
+		if (props.duelSide) {
+			return getDuelBoardStack(props.duelSide).board[props.reel]?.reelState.motion;
+		}
+		return stateGame.board[props.reel]?.reelState.motion;
+	};
+
+	const reelSpinSpeedForDismiss = () => {
+		const reel = props.duelSide
+			? getDuelBoardStack(props.duelSide).board[props.reel]
+			: stateGame.board[props.reel];
+		const fromReel = reel?.reelState.spinOptions?.()?.reelSpinSpeed;
+		if (typeof fromReel === 'number' && fromReel > 0) return fromReel;
+		return SPIN_OPTIONS_DEFAULT.reelSpinSpeed * gameSpeedMultFor(stateGame.gameSpeed);
+	};
+
+	/**
+	 * Board SW tiles stay hidden while the curtain owns the column. If the Spine
+	 * slides away before this reel's strip starts moving (stagger + pool swap +
+	 * mount settle), the column goes black. Arm dismiss only after the reel
+	 * leaves `stopped`, then wait the same mount-settle frames as the strip.
+	 */
+	const armDismissWithReel = async (token: number) => {
+		// Safety: never hang if this reel never leaves stopped (frozen / race).
+		const maxWaitFrames = 180;
+		let waited = 0;
+		while (token === dismissArmToken && props.phase === 'dismiss') {
+			const motion = reelMotionForDismiss();
+			if (motion === 'spinning' || motion === 'bouncing') break;
+			if (++waited > maxWaitFrames) break;
+			await waitForAnimationFrame();
+		}
+		if (token !== dismissArmToken || props.phase !== 'dismiss') return;
+
+		const settleFrames = SPIN_OPTIONS_DEFAULT.reelSpinMountSettleFrames ?? 0;
+		for (let i = 0; i < settleFrames; i++) {
+			if (token !== dismissArmToken || props.phase !== 'dismiss') return;
+			await waitForAnimationFrame();
+		}
+		if (token !== dismissArmToken || props.phase !== 'dismiss') return;
+
+		const speed = Math.max(0.01, reelSpinSpeedForDismiss());
+		const duration = SUPER_WILD_DISMISS_DIST / speed;
+		untrack(() => {
+			void dropInY.set(SUPER_WILD_DISMISS_DIST, { duration, delay: 0, easing: linear });
+		});
+	};
 
 	/**
 	 * 0→1 with Spine `open`. Shifts the column so open frame-0's lying WILD
@@ -111,6 +163,7 @@
 	$effect(() => {
 		const phase = props.phase;
 		if (phase === 'expanding' && prevPhase !== 'expanding') {
+			dismissArmToken += 1;
 			badgePinned = false;
 			wheelLanded = false;
 			// Align with the foot landing, not the full `open` clip (cat after).
@@ -123,6 +176,7 @@
 				void alignT.set(1, { duration, easing: cubicOut });
 			});
 		} else if (phase === 'dropIn' && prevPhase !== 'dropIn') {
+			dismissArmToken += 1;
 			// Appear first — no × yet. Controller spins the drum after drop-in.
 			badgePinned = false;
 			wheelLanded = false;
@@ -137,19 +191,17 @@
 		} else if (phase === 'dismiss' && prevPhase !== 'dismiss') {
 			badgePinned = true;
 			wheelLanded = true;
-			// Match reel strip px/ms (includes turbo) so the curtain keeps pace
-			// with the strip — no hole above. Same start stagger as spin.
-			const speedMult = Math.max(0.01, gameSpeedMultFor(stateGame.gameSpeed));
-			const speed = SPIN_OPTIONS_DEFAULT.reelSpinSpeed * speedMult;
-			const duration = SUPER_WILD_DISMISS_DIST / speed;
-			const delay =
-				(SPIN_OPTIONS_DEFAULT.reelSpinDelay * props.reel) / speedMult;
+			// Keep pace with THIS reel's strip: wait until it leaves `stopped`
+			// (after stagger + pool swap), then the same mount-settle frames,
+			// then slide at the reel's scroll speed — no black hole above SW.
+			const token = ++dismissArmToken;
 			untrack(() => {
 				alignT.set(1, { duration: 0 });
 				dropInY.set(0, { duration: 0 });
-				void dropInY.set(SUPER_WILD_DISMISS_DIST, { duration, delay, easing: linear });
+				void armDismissWithReel(token);
 			});
 		} else if (phase === 'done') {
+			dismissArmToken += 1;
 			untrack(() => {
 				alignT.set(1, { duration: 0 });
 				dropInY.set(0, { duration: 0 });

@@ -92,30 +92,17 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 		}, 0);
 
 		// Kick off each reel on its own frame so updateSymbolsPool + symbolState
-		// flips don't land in one Svelte+GC frame (mobile traces: 80–200ms hitches).
-		// Hold-scroll games use parallel handoff — rAF stagger made each column
-		// freeze for a couple of frames in a left-to-right wave at RGS response.
-		const useParallelHandoff = board.some(
-			(reel) => reel.reelState.spinOptions().reelPreSpinHoldRotations !== undefined,
-		);
-		if (useParallelHandoff) {
-			await Promise.all(
-				board.map((reel, reelIndex) => {
-					if (frozenReelIndices.includes(reelIndex)) return Promise.resolve();
-					return reel.spin();
-				}),
-			);
-		} else {
-			const spinPromises: Promise<void>[] = [];
-			for (let reelIndex = 0; reelIndex < board.length; reelIndex++) {
-				if (frozenReelIndices.includes(reelIndex)) continue;
-				spinPromises.push(board[reelIndex].spin());
-				if (reelIndex < board.length - 1) {
-					await waitForAnimationFrame();
-				}
+		// flips don't land in one Svelte+GC frame. Each reel also awaits
+		// reelSpinDelay × index before its pool swap (see generalSpinWith).
+		const spinPromises: Promise<void>[] = [];
+		for (let reelIndex = 0; reelIndex < board.length; reelIndex++) {
+			if (frozenReelIndices.includes(reelIndex)) continue;
+			spinPromises.push(board[reelIndex].spin());
+			if (reelIndex < board.length - 1) {
+				await waitForAnimationFrame();
 			}
-			await Promise.all(spinPromises);
 		}
+		await Promise.all(spinPromises);
 	}
 
 	return { spin };

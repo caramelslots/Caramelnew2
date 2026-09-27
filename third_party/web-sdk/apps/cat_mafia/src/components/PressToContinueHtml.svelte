@@ -22,20 +22,6 @@
 	const locale = $derived(stateI18n.i18n.locale);
 	const textDirection = $derived(localeTextDirection(locale));
 
-	/**
-	 * WebKit applies `background-clip` + `filter` inconsistently across wrapped
-	 * lines (first line flat, second line beveled). Split into balanced word
-	 * lines so each fragment gets the same gold face. CJK / Arabic stay one line.
-	 */
-	const lines = $derived.by(() => {
-		const value = text.trim();
-		if (!value || isCjkLocale(locale) || isArabicLocale(locale)) return [value];
-		const words = value.split(/\s+/).filter(Boolean);
-		if (words.length <= 1) return [value];
-		const mid = Math.ceil(words.length / 2);
-		return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
-	});
-
 	const labelStyle = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
 		const bottom = PRESS_TO_CONTINUE_BOTTOM_OFFSET * ml.scale;
@@ -58,9 +44,7 @@
 	dir={textDirection}
 	lang={locale}
 >
-	{#each lines as line, i (i)}
-		<span class="press-label__line">{line}</span>
-	{/each}
+	<span class="press-label__line">{text}</span>
 </p>
 
 <style lang="scss">
@@ -74,7 +58,6 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.05em;
 		text-align: center;
 		/* Same face as FreeSpinIntro CONGRATULATIONS (proxima-nova + gold). */
 		font-family: 'proxima-nova', sans-serif;
@@ -82,7 +65,6 @@
 		letter-spacing: 0.04em;
 		line-height: 1.15;
 		text-transform: uppercase;
-		/* Bevel on the wrapper — fill lives on each line (WebKit multiline fix). */
 		filter: drop-shadow(0 1px 0 #fff3b0) drop-shadow(0 3px 0 #5a3a0e)
 			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
 	}

@@ -587,6 +587,11 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	};
 
 	const generalSpinWith = async ({ slideDown }: { slideDown: () => Promise<void> }) => {
+		// Stagger the heavy pool swap (Spine→WebP mounts) per column so five
+		// reels do not hit the main thread in the same breath. preSpin already
+		// delayed; main spin previously only waited one rAF between starts.
+		if (!stateBet.isTurbo) await delaySpinByReelIndex();
+
 		const isSpinning = reelState.motion === 'spinning';
 		const symbolHeight = reelOptions.symbolHeight;
 

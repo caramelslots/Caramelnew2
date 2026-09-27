@@ -17,7 +17,6 @@ import {
 import { eventEmitter } from './eventEmitter';
 import type { Bet, BookEventOfType } from './typesBookEvent';
 import { bookEventHandlerMap } from './bookEventHandlerMap';
-import { stateGame } from './stateGame.svelte';
 import { devPreview } from './devPreview.svelte';
 import { resolveSymbolDevPreview } from './symbolDevPreview';
 import type { RawSymbol, SymbolName, SymbolState } from './types';
@@ -196,12 +195,6 @@ export const getSymbolInfo = ({
 	}
 	if (rawSymbol.name === 'M' && state === 'mysteryCollapse') {
 		return MYSTERY_COLLAPSE_SPINE;
-	}
-	// Turbo 3: skip land bounce visually for the frame before ReelSymbol settles
-	// `land` → `static` (same speed gate). Do not leave cells parked on `land`
-	// while this shortcut is active — mid-win turbo toggles would remount land/win.
-	if (state === 'land' && stateGame.gameSpeed === 3) {
-		return SYMBOL_INFO_MAP[rawSymbol.name].static;
 	}
 	if (state === 'idleBounce' || state === 'winLift') {
 		return SYMBOL_INFO_MAP[rawSymbol.name].static;

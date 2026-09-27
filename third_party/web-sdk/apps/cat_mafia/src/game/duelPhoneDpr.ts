@@ -3,8 +3,8 @@ export const GAME_MAX_RESOLUTION = 3;
 /** Phone portrait renderer DPR — common WebGL/slot default (was 2.5). */
 export const PHONE_PORTRAIT_MAX_DPR = 2;
 export const DUEL_PHONE_MAX_DPR = 2;
-/** Main Pixi ticker cap on phone (ProMotion / 120 Hz displays). */
-export const PHONE_TICKER_MAX_FPS = 120;
+/** Main Pixi ticker cap on phone (ProMotion / 120 Hz displays → lock 60). */
+export const PHONE_TICKER_MAX_FPS = 60;
 
 export const phonePortraitMaxDpr = () =>
 	Math.min(GAME_MAX_RESOLUTION, PHONE_PORTRAIT_MAX_DPR);

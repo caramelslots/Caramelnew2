@@ -708,17 +708,18 @@ const SPIN_OPTIONS_SHARED = {
 	reelSpinSpeedBeforeBounce: REEL_SPEED,
 	reelPaddingMultiplierNormal: 0.7,
 	reelPaddingMultiplierAnticipated: 10,
-	// Per-reel START stagger (ms × reelIndex) for the pre-spin launch. A small
-	// 10ms gives a subtle left-to-right cascade at the start without the
-	// "rushing to catch up" look that a larger delay produced at the slower
-	// REEL_SPEED. The left-to-right STOP order is independent of this — it
-	// comes from each reel's accumulated padding distance, so it stays.
-	reelSpinDelay: 60,
+	// Per-reel START stagger (ms × reelIndex). Applied before each column's
+	// Spine→WebP pool swap so the five reels do not mount WebPs in one hit.
+	// Stop cascade still comes from padding distance, not this delay.
+	reelSpinDelay: 100,
 	reelPreSpinSpeed: REEL_SPEED,
 	reelSpinSpeed: REEL_SPEED,
 	// Start at a constant speed (no `backIn` wind-up burst) so the slot doesn't
 	// visibly "surge" to swap symbols at the start of the spin.
 	reelPreSpinWindup: false,
+	// Visible cells keep their current Spine/state and scroll off; only the
+	// newly injected rows above are WebP (`spin`). Landing still uses Spine.
+	reelSeamlessSpinStart: true,
 	// Phone: finish off-screen Spine→WebP mounts before the first slide frame
 	// (and stagger per-reel preSpin). Cuts the "tap → hitch → surge" feel.
 	reelSpinMountSettleFrames: 2,
