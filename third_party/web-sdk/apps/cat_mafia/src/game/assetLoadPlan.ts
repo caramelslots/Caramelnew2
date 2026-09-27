@@ -24,7 +24,7 @@ export const LOADER_BATCH_1_KEYS = [
 	'H4Img',
 ] as const satisfies readonly (keyof typeof assets)[];
 
-/** Bootstrap splash — low/wild/bonus symbols, core game fonts. */
+/** Bootstrap splash — low/wild/bonus/paw symbols, core game fonts. */
 export const LOADER_BATCH_2_KEYS = [
 	'L1',
 	'L2',
@@ -32,6 +32,7 @@ export const LOADER_BATCH_2_KEYS = [
 	'L4',
 	'B',
 	'W',
+	'coinsPaw',
 	'L1Img',
 	'L2Img',
 	'L3Img',
@@ -107,7 +108,6 @@ export const LOADER_BATCH_4_KEYS = [
 	'BDuelImg',
 	'BTImg',
 	'outlineReel',
-	'coinsPaw',
 	'mascotCat',
 	'mascotDog',
 	'revolverBarrel',

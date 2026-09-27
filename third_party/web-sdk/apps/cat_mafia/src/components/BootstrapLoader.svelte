@@ -214,18 +214,26 @@
 
 	.progress-label {
 		font-family: 'proxima-nova', sans-serif;
-		font-size: 0.72rem;
+		font-size: 0.85rem;
 		font-weight: 600;
 		text-transform: uppercase;
-		letter-spacing: 0.14em;
+		letter-spacing: 0.12em;
 		color: #ffffff;
 		margin-top: 0.15rem;
+	}
+
+	@media (max-width: 768px) {
+		.progress-label {
+			font-size: clamp(1.05rem, 4.2vw, 1.35rem);
+			letter-spacing: 0.1em;
+			margin-top: 0.35rem;
+		}
 	}
 
 	@media (max-width: 768px) and (orientation: portrait) {
 		.progress-wrap {
 			width: min(340px, 78vw);
-			gap: 0.45rem;
+			gap: 0.5rem;
 		}
 
 		.progress-track {
@@ -233,8 +241,7 @@
 		}
 
 		.progress-label {
-			font-size: 0.82rem;
-			letter-spacing: 0.16em;
+			font-size: clamp(1.15rem, 4.8vw, 1.4rem);
 		}
 	}
 </style>

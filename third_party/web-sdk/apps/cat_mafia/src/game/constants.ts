@@ -190,7 +190,7 @@ export const BOARD_DIMENSIONS = { x: 5, y: 4 };
 /** Central reel for the idle showcase open Super Wild curtain (0-based). */
 export const STARTUP_SW_REEL = 2;
 /** Drum multiplier on the idle showcase curtain — must be a `SUPER_WILD_WHEEL_SECTORS` value (2/4/6/8/25/50/75). */
-export const STARTUP_SW_MULT = 4;
+export const STARTUP_SW_MULT = 8;
 /** Padded row of the lying SW the curtain grows from. */
 export const STARTUP_SW_ORIGIN_ROW = Math.floor(BOARD_DIMENSIONS.y / 2) + 1;
 
@@ -198,16 +198,15 @@ export const STARTUP_SW_ORIGIN_ROW = Math.floor(BOARD_DIMENSIONS.y / 2) + 1;
  * Fixed 5×4 visible grid for the first screen before any spin.
  * Column-major: [reel][row], row 0 = top visible row.
  *
- * Edit this table to try different compositions — reel `STARTUP_SW_REEL`
- * must stay a full SW column (open curtain).
+ * Centre SW ×8 + Bonus (left) + gold Paw on reel 2 + bronze Paw (bottom-right).
+ * Reel `STARTUP_SW_REEL` must stay a full SW column (open curtain).
  */
 export const STARTUP_BOARD_VISIBLE: ReadonlyArray<ReadonlyArray<RawSymbol['name']>> = [
-	// Symmetric frame around the central open curtain; H2 stack on cols 1/3.
-	['L4', 'H2', 'H3', 'L1'],
-	['H4', 'H2', 'L3', 'H1'],
+	['B', 'H2', 'H3', 'L1'],
+	['H4', 'PG', 'L3', 'H1'],
 	['SW', 'SW', 'SW', 'SW'],
 	['H4', 'H2', 'L3', 'H1'],
-	['L4', 'H2', 'H3', 'L1'],
+	['L4', 'H2', 'H3', 'PB'],
 ];
 
 /** Highs used when remapping curated preview templates. */
@@ -373,11 +372,19 @@ export const createInitialBoard = (opts?: { exclude?: ReadonlySet<string> }): Ra
  */
 export const createStartupBoard = (): RawSymbol[][] => {
 	const swCell = (): RawSymbol => ({ name: 'SW', multiplier: STARTUP_SW_MULT });
+	/** Padding must stay ordinary pay symbols — never SW / W / B / paw. */
+	const padName = (cell: RawSymbol): RawSymbol['name'] => {
+		const n = cell.name;
+		if (n === 'SW' || n === 'W' || n === 'B' || n === 'BD' || n === 'PB' || n === 'PS' || n === 'PG') {
+			return 'H2';
+		}
+		return n;
+	};
 	return STARTUP_BOARD_VISIBLE.map((column, reelIndex) => {
 		const visible: RawSymbol[] =
-			reelIndex === STARTUP_SW_REEL ? column.map(() => swCell()) : column.map((name) => ({ name }));
-		const padName = (cell: RawSymbol) =>
-			cell.name === 'SW' || cell.name === 'W' ? ('H2' as RawSymbol['name']) : cell.name;
+			reelIndex === STARTUP_SW_REEL
+				? column.map(() => swCell())
+				: column.map((name) => ({ name }));
 		return [
 			{ name: padName(visible[0]!) },
 			...visible,
