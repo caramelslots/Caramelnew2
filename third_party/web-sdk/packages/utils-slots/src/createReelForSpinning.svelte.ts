@@ -556,7 +556,16 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	};
 
 	const delaySpinByReelIndex = async () => {
-		await waitForTimeout(reelState.spinOptions().reelSpinDelay * reelOptions.reelIndex);
+		const total = reelState.spinOptions().reelSpinDelay * reelOptions.reelIndex;
+		if (total <= 0) return;
+		// Chunk the wait so slam-stop (`isTurbo`) can abort mid-stagger —
+		// otherwise right columns keep their full reelSpinDelay and land one-by-one.
+		const startedAt = performance.now();
+		while (performance.now() - startedAt < total) {
+			if (stateBet.isTurbo) return;
+			const remaining = total - (performance.now() - startedAt);
+			await waitForTimeout(Math.min(16, Math.max(0, remaining)));
+		}
 	};
 
 	const settleSpinMounts = async () => {
@@ -720,7 +729,9 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		}
 
 		// Same settle as preSpin: finish spin-sprite mounts before motion resumes.
-		await settleSpinMounts();
+		// Turbo 3 / slam-stop skips the slide — don't burn settle frames per column
+		// or right reels (fresh off an aborted stagger) land visibly later.
+		if (!stateBet.isTurbo) await settleSpinMounts();
 
 		// Q: When to skip the slideDown?
 		// A: Stop / Space set isTurbo — skip remaining travel when noStop is false.

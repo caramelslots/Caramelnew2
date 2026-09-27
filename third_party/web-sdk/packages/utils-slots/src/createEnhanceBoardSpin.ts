@@ -91,14 +91,16 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 			return paddingSize;
 		}, 0);
 
-		// Kick off each reel on its own frame so updateSymbolsPool + symbolState
-		// flips don't land in one Svelte+GC frame. Each reel also awaits
-		// reelSpinDelay × index before its pool swap (see generalSpinWith).
+		// Normal / turbo-1–2: kick off each reel on its own frame so
+		// updateSymbolsPool + symbolState flips don't land in one Svelte+GC hit.
+		// Each reel also awaits reelSpinDelay × index before its pool swap.
+		// Turbo 3 / slam-stop (`isTurbo`): start remaining columns together so
+		// they land as one board — staggered appearance looks wrong on a fast stop.
 		const spinPromises: Promise<void>[] = [];
 		for (let reelIndex = 0; reelIndex < board.length; reelIndex++) {
 			if (frozenReelIndices.includes(reelIndex)) continue;
 			spinPromises.push(board[reelIndex].spin());
-			if (reelIndex < board.length - 1) {
+			if (!stateBet.isTurbo && reelIndex < board.length - 1) {
 				await waitForAnimationFrame();
 			}
 		}
