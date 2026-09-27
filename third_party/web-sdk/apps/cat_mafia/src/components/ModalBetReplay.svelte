@@ -70,7 +70,12 @@
 </script>
 
 {#if isOpen && summary}
-	<div class="replay-overlay" role="presentation" transition:fade={{ duration: 180 }}>
+	<div
+		class="replay-overlay"
+		class:in-lift={!gameEntrance.liftComplete}
+		role="presentation"
+		transition:fade={{ duration: 180 }}
+	>
 		<div class="replay-backdrop" aria-hidden="true"></div>
 
 		<div
@@ -151,6 +156,11 @@
 		place-items: center;
 		padding: 1.25rem;
 		pointer-events: auto;
+
+		/* Ride the game panel during entrance lift — fixed would center on intro+game. */
+		&.in-lift {
+			position: absolute;
+		}
 	}
 
 	.replay-backdrop {
