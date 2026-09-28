@@ -470,7 +470,8 @@
 		aspect-ratio: 437 / 625;
 		container-type: size;
 		container-name: duel-pick-card;
-		@include buy-bonus-card-price-tall;
+		/* Larger than buy-menu tall (10.2) — pick plates read small otherwise. */
+		--bb-card-price-fs: 11.2cqw;
 		filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.45));
 	}
 

@@ -8,10 +8,7 @@ import { stateBet } from 'state-shared';
  * Amount precision is never taken from `decimals`: we always show what the
  * API micro value contains (dynamic fraction digits).
  */
-const CURRENCY_META: Record<
-	string,
-	{ symbol: string; decimals: number; symbolAfter?: boolean }
-> = {
+const CURRENCY_META: Record<string, { symbol: string; decimals: number; symbolAfter?: boolean }> = {
 	USD: { symbol: '$', decimals: 2 },
 	CAD: { symbol: 'CA$', decimals: 2 },
 	JPY: { symbol: '¥', decimals: 0 },
@@ -55,7 +52,11 @@ const CURRENCY_META: Record<
 const SOCIAL_CURRENCY_CODES = new Set(['XGC', 'XSC', 'XEC']);
 
 export const isSocialCurrencyCode = (currency?: string) =>
-	SOCIAL_CURRENCY_CODES.has(String(currency ?? '').trim().toUpperCase());
+	SOCIAL_CURRENCY_CODES.has(
+		String(currency ?? '')
+			.trim()
+			.toUpperCase(),
+	);
 
 /** API amounts are micro-units (1_000_000 = 1.00). Wins may need up to this many fraction digits. */
 export const WIN_AMOUNT_MAX_FRACTION_DIGITS = Math.round(Math.log10(API_AMOUNT_MULTIPLIER));
@@ -68,7 +69,13 @@ export const getCurrencyMeta = (currency = stateBet.currency) => {
 	const code = String(currency ?? '')
 		.trim()
 		.toUpperCase();
-	return CURRENCY_META[code] ?? { symbol: code || String(currency ?? ''), decimals: 2, symbolAfter: true };
+	return (
+		CURRENCY_META[code] ?? {
+			symbol: code || String(currency ?? ''),
+			decimals: 2,
+			symbolAfter: true,
+		}
+	);
 };
 
 /** @deprecated Prefer dynamic API precision — kept for callers that still read meta.decimals. */
@@ -102,8 +109,7 @@ export const bookEventAmountToNormalisedAmount = (bookEventAmount: number) => {
 	// integer book amounts (e.g. 1630.0023). Snap those; keep real fractions
 	// needed for sub-cent wins (7.5 → $0.075, 12.3456 → $0.123456).
 	const nearestInt = Math.round(bookEventAmount);
-	const book =
-		Math.abs(bookEventAmount - nearestInt) < 0.005 ? nearestInt : bookEventAmount;
+	const book = Math.abs(bookEventAmount - nearestInt) < 0.005 ? nearestInt : bookEventAmount;
 	const winMicro = Math.round((betMicro * book) / BOOK_AMOUNT_MULTIPLIER);
 	return winMicro / API_AMOUNT_MULTIPLIER;
 };
@@ -242,15 +248,20 @@ const withCurrencySymbol = (body: string, currency?: string) => {
 export const numberToCurrencyString = (value: number) =>
 	withCurrencySymbol(formatAmountBody(value));
 
+/**
+ * HUD balance only — always exactly 2 fraction digits (never expands past 2).
+ * Do not use for wins / paylines / bet / replay.
+ */
+export const numberToBalanceCurrencyString = (value: number) =>
+	withCurrencySymbol(formatWinAmountBody(value, stateBet.currency, { fractionDigits: 2 }));
+
 /** Win displays — same dynamic precision for every currency. */
 export const numberToWinCurrencyString = (value: number) =>
 	withCurrencySymbol(formatAmountBody(value));
 
 /** Bet replay amounts — same dynamic precision for every currency. */
-export const numberToReplayCurrencyString = (
-	value: number,
-	currency: string = stateBet.currency,
-) => withCurrencySymbol(formatAmountBody(value), currency);
+export const numberToReplayCurrencyString = (value: number, currency: string = stateBet.currency) =>
+	withCurrencySymbol(formatAmountBody(value), currency);
 
 /** Bet replay total win/prize — same as other replay amounts. */
 export const numberToReplayWinCurrencyString = (

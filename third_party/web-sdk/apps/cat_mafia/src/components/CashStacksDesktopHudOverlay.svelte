@@ -13,9 +13,13 @@
 		AUTO_SPINS_LOSS_LIMIT_MULTIPLIER_MAP,
 		AUTO_SPINS_SINGLE_WIN_LIMIT_MULTIPLIER_MAP,
 	} from 'state-shared';
-	import { numberToCurrencyString } from 'utils-shared/amount';
+	import { numberToBalanceCurrencyString, numberToCurrencyString } from 'utils-shared/amount';
 
-	import { isPopoutSmallViewport, BUY_BONUS_BUTTON_ASPECT, HUD_TURBO_ICON_BG_FRAC } from '../game/constants';
+	import {
+		isPopoutSmallViewport,
+		BUY_BONUS_BUTTON_ASPECT,
+		HUD_TURBO_ICON_BG_FRAC,
+	} from '../game/constants';
 	import { computeDesktopHudLayout, resolveDesktopHudConfig } from '../game/desktopHudLayout';
 	import { getRoundsCounter } from '../game/autoplay';
 	import { canAffordSpin, canIncreaseBet } from '../game/buyBonusBalance';
@@ -79,10 +83,7 @@
 	const hudLocked = $derived(isLockedBonusHud());
 	const isReplay = $derived(stateUi.config.mode === 'replay');
 	const show = $derived(
-		useDesktopHud &&
-			gameEntrance.showContent &&
-			uiVisible &&
-			!stateGame.fsOutroActive,
+		useDesktopHud && gameEntrance.showContent && uiVisible && !stateGame.fsOutroActive,
 	);
 	const spinPrewarmActive = $derived(
 		useDesktopHud &&
@@ -98,9 +99,7 @@
 	const hudConfig = $derived(resolveDesktopHudConfig(isPopoutSmall));
 	/** Bonus / duel / replay hide AUTO — pack BALANCE/BET against turbo. */
 	const hideAutoplay = $derived(hudLocked || isReplay);
-	const pos = $derived(
-		computeDesktopHudLayout(stateLayoutDerived, hudConfig, { hideAutoplay }),
-	);
+	const pos = $derived(computeDesktopHudLayout(stateLayoutDerived, hudConfig, { hideAutoplay }));
 
 	const buyBonusLabel = $derived(context.i18nDerived.buyBonusPanelButton());
 	const showBuyBonus = $derived(!hudLocked && !isReplay && !isFreeSpinsActive());
@@ -319,7 +318,7 @@
 				>
 					<HudBalanceBetLine
 						label={context.i18nDerived.balance()}
-						value={numberToCurrencyString(stateBet.balanceAmount)}
+						value={numberToBalanceCurrencyString(stateBet.balanceAmount)}
 					/>
 				</p>
 			{/if}
@@ -378,7 +377,10 @@
 					aria-label={context.i18nDerived.autoplayTitle()}
 					onclick={onAutoplayPress}
 				>
-					<span class="hud-buy-bonus-label hud-autoplay-label" style:font-size="{pos.autoplay.fontSize}px">
+					<span
+						class="hud-buy-bonus-label hud-autoplay-label"
+						style:font-size="{pos.autoplay.fontSize}px"
+					>
 						{context.i18nDerived.autoplayTitle()}
 					</span>
 				</button>

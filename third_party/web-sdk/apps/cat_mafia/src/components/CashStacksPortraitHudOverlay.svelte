@@ -12,7 +12,7 @@
 		AUTO_SPINS_LOSS_LIMIT_MULTIPLIER_MAP,
 		AUTO_SPINS_SINGLE_WIN_LIMIT_MULTIPLIER_MAP,
 	} from 'state-shared';
-	import { numberToCurrencyString } from 'utils-shared/amount';
+	import { numberToBalanceCurrencyString, numberToCurrencyString } from 'utils-shared/amount';
 
 	import { computePortraitHudCanvas } from '../game/portraitHudLayout';
 	import { HUD_TURBO_ICON_BG_FRAC } from '../game/constants';
@@ -334,7 +334,7 @@
 				{#if !isReplay}
 					<HudBalanceBetLine
 						label={context.i18nDerived.balance()}
-						value={numberToCurrencyString(stateBet.balanceAmount)}
+						value={numberToBalanceCurrencyString(stateBet.balanceAmount)}
 					/>
 				{/if}
 				<HudBalanceBetLine

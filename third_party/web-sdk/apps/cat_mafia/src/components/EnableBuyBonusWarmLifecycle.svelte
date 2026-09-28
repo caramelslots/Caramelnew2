@@ -11,6 +11,7 @@
 	import {
 		buyBonusWarmAfterFeatureMs,
 		clearBuyBonusFeatureEvictLock,
+		ensureBuyBonusWarm,
 		shouldKeepBuyBonusWarm,
 	} from '../game/buyBonusSharedPixi';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
@@ -50,11 +51,13 @@
 			const timer = setTimeout(() => {
 				clearBuyBonusFeatureEvictLock();
 				void startBuyBonusFlowPreload();
+				void ensureBuyBonusWarm();
 			}, buyBonusWarmAfterFeatureMs());
 			return () => clearTimeout(timer);
 		}
 
 		if (!shouldKeepBuyBonusWarm()) return;
 		void startBuyBonusFlowPreload();
+		void ensureBuyBonusWarm();
 	});
 </script>

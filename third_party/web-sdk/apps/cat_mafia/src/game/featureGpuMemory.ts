@@ -4,14 +4,16 @@
  */
 
 import { Assets } from 'pixi.js';
+import type { TextureAtlas } from '@esotericsoftware/spine-core';
+import { SpineTexture } from '@esotericsoftware/spine-pixi-v8';
 import { stateBet, stateModal } from 'state-shared';
 import { getProcessed } from '../../../../packages/pixi-svelte/src/lib/assetLoad';
 
 import assets from './assets';
 import { devPreview } from './devPreview.svelte';
-import { isPhoneForAtlasDownscale } from './phoneSpineAtlasDownscale';
 import { stateGame } from './stateGame.svelte';
 import { isDuelBetMode, stateDuel } from './stateDuel.svelte';
+import { evictSpineAssetUrls, evictSpineAtlasAndPages } from './spineAtlasEvict';
 
 export const FS_CARTRIDGE_KEYS = ['BT', 'BTImg'] as const;
 export const DUEL_MASCOT_KEYS = ['mascotDog'] as const;
@@ -78,10 +80,46 @@ const spineSrcUrls = (key: string): string[] => {
 	return Object.values(entry.src).filter((value): value is string => typeof value === 'string');
 };
 
+const spineAtlasUrl = (key: string): string | undefined => {
+	const entry = assets[key as keyof typeof assets];
+	if (!entry || entry.type !== 'spine') return undefined;
+	const atlas = (entry.src as { atlas?: string }).atlas;
+	return typeof atlas === 'string' ? atlas : undefined;
+};
+
 const spriteSrcUrl = (key: string): string | undefined => {
 	const entry = assets[key as keyof typeof assets];
 	if (!entry || entry.type !== 'sprite') return undefined;
 	return typeof entry.src === 'string' ? entry.src : undefined;
+};
+
+const atlasPagesLive = (atlasUrl: string) => {
+	try {
+		const atlas = Assets.get(atlasUrl) as TextureAtlas | undefined;
+		if (!atlas?.pages?.length) return false;
+		return atlas.pages.every((page) => {
+			const pixiTex = (page.texture as SpineTexture | null)?.texture;
+			return Boolean(pixiTex && !pixiTex.destroyed && !pixiTex.source?.destroyed);
+		});
+	} catch {
+		return false;
+	}
+};
+
+const evictFeatureSpineKey = async (key: string) => {
+	const atlasUrl = spineAtlasUrl(key);
+	const skeletonUrl = (() => {
+		const entry = assets[key as keyof typeof assets];
+		if (!entry || entry.type !== 'spine') return undefined;
+		const skeleton = (entry.src as { skeleton?: string }).skeleton;
+		return typeof skeleton === 'string' ? skeleton : undefined;
+	})();
+	if (atlasUrl) {
+		await evictSpineAtlasAndPages(atlasUrl, skeletonUrl);
+		return;
+	}
+	const urls = spineSrcUrls(key);
+	if (urls.length > 0) await evictSpineAssetUrls(urls);
 };
 
 export const ensureFeatureKeyLoaded = async (
@@ -95,6 +133,12 @@ export const ensureFeatureKeyLoaded = async (
 	if (entry.type === 'spine') {
 		const loadSrc = spineSrcUrls(key);
 		if (loadSrc.length === 0) return null;
+		const atlasUrl = spineAtlasUrl(key);
+		const skeletonUrl = (entry.src as { skeleton?: string }).skeleton;
+		// After base-return unload, Cache may still hold a dead atlas — wipe before reload.
+		if (atlasUrl && !atlasPagesLive(atlasUrl)) {
+			await evictSpineAtlasAndPages(atlasUrl, skeletonUrl);
+		}
 		const rawAsset = await Assets.load(loadSrc);
 		const processed = getProcessed({
 			key,
@@ -120,31 +164,45 @@ export const ensureFeatureKeyLoaded = async (
 };
 
 /**
- * Drop feature keys from `loadedAssets`.
- * Desktop: park only — `Assets.unload` still destroys TextureSources while batch
- * BindGroups hold them → `_resourceId` / `alphaMode` null (often mid-idle).
- * Phone: unload after the caller’s frame barrier (VRAM).
+ * Drop feature keys from `loadedAssets` and Assets.Cache (including atlas page `.webp`).
+ * Caller must wait for unmount / BindGroup release (see FS_POPUP_UNLOAD_DELAY_FRAMES).
+ * Cartridge is never passed here — it stays resident after first FS.
  */
 export const unloadFeatureKeys = (
 	keys: readonly FeatureGpuKey[],
 	loadedAssets: Record<string, unknown>,
 ): Record<string, unknown> => {
-	const evictAssets = isPhoneForAtlasDownscale();
 	let next = loadedAssets;
 	for (const key of keys) {
-		if (!(key in next)) continue;
 		const entry = assets[key];
-		if (evictAssets) {
-			if (entry?.type === 'spine') {
-				const urls = spineSrcUrls(key);
-				if (urls.length > 0) {
-					void Assets.unload(urls).catch(() => undefined);
-				}
-			} else {
-				const url = spriteSrcUrl(key);
-				if (url) void Assets.unload(url).catch(() => undefined);
-			}
+		if (entry?.type === 'spine') {
+			void evictFeatureSpineKey(key);
+		} else {
+			const url = spriteSrcUrl(key);
+			if (url) void evictSpineAssetUrls([url]);
 		}
+		if (!(key in next)) continue;
+		next = { ...next };
+		delete next[key];
+	}
+	return next;
+};
+
+/** Awaitable variant — prefer this after the frame barrier so Cache is cleared before reload. */
+export const unloadFeatureKeysAsync = async (
+	keys: readonly FeatureGpuKey[],
+	loadedAssets: Record<string, unknown>,
+): Promise<Record<string, unknown>> => {
+	let next = loadedAssets;
+	for (const key of keys) {
+		const entry = assets[key];
+		if (entry?.type === 'spine') {
+			await evictFeatureSpineKey(key);
+		} else {
+			const url = spriteSrcUrl(key);
+			if (url) await evictSpineAssetUrls([url]);
+		}
+		if (!(key in next)) continue;
 		next = { ...next };
 		delete next[key];
 	}
@@ -167,6 +225,15 @@ type LoadedAssetsBag = {
 	loadedAssets?: Record<string, unknown>;
 };
 
+/** Ensure `outlineReel` is in loadedAssets before cat-slow mounts columns. */
+export const ensureOutlineReelReady = async (stateApp: LoadedAssetsBag) => {
+	const loaded = (stateApp.loadedAssets ?? {}) as Record<string, unknown>;
+	if (loaded.outlineReel) return;
+	const patch = await ensureFeatureKeysLoaded(FS_OUTLINE_KEYS, loaded);
+	if (!patch) return;
+	stateApp.loadedAssets = { ...(stateApp.loadedAssets ?? {}), ...patch };
+};
+
 /** Ensure `fsPopup` is in loadedAssets before FreeSpinAnimation mounts. */
 export const ensureFsPopupReady = async (stateApp: LoadedAssetsBag) => {
 	const loaded = (stateApp.loadedAssets ?? {}) as Record<string, unknown>;
@@ -177,4 +244,4 @@ export const ensureFsPopupReady = async (stateApp: LoadedAssetsBag) => {
 };
 
 /** Frames to wait after keep→false before unloading fsPopup (outro unmount). */
-export const FS_POPUP_UNLOAD_DELAY_FRAMES = 6;
+export const FS_POPUP_UNLOAD_DELAY_FRAMES = 8;

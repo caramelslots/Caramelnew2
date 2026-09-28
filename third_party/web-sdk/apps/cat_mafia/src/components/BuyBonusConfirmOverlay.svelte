@@ -15,12 +15,25 @@
 		buySuperCostMultiplier,
 		canAffordBuyBonus,
 	} from '../game/buyBonusBalance';
-	import { isPopoutSmallViewport, isPopoutViewport, HUD_BALANCE_BET_FONT_FAMILY } from '../game/constants';
+	import {
+		isPopoutSmallViewport,
+		isPopoutViewport,
+		HUD_BALANCE_BET_FONT_FAMILY,
+	} from '../game/constants';
 	import { ensureKnewaveFontLoaded } from '../game/knewaveFont';
 	import { getContext } from '../game/context';
-	import { evictBuyBonusForFeature } from '../game/buyBonusSharedPixi';
-	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS, startFsCongPreload } from '../game/uiHtmlAssetManifest';
-	import { getBuyBonusCardSpineHost } from '../game/buyBonusCardHosts';
+	import {
+		evictBuyBonusForFeature,
+		flushBuyBonusSharedStage,
+		registerBuyBonusCardView,
+		unregisterBuyBonusCardView,
+	} from '../game/buyBonusSharedPixi';
+	import { ensureOutlineReelReady } from '../game/featureGpuMemory';
+	import {
+		AUTOSPIN_ASSETS,
+		BUY_BONUS_ASSETS,
+		startFsCongPreload,
+	} from '../game/uiHtmlAssetManifest';
 	import type { BuyBonusSpineVariant } from '../game/buyBonusHtmlSpine';
 	import ArchedRibbonTitle from './ArchedRibbonTitle.svelte';
 	import FitCardText from './FitCardText.svelte';
@@ -57,53 +70,18 @@
 	const isSuper = $derived(stateBonus.selectedBetModeKey === 'bonus_super');
 	const spineVariant = $derived<BuyBonusSpineVariant>(isSuper ? 'super' : 'normal');
 
-	/**
-	 * Borrow the menu card's imperative portal (same WebGL canvases).
-	 * Never mount a second BuyBonusCardSpine here — that doubles bonus_normal / WILD.
-	 */
+	/** Shared Pixi lays out to this host while confirm is open (no second Spine stack). */
 	$effect(() => {
 		if (!isOpen || !spineMount) return;
-		const mount = spineMount;
-		const variant = spineVariant;
-		let host: HTMLElement | undefined;
-		let home: HTMLElement | null = null;
-		let cancelled = false;
-		let raf = 0;
-
-		const attach = () => {
-			if (cancelled) return;
-			host = getBuyBonusCardSpineHost(variant);
-			if (!host) {
-				raf = requestAnimationFrame(attach);
-				return;
-			}
-			if (!home) {
-				const parent = host.parentElement;
-				// Need the menu root as home — skip if already under confirm.
-				if (!parent || parent === mount) {
-					raf = requestAnimationFrame(attach);
-					return;
-				}
-				home = parent;
-			}
-			if (host.parentElement !== mount) {
-				mount.appendChild(host);
-			}
-		};
-		attach();
-
-		return () => {
-			cancelled = true;
-			cancelAnimationFrame(raf);
-			if (host && home?.isConnected && host.parentElement === mount) {
-				home.appendChild(host);
-			}
-		};
+		const id = registerBuyBonusCardView(spineVariant, spineMount, true);
+		// Wait for confirm panel-slot layout, then flush (avoids first-frame wrong host box).
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => flushBuyBonusSharedStage());
+		});
+		return () => unregisterBuyBonusCardView(id);
 	});
 
-	const multiplier = $derived(
-		isSuper ? buySuperCostMultiplier() : buyNormalCostMultiplier(),
-	);
+	const multiplier = $derived(isSuper ? buySuperCostMultiplier() : buyNormalCostMultiplier());
 	const price = $derived(numberToCurrencyString(stateBet.betAmount * multiplier));
 	const canConfirm = $derived(canAffordBuyBonus(multiplier));
 
@@ -128,8 +106,10 @@
 		stateModal.modal = null;
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		void startFsCongPreload();
+		void ensureOutlineReelReady(context.stateApp);
 		await tick();
-		await evictBuyBonusForFeature();
+		// Soft-lock + deferred heavy unload — do not await (keeps buy-spin smooth).
+		evictBuyBonusForFeature();
 		stateBet.activeBetModeKey = modeKey;
 		context.eventEmitter.broadcast({ type: 'bet' });
 	};
@@ -170,7 +150,12 @@
 			{context.i18nDerived.buyBonusTitle()}
 		</p>
 
-		<section class="confirm-card-section" data-buy-bonus-spine-layer aria-label="selected bonus">
+		<section
+			class="confirm-card-section"
+			data-buy-bonus-spine-layer
+			data-buy-bonus-confirm-layer
+			aria-label="selected bonus"
+		>
 			<article class="card confirm-card" class:card-normal={!isSuper} class:card-super={isSuper}>
 				<div class="spine-layer on" bind:this={spineMount}></div>
 				<div class="card-content">
@@ -440,7 +425,7 @@
 
 	.card-title {
 		position: absolute;
-		top: 0.2%;
+		top: 1%;
 		left: 4.5%;
 		right: 4.5%;
 		height: 16%;
@@ -606,8 +591,8 @@
 		@include buy-bonus-card-price-text;
 		display: block;
 		width: auto;
-		/* Nudge a couple px left; slight down from previous up-nudge. */
-		transform: translate(0.02em, 0.1em);
+		/* Nudge a couple px left; raise slightly with the title tweak. */
+		transform: translate(0.02em, calc(0.1em - 3px));
 	}
 
 	.card-price :global(a) {
@@ -727,7 +712,6 @@
 			width: auto;
 			transform: none;
 		}
-
 	}
 
 	/* Popout S */
@@ -757,7 +741,6 @@
 			width: auto;
 			transform: none;
 		}
-
 	}
 
 	@media (max-width: 600px) {

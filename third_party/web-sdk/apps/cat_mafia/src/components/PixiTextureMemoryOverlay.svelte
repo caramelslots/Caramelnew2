@@ -7,6 +7,7 @@
 	import { getContextApp } from 'pixi-svelte';
 
 	import {
+		dumpPixiTextureMemoryToConsole,
 		estimatePixiTextureMemory,
 		formatMb,
 		type PixiTextureMemoryStats,
@@ -22,6 +23,11 @@
 
 	const toggle = () => {
 		open = !open;
+	};
+
+	const dumpToConsole = (e: MouseEvent) => {
+		e.stopPropagation();
+		dumpPixiTextureMemoryToConsole(app.stateApp.pixiApplication ?? null);
 	};
 
 	$effect(() => {
@@ -63,6 +69,14 @@
 				<div class="pixi-mem__row">
 					HTML Spine {formatMb(stats.htmlSpineBytes)} · {stats.htmlSpineCount} surf
 				</div>
+				<button
+					type="button"
+					class="pixi-mem__dump"
+					title="Log full texture list to the browser console"
+					onclick={dumpToConsole}
+				>
+					dump → console
+				</button>
 				<div class="pixi-mem__top-title">Top 30 live</div>
 				{#if stats.top.length}
 					<ol class="pixi-mem__top">
@@ -146,6 +160,24 @@
 
 	.pixi-mem__row {
 		opacity: 0.85;
+	}
+
+	.pixi-mem__dump {
+		display: block;
+		width: 100%;
+		margin-top: 6px;
+		padding: 3px 0;
+		border: 1px solid rgba(157, 255, 176, 0.35);
+		border-radius: 4px;
+		background: rgba(157, 255, 176, 0.08);
+		color: #9dffb0;
+		font: inherit;
+		cursor: pointer;
+		text-align: center;
+	}
+
+	.pixi-mem__dump:hover {
+		background: rgba(157, 255, 176, 0.16);
 	}
 
 	.pixi-mem__top-title {

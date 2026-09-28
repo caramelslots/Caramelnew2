@@ -1,12 +1,17 @@
 /**
- * Buy-bonus card visuals: one overlay WebGL for every card Spine.
- * Load when the user opens the menu; drop GPU on bonus purchase / FS;
- * remount after returning to base.
+ * Buy-flow overlay WebGL: buy-bonus cards + duel pick mascots (cat/dog).
+ * One Pixi app for menu → confirm → duel pick → duel confirm (and in-round duel pick).
+ * Drop GPU on bonus purchase / FS; remount after returning to base.
  */
 import * as PIXI from 'pixi.js';
 import { Cache } from 'pixi.js';
-import type { TextureAtlas } from '@esotericsoftware/spine-core';
-import { Spine, SpineTexture } from '@esotericsoftware/spine-pixi-v8';
+import {
+	AtlasAttachmentLoader,
+	SkeletonJson,
+	Spine,
+	SpineTexture,
+	TextureAtlas,
+} from '@esotericsoftware/spine-pixi-v8';
 
 import {
 	BUY_BONUS_HIDDEN_SLOTS,
@@ -15,7 +20,6 @@ import {
 	buyBonusNormalMascotUrls,
 	buyBonusSpineUrls,
 	getBuyBonusPixiTransform,
-	getBuyBonusSpineBitmap,
 	releaseBuyBonusSpineBitmaps,
 	resumeBuyBonusSpineBitmapDecode,
 	startBuyBonusSpineBitmapDecode,
@@ -28,27 +32,48 @@ import { isHtmlWebglPaused } from './htmlWebglPause';
 import { isBuyBonusFlowOpen } from './isAnyMenuOpen';
 import { isPhoneForAtlasDownscale } from './phoneSpineAtlasDownscale';
 import { gameEntrance } from './gameEntrance.svelte';
+import {
+	getMascotPixiTransform,
+	MASCOT_DOG_SPINE_VIEWPORT,
+	MASCOT_SPINE_VIEWPORT,
+	resolveMascotSpineUrl,
+} from './mascotHtmlSpine';
 import { stateDuel } from './stateDuel.svelte';
 import { stateGame } from './stateGame.svelte';
 
 export type BuyBonusCardViewId = number;
+export type BuyBonusPickSpecies = 'cat' | 'dog';
 
 type CardView = {
 	id: BuyBonusCardViewId;
+	kind: 'card';
 	variant: BuyBonusSpineVariant;
 	host: HTMLElement;
 	active: boolean;
 };
 
+type PickView = {
+	id: BuyBonusCardViewId;
+	kind: 'pick';
+	species: BuyBonusPickSpecies;
+	host: HTMLElement;
+	active: boolean;
+	mirror: boolean;
+};
+
+type OverlayView = CardView | PickView;
+
 const LAYER_SELECTOR = '[data-buy-bonus-spine-layer]';
 const CANVAS_CLASS = 'buy-bonus-shared-spine-canvas';
 
-const views = new Map<BuyBonusCardViewId, CardView>();
+const views = new Map<BuyBonusCardViewId, OverlayView>();
 /** Frame spine, or (normal) Container: bg frame + shared white mascot + fg frame. */
 type CardVisual = Spine | PIXI.Container;
 
 const spines = new Map<BuyBonusSpineVariant, CardVisual>();
 const loading = new Map<BuyBonusSpineVariant, Promise<CardVisual | null>>();
+const pickSpines = new Map<BuyBonusPickSpecies, Spine>();
+const pickLoading = new Map<BuyBonusPickSpecies, Promise<Spine | null>>();
 
 /** Blocks warm/recreate until settled base after a bought bonus / FS. */
 const getFeatureEvictLock = () => gameEntrance.buyBonusFeatureEvictLock;
@@ -74,6 +99,27 @@ const buyBonusAssetUrls = () =>
 	});
 
 const overlayOnlyUrls = () => buyBonusAssetUrls();
+
+/** Spine.from caches SkeletonData as `${skeleton}-${atlas}-${scale}` — must die with the atlas. */
+const spineFromCacheKey = (skeletonUrl: string, atlasUrl: string, scale = 1) =>
+	`${skeletonUrl}-${atlasUrl}-${scale}`;
+
+const buyBonusSpineFromCacheKeys = () => {
+	const keys: string[] = [];
+	for (const variant of MENU_VARIANTS) {
+		const urls = buyBonusSpineUrls(variant);
+		keys.push(spineFromCacheKey(urls.skeleton, urls.atlas));
+		if (variant === 'normal') {
+			const mascot = buyBonusNormalMascotUrls();
+			keys.push(spineFromCacheKey(mascot.skeleton, mascot.atlas));
+		}
+	}
+	return keys;
+};
+
+const evictBuyBonusSpineFromCache = () => {
+	for (const key of buyBonusSpineFromCacheKeys()) evictCachedUrl(key);
+};
 
 const evictCachedUrl = (url: string) => {
 	try {
@@ -107,8 +153,10 @@ const variantTexturesLive = (variant: BuyBonusSpineVariant) => {
  * Drop overlay-only atlas Cache after a WebGL teardown.
  * Never destroy(true) — that races the main Pixi BindGroups (`_resourceId`).
  * Never touch the shared white mascot atlas (main-game cat).
+ * Always drop Spine.from SkeletonData keys — otherwise remount paints black (dead GPU pages).
  */
 const purgeBuyBonusAssetCache = async () => {
+	evictBuyBonusSpineFromCache();
 	const urls = overlayOnlyUrls();
 	try {
 		await PIXI.Assets.unload(urls);
@@ -117,20 +165,6 @@ const purgeBuyBonusAssetCache = async () => {
 	}
 	for (const url of urls) evictCachedUrl(url);
 	atlasesDirty = false;
-};
-
-/** Only use decoded bitmaps when every atlas page is ready — a partial map loads a broken atlas. */
-const atlasImagesFromBitmaps = (imageUrls: readonly string[]) => {
-	const images: Record<string, PIXI.TextureSource> = {};
-	for (const url of imageUrls) {
-		const bitmap = getBuyBonusSpineBitmap(url);
-		if (!bitmap) return null;
-		const file = url.replace(/^.*\//, '');
-		const source = PIXI.Texture.from(bitmap).source;
-		source.label = file;
-		images[file] = source;
-	}
-	return imageUrls.length > 0 ? images : null;
 };
 
 const dropDeadSpine = (variant: BuyBonusSpineVariant) => {
@@ -205,9 +239,11 @@ export const shouldKeepBuyBonusWarm = () =>
 	!stateDuel.active &&
 	!isTirSceneLive();
 
+/** Own overlay GL for buy-flow + in-round duel side pick. */
 const canOwnApp = () => {
-	if (stateGame.gameType !== 'basegame' || stateDuel.active) return false;
 	if (isBuyBonusFlowOpen()) return true;
+	if (stateDuel.phase === 'pick') return true;
+	if (stateGame.gameType !== 'basegame' || stateDuel.active) return false;
 	return shouldKeepBuyBonusWarm();
 };
 
@@ -217,7 +253,11 @@ export const buyBonusWarmAfterFeatureMs = () => (isPhoneForAtlasDownscale() ? 90
 const visualZoom = () =>
 	typeof window === 'undefined' ? 1 : Math.max(1, window.visualViewport?.scale ?? 1);
 
-const buyBonusHostResolution = () => (isPhoneForAtlasDownscale() ? 2 : 3) / visualZoom();
+/** Match former per-card SpinePlayer sharpness (device DPR, floor 2 on retina). */
+const buyBonusHostResolution = () => {
+	const dpr = typeof window === 'undefined' ? 2 : window.devicePixelRatio || 1;
+	return Math.min(Math.max(dpr, 2), 3) / visualZoom();
+};
 
 const ensureApp = (): Promise<PIXI.Application | undefined> => {
 	if (app) return Promise.resolve(app);
@@ -226,15 +266,14 @@ const ensureApp = (): Promise<PIXI.Application | undefined> => {
 	const gen = ++appGen;
 	const pending = (async () => {
 		const next = new PIXI.Application();
-		const phone = isPhoneForAtlasDownscale();
 		await next.init({
 			width: 4,
 			height: 4,
 			backgroundAlpha: 0,
-			antialias: !phone,
+			antialias: true,
 			autoDensity: true,
 			preference: 'webgl',
-			powerPreference: phone ? 'low-power' : 'high-performance',
+			powerPreference: 'high-performance',
 			resolution: buyBonusHostResolution(),
 			autoStart: false,
 		});
@@ -248,7 +287,7 @@ const ensureApp = (): Promise<PIXI.Application | undefined> => {
 		next.canvas.style.width = '100%';
 		next.canvas.style.height = '100%';
 		next.canvas.style.pointerEvents = 'none';
-		next.canvas.style.zIndex = '0';
+		/* z-index via CSS per overlay — inline would pin canvas under pick card HTML. */
 		next.canvas.setAttribute('aria-hidden', 'true');
 		app = next;
 		if (!tickerBound) {
@@ -284,16 +323,75 @@ const withBuyBonusAssets = async <T>(fn: () => Promise<T>): Promise<T> => {
 	}
 };
 
+/** Evict atlas + pages so a new overlay GL app cannot reuse dead GPU textures. */
+const hardEvictBuyBonusVariantAssets = async (variant: BuyBonusSpineVariant) => {
+	const urls = buyBonusSpineUrls(variant);
+	const all = [urls.atlas, urls.skeleton, ...urls.images];
+	// Stale Spine.from SkeletonData keeps pointers to destroyed atlas pages → black cards.
+	evictCachedUrl(spineFromCacheKey(urls.skeleton, urls.atlas));
+	if (variant === 'normal') {
+		const mascot = buyBonusNormalMascotUrls();
+		evictCachedUrl(spineFromCacheKey(mascot.skeleton, mascot.atlas));
+	}
+	for (const url of all) {
+		try {
+			if (!Cache.has(url)) continue;
+			const asset = PIXI.Assets.get(url) as
+				| TextureAtlas
+				| PIXI.Texture
+				| { destroy?: (n?: boolean) => void }
+				| undefined;
+			if (asset && 'pages' in asset && Array.isArray((asset as TextureAtlas).pages)) {
+				for (const page of (asset as TextureAtlas).pages) {
+					try {
+						(page.texture as SpineTexture | null)?.texture?.destroy(true);
+					} catch {
+						/* already gone */
+					}
+				}
+			} else if (asset && typeof (asset as PIXI.Texture).destroy === 'function') {
+				try {
+					(asset as PIXI.Texture).destroy(true);
+				} catch {
+					/* already gone */
+				}
+			}
+		} catch {
+			/* not in cache */
+		}
+	}
+	try {
+		await PIXI.Assets.unload(all);
+	} catch {
+		/* not cached */
+	}
+	for (const url of all) evictCachedUrl(url);
+};
+
+/**
+ * Load atlas pages with explicit PMA-on-upload into THIS pass, then wire the atlas.
+ * Avoids stale Cache TextureSources from a destroyed overlay WebGL (solid black cards).
+ */
 const loadBuyBonusAtlasAndSkeleton = async (variant: BuyBonusSpineVariant) => {
 	const urls = buyBonusSpineUrls(variant);
 	await withBuyBonusAssets(async () => {
-		if (atlasesDirty || !atlasPagesLive(urls.atlas)) await purgeBuyBonusAssetCache();
-		const images = atlasImagesFromBitmaps(urls.images);
-		if (images) {
-			await PIXI.Assets.load([{ src: urls.atlas, data: { images } }, urls.skeleton]);
-		} else {
-			await PIXI.Assets.load([urls.atlas, urls.skeleton]);
+		await hardEvictBuyBonusVariantAssets(variant);
+
+		const images: Record<string, PIXI.TextureSource> = {};
+		for (const url of urls.images) {
+			const texture = (await PIXI.Assets.load({
+				src: url,
+				data: { alphaMode: 'premultiply-alpha-on-upload' },
+			})) as PIXI.Texture;
+			const file = url.replace(/^.*\//, '');
+			texture.source.label = file;
+			texture.source.autoGenerateMipmaps = false;
+			if (texture.source.style) texture.source.style.scaleMode = 'linear';
+			images[file] = texture.source;
 		}
+
+		await PIXI.Assets.load([{ src: urls.atlas, data: { images } }, urls.skeleton]);
+		atlasesDirty = false;
 	});
 };
 
@@ -361,6 +459,209 @@ const forceDropSpine = (variant: BuyBonusSpineVariant) => {
 	atlasesDirty = true;
 };
 
+/** Cache keys unique from main-game white/dog atlases (those live on another GL). */
+const pickAtlasCacheKey = (species: BuyBonusPickSpecies) => `bb-overlay-pick-${species}-atlas`;
+const pickSkeletonCacheKey = (species: BuyBonusPickSpecies) => `bb-overlay-pick-${species}-skel`;
+const pickSkeletonDataCacheKey = (species: BuyBonusPickSpecies) =>
+	`${pickSkeletonCacheKey(species)}-${pickAtlasCacheKey(species)}-1`;
+
+const pickMascotUrls = (species: BuyBonusPickSpecies) => {
+	const isDog = species === 'dog';
+	return {
+		skeleton: resolveMascotSpineUrl(isDog ? 'dog/mascot_dog.json' : 'white/mascot_cat.json'),
+		atlas: resolveMascotSpineUrl(isDog ? 'dog/mascot_dog.atlas' : 'white/mascot_cat.atlas'),
+		images: isDog
+			? [
+					resolveMascotSpineUrl('dog/mascot_dog.png'),
+					resolveMascotSpineUrl('dog/mascot_dog_2.png'),
+				]
+			: [resolveMascotSpineUrl('white/mascot_cat.png')],
+	};
+};
+
+const forceDropPickSpine = (species: BuyBonusPickSpecies) => {
+	const spine = pickSpines.get(species);
+	if (!spine) return;
+	try {
+		spine.destroy({ children: true, texture: false });
+	} catch {
+		/* already released */
+	}
+	pickSpines.delete(species);
+};
+
+const dropAllPickSpines = () => {
+	for (const species of [...pickSpines.keys()]) forceDropPickSpine(species);
+	pickLoading.clear();
+};
+
+const evictPickMascotCache = (species: BuyBonusPickSpecies) => {
+	for (const key of [
+		pickAtlasCacheKey(species),
+		pickSkeletonCacheKey(species),
+		pickSkeletonDataCacheKey(species),
+	]) {
+		try {
+			if (!Cache.has(key)) continue;
+			const asset = Cache.get(key) as TextureAtlas | { dispose?: () => void } | undefined;
+			if (asset && 'pages' in asset && Array.isArray((asset as TextureAtlas).pages)) {
+				for (const page of (asset as TextureAtlas).pages) {
+					try {
+						(page.texture as SpineTexture | null)?.texture?.destroy(true);
+					} catch {
+						/* already gone */
+					}
+				}
+				try {
+					(asset as TextureAtlas).dispose?.();
+				} catch {
+					/* already gone */
+				}
+			}
+		} catch {
+			/* not in cache */
+		}
+		evictCachedUrl(key);
+	}
+};
+
+type PickMascotBuilt = {
+	atlas: TextureAtlas;
+	skeletonData: ReturnType<SkeletonJson['readSkeletonData']>;
+};
+
+/**
+ * Overlay-only atlas pages (canvas copy → upload to THIS renderer) + SkeletonData.
+ * No Assets.load / no shared main-game Cache keys — those bind to the wrong GL.
+ */
+const buildPickMascotSkeleton = async (
+	species: BuyBonusPickSpecies,
+	renderer: PIXI.Renderer,
+): Promise<PickMascotBuilt> => {
+	const urls = pickMascotUrls(species);
+	evictPickMascotCache(species);
+
+	const atlasText = await (await fetch(urls.atlas)).text();
+	const atlas = new TextureAtlas(atlasText);
+	const imageByFile = new Map(
+		urls.images.map((url) => [url.replace(/^.*\//, '').split('?')[0]!, url] as const),
+	);
+
+	for (const page of atlas.pages) {
+		const imgUrl = imageByFile.get(page.name);
+		if (!imgUrl) throw new Error(`[buyBonus] pick atlas page missing image: ${page.name}`);
+		const response = await fetch(imgUrl);
+		if (!response.ok) throw new Error(`[buyBonus] pick image fetch failed: ${imgUrl}`);
+		const bitmap = await createImageBitmap(await response.blob());
+		const canvas = document.createElement('canvas');
+		canvas.width = bitmap.width;
+		canvas.height = bitmap.height;
+		const ctx = canvas.getContext('2d', { alpha: true });
+		if (!ctx) {
+			bitmap.close();
+			throw new Error(`[buyBonus] pick canvas 2d unavailable: ${page.name}`);
+		}
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		ctx.drawImage(bitmap, 0, 0);
+		bitmap.close();
+
+		const texture = PIXI.Texture.from(canvas);
+		texture.source.alphaMode = 'premultiply-alpha-on-upload';
+		texture.source.autoGenerateMipmaps = true;
+		texture.source.label = `bb-pick-${page.name}`;
+		if (texture.source.style) texture.source.style.scaleMode = 'linear';
+		try {
+			renderer.texture.bind(texture.source);
+		} catch {
+			/* first draw will upload */
+		}
+		page.setTexture(SpineTexture.from(texture.source));
+	}
+
+	const skeletonJson = await (await fetch(urls.skeleton)).json();
+	const parser = new SkeletonJson(new AtlasAttachmentLoader(atlas));
+	parser.scale = 1;
+	const skeletonData = parser.readSkeletonData(skeletonJson);
+	return { atlas, skeletonData };
+};
+
+const loadPickMascot = (species: BuyBonusPickSpecies) => {
+	const existing = pickSpines.get(species);
+	if (existing && !existing.destroyed) return Promise.resolve(existing);
+	if (existing) forceDropPickSpine(species);
+	const pending = pickLoading.get(species);
+	if (pending) return pending;
+
+	const task = (async () => {
+		if (!canOwnApp()) return null;
+		const createdApp = await ensureApp();
+		if (!createdApp) return null;
+		const gen = appGen;
+		let built: PickMascotBuilt;
+		try {
+			built = await withBuyBonusAssets(() => buildPickMascotSkeleton(species, createdApp.renderer));
+		} catch (error) {
+			console.error('[buyBonus] pick mascot load failed', species, error);
+			return null;
+		}
+		if (!app || gen !== appGen || !canOwnApp()) return null;
+		const already = pickSpines.get(species);
+		if (already && !already.destroyed) return already;
+		if (already) forceDropPickSpine(species);
+
+		try {
+			const spine = new Spine({ skeletonData: built.skeletonData, autoUpdate: false });
+			spine.state.setAnimation(0, 'idle', true);
+			if (species === 'cat') {
+				try {
+					spine.skeleton.setAttachment('smile', null);
+				} catch {
+					spine.skeleton.findSlot('smile')?.setAttachment(null);
+				}
+			}
+			spine.update(0);
+			spine.visible = false;
+			createdApp.stage.addChild(spine);
+			pickSpines.set(species, spine);
+			return spine;
+		} catch (error) {
+			console.error('[buyBonus] pick Spine create failed', species, error);
+			return null;
+		}
+	}).finally(() => {
+		pickLoading.delete(species);
+	});
+
+	pickLoading.set(species, task);
+	return task;
+};
+
+const reloadRegisteredPickMascots = async () => {
+	const speciesNeeded = new Set<BuyBonusPickSpecies>();
+	for (const view of views.values()) {
+		if (view.kind === 'pick' && view.host.isConnected) speciesNeeded.add(view.species);
+	}
+	await Promise.all([...speciesNeeded].map((species) => loadPickMascot(species)));
+};
+
+/** Force cat+dog onto overlay GL. Call when duel pick opens. */
+export const ensureBuyBonusPickMascotsReady = async () => {
+	if (!canOwnApp()) return;
+	cancelScheduledDestroy();
+	dropAllPickSpines();
+	evictPickMascotCache('cat');
+	evictPickMascotCache('dog');
+	const created = await ensureApp();
+	if (!created || !canOwnApp()) return;
+	await Promise.all([loadPickMascot('cat'), loadPickMascot('dog')]);
+	if (!app || !canOwnApp()) return;
+	flushBuyBonusSharedStage();
+	requestAnimationFrame(() => {
+		flushBuyBonusSharedStage();
+		requestAnimationFrame(() => flushBuyBonusSharedStage());
+	});
+};
+
 const loadSpine = (variant: BuyBonusSpineVariant) => {
 	const existing = spines.get(variant);
 	// Reuse only when GPU textures are actually live — otherwise redraw stays blank.
@@ -385,6 +686,7 @@ const loadSpine = (variant: BuyBonusSpineVariant) => {
 			await loadBuyBonusAtlasAndSkeleton(variant);
 			if (variant === 'normal') {
 				const mascot = buyBonusNormalMascotUrls();
+				// Shared with main-game white cat — never hard-destroy; just ensure loaded.
 				await PIXI.Assets.load([mascot.atlas, mascot.skeleton]);
 			}
 		};
@@ -480,7 +782,8 @@ export const whenBuyBonusSpinesReady = async (
 };
 
 export const areBuyBonusSpinesReady = (variants: readonly BuyBonusSpineVariant[] = MENU_VARIANTS) =>
-	Boolean(app) && variants.every((variant) => spines.has(variant));
+	Boolean(app) &&
+	variants.every((variant) => spines.has(variant) && variantTexturesLive(variant));
 
 /** Overlay normal card shares `white/mascot_cat` — do not Assets.unload it. */
 export const isBuyBonusWhiteMascotGpuLive = () =>
@@ -502,10 +805,17 @@ export const acknowledgeBuyBonusPresented = () => {
 
 let warmPromise: Promise<void> | null = null;
 
+/**
+ * One-shot: force overlay GL + atlases to rebuild (black-card / quality fixes).
+ * Bump this when texture-load path changes so HMR/warm park cannot keep dead GPU pages.
+ * v2: pick mascots use manual TextureAtlas Cache keys (not Assets.load aliases).
+ */
+let needsAtlasPmaRebuild = true;
+
 /** Load on first Buy Bonus open; remount after FS. Never during a feature. */
 export const ensureBuyBonusWarm = (): Promise<void> => {
 	if (!canOwnApp()) return Promise.resolve();
-	if (areBuyBonusSpinesReady(MENU_VARIANTS)) {
+	if (!needsAtlasPmaRebuild && areBuyBonusSpinesReady(MENU_VARIANTS)) {
 		markBuyBonusWarmSucceeded();
 		return Promise.resolve();
 	}
@@ -513,15 +823,34 @@ export const ensureBuyBonusWarm = (): Promise<void> => {
 
 	warmPromise = (async () => {
 		try {
+			if (needsAtlasPmaRebuild) {
+				needsAtlasPmaRebuild = false;
+				for (const variant of MENU_VARIANTS) forceDropSpine(variant);
+				dropAllPickSpines();
+				// Recreate GL app (new resolution / AA) but keep registered HTML hosts.
+				appGen += 1;
+				atlasesDirty = true;
+				const current = app;
+				app = undefined;
+				appReady = undefined;
+				tickerBound = false;
+				if (current) {
+					current.ticker.remove(tickSharedStage);
+					current.destroy(true);
+				}
+				await purgeBuyBonusAssetCache();
+			}
 			resumeBuyBonusSpineBitmapDecode();
 			const createdApp = await ensureApp();
 			if (!createdApp || !canOwnApp()) return;
 			await whenBuyBonusSpinesReady(MENU_VARIANTS);
+			await reloadRegisteredPickMascots();
 			if (!app || !canOwnApp()) return;
 			if (hasLiveView()) {
 				flushBuyBonusSharedStage();
 			} else {
 				for (const spine of spines.values()) spine.visible = false;
+				for (const spine of pickSpines.values()) spine.visible = false;
 				if (app.ticker.started) app.ticker.stop();
 			}
 			markBuyBonusWarmSucceeded();
@@ -571,27 +900,36 @@ const observeLayer = (layer: HTMLElement) => {
 
 const attachCanvas = (layer: HTMLElement) => {
 	if (!app) return;
-	if (app.canvas.parentElement === layer) {
-		// Keep canvas under the card buttons so art shows through transparent cards.
-		if (layer.firstChild !== app.canvas) layer.insertBefore(app.canvas, layer.firstChild);
-		observeLayer(layer);
-		return;
+	// Pick layers: canvas above opaque card bg (clear pixels still show frame/text).
+	// Buy-card layers: canvas under HTML text (cards are transparent over spine art).
+	const isPickLayer = Boolean(layer.querySelector('[data-buy-bonus-pick-host]'));
+	app.canvas.style.zIndex = isPickLayer ? '1' : '0';
+	if (isPickLayer) {
+		if (app.canvas.parentElement !== layer || layer.lastElementChild !== app.canvas) {
+			layer.appendChild(app.canvas);
+		}
+	} else if (app.canvas.parentElement !== layer || layer.firstChild !== app.canvas) {
+		layer.insertBefore(app.canvas, layer.firstChild);
 	}
-	layer.insertBefore(app.canvas, layer.firstChild);
 	observeLayer(layer);
 };
 
 const resizeCanvas = (layer: HTMLElement) => {
 	if (!app) return;
-	const { w, h } = hostBox(layer);
+	const zoom = visualZoom();
+	const rect = layer.getBoundingClientRect();
+	const w = Math.max(0, Math.round(rect.width / zoom));
+	const h = Math.max(0, Math.round(rect.height / zoom));
 	if (w < 2 || h < 2) return;
 	const dpr = buyBonusHostResolution();
 	if (app.renderer.resolution !== dpr) app.renderer.resolution = dpr;
 	if (app.renderer.width !== w || app.renderer.height !== h) {
 		app.renderer.resize(w, h);
 	}
-	app.canvas.style.width = '100%';
-	app.canvas.style.height = '100%';
+	app.canvas.style.width = `${w}px`;
+	app.canvas.style.height = `${h}px`;
+	app.canvas.style.left = '0';
+	app.canvas.style.top = '0';
 };
 
 const cardButton = (host: HTMLElement) => host.closest('button');
@@ -622,15 +960,73 @@ const layoutSpine = (
 	visual.y = (hostRect.top - layerRect.top) / zoom + h * 0.5 + transform.spineY;
 };
 
-const pickLayer = (visible: CardView[]) => {
+const layoutPickMascot = (
+	spine: Spine,
+	species: BuyBonusPickSpecies,
+	host: HTMLElement,
+	layer: HTMLElement,
+	mirror: boolean,
+) => {
+	const zoom = visualZoom();
+	const hostRect = host.getBoundingClientRect();
+	const w = hostRect.width / zoom;
+	const h = hostRect.height / zoom;
+	if (w < 2 || h < 2) {
+		spine.visible = false;
+		return;
+	}
+	const viewport = species === 'dog' ? MASCOT_DOG_SPINE_VIEWPORT : MASCOT_SPINE_VIEWPORT;
+	const transform = getMascotPixiTransform(
+		{ left: 0, top: 0, width: w, height: h, bodyLeft: 0, bodyWidth: w },
+		viewport,
+	);
+	const button = cardButton(host);
+	spine.alpha = button?.disabled ? 0.5 : 1;
+	spine.visible = true;
+	const layerRect = layer.getBoundingClientRect();
+	const sx = mirror ? -transform.scale : transform.scale;
+	spine.scale.set(sx, transform.scale);
+	spine.x = (hostRect.left - layerRect.left) / zoom + w * 0.5 + transform.spineX;
+	spine.y = (hostRect.top - layerRect.top) / zoom + h * 0.5 + transform.spineY;
+};
+
+const CONFIRM_LAYER_ATTR = 'data-buy-bonus-confirm-layer';
+
+const viewLayerOf = (host: HTMLElement): HTMLElement | null => {
+	const confirm = host.closest(`[${CONFIRM_LAYER_ATTR}]`);
+	if (confirm instanceof HTMLElement) return confirm;
+	const menu = host.closest(LAYER_SELECTOR);
+	return menu instanceof HTMLElement ? menu : null;
+};
+
+const pickLayer = (visible: OverlayView[]) => {
+	// Active pick hosts first (buy choose-side / in-round duel pick).
+	for (const view of visible) {
+		if (!view.active || view.kind !== 'pick') continue;
+		const layer = viewLayerOf(view.host);
+		if (layer) return layer;
+	}
+	// Pick layer may be displayed before `playing` flips active — never let warm
+	// buy-menu hosts (isDisplayed via data-buy-bonus-prepare) steal the canvas.
+	for (const view of views.values()) {
+		if (view.kind !== 'pick' || !view.host.isConnected) continue;
+		const layer = viewLayerOf(view.host);
+		if (layer && isDisplayed(layer)) return layer;
+	}
+	// Confirm host wins over warm-parked menu hosts (same variant, two layers).
 	for (const view of visible) {
 		if (!view.active) continue;
-		const layer = view.host.closest(LAYER_SELECTOR);
+		const layer = view.host.closest(`[${CONFIRM_LAYER_ATTR}]`);
 		if (layer instanceof HTMLElement) return layer;
 	}
 	for (const view of visible) {
-		const layer = view.host.closest(LAYER_SELECTOR);
-		if (layer instanceof HTMLElement) return layer;
+		if (!view.active) continue;
+		const layer = viewLayerOf(view.host);
+		if (layer) return layer;
+	}
+	for (const view of visible) {
+		const layer = viewLayerOf(view.host);
+		if (layer) return layer;
 	}
 	return null;
 };
@@ -640,14 +1036,16 @@ let lastSpineAdvanceMs = 0;
 const layoutAndDraw = (advance: boolean) => {
 	if (!app) return;
 
-	const visible: CardView[] = [];
+	const visible: OverlayView[] = [];
 	for (const view of views.values()) {
-		if (isDisplayed(view.host)) visible.push(view);
+		if (!view.host.isConnected) continue;
+		if (view.active || isDisplayed(view.host)) visible.push(view);
 	}
 
 	const layer = pickLayer(visible);
 	if (!layer) {
 		for (const spine of spines.values()) spine.visible = false;
+		for (const spine of pickSpines.values()) spine.visible = false;
 		lastSpineAdvanceMs = 0;
 		app.ticker.stop();
 		return;
@@ -656,7 +1054,11 @@ const layoutAndDraw = (advance: boolean) => {
 	attachCanvas(layer);
 	resizeCanvas(layer);
 
-	const playing = visible.some((view) => view.active) && !isHtmlWebglPaused();
+	// Never layout warm-parked menu hosts into the confirm canvas (ghost duel/normal art).
+	const layerViews = visible.filter((view) => viewLayerOf(view.host) === layer);
+	const layerHasActive = layerViews.some((view) => view.active);
+
+	const playing = layerViews.some((view) => view.active) && !isHtmlWebglPaused();
 	let dt = 0;
 	if (advance && playing) {
 		const now = performance.now();
@@ -666,12 +1068,16 @@ const layoutAndDraw = (advance: boolean) => {
 		lastSpineAdvanceMs = 0;
 	}
 
+	const layerCards = layerViews.filter((v): v is CardView => v.kind === 'card');
+	const layerPicks = layerViews.filter((v): v is PickView => v.kind === 'pick');
+
 	for (const variant of spines.keys()) {
 		const visual = spines.get(variant);
 		if (!visual) continue;
+		const candidates = layerCards.filter((item) => item.variant === variant);
 		const view =
-			visible.find((item) => item.variant === variant && item.active) ??
-			visible.find((item) => item.variant === variant);
+			candidates.find((item) => item.active) ??
+			(layerHasActive ? undefined : candidates[0]);
 		if (!view) {
 			visual.visible = false;
 			continue;
@@ -680,6 +1086,22 @@ const layoutAndDraw = (advance: boolean) => {
 		if (dt > 0 && view.active) {
 			forEachCardSpine(visual, (spine) => spine.update(dt));
 		}
+	}
+
+	for (const species of pickSpines.keys()) {
+		const spine = pickSpines.get(species);
+		if (!spine) continue;
+		const candidates = layerPicks.filter((item) => item.species === species);
+		const view =
+			candidates.find((item) => item.active) ??
+			candidates.find((item) => isDisplayed(item.host)) ??
+			(layerHasActive ? undefined : candidates[0]);
+		if (!view) {
+			spine.visible = false;
+			continue;
+		}
+		layoutPickMascot(spine, species, view.host, layer, view.mirror);
+		if (dt > 0 && (view.active || isDisplayed(view.host))) spine.update(dt);
 	}
 
 	app.render();
@@ -712,11 +1134,68 @@ const cancelScheduledDestroy = () => {
 
 const DESTROY_IDLE_MS = 80;
 
+/** Delay Assets.unload / shared-stage destroy so buy-spin + cat-slow are not hitched. */
+const buyBonusHeavyTeardownDeferMs = () => (isPhoneForAtlasDownscale() ? 2200 : 1200);
+
+let deferredHeavyTeardownTimer: ReturnType<typeof setTimeout> | undefined;
+let deferredHeavyTeardownRaf = 0;
+
+const cancelDeferredHeavyTeardown = () => {
+	if (deferredHeavyTeardownTimer !== undefined) {
+		clearTimeout(deferredHeavyTeardownTimer);
+		deferredHeavyTeardownTimer = undefined;
+	}
+	if (deferredHeavyTeardownRaf) {
+		cancelAnimationFrame(deferredHeavyTeardownRaf);
+		deferredHeavyTeardownRaf = 0;
+	}
+};
+
+/**
+ * Soft-lock warm + stop card GPU; schedule heavy GL dispose / Assets.unload after
+ * the buy-spin has started (avoids main-thread hitch during cat-slow).
+ * Safe to call without await — sync work is only the lock + stopRendering.
+ */
+export const evictBuyBonusForFeature = () => {
+	setFeatureEvictLock(true);
+	suspendBuyBonusSpineBitmapDecode();
+	cancelScheduledDestroy();
+	cancelDeferredHeavyTeardown();
+	gameEntrance.buyBonusPanelReady = false;
+	gameEntrance.buyBonusWarmReady = false;
+
+	// 2 rAF: modal unmount + bet tick first; then drop spines; unload later.
+	deferredHeavyTeardownRaf = requestAnimationFrame(() => {
+		deferredHeavyTeardownRaf = requestAnimationFrame(() => {
+			deferredHeavyTeardownRaf = 0;
+			releaseAllBuyBonusCardSpinePlayers();
+			releaseBuyBonusNormalStreetStill();
+			deferredHeavyTeardownTimer = setTimeout(() => {
+				deferredHeavyTeardownTimer = undefined;
+				// Warm remount cleared the lock — do not purge atlases under a new park.
+				if (!getFeatureEvictLock()) return;
+				void destroySharedStageAsync();
+			}, buyBonusHeavyTeardownDeferMs());
+		});
+	});
+};
+
+export const isBuyBonusFeatureEvictLocked = () => getFeatureEvictLock();
+
+export const clearBuyBonusFeatureEvictLock = () => {
+	cancelDeferredHeavyTeardown();
+	setFeatureEvictLock(false);
+	resumeBuyBonusSpineBitmapDecode();
+};
+
 const teardownSharedStageSync = () => {
 	cancelScheduledDestroy();
 	appGen += 1;
 	atlasesDirty = true;
-	const inflight = [...loading.values()];
+	// Next warm must rebuild GL + atlases (PMA upload into the new context).
+	needsAtlasPmaRebuild = true;
+	evictBuyBonusSpineFromCache();
+	const inflight = [...loading.values(), ...pickLoading.values()];
 	for (const visual of spines.values()) {
 		try {
 			visual.destroy({ children: true, texture: false });
@@ -726,6 +1205,15 @@ const teardownSharedStageSync = () => {
 	}
 	spines.clear();
 	loading.clear();
+	for (const spine of pickSpines.values()) {
+		try {
+			spine.destroy({ children: true, texture: false });
+		} catch {
+			/* already released */
+		}
+	}
+	pickSpines.clear();
+	pickLoading.clear();
 	views.clear();
 	gameEntrance.buyBonusWarmReady = false;
 	const current = app;
@@ -762,7 +1250,7 @@ const destroySharedStageAsync = async () => {
 };
 
 const destroyIfIdle = () => {
-	if (loading.size > 0 || hasLiveView()) return;
+	if (loading.size > 0 || pickLoading.size > 0 || hasLiveView()) return;
 	if (shouldKeepBuyBonusWarm()) return;
 	destroySharedStage();
 };
@@ -777,24 +1265,6 @@ const scheduleDestroyIfIdle = () => {
 		destroyTimer = undefined;
 		destroyIfIdle();
 	}, DESTROY_IDLE_MS);
-};
-
-export const evictBuyBonusForFeature = async () => {
-	setFeatureEvictLock(true);
-	suspendBuyBonusSpineBitmapDecode();
-	cancelScheduledDestroy();
-	releaseAllBuyBonusCardSpinePlayers();
-	releaseBuyBonusNormalStreetStill();
-	gameEntrance.buyBonusPanelReady = false;
-	gameEntrance.buyBonusWarmReady = false;
-	await destroySharedStageAsync();
-};
-
-export const isBuyBonusFeatureEvictLocked = () => getFeatureEvictLock();
-
-export const clearBuyBonusFeatureEvictLock = () => {
-	setFeatureEvictLock(false);
-	resumeBuyBonusSpineBitmapDecode();
 };
 
 export const releaseBuyBonusSharedStage = () => {
@@ -812,7 +1282,7 @@ export const registerBuyBonusCardView = (
 ): BuyBonusCardViewId => {
 	const id = nextViewId;
 	nextViewId += 1;
-	views.set(id, { id, variant, host, active });
+	views.set(id, { id, kind: 'card', variant, host, active });
 	if (!canOwnApp()) return id;
 	cancelScheduledDestroy();
 	void ensureApp().then((created) => {
@@ -836,7 +1306,9 @@ export const setBuyBonusCardViewActive = (id: BuyBonusCardViewId, active: boolea
 	cancelScheduledDestroy();
 	void ensureApp().then((created) => {
 		if (!created || !views.has(id) || !canOwnApp()) return;
-		void loadSpine(view.variant).then(() => {
+		const load =
+			view.kind === 'card' ? loadSpine(view.variant) : loadPickMascot(view.species);
+		void load.then(() => {
 			if (views.has(id)) requestSync();
 		});
 	});
@@ -847,8 +1319,37 @@ export const unregisterBuyBonusCardView = (id: BuyBonusCardViewId) => {
 	if (views.size === 0 || !hasLiveView()) {
 		if (app?.ticker.started) app.ticker.stop();
 		for (const spine of spines.values()) spine.visible = false;
+		for (const spine of pickSpines.values()) spine.visible = false;
 		if (!shouldKeepBuyBonusWarm()) scheduleDestroyIfIdle();
 		return;
 	}
 	requestSync();
+};
+
+export const registerBuyBonusPickMascotView = (
+	species: BuyBonusPickSpecies,
+	host: HTMLElement,
+	active: boolean,
+	mirror = false,
+): BuyBonusCardViewId => {
+	const id = nextViewId;
+	nextViewId += 1;
+	views.set(id, { id, kind: 'pick', species, host, active, mirror });
+	if (!canOwnApp()) return id;
+	cancelScheduledDestroy();
+	void ensureApp().then((created) => {
+		if (!created || !views.has(id) || !canOwnApp()) return;
+		void loadPickMascot(species).then(() => {
+			if (views.has(id)) requestSync();
+		});
+	});
+	return id;
+};
+
+export const setBuyBonusPickMascotViewActive = (id: BuyBonusCardViewId, active: boolean) => {
+	setBuyBonusCardViewActive(id, active);
+};
+
+export const unregisterBuyBonusPickMascotView = (id: BuyBonusCardViewId) => {
+	unregisterBuyBonusCardView(id);
 };

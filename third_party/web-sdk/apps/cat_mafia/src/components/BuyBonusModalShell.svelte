@@ -45,10 +45,8 @@
 	/** Confirm has no own spines — only mounts when open and reparents the menu portal. */
 	const mountConfirmPanel = $derived(showConfirmPanel);
 
-	/** Blur shell only when buy panel is painted — avoid empty-card flash. */
-	const isVisible = $derived(
-		(showBuyPanel && gameEntrance.buyBonusPanelReady) || showConfirmPanel || showDuelPickPanel,
-	);
+	/** Show shell as soon as buy flow opens — board HTML must not wait on spine warm. */
+	const isVisible = $derived(showBuyPanel || showConfirmPanel || showDuelPickPanel);
 	/** Dim while first open waits for spines (warm miss). */
 	const isPreparingBuy = $derived(showBuyPanel && !gameEntrance.buyBonusPanelReady);
 	/** Park warm hosts off-screen with real layout size so WebGL can compile. */
@@ -78,15 +76,17 @@
 		class:warm={isWarmParked}
 		aria-hidden={!isVisible}
 		inert={!isVisible && !isPreparingBuy}
+		data-buy-bonus-prepare={isPreparingBuy || isWarmParked ? '' : undefined}
 		data-test="buy-bonus-modal-shell"
 	>
 		<div
 			class="panel-slot"
-			class:active={showBuyPanel && gameEntrance.buyBonusPanelReady}
+			class:active={showBuyPanel}
 			class:preparing={isPreparingBuy}
 			class:warm-park={isWarmParked}
 			aria-hidden={!showBuyPanel}
-			inert={!showBuyPanel || !gameEntrance.buyBonusPanelReady}
+			inert={!showBuyPanel}
+			data-buy-bonus-prepare={isPreparingBuy || isWarmParked ? '' : undefined}
 		>
 			{#if mountBuyPanel}
 				<BuyBonusOverlay />
@@ -183,9 +183,10 @@
 			z-index: 1;
 		}
 
-		/* Layout hosts off-screen while spines flush — keep size, hide paint. */
-		&.preparing,
-		&.warm-park {
+		/* Layout hosts off-screen while spines flush — keep size, hide paint.
+		   Never hide an active (open) panel — preparing+active must stay visible. */
+		&.preparing:not(.active),
+		&.warm-park:not(.active) {
 			opacity: 0;
 			pointer-events: none;
 			z-index: 0;

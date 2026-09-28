@@ -26,10 +26,18 @@
 	import { getContextLayout } from 'utils-layout';
 
 	import {
-		areBuyBonusMenuCardsReady,
-		subscribeBuyBonusCardsReady,
-	} from '../game/buyBonusCardGpu';
-	import { AUTOSPIN_ASSETS, BUY_BONUS_ASSETS, HUD_ASSETS, startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
+		areBuyBonusSpinesReady,
+		ensureBuyBonusMenuOpen,
+		ensureBuyBonusWarm,
+		flushBuyBonusSharedStage,
+	} from '../game/buyBonusSharedPixi';
+	import { ensureOutlineReelReady } from '../game/featureGpuMemory';
+	import {
+		AUTOSPIN_ASSETS,
+		BUY_BONUS_ASSETS,
+		HUD_ASSETS,
+		startBuyBonusFlowPreload,
+	} from '../game/uiHtmlAssetManifest';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import ArchedRibbonTitle from './ArchedRibbonTitle.svelte';
 	import BuyBonusCardSpine from './BuyBonusCardSpine.svelte';
@@ -40,7 +48,6 @@
 	const { stateLayoutDerived } = getContextLayout();
 
 	let knewaveFontReady = $state(false);
-	let cardsReady = $state(areBuyBonusMenuCardsReady());
 
 	const bgUrl = BUY_BONUS_ASSETS.menuBg;
 	const closeIconUrl = AUTOSPIN_ASSETS.close;
@@ -49,23 +56,23 @@
 
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonus');
 	const isConfirmOpen = $derived(stateModal.modal?.name === 'buyBonusConfirm');
-	const confirmIsSuper = $derived(stateBonus.selectedBetModeKey === 'bonus_super');
 
+	/** Sync panel-ready from live shared Pixi — ignore stale HMR warm flags. */
 	$effect(() => {
-		cardsReady = areBuyBonusMenuCardsReady();
-		return subscribeBuyBonusCardsReady(() => {
-			cardsReady = areBuyBonusMenuCardsReady();
-		});
-	});
-
-	/** Never flash empty board — keep ready sticky while spines stay warm (confirm ↔ back). */
-	$effect(() => {
-		const painted = cardsReady;
-		gameEntrance.buyBonusWarmReady = painted;
-		if (painted) {
+		void gameEntrance.buyBonusWarmReady;
+		const live = areBuyBonusSpinesReady();
+		if (live) {
+			gameEntrance.buyBonusWarmReady = true;
 			gameEntrance.buyBonusEverWarmed = true;
 			gameEntrance.buyBonusPanelReady = true;
+			return;
 		}
+		// Stale flag after HMR / eviction — force a remount path.
+		if (gameEntrance.buyBonusWarmReady && !live) {
+			gameEntrance.buyBonusWarmReady = false;
+		}
+		if (!isOpen && !isConfirmOpen) return;
+		gameEntrance.buyBonusPanelReady = false;
 	});
 
 	onDestroy(() => {
@@ -74,6 +81,26 @@
 
 	$effect(() => {
 		void startBuyBonusFlowPreload();
+		// Shared Pixi card stage (one WebGL) — not HTML SpinePlayers.
+		void ensureBuyBonusWarm();
+		// Warm cat-slow VFX while the menu is open — buy-spin must not Assets.load mid-reel.
+		void ensureOutlineReelReady(context.stateApp);
+	});
+
+	/** Open must load + flush after the panel is actually laid out (opacity > 0). */
+	$effect(() => {
+		if (!isOpen) return;
+		let cancelled = false;
+		void ensureBuyBonusMenuOpen().then(() => {
+			if (cancelled) return;
+			gameEntrance.buyBonusPanelReady = areBuyBonusSpinesReady();
+			requestAnimationFrame(() => {
+				if (!cancelled) flushBuyBonusSharedStage();
+			});
+		});
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	$effect(() => {
@@ -193,7 +220,7 @@
 				onclick={() => onBuy('normal')}
 				aria-label={context.i18nDerived.normalBonus()}
 			>
-				<BuyBonusCardSpine variant="normal" active={isOpen || (isConfirmOpen && !confirmIsSuper)} />
+				<BuyBonusCardSpine variant="normal" active={isOpen} />
 				<div class="card-content">
 					<div class="card-title">
 						<ArchedRibbonTitle text={context.i18nDerived.normalBonus()} />
@@ -224,7 +251,7 @@
 				onclick={() => onBuy('super')}
 				aria-label={context.i18nDerived.superBonus()}
 			>
-				<BuyBonusCardSpine variant="super" active={isOpen || (isConfirmOpen && confirmIsSuper)} />
+				<BuyBonusCardSpine variant="super" active={isOpen} />
 				<div class="card-content">
 					<div class="card-title">
 						<ArchedRibbonTitle text={context.i18nDerived.superBonus()} archDeg={30} />
@@ -465,7 +492,8 @@
 
 	.card {
 		position: relative;
-		/* No z-index — a stacking context here paints over the shared spine canvas. */
+		/* Above shared spine canvas (z-index:0). Transparent bg — art shows through. */
+		z-index: 1;
 		min-width: 0;
 		overflow: visible;
 		background: none;
@@ -531,7 +559,7 @@
 
 	.card-normal .card-title,
 	.card-super .card-title {
-		top: 0.5%;
+		top: 2%;
 	}
 
 	.card-title.card-label-knewave {
@@ -764,8 +792,8 @@
 
 	.card-normal .card-price,
 	.card-super .card-price {
-		/* Nudge a couple px left; slight down from previous up-nudge. */
-		transform: translate(0.02em, 0.18em);
+		/* Nudge a couple px left; raise slightly with the title tweak. */
+		transform: translate(0.02em, 0em);
 	}
 
 	.card-price :global(a) {
@@ -775,8 +803,8 @@
 	}
 
 	.card-duel .card-price {
-		/* Nudge a couple px left; slight raise (~1px). */
-		transform: translate(-0.08em, calc(0.38em - 1px));
+		/* Nudge a couple px left; raise slightly with normal/super price tweak. */
+		transform: translate(-0.08em, 0.28em);
 	}
 
 	.features-section {

@@ -166,6 +166,7 @@ const shortPathLabel = (path: string) =>
  */
 export const estimateHtmlSpinePlayerMemory = (
 	players: readonly SpinePlayer[],
+	limit = 30,
 ): { bytes: number; count: number; top: PixiTextureMemoryEntry[] } => {
 	const top: PixiTextureMemoryEntry[] = [];
 	let bytes = 0;
@@ -211,7 +212,11 @@ export const estimateHtmlSpinePlayerMemory = (
 	}
 
 	top.sort((a, b) => b.bytes - a.bytes);
-	return { bytes, count, top: top.slice(0, 30) };
+	return {
+		bytes,
+		count,
+		top: Number.isFinite(limit) ? top.slice(0, limit) : top,
+	};
 };
 
 export const estimatePixiTextureMemory = (app?: Application | null): PixiTextureMemoryStats => {
@@ -257,6 +262,88 @@ export const estimatePixiTextureMemory = (app?: Application | null): PixiTexture
 		totalCount: pixiTotal.count + htmlSpine.count,
 		top: mergedTop,
 	};
+};
+
+export type PixiTextureMemoryDump = PixiTextureMemoryStats & {
+	at: string;
+	all: PixiTextureMemoryEntry[];
+	cacheKeys: string[];
+};
+
+/** Full snapshot for console compare (not truncated to top 30). */
+export const collectPixiTextureMemoryDump = (
+	app?: Application | null,
+): PixiTextureMemoryDump => {
+	const gpuSources = new Map<number, TextureSource>();
+	const cacheSources = new Map<number, TextureSource>();
+
+	const managed = (
+		app?.renderer as unknown as { texture?: { managedTextures?: TextureSource[] } } | undefined
+	)?.texture?.managedTextures;
+	if (Array.isArray(managed)) {
+		for (const source of managed) {
+			if (source && !source.destroyed) gpuSources.set(source.uid, source);
+		}
+	}
+
+	const cache = getCacheMap();
+	const cacheKeys: string[] = [];
+	if (cache) {
+		for (const [key, value] of cache.entries()) {
+			cacheKeys.push(typeof key === 'string' ? key : String(key));
+			addSource(cacheSources, value);
+		}
+	}
+	cacheKeys.sort();
+
+	const all = new Map<number, TextureSource>([...cacheSources, ...gpuSources]);
+	const gpu = sumSources(gpuSources.values());
+	const cached = sumSources(cacheSources.values());
+	const pixiTotal = sumSources(all.values());
+
+	const htmlSpine = estimateHtmlSpinePlayerMemory(
+		[...getLiveBuyBonusCardSpinePlayers(), ...getLiveDuelPickSpinePlayers()],
+		Number.POSITIVE_INFINITY,
+	);
+
+	const mergedAll = [...collectTop(all, Number.POSITIVE_INFINITY), ...htmlSpine.top].sort(
+		(a, b) => b.bytes - a.bytes,
+	);
+
+	return {
+		at: new Date().toISOString(),
+		gpuBytes: gpu.bytes,
+		gpuCount: gpu.count,
+		cacheBytes: cached.bytes,
+		cacheCount: cached.count,
+		htmlSpineBytes: htmlSpine.bytes,
+		htmlSpineCount: htmlSpine.count,
+		totalBytes: pixiTotal.bytes + htmlSpine.bytes,
+		totalCount: pixiTotal.count + htmlSpine.count,
+		top: mergedAll.slice(0, 30),
+		all: mergedAll,
+		cacheKeys,
+	};
+};
+
+/** Log full GPU/Cache/HTML-Spine snapshot — for before/after compare in DevTools. */
+export const dumpPixiTextureMemoryToConsole = (app?: Application | null) => {
+	const dump = collectPixiTextureMemoryDump(app);
+	const lines = dump.all.map(
+		(e, i) =>
+			`${String(i + 1).padStart(3, ' ')}. ${formatMb(e.bytes).padStart(8)}  ${e.pixelWidth}×${e.pixelHeight}  ${e.label}`,
+	);
+	console.groupCollapsed(
+		`[RAM dump] ${dump.at} · total ~${formatMb(dump.totalBytes)} (${dump.totalCount} surfaces)`,
+	);
+	console.log(
+		`Pixi GPU ${formatMb(dump.gpuBytes)} (${dump.gpuCount}) · Cache ${formatMb(dump.cacheBytes)} (${dump.cacheCount}) · HTML Spine ${formatMb(dump.htmlSpineBytes)} (${dump.htmlSpineCount})`,
+	);
+	console.log(lines.join('\n'));
+	console.log(`Cache keys (${dump.cacheKeys.length}):`, dump.cacheKeys);
+	console.log('raw', dump);
+	console.groupEnd();
+	return dump;
 };
 
 /**

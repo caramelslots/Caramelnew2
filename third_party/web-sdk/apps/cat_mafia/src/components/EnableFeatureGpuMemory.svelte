@@ -1,6 +1,7 @@
 <!--
-	Duel dog / tir / FS popup: load on feature entry, drop on settled base.
+	Duel dog / FS popup / outline: load on feature entry, Assets.unload on settled base.
 	Cartridge (BT/BTImg): load on first FS, then stay resident — never unload.
+	TIR (shot_bullet / target_board) is owned by EnableTirGpuMemory.
 -->
 <script lang="ts">
 	import { getContextApp } from 'pixi-svelte';
@@ -16,8 +17,10 @@
 		shouldKeepDuelMascotGpu,
 		shouldKeepFsPopupGpu,
 		shouldKeepOutlineReelGpu,
-		unloadFeatureKeys,
+		unloadFeatureKeysAsync,
 	} from '../game/featureGpuMemory';
+	import assets from '../game/assets';
+	import { spineAssetsPossiblyCached } from '../game/spineAtlasEvict';
 	import { waitAnimationFrames } from '../game/tirGpuMemory';
 
 	const app = getContextApp();
@@ -42,6 +45,29 @@
 
 		const gen = ++syncGen;
 		void (async () => {
+			// Outline first — cat-slow on buy-spin must not wait on Assets.load mid-reel.
+			if (wantOutline) {
+				const patch = await ensureFeatureKeysLoaded(
+					FS_OUTLINE_KEYS,
+					(app.stateApp.loadedAssets ?? {}) as Record<string, unknown>,
+				);
+				if (gen !== syncGen) return;
+				if (patch) {
+					app.stateApp.loadedAssets = { ...app.stateApp.loadedAssets, ...patch };
+				}
+			} else {
+				const loaded = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
+				if (FS_OUTLINE_KEYS.some((key) => key in loaded)) {
+					await waitAnimationFrames(FS_POPUP_UNLOAD_DELAY_FRAMES);
+					if (gen !== syncGen) return;
+					const latest = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
+					if (FS_OUTLINE_KEYS.some((key) => key in latest) && !shouldKeepOutlineReelGpu()) {
+						app.stateApp.loadedAssets = await unloadFeatureKeysAsync(FS_OUTLINE_KEYS, latest);
+					}
+				}
+			}
+
+			if (gen !== syncGen) return;
 			if (wantCartridge) {
 				const patch = await ensureFeatureKeysLoaded(
 					FS_CARTRIDGE_KEYS,
@@ -69,8 +95,11 @@
 					await waitAnimationFrames(FS_POPUP_UNLOAD_DELAY_FRAMES);
 					if (gen !== syncGen) return;
 					const latest = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
-					if (DUEL_MASCOT_KEYS.some((key) => key in latest)) {
-						app.stateApp.loadedAssets = unloadFeatureKeys(DUEL_MASCOT_KEYS, latest);
+					if (
+						DUEL_MASCOT_KEYS.some((key) => key in latest) &&
+						!shouldKeepDuelMascotGpu(isPortrait)
+					) {
+						app.stateApp.loadedAssets = await unloadFeatureKeysAsync(DUEL_MASCOT_KEYS, latest);
 					}
 				}
 			}
@@ -87,38 +116,26 @@
 				}
 			} else {
 				const loaded = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
-				if (FS_POPUP_KEYS.some((key) => key in loaded)) {
-					// Wait for FreeSpinAnimation unmount before Assets.unload —
-					// too-early drop caused missing-key + `_resourceId` freezes.
-					await waitAnimationFrames(FS_POPUP_UNLOAD_DELAY_FRAMES);
-					if (gen !== syncGen) return;
-					const latest = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
-					if (FS_POPUP_KEYS.some((key) => key in latest) && !shouldKeepFsPopupGpu()) {
-						app.stateApp.loadedAssets = unloadFeatureKeys(FS_POPUP_KEYS, latest);
-					}
-				}
-			}
-
-			if (gen !== syncGen) return;
-			if (wantOutline) {
-				const patch = await ensureFeatureKeysLoaded(
-					FS_OUTLINE_KEYS,
-					(app.stateApp.loadedAssets ?? {}) as Record<string, unknown>,
-				);
+				const fsEntry = assets.fsPopup;
+				const atlasUrl =
+					fsEntry?.type === 'spine' && typeof fsEntry.src?.atlas === 'string'
+						? fsEntry.src.atlas
+						: undefined;
+				const skeletonUrl =
+					fsEntry?.type === 'spine' && typeof fsEntry.src?.skeleton === 'string'
+						? fsEntry.src.skeleton
+						: undefined;
+				// Avoid 8-frame wait + fetch on every base tick when already clean.
+				const needsEvict =
+					FS_POPUP_KEYS.some((key) => key in loaded) ||
+					(atlasUrl != null && spineAssetsPossiblyCached(atlasUrl, skeletonUrl));
+				if (!needsEvict) return;
+				// Wait for FreeSpinAnimation unmount before Assets.unload.
+				await waitAnimationFrames(FS_POPUP_UNLOAD_DELAY_FRAMES);
 				if (gen !== syncGen) return;
-				if (patch) {
-					app.stateApp.loadedAssets = { ...app.stateApp.loadedAssets, ...patch };
-				}
-			} else {
-				const loaded = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
-				if (FS_OUTLINE_KEYS.some((key) => key in loaded)) {
-					await waitAnimationFrames(FS_POPUP_UNLOAD_DELAY_FRAMES);
-					if (gen !== syncGen) return;
-					const latest = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
-					if (FS_OUTLINE_KEYS.some((key) => key in latest) && !shouldKeepOutlineReelGpu()) {
-						app.stateApp.loadedAssets = unloadFeatureKeys(FS_OUTLINE_KEYS, latest);
-					}
-				}
+				if (shouldKeepFsPopupGpu()) return;
+				const latest = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
+				app.stateApp.loadedAssets = await unloadFeatureKeysAsync(FS_POPUP_KEYS, latest);
 			}
 		})();
 	});

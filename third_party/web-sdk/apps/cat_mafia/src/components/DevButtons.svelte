@@ -20,7 +20,7 @@
 	} from 'state-shared';
 
 	/** Set to true to show DEV / LANG / SOCIAL toggles locally. */
-	const SHOW_DEV_PANEL = true;
+	const SHOW_DEV_PANEL = false;
 
 	import { playBet, playBookEvent, playBookEvents } from '../game/utils';
 	import { eventEmitter } from '../game/eventEmitter';
@@ -64,7 +64,9 @@
 	} from '../game/devLang';
 	import { setGameSocialMode } from '../game/devSocial';
 	import { pixiMemoryHud, setRamOverlayVisible } from '../game/pixiTextureMemoryHud.svelte';
+	import { dumpPixiTextureMemoryToConsole } from '../game/pixiTextureMemory';
 	import { pixiFpsHud, setFpsOverlayVisible } from '../game/pixiFpsHud.svelte';
+	import { getContextApp } from 'pixi-svelte';
 	import DevAccordion from './DevAccordion.svelte';
 	import baseEvents from '../stories/data/base_events';
 	import baseBooks from '../stories/data/base_books';
@@ -1978,6 +1980,16 @@
 					onclick={() => setRamOverlayVisible(!pixiMemoryHud.overlay)}
 				>
 					RAM {pixiMemoryHud.overlay ? 'ON' : 'OFF'}
+				</button>
+				<button
+					type="button"
+					title="Dump full GPU / Cache / HTML Spine texture list to the browser console (for before/after compare)."
+					onclick={() => {
+						const app = getContextApp().stateApp.pixiApplication ?? null;
+						dumpPixiTextureMemoryToConsole(app);
+					}}
+				>
+					RAM dump
 				</button>
 				<button
 					type="button"
