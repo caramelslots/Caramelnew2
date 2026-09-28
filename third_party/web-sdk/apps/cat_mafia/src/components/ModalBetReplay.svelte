@@ -49,6 +49,8 @@
 	);
 
 	const modeLabel = $derived(summary ? getReplayModeLabel(summary.modeKey) : '');
+	/** Track currency explicitly so replay amounts react to `?currency=` / summary. */
+	const replayCurrency = $derived(summary?.currency || stateBet.currency);
 
 	const startReplay = () => {
 		if (!summary?.payload) return;
@@ -58,6 +60,7 @@
 		// Re-apply stake before play — wins scale from wageredBetAmount.
 		stateBet.betAmount = summary.baseBet;
 		stateBet.wageredBetAmount = summary.baseBet;
+		if (summary.currency) stateBet.currency = summary.currency;
 		// @ts-ignore — resume machine expects a bet-shaped payload
 		stateBet.betToResume = {
 			...(summary.payload as object),
@@ -108,7 +111,9 @@
 
 				<div class="row">
 					<span class="label">{context.i18nDerived.replayBaseBet()}</span>
-					<span class="value yellow">{numberToReplayCurrencyString(summary.baseBet)}</span>
+					<span class="value yellow"
+						>{numberToReplayCurrencyString(summary.baseBet, replayCurrency)}</span
+					>
 				</div>
 				<div class="row">
 					<span class="label">{context.i18nDerived.replayCostMultiplier()}</span>
@@ -117,7 +122,9 @@
 
 				<div class="row highlight">
 					<span class="label">{context.i18nDerived.replayTotalBetCost()}</span>
-					<span class="value yellow strong">{numberToReplayCurrencyString(summary.totalBetCost)}</span>
+					<span class="value yellow strong"
+						>{numberToReplayCurrencyString(summary.totalBetCost, replayCurrency)}</span
+					>
 				</div>
 				<div class="divider"></div>
 
@@ -130,7 +137,7 @@
 				<div class="row highlight">
 					<span class="label">{context.i18nDerived.replayTotalWin()}</span>
 					<span class="value green strong"
-						>{numberToReplayWinCurrencyString(summary.totalWin)}</span
+						>{numberToReplayWinCurrencyString(summary.totalWin, replayCurrency)}</span
 					>
 				</div>
 			</div>

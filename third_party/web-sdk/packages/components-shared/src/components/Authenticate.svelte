@@ -91,8 +91,14 @@
 				// 		"amount": 10000000000000000,
 				// 		"currency": "USD"
 				// },
-				stateBet.currency = authenticateData.balance.currency;
+				// Social: XGC → "GC", XSC/XEC → "SC" (via getCurrencyMeta).
+				const balanceCurrency = String(authenticateData.balance.currency ?? '')
+					.trim()
+					.toUpperCase();
+				stateBet.currency = balanceCurrency || stateUrlDerived.currency() || stateBet.currency;
 				stateBet.balanceAmount = fromApiAmount(authenticateData.balance.amount);
+			} else if (stateUrlDerived.currency()) {
+				stateBet.currency = stateUrlDerived.currency();
 			}
 
 			// config
@@ -194,6 +200,11 @@
 		stateBet.wageredBetAmount = baseBet;
 		if (modeKey) stateBet.activeBetModeKey = modeKey;
 
+		// Optional launch params: currency / lang must not break replay.
+		// Social coins: XGC→GC, XSC/XEC→SC (never `$`).
+		const urlCurrency = stateUrlDerived.currency();
+		if (urlCurrency) stateBet.currency = urlCurrency;
+
 		const data = await requestReplay({
 			rgsUrl: stateUrlDerived.rgsUrl(),
 			game: stateUrlDerived.game(),
@@ -207,6 +218,16 @@
 			stateModal.modal = { name: 'error', error: data ?? 'replay failed' };
 			return;
 		}
+
+		const payloadCurrency = String(
+			(data as { currency?: string }).currency ??
+				(data as { balance?: { currency?: string } }).balance?.currency ??
+				'',
+		)
+			.trim()
+			.toUpperCase();
+		const resolvedCurrency = payloadCurrency || urlCurrency || stateBet.currency;
+		stateBet.currency = resolvedCurrency;
 
 		const modeMeta =
 			stateMeta.betModeMeta?.[modeKey] ??
@@ -230,6 +251,7 @@
 		stateUi.replay = {
 			payload: data,
 			modeKey,
+			currency: resolvedCurrency,
 			baseBet,
 			costMultiplier,
 			totalBetCost: baseBet * costMultiplier,

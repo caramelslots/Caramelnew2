@@ -39,6 +39,9 @@
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		stateBet.betToResume = null;
 		stateBet.winBookEventAmount = 0;
+		if (stateUi.replay.currency) stateBet.currency = stateUi.replay.currency;
+		stateBet.betAmount = stateUi.replay.baseBet;
+		stateBet.wageredBetAmount = stateUi.replay.baseBet;
 		context.eventEmitter.broadcast({ type: 'winHide' });
 		stateModal.modal = { name: 'betReplay' };
 	};

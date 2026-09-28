@@ -58,8 +58,12 @@ export const WIN_AMOUNT_MAX_FRACTION_DIGITS = Math.round(Math.log10(API_AMOUNT_M
 export const numberToFloat = (value: number) =>
 	Math.round(value * API_AMOUNT_MULTIPLIER) / API_AMOUNT_MULTIPLIER;
 
-export const getCurrencyMeta = (currency = stateBet.currency) =>
-	CURRENCY_META[currency] ?? { symbol: currency, decimals: 2, symbolAfter: true };
+export const getCurrencyMeta = (currency = stateBet.currency) => {
+	const code = String(currency ?? '')
+		.trim()
+		.toUpperCase();
+	return CURRENCY_META[code] ?? { symbol: code || String(currency ?? ''), decimals: 2, symbolAfter: true };
+};
 
 export const getCurrencyDisplayDecimals = (currency = stateBet.currency) =>
 	getCurrencyMeta(currency).decimals;
@@ -276,11 +280,14 @@ export const numberToWinCurrencyString = (value: number) => {
 /**
  * Bet replay currency amounts (base bet, total cost, win) — currency decimals
  * by default; expand only when the amount has real sub-cent precision
- * (e.g. $0.01, $1.23, $0.075, $0.0025).
+ * (e.g. $0.01, 1.23 SC, 0.075 SC, 10 GC).
  */
-export const numberToReplayCurrencyString = (value: number) => {
-	const meta = getCurrencyMeta();
-	const formatted = formatWinAmountBody(value, stateBet.currency, {
+export const numberToReplayCurrencyString = (
+	value: number,
+	currency: string = stateBet.currency,
+) => {
+	const meta = getCurrencyMeta(currency);
+	const formatted = formatWinAmountBody(value, currency, {
 		significant: true,
 	});
 
@@ -291,8 +298,10 @@ export const numberToReplayCurrencyString = (value: number) => {
 };
 
 /** Bet replay total win/prize — same significant precision as replay costs. */
-export const numberToReplayWinCurrencyString = (value: number) =>
-	numberToReplayCurrencyString(value);
+export const numberToReplayWinCurrencyString = (
+	value: number,
+	currency: string = stateBet.currency,
+) => numberToReplayCurrencyString(value, currency);
 
 export const bookEventAmountToCurrencyString = (bookEventAmount: number) => {
 	const normalisedAmount = bookEventAmountToNormalisedAmount(bookEventAmount);

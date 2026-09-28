@@ -59,6 +59,8 @@ export type ReplaySummary = {
 	/** Raw replay payload kept so the round can be started / replayed again. */
 	payload: unknown;
 	modeKey: string;
+	/** Currency code used for replay amounts (from `?currency=` / payload). */
+	currency: string;
 	baseBet: number;
 	costMultiplier: number;
 	totalBetCost: number;

@@ -8,6 +8,9 @@ import { i18nDerived } from '../i18n/i18nDerived';
  */
 export const getReplayModeLabel = (modeKey: string): string => {
 	const normalized = modeKey.trim();
+	// Prefer i18n "Base" over meta / raw `BASE` keys.
+	if (normalized.toLowerCase() === 'base') return i18nDerived.replayModeBase();
+
 	const meta =
 		stateMeta.betModeMeta?.[normalized] ??
 		stateMeta.betModeMeta?.[normalized.toUpperCase()] ??
@@ -16,7 +19,6 @@ export const getReplayModeLabel = (modeKey: string): string => {
 	const title = meta?.text?.title?.trim();
 	if (title) return title;
 
-	if (normalized.toLowerCase() === 'base') return i18nDerived.replayModeBase();
 	return normalized;
 };
 
