@@ -67,8 +67,7 @@ export default {
 	GAME_INFO_FS_BODY:
 		'احصل على 3 رموز Bonus في اللعبة الأساسية لتفعيل Normal Bonus مع 10 دورات مجانية. احصل على 4 رموز Bonus لتفعيل Super Bonus مع 10 دورات مجانية و1 Sticky Mystery Reel من البداية. لا يمكن إعادة تفعيل الدورات المجانية بظهور رموز Bonus أثناء الميزة. تُمنح الدورات المجانية الإضافية فقط عبر Progress Ladder.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
-	GAME_INFO_MYSTERY_BODY:
-		'تبقى بكرات Mystery في مكانها وتكشف عن نفس الرمز في كل دورة.',
+	GAME_INFO_MYSTERY_BODY: 'تبقى بكرات Mystery في مكانها وتكشف عن نفس الرمز في كل دورة.',
 	GAME_INFO_PROGRESS_LADDER_TITLE: 'PROGRESS LADDER',
 	GAME_INFO_PROGRESS_LADDER_BODY:
 		'أثناء الدورات المجانية، يُجمع كل رمز Bonus يظهر نحو Progress Ladder. كل 4 رموز Bonus مجمعة ترفع مستوى واحدًا. يمنح كل مستوى 3 دورات مجانية إضافية ويفتح 1 Sticky Mystery Reel إضافي، بحد أقصى 5 مستويات (15 دورة مجانية إضافية).',
@@ -79,12 +78,12 @@ export default {
 	GAME_INFO_PAYTABLE_NOTE: 'جميع قيم الدفع مضاعفات الرهان الأساسي.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1\nW: 5 = 225',
-		GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
+	GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
 	GAME_INFO_CONTROLS_BODY:
 		'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nBet amount (−): Use the minus button to decrease your bet amount. Bet changes are only available while the game is idle.\nBet amount (+): Use the plus button to increase your bet amount. Bet changes are only available while the game is idle.\nBuy Bonus: Open Buy Bonus to purchase Normal Bonus or Super Bonus. Confirm a purchase to start the selected feature immediately.\nBonus Boost: Enable Bonus Boost to play at 2× your base bet with more Bonus symbols and a higher chance of triggering free spins. You can turn it on or off from the Buy Bonus panel or the Autoplay panel.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance: Shows your current balance. This is informational and is not a button.\nBet: Shows your selected bet amount. This is informational and is not a button.',
 	GAME_INFO_LEGAL_TITLE: 'إخلاء مسؤولية عام عن اللعبة',
 	GAME_INFO_LEGAL_BODY:
-		'يؤدي العطل إلى إلغاء جميع الأرباح والجولات. يلزم اتصال إنترنت مستقر. في حال انقطاع الاتصال، أعد تحميل اللعبة لإكمال أي جولات غير مكتملة. يُحسب العائد المتوقع على مدى عدد كبير من الجولات. عرض اللعبة لا يمثل أي جهاز فعلي وهو لأغراض توضيحية فقط. تُسوَّى الأرباح وفق المبلغ المستلم من Remote Game Server وليس وفق الأحداث داخل متصفح الويب. TM و© 2026 Stake Engine.',
+		'يؤدي العطل إلى إلغاء جميع الأرباح والجولات. يلزم اتصال إنترنت مستقر. في حال انقطاع الاتصال، أعد تحميل اللعبة لإكمال أي جولات غير مكتملة. يُحسب العائد المتوقع على مدى عدد كبير من الجولات. عرض اللعبة لا يمثل أي جهاز فعلي وهو لأغراض توضيحية فقط. تُسوَّى الأرباح وفق المبلغ المستلم من Remote Game Server وليس وفق الأحداث داخل متصفح الويب. TM و© 2026 Engine.',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'رصيد غير كافٍ',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'أضف رصيداً أو خفّض الرهان لمتابعة اللعب.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'تم الوصول لحد الخسارة',

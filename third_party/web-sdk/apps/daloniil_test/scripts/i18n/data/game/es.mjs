@@ -79,18 +79,21 @@ export default {
 	GAME_INFO_PAYTABLE_NOTE: 'Todos los valores de pago son múltiplos de la apuesta base.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1\nW: 5 = 225',
-		GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
+	GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
 	GAME_INFO_CONTROLS_BODY:
 		'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nBet amount (−): Use the minus button to decrease your bet amount. Bet changes are only available while the game is idle.\nBet amount (+): Use the plus button to increase your bet amount. Bet changes are only available while the game is idle.\nBuy Bonus: Open Buy Bonus to purchase Normal Bonus or Super Bonus. Confirm a purchase to start the selected feature immediately.\nBonus Boost: Enable Bonus Boost to play at 2× your base bet with more Bonus symbols and a higher chance of triggering free spins. You can turn it on or off from the Buy Bonus panel or the Autoplay panel.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance: Shows your current balance. This is informational and is not a button.\nBet: Shows your selected bet amount. This is informational and is not a button.',
 	GAME_INFO_LEGAL_TITLE: 'AVISO GENERAL DEL JUEGO',
 	GAME_INFO_LEGAL_BODY:
-		'El mal funcionamiento anula todas las ganancias y jugadas. Se requiere una conexión a internet estable. En caso de desconexión, recarga el juego para completar las rondas pendientes. El retorno esperado se calcula sobre muchas partidas. La pantalla del juego no representa ningún dispositivo físico y es solo con fines ilustrativos. Las ganancias se liquidan según el importe recibido del Remote Game Server y no según los eventos del navegador web. TM y © 2026 Stake Engine.',
+		'El mal funcionamiento anula todas las ganancias y jugadas. Se requiere una conexión a internet estable. En caso de desconexión, recarga el juego para completar las rondas pendientes. El retorno esperado se calcula sobre muchas partidas. La pantalla del juego no representa ningún dispositivo físico y es solo con fines ilustrativos. Las ganancias se liquidan según el importe recibido del Remote Game Server y no según los eventos del navegador web. TM y © 2026 Engine.',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Fondos insuficientes',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Recarga tu saldo o reduce la apuesta para continuar jugando.',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY:
+		'Recarga tu saldo o reduce la apuesta para continuar jugando.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Límite de pérdidas alcanzado',
-	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'El autojuego se ha detenido porque se alcanzó el límite de pérdidas.',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY:
+		'El autojuego se ha detenido porque se alcanzó el límite de pérdidas.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'Límite de ganancia alcanzado',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'El autojuego se ha detenido porque se alcanzó el límite de ganancia única.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY:
+		'El autojuego se ha detenido porque se alcanzó el límite de ganancia única.',
 	AUTOPLAY_MSG_OK: 'OK',
 	REPLAY_BADGE: 'REPETICIÓN',
 	REPLAY_TITLE: 'Repetición de apuesta',
@@ -104,5 +107,6 @@ export default {
 	REPLAY_START: 'Iniciar repetición',
 	REPLAY_AGAIN: 'Repetir de nuevo',
 	REPLAY_COMPLETE_TITLE: 'Repetición completada',
-	REPLAY_DISCLAIMER: 'Esta es la repetición de una ronda de apuesta anterior. No se realizarán apuestas.',
+	REPLAY_DISCLAIMER:
+		'Esta es la repetición de una ronda de apuesta anterior. No se realizarán apuestas.',
 };

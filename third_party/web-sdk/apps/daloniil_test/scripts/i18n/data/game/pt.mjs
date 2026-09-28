@@ -79,18 +79,20 @@ export default {
 	GAME_INFO_PAYTABLE_NOTE: 'Todos os valores de pagamento são múltiplos da aposta base.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1\nW: 5 = 225',
-		GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
+	GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
 	GAME_INFO_CONTROLS_BODY:
 		'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nBet amount (−): Use the minus button to decrease your bet amount. Bet changes are only available while the game is idle.\nBet amount (+): Use the plus button to increase your bet amount. Bet changes are only available while the game is idle.\nBuy Bonus: Open Buy Bonus to purchase Normal Bonus or Super Bonus. Confirm a purchase to start the selected feature immediately.\nBonus Boost: Enable Bonus Boost to play at 2× your base bet with more Bonus symbols and a higher chance of triggering free spins. You can turn it on or off from the Buy Bonus panel or the Autoplay panel.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance: Shows your current balance. This is informational and is not a button.\nBet: Shows your selected bet amount. This is informational and is not a button.',
 	GAME_INFO_LEGAL_TITLE: 'AVISO GERAL DO JOGO',
 	GAME_INFO_LEGAL_BODY:
-		'Avaria anula todos os ganhos e jogadas. É necessária uma ligação estável à internet. Em caso de desconexão, recarregue o jogo para concluir rondas incompletas. O retorno esperado é calculado ao longo de muitas jogadas. O ecrã do jogo não representa qualquer dispositivo físico e é apenas para fins ilustrativos. Os ganhos são liquidados de acordo com o valor recebido do Remote Game Server e não com eventos no navegador web. TM e © 2026 Stake Engine.',
+		'Avaria anula todos os ganhos e jogadas. É necessária uma ligação estável à internet. Em caso de desconexão, recarregue o jogo para concluir rondas incompletas. O retorno esperado é calculado ao longo de muitas jogadas. O ecrã do jogo não representa qualquer dispositivo físico e é apenas para fins ilustrativos. Os ganhos são liquidados de acordo com o valor recebido do Remote Game Server e não com eventos no navegador web. TM e © 2026 Engine.',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Fundos insuficientes',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Carregue o saldo ou diminua a aposta para continuar a jogar.',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY:
+		'Carregue o saldo ou diminua a aposta para continuar a jogar.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Limite de perdas atingido',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'O jogo automático parou porque o limite de perdas foi atingido.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'Limite de ganho atingido',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'O jogo automático parou porque o limite de ganho único foi atingido.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY:
+		'O jogo automático parou porque o limite de ganho único foi atingido.',
 	AUTOPLAY_MSG_OK: 'OK',
 	REPLAY_BADGE: 'REPLAY',
 	REPLAY_TITLE: 'Replay da aposta',
@@ -104,5 +106,6 @@ export default {
 	REPLAY_START: 'Iniciar replay',
 	REPLAY_AGAIN: 'Repetir novamente',
 	REPLAY_COMPLETE_TITLE: 'Replay concluído',
-	REPLAY_DISCLAIMER: 'Isto é um replay de uma rodada de aposta anterior. Nenhuma aposta será feita.',
+	REPLAY_DISCLAIMER:
+		'Isto é um replay de uma rodada de aposta anterior. Nenhuma aposta será feita.',
 };

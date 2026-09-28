@@ -79,18 +79,20 @@ export default {
 	GAME_INFO_PAYTABLE_NOTE: 'Semua nilai bayaran adalah kelipatan taruhan dasar.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1\nW: 5 = 225',
-		GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
+	GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
 	GAME_INFO_CONTROLS_BODY:
 		'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nBet amount (−): Use the minus button to decrease your bet amount. Bet changes are only available while the game is idle.\nBet amount (+): Use the plus button to increase your bet amount. Bet changes are only available while the game is idle.\nBuy Bonus: Open Buy Bonus to purchase Normal Bonus or Super Bonus. Confirm a purchase to start the selected feature immediately.\nBonus Boost: Enable Bonus Boost to play at 2× your base bet with more Bonus symbols and a higher chance of triggering free spins. You can turn it on or off from the Buy Bonus panel or the Autoplay panel.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance: Shows your current balance. This is informational and is not a button.\nBet: Shows your selected bet amount. This is informational and is not a button.',
 	GAME_INFO_LEGAL_TITLE: 'PENAFIAN UMUM PERMAINAN',
 	GAME_INFO_LEGAL_BODY:
-		'Kerusakan membatalkan semua kemenangan dan permainan. Koneksi internet yang stabil diperlukan. Jika terputus, muat ulang permainan untuk menyelesaikan ronde yang belum selesai. Pengembalian yang diharapkan dihitung dari banyak permainan. Tampilan permainan tidak mewakili perangkat fisik apa pun dan hanya untuk tujuan ilustrasi. Kemenangan diselesaikan sesuai jumlah yang diterima dari Remote Game Server, bukan dari peristiwa di dalam peramban web. TM dan © 2026 Stake Engine.',
+		'Kerusakan membatalkan semua kemenangan dan permainan. Koneksi internet yang stabil diperlukan. Jika terputus, muat ulang permainan untuk menyelesaikan ronde yang belum selesai. Pengembalian yang diharapkan dihitung dari banyak permainan. Tampilan permainan tidak mewakili perangkat fisik apa pun dan hanya untuk tujuan ilustrasi. Kemenangan diselesaikan sesuai jumlah yang diterima dari Remote Game Server, bukan dari peristiwa di dalam peramban web. TM dan © 2026 Engine.',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'Dana tidak cukup',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'Isi saldo atau turunkan taruhan untuk melanjutkan permainan.',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY:
+		'Isi saldo atau turunkan taruhan untuk melanjutkan permainan.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'Batas kerugian tercapai',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY: 'Main otomatis dihentikan karena batas kerugian telah tercapai.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE: 'Batas kemenangan tercapai',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY: 'Main otomatis dihentikan karena batas kemenangan tunggal telah tercapai.',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY:
+		'Main otomatis dihentikan karena batas kemenangan tunggal telah tercapai.',
 	AUTOPLAY_MSG_OK: 'OK',
 	REPLAY_BADGE: 'ULANG',
 	REPLAY_TITLE: 'Ulang Taruhan',
@@ -104,5 +106,6 @@ export default {
 	REPLAY_START: 'Mulai Ulang',
 	REPLAY_AGAIN: 'Ulangi Lagi',
 	REPLAY_COMPLETE_TITLE: 'Ulang Selesai',
-	REPLAY_DISCLAIMER: 'Ini adalah ulang dari putaran taruhan sebelumnya. Tidak ada taruhan yang akan dipasang.',
+	REPLAY_DISCLAIMER:
+		'Ini adalah ulang dari putaran taruhan sebelumnya. Tidak ada taruhan yang akan dipasang.',
 };

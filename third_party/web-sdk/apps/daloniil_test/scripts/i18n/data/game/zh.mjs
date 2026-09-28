@@ -67,8 +67,7 @@ export default {
 	GAME_INFO_FS_BODY:
 		'在基础游戏中获得 3 个 Bonus 符号可触发含 10 次免费旋转的 Normal Bonus。获得 4 个 Bonus 符号可触发含 10 次免费旋转且从一开始就有 1 个 Sticky Mystery Reel 的 Super Bonus。在功能期间出现 Bonus 符号不会重新触发免费旋转。额外免费旋转仅通过 Progress Ladder 发放。',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
-	GAME_INFO_MYSTERY_BODY:
-		'Mystery 转轴保持固定，每次旋转显示相同符号。',
+	GAME_INFO_MYSTERY_BODY: 'Mystery 转轴保持固定，每次旋转显示相同符号。',
 	GAME_INFO_PROGRESS_LADDER_TITLE: 'PROGRESS LADDER',
 	GAME_INFO_PROGRESS_LADDER_BODY:
 		'在免费旋转期间，每个落地的 Bonus 符号都会计入 Progress Ladder。每收集 4 个 Bonus 符号提升一级。每级奖励 3 次额外免费旋转并解锁 1 个额外的 Sticky Mystery Reel，最多 5 级（15 次额外免费旋转）。',
@@ -79,12 +78,12 @@ export default {
 	GAME_INFO_PAYTABLE_NOTE: '所有赔付值为基础投注的倍数。',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1\nW: 5 = 225',
-		GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
+	GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
 	GAME_INFO_CONTROLS_BODY:
 		'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nBet amount (−): Use the minus button to decrease your bet amount. Bet changes are only available while the game is idle.\nBet amount (+): Use the plus button to increase your bet amount. Bet changes are only available while the game is idle.\nBuy Bonus: Open Buy Bonus to purchase Normal Bonus or Super Bonus. Confirm a purchase to start the selected feature immediately.\nBonus Boost: Enable Bonus Boost to play at 2× your base bet with more Bonus symbols and a higher chance of triggering free spins. You can turn it on or off from the Buy Bonus panel or the Autoplay panel.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance: Shows your current balance. This is informational and is not a button.\nBet: Shows your selected bet amount. This is informational and is not a button.',
 	GAME_INFO_LEGAL_TITLE: '一般游戏免责声明',
 	GAME_INFO_LEGAL_BODY:
-		'故障将使所有奖金和游戏无效。需要稳定的网络连接。如发生断线，请重新加载游戏以完成未结束的回合。预期回报基于大量游戏计算。游戏画面不代表任何物理设备，仅供参考。奖金根据从 Remote Game Server 收到的金额结算，而非根据网页浏览器内的事件。TM 和 © 2026 Stake Engine。',
+		'故障将使所有奖金和游戏无效。需要稳定的网络连接。如发生断线，请重新加载游戏以完成未结束的回合。预期回报基于大量游戏计算。游戏画面不代表任何物理设备，仅供参考。奖金根据从 Remote Game Server 收到的金额结算，而非根据网页浏览器内的事件。TM 和 © 2026 Engine。',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: '余额不足',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: '请充值或降低投注额以继续游戏。',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: '已达亏损上限',

@@ -148,7 +148,7 @@
 							<section class="section">
 								<h3>{paytableTitle}</h3>
 								<p class="paytable-note">{paytableNote}</p>
-								<div class="paytable-grid">
+								<div class="pay-grid">
 									{#each payingSymbols as symbol (symbol.id)}
 										<article class="pay-card">
 											<img
@@ -452,10 +452,10 @@
 		white-space: nowrap;
 	}
 
-	.paytable-grid {
+	.pay-grid {
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 0.75rem;
+		gap: 0.65rem;
 	}
 
 	.pay-card {
@@ -466,6 +466,7 @@
 		padding: 0.65rem 0.45rem;
 		border-radius: 10px;
 		background: rgba(255, 255, 255, 0.06);
+		border: 1px solid rgba(255, 255, 255, 0.05);
 	}
 
 	.symbol-image {
@@ -553,22 +554,13 @@
 			height: 80px;
 		}
 
-		.pay-card:last-child:nth-child(odd) .pay-symbol-image {
-			width: 96px;
-			height: 96px;
-		}
-
 		.pay-rows li {
 			font-size: 1.05rem;
 			line-height: 1.45;
 		}
 
-		.paytable-grid {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-
-		.pay-card:last-child:nth-child(odd) {
-			grid-column: 1 / -1;
+		.pay-grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
 		}
 
 		.special-card {

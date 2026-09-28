@@ -352,13 +352,13 @@ export default {
 			feature: true,
 			buyBonus: false,
 			rtp: 0.9601,
-			max_win: 2500.0,
+			max_win: 713.0,
 		},
 		bonus_boost: {
 			cost: 2.0,
 			feature: true,
 			buyBonus: false,
-			rtp: 0.9601,
+			rtp: 0.9600,
 			max_win: 2500.0,
 		},
 		special_spins: {

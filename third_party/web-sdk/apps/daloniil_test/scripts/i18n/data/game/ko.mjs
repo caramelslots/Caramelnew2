@@ -67,8 +67,7 @@ export default {
 	GAME_INFO_FS_BODY:
 		'기본 게임에서 Bonus 심볼 3개를 맞추면 10회 무료 스핀이 있는 Normal Bonus가 발동됩니다. Bonus 심볼 4개를 맞추면 10회 무료 스핀과 처음부터 Sticky Mystery Reel 1개가 있는 Super Bonus가 발동됩니다. 기능 중 Bonus 심볼이 나와도 무료 스핀은 재트리거되지 않습니다. 추가 무료 스핀은 Progress Ladder를 통해서만 지급됩니다.',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
-	GAME_INFO_MYSTERY_BODY:
-		'Mystery 릴은 고정되며 매 스핀마다 같은 심볼을 공개합니다.',
+	GAME_INFO_MYSTERY_BODY: 'Mystery 릴은 고정되며 매 스핀마다 같은 심볼을 공개합니다.',
 	GAME_INFO_PROGRESS_LADDER_TITLE: 'PROGRESS LADDER',
 	GAME_INFO_PROGRESS_LADDER_BODY:
 		'무료 스핀 중 나온 모든 Bonus 심볼은 Progress Ladder에 수집됩니다. Bonus 심볼 4개를 모을 때마다 한 단계 올라갑니다. 각 단계마다 추가 무료 스핀 3회와 Sticky Mystery Reel 1개가 해제되며, 최대 5단계(추가 무료 스핀 15회)입니다.',
@@ -79,12 +78,12 @@ export default {
 	GAME_INFO_PAYTABLE_NOTE: '모든 배당 값은 기본 베팅의 배수입니다.',
 	GAME_INFO_PAYTABLE_BODY:
 		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1\nW: 5 = 225',
-		GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
+	GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
 	GAME_INFO_CONTROLS_BODY:
 		'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nBet amount (−): Use the minus button to decrease your bet amount. Bet changes are only available while the game is idle.\nBet amount (+): Use the plus button to increase your bet amount. Bet changes are only available while the game is idle.\nBuy Bonus: Open Buy Bonus to purchase Normal Bonus or Super Bonus. Confirm a purchase to start the selected feature immediately.\nBonus Boost: Enable Bonus Boost to play at 2× your base bet with more Bonus symbols and a higher chance of triggering free spins. You can turn it on or off from the Buy Bonus panel or the Autoplay panel.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance: Shows your current balance. This is informational and is not a button.\nBet: Shows your selected bet amount. This is informational and is not a button.',
 	GAME_INFO_LEGAL_TITLE: '일반 게임 면책 조항',
 	GAME_INFO_LEGAL_BODY:
-		'오작동 시 모든 당첨금과 플레이가 무효가 됩니다. 안정적인 인터넷 연결이 필요합니다. 연결이 끊기면 미완료 라운드를 마치기 위해 게임을 다시 불러오세요. 기대 수익률은 많은 플레이를 기준으로 계산됩니다. 게임 화면은 실제 물리적 기기를 나타내지 않으며 설명 목적으로만 제공됩니다. 당첨금은 웹 브라우저 내 이벤트가 아니라 Remote Game Server에서 받은 금액에 따라 정산됩니다. TM 및 © 2026 Stake Engine.',
+		'오작동 시 모든 당첨금과 플레이가 무효가 됩니다. 안정적인 인터넷 연결이 필요합니다. 연결이 끊기면 미완료 라운드를 마치기 위해 게임을 다시 불러오세요. 기대 수익률은 많은 플레이를 기준으로 계산됩니다. 게임 화면은 실제 물리적 기기를 나타내지 않으며 설명 목적으로만 제공됩니다. 당첨금은 웹 브라우저 내 이벤트가 아니라 Remote Game Server에서 받은 금액에 따라 정산됩니다. TM 및 © 2026 Engine.',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: '잔액 부족',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: '게임을 계속하려면 잔액을 충전하거나 베팅을 낮추세요.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: '손실 한도 도달',

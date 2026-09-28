@@ -273,6 +273,27 @@ export const numberToWinCurrencyString = (value: number) => {
 	return `${meta.symbol}${formatted}`;
 };
 
+/**
+ * Bet replay currency amounts (base bet, total cost, win) — currency decimals
+ * by default; expand only when the amount has real sub-cent precision
+ * (e.g. $0.01, $1.23, $0.075, $0.0025).
+ */
+export const numberToReplayCurrencyString = (value: number) => {
+	const meta = getCurrencyMeta();
+	const formatted = formatWinAmountBody(value, stateBet.currency, {
+		significant: true,
+	});
+
+	if (meta.symbolAfter) {
+		return `${formatted} ${meta.symbol}`;
+	}
+	return `${meta.symbol}${formatted}`;
+};
+
+/** Bet replay total win/prize — same significant precision as replay costs. */
+export const numberToReplayWinCurrencyString = (value: number) =>
+	numberToReplayCurrencyString(value);
+
 export const bookEventAmountToCurrencyString = (bookEventAmount: number) => {
 	const normalisedAmount = bookEventAmountToNormalisedAmount(bookEventAmount);
 	return numberToWinCurrencyString(normalisedAmount);

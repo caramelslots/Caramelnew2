@@ -52,7 +52,12 @@ export const GAME_INFO_SPECIAL_SYMBOL_ENTRIES = [
 	bodyKey: string;
 }>;
 
+/**
+ * Paying symbols for Game Info paytable — descending by top (5-oak) payout
+ * so relative value is clear without low/medium/high labels.
+ */
 export const GAME_INFO_PAYING_SYMBOL_IDS = [
+	'W',
 	'H1',
 	'H2',
 	'H3',
@@ -61,7 +66,6 @@ export const GAME_INFO_PAYING_SYMBOL_IDS = [
 	'L2',
 	'L3',
 	'L4',
-	'W',
 ] as const satisfies readonly GameInfoSymbolId[];
 
 export type SymbolPayRow = { count: number; multiplier: number };

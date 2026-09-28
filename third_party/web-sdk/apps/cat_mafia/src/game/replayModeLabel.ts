@@ -30,12 +30,13 @@ export const lookupReplayCostMultiplier = (modeKey: string): number => {
 	return typeof cost === 'number' && cost > 0 ? cost : 1;
 };
 
+/** Cost / payout multipliers — extra fraction digits only when needed (1x, 1.5x, 0.075x). */
 export const formatReplayMultiplier = (value: number): string => {
 	if (!Number.isFinite(value)) return '0x';
-	if (Number.isInteger(value)) return `${value}x`;
-	const formatted = value
-		.toLocaleString('en', { maximumFractionDigits: 6, useGrouping: false })
-		.replace(/(\.\d*?[1-9])0+$/, '$1')
-		.replace(/\.0+$/, '');
+	const formatted = value.toLocaleString('en', {
+		minimumFractionDigits: 0,
+		maximumFractionDigits: 6,
+		useGrouping: false,
+	});
 	return `${formatted}x`;
 };

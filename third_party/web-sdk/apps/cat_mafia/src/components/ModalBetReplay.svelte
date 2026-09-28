@@ -7,7 +7,10 @@
 	import { fade, scale } from 'svelte/transition';
 	import { backOut, cubicOut } from 'svelte/easing';
 	import { stateBet, stateModal, stateUi, stateUrlDerived } from 'state-shared';
-	import { numberToCurrencyString, numberToWinCurrencyString } from 'utils-shared/amount';
+	import {
+		numberToReplayCurrencyString,
+		numberToReplayWinCurrencyString,
+	} from 'utils-shared/amount';
 	import { getContextLayout } from 'utils-layout';
 
 	import { getContext } from '../game/context';
@@ -105,7 +108,7 @@
 
 				<div class="row">
 					<span class="label">{context.i18nDerived.replayBaseBet()}</span>
-					<span class="value yellow">{numberToCurrencyString(summary.baseBet)}</span>
+					<span class="value yellow">{numberToReplayCurrencyString(summary.baseBet)}</span>
 				</div>
 				<div class="row">
 					<span class="label">{context.i18nDerived.replayCostMultiplier()}</span>
@@ -114,7 +117,7 @@
 
 				<div class="row highlight">
 					<span class="label">{context.i18nDerived.replayTotalBetCost()}</span>
-					<span class="value yellow strong">{numberToCurrencyString(summary.totalBetCost)}</span>
+					<span class="value yellow strong">{numberToReplayCurrencyString(summary.totalBetCost)}</span>
 				</div>
 				<div class="divider"></div>
 
@@ -127,7 +130,7 @@
 				<div class="row highlight">
 					<span class="label">{context.i18nDerived.replayTotalWin()}</span>
 					<span class="value green strong"
-						>{numberToWinCurrencyString(summary.totalWin)}</span
+						>{numberToReplayWinCurrencyString(summary.totalWin)}</span
 					>
 				</div>
 			</div>

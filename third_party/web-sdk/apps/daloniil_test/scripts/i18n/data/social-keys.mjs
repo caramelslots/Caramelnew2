@@ -18,8 +18,7 @@ const en = {
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
 		'Top up your balance or lower the play amount to continue the game.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'Stop limit reached',
-	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL:
-		'Autoplay has stopped because the stop limit was reached.',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'Autoplay has stopped because the stop limit was reached.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Single prize limit reached',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
 		'Autoplay has stopped because the single prize limit was reached.',
@@ -39,15 +38,14 @@ const en = {
 	GAME_INFO_PAYTABLE_TITLE_SOCIAL: 'WINTABLE (× PLAY)',
 	GAME_INFO_PAYTABLE_NOTE_SOCIAL: 'All win values are multiples of the base play.',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Malfunction voids all prizes and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Rewards are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Stake Engine.',
+		'Malfunction voids all prizes and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Rewards are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Engine.',
 	REPLAY_TITLE_SOCIAL: 'Play Replay',
 	REPLAY_BASE_BET_SOCIAL: 'Base Play',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Feature Multiplier',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Total Play Amount',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Final Multiplier',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Total Prize',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'This is a replay of a previous play round. No plays will be placed.',
+	REPLAY_DISCLAIMER_SOCIAL: 'This is a replay of a previous play round. No plays will be placed.',
 };
 
 const ru = {
@@ -80,16 +78,14 @@ const ru = {
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'РЕЖИМЫ ИГРЫ',
 	GAME_INFO_CONTROLS_TITLE_SOCIAL: 'РУКОВОДСТВО ПО УПРАВЛЕНИЮ',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Неисправность аннулирует все призы и игры. Требуется стабильное интернет-соединение. В случае разрыва соединения перезагрузите игру, чтобы завершить незавершённые раунды. Ожидаемая отдача рассчитывается на большом количестве игр. Отображение игры не является представлением какого-либо физического устройства и предназначено только для иллюстрации. Награды рассчитываются согласно сумме, полученной от Remote Game Server, а не по событиям в веб-браузере. TM и © 2026 Stake Engine.',
+		'Неисправность аннулирует все призы и игры. Требуется стабильное интернет-соединение. В случае разрыва соединения перезагрузите игру, чтобы завершить незавершённые раунды. Ожидаемая отдача рассчитывается на большом количестве игр. Отображение игры не является представлением какого-либо физического устройства и предназначено только для иллюстрации. Награды рассчитываются согласно сумме, полученной от Remote Game Server, а не по событиям в веб-браузере. TM и © 2026 Engine.',
 	REPLAY_BASE_BET_SOCIAL: 'Базовая игра',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Множитель функции',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Итоговый множитель',
 	REPLAY_TITLE_SOCIAL: 'Повтор игры',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Итоговая сумма игры',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Общий приз',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'Это повтор предыдущего раунда игры. Новые игры не будут запущены.',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'Это повтор предыдущего раунда игры. Новые игры не будут запущены.',
 };
 
 const de = {
@@ -109,7 +105,8 @@ const de = {
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
 		'Lade dein Guthaben auf oder verringere den Play-Betrag, um weiterzuspielen.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'Stopplimit erreicht',
-	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'Autospiel wurde gestoppt, weil das Stopplimit erreicht wurde.',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL:
+		'Autospiel wurde gestoppt, weil das Stopplimit erreicht wurde.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Einzelpreislimit erreicht',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
 		'Autospiel wurde gestoppt, weil das Einzelpreislimit erreicht wurde.',
@@ -121,7 +118,7 @@ const de = {
 		'Das Wild-Symbol ersetzt alle zahlenden Symbole außer Bonus. Wild zahlt 225× Spin für 5 gleiche. During Free Spins, each Wild receives a multiplier of ×2, ×5, ×10, ×20, or ×50. If more than one Wild lands on a winning winline, their multipliers are added together and applied to that line prize.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'SPIELMODI',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Bei Fehlfunktion sind alle Preise und Spiele ungültig. Eine stabile Internetverbindung ist erforderlich. Bei Verbindungsabbruch das Spiel neu laden, um unvollständige Runden abzuschließen. Die erwartete Rendite wird über viele Spiele berechnet. Die Spielanzeige stellt kein physisches Gerät dar und dient nur zur Veranschaulichung. Belohnungen werden gemäß dem vom Remote Game Server erhaltenen Betrag abgerechnet, nicht nach Ereignissen im Webbrowser. TM und © 2026 Stake Engine.',
+		'Bei Fehlfunktion sind alle Preise und Spiele ungültig. Eine stabile Internetverbindung ist erforderlich. Bei Verbindungsabbruch das Spiel neu laden, um unvollständige Runden abzuschließen. Die erwartete Rendite wird über viele Spiele berechnet. Die Spielanzeige stellt kein physisches Gerät dar und dient nur zur Veranschaulichung. Belohnungen werden gemäß dem vom Remote Game Server erhaltenen Betrag abgerechnet, nicht nach Ereignissen im Webbrowser. TM und © 2026 Engine.',
 	REPLAY_BASE_BET_SOCIAL: 'Basis-Spiel',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Feature-Multiplikator',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Endmultiplikator',
@@ -130,7 +127,6 @@ const de = {
 	REPLAY_TOTAL_WIN_SOCIAL: 'Gesamtpreis',
 	REPLAY_DISCLAIMER_SOCIAL:
 		'Dies ist die Wiederholung einer vorherigen Spielrunde. Es werden keine neuen Spiele gestartet.',
-
 };
 
 const es = {
@@ -150,7 +146,8 @@ const es = {
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
 		'Recarga tu saldo o reduce el importe de play para continuar.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'Límite de parada alcanzado',
-	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'El autojuego se detuvo porque se alcanzó el límite de parada.',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL:
+		'El autojuego se detuvo porque se alcanzó el límite de parada.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Límite de premio único alcanzado',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
 		'El autojuego se detuvo porque se alcanzó el límite de premio único.',
@@ -162,7 +159,7 @@ const es = {
 		'El símbolo Wild sustituye a todos los símbolos de pago excepto Bonus. Wild paga 225× giro por 5 iguales. During Free Spins, each Wild receives a multiplier of ×2, ×5, ×10, ×20, or ×50. If more than one Wild lands on a winning winline, their multipliers are added together and applied to that line prize.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'MODOS DE JUEGO',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'El mal funcionamiento anula todos los premios y jugadas. Se requiere conexión a internet estable. Si se pierde la conexión, recarga el juego para completar rondas pendientes. El retorno esperado se calcula en muchas partidas. La pantalla no representa ningún dispositivo físico y es solo ilustrativa. Las recompensas se liquidan según el importe recibido del Remote Game Server y no según eventos del navegador. TM y © 2026 Stake Engine.',
+		'El mal funcionamiento anula todos los premios y jugadas. Se requiere conexión a internet estable. Si se pierde la conexión, recarga el juego para completar rondas pendientes. El retorno esperado se calcula en muchas partidas. La pantalla no representa ningún dispositivo físico y es solo ilustrativa. Las recompensas se liquidan según el importe recibido del Remote Game Server y no según eventos del navegador. TM y © 2026 Engine.',
 	REPLAY_BASE_BET_SOCIAL: 'Jugada base',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Multiplicador de función',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Multiplicador final',
@@ -171,7 +168,6 @@ const es = {
 	REPLAY_TOTAL_WIN_SOCIAL: 'Premio total',
 	REPLAY_DISCLAIMER_SOCIAL:
 		'Esta es la repetición de una jugada anterior. No se iniciarán nuevas jugadas.',
-
 };
 
 const fr = {
@@ -191,7 +187,8 @@ const fr = {
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
 		'Rechargez votre solde ou réduisez le montant de play pour continuer.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'Limite d’arrêt atteinte',
-	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'Le jeu auto s’est arrêté car la limite d’arrêt a été atteinte.',
+	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL:
+		'Le jeu auto s’est arrêté car la limite d’arrêt a été atteinte.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Limite de prix unique atteinte',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
 		'Le jeu auto s’est arrêté car la limite de prix unique a été atteinte.',
@@ -203,7 +200,7 @@ const fr = {
 		'Le symbole Wild remplace tous les symboles payants sauf Bonus. Wild paie 225× spin pour 5 identiques. During Free Spins, each Wild receives a multiplier of ×2, ×5, ×10, ×20, or ×50. If more than one Wild lands on a winning winline, their multipliers are added together and applied to that line prize.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'MODES DE JEU',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Un dysfonctionnement annule tous les prix et parties. Une connexion internet stable est requise. En cas de déconnexion, rechargez le jeu pour terminer les manches incomplètes. Le retour attendu est calculé sur de nombreuses parties. L’affichage ne représente aucun appareil physique et est illustratif. Les récompenses sont réglées selon le montant reçu du Remote Game Server et non selon les événements du navigateur. TM et © 2026 Stake Engine.',
+		'Un dysfonctionnement annule tous les prix et parties. Une connexion internet stable est requise. En cas de déconnexion, rechargez le jeu pour terminer les manches incomplètes. Le retour attendu est calculé sur de nombreuses parties. L’affichage ne représente aucun appareil physique et est illustratif. Les récompenses sont réglées selon le montant reçu du Remote Game Server et non selon les événements du navigateur. TM et © 2026 Engine.',
 	REPLAY_BASE_BET_SOCIAL: 'Jeu de base',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Multiplicateur de fonction',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Multiplicateur final',
@@ -212,7 +209,6 @@ const fr = {
 	REPLAY_TOTAL_WIN_SOCIAL: 'Prix total',
 	REPLAY_DISCLAIMER_SOCIAL:
 		'Ceci est le replay d’une manche de jeu précédente. Aucune nouvelle partie ne sera lancée.',
-
 };
 
 const pl = {
@@ -244,7 +240,7 @@ const pl = {
 		'Symbol Wild zastępuje wszystkie płatne symbole oprócz Bonus. Wild płaci 225× spin za 5 takich samych. During Free Spins, each Wild receives a multiplier of ×2, ×5, ×10, ×20, or ×50. If more than one Wild lands on a winning winline, their multipliers are added together and applied to that line prize.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'TRYBY GRY',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Awarie unieważniają wszystkie nagrody i gry. Wymagane stabilne połączenie internetowe. Po rozłączeniu przeładuj grę, aby dokończyć niedokończone rundy. Oczekiwany zwrot liczony jest na wielu grach. Wyświetlacz nie przedstawia urządzenia fizycznego i służy wyłącznie ilustracji. Nagrody rozliczane są według kwoty z Remote Game Server, a nie zdarzeń w przeglądarce. TM i © 2026 Stake Engine.',
+		'Awarie unieważniają wszystkie nagrody i gry. Wymagane stabilne połączenie internetowe. Po rozłączeniu przeładuj grę, aby dokończyć niedokończone rundy. Oczekiwany zwrot liczony jest na wielu grach. Wyświetlacz nie przedstawia urządzenia fizycznego i służy wyłącznie ilustracji. Nagrody rozliczane są według kwoty z Remote Game Server, a nie zdarzeń w przeglądarce. TM i © 2026 Engine.',
 	REPLAY_BASE_BET_SOCIAL: 'Gra bazowa',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Mnożnik funkcji',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Mnożnik końcowy',
@@ -253,7 +249,6 @@ const pl = {
 	REPLAY_TOTAL_WIN_SOCIAL: 'Całkowita nagroda',
 	REPLAY_DISCLAIMER_SOCIAL:
 		'To powtórka poprzedniej rundy gry. Żadne nowe gry nie zostaną rozpoczęte.',
-
 };
 
 const pt = {
@@ -285,7 +280,7 @@ const pt = {
 		'O símbolo Wild substitui todos os símbolos pagantes exceto Bonus. Wild paga 225× giro por 5 iguais. During Free Spins, each Wild receives a multiplier of ×2, ×5, ×10, ×20, or ×50. If more than one Wild lands on a winning winline, their multipliers are added together and applied to that line prize.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'MODOS DE JOGO',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Avaria anula todos os prémios e jogadas. É necessária ligação estável à internet. Se a ligação cair, recarregue o jogo para concluir rondas incompletas. O retorno esperado é calculado em muitas jogadas. O ecrã não representa qualquer dispositivo físico e é apenas ilustrativo. As recompensas são liquidadas conforme o montante recebido do Remote Game Server e não eventos no browser. TM e © 2026 Stake Engine.',
+		'Avaria anula todos os prémios e jogadas. É necessária ligação estável à internet. Se a ligação cair, recarregue o jogo para concluir rondas incompletas. O retorno esperado é calculado em muitas jogadas. O ecrã não representa qualquer dispositivo físico e é apenas ilustrativo. As recompensas são liquidadas conforme o montante recebido do Remote Game Server e não eventos no browser. TM e © 2026 Engine.',
 	REPLAY_BASE_BET_SOCIAL: 'Jogo base',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Multiplicador de função',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Multiplicador final',
@@ -294,7 +289,6 @@ const pt = {
 	REPLAY_TOTAL_WIN_SOCIAL: 'Prémio total',
 	REPLAY_DISCLAIMER_SOCIAL:
 		'Isto é um replay de uma jogada anterior. Nenhuma nova jogada será iniciada.',
-
 };
 
 const tr = {
@@ -326,16 +320,14 @@ const tr = {
 		'Wild sembolü Bonus hariç tüm ödeme sembollerinin yerine geçer. Wild, 5 aynı için 225× spin öder. During Free Spins, each Wild receives a multiplier of ×2, ×5, ×10, ×20, or ×50. If more than one Wild lands on a winning winline, their multipliers are added together and applied to that line prize.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'OYUN MODLARI',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Arıza tüm ödülleri ve oyunları geçersiz kılar. Kararlı internet bağlantısı gerekir. Bağlantı kesilirse tamamlanmamış turları bitirmek için oyunu yeniden yükleyin. Beklenen getiri birçok oyun üzerinden hesaplanır. Oyun ekranı fiziksel bir cihazı temsil etmez ve yalnızca açıklama amaçlıdır. Ödüller web tarayıcısındaki olaylara göre değil, Remote Game Server\'dan alınan tutara göre ödenir. TM ve © 2026 Stake Engine.',
+		"Arıza tüm ödülleri ve oyunları geçersiz kılar. Kararlı internet bağlantısı gerekir. Bağlantı kesilirse tamamlanmamış turları bitirmek için oyunu yeniden yükleyin. Beklenen getiri birçok oyun üzerinden hesaplanır. Oyun ekranı fiziksel bir cihazı temsil etmez ve yalnızca açıklama amaçlıdır. Ödüller web tarayıcısındaki olaylara göre değil, Remote Game Server'dan alınan tutara göre ödenir. TM ve © 2026 Engine.",
 	REPLAY_BASE_BET_SOCIAL: 'Temel Oyun',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Özellik Çarpanı',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Son Çarpan',
 	REPLAY_TITLE_SOCIAL: 'Oyun Tekrarı',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Toplam Oyun Tutarı',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Toplam Ödül',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'Bu, önceki bir oyun turunun tekrarıdır. Yeni oyun başlatılmayacaktır.',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'Bu, önceki bir oyun turunun tekrarıdır. Yeni oyun başlatılmayacaktır.',
 };
 
 const vi = {
@@ -352,8 +344,7 @@ const vi = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: 'Chơi bonus',
 	AUTO_BET_SOCIAL: 'Tự chơi',
 	MAX_WIN_SOCIAL: 'THƯỞNG TỐI ĐA',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'Nạp thêm số dư hoặc giảm mức play để tiếp tục.',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: 'Nạp thêm số dư hoặc giảm mức play để tiếp tục.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'Đã đạt giới hạn dừng',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'Tự chơi đã dừng vì đạt giới hạn dừng.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'Đã đạt giới hạn thưởng đơn',
@@ -366,7 +357,7 @@ const vi = {
 		'Wild thay thế mọi biểu tượng trả thưởng trừ Bonus. Wild trả 225× lượt quay cho 5 giống nhau. During Free Spins, each Wild receives a multiplier of ×2, ×5, ×10, ×20, or ×50. If more than one Wild lands on a winning winline, their multipliers are added together and applied to that line prize.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'CHẾ ĐỘ CHƠI',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Sự cố vô hiệu mọi thưởng và lượt chơi. Cần kết nối internet ổn định. Nếu mất kết nối, tải lại game để hoàn tất vòng chưa xong. Lợi nhuận kỳ vọng tính trên nhiều lượt chơi. Màn hình không đại diện thiết bị thật và chỉ mang tính minh họa. Phần thưởng được thanh toán theo số tiền từ Remote Game Server, không theo sự kiện trình duyệt. TM và © 2026 Stake Engine.',
+		'Sự cố vô hiệu mọi thưởng và lượt chơi. Cần kết nối internet ổn định. Nếu mất kết nối, tải lại game để hoàn tất vòng chưa xong. Lợi nhuận kỳ vọng tính trên nhiều lượt chơi. Màn hình không đại diện thiết bị thật và chỉ mang tính minh họa. Phần thưởng được thanh toán theo số tiền từ Remote Game Server, không theo sự kiện trình duyệt. TM và © 2026 Engine.',
 	REPLAY_BASE_BET_SOCIAL: 'Lượt chơi cơ bản',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Hệ số tính năng',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Hệ số cuối',
@@ -375,7 +366,6 @@ const vi = {
 	REPLAY_TOTAL_WIN_SOCIAL: 'Tổng thưởng',
 	REPLAY_DISCLAIMER_SOCIAL:
 		'Đây là phát lại lượt chơi trước. Không có lượt chơi mới nào được bắt đầu.',
-
 };
 
 const id = {
@@ -407,7 +397,7 @@ const id = {
 		'Simbol Wild menggantikan semua simbol berbayar kecuali Bonus. Wild membayar 225× spin untuk 5 sama. During Free Spins, each Wild receives a multiplier of ×2, ×5, ×10, ×20, or ×50. If more than one Wild lands on a winning winline, their multipliers are added together and applied to that line prize.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'MODE MAIN',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Kerusakan membatalkan semua hadiah dan permainan. Koneksi internet stabil diperlukan. Jika terputus, muat ulang game untuk menyelesaikan ronde yang belum selesai. Return yang diharapkan dihitung dari banyak permainan. Tampilan game tidak mewakili perangkat fisik dan hanya ilustrasi. Hadiah diselesaikan menurut jumlah dari Remote Game Server, bukan peristiwa browser. TM dan © 2026 Stake Engine.',
+		'Kerusakan membatalkan semua hadiah dan permainan. Koneksi internet stabil diperlukan. Jika terputus, muat ulang game untuk menyelesaikan ronde yang belum selesai. Return yang diharapkan dihitung dari banyak permainan. Tampilan game tidak mewakili perangkat fisik dan hanya ilustrasi. Hadiah diselesaikan menurut jumlah dari Remote Game Server, bukan peristiwa browser. TM dan © 2026 Engine.',
 	REPLAY_BASE_BET_SOCIAL: 'Main Dasar',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Pengali Fitur',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Pengali Akhir',
@@ -416,7 +406,6 @@ const id = {
 	REPLAY_TOTAL_WIN_SOCIAL: 'Total Hadiah',
 	REPLAY_DISCLAIMER_SOCIAL:
 		'Ini adalah ulang dari putaran main sebelumnya. Tidak ada permainan baru yang akan dimulai.',
-
 };
 
 const fi = {
@@ -448,16 +437,14 @@ const fi = {
 		'Wild korvaa kaikki maksavat symbolit paitsi Bonus. Wild maksaa 225× spin viidestä samasta. During Free Spins, each Wild receives a multiplier of ×2, ×5, ×10, ×20, or ×50. If more than one Wild lands on a winning winline, their multipliers are added together and applied to that line prize.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'PELI TILAT',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'Toimintahäiriö mitätöi kaikki palkinnot ja pelit. Vakaa internetyhteys vaaditaan. Yhteyden katketessa lataa peli uudelleen viimeistelläksesi keskeneräiset kierrokset. Odotettu tuotto lasketaan monista peleistä. Näyttö ei edusta fyysistä laitetta ja on vain havainnollistava. Palkinnot maksetaan Remote Game Serveriltä saadun summan mukaan, ei selaimen tapahtumien perusteella. TM ja © 2026 Stake Engine.',
+		'Toimintahäiriö mitätöi kaikki palkinnot ja pelit. Vakaa internetyhteys vaaditaan. Yhteyden katketessa lataa peli uudelleen viimeistelläksesi keskeneräiset kierrokset. Odotettu tuotto lasketaan monista peleistä. Näyttö ei edusta fyysistä laitetta ja on vain havainnollistava. Palkinnot maksetaan Remote Game Serveriltä saadun summan mukaan, ei selaimen tapahtumien perusteella. TM ja © 2026 Engine.',
 	REPLAY_BASE_BET_SOCIAL: 'Peruspeli',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'Ominaisuuskerroin',
-		REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Loppukerroin',
+	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'Loppukerroin',
 	REPLAY_TITLE_SOCIAL: 'Pelin toisto',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'Kokonaispelimäärä',
 	REPLAY_TOTAL_WIN_SOCIAL: 'Kokonaispalkinto',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'Tämä on edellisen pelikierroksen toisto. Uusia pelejä ei aloiteta.',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'Tämä on edellisen pelikierroksen toisto. Uusia pelejä ei aloiteta.',
 };
 
 const ar = {
@@ -474,8 +461,7 @@ const ar = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: 'العب مكافأة',
 	AUTO_BET_SOCIAL: 'لعب تلقائي',
 	MAX_WIN_SOCIAL: 'الحد الأقصى للجائزة',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'أضف رصيداً أو خفّض مبلغ اللعب للمتابعة.',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: 'أضف رصيداً أو خفّض مبلغ اللعب للمتابعة.',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'تم الوصول لحد الإيقاف',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'توقف اللعب التلقائي لأنه تم الوصول إلى حد الإيقاف.',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'تم الوصول لحد الجائزة الواحدة',
@@ -489,16 +475,14 @@ const ar = {
 		'رمز Wild يستبدل جميع الرموز المدفوعة ما عدا Bonus. Wild يدفع 225× اللفة لـ 5 متطابقة. During Free Spins, each Wild receives a multiplier of ×2, ×5, ×10, ×20, or ×50. If more than one Wild lands on a winning winline, their multipliers are added together and applied to that line prize.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'أوضاع اللعب',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'العطل يلغي جميع الجوائز والجولات. يلزم اتصال إنترنت مستقر. في حال انقطاع الاتصال، أعد تحميل اللعبة لإكمال أي جولات غير مكتملة. يُحسب العائد المتوقع على مدى عدد كبير من الجولات. عرض اللعبة لا يمثل أي جهاز فعلي وهو لأغراض توضيحية فقط. تُسوَّى المكافآت وفق المبلغ المستلم من Remote Game Server وليس وفق الأحداث داخل متصفح الويب. TM و© 2026 Stake Engine.',
+		'العطل يلغي جميع الجوائز والجولات. يلزم اتصال إنترنت مستقر. في حال انقطاع الاتصال، أعد تحميل اللعبة لإكمال أي جولات غير مكتملة. يُحسب العائد المتوقع على مدى عدد كبير من الجولات. عرض اللعبة لا يمثل أي جهاز فعلي وهو لأغراض توضيحية فقط. تُسوَّى المكافآت وفق المبلغ المستلم من Remote Game Server وليس وفق الأحداث داخل متصفح الويب. TM و© 2026 Engine.',
 	REPLAY_BASE_BET_SOCIAL: 'اللعب الأساسي',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'مضاعف الميزة',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'المضاعف النهائي',
 	REPLAY_TITLE_SOCIAL: 'إعادة اللعب',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'إجمالي مبلغ اللعب',
 	REPLAY_TOTAL_WIN_SOCIAL: 'إجمالي الجائزة',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'هذه إعادة لجولة لعب سابقة. لن يتم بدء أي لعب جديد.',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'هذه إعادة لجولة لعب سابقة. لن يتم بدء أي لعب جديد.',
 };
 
 const hi = {
@@ -515,13 +499,11 @@ const hi = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: 'बोनस खेलें',
 	AUTO_BET_SOCIAL: 'ऑटोप्ले',
 	MAX_WIN_SOCIAL: 'अधिकतम पुरस्कार',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'जारी रखने के लिए बैलेंस बढ़ाएँ या प्ले राशि घटाएँ।',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: 'जारी रखने के लिए बैलेंस बढ़ाएँ या प्ले राशि घटाएँ।',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: 'रोक सीमा पहुँची',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: 'ऑटोप्ले रुका क्योंकि रोक सीमा पहुँच गई।',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: 'एकल पुरस्कार सीमा पहुँची',
-	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL:
-		'ऑटोप्ले रुका क्योंकि एकल पुरस्कार सीमा पहुँच गई।',
+	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_BODY_SOCIAL: 'ऑटोप्ले रुका क्योंकि एकल पुरस्कार सीमा पहुँच गई।',
 	GAME_INFO_ABOUT_BODY_SOCIAL:
 		'Wok Fury 5 रील, 5 पंक्ति स्लॉट है, 25 पेलाइन के साथ। पुरस्कार बाएँ से दाएँ, सटे हुए रीलों पर, सबसे बाएँ रील से शुरू होकर दिए जाते हैं। पुरस्कार के लिए पेलाइन पर न्यूनतम 3 समान प्रतीक आवश्यक हैं। प्रति लाइन केवल सबसे बड़ा पुरस्कार दिया जाता है।',
 	GAME_INFO_PAYLINES_NOTE_SOCIAL:
@@ -530,16 +512,14 @@ const hi = {
 		'Wild प्रतीक Bonus को छोड़कर सभी भुगतान प्रतीकों की जगह लेता है। Wild 5 एक जैसे के लिए 225× स्पिन देता है। During Free Spins, each Wild receives a multiplier of ×2, ×5, ×10, ×20, or ×50. If more than one Wild lands on a winning winline, their multipliers are added together and applied to that line prize.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'खेल मोड',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'खराबी सभी पुरस्कार और खेल रद्द कर देती है। स्थिर इंटरनेट कनेक्शन आवश्यक है। डिस्कनेक्शन पर अधूरे राउंड पूरे करने के लिए गेम रीलोड करें। अपेक्षित रिटर्न कई खेलों पर गणना की जाती है। डिस्प्ले किसी भौतिक उपकरण का प्रतिनिधित्व नहीं करता। पुरस्कार Remote Game Server से प्राप्त राशि के अनुसार तय होते हैं, ब्राउज़र घटनाओं के अनुसार नहीं। TM और © 2026 Stake Engine.',
+		'खराबी सभी पुरस्कार और खेल रद्द कर देती है। स्थिर इंटरनेट कनेक्शन आवश्यक है। डिस्कनेक्शन पर अधूरे राउंड पूरे करने के लिए गेम रीलोड करें। अपेक्षित रिटर्न कई खेलों पर गणना की जाती है। डिस्प्ले किसी भौतिक उपकरण का प्रतिनिधित्व नहीं करता। पुरस्कार Remote Game Server से प्राप्त राशि के अनुसार तय होते हैं, ब्राउज़र घटनाओं के अनुसार नहीं। TM और © 2026 Engine.',
 	REPLAY_BASE_BET_SOCIAL: 'बेस प्ले',
 	REPLAY_COST_MULTIPLIER_SOCIAL: 'फ़ीचर गुणक',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: 'अंतिम गुणक',
 	REPLAY_TITLE_SOCIAL: 'प्ले रीप्ले',
 	REPLAY_TOTAL_BET_COST_SOCIAL: 'कुल प्ले राशि',
 	REPLAY_TOTAL_WIN_SOCIAL: 'कुल पुरस्कार',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'यह पिछले प्ले राउंड का रीप्ले है। कोई नया प्ले शुरू नहीं होगा।',
-
+	REPLAY_DISCLAIMER_SOCIAL: 'यह पिछले प्ले राउंड का रीप्ले है। कोई नया प्ले शुरू नहीं होगा।',
 };
 
 const ja = {
@@ -570,7 +550,7 @@ const ja = {
 		'WildシンボルはBonusを除くすべての配当シンボルの代わりになります。Wildは5一致で225×スピンを払います。 During Free Spins, each Wild receives a multiplier of ×2, ×5, ×10, ×20, or ×50. If more than one Wild lands on a winning winline, their multipliers are added together and applied to that line prize.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: 'プレイモード',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'故障時はすべての賞とプレイが無効になります。安定したインターネット接続が必要です。切断時は未完了ラウンドを完了するためゲームを再読み込みしてください。期待リターンは多数のプレイに基づき計算されます。表示は物理デバイスを表しません。賞はRemote Game Serverから受け取った金額に基づき精算され、ブラウザ内イベントではありません。TM and © 2026 Stake Engine.',
+		'故障時はすべての賞とプレイが無効になります。安定したインターネット接続が必要です。切断時は未完了ラウンドを完了するためゲームを再読み込みしてください。期待リターンは多数のプレイに基づき計算されます。表示は物理デバイスを表しません。賞はRemote Game Serverから受け取った金額に基づき精算され、ブラウザ内イベントではありません。TM and © 2026 Engine.',
 	REPLAY_BASE_BET_SOCIAL: 'ベースプレイ',
 	REPLAY_COST_MULTIPLIER_SOCIAL: '機能倍率',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: '最終倍率',
@@ -579,7 +559,6 @@ const ja = {
 	REPLAY_TOTAL_WIN_SOCIAL: '合計賞',
 	REPLAY_DISCLAIMER_SOCIAL:
 		'これは過去のプレイラウンドのリプレイです。新しいプレイは行われません。',
-
 };
 
 const ko = {
@@ -611,7 +590,7 @@ const ko = {
 		'Wild 심볼은 Bonus를 제외한 모든 유료 심볼을 대체합니다. Wild는 5개 일치 시 225× 스핀을 지급합니다. During Free Spins, each Wild receives a multiplier of ×2, ×5, ×10, ×20, or ×50. If more than one Wild lands on a winning winline, their multipliers are added together and applied to that line prize.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: '플레이 모드',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'오작동 시 모든 상금과 플레이가 무효화됩니다. 안정적인 인터넷 연결이 필요합니다. 연결이 끊기면 미완료 라운드를 마치려면 게임을 다시 로드하세요. 기대 수익은 많은 플레이를 기준으로 계산됩니다. 화면은 실제 기기를 나타내지 않으며 설명용입니다. 상금은 브라우저 이벤트가 아니라 Remote Game Server에서 받은 금액 기준으로 정산됩니다. TM and © 2026 Stake Engine.',
+		'오작동 시 모든 상금과 플레이가 무효화됩니다. 안정적인 인터넷 연결이 필요합니다. 연결이 끊기면 미완료 라운드를 마치려면 게임을 다시 로드하세요. 기대 수익은 많은 플레이를 기준으로 계산됩니다. 화면은 실제 기기를 나타내지 않으며 설명용입니다. 상금은 브라우저 이벤트가 아니라 Remote Game Server에서 받은 금액 기준으로 정산됩니다. TM and © 2026 Engine.',
 	REPLAY_BASE_BET_SOCIAL: '기본 플레이',
 	REPLAY_COST_MULTIPLIER_SOCIAL: '기능 배율',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: '최종 배율',
@@ -620,7 +599,6 @@ const ko = {
 	REPLAY_TOTAL_WIN_SOCIAL: '총 상금',
 	REPLAY_DISCLAIMER_SOCIAL:
 		'이전 플레이 라운드의 리플레이입니다. 새로운 플레이는 시작되지 않습니다.',
-
 };
 
 const zh = {
@@ -637,8 +615,7 @@ const zh = {
 	BUY_BONUS_PANEL_BUTTON_SOCIAL: '玩奖金',
 	AUTO_BET_SOCIAL: '自动游戏',
 	MAX_WIN_SOCIAL: '最大奖励',
-	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL:
-		'请充值或降低游玩金额以继续游戏。',
+	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY_SOCIAL: '请充值或降低游玩金额以继续游戏。',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE_SOCIAL: '已达停止上限',
 	AUTOPLAY_MSG_LOSS_LIMIT_BODY_SOCIAL: '自动游戏已停止，因为已达停止上限。',
 	AUTOPLAY_MSG_SINGLE_WIN_LIMIT_TITLE_SOCIAL: '已达单次奖励上限',
@@ -651,16 +628,14 @@ const zh = {
 		'Wild 符号可替代除 Bonus 外的所有付费符号。Wild 在 5 连时支付 225× 旋转。 During Free Spins, each Wild receives a multiplier of ×2, ×5, ×10, ×20, or ×50. If more than one Wild lands on a winning winline, their multipliers are added together and applied to that line prize.',
 	GAME_INFO_BET_MODES_TITLE_SOCIAL: '游戏模式',
 	GAME_INFO_LEGAL_BODY_SOCIAL:
-		'故障将使所有奖励和游戏无效。需要稳定的网络连接。如发生断线，请重新加载游戏以完成未结束的回合。预期回报基于大量游戏计算。游戏画面不代表任何物理设备，仅供参考。奖励根据从 Remote Game Server 收到的金额结算，而非浏览器内事件。TM 和 © 2026 Stake Engine.',
+		'故障将使所有奖励和游戏无效。需要稳定的网络连接。如发生断线，请重新加载游戏以完成未结束的回合。预期回报基于大量游戏计算。游戏画面不代表任何物理设备，仅供参考。奖励根据从 Remote Game Server 收到的金额结算，而非浏览器内事件。TM 和 © 2026 Engine.',
 	REPLAY_BASE_BET_SOCIAL: '基础游玩',
 	REPLAY_COST_MULTIPLIER_SOCIAL: '功能倍数',
 	REPLAY_PAYOUT_MULTIPLIER_SOCIAL: '最终倍数',
 	REPLAY_TITLE_SOCIAL: '游玩回放',
 	REPLAY_TOTAL_BET_COST_SOCIAL: '总游玩金额',
 	REPLAY_TOTAL_WIN_SOCIAL: '总奖励',
-	REPLAY_DISCLAIMER_SOCIAL:
-		'这是上一轮游玩的回放。不会开始任何新的游玩。',
-
+	REPLAY_DISCLAIMER_SOCIAL: '这是上一轮游玩的回放。不会开始任何新的游玩。',
 };
 
 export default {
