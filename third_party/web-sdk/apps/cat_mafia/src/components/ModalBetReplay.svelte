@@ -57,13 +57,31 @@
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 
 		const mode = summary.modeKey || stateUrlDerived.mode();
+		const payload = summary.payload as Record<string, unknown>;
+		// Payload is already a normalized round from Authenticate; still accept
+		// nested `{ round }` / `events` so Replay Again stays resilient.
+		const round =
+			Array.isArray(payload.state) || Array.isArray(payload.events)
+				? payload
+				: payload.round && typeof payload.round === 'object'
+					? (payload.round as Record<string, unknown>)
+					: null;
+		const state = (round?.state ?? round?.events) as unknown[] | undefined;
+		if (!round || !Array.isArray(state) || state.length === 0) {
+			stateModal.modal = { name: 'error', error: 'replay missing state' };
+			return;
+		}
+
 		// Re-apply stake before play — wins scale from wageredBetAmount.
 		stateBet.betAmount = summary.baseBet;
 		stateBet.wageredBetAmount = summary.baseBet;
 		if (summary.currency) stateBet.currency = summary.currency;
+		// Full playback from the first book event (`event: '0'`), active so
+		// resumeGame → playBet runs the complete outcome for this URL event.
 		// @ts-ignore — resume machine expects a bet-shaped payload
 		stateBet.betToResume = {
-			...(summary.payload as object),
+			...round,
+			state,
 			event: '0',
 			active: true,
 			mode,

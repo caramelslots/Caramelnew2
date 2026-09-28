@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, type Snippet } from 'svelte';
 
-	import { requestAuthenticate, requestReplay } from 'rgs-requests';
+	import { requestAuthenticate, requestReplay, normalizeReplayRound } from 'rgs-requests';
 	import {
 		stateUrlDerived,
 		stateBet,
@@ -193,18 +193,14 @@
 
 	const handleReplay = async () => {
 		const modeKey = stateUrlDerived.mode();
-		const baseBet = fromApiAmount(stateUrlDerived.amount()) || 0;
-		// Replay has no wallet/balance — do NOT use setBetAmount (it snaps to
-		// affordable ladder levels and collapses to min when balance is 0).
-		stateBet.betAmount = baseBet;
-		stateBet.wageredBetAmount = baseBet;
-		if (modeKey) stateBet.activeBetModeKey = modeKey;
+		const urlAmount = fromApiAmount(stateUrlDerived.amount()) || 0;
 
 		// Optional launch params: currency / lang must not break replay.
 		// Social coins: XGC→GC, XSC/XEC→SC (never `$`).
 		const urlCurrency = stateUrlDerived.currency();
 		if (urlCurrency) stateBet.currency = urlCurrency;
 
+		// `?event=` is the RGS event id in the path — fetch that exact round.
 		const data = await requestReplay({
 			rgsUrl: stateUrlDerived.rgsUrl(),
 			game: stateUrlDerived.game(),
@@ -214,13 +210,29 @@
 			language: stateUrlDerived.lang(),
 		});
 
-		if (!data || (data as { error?: unknown }).error) {
+		// Canonical response is `{ round: { state, ... }, status }`. Flatten so
+		// resumeBet → playBet receives the same shape as authenticate/play.
+		const round = normalizeReplayRound(data);
+		if (!round) {
 			stateModal.modal = { name: 'error', error: data ?? 'replay failed' };
 			return;
 		}
 
+		const resolvedMode = modeKey || String(round.mode ?? '');
+		if (resolvedMode) stateBet.activeBetModeKey = resolvedMode;
+
+		// Prefer URL `?amount=`; fall back to the round’s original stake.
+		const roundAmount =
+			typeof round.amount === 'number' ? fromApiAmount(round.amount) : 0;
+		const baseBet = urlAmount || roundAmount || 0;
+		// Replay has no wallet/balance — do NOT use setBetAmount (it snaps to
+		// affordable ladder levels and collapses to min when balance is 0).
+		stateBet.betAmount = baseBet;
+		stateBet.wageredBetAmount = baseBet;
+
 		const payloadCurrency = String(
-			(data as { currency?: string }).currency ??
+			(round as { currency?: string }).currency ??
+				(data as { currency?: string }).currency ??
 				(data as { balance?: { currency?: string } }).balance?.currency ??
 				'',
 		)
@@ -230,27 +242,29 @@
 		stateBet.currency = resolvedCurrency;
 
 		const modeMeta =
-			stateMeta.betModeMeta?.[modeKey] ??
-			stateMeta.betModeMeta?.[modeKey.toUpperCase()] ??
-			stateMeta.betModeMeta?.[modeKey.toLowerCase()];
+			stateMeta.betModeMeta?.[resolvedMode] ??
+			stateMeta.betModeMeta?.[resolvedMode.toUpperCase()] ??
+			stateMeta.betModeMeta?.[resolvedMode.toLowerCase()];
 		const costMultiplier =
 			typeof modeMeta?.costMultiplier === 'number' && modeMeta.costMultiplier > 0
 				? modeMeta.costMultiplier
 				: 1;
 		const payoutMultiplier =
-			typeof (data as { payoutMultiplier?: number }).payoutMultiplier === 'number'
-				? (data as { payoutMultiplier: number }).payoutMultiplier
-				: 0;
-		const payoutRaw = (data as { payout?: number }).payout;
+			typeof round.payoutMultiplier === 'number' ? round.payoutMultiplier : 0;
+		// Prefer the RGS payout integer (API micros) — never invent from float maths.
 		const totalWin =
-			typeof payoutRaw === 'number'
-				? fromApiAmount(payoutRaw)
-				: baseBet * payoutMultiplier;
+			typeof round.payout === 'number'
+				? fromApiAmount(round.payout)
+				: typeof round.amount === 'number' && payoutMultiplier
+					? fromApiAmount(Math.round(round.amount * payoutMultiplier))
+					: baseBet * payoutMultiplier;
 
 		// Do not auto-start — show Bet Replay summary first (checklist + screenshot UX).
+		// Store the normalized round (with `state`) so Start Replay / Replay Again
+		// play the exact event stream for this URL’s `event` id.
 		stateUi.replay = {
-			payload: data,
-			modeKey,
+			payload: round,
+			modeKey: resolvedMode,
 			currency: resolvedCurrency,
 			baseBet,
 			costMultiplier,

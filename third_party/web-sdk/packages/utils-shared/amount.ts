@@ -4,8 +4,9 @@ import { API_AMOUNT_MULTIPLIER, BOOK_AMOUNT_MULTIPLIER } from 'constants-shared/
 import { stateBet } from 'state-shared';
 
 /**
- * Stake-supported currency display metadata (aligned with ts-client helpers).
- * Decimals drive Balance / Bet display; wins still allow up to API precision.
+ * Currency display metadata — symbol / placement only.
+ * Amount precision is never taken from `decimals`: we always show what the
+ * API micro value contains (dynamic fraction digits).
  */
 const CURRENCY_META: Record<
 	string,
@@ -51,6 +52,11 @@ const CURRENCY_META: Record<
 	XEC: { symbol: 'SC', decimals: 2, symbolAfter: true },
 };
 
+const SOCIAL_CURRENCY_CODES = new Set(['XGC', 'XSC', 'XEC']);
+
+export const isSocialCurrencyCode = (currency?: string) =>
+	SOCIAL_CURRENCY_CODES.has(String(currency ?? '').trim().toUpperCase());
+
 /** API amounts are micro-units (1_000_000 = 1.00). Wins may need up to this many fraction digits. */
 export const WIN_AMOUNT_MAX_FRACTION_DIGITS = Math.round(Math.log10(API_AMOUNT_MULTIPLIER));
 
@@ -65,6 +71,7 @@ export const getCurrencyMeta = (currency = stateBet.currency) => {
 	return CURRENCY_META[code] ?? { symbol: code || String(currency ?? ''), decimals: 2, symbolAfter: true };
 };
 
+/** @deprecated Prefer dynamic API precision — kept for callers that still read meta.decimals. */
 export const getCurrencyDisplayDecimals = (currency = stateBet.currency) =>
 	getCurrencyMeta(currency).decimals;
 
@@ -101,34 +108,57 @@ export const bookEventAmountToNormalisedAmount = (bookEventAmount: number) => {
 	return winMicro / API_AMOUNT_MULTIPLIER;
 };
 
+const wholeFormatters = new Map<string, Intl.NumberFormat>();
+const formatWholeGrouped = (whole: number, locale: string) => {
+	let formatter = wholeFormatters.get(locale);
+	if (!formatter) {
+		formatter = new Intl.NumberFormat(locale, {
+			useGrouping: true,
+			maximumFractionDigits: 0,
+			numberingSystem: 'latn',
+		});
+		wholeFormatters.set(locale, formatter);
+	}
+	return formatter.format(whole);
+};
+
 /**
- * How many fraction digits are needed to display `value` without truncating.
- * Matches `formatWinAmountBody(..., { significant: true })` digit count.
+ * Amount body from API micros — same for every currency.
+ * Precision = whatever is in the value: 10 → "10", 19.5 → "19.5", 0.075 → "0.075".
+ * No fixed currency decimals. No rounding away fractional micros.
+ */
+export const formatAmountBody = (value: number) => {
+	const signedMicros = toApiMicros(value);
+	const sign = signedMicros < 0 ? '-' : '';
+	const micros = Math.abs(signedMicros);
+	const whole = Math.floor(micros / API_AMOUNT_MULTIPLIER);
+	const fracMicros = micros % API_AMOUNT_MULTIPLIER;
+	const wholeFormatted = formatWholeGrouped(whole, stateI18n.i18n.locale || 'en');
+
+	if (fracMicros === 0) return `${sign}${wholeFormatted}`;
+
+	let fracStr = String(fracMicros).padStart(WIN_AMOUNT_MAX_FRACTION_DIGITS, '0');
+	while (fracStr.endsWith('0')) fracStr = fracStr.slice(0, -1);
+	return `${sign}${wholeFormatted}.${fracStr}`;
+};
+
+/** @deprecated Use formatAmountBody — same dynamic precision for all currencies. */
+export const formatSocialAmountBody = (value: number) => formatAmountBody(value);
+
+/**
+ * How many fraction digits the value actually needs (from API micros).
+ * Used to lock HUD count-up width to the real target — not currency meta.
  */
 export const winAmountSignificantFractionDigits = (
 	value: number,
-	currency = stateBet.currency,
+	_currency = stateBet.currency,
 ): number => {
-	const meta = getCurrencyMeta(currency);
-	const minDigits = Math.max(0, meta.decimals);
 	const micros = Math.abs(toApiMicros(value));
 	const fracMicros = micros % API_AMOUNT_MULTIPLIER;
-
-	if (minDigits <= 0) {
-		if (fracMicros === 0) return 0;
-		let fracStr = String(fracMicros).padStart(WIN_AMOUNT_MAX_FRACTION_DIGITS, '0');
-		while (fracStr.endsWith('0')) fracStr = fracStr.slice(0, -1);
-		return fracStr.length;
-	}
-
-	const currencyUnit = 10 ** (WIN_AMOUNT_MAX_FRACTION_DIGITS - minDigits);
-	if (fracMicros % currencyUnit === 0) return minDigits;
-
+	if (fracMicros === 0) return 0;
 	let fracStr = String(fracMicros).padStart(WIN_AMOUNT_MAX_FRACTION_DIGITS, '0');
-	while (fracStr.length > minDigits && fracStr.endsWith('0')) {
-		fracStr = fracStr.slice(0, -1);
-	}
-	return Math.max(minDigits, fracStr.length);
+	while (fracStr.endsWith('0')) fracStr = fracStr.slice(0, -1);
+	return fracStr.length;
 };
 
 /**
@@ -152,96 +182,35 @@ export const resolveWinCountUpFormat = (
 	return { fractionDigits, canAnimate: steps >= 2 };
 };
 
-const formatPlainAmount = (value: number, decimals: number) =>
-	value.toLocaleString(stateI18n.i18n.locale || 'en', {
-		minimumFractionDigits: decimals,
-		maximumFractionDigits: decimals,
-		useGrouping: true,
-	});
-
-const wholeFormatters = new Map<string, Intl.NumberFormat>();
-const formatWholeGrouped = (whole: number, locale: string) => {
-	let formatter = wholeFormatters.get(locale);
-	if (!formatter) {
-		formatter = new Intl.NumberFormat(locale, {
-			useGrouping: true,
-			maximumFractionDigits: 0,
-			numberingSystem: 'latn',
-		});
-		wholeFormatters.set(locale, formatter);
-	}
-	return formatter.format(whole);
-};
-
 /**
- * Win amount body (no currency symbol).
- * Default: currency decimals (USD → 2, `$16.30`) so HUD count-up width stays stable.
- * Pass `fractionDigits` to force a fixed length (e.g. DEV QA for 3dp count-up).
- * Pass `significant: true` to keep real sub-cent precision (`$0.0025`, `$12.3456`)
- * without padding trailing zeros beyond currency decimals.
+ * Amount body (no currency symbol).
+ * Default / significant: dynamic API precision for every currency.
+ * `fractionDigits` only locks width during HUD count-up (pads to that many digits).
  */
 export const formatWinAmountBody = (
 	value: number,
-	currency = stateBet.currency,
+	_currency = stateBet.currency,
 	options?: { fractionDigits?: number; significant?: boolean },
 ) => {
-	const meta = getCurrencyMeta(currency);
-	const minDigits = Math.max(0, meta.decimals);
+	if (options?.fractionDigits == null) {
+		return formatAmountBody(value);
+	}
+
+	const digits = Math.max(
+		0,
+		Math.min(WIN_AMOUNT_MAX_FRACTION_DIGITS, Math.floor(options.fractionDigits)),
+	);
 	const signedMicros = toApiMicros(value);
 	const sign = signedMicros < 0 ? '-' : '';
 	const micros = Math.abs(signedMicros);
 	let whole = Math.floor(micros / API_AMOUNT_MULTIPLIER);
 	const fracMicros = micros % API_AMOUNT_MULTIPLIER;
-
-	const wholeFormatted = () => formatWholeGrouped(whole, stateI18n.i18n.locale || 'en');
-
-	// Significant mode: currency decimals by default; expand only when the
-	// amount truly has sub-currency precision (payline / board win labels).
-	if (options?.significant && options?.fractionDigits == null) {
-		if (meta.decimals <= 0) {
-			if (fracMicros === 0) return `${sign}${wholeFormatted()}`;
-		}
-
-		const currencyUnit =
-			minDigits > 0 ? 10 ** (WIN_AMOUNT_MAX_FRACTION_DIGITS - minDigits) : API_AMOUNT_MULTIPLIER;
-		const hasSubCurrencyPrecision = minDigits > 0 && fracMicros % currencyUnit !== 0;
-
-		let fracStr: string;
-		if (!hasSubCurrencyPrecision) {
-			if (minDigits <= 0) {
-				if (fracMicros >= API_AMOUNT_MULTIPLIER / 2) whole += 1;
-				return `${sign}${wholeFormatted()}`;
-			}
-			let roundedFrac = Math.round(fracMicros / currencyUnit);
-			const fracMod = 10 ** minDigits;
-			if (roundedFrac >= fracMod) {
-				roundedFrac = 0;
-				whole += 1;
-			}
-			fracStr = String(roundedFrac).padStart(minDigits, '0');
-		} else {
-			fracStr = String(fracMicros).padStart(WIN_AMOUNT_MAX_FRACTION_DIGITS, '0');
-			while (fracStr.length > minDigits && fracStr.endsWith('0')) {
-				fracStr = fracStr.slice(0, -1);
-			}
-		}
-
-		if (!fracStr) return `${sign}${wholeFormatted()}`;
-		return `${sign}${wholeFormatted()}.${fracStr}`;
-	}
-
-	const digits =
-		options?.fractionDigits != null
-			? Math.max(0, Math.min(WIN_AMOUNT_MAX_FRACTION_DIGITS, Math.floor(options.fractionDigits)))
-			: minDigits;
+	const wholeFormatted = formatWholeGrouped(whole, stateI18n.i18n.locale || 'en');
 
 	if (digits <= 0) {
-		// JPY / XGC: whole units only (sub-unit dust rounds away via toApiMicros).
-		if (fracMicros >= API_AMOUNT_MULTIPLIER / 2) whole += 1;
-		return `${sign}${wholeFormatted()}`;
+		return `${sign}${wholeFormatted}`;
 	}
 
-	// Unit for requested decimals in micros (USD 2dp → 10_000; 3dp → 1_000).
 	const digitUnit = 10 ** (WIN_AMOUNT_MAX_FRACTION_DIGITS - digits);
 	let roundedFrac = Math.round(fracMicros / digitUnit);
 	const fracMod = 10 ** digits;
@@ -250,54 +219,32 @@ export const formatWinAmountBody = (
 		whole += 1;
 	}
 	const fracStr = String(roundedFrac).padStart(digits, '0');
-
-	return `${sign}${wholeFormatted()}.${fracStr}`;
+	return `${sign}${formatWholeGrouped(whole, stateI18n.i18n.locale || 'en')}.${fracStr}`;
 };
 
-/** Balance / bet / costs — currency-native decimals (XGC=0, USD=2, JPY=0, …). */
-export const numberToCurrencyString = (value: number) => {
-	const amount = quantizeToApiAmount(value);
-	const meta = getCurrencyMeta();
-	const formatted = formatPlainAmount(amount, meta.decimals);
-
+const withCurrencySymbol = (body: string, currency?: string) => {
+	const meta = getCurrencyMeta(currency);
 	if (meta.symbolAfter) {
-		return `${formatted} ${meta.symbol}`;
+		return `${body} ${meta.symbol}`;
 	}
-	return `${meta.symbol}${formatted}`;
+	return `${meta.symbol}${body}`;
 };
 
-/** Win displays — currency-native decimals (same stability as Balance/Bet). */
-export const numberToWinCurrencyString = (value: number) => {
-	const meta = getCurrencyMeta();
-	const formatted = formatWinAmountBody(value);
+/** Balance / bet / costs — dynamic precision (what the value has, all currencies). */
+export const numberToCurrencyString = (value: number) =>
+	withCurrencySymbol(formatAmountBody(value));
 
-	if (meta.symbolAfter) {
-		return `${formatted} ${meta.symbol}`;
-	}
-	return `${meta.symbol}${formatted}`;
-};
+/** Win displays — same dynamic precision for every currency. */
+export const numberToWinCurrencyString = (value: number) =>
+	withCurrencySymbol(formatAmountBody(value));
 
-/**
- * Bet replay currency amounts (base bet, total cost, win) — currency decimals
- * by default; expand only when the amount has real sub-cent precision
- * (e.g. $0.01, 1.23 SC, 0.075 SC, 10 GC).
- */
+/** Bet replay amounts — same dynamic precision for every currency. */
 export const numberToReplayCurrencyString = (
 	value: number,
 	currency: string = stateBet.currency,
-) => {
-	const meta = getCurrencyMeta(currency);
-	const formatted = formatWinAmountBody(value, currency, {
-		significant: true,
-	});
+) => withCurrencySymbol(formatAmountBody(value), currency);
 
-	if (meta.symbolAfter) {
-		return `${formatted} ${meta.symbol}`;
-	}
-	return `${meta.symbol}${formatted}`;
-};
-
-/** Bet replay total win/prize — same significant precision as replay costs. */
+/** Bet replay total win/prize — same as other replay amounts. */
 export const numberToReplayWinCurrencyString = (
 	value: number,
 	currency: string = stateBet.currency,

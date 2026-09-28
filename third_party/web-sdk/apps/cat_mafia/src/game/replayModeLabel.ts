@@ -32,13 +32,9 @@ export const lookupReplayCostMultiplier = (modeKey: string): number => {
 	return typeof cost === 'number' && cost > 0 ? cost : 1;
 };
 
-/** Cost / payout multipliers — extra fraction digits only when needed (1x, 1.5x, 0.075x). */
+/** Cost / payout multipliers — exact value as received, no rounding. */
 export const formatReplayMultiplier = (value: number): string => {
 	if (!Number.isFinite(value)) return '0x';
-	const formatted = value.toLocaleString('en', {
-		minimumFractionDigits: 0,
-		maximumFractionDigits: 6,
-		useGrouping: false,
-	});
-	return `${formatted}x`;
+	// Avoid toLocaleString rounding — print the number’s own decimal representation.
+	return `${String(value)}x`;
 };

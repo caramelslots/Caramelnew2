@@ -93,3 +93,46 @@ export const requestReplay = async (options: {
 
 	return data;
 };
+
+/**
+ * Playable bet shape extracted from a `/bet/replay/...` response.
+ * Matches `authenticate` / `play` `round` so resumeBet → playBet can consume it.
+ */
+export type ReplayRound = {
+	state: unknown[];
+	amount?: number;
+	payout?: number;
+	payoutMultiplier?: number;
+	mode?: string;
+	event?: string | null;
+	active?: boolean;
+	roundID?: number | string;
+	[key: string]: unknown;
+};
+
+/**
+ * Stake Engine replay responses are usually `{ round: { state, ... }, status }`.
+ * Some docs/clients flatten `state` / `payoutMultiplier` at the top level, and
+ * math books may expose the stream as `events` instead of `state`.
+ */
+export const normalizeReplayRound = (data: unknown): ReplayRound | null => {
+	if (!data || typeof data !== 'object') return null;
+	const root = data as Record<string, unknown>;
+	if (root.error) return null;
+
+	const status = root.status as { statusCode?: string } | undefined;
+	if (status?.statusCode && status.statusCode !== 'SUCCESS') return null;
+
+	const candidate =
+		root.round && typeof root.round === 'object'
+			? (root.round as Record<string, unknown>)
+			: root;
+
+	const stateRaw = candidate.state ?? candidate.events;
+	if (!Array.isArray(stateRaw) || stateRaw.length === 0) return null;
+
+	return {
+		...candidate,
+		state: stateRaw as unknown[],
+	};
+};
