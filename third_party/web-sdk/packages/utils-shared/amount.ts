@@ -124,8 +124,9 @@ const formatWholeGrouped = (whole: number, locale: string) => {
 
 /**
  * Amount body from API micros — same for every currency.
- * Precision = whatever is in the value: 10 → "10", 19.5 → "19.5", 0.075 → "0.075".
- * No fixed currency decimals. No rounding away fractional micros.
+ * At least 2 fraction digits; expand when the value has more
+ * (10 → "10.00", 19.5 → "19.50", 0.075 → "0.075").
+ * No rounding away fractional micros.
  */
 export const formatAmountBody = (value: number) => {
 	const signedMicros = toApiMicros(value);
@@ -135,10 +136,14 @@ export const formatAmountBody = (value: number) => {
 	const fracMicros = micros % API_AMOUNT_MULTIPLIER;
 	const wholeFormatted = formatWholeGrouped(whole, stateI18n.i18n.locale || 'en');
 
-	if (fracMicros === 0) return `${sign}${wholeFormatted}`;
-
+	const minFractionDigits = 2;
 	let fracStr = String(fracMicros).padStart(WIN_AMOUNT_MAX_FRACTION_DIGITS, '0');
-	while (fracStr.endsWith('0')) fracStr = fracStr.slice(0, -1);
+	while (fracStr.length > minFractionDigits && fracStr.endsWith('0')) {
+		fracStr = fracStr.slice(0, -1);
+	}
+	if (fracStr.length < minFractionDigits) {
+		fracStr = fracStr.padEnd(minFractionDigits, '0');
+	}
 	return `${sign}${wholeFormatted}.${fracStr}`;
 };
 
@@ -147,18 +152,21 @@ export const formatSocialAmountBody = (value: number) => formatAmountBody(value)
 
 /**
  * How many fraction digits the value actually needs (from API micros).
- * Used to lock HUD count-up width to the real target — not currency meta.
+ * At least 2 — matches formatAmountBody. Used to lock HUD count-up width.
  */
 export const winAmountSignificantFractionDigits = (
 	value: number,
 	_currency = stateBet.currency,
 ): number => {
+	const minFractionDigits = 2;
 	const micros = Math.abs(toApiMicros(value));
 	const fracMicros = micros % API_AMOUNT_MULTIPLIER;
-	if (fracMicros === 0) return 0;
+	if (fracMicros === 0) return minFractionDigits;
 	let fracStr = String(fracMicros).padStart(WIN_AMOUNT_MAX_FRACTION_DIGITS, '0');
-	while (fracStr.endsWith('0')) fracStr = fracStr.slice(0, -1);
-	return fracStr.length;
+	while (fracStr.length > minFractionDigits && fracStr.endsWith('0')) {
+		fracStr = fracStr.slice(0, -1);
+	}
+	return Math.max(minFractionDigits, fracStr.length);
 };
 
 /**
