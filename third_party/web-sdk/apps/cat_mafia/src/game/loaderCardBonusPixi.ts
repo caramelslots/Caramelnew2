@@ -403,14 +403,15 @@ const destroyIfIdle = () => {
 	spine = undefined;
 	spineReady = undefined;
 	tickerBound = false;
-	currentSpine?.destroy({ children: true });
+	currentSpine?.destroy({ children: true, texture: false });
 	hostObserver?.disconnect();
 	hostObserver = undefined;
 	if (resizeListening) {
 		window.removeEventListener('resize', requestSync);
 		resizeListening = false;
 	}
-	if (current) current.destroy(true);
+	// Destroy the overlay view/renderer only — do not touch shared Assets textures.
+	if (current) current.destroy(true, { children: true, texture: false });
 };
 
 /** Tear down overlay WebGL after Continue / unmount. Does not unload slot atlas B. */

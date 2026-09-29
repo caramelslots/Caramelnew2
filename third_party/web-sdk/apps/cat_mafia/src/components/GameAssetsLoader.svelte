@@ -116,12 +116,9 @@
 				context.stateApp.loadingProgress = ENTRY_PROGRESS_CAP;
 
 				context.stateApp.loaded = true;
-				// After first layout frame: GPU upload then drop ImageBitmap/HTMLImage twins.
-				requestAnimationFrame(() => {
-					requestAnimationFrame(() => {
-						releaseCpuTextureTwins(context.stateApp.pixiApplication ?? null);
-					});
-				});
+				// Do NOT releaseCpuTextureTwins here — board/bg spines often have not
+				// drawn yet under the loader HTML. Dropping ImageBitmap before the
+				// first GPU upload leaves solid-black street/board after Continue.
 			})();
 		}
 	});
@@ -142,6 +139,10 @@
 				shouldSkipDeferredTirMerge() ? omitParkedTirAssets(batch4Assets) : batch4Assets,
 			);
 			downscalePhoneSpineAtlases();
+			// Wait until the slot has painted a few frames, then drop CPU twins.
+			await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+			await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+			await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 			releaseCpuTextureTwins(context.stateApp.pixiApplication ?? null);
 			gameEntrance.postLiftAssetsReady = true;
 			if (!shouldSkipDeferredTirMerge()) void ensureTargetBoardSpritesInPixi('six');
