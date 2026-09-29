@@ -1,16 +1,11 @@
 import { preloadHtmlImages } from './preloadHtmlImages';
 import assets from './assets';
 import { GAME_INFO_SYMBOL_IMAGE_URLS, GAME_INFO_SYMBOL_IMAGES } from './gameInfoSymbols';
-import {
-	MASCOT_SPINE_IMAGE_URL,
-	MASCOT_SPINE_GRAY_IMAGE_URL,
-	startMascotSpinePreload,
-} from './mascotHtmlSpine';
-import { COIN_PAW_SPINE_WEBP_URL } from './coinHtmlSpine';
-import { SPIN_BUTTON_SPINE_WEBP_URL, startSpinButtonSpinePreload } from './spinButtonHtmlSpine';
+import { startMascotSpinePreload } from './mascotHtmlSpine';
+import { startSpinButtonSpinePreload } from './spinButtonHtmlSpine';
 import { preloadBuyBonusSpines } from './buyBonusHtmlSpine';
-import { startTargetBoardPreload, TARGET_BOARD_SPRITES } from './targetBoardAssets';
-import { startShotBulletPreload, SHOT_BULLET_SPRITES } from './shotBulletAssets';
+import { startTargetBoardPreload } from './targetBoardAssets';
+import { startShotBulletPreload } from './shotBulletAssets';
 
 const UI_ASSET_BASE = `${import.meta.env.BASE_URL}assets/sprites/ui`;
 
@@ -80,11 +75,6 @@ export const FEATURE_TOGGLE_ASSETS = {
 	menuCatIcon: GAME_INFO_SYMBOL_IMAGES.B,
 } as const;
 
-/** Full-body Cat Mafia mascot (board right) — Spine atlas image. */
-export const MASCOT_ASSETS = {
-	body: MASCOT_SPINE_IMAGE_URL,
-} as const;
-
 const dedupeUrls = (urls: readonly string[]) => [...new Set(urls)];
 
 /** FreeSpinIntro HTML layers (`assets/sprites/fsCong/`) + desktop FS spinboard. */
@@ -97,7 +87,11 @@ export const FS_CONG_IMAGE_URLS = dedupeUrls([
 	assets.fsLeftCounterSpinboard.src,
 ]);
 
-/** HUD + settings + autoplay + buy bonus sprites shown soon after entering the game. */
+/**
+ * HUD chrome only during loading idle.
+ * Spine / Pixi atlases stay on fetch-only warmers (no HTML Image decode).
+ * Settings / autoplay / buy-bonus boards preload when those panels open.
+ */
 export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	HUD_ASSETS.info,
 	HUD_ASSETS.menu,
@@ -105,13 +99,26 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	HUD_ASSETS.betPlus,
 	HUD_ASSETS.spin1,
 	HUD_ASSETS.spin2,
-	SPIN_BUTTON_SPINE_WEBP_URL,
 	HUD_ASSETS.autoplay,
 	HUD_ASSETS.autoplayMobile,
 	HUD_ASSETS.turbo1,
 	HUD_ASSETS.turbo2,
 	HUD_ASSETS.turbo3,
 	HUD_ASSETS.buyBonusPanel,
+	FEATURE_TOGGLE_ASSETS.menuCatIcon,
+	...GAME_INFO_SYMBOL_IMAGE_URLS,
+]);
+
+/** HTML board / cards / buttons only — Spine webps stay on the fetch-only path. */
+export const BUY_BONUS_FLOW_IMAGE_URLS = dedupeUrls([
+	BUY_BONUS_ASSETS.menuBg,
+	BUY_BONUS_ASSETS.confirmBg,
+	BUY_BONUS_ASSETS.buyButtonBg,
+	BUY_BONUS_ASSETS.cancelButtonBg,
+	BUY_BONUS_ASSETS.confirmButtonBg,
+]);
+
+export const SETTINGS_PANEL_IMAGE_URLS = dedupeUrls([
 	SETTINGS_ASSETS.bg,
 	SETTINGS_ASSETS.soundOff,
 	SETTINGS_ASSETS.soundLow,
@@ -125,37 +132,30 @@ export const LOADING_IDLE_UI_IMAGE_URLS = dedupeUrls([
 	SETTINGS_ASSETS.musicOn,
 	SETTINGS_ASSETS.musicOff,
 	...SETTINGS_TURBO_URLS,
+	AUTOSPIN_ASSETS.pawIcon,
+	AUTOSPIN_ASSETS.close,
+]);
+
+export const AUTOPLAY_PANEL_IMAGE_URLS = dedupeUrls([
 	AUTOSPIN_ASSETS.bg,
 	AUTOSPIN_ASSETS.close,
 	AUTOSPIN_ASSETS.pawIcon,
 	AUTOSPIN_ASSETS.bonusIcon,
 	AUTOSPIN_ASSETS.startButton,
+	SETTINGS_ASSETS.sliderEmpty,
+	SETTINGS_ASSETS.sliderFull,
+	SETTINGS_ASSETS.sliderKnob,
+	HUD_ASSETS.betMinus,
+	HUD_ASSETS.betPlus,
 	FEATURE_TOGGLE_ASSETS.menuCatIcon,
-	MASCOT_ASSETS.body,
-	MASCOT_SPINE_GRAY_IMAGE_URL,
-	COIN_PAW_SPINE_WEBP_URL,
-	TARGET_BOARD_SPRITES.background,
-	TARGET_BOARD_SPRITES.background9,
-	TARGET_BOARD_SPRITES.front,
-	TARGET_BOARD_SPRITES.back,
-	TARGET_BOARD_SPRITES.holder,
-	SHOT_BULLET_SPRITES.bullet,
-	...GAME_INFO_SYMBOL_IMAGE_URLS,
-]);
-
-/** HTML board / cards / buttons only — Spine webps stay on the fetch-only path. */
-export const BUY_BONUS_FLOW_IMAGE_URLS = dedupeUrls([
-	BUY_BONUS_ASSETS.menuBg,
-	BUY_BONUS_ASSETS.confirmBg,
-	BUY_BONUS_ASSETS.buyButtonBg,
-	BUY_BONUS_ASSETS.cancelButtonBg,
-	BUY_BONUS_ASSETS.confirmButtonBg,
 ]);
 
 let buyBonusFlowPreload: Promise<void> | null = null;
 let fsCongPreload: Promise<void> | null = null;
+let settingsPanelPreload: Promise<void> | null = null;
+let autoplayPanelPreload: Promise<void> | null = null;
 
-/** Board, buttons, and card spines — HTTP cache only, when the user opens Buy Bonus. */
+/** Board, buttons, and card spines — when the user opens Buy Bonus. */
 export const startBuyBonusFlowPreload = (): Promise<void> => {
 	if (buyBonusFlowPreload) return buyBonusFlowPreload;
 
@@ -165,6 +165,24 @@ export const startBuyBonusFlowPreload = (): Promise<void> => {
 	]).then(() => undefined);
 
 	return buyBonusFlowPreload;
+};
+
+/** Settings panel board + chrome — on menu open. */
+export const startSettingsPanelPreload = (): Promise<void> => {
+	if (settingsPanelPreload) return settingsPanelPreload;
+	settingsPanelPreload = preloadHtmlImages(SETTINGS_PANEL_IMAGE_URLS, {
+		concurrency: 4,
+	}).then(() => undefined);
+	return settingsPanelPreload;
+};
+
+/** Autoplay panel board + sliders — on modal open. */
+export const startAutoplayPanelPreload = (): Promise<void> => {
+	if (autoplayPanelPreload) return autoplayPanelPreload;
+	autoplayPanelPreload = preloadHtmlImages(AUTOPLAY_PANEL_IMAGE_URLS, {
+		concurrency: 4,
+	}).then(() => undefined);
+	return autoplayPanelPreload;
 };
 
 /** Decode fsCong HTML layers after a bought bonus / just before FS or duel intro. */
@@ -187,13 +205,11 @@ const LOADING_IDLE_UI_PRIORITY = [
 	HUD_ASSETS.turbo1,
 	HUD_ASSETS.turbo2,
 	HUD_ASSETS.turbo3,
-	SETTINGS_ASSETS.bg,
-	AUTOSPIN_ASSETS.bg,
 ] as const;
 
 let loadingIdleUiPreloadStarted = false;
 
-/** Warm HUD/settings/autoplay HTML sprites during the loading-screen idle window. */
+/** Warm HUD HTML sprites + fetch-only Spine/Pixi during the loading-screen idle window. */
 export const startLoadingIdleUiPreload = () => {
 	if (loadingIdleUiPreloadStarted) return;
 	loadingIdleUiPreloadStarted = true;

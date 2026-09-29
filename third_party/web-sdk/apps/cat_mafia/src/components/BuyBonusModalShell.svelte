@@ -25,10 +25,13 @@
 	const mountBuyPanel = $derived(showBuyPanel || showConfirmPanel);
 	const mountConfirmPanel = $derived(showConfirmPanel);
 
-	/** Show shell as soon as buy flow opens — board HTML must not wait on spine warm. */
-	const isVisible = $derived(showBuyPanel || showConfirmPanel || showDuelPickPanel);
-	/** Dim while first open waits for spines. */
+	/** Dim while spines flush; reveal board + cards together when ready. */
 	const isPreparingBuy = $derived(showBuyPanel && !gameEntrance.buyBonusPanelReady);
+	const isVisible = $derived(
+		(showBuyPanel && gameEntrance.buyBonusPanelReady) ||
+			showConfirmPanel ||
+			showDuelPickPanel,
+	);
 
 	/** Opening buy flow after a feature must drop the eviction lock or warm never returns. */
 	$effect(() => {
@@ -58,10 +61,10 @@
 	>
 		<div
 			class="panel-slot"
-			class:active={showBuyPanel}
+			class:active={showBuyPanel && gameEntrance.buyBonusPanelReady}
 			class:preparing={isPreparingBuy}
-			aria-hidden={!showBuyPanel}
-			inert={!showBuyPanel}
+			aria-hidden={!showBuyPanel || !gameEntrance.buyBonusPanelReady}
+			inert={!showBuyPanel || !gameEntrance.buyBonusPanelReady}
 			data-buy-bonus-prepare={isPreparingBuy ? '' : undefined}
 		>
 			{#if mountBuyPanel}
@@ -113,14 +116,14 @@
 			-webkit-backdrop-filter: blur(30px);
 		}
 
-		/* Instant feedback on tap: dim while spines flush, then reveal cards. */
+		/* Tap feedback: dim only while spines flush — board stays hidden until ready. */
 		&.preparing:not(.active) {
 			opacity: 1;
 			visibility: visible;
 			pointer-events: auto;
 			background: rgba(0, 0, 0, 0.5);
-			backdrop-filter: none;
-			-webkit-backdrop-filter: none;
+			backdrop-filter: blur(30px);
+			-webkit-backdrop-filter: blur(30px);
 		}
 
 		/* Park card WebGL off-screen after lift — keep layout size, no paint. */

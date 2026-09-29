@@ -2,11 +2,12 @@
 """Import designer buy-bonus card spines into runtime 4.2 Pixi assets.
 
 Sources:
-  designer_assets/cat_bonus_final  → normal (idle_bonus)
-  designer_assets/wild_render      → super  (idle_bonus)
-  designer_assets/export_cat&dog   → duel   (idle_duel)
+  designer_assets/normal         → normal (idle_bonus, full cat+frame)
+  designer_assets/wild_render    → super  (idle_bonus)
+  designer_assets/export_cat&dog → duel   (idle_duel)
 
 Kept separate from board symbol / Super Wild curtain copies.
+After import, run downscaleSpineAtlases.py --max-side 1024 on buyBonus/normal.
 """
 
 from __future__ import annotations
@@ -23,10 +24,11 @@ OUT_ROOT = APP_ROOT / "static" / "assets" / "spines" / "buyBonus"
 JOBS = (
     {
         "name": "normal",
-        "src": REPO_ROOT / "designer_assets" / "cat_bonus_final",
+        "src": REPO_ROOT / "designer_assets" / "normal",
         "json_name": "mascot_cat.json",
         "atlas_name": "mascot_cat.atlas",
-        "pngs": ("mascot_cat.png", "mascot_cat_2.png"),
+        # Designer export already ships WebP atlas pages.
+        "webps": ("mascot_cat.webp", "mascot_cat_2.webp"),
     },
     {
         "name": "super",
@@ -151,18 +153,35 @@ def copy_pngs(src_dir: Path, out_dir: Path, pngs: tuple[str, ...]) -> None:
         shutil.copy2(src_png, out_dir / png_name)
 
 
+def copy_webps(src_dir: Path, out_dir: Path, webps: tuple[str, ...]) -> None:
+    import shutil
+
+    for name in webps:
+        src = src_dir / name
+        if not src.is_file():
+            raise FileNotFoundError(src)
+        shutil.copy2(src, out_dir / name)
+
+
 def prepare_job(job: dict) -> None:
     src_dir: Path = job["src"]
     out_dir = OUT_ROOT / job["name"]
     src_json = src_dir / job["json_name"]
     src_atlas = src_dir / job["atlas_name"]
     keep_png = bool(job.get("keep_png"))
+    pngs: tuple[str, ...] = tuple(job.get("pngs") or ())
+    webps: tuple[str, ...] = tuple(job.get("webps") or ())
 
     for path in (src_json, src_atlas):
         if not path.is_file():
             raise FileNotFoundError(path)
 
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Drop previous export leftovers (e.g. bonus_normal.* → mascot_cat.*).
+    for stale in out_dir.iterdir():
+        if stale.is_file():
+            stale.unlink()
 
     data = json.loads(src_json.read_text(encoding="utf-8"))
     skeleton = data.setdefault("skeleton", {})
@@ -178,27 +197,34 @@ def prepare_job(job: dict) -> None:
     if keep_png:
         atlas_text = strip_atlas_pma(atlas_text)
         (out_dir / job["atlas_name"]).write_text(atlas_text, encoding="utf-8")
-        copy_pngs(src_dir, out_dir, job["pngs"])
-        for stale in out_dir.glob("*.webp"):
-            stale.unlink()
+        copy_pngs(src_dir, out_dir, pngs)
+    elif webps:
+        atlas_text = strip_atlas_pma(atlas_text)
+        (out_dir / job["atlas_name"]).write_text(atlas_text, encoding="utf-8")
+        copy_webps(src_dir, out_dir, webps)
     else:
-        for png_name in job["pngs"]:
+        for png_name in pngs:
             atlas_text = atlas_text.replace(png_name, Path(png_name).stem + ".webp")
         atlas_text = strip_atlas_pma(atlas_text)
         (out_dir / job["atlas_name"]).write_text(atlas_text, encoding="utf-8")
-        convert_pngs(src_dir, out_dir, job["pngs"], unpremultiply=had_pma)
+        convert_pngs(src_dir, out_dir, pngs, unpremultiply=had_pma)
 
     print(f"wrote {out_dir}")
     print("  animations:", sorted(data.get("animations", {})))
     if keep_png:
         print("  kept PNG atlas pages (no WebP conversion)")
+    elif webps:
+        print("  copied designer WebP atlas pages")
     elif had_pma:
         print("  stripped pma:true (WebP must stay straight-alpha for spine-pixi)")
 
 
 def main() -> int:
+    only = {a for a in sys.argv[1:] if not a.startswith("-")}
     try:
         for job in JOBS:
+            if only and job["name"] not in only:
+                continue
             prepare_job(job)
     except (FileNotFoundError, subprocess.CalledProcessError) as exc:
         print(exc, file=sys.stderr)

@@ -57,7 +57,7 @@
 			<span class="pixi-mem__total"
 				>~{formatMb(stats.totalBytes)}
 				<span class="pixi-mem__split"
-					>GPU {formatMb(stats.totalBytes - stats.cpuBytes)} · CPU {formatMb(stats.cpuBytes)}</span
+					>GPU {formatMb(stats.totalBytes - stats.cpuBytes - stats.htmlPreloadBytes)} · CPU {formatMb(stats.cpuBytes)} · preload {formatMb(stats.htmlPreloadBytes)}</span
 				></span
 			>
 			<span class="pixi-mem__chevron" aria-hidden="true">{open ? '▾' : '▸'}</span>
@@ -79,6 +79,9 @@
 				</div>
 				<div class="pixi-mem__row">
 					CPU {formatMb(stats.cpuBytes)} · {stats.cpuCount} twin
+				</div>
+				<div class="pixi-mem__row">
+					HTML preload {formatMb(stats.htmlPreloadBytes)} · {stats.htmlPreloadCount} img
 				</div>
 				<button
 					type="button"

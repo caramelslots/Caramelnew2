@@ -15,6 +15,7 @@
 		SETTINGS_ASSETS,
 		SETTINGS_TURBO_URLS,
 		AUTOSPIN_ASSETS,
+		startSettingsPanelPreload,
 	} from '../game/uiHtmlAssetManifest';
 	import { computeDesktopHudLayout, resolveDesktopHudConfig } from '../game/desktopHudLayout';
 	import { computePortraitHudCanvas } from '../game/portraitHudLayout';
@@ -119,6 +120,11 @@
 	const PANEL_OUT_MS = 240;
 
 	const isOpen = $derived(stateUi.menuOpen);
+
+	$effect(() => {
+		if (!isOpen) return;
+		void startSettingsPanelPreload();
+	});
 
 	$effect(() => {
 		if (!isOpen) return;

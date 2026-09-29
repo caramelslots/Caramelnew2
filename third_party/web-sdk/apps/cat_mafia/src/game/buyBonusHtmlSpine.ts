@@ -33,7 +33,8 @@ export const BUY_BONUS_SPINE_VIEWPORTS = {
 } as const satisfies Record<BuyBonusSpineVariant, BuyBonusSpineViewport>;
 
 export const BUY_BONUS_SPINE_ANIM: Record<BuyBonusSpineVariant, string> = {
-	normal: 'idle_bonusnormal',
+	/** Full cat+frame export from designer_assets/normal. */
+	normal: 'idle_bonus',
 	super: 'idle_bonus',
 	duel: 'idle_duel',
 };
@@ -43,9 +44,9 @@ export const BUY_BONUS_SPINE_FILES: Record<
 	{ json: string; atlas: string; images: readonly string[] }
 > = {
 	normal: {
-		json: 'bonus_normal.json',
-		atlas: 'bonus_normal.atlas',
-		images: ['bonus_normal.webp'],
+		json: 'mascot_cat.json',
+		atlas: 'mascot_cat.atlas',
+		images: ['mascot_cat.webp', 'mascot_cat_2.webp'],
 	},
 	super: {
 		json: 'WILD_F_1.json',
@@ -95,7 +96,7 @@ export const BUY_BONUS_SPINE_IMAGE_URLS = (
 
 /** Designer reference stills baked into the export — hide at runtime. */
 export const BUY_BONUS_HIDDEN_SLOTS: Record<BuyBonusSpineVariant, readonly string[]> = {
-	/** New normal export is frame-only — mascot comes from shared white spine. */
+	/** Self-contained cat+frame — no separate white mascot / street still. */
 	normal: [],
 	/** New wild_superbonus export is self-contained — no reference still. */
 	super: [],
@@ -132,7 +133,5 @@ export const preloadBuyBonusSpines = async () => {
 		const files = buyBonusSpineUrls(variant);
 		return [files.atlas, files.skeleton, ...files.images];
 	});
-	const normalMascot = buyBonusNormalMascotUrls();
-	urls.push(normalMascot.atlas, normalMascot.skeleton, ...normalMascot.images);
 	await Promise.all(urls.map((url) => fetch(url).catch(() => null)));
 };

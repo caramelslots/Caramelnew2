@@ -9,6 +9,10 @@ import type { SpinePlayer } from '@esotericsoftware/spine-player';
 import { getBuyBonusSharedPixiApp } from './buyBonusSharedPixi';
 import { getLiveBuyBonusCardSpinePlayers } from './buyBonusCardGpu';
 import { getLiveDuelPickSpinePlayers } from './duelPickGpu';
+import {
+	getHtmlPreloadMemoryEntries,
+	htmlPreloadLabel,
+} from './preloadHtmlImages';
 
 const RGBA_BYTES = 4;
 /** Typical WebGL MSAA sample count when context was created with antialias:true. */
@@ -35,12 +39,17 @@ export type PixiTextureMemoryStats = {
 	framebufferCount: number;
 	/**
 	 * CPU-side decoded copies still held: Pixi TextureSource.resource (ImageBitmap /
-	 * HTMLImage / canvas2d), buy-bonus warmup bitmaps, DOM &lt;img&gt;.
-	 * These sit in system RAM on top of GPU uploads.
+	 * HTMLImage / canvas2d), live DOM &lt;img&gt;.
 	 */
 	cpuBytes: number;
 	cpuCount: number;
-	/** Unique sources across GPU + Cache + HTML Spine + FB + CPU twins */
+	/**
+	 * Images decoded by `preloadHtmlImages` (browser image cache estimate).
+	 * Skips URLs that already appear as live DOM &lt;img&gt; (counted under CPU).
+	 */
+	htmlPreloadBytes: number;
+	htmlPreloadCount: number;
+	/** Unique sources across GPU + Cache + HTML Spine + FB + CPU + HTML preload */
 	totalBytes: number;
 	totalCount: number;
 	top: PixiTextureMemoryEntry[];
@@ -403,6 +412,54 @@ export const estimateCpuTwinMemory = (
 	};
 };
 
+const liveDomImageUrlKeys = (): Set<string> => {
+	const keys = new Set<string>();
+	if (typeof document === 'undefined') return keys;
+	for (const el of document.querySelectorAll('img')) {
+		const img = el as HTMLImageElement;
+		if (!img.complete) continue;
+		const src = img.currentSrc || img.src;
+		if (!src) continue;
+		keys.add(src);
+		keys.add(shortPathLabel(src));
+	}
+	return keys;
+};
+
+/**
+ * Decoded via preloadHtmlImages — estimate of browser image-cache cost.
+ * Omits URLs that are already live DOM &lt;img&gt; (those sit in CPU twin row).
+ */
+export const estimateHtmlPreloadMemory = (
+	limit = 30,
+): { bytes: number; count: number; top: PixiTextureMemoryEntry[] } => {
+	const top: PixiTextureMemoryEntry[] = [];
+	const domKeys = liveDomImageUrlKeys();
+	let bytes = 0;
+	let count = 0;
+	let uid = -5000;
+
+	for (const entry of getHtmlPreloadMemoryEntries()) {
+		if (domKeys.has(entry.url) || domKeys.has(shortPathLabel(entry.url))) continue;
+		bytes += entry.bytes;
+		count += 1;
+		top.push({
+			uid: uid--,
+			label: htmlPreloadLabel(entry.url),
+			bytes: entry.bytes,
+			pixelWidth: entry.pixelWidth,
+			pixelHeight: entry.pixelHeight,
+		});
+	}
+
+	top.sort((a, b) => b.bytes - a.bytes);
+	return {
+		bytes,
+		count,
+		top: Number.isFinite(limit) ? top.slice(0, limit) : top,
+	};
+};
+
 export const estimatePixiTextureMemory = (app?: Application | null): PixiTextureMemoryStats => {
 	const gpuSources = new Map<number, TextureSource>();
 	const cacheSources = new Map<number, TextureSource>();
@@ -432,8 +489,15 @@ export const estimatePixiTextureMemory = (app?: Application | null): PixiTexture
 	]);
 	const framebuffers = estimateWebglFramebufferMemory(app);
 	const cpu = estimateCpuTwinMemory(all.values());
+	const htmlPreload = estimateHtmlPreloadMemory();
 
-	const mergedTop = [...collectTop(all), ...htmlSpine.top, ...framebuffers.top, ...cpu.top]
+	const mergedTop = [
+		...collectTop(all),
+		...htmlSpine.top,
+		...framebuffers.top,
+		...cpu.top,
+		...htmlPreload.top,
+	]
 		.sort((a, b) => b.bytes - a.bytes)
 		.slice(0, 30);
 
@@ -448,8 +512,10 @@ export const estimatePixiTextureMemory = (app?: Application | null): PixiTexture
 		framebufferCount: framebuffers.count,
 		cpuBytes: cpu.bytes,
 		cpuCount: cpu.count,
-		totalBytes: pixiTotal.bytes + htmlSpine.bytes + framebuffers.bytes + cpu.bytes,
-		totalCount: pixiTotal.count + htmlSpine.count + framebuffers.count + cpu.count,
+		htmlPreloadBytes: htmlPreload.bytes,
+		htmlPreloadCount: htmlPreload.count,
+		totalBytes: pixiTotal.bytes + htmlSpine.bytes + framebuffers.bytes + cpu.bytes + htmlPreload.bytes,
+		totalCount: pixiTotal.count + htmlSpine.count + framebuffers.count + cpu.count + htmlPreload.count,
 		top: mergedTop,
 	};
 };
@@ -497,12 +563,14 @@ export const collectPixiTextureMemoryDump = (
 	);
 	const framebuffers = estimateWebglFramebufferMemory(app, Number.POSITIVE_INFINITY);
 	const cpu = estimateCpuTwinMemory(all.values(), Number.POSITIVE_INFINITY);
+	const htmlPreload = estimateHtmlPreloadMemory(Number.POSITIVE_INFINITY);
 
 	const mergedAll = [
 		...collectTop(all, Number.POSITIVE_INFINITY),
 		...htmlSpine.top,
 		...framebuffers.top,
 		...cpu.top,
+		...htmlPreload.top,
 	].sort((a, b) => b.bytes - a.bytes);
 
 	return {
@@ -517,15 +585,19 @@ export const collectPixiTextureMemoryDump = (
 		framebufferCount: framebuffers.count,
 		cpuBytes: cpu.bytes,
 		cpuCount: cpu.count,
-		totalBytes: pixiTotal.bytes + htmlSpine.bytes + framebuffers.bytes + cpu.bytes,
-		totalCount: pixiTotal.count + htmlSpine.count + framebuffers.count + cpu.count,
+		htmlPreloadBytes: htmlPreload.bytes,
+		htmlPreloadCount: htmlPreload.count,
+		totalBytes:
+			pixiTotal.bytes + htmlSpine.bytes + framebuffers.bytes + cpu.bytes + htmlPreload.bytes,
+		totalCount:
+			pixiTotal.count + htmlSpine.count + framebuffers.count + cpu.count + htmlPreload.count,
 		top: mergedAll.slice(0, 30),
 		all: mergedAll,
 		cacheKeys,
 	};
 };
 
-/** Log full GPU/Cache/HTML-Spine snapshot — for before/after compare in DevTools. */
+/** Log full snapshot — for before/after compare in DevTools. */
 export const dumpPixiTextureMemoryToConsole = (app?: Application | null) => {
 	const dump = collectPixiTextureMemoryDump(app);
 	const lines = dump.all.map(
@@ -536,7 +608,7 @@ export const dumpPixiTextureMemoryToConsole = (app?: Application | null) => {
 		`[RAM dump] ${dump.at} · total ~${formatMb(dump.totalBytes)} (${dump.totalCount} surfaces)`,
 	);
 	console.log(
-		`Pixi GPU ${formatMb(dump.gpuBytes)} (${dump.gpuCount}) · Cache ${formatMb(dump.cacheBytes)} (${dump.cacheCount}) · HTML Spine ${formatMb(dump.htmlSpineBytes)} (${dump.htmlSpineCount}) · FB ${formatMb(dump.framebufferBytes)} (${dump.framebufferCount}) · CPU ${formatMb(dump.cpuBytes)} (${dump.cpuCount})`,
+		`Pixi GPU ${formatMb(dump.gpuBytes)} (${dump.gpuCount}) · Cache ${formatMb(dump.cacheBytes)} (${dump.cacheCount}) · HTML Spine ${formatMb(dump.htmlSpineBytes)} (${dump.htmlSpineCount}) · FB ${formatMb(dump.framebufferBytes)} (${dump.framebufferCount}) · CPU ${formatMb(dump.cpuBytes)} (${dump.cpuCount}) · HTML preload ${formatMb(dump.htmlPreloadBytes)} (${dump.htmlPreloadCount})`,
 	);
 	console.log(lines.join('\n'));
 	console.log(`Cache keys (${dump.cacheKeys.length}):`, dump.cacheKeys);

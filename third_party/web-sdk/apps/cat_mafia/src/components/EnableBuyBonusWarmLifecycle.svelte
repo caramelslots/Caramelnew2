@@ -1,9 +1,7 @@
 <!--
-	HTTP-warm buy-bonus assets as soon as content shows (don't wait for lift end).
-	Overlay WebGL + atlases load on first menu open only (no base warm-park).
-
+	Buy-bonus HTML/Spine preload runs on menu open (shell / HUD tap), not on base entry.
 	After a bought feature, `evictBuyBonusForFeature` sets a reactive lock on gameEntrance.
-	Once basegame settles, clear it so the next tap can open Buy Bonus again.
+	Once basegame settles, clear it and re-warm HTTP so the next tap feels instant.
 -->
 <script lang="ts">
 	import { startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
@@ -40,18 +38,14 @@
 		void gameEntrance.buyBonusFeatureEvictLock;
 
 		if (!gameEntrance.showContent) return;
-
-		// Post-feature: lock blocks open — HTTP can warm under lock; clear soon.
-		if (gameEntrance.buyBonusFeatureEvictLock) {
-			if (!isSettledBasegame()) return;
-			void startBuyBonusFlowPreload();
-			const timer = setTimeout(() => {
-				clearBuyBonusFeatureEvictLock();
-				void startBuyBonusFlowPreload();
-			}, buyBonusWarmAfterFeatureMs());
-			return () => clearTimeout(timer);
-		}
+		if (!gameEntrance.buyBonusFeatureEvictLock) return;
+		if (!isSettledBasegame()) return;
 
 		void startBuyBonusFlowPreload();
+		const timer = setTimeout(() => {
+			clearBuyBonusFeatureEvictLock();
+			void startBuyBonusFlowPreload();
+		}, buyBonusWarmAfterFeatureMs());
+		return () => clearTimeout(timer);
 	});
 </script>

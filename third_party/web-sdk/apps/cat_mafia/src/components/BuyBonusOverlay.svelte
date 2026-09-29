@@ -187,9 +187,9 @@
 	class:portrait={isPortrait}
 	class:popout-l={isPopout}
 	class:popout-s={isPopoutSmall}
-	class:ready={isOpen}
+	class:ready={isOpen && gameEntrance.buyBonusPanelReady}
 	data-test="buy-bonus-overlay"
-	aria-hidden={!isOpen}
+	aria-hidden={!isOpen || !gameEntrance.buyBonusPanelReady}
 >
 	<img class="panel-bg" src={bgUrl} alt="" draggable="false" loading="eager" />
 

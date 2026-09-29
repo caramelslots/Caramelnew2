@@ -24,7 +24,12 @@
 		launchCashStacksAutoplay,
 	} from '../game/autoplay';
 	import { computeAutoplayPanelAnchor } from '../game/popupHudLayout';
-	import { AUTOSPIN_ASSETS, HUD_ASSETS, SETTINGS_ASSETS } from '../game/uiHtmlAssetManifest';
+	import {
+		AUTOSPIN_ASSETS,
+		HUD_ASSETS,
+		SETTINGS_ASSETS,
+		startAutoplayPanelPreload,
+	} from '../game/uiHtmlAssetManifest';
 
 	const context = getContext();
 	const { stateLayoutDerived } = getContextLayout();
@@ -53,6 +58,11 @@
 
 	$effect(() => {
 		if (isOpen) stateUi.menuOpen = false;
+	});
+
+	$effect(() => {
+		if (!isOpen) return;
+		void startAutoplayPanelPreload();
 	});
 
 	const featureTogglesDisabled = $derived(!context.stateXstateDerived.isIdle());
