@@ -14,8 +14,6 @@ import {
 import { Assets, Cache, Texture } from 'pixi.js';
 
 import { clearHtmlPreloadMemoryRegistry } from './preloadHtmlImages';
-import { releaseCpuTwinsForUrls } from './releaseCpuTextureTwins';
-import { stateApp } from './stateApp';
 
 const SPRITE_BASE = `${import.meta.env.BASE_URL}assets/sprites/targetBoard`;
 
@@ -386,13 +384,6 @@ export const ensureTargetBoardSpritesInPixi = async (mode: TirCabinetMode = 'six
 	}
 	// Drop decoded HTML preload row for the other plate (Dev RAM + stale registry).
 	clearHtmlPreloadMemoryRegistry([otherBg]);
-	// After a couple paints, drop CPU twins for this cabinet only.
-	const twinUrls = [...urls];
-	requestAnimationFrame(() => {
-		requestAnimationFrame(() => {
-			releaseCpuTwinsForUrls(twinUrls, stateApp.pixiApplication ?? null);
-		});
-	});
 };
 
 /** HTTP warm URLs for one cabinet mode (+ shared seats + flip spine). Never both BGs. */

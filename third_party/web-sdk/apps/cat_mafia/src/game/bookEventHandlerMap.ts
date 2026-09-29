@@ -1923,14 +1923,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		// Snap win/activate off the unmasked above-rails layer before scroll —
 		// otherwise celebrate cells leak above the desk mask (base does this in
-		// clearWinSpotlight / reveal). Cancel the delayed spotlight clear so it
-		// cannot fire mid-spin.
-		if (spotlightClearTimer !== null) {
-			clearTimeout(spotlightClearTimer);
-			spotlightClearTimer = null;
-		}
-		clearDuelSideWinPresentation(side);
-		stateDuel.winSpotlightSide = null;
+		// clearWinSpotlight / reveal). Clear both desks: cancelling only the
+		// delayed timer left the idle desk looping win after paylines vanished.
+		clearWinSpotlight();
 		// Keep sticky curtains through the spin (same as FS). Clearing them left a
 		// blank column: board SW stays alpha-0 via sticky while Spine is gone.
 		const stickyReelSet = new Set(Object.keys(sticky).map(Number));
@@ -2062,7 +2057,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const totalWin = bookEvent.totalWin ?? bookEvent.spinWin;
 		const bankStarted = startDuelBankCountUpFromNext(bookEvents, bookEvent, side);
 		if (wins.length > 0 && totalWin > 0) {
-			eventEmitter.broadcast({ type: 'paylineClearAll', side });
+			// Drop phase-1 lines AND celebrate together — paylineClearAll alone
+			// left win/`activate` looping until phase-2 lines drew.
+			clearDuelSideWinPresentation(side);
 			// Same budget as normal duel wins — never gate the next desk on full spines.
 			await playDuelWinLines(side, wins, totalWin);
 		} else if (bankStarted) {
