@@ -17,7 +17,6 @@
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { waitForLoaderStage } from '../game/loaderAssetPipeline.svelte';
 	import { downscalePhoneSpineAtlases } from '../game/phoneSpineAtlasDownscale';
-	import { releaseCpuTextureTwins } from '../game/releaseCpuTextureTwins';
 	import { ensureTargetBoardSpritesInPixi } from '../game/targetBoardAssets';
 	import { omitParkedTirAssets, parkTirGpuForDeferredLoad, shouldSkipDeferredTirMerge } from '../game/tirGpuMemory';
 	import { BATCH4_DEFERRED_KEYS } from '../game/featureGpuMemory';
@@ -139,11 +138,7 @@
 				shouldSkipDeferredTirMerge() ? omitParkedTirAssets(batch4Assets) : batch4Assets,
 			);
 			downscalePhoneSpineAtlases();
-			// Wait until the slot has painted a few frames, then drop CPU twins.
-			await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-			await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-			await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-			releaseCpuTextureTwins(context.stateApp.pixiApplication ?? null);
+			// CPU twin release is disabled for main app (texture GC + spin WebPs).
 			gameEntrance.postLiftAssetsReady = true;
 			if (!shouldSkipDeferredTirMerge()) void ensureTargetBoardSpritesInPixi('six');
 		})();

@@ -24,7 +24,6 @@ import { isBuyBonusCardSpineGpuLive, releaseAllBuyBonusCardSpinePlayers } from '
 import { isHtmlWebglPaused } from './htmlWebglPause';
 import { isBuyBonusFlowOpen } from './isAnyMenuOpen';
 import { isPhoneForAtlasDownscale } from './phoneSpineAtlasDownscale';
-import { releaseCpuTextureTwins } from './releaseCpuTextureTwins';
 import { gameEntrance } from './gameEntrance.svelte';
 import {
 	getMascotPixiTransform,
@@ -695,7 +694,9 @@ export const whenBuyBonusSpinesReady = async (
 	variants: readonly BuyBonusSpineVariant[] = MENU_VARIANTS,
 ) => {
 	await Promise.all(variants.map((variant) => loadSpine(variant)));
-	if (app) releaseCpuTextureTwins(app);
+	// Do not releaseCpuTextureTwins here — even scoped to overlay managedTextures
+	// is unnecessary (purge on teardown), and a Cache sweep historically blanked
+	// main-game bigwin / transition / fonts / FS barrel.
 };
 
 export const areBuyBonusSpinesReady = (variants: readonly BuyBonusSpineVariant[] = MENU_VARIANTS) =>
