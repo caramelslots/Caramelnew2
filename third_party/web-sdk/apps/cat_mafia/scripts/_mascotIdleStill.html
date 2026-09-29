@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>mascot idle still</title>
+		<link rel="stylesheet" href="/spine-player.css" />
+		<style>
+			html,
+			body {
+				margin: 0;
+				background: transparent;
+				overflow: hidden;
+			}
+			#host {
+				width: 800px;
+				height: 800px;
+			}
+			.spine-player,
+			.spine-player-canvas {
+				width: 100% !important;
+				height: 100% !important;
+				background: transparent !important;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="host"></div>
+		<script src="/spine-player.js"></script>
+		<script>
+			const params = new URLSearchParams(location.search);
+			const species = params.get('species') === 'dog' ? 'dog' : 'cat';
+			const isDog = species === 'dog';
+			const viewport = isDog
+				? { x: -760, y: -1080, width: 1560, height: 2020, padLeft: '8%', padRight: '6%', padTop: '10%', padBottom: '4%' }
+				: { x: -1700, y: -200, width: 3200, height: 2900, padLeft: '8%', padRight: '6%', padTop: '10%', padBottom: '4%' };
+			const jsonUrl = isDog
+				? '/assets/spines/mascot/dog/mascot_dog.json'
+				: '/assets/spines/mascot/white/mascot_cat.json';
+			const atlasUrl = isDog
+				? '/assets/spines/mascot/dog/mascot_dog.atlas'
+				: '/assets/spines/mascot/white/mascot_cat.atlas';
+
+			window.__stillReady = false;
+			window.__stillError = null;
+
+			new spine.SpinePlayer('host', {
+				jsonUrl,
+				atlasUrl,
+				animation: 'idle',
+				showControls: false,
+				showLoading: false,
+				backgroundColor: '#00000000',
+				premultipliedAlpha: false,
+				alpha: true,
+				defaultMix: 0,
+				viewport,
+				success: (player) => {
+					try {
+						// SpinePlayer canvas is Y-down; keep default orientation for still export.
+						if (!isDog) {
+							try {
+								player.skeleton.setAttachment('smile', null);
+							} catch {
+								player.skeleton.findSlot('smile')?.setAttachment(null);
+							}
+						}
+						const entry = player.animationState.setAnimation(0, 'idle', false);
+						entry.trackTime = 0;
+						player.animationState.timeScale = 0;
+						let frames = 0;
+						const tick = () => {
+							frames += 1;
+							if (frames >= 8) {
+								window.__stillReady = true;
+								return;
+							}
+							requestAnimationFrame(tick);
+						};
+						requestAnimationFrame(tick);
+					} catch (error) {
+						window.__stillError = String(error && error.stack ? error.stack : error);
+					}
+				},
+				error: (_player, msg) => {
+					window.__stillError = String(msg);
+				},
+			});
+		</script>
+	</body>
+</html>

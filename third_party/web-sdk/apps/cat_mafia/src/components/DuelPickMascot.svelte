@@ -1,11 +1,11 @@
 <!--
-	Static mascot art for the Duel side-pick screen (no SpinePlayer / WebGL).
-	Same host classes as the old spine path so card framing CSS keeps working.
+	Static mascot still for Duel side-pick (first frame of idle — no Spine / Pixi).
+	Generated via scripts/_mascotIdleStill.html → pick_mascot_*_idle.webp.
 -->
 <script lang="ts">
 	import {
-		DUEL_CAT_FACE_AVATAR_SRC,
-		DUEL_DOG_FACE_AVATAR_SRC,
+		DUEL_PICK_MASCOT_CAT_IDLE_SRC,
+		DUEL_PICK_MASCOT_DOG_IDLE_SRC,
 	} from '../game/duelAssets';
 
 	type Props = {
@@ -23,7 +23,7 @@
 	const species = $derived(props.species ?? 'cat');
 	const fill = $derived(props.fill === true);
 	const src = $derived(
-		species === 'dog' ? DUEL_DOG_FACE_AVATAR_SRC : DUEL_CAT_FACE_AVATAR_SRC,
+		species === 'dog' ? DUEL_PICK_MASCOT_DOG_IDLE_SRC : DUEL_PICK_MASCOT_CAT_IDLE_SRC,
 	);
 </script>
 

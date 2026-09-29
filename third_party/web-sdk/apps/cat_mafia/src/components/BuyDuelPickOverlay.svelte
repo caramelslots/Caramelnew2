@@ -507,7 +507,8 @@
 	}
 
 	.pick-card-mascot.mascot-cat :global(.pick-spine.fill) {
-		transform: scale(1.2) translateY(2%);
+		/* Still AABB is left-heavy — nudge so the body sits on the card center. */
+		transform: scale(1.35) translate(10%, 2%);
 		transform-origin: 50% 55%;
 	}
 
@@ -884,7 +885,7 @@
 		}
 
 		.pick-card-mascot.mascot-cat :global(.pick-spine.fill) {
-			transform: scale(1.15) translateY(2%);
+			transform: scale(1.28) translate(10%, 2%);
 		}
 	}
 
