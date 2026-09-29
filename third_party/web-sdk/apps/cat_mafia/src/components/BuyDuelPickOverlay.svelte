@@ -501,13 +501,14 @@
 	}
 
 	.pick-card-mascot.mascot-dog :global(.pick-spine.fill) {
-		transform: scale(1.28) translateY(5%);
-		transform-origin: 50% 78%;
+		/* Face still — milder zoom than the old full-body Spine idle. */
+		transform: scale(1.15) translateY(2%);
+		transform-origin: 50% 55%;
 	}
 
 	.pick-card-mascot.mascot-cat :global(.pick-spine.fill) {
-		transform: scale(1.72) translateY(6%);
-		transform-origin: 50% 70%;
+		transform: scale(1.2) translateY(2%);
+		transform-origin: 50% 55%;
 	}
 
 	.pick-card-frame {
@@ -879,11 +880,11 @@
 		}
 
 		.pick-card-mascot.mascot-dog :global(.pick-spine.fill) {
-			transform: scale(1.2) translateY(4%);
+			transform: scale(1.12) translateY(2%);
 		}
 
 		.pick-card-mascot.mascot-cat :global(.pick-spine.fill) {
-			transform: scale(1.55) translateY(5%);
+			transform: scale(1.15) translateY(2%);
 		}
 	}
 

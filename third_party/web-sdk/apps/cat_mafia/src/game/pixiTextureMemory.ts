@@ -6,10 +6,13 @@
 import { Cache, Texture, TextureSource, type Application } from 'pixi.js';
 import type { SpinePlayer } from '@esotericsoftware/spine-player';
 
+import { getBuyBonusSharedPixiApp } from './buyBonusSharedPixi';
 import { getLiveBuyBonusCardSpinePlayers } from './buyBonusCardGpu';
 import { getLiveDuelPickSpinePlayers } from './duelPickGpu';
 
 const RGBA_BYTES = 4;
+/** Typical WebGL MSAA sample count when context was created with antialias:true. */
+const MSAA_SAMPLES = 4;
 
 export type PixiTextureMemoryEntry = {
 	uid: number;
@@ -24,10 +27,20 @@ export type PixiTextureMemoryStats = {
 	gpuCount: number;
 	cacheBytes: number;
 	cacheCount: number;
-	/** HTML SpinePlayer canvases + atlas pages (buy-bonus / duel-pick). */
+	/** HTML SpinePlayer atlas pages (buy-bonus / duel-pick). Canvas FBs are in framebuffer*. */
 	htmlSpineBytes: number;
 	htmlSpineCount: number;
-	/** Unique sources across GPU + Assets.Cache + HTML Spine */
+	/** Live WebGL backbuffers (main / buyBonus / other canvases), MSAA-aware. */
+	framebufferBytes: number;
+	framebufferCount: number;
+	/**
+	 * CPU-side decoded copies still held: Pixi TextureSource.resource (ImageBitmap /
+	 * HTMLImage / canvas2d), buy-bonus warmup bitmaps, DOM &lt;img&gt;.
+	 * These sit in system RAM on top of GPU uploads.
+	 */
+	cpuBytes: number;
+	cpuCount: number;
+	/** Unique sources across GPU + Cache + HTML Spine + FB + CPU twins */
 	totalBytes: number;
 	totalCount: number;
 	top: PixiTextureMemoryEntry[];
@@ -161,8 +174,8 @@ const shortPathLabel = (path: string) =>
 	path.replace(/^.*\//, '').slice(0, 28) || path.slice(0, 28);
 
 /**
- * Estimate HTML SpinePlayer GPU: framebuffer (canvas) + atlas page textures.
- * Buy-bonus / duel-pick sit outside Pixi managedTextures — without this the RAM bar misses them.
+ * Estimate HTML SpinePlayer atlas page textures (not canvas FBs — those go through
+ * estimateWebglFramebufferMemory so MSAA / main / buyBonus share one FB line).
  */
 export const estimateHtmlSpinePlayerMemory = (
 	players: readonly SpinePlayer[],
@@ -188,11 +201,6 @@ export const estimateHtmlSpinePlayerMemory = (
 	};
 
 	for (const player of players) {
-		const canvas = player.canvas;
-		if (canvas && canvas.width > 1 && canvas.height > 1) {
-			push('html-spine:canvas', canvas.width | 0, canvas.height | 0);
-		}
-
 		const manager = player.assetManager as HtmlSpineAssetManager | null;
 		const assets = manager?.assets;
 		if (!assets || typeof assets !== 'object') continue;
@@ -208,6 +216,182 @@ export const estimateHtmlSpinePlayerMemory = (
 				const label = `html:${shortPathLabel(page.name || path)}`;
 				push(label, w, h);
 			}
+		}
+	}
+
+	top.sort((a, b) => b.bytes - a.bytes);
+	return {
+		bytes,
+		count,
+		top: Number.isFinite(limit) ? top.slice(0, limit) : top,
+	};
+};
+
+const webglSampleCount = (canvas: HTMLCanvasElement): number => {
+	try {
+		const gl =
+			(canvas.getContext('webgl2') as WebGL2RenderingContext | null) ||
+			(canvas.getContext('webgl') as WebGLRenderingContext | null);
+		if (!gl) return 0;
+		return gl.getContextAttributes()?.antialias ? MSAA_SAMPLES : 1;
+	} catch {
+		return 0;
+	}
+};
+
+/** Color + depth (×samples) + resolve color when MSAA is on. */
+export const estimateFramebufferBytes = (pixelWidth: number, pixelHeight: number, samples: number) => {
+	const w = pixelWidth | 0;
+	const h = pixelHeight | 0;
+	const s = Math.max(1, samples | 0);
+	if (w <= 0 || h <= 0) return 0;
+	const color = w * h * RGBA_BYTES * s;
+	const depth = w * h * RGBA_BYTES * s;
+	const resolve = s > 1 ? w * h * RGBA_BYTES : 0;
+	return color + depth + resolve;
+};
+
+const canvasHostLabel = (canvas: HTMLCanvasElement): string => {
+	const host =
+		canvas.closest(
+			'.spin-button-spine, .mascot-spine, .spine-host, .shot-host, .flip-shift, .coin-paw-spine-hub, .player',
+		) ?? canvas.parentElement;
+	const cls =
+		host instanceof HTMLElement
+			? [...host.classList].find((c) => c && c !== 'spine-player') || host.classList[0]
+			: '';
+	return cls ? `fb:${cls.slice(0, 22)}` : 'fb:webgl';
+};
+
+/**
+ * Live WebGL backbuffers — main Pixi, buy-bonus host, spin/mascot/etc.
+ * These dominate Jetsam far more than atlas TextureSources at maxResolution.
+ */
+export const estimateWebglFramebufferMemory = (
+	app?: Application | null,
+	limit = 30,
+): { bytes: number; count: number; top: PixiTextureMemoryEntry[] } => {
+	const top: PixiTextureMemoryEntry[] = [];
+	const seen = new WeakSet<HTMLCanvasElement>();
+	let bytes = 0;
+	let count = 0;
+	let uid = -9000;
+
+	const push = (label: string, canvas: HTMLCanvasElement | null | undefined) => {
+		if (!canvas || seen.has(canvas)) return;
+		const w = canvas.width | 0;
+		const h = canvas.height | 0;
+		if (w <= 1 || h <= 1) return;
+		const samples = webglSampleCount(canvas);
+		if (samples <= 0) return;
+		seen.add(canvas);
+		const b = estimateFramebufferBytes(w, h, samples);
+		if (b <= 0) return;
+		bytes += b;
+		count += 1;
+		top.push({
+			uid: uid--,
+			label: samples > 1 ? `${label}×${samples}AA` : label,
+			bytes: b,
+			pixelWidth: w,
+			pixelHeight: h,
+		});
+	};
+
+	push('fb:main', (app?.canvas as HTMLCanvasElement | undefined) ?? null);
+	push(
+		'fb:buyBonus',
+		(getBuyBonusSharedPixiApp()?.canvas as HTMLCanvasElement | undefined) ?? null,
+	);
+
+	if (typeof document !== 'undefined') {
+		for (const el of document.querySelectorAll('canvas')) {
+			push(canvasHostLabel(el as HTMLCanvasElement), el as HTMLCanvasElement);
+		}
+	}
+
+	top.sort((a, b) => b.bytes - a.bytes);
+	return {
+		bytes,
+		count,
+		top: Number.isFinite(limit) ? top.slice(0, limit) : top,
+	};
+};
+
+type CpuResourceKind = 'bitmap' | 'img' | 'canvas2d';
+
+const cpuResourceInfo = (
+	resource: unknown,
+): { w: number; h: number; kind: CpuResourceKind } | null => {
+	try {
+		if (typeof ImageBitmap !== 'undefined' && resource instanceof ImageBitmap) {
+			const w = resource.width | 0;
+			const h = resource.height | 0;
+			if (w <= 0 || h <= 0) return null;
+			return { w, h, kind: 'bitmap' };
+		}
+		if (typeof HTMLImageElement !== 'undefined' && resource instanceof HTMLImageElement) {
+			const w = (resource.naturalWidth || resource.width) | 0;
+			const h = (resource.naturalHeight || resource.height) | 0;
+			if (w <= 0 || h <= 0) return null;
+			return { w, h, kind: 'img' };
+		}
+		if (typeof HTMLCanvasElement !== 'undefined' && resource instanceof HTMLCanvasElement) {
+			// WebGL canvases are framebuffers, not CPU decode twins.
+			if (webglSampleCount(resource) > 0) return null;
+			const w = resource.width | 0;
+			const h = resource.height | 0;
+			if (w <= 1 || h <= 1) return null;
+			return { w, h, kind: 'canvas2d' };
+		}
+	} catch {
+		/* closed ImageBitmap / detached */
+	}
+	return null;
+};
+
+/**
+ * CPU RAM still holding decoded pixels after (or before) GPU upload:
+ * Pixi TextureSource.resource twins, buy-bonus warmup ImageBitmaps, live DOM &lt;img&gt;.
+ */
+export const estimateCpuTwinMemory = (
+	sources: Iterable<TextureSource>,
+	limit = 30,
+): { bytes: number; count: number; top: PixiTextureMemoryEntry[] } => {
+	const top: PixiTextureMemoryEntry[] = [];
+	const seen = new WeakSet<object>();
+	let bytes = 0;
+	let count = 0;
+	let uid = -7000;
+
+	const push = (label: string, resource: unknown) => {
+		if (!resource || (typeof resource === 'object' && seen.has(resource as object))) return;
+		const info = cpuResourceInfo(resource);
+		if (!info) return;
+		if (typeof resource === 'object') seen.add(resource as object);
+		const b = info.w * info.h * RGBA_BYTES;
+		bytes += b;
+		count += 1;
+		top.push({
+			uid: uid--,
+			label: `cpu:${info.kind}:${label}`,
+			bytes: b,
+			pixelWidth: info.w,
+			pixelHeight: info.h,
+		});
+	};
+
+	for (const source of sources) {
+		if (!source || source.destroyed) continue;
+		push(sourceLabel(source), source.resource);
+	}
+
+	if (typeof document !== 'undefined') {
+		for (const el of document.querySelectorAll('img')) {
+			const img = el as HTMLImageElement;
+			if (!img.complete) continue;
+			const src = img.currentSrc || img.src || 'dom-img';
+			push(`dom:${shortPathLabel(src)}`, img);
 		}
 	}
 
@@ -246,8 +430,10 @@ export const estimatePixiTextureMemory = (app?: Application | null): PixiTexture
 		...getLiveBuyBonusCardSpinePlayers(),
 		...getLiveDuelPickSpinePlayers(),
 	]);
+	const framebuffers = estimateWebglFramebufferMemory(app);
+	const cpu = estimateCpuTwinMemory(all.values());
 
-	const mergedTop = [...collectTop(all), ...htmlSpine.top]
+	const mergedTop = [...collectTop(all), ...htmlSpine.top, ...framebuffers.top, ...cpu.top]
 		.sort((a, b) => b.bytes - a.bytes)
 		.slice(0, 30);
 
@@ -258,8 +444,12 @@ export const estimatePixiTextureMemory = (app?: Application | null): PixiTexture
 		cacheCount: cached.count,
 		htmlSpineBytes: htmlSpine.bytes,
 		htmlSpineCount: htmlSpine.count,
-		totalBytes: pixiTotal.bytes + htmlSpine.bytes,
-		totalCount: pixiTotal.count + htmlSpine.count,
+		framebufferBytes: framebuffers.bytes,
+		framebufferCount: framebuffers.count,
+		cpuBytes: cpu.bytes,
+		cpuCount: cpu.count,
+		totalBytes: pixiTotal.bytes + htmlSpine.bytes + framebuffers.bytes + cpu.bytes,
+		totalCount: pixiTotal.count + htmlSpine.count + framebuffers.count + cpu.count,
 		top: mergedTop,
 	};
 };
@@ -305,10 +495,15 @@ export const collectPixiTextureMemoryDump = (
 		[...getLiveBuyBonusCardSpinePlayers(), ...getLiveDuelPickSpinePlayers()],
 		Number.POSITIVE_INFINITY,
 	);
+	const framebuffers = estimateWebglFramebufferMemory(app, Number.POSITIVE_INFINITY);
+	const cpu = estimateCpuTwinMemory(all.values(), Number.POSITIVE_INFINITY);
 
-	const mergedAll = [...collectTop(all, Number.POSITIVE_INFINITY), ...htmlSpine.top].sort(
-		(a, b) => b.bytes - a.bytes,
-	);
+	const mergedAll = [
+		...collectTop(all, Number.POSITIVE_INFINITY),
+		...htmlSpine.top,
+		...framebuffers.top,
+		...cpu.top,
+	].sort((a, b) => b.bytes - a.bytes);
 
 	return {
 		at: new Date().toISOString(),
@@ -318,8 +513,12 @@ export const collectPixiTextureMemoryDump = (
 		cacheCount: cached.count,
 		htmlSpineBytes: htmlSpine.bytes,
 		htmlSpineCount: htmlSpine.count,
-		totalBytes: pixiTotal.bytes + htmlSpine.bytes,
-		totalCount: pixiTotal.count + htmlSpine.count,
+		framebufferBytes: framebuffers.bytes,
+		framebufferCount: framebuffers.count,
+		cpuBytes: cpu.bytes,
+		cpuCount: cpu.count,
+		totalBytes: pixiTotal.bytes + htmlSpine.bytes + framebuffers.bytes + cpu.bytes,
+		totalCount: pixiTotal.count + htmlSpine.count + framebuffers.count + cpu.count,
 		top: mergedAll.slice(0, 30),
 		all: mergedAll,
 		cacheKeys,
@@ -337,7 +536,7 @@ export const dumpPixiTextureMemoryToConsole = (app?: Application | null) => {
 		`[RAM dump] ${dump.at} · total ~${formatMb(dump.totalBytes)} (${dump.totalCount} surfaces)`,
 	);
 	console.log(
-		`Pixi GPU ${formatMb(dump.gpuBytes)} (${dump.gpuCount}) · Cache ${formatMb(dump.cacheBytes)} (${dump.cacheCount}) · HTML Spine ${formatMb(dump.htmlSpineBytes)} (${dump.htmlSpineCount})`,
+		`Pixi GPU ${formatMb(dump.gpuBytes)} (${dump.gpuCount}) · Cache ${formatMb(dump.cacheBytes)} (${dump.cacheCount}) · HTML Spine ${formatMb(dump.htmlSpineBytes)} (${dump.htmlSpineCount}) · FB ${formatMb(dump.framebufferBytes)} (${dump.framebufferCount}) · CPU ${formatMb(dump.cpuBytes)} (${dump.cpuCount})`,
 	);
 	console.log(lines.join('\n'));
 	console.log(`Cache keys (${dump.cacheKeys.length}):`, dump.cacheKeys);

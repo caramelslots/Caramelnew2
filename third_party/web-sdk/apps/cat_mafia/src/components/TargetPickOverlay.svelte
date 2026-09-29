@@ -6,13 +6,17 @@
 				chosenIndex: number;
 				awardedFs: number;
 		  }
-		| { type: 'targetPickDismiss' };
+		| { type: 'targetPickDismiss' }
+		/** Slide gallery off-screen, then clear UI (before FS steam — no tir/transition overlap). */
+		| { type: 'targetPickRetreat' };
 </script>
 
 <script lang="ts">
 	/**
 	 * Target pick on base: board slides in → shot → Spine flip.
-	 * Board stays up until steam covers (`targetPickDismiss`); then symbols.
+	 * After the shot settles the gallery stays up until `targetPickRetreat`
+	 * (freeSpinTrigger slides it off, then unloads TIR, then starts steam).
+	 * `targetPickDismiss` still snaps closed when steam covers (safety / DEV).
 	 */
 	import { waitForResolve } from 'utils-shared/wait';
 
@@ -268,14 +272,34 @@
 		await mascotAfterShot;
 		stateGame.mascotPose = 'idle';
 
-		// Keep the gallery up; freeSpinTrigger starts the cloud, and
-		// `targetPickDismiss` snaps to symbols while the screen is covered.
+		// Keep the gallery up; freeSpinTrigger retreats it (slide + unload) before steam.
 		oncomplete();
+	};
+
+	const clearPickUi = () => {
+		stateGame.targetShotFlight = null;
+		stateGame.targetShotFlips = [];
+		stateGame.targetShotFlipLabels = {};
+		stateGame.targetPickSlide = 0;
+		stateGame.targetPickOpen = false;
+		show = false;
+		phase = 'prep';
 	};
 
 	context.eventEmitter.subscribeOnMount({
 		targetPickDismiss: () => {
+			clearPickUi();
+		},
+		targetPickRetreat: async () => {
+			if (!show && !stateGame.targetPickOpen && stateGame.targetPickSlide < 0.001) {
+				clearPickUi();
+				return;
+			}
 			stateGame.targetShotFlight = null;
+			// Same beat as Stage E closeBoard — cabinet slides off, then GPU drop.
+			if (stateGame.targetPickSlide > 0.001 || show) {
+				await tweenSlide(0);
+			}
 			stateGame.targetShotFlips = [];
 			stateGame.targetShotFlipLabels = {};
 			stateGame.targetPickSlide = 0;

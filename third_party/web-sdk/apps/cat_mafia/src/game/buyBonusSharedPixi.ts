@@ -20,10 +20,6 @@ import {
 	buyBonusNormalMascotUrls,
 	buyBonusSpineUrls,
 	getBuyBonusPixiTransform,
-	releaseBuyBonusSpineBitmaps,
-	resumeBuyBonusSpineBitmapDecode,
-	startBuyBonusSpineBitmapDecode,
-	suspendBuyBonusSpineBitmapDecode,
 	type BuyBonusSpineVariant,
 } from './buyBonusHtmlSpine';
 import { isBuyBonusCardSpineGpuLive, releaseAllBuyBonusCardSpinePlayers } from './buyBonusCardGpu';
@@ -31,6 +27,7 @@ import { releaseBuyBonusNormalStreetStill } from './buyBonusNormalStreetStill';
 import { isHtmlWebglPaused } from './htmlWebglPause';
 import { isBuyBonusFlowOpen } from './isAnyMenuOpen';
 import { isPhoneForAtlasDownscale } from './phoneSpineAtlasDownscale';
+import { releaseCpuTextureTwins } from './releaseCpuTextureTwins';
 import { gameEntrance } from './gameEntrance.svelte';
 import {
 	getMascotPixiTransform,
@@ -39,7 +36,6 @@ import {
 	resolveMascotSpineUrl,
 } from './mascotHtmlSpine';
 import { stateDuel } from './stateDuel.svelte';
-import { stateGame } from './stateGame.svelte';
 
 export type BuyBonusCardViewId = number;
 export type BuyBonusPickSpecies = 'cat' | 'dog';
@@ -227,28 +223,25 @@ const prepareBuyBonusSpineDraw = (spine: Spine, variant: BuyBonusSpineVariant) =
 	hideReferenceSlots(spine, variant);
 };
 
-const isTirSceneLive = () =>
-	stateGame.targetPickOpen || stateGame.targetPickSlide > 0.001 || stateGame.drumShootActive;
-
-/** True while buy-bonus may open again soon — keep GL + spines parked. */
-export const shouldKeepBuyBonusWarm = () =>
-	!getFeatureEvictLock() &&
-	stateGame.gameType === 'basegame' &&
-	!stateGame.freeSpinIntroActive &&
-	!stateGame.transitionActive &&
-	!stateDuel.active &&
-	!isTirSceneLive();
+/**
+ * Formerly parked overlay GL + atlases on base for instant open.
+ * Disabled: warm cost (~fb:buyBonus + card atlases + CPU twins) outweighed the UX.
+ * HTTP preload still runs; WebGL loads on first menu open.
+ */
+export const shouldKeepBuyBonusWarm = () => false;
 
 /** Own overlay GL for buy-flow + in-round duel side pick. */
 const canOwnApp = () => {
 	if (isBuyBonusFlowOpen()) return true;
 	if (stateDuel.phase === 'pick') return true;
-	if (stateGame.gameType !== 'basegame' || stateDuel.active) return false;
-	return shouldKeepBuyBonusWarm();
+	return false;
 };
 
 /** After FS cloud — brief pause so outro / tir GPU can drop before overlay WebGL returns. */
 export const buyBonusWarmAfterFeatureMs = () => (isPhoneForAtlasDownscale() ? 900 : 450);
+
+/** Live overlay Application for Dev RAM framebuffer estimates (may be undefined). */
+export const getBuyBonusSharedPixiApp = () => app;
 
 const visualZoom = () =>
 	typeof window === 'undefined' ? 1 : Math.max(1, window.visualViewport?.scale ?? 1);
@@ -270,7 +263,7 @@ const ensureApp = (): Promise<PIXI.Application | undefined> => {
 			width: 4,
 			height: 4,
 			backgroundAlpha: 0,
-			antialias: true,
+			antialias: false,
 			autoDensity: true,
 			preference: 'webgl',
 			powerPreference: 'high-performance',
@@ -675,7 +668,6 @@ const loadSpine = (variant: BuyBonusSpineVariant) => {
 		if (cached && variantTexturesLive(variant)) return cached;
 		if (cached) forceDropSpine(variant);
 		if (!canOwnApp()) return null;
-		void startBuyBonusSpineBitmapDecode();
 		const createdApp = await ensureApp();
 		if (!createdApp) return null;
 		const gen = appGen;
@@ -779,6 +771,7 @@ export const whenBuyBonusSpinesReady = async (
 	variants: readonly BuyBonusSpineVariant[] = MENU_VARIANTS,
 ) => {
 	await Promise.all(variants.map((variant) => loadSpine(variant)));
+	if (app) releaseCpuTextureTwins(app);
 };
 
 export const areBuyBonusSpinesReady = (variants: readonly BuyBonusSpineVariant[] = MENU_VARIANTS) =>
@@ -840,7 +833,6 @@ export const ensureBuyBonusWarm = (): Promise<void> => {
 				}
 				await purgeBuyBonusAssetCache();
 			}
-			resumeBuyBonusSpineBitmapDecode();
 			const createdApp = await ensureApp();
 			if (!createdApp || !canOwnApp()) return;
 			await whenBuyBonusSpinesReady(MENU_VARIANTS);
@@ -869,7 +861,6 @@ export const flushBuyBonusSharedStage = () => {
 
 export const ensureBuyBonusMenuOpen = async () => {
 	setFeatureEvictLock(false);
-	resumeBuyBonusSpineBitmapDecode();
 	cancelScheduledDestroy();
 	const createdApp = await ensureApp();
 	if (!createdApp) return;
@@ -1118,7 +1109,6 @@ const requestSync = () => {
 };
 
 const unloadBuyBonusAssets = async () => {
-	releaseBuyBonusSpineBitmaps();
 	atlasesDirty = true;
 	await withBuyBonusAssets(async () => {
 		if (app || spines.size > 0) return;
@@ -1158,7 +1148,6 @@ const cancelDeferredHeavyTeardown = () => {
  */
 export const evictBuyBonusForFeature = () => {
 	setFeatureEvictLock(true);
-	suspendBuyBonusSpineBitmapDecode();
 	cancelScheduledDestroy();
 	cancelDeferredHeavyTeardown();
 	gameEntrance.buyBonusPanelReady = false;
@@ -1185,7 +1174,6 @@ export const isBuyBonusFeatureEvictLocked = () => getFeatureEvictLock();
 export const clearBuyBonusFeatureEvictLock = () => {
 	cancelDeferredHeavyTeardown();
 	setFeatureEvictLock(false);
-	resumeBuyBonusSpineBitmapDecode();
 };
 
 const teardownSharedStageSync = () => {

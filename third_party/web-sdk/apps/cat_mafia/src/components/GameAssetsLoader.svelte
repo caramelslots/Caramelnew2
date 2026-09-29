@@ -10,12 +10,14 @@
 	import {
 		BATCH4_HTML_ONLY_KEYS,
 		LOADER_ASSET_BATCHES,
+		getBatch2KeysForLocale,
 		getBatch3KeysForLocale,
 		getEntryLoadKeyCount,
 	} from '../game/assetLoadPlan';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { waitForLoaderStage } from '../game/loaderAssetPipeline.svelte';
 	import { downscalePhoneSpineAtlases } from '../game/phoneSpineAtlasDownscale';
+	import { releaseCpuTextureTwins } from '../game/releaseCpuTextureTwins';
 	import { ensureTargetBoardSpritesInPixi } from '../game/targetBoardAssets';
 	import { omitParkedTirAssets, parkTirGpuForDeferredLoad, shouldSkipDeferredTirMerge } from '../game/tirGpuMemory';
 	import { BATCH4_DEFERRED_KEYS } from '../game/featureGpuMemory';
@@ -90,13 +92,12 @@
 				loadedCount = 0;
 				context.stateApp.loadingProgress = 0;
 
-				const [batch1, batch2] = LOADER_ASSET_BATCHES;
+				const [batch1] = LOADER_ASSET_BATCHES;
 
-				// Batch 3 is filtered to the active locale — locale-specific font keys
-				// for other scripts (hi / vi / cjk) are skipped, saving 0.8–3 MB for
-				// most users. LOADER_ASSET_KEY_COUNT still includes all locale font keys
-				// so the progress bar slightly undershoots 100% before we force it below.
+				// Batches 2–3 skip fonts for inactive locales (ru / hi / vi / cjk).
+				// LOADER_ASSET_KEY_COUNT still lists every key for the assets map check.
 				const locale = stateUrlDerived.lang();
+				const batch2 = getBatch2KeysForLocale(locale);
 				const batch3 = getBatch3KeysForLocale(locale);
 				entryTotal = getEntryLoadKeyCount(locale);
 
@@ -115,6 +116,12 @@
 				context.stateApp.loadingProgress = ENTRY_PROGRESS_CAP;
 
 				context.stateApp.loaded = true;
+				// After first layout frame: GPU upload then drop ImageBitmap/HTMLImage twins.
+				requestAnimationFrame(() => {
+					requestAnimationFrame(() => {
+						releaseCpuTextureTwins(context.stateApp.pixiApplication ?? null);
+					});
+				});
 			})();
 		}
 	});
@@ -135,6 +142,7 @@
 				shouldSkipDeferredTirMerge() ? omitParkedTirAssets(batch4Assets) : batch4Assets,
 			);
 			downscalePhoneSpineAtlases();
+			releaseCpuTextureTwins(context.stateApp.pixiApplication ?? null);
 			gameEntrance.postLiftAssetsReady = true;
 			if (!shouldSkipDeferredTirMerge()) void ensureTargetBoardSpritesInPixi('six');
 		})();

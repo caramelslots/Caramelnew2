@@ -83,7 +83,7 @@
 	import { FadeContainer } from 'components-pixi';
 
 	/** Flip to `false` and comment the dev imports + markup below to hide the dev menu. */
-	const SHOW_DEV_UI = false;
+	const SHOW_DEV_UI = true;
 
 	const context = getContext();
 	const phoneTickerMaxFps = isPhoneForAtlasDownscale() ? PHONE_TICKER_MAX_FPS : undefined;
@@ -149,6 +149,7 @@
 >
 	<GameApp
 		maxResolution={3}
+		antialias={false}
 		tuneForMobilePortrait
 		webglOnIosAndroid
 		maxFps={phoneTickerMaxFps}

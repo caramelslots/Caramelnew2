@@ -1,18 +1,15 @@
 <!--
 	HTTP-warm buy-bonus assets as soon as content shows (don't wait for lift end).
-	Card WebGL mounts via BuyBonusModalShell warm-park — SpinePlayer inside each card.
+	Overlay WebGL + atlases load on first menu open only (no base warm-park).
 
 	After a bought feature, `evictBuyBonusForFeature` sets a reactive lock on gameEntrance.
-	Once basegame settles, clear it so `keepBuyWarm` remounts the parked panel *before*
-	the next tap (a plain module `let` never retriggered the shell).
+	Once basegame settles, clear it so the next tap can open Buy Bonus again.
 -->
 <script lang="ts">
 	import { startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
 	import {
 		buyBonusWarmAfterFeatureMs,
 		clearBuyBonusFeatureEvictLock,
-		ensureBuyBonusWarm,
-		shouldKeepBuyBonusWarm,
 	} from '../game/buyBonusSharedPixi';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { stateDuel } from '../game/stateDuel.svelte';
@@ -44,20 +41,17 @@
 
 		if (!gameEntrance.showContent) return;
 
-		// Post-feature: lock blocks keepBuyWarm — HTTP can warm under lock; clear soon so park remounts.
+		// Post-feature: lock blocks open — HTTP can warm under lock; clear soon.
 		if (gameEntrance.buyBonusFeatureEvictLock) {
 			if (!isSettledBasegame()) return;
 			void startBuyBonusFlowPreload();
 			const timer = setTimeout(() => {
 				clearBuyBonusFeatureEvictLock();
 				void startBuyBonusFlowPreload();
-				void ensureBuyBonusWarm();
 			}, buyBonusWarmAfterFeatureMs());
 			return () => clearTimeout(timer);
 		}
 
-		if (!shouldKeepBuyBonusWarm()) return;
 		void startBuyBonusFlowPreload();
-		void ensureBuyBonusWarm();
 	});
 </script>

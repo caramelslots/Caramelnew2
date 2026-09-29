@@ -51,6 +51,17 @@ export const LOADER_BATCH_2_KEYS = [
 ] as const satisfies readonly (keyof typeof assets)[];
 
 /**
+ * Cyrillic bitmap fonts — only needed for `ru`.
+ * Digits / Big Win titles stay on latin prostoi/krutoi/meowfia even for Russian.
+ * Declared in batch 2 for the key-count check; filtered out for non-ru locales.
+ */
+export const RU_FONT_KEYS = [
+	'prostoiFontRu',
+	'prostoiWhiteFontRu',
+	'krutoiFontRu',
+] as const satisfies readonly (keyof typeof assets)[];
+
+/**
  * All six locale-specific font keys. Always declared in batch 3 so the
  * key-count check (loaded batches === Object.keys(assets).length)
  * passes. Only the subset matching the active locale is actually loaded by
@@ -180,6 +191,16 @@ export const collectBatchHttpUrls = (
 };
 
 /**
+ * Returns batch-2 keys filtered to the active locale — skips Cyrillic font
+ * atlases (~6 MB GPU + CPU twins) when the player is not on `ru`.
+ */
+export const getBatch2KeysForLocale = (locale: string): readonly string[] => {
+	if (locale === 'ru') return LOADER_BATCH_2_KEYS;
+	const ruFontSet = new Set<string>(RU_FONT_KEYS);
+	return LOADER_BATCH_2_KEYS.filter((key) => !ruFontSet.has(key));
+};
+
+/**
  * Returns batch-3 keys filtered to the active locale — skips the 4 locale
  * font keys that don't apply (saves 0.8–3 MB of Pixi loads for most users).
  */
@@ -191,7 +212,9 @@ export const getBatch3KeysForLocale = (locale: string): readonly string[] => {
 
 /** Pixi keys that must finish before Continue (excludes batch 4). */
 export const getEntryLoadKeyCount = (locale: string) =>
-	LOADER_BATCH_1_KEYS.length + LOADER_BATCH_2_KEYS.length + getBatch3KeysForLocale(locale).length;
+	LOADER_BATCH_1_KEYS.length +
+	getBatch2KeysForLocale(locale).length +
+	getBatch3KeysForLocale(locale).length;
 
 /** HTTP warm-up during the Stake GIF (before Pixi / auth may be ready). */
 export const collectBatch1EarlyPreloadUrls = (): string[] => {
@@ -202,5 +225,5 @@ export const collectBatch1EarlyPreloadUrls = (): string[] => {
 };
 
 /** HTTP warm-up during Bootstrap (parallel with batch 2 Pixi load). */
-export const collectBatch2EarlyPreloadUrls = (): string[] =>
-	collectBatchHttpUrls(LOADER_BATCH_2_KEYS);
+export const collectBatch2EarlyPreloadUrls = (locale: string): string[] =>
+	collectBatchHttpUrls(getBatch2KeysForLocale(locale));

@@ -20,7 +20,7 @@
 	} from 'state-shared';
 
 	/** Set to true to show DEV / LANG / SOCIAL toggles locally. */
-	const SHOW_DEV_PANEL = false;
+	const SHOW_DEV_PANEL = true;
 
 	import { playBet, playBookEvent, playBookEvents } from '../game/utils';
 	import { eventEmitter } from '../game/eventEmitter';
@@ -428,8 +428,8 @@
 	};
 
 	/**
-	 * Production freeSpinTargetPick path: board stays until steam covers
-	 * (solo preview dismisses immediately after pick).
+	 * Production freeSpinTargetPick path: gallery retreats (slide + unload)
+	 * before steam (solo preview dismisses immediately after pick).
 	 */
 	const playTargetPickPreview = () =>
 		guard(async () => {
