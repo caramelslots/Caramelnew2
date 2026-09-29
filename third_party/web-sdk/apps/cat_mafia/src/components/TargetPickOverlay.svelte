@@ -309,7 +309,7 @@
 		},
 		freeSpinTargetPick: async (event) => {
 			startShotBulletPreload();
-			startTargetBoardPreload();
+			startTargetBoardPreload('six');
 			// Warm in background — do not block the slide (decode hitch felt like lag).
 			void ensureTirPixiInApp(context.stateApp, 'six');
 			targets = event.targets.length === 6 ? [...event.targets] : [...TARGET_BOARD_DEV_VALUES];

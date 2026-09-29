@@ -441,7 +441,7 @@
 	context.eventEmitter.subscribeOnMount({
 		targetShootRound: async (event) => {
 			startShotBulletPreload();
-			startTargetBoardPreload();
+			startTargetBoardPreload('nine');
 			// Load 9-seat only and drop the 6-seat plate before the cabinet slides.
 			await ensureTirPixiInApp(context.stateApp, 'nine');
 			rewardQueue = event.shots.map((s) => s.reward as 0 | 1 | 2 | 3);

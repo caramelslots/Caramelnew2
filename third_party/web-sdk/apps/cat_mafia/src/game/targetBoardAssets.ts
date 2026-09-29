@@ -13,6 +13,10 @@ import {
 } from './constants';
 import { Assets, Cache, Texture } from 'pixi.js';
 
+import { clearHtmlPreloadMemoryRegistry } from './preloadHtmlImages';
+import { releaseCpuTwinsForUrls } from './releaseCpuTextureTwins';
+import { stateApp } from './stateApp';
+
 const SPRITE_BASE = `${import.meta.env.BASE_URL}assets/sprites/targetBoard`;
 
 export const targetBoardSpriteUrl = (file: string) => `${SPRITE_BASE}/${file.replace(/^\//, '')}`;
@@ -380,16 +384,35 @@ export const ensureTargetBoardSpritesInPixi = async (mode: TirCabinetMode = 'six
 	} catch {
 		/* not in cache */
 	}
+	// Drop decoded HTML preload row for the other plate (Dev RAM + stale registry).
+	clearHtmlPreloadMemoryRegistry([otherBg]);
+	// After a couple paints, drop CPU twins for this cabinet only.
+	const twinUrls = [...urls];
+	requestAnimationFrame(() => {
+		requestAnimationFrame(() => {
+			releaseCpuTwinsForUrls(twinUrls, stateApp.pixiApplication ?? null);
+		});
+	});
 };
 
-let targetBoardPreloadStarted = false;
+/** HTTP warm URLs for one cabinet mode (+ shared seats + flip spine). Never both BGs. */
+export const warmUrlsForTirCabinet = (mode: TirCabinetMode = 'six') => [
+	...spriteUrlsForTirCabinet(mode),
+	...TARGET_BOARD_SPINE_ASSET_URLS,
+];
 
-/** Warm target-board sprites + spine during loading idle / before first pick. */
-export const startTargetBoardPreload = () => {
-	if (targetBoardPreloadStarted || typeof window === 'undefined') return;
-	targetBoardPreloadStarted = true;
+const targetBoardPreloadStarted = new Set<TirCabinetMode>();
 
-	const queue = [...TARGET_BOARD_SPRITE_URLS, ...TARGET_BOARD_SPINE_ASSET_URLS];
+/**
+ * Warm HTTP cache for one cabinet mode.
+ * Idle / gallery → `six`; Stage E → `nine` (does not pull the other plate).
+ */
+export const startTargetBoardPreload = (mode: TirCabinetMode = 'six') => {
+	if (typeof window === 'undefined') return;
+	if (targetBoardPreloadStarted.has(mode)) return;
+	targetBoardPreloadStarted.add(mode);
+
+	const queue = [...warmUrlsForTirCabinet(mode)];
 	const workerCount = Math.min(3, queue.length);
 
 	void Promise.all(

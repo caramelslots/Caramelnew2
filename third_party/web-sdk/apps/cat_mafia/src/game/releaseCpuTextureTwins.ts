@@ -6,6 +6,9 @@
  * pages (spin WebPs, transition, fonts, FS barrel). Re-upload then needs
  * `resource`; if we nulled it, those assets render blank.
  *
+ * Safe scoped path: `releaseCpuTwinsForUrls` — only named Asset URLs (tir cabinet /
+ * tir spines). Never walk the whole Cache.
+ *
  * Overlay apps (`{ force: true }`) may release twins — but ONLY from that app's
  * `renderer.texture.managedTextures`. Never walk the global Assets `Cache`:
  * buy-bonus and main share the same Cache, so a Cache sweep blanks transition,
@@ -14,7 +17,8 @@
  * Do not release HTMLCanvasElement resources — CanvasText / feather masks still mutate them.
  */
 
-import { TextureSource, type Application } from 'pixi.js';
+import { Assets, Cache, Texture, TextureSource, type Application } from 'pixi.js';
+import { SpineTexture } from '@esotericsoftware/spine-pixi-v8';
 
 const isCloseableBitmap = (resource: unknown): resource is ImageBitmap =>
 	typeof ImageBitmap !== 'undefined' && resource instanceof ImageBitmap;
@@ -32,6 +36,36 @@ const collectAppManagedSources = (app?: Application | null): TextureSource[] => 
 	)?.texture?.managedTextures;
 	if (!Array.isArray(managed)) return [];
 	return managed.filter((source): source is TextureSource => Boolean(source && !source.destroyed));
+};
+
+const collectSourcesFromAsset = (into: Map<number, TextureSource>, value: unknown) => {
+	if (!value || typeof value !== 'object') return;
+
+	if (value instanceof TextureSource) {
+		if (!value.destroyed) into.set(value.uid, value);
+		return;
+	}
+	if (value instanceof Texture) {
+		const source = value.source;
+		if (source && !source.destroyed) into.set(source.uid, source);
+		return;
+	}
+
+	const anyVal = value as Record<string, unknown>;
+	if (Array.isArray(anyVal.pages)) {
+		for (const page of anyVal.pages) {
+			const spineTex = (page as { texture?: SpineTexture | null })?.texture;
+			const pixiTex = spineTex?.texture;
+			if (pixiTex?.source && !pixiTex.source.destroyed) {
+				into.set(pixiTex.source.uid, pixiTex.source);
+			}
+		}
+		return;
+	}
+	if (anyVal.texture) collectSourcesFromAsset(into, anyVal.texture);
+	if (anyVal.source && anyVal.source instanceof TextureSource) {
+		collectSourcesFromAsset(into, anyVal.source);
+	}
 };
 
 export type ReleaseCpuTwinOptions = {
@@ -70,6 +104,33 @@ export const releaseTextureSourceCpuTwin = (
 		}
 	}
 	return true;
+};
+
+/**
+ * Drop CPU twins for explicit Asset URLs only (sprites / atlas pages / TextureAtlas).
+ * Used after tir cabinet GPU upload — short-lived textures that reload on next open.
+ */
+export const releaseCpuTwinsForUrls = (
+	urls: readonly string[],
+	app?: Application | null,
+): number => {
+	if (urls.length === 0) return 0;
+
+	const into = new Map<number, TextureSource>();
+	for (const url of urls) {
+		try {
+			if (!Cache.has(url)) continue;
+			collectSourcesFromAsset(into, Assets.get(url));
+		} catch {
+			/* not in cache */
+		}
+	}
+
+	let released = 0;
+	for (const source of into.values()) {
+		if (releaseTextureSourceCpuTwin(source, app)) released += 1;
+	}
+	return released;
 };
 
 /**

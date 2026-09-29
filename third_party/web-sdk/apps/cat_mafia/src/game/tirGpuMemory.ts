@@ -17,12 +17,14 @@ import {
 } from './phoneSpineAtlasDownscale';
 import { devPreview } from './devPreview.svelte';
 import { eventEmitter } from './eventEmitter';
+import { releaseCpuTwinsForUrls } from './releaseCpuTextureTwins';
 import { SHOT_BULLET_SPRITES } from './shotBulletAssets';
 import { evictSpineAssetUrls, evictSpineAtlasAndPages } from './spineAtlasEvict';
 import { stateApp } from './stateApp';
 import { stateGame } from './stateGame.svelte';
 import {
 	ensureTargetBoardSpritesInPixi,
+	spriteUrlsForTirCabinet,
 	TARGET_BOARD_SPRITE_URLS,
 	type TirCabinetMode,
 } from './targetBoardAssets';
@@ -55,6 +57,44 @@ const spineSrcUrls = (key: TirSpineKey): string[] => {
 	const entry = assets[key];
 	if (!entry || entry.type !== 'spine') return [];
 	return Object.values(entry.src).filter((v): v is string => typeof v === 'string');
+};
+
+/** Sprite + spine atlas/page URLs for the live cabinet (never both BGs). */
+const tirTwinReleaseUrls = (mode?: TirCabinetMode): string[] => {
+	const urls = new Set<string>();
+	if (mode) {
+		for (const url of spriteUrlsForTirCabinet(mode)) urls.add(url);
+	} else {
+		for (const url of TIR_SPRITE_URLS) urls.add(url);
+	}
+	urls.add(SHOT_BULLET_SPRITES.bullet);
+	for (const key of TIR_SPINE_KEYS) {
+		for (const url of spineSrcUrls(key)) urls.add(url);
+	}
+	return [...urls];
+};
+
+export const waitAnimationFrames = (n = 2) =>
+	new Promise<void>((resolve) => {
+		let left = Math.max(1, n);
+		const tick = () => {
+			left -= 1;
+			if (left <= 0) {
+				resolve();
+				return;
+			}
+			requestAnimationFrame(tick);
+		};
+		requestAnimationFrame(tick);
+	});
+
+/** After GPU paint: drop CPU decode twins for tir only (not global Cache). */
+const releaseTirCpuTwinsSoon = (mode?: TirCabinetMode) => {
+	const urls = tirTwinReleaseUrls(mode);
+	void waitAnimationFrames(2).then(() => {
+		const pixi = stateApp.pixiApplication ?? null;
+		releaseCpuTwinsForUrls(urls, pixi);
+	});
 };
 
 /** Serialize unload ↔ Stage E reload so a late FS drop cannot wipe the cabinet. */
@@ -172,25 +212,15 @@ export const ensureTirPixiLoaded = async (
 		}
 
 		if (Object.keys(patch).length === 0) {
-			if (mode) tirGpuParked = false;
+			if (mode) {
+				tirGpuParked = false;
+				releaseTirCpuTwinsSoon(mode);
+			}
 			return null;
 		}
 		tirGpuParked = false;
+		releaseTirCpuTwinsSoon(mode);
 		return patch;
-	});
-
-export const waitAnimationFrames = (n = 2) =>
-	new Promise<void>((resolve) => {
-		let left = Math.max(1, n);
-		const tick = () => {
-			left -= 1;
-			if (left <= 0) {
-				resolve();
-				return;
-			}
-			requestAnimationFrame(tick);
-		};
-		requestAnimationFrame(tick);
 	});
 
 /**

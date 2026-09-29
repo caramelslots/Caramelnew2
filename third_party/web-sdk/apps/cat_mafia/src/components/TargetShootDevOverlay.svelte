@@ -47,7 +47,7 @@
 	$effect(() => {
 		if (!show) return;
 
-		startTargetBoardPreload();
+		startTargetBoardPreload('nine');
 		stateGame.targetPickSeatMode = 'nine';
 		stateGame.targetPickFlipped = [...flipped];
 		stateGame.targetPickSpineSeat = null;
