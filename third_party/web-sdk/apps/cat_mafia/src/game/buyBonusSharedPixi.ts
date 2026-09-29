@@ -84,6 +84,9 @@ const setFeatureEvictLock = (locked: boolean) => {
 let app: PIXI.Application | undefined;
 let appReady: Promise<PIXI.Application | undefined> | undefined;
 let appGen = 0;
+
+/** Dev RAM: buy-bonus overlay WebGL backbuffer (if warm). */
+export const getBuyBonusSharedPixiApp = () => app;
 let nextViewId = 1;
 let tickerBound = false;
 let layerObserver: ResizeObserver | undefined;

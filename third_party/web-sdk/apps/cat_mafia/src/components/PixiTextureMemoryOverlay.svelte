@@ -54,7 +54,12 @@
 			aria-label={open ? 'Collapse Pixi memory panel' : 'Expand Pixi memory panel'}
 			onclick={toggle}
 		>
-			<span class="pixi-mem__total">GPU ~{formatMb(stats.totalBytes)}</span>
+			<span class="pixi-mem__total"
+				>~{formatMb(stats.totalBytes)}
+				<span class="pixi-mem__split"
+					>GPU {formatMb(stats.totalBytes - stats.cpuBytes - stats.htmlPreloadBytes)} · CPU {formatMb(stats.cpuBytes)} · preload {formatMb(stats.htmlPreloadBytes)}</span
+				></span
+			>
 			<span class="pixi-mem__chevron" aria-hidden="true">{open ? '▾' : '▸'}</span>
 		</button>
 
@@ -68,6 +73,15 @@
 				</div>
 				<div class="pixi-mem__row">
 					HTML Spine {formatMb(stats.htmlSpineBytes)} · {stats.htmlSpineCount} surf
+				</div>
+				<div class="pixi-mem__row">
+					FB {formatMb(stats.framebufferBytes)} · {stats.framebufferCount} canvas
+				</div>
+				<div class="pixi-mem__row">
+					CPU {formatMb(stats.cpuBytes)} · {stats.cpuCount} twin
+				</div>
+				<div class="pixi-mem__row">
+					HTML preload {formatMb(stats.htmlPreloadBytes)} · {stats.htmlPreloadCount} img
 				</div>
 				<button
 					type="button"
@@ -145,6 +159,17 @@
 	.pixi-mem__total {
 		font-weight: 700;
 		color: #9dffb0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	.pixi-mem__split {
+		font-weight: 500;
+		font-size: 10px;
+		opacity: 0.7;
+		color: #c8ffd4;
 	}
 
 	.pixi-mem__chevron {

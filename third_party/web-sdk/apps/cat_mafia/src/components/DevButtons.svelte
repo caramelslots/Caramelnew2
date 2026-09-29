@@ -20,7 +20,7 @@
 	} from 'state-shared';
 
 	/** Set to true to show DEV / LANG / SOCIAL toggles locally. */
-	const SHOW_DEV_PANEL = false;
+	const SHOW_DEV_PANEL = true;
 
 	import { playBet, playBookEvent, playBookEvents } from '../game/utils';
 	import { eventEmitter } from '../game/eventEmitter';
@@ -1976,14 +1976,14 @@
 				<button
 					type="button"
 					class:active={pixiMemoryHud.overlay}
-					title="Pin GPU memory HUD in the top-right. Tap its header to expand or collapse the list."
+					title="Pin GPU / CPU / preload memory HUD in the top-right. Tap its header to expand or collapse the list."
 					onclick={() => setRamOverlayVisible(!pixiMemoryHud.overlay)}
 				>
 					RAM {pixiMemoryHud.overlay ? 'ON' : 'OFF'}
 				</button>
 				<button
 					type="button"
-					title="Dump full GPU / Cache / HTML Spine texture list to the browser console (for before/after compare)."
+					title="Dump full GPU / Cache / HTML Spine / FB / CPU twins / HTML preload list to the browser console (for before/after compare)."
 					onclick={() => {
 						const app = getContextApp().stateApp.pixiApplication ?? null;
 						dumpPixiTextureMemoryToConsole(app);

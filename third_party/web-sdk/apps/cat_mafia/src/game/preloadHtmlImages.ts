@@ -4,15 +4,49 @@ type PreloadHtmlImagesOptions = {
 	concurrency?: number;
 };
 
+export type HtmlPreloadMemoryEntry = {
+	url: string;
+	pixelWidth: number;
+	pixelHeight: number;
+	bytes: number;
+};
+
+const RGBA_BYTES = 4;
+
+/**
+ * Dev RAM registry: images we decoded via `preloadHtmlImages`.
+ * Metadata only — we do not retain the HTMLImageElement (browser cache may still hold pixels).
+ */
+const htmlPreloadRegistry = new Map<string, HtmlPreloadMemoryEntry>();
+
+const shortPathLabel = (path: string) =>
+	path.replace(/^.*\//, '').slice(0, 28) || path.slice(0, 28);
+
+const recordPreload = (url: string, img: HTMLImageElement) => {
+	const w = (img.naturalWidth || img.width) | 0;
+	const h = (img.naturalHeight || img.height) | 0;
+	if (w <= 0 || h <= 0) return;
+	htmlPreloadRegistry.set(url, {
+		url,
+		pixelWidth: w,
+		pixelHeight: h,
+		bytes: w * h * RGBA_BYTES,
+	});
+};
+
 const loadImage = (url: string): Promise<void> =>
 	new Promise((resolve, reject) => {
 		const img = new Image();
 		img.onload = () => {
+			const finish = () => {
+				recordPreload(url, img);
+				resolve();
+			};
 			if (typeof img.decode === 'function') {
-				void img.decode().then(resolve).catch(resolve);
+				void img.decode().then(finish).catch(finish);
 				return;
 			}
-			resolve();
+			finish();
 		};
 		img.onerror = () => reject(new Error(`Failed to preload image: ${url}`));
 		img.src = url;
@@ -73,3 +107,18 @@ export const preloadHtmlImages = async (
 
 	await preloadWithConcurrency(remainingUrls, concurrency);
 };
+
+/** All URLs recorded by preloadHtmlImages (for Dev RAM). */
+export const getHtmlPreloadMemoryEntries = (): readonly HtmlPreloadMemoryEntry[] =>
+	[...htmlPreloadRegistry.values()];
+
+/** Drop registry rows (Dev / teardown). Does not force browser image-cache eviction. */
+export const clearHtmlPreloadMemoryRegistry = (urls?: readonly string[]) => {
+	if (!urls) {
+		htmlPreloadRegistry.clear();
+		return;
+	}
+	for (const url of urls) htmlPreloadRegistry.delete(url);
+};
+
+export const htmlPreloadLabel = (url: string) => `preload:${shortPathLabel(url)}`;
