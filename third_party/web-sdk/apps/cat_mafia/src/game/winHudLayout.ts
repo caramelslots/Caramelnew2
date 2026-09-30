@@ -40,6 +40,10 @@ const WIN_IN_PLATE_X_NUDGE_FRAC = 0;
 
 /** Font size as a fraction of on-screen nameplate height (proxima-nova matches FS intro). */
 const WIN_FONT_OF_PLATE_H = 1.12;
+/** Popout S only — slightly under desktop 1.12 so WIN fits without filling the plate. */
+const WIN_FONT_OF_PLATE_H_POPOUT_S = 1.02;
+const WIN_FONT_MIN_PX = 10;
+const WIN_FONT_MIN_PX_POPOUT_S = 1;
 
 const deskSlotSize = (board: BoardLayoutLike) => ({
 	width: (board.width * DESK_PARCHMENT_PADDING.width) / DESK_PARCHMENT.widthFrac,
@@ -87,16 +91,20 @@ export const getWinHudLocalPos = (board: BoardLayoutLike) => {
 export const getWinHudScreenBox = (opts: {
 	mainLayout: MainLayoutLike;
 	boardLayout: BoardLayoutLike;
+	/** Stake popout S (400×225) — smaller face so WIN fits the nameplate. */
+	isPopoutSmall?: boolean;
 }) => {
 	const local = getWinHudLocalPos(opts.boardLayout);
 	const ml = opts.mainLayout;
 	const s = ml.scale;
 	const plateHScreen = local.plateHeight * s;
+	const fontOfPlate = opts.isPopoutSmall ? WIN_FONT_OF_PLATE_H_POPOUT_S : WIN_FONT_OF_PLATE_H;
+	const minFont = opts.isPopoutSmall ? WIN_FONT_MIN_PX_POPOUT_S : WIN_FONT_MIN_PX;
 	return {
 		centerX: ml.x + (local.x - ml.width * 0.5) * s,
 		centerY: ml.y + (local.y - ml.height * 0.5) * s,
 		maxWidth: local.maxWidth * s,
-		fontSize: Math.max(10, plateHScreen * WIN_FONT_OF_PLATE_H),
+		fontSize: Math.max(minFont, plateHScreen * fontOfPlate),
 	};
 };
 
@@ -109,4 +117,5 @@ export const WIN_HUD_LAYOUT = {
 	IN_PLATE_Y_NUDGE_FRAC: WIN_IN_PLATE_Y_NUDGE_FRAC,
 	IN_PLATE_X_NUDGE_FRAC: WIN_IN_PLATE_X_NUDGE_FRAC,
 	FONT_OF_PLATE_H: WIN_FONT_OF_PLATE_H,
+	FONT_OF_PLATE_H_POPOUT_S: WIN_FONT_OF_PLATE_H_POPOUT_S,
 } as const;

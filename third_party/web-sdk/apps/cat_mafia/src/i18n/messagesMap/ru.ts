@@ -63,6 +63,7 @@ export default {
 	FREE_SPINS_AWARDED_SUFFIX: 'ФРИСПИНОВ',
 	MAX_WIN: 'МАКС. ВЫИГРЫШ',
 	PRESS_TO_CONTINUE: 'Нажмите, чтобы продолжить',
+	LOADING_PROGRESS: 'Загрузка {percent}%',
 	LOADER_CARD_1_TITLE: 'ФРИСПИНЫ',
 	LOADER_CARD_1_LINE_1: 'СОБЕРИТЕ 3+ SCATTER, ЗАТЕМ ВЫБЕРИТЕ МИШЕНЬ',
 	LOADER_CARD_1_LINE_2: 'НА 8 / 10 / 12 ФРИСПИНОВ',

@@ -47,6 +47,7 @@ export default {
 	FREE_SPINS_AWARDED_SUFFIX: '무료 스핀',
 	MAX_WIN: '최대 승리',
 	PRESS_TO_CONTINUE: '탭하여 계속',
+	LOADING_PROGRESS: '로딩 중 {percent}%',
 	LOADER_CARD_1_TITLE: '프리 스핀',
 	LOADER_CARD_1_LINE_1: '3+ SCATTER 후 목표 선택',
 	LOADER_CARD_1_LINE_2: '8 / 10 / 12 프리 스핀',

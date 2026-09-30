@@ -926,6 +926,12 @@ export const BOARD_LAYOUT_SCALE = {
  * Factor = desktopScale × (landscapeMainH / desktopMainH) = 1.22 × 900/800.
  */
 export const BOARD_LAYOUT_SCALE_POPOUT = BOARD_LAYOUT_SCALE.desktop * (900 / 800);
+/**
+ * Popout L/S board center offset (landscape design space 1600×900, −y = up).
+ * Same x as phone landscape; y lifted so the desk sits a bit higher in the
+ * 800×450 / 400×225 embeds (phone landscape keeps BOARD_LAYOUT_OFFSETS.landscape).
+ */
+export const BOARD_LAYOUT_OFFSET_POPOUT = { x: -12, y: -32 } as const;
 /** Frame bezel + glow offset from board center (px): +x right, +y down. */
 export const BOARD_FRAME_OFFSET = { x: 0, y: 0 } as const;
 /** Vertical nudge (game px, +y = down) applied to all desk artwork layers (base / contour)
@@ -1193,6 +1199,15 @@ export const isPopoutViewport = (sizes: { width: number; height: number }, toler
 export const isPopoutSmallViewport = (sizes: { width: number; height: number }, tolerance = 12) => {
 	const { width, height } = sizes;
 	return Math.abs(width - 400) <= tolerance && Math.abs(height - 225) <= tolerance;
+};
+
+/** Board center offset for the current layout — popout L/S override landscape. */
+export const resolveBoardLayoutOffset = (
+	layoutType: string,
+	canvasSizes: { width: number; height: number },
+) => {
+	if (isPopoutViewport(canvasSizes)) return BOARD_LAYOUT_OFFSET_POPOUT;
+	return BOARD_LAYOUT_OFFSETS[layoutType as keyof typeof BOARD_LAYOUT_OFFSETS] ?? { x: 0, y: 0 };
 };
 
 /**
@@ -1711,10 +1726,12 @@ export const LOADER_INTRO_COLOR_MATCH = 'saturate(0.92) brightness(1.06)';
 export const LOADER_INTRO_PLATE_OFFSET_Y = 0;
 /** Nudge intro plate right (px) so roofs line up with Pixi street at the seam. */
 export const LOADER_INTRO_PLATE_OFFSET_X = 0;
-/** How far the roofs fade sits below the intro panel bottom (onto the Pixi street). */
-export const LOADER_INTRO_ROOFS_OVERLAP_PX = 60;
-/** Phone-only roofs overlap — lowers the plate so the lift seam stays covered. */
-export const LOADER_INTRO_ROOFS_OVERLAP_PHONE_PX = 65;
+/**
+ * Soft-fade hang onto the Pixi street, in intro_roofs source px.
+ * Scaled by plate.height / 940 so tablet / narrow / popout keep the same
+ * blend as a 1080p monitor (fixed CSS px used to overshoot on short viewports).
+ */
+export const LOADER_INTRO_ROOFS_OVERLAP_NATIVE_PX = 18;
 /** Cloud strip Y as fraction of intro plate height (from top). */
 export const LOADER_INTRO_CLOUDS_Y_FRAC = 0.3;
 /** Cloud scroll speed in intro-native px per second (left → right). */

@@ -111,6 +111,7 @@ export const i18nDerived = {
 	// Misc
 	maxWin: () => ts('MAX_WIN'),
 	pressToContinue: () => t('PRESS_TO_CONTINUE').toUpperCase(),
+	loadingProgress: (percent: number) => t('LOADING_PROGRESS', { percent }),
 	// Loader cards
 	loaderCard1Title: () => t('LOADER_CARD_1_TITLE'),
 	loaderCard1Line1: () => t('LOADER_CARD_1_LINE_1'),

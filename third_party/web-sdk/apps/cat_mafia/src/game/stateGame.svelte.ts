@@ -77,7 +77,6 @@ import { COIN_TURN_SOUNDS } from './sound';
 import {
 	SYMBOL_SIZE,
 	BOARD_SIZES,
-	BOARD_LAYOUT_OFFSETS,
 	BOARD_LAYOUT_SCALE,
 	BOARD_LAYOUT_SCALE_POPOUT,
 	getPortraitBoardScale,
@@ -90,6 +89,7 @@ import {
 	BOARD_DIMENSIONS,
 	isVisibleBoardSymbolIndex,
 	isPopoutViewport,
+	resolveBoardLayoutOffset,
 	SPIN_OPTIONS_DEFAULT,
 	SPIN_OPTIONS_FAST,
 	INITIAL_SYMBOL_STATE,
@@ -433,10 +433,11 @@ stateBetDerived.timeScale = () => 1;
 
 const baseBoardLayout = () => {
 	const layoutType = stateLayoutDerived.layoutType();
-	const offset = BOARD_LAYOUT_OFFSETS[layoutType];
+	const canvasSizes = stateLayoutDerived.canvasSizes();
+	const offset = resolveBoardLayoutOffset(layoutType, canvasSizes);
 	const ml = stateLayoutDerived.mainLayout();
 	const parchment = layoutType === 'portrait' ? getPortraitParchmentSize() : null;
-	const isPopout = isPopoutViewport(stateLayoutDerived.canvasSizes());
+	const isPopout = isPopoutViewport(canvasSizes);
 	const scale =
 		layoutType === 'portrait'
 			? getPortraitBoardScale(

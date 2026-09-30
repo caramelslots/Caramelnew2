@@ -102,7 +102,8 @@
 </script>
 
 {#if stateModal.modal?.name === 'gameRules'}
-	<Popup zIndex={zIndex.modal} {closeIconUrl} onclose={() => (stateModal.modal = null)}>
+	<!-- Above tir HTML (Target pick/shoot ~60–72) so prompt text stays under info. -->
+	<Popup zIndex={zIndex.info} {closeIconUrl} onclose={() => (stateModal.modal = null)}>
 		<BaseContent maxWidth="100%">
 			<BaseTitle>{gameInfoTitle}</BaseTitle>
 			<BaseScrollable type="column">

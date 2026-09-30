@@ -166,8 +166,12 @@
 		bankRatioLeft + (bankRatioFullWidth - bankRatioWidth) * 0.5,
 	);
 	const bankScaleHeight = $derived(bankRatioWidth / DUEL_BANK_SCALE.aspect);
-	const bankTotalMaxWidth = $derived(bankRatioWidth * DUEL_BANK_SCALE.plaqueWidth * 0.98);
-	const bankTotalMaxHeight = $derived(bankScaleHeight * DUEL_BANK_SCALE.plaqueHeight * 0.9);
+	const bankTotalMaxWidth = $derived(
+		bankRatioWidth * DUEL_BANK_SCALE.plaqueWidth * (isPopoutSmall ? 0.94 : 0.98),
+	);
+	const bankTotalMaxHeight = $derived(
+		bankScaleHeight * DUEL_BANK_SCALE.plaqueHeight * (isPopoutSmall ? 0.78 : 0.9),
+	);
 	/**
 	 * Anchor to desk bottoms (not HUD reserve) so the scale keeps the same
 	 * relative spot on every landscape / tablet size. Popout L clamps above
@@ -180,8 +184,15 @@
 			duelLayout.boardHeight * 0.5;
 		const scaleH = bankRatioWidth / DUEL_BANK_SCALE.aspect;
 
+		// Popout S (400×225) — tucked under the desks, above the HUD band.
+		if (isPopoutSmall) {
+			const preferred = deskBottom - Math.round(duelLayout.boardHeight * 0.08);
+			const maxTop = canvasSizes.height - Math.round(scaleH * 0.85);
+			return Math.min(preferred, maxTop);
+		}
+
 		// Phones keep the tighter tuck under the desks.
-		if (isPopoutSmall || isPortrait) {
+		if (isPortrait) {
 			const preferred = deskBottom - Math.round(duelLayout.boardHeight * 0.04);
 			const maxTop = canvasSizes.height - Math.round(scaleH * 0.78);
 			return Math.min(preferred, maxTop);
@@ -369,6 +380,7 @@
 							prefix={combinedBankWinPrefix}
 							maxWidth={bankTotalMaxWidth}
 							maxHeight={bankTotalMaxHeight}
+							darker={isPopoutSmall}
 						/>
 					{/if}
 				</span>
@@ -971,6 +983,23 @@
 
 	.loss-board.popout-s {
 		--panel-width: min(480px, 99vw);
+
+		.content-safe {
+			left: 18%;
+			right: 18%;
+		}
+
+		.loss-title {
+			font-size: calc(var(--panel-width) * 0.036);
+		}
+
+		.loss-label {
+			font-size: calc(var(--panel-width) * 0.018);
+		}
+
+		.loss-amount {
+			font-size: calc(var(--panel-width) * 0.038);
+		}
 	}
 
 </style>

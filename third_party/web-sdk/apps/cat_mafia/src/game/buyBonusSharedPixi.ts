@@ -387,8 +387,6 @@ const runPhoneSerialized = <T>(fn: () => Promise<T>): Promise<T> => {
 	return run;
 };
 
-const isCardSpine = (visual: CardVisual): visual is Spine => visual instanceof Spine;
-
 const forEachCardSpine = (visual: CardVisual, fn: (spine: Spine) => void) => {
 	fn(visual);
 };
@@ -865,8 +863,10 @@ const layoutSpine = (
 	const transform = getBuyBonusPixiTransform(variant, w, h);
 	const button = cardButton(host);
 	const disabled = Boolean(button?.disabled);
-	visual.alpha = disabled ? 0.5 : 1;
-	if (isCardSpine(visual)) visual.tint = 0xffffff;
+	// Never lower Spine alpha when disabled — PMA layers go see-through ("x-ray").
+	// Tint keeps the card readable as disabled while staying fully opaque.
+	visual.alpha = 1;
+	visual.tint = disabled ? 0x7a7a7a : 0xffffff;
 	visual.visible = true;
 	const layerRect = layer.getBoundingClientRect();
 	visual.scale.set(transform.scale);

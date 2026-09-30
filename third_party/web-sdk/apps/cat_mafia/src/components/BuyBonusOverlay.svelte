@@ -509,9 +509,13 @@
 		}
 
 		&:disabled {
-			opacity: 0.5;
 			cursor: not-allowed;
 			pointer-events: none;
+
+			/* Dim HTML only — Spine stays opaque (tint in buyBonusSharedPixi). */
+			.card-content {
+				opacity: 0.55;
+			}
 		}
 	}
 

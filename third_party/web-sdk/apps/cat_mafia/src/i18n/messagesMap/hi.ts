@@ -47,6 +47,7 @@ export default {
 	FREE_SPINS_AWARDED_SUFFIX: 'मुफ़्त स्पिन',
 	MAX_WIN: 'अधिकतम जीत',
 	PRESS_TO_CONTINUE: 'जारी रखने के लिए टैप करें',
+	LOADING_PROGRESS: 'लोड हो रहा है {percent}%',
 	LOADER_CARD_1_TITLE: 'फ्री स्पिन',
 	LOADER_CARD_1_LINE_1: '3+ SCATTER लाएँ, फिर लक्ष्य चुनें',
 	LOADER_CARD_1_LINE_2: '8 / 10 / 12 फ्री स्पिन के लिए',

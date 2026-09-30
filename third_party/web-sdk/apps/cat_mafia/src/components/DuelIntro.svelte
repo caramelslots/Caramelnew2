@@ -10,15 +10,18 @@
 </script>
 
 <script lang="ts">
-	import { fade, scale } from 'svelte/transition';
-	import { backOut, cubicOut } from 'svelte/easing';
 	import { OnHotkey } from 'components-shared';
 	import { waitForResolve } from 'utils-shared/wait';
 
+	import {
+		BOARD_DIMENSIONS,
+		SYMBOL_SIZE,
+		isPopoutSmallViewport,
+		resolveBoardLayoutOffset,
+	} from '../game/constants';
 	import assets from '../game/assets';
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
-	import { isPopoutSmallViewport, isPopoutViewport } from '../game/constants';
 	import PressToContinueHtml from './PressToContinueHtml.svelte';
 
 	const context = getContext();
@@ -26,21 +29,85 @@
 	const bgUrl = assets.fsCongBg.src;
 	const frameUrl = assets.fsCongFrame.src;
 
-	const layoutType = $derived(context.stateLayoutDerived.layoutType());
+	/** Same artboard / panel sizing as FreeSpinIntro (fsCong 2000×1500). */
+	const BOARD_RATIO = 2000 / 1500;
+	const BOARD_SCALE = 1.9;
+	const BOARD_SCALE_PORTRAIT = 2.05;
+
+	/** Vertical centres of each line inside the plaque (vs panel height) — same % on every screen. */
+	const RULE_CAT_Y_RATIO = 0.335;
+	const RULE_DOG_Y_RATIO = 0.445;
+	const DIVIDER_Y_RATIO = 0.51;
+	const RULE_WINNER_Y_RATIO = 0.575;
+
+	/** Font size as a fraction of panel width (same approach as FS FREE SPINS / YOU WON). */
+	const RULE_SIZE_RATIO = 0.048;
+	const WINNER_SIZE_RATIO = 0.05;
+	/** Popout S — slightly smaller base so long EN lines clear the gold frame. */
+	const RULE_SIZE_RATIO_POPOUT_S = 0.032;
+	const WINNER_SIZE_RATIO_POPOUT_S = 0.034;
+	/**
+	 * Max text width as a fraction of panel width before scale-fit.
+	 * Tight enough to stay inside the burgundy plate (not the outer gold frame).
+	 */
+	const RULE_MAX_WIDTH_RATIO = 0.5;
+	const RULE_MAX_WIDTH_RATIO_POPOUT_S = 0.48;
+	const MIN_FIT_SCALE = 0.4;
+
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
-	const isPortrait = $derived(layoutType === 'portrait');
 	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
-	const isPopout = $derived(isPopoutViewport(canvasSizes) && !isPopoutSmall);
+
+	const panelLayout = $derived.by(() => {
+		const ml = context.stateLayoutDerived.mainLayout();
+		const layoutType = context.stateLayoutDerived.layoutType();
+		const canvas = context.stateLayoutDerived.canvasSizes();
+		const off = resolveBoardLayoutOffset(layoutType, canvas);
+		const centerX = ml.x + off.x * ml.scale;
+		const centerY = ml.y + off.y * ml.scale;
+		const isPortrait = layoutType === 'portrait';
+		const popoutS = isPopoutSmallViewport({
+			width: canvas.width,
+			height: canvas.height,
+		});
+
+		const panelWidth =
+			SYMBOL_SIZE *
+			BOARD_DIMENSIONS.x *
+			(isPortrait ? BOARD_SCALE_PORTRAIT : BOARD_SCALE) *
+			ml.scale;
+		const panelHeight = panelWidth / BOARD_RATIO;
+		const ruleSizeRatio = popoutS ? RULE_SIZE_RATIO_POPOUT_S : RULE_SIZE_RATIO;
+		const winnerSizeRatio = popoutS ? WINNER_SIZE_RATIO_POPOUT_S : WINNER_SIZE_RATIO;
+		const maxWidthRatio = popoutS ? RULE_MAX_WIDTH_RATIO_POPOUT_S : RULE_MAX_WIDTH_RATIO;
+
+		return {
+			centerX,
+			centerY,
+			panelWidth,
+			panelHeight,
+			isPortrait,
+			popoutS,
+			ruleSizeRatio,
+			winnerSizeRatio,
+			maxWidthRatio,
+		};
+	});
+
+	const panelStyle = $derived.by(() => {
+		const p = panelLayout;
+		return [
+			`left:${p.centerX}px`,
+			`top:${p.centerY}px`,
+			`width:${p.panelWidth}px`,
+			`height:${p.panelHeight}px`,
+		].join(';');
+	});
 
 	let show = $state(false);
 	let oncomplete = $state(() => {});
 	let catEl = $state<HTMLParagraphElement | undefined>();
-	let catSlotEl = $state<HTMLDivElement | undefined>();
 	let dogEl = $state<HTMLParagraphElement | undefined>();
-	let dogSlotEl = $state<HTMLDivElement | undefined>();
 	let winnerEl = $state<HTMLParagraphElement | undefined>();
-	let winnerSlotEl = $state<HTMLDivElement | undefined>();
-	/** Shrink long locales so copy stays inside the gold frame. */
 	let catFitScale = $state(1);
 	let dogFitScale = $state(1);
 	let winnerFitScale = $state(1);
@@ -49,51 +116,68 @@
 	const ruleDog = $derived(context.i18nDerived.duelIntroRule2());
 	const ruleWinner = $derived(context.i18nDerived.duelIntroRule3());
 
-	const MIN_LINE_FIT = 0.55;
+	const ruleCatStyle = $derived.by(() => {
+		const p = panelLayout;
+		const fontPx = Math.max(12, Math.round(p.panelWidth * p.ruleSizeRatio));
+		return [
+			`top:${p.panelHeight * RULE_CAT_Y_RATIO}px`,
+			`font-size:${fontPx}px`,
+			`transform:translate(-50%, -50%) scale(${catFitScale})`,
+		].join(';');
+	});
 
+	const ruleDogStyle = $derived.by(() => {
+		const p = panelLayout;
+		const fontPx = Math.max(12, Math.round(p.panelWidth * p.ruleSizeRatio));
+		return [
+			`top:${p.panelHeight * RULE_DOG_Y_RATIO}px`,
+			`font-size:${fontPx}px`,
+			`transform:translate(-50%, -50%) scale(${dogFitScale})`,
+		].join(';');
+	});
+
+	const dividerStyle = $derived.by(() => {
+		const p = panelLayout;
+		return `top:${p.panelHeight * DIVIDER_Y_RATIO}px`;
+	});
+
+	const ruleWinnerStyle = $derived.by(() => {
+		const p = panelLayout;
+		const fontPx = Math.max(12, Math.round(p.panelWidth * p.winnerSizeRatio));
+		return [
+			`top:${p.panelHeight * RULE_WINNER_Y_RATIO}px`,
+			`font-size:${fontPx}px`,
+			`transform:translate(-50%, -50%) scale(${winnerFitScale})`,
+		].join(';');
+	});
+
+	/** Same fit as FreeSpinIntro YOU WON / FREE SPINS banner. */
 	const refitLine = (
 		el: HTMLParagraphElement | undefined,
-		slot: HTMLDivElement | undefined,
 		setScale: (scale: number) => void,
 	) => {
-		if (!el || !slot) return;
-
-		setScale(1);
-		el.style.transform = 'scale(1)';
-
-		const maxW = slot.clientWidth;
-		if (maxW <= 0) return;
-
-		const natural = el.scrollWidth;
-		if (natural <= 0) return;
-
-		const scale = Math.min(1, Math.max(MIN_LINE_FIT, maxW / natural));
-		setScale(scale);
-		el.style.transform = `scale(${scale})`;
-	};
-
-	const refitAllLines = () => {
-		refitLine(catEl, catSlotEl, (scale) => (catFitScale = scale));
-		refitLine(dogEl, dogSlotEl, (scale) => (dogFitScale = scale));
-		refitLine(winnerEl, winnerSlotEl, (scale) => (winnerFitScale = scale));
+		if (!el) return;
+		el.style.transform = 'translate(-50%, -50%) scale(1)';
+		const limit = panelLayout.panelWidth * panelLayout.maxWidthRatio;
+		const width = el.scrollWidth;
+		setScale(width > limit ? Math.max(MIN_FIT_SCALE, limit / width) : 1);
 	};
 
 	$effect(() => {
 		if (!show) return;
-		ruleCat;
-		ruleDog;
-		ruleWinner;
-		canvasSizes.width;
-		canvasSizes.height;
-		requestAnimationFrame(() => requestAnimationFrame(refitAllLines));
-	});
-
-	$effect(() => {
-		const slots = [catSlotEl, dogSlotEl, winnerSlotEl].filter(Boolean) as HTMLDivElement[];
-		if (slots.length === 0 || !show) return;
-		const observer = new ResizeObserver(() => refitAllLines());
-		for (const slot of slots) observer.observe(slot);
-		return () => observer.disconnect();
+		void ruleCat;
+		void ruleDog;
+		void ruleWinner;
+		void panelLayout.panelWidth;
+		void panelLayout.maxWidthRatio;
+		void isPopoutSmall;
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				refitLine(catEl, (s) => (catFitScale = s));
+				refitLine(dogEl, (s) => (dogFitScale = s));
+				refitLine(winnerEl, (s) => (winnerFitScale = s));
+			});
+		});
 	});
 
 	const dismiss = () => oncomplete();
@@ -101,6 +185,9 @@
 	context.eventEmitter.subscribeOnMount({
 		duelIntroShow: () => {
 			context.eventEmitter.broadcast({ type: 'duelPickWarm' });
+			catFitScale = 1;
+			dogFitScale = 1;
+			winnerFitScale = 1;
 			show = true;
 			stateGame.duelIntroActive = true;
 		},
@@ -117,60 +204,28 @@
 {#if show}
 	<div
 		class="overlay"
-		class:portrait={isPortrait}
-		class:popout-s={isPopoutSmall}
 		data-test="duel-intro-overlay"
-		transition:fade={{ duration: 200 }}
 		onclick={dismiss}
 		onkeydown={(e) => e.key === 'Enter' && dismiss()}
 		role="button"
 		tabindex="0"
 	>
-		<div
-			class="board"
-			class:portrait={isPortrait}
-			class:popout-l={isPopout}
-			class:popout-s={isPopoutSmall}
-			role="dialog"
-			aria-modal="true"
-			aria-label={ruleWinner}
-			in:scale={{ duration: 320, easing: backOut, start: 0.88, opacity: 0 }}
-			out:scale={{ duration: 200, easing: cubicOut, start: 0.95, opacity: 0 }}
-		>
+		<div class="dim" aria-hidden="true"></div>
+		<div class="panel" style={panelStyle}>
 			<img class="layer layer-bg" src={bgUrl} alt="" draggable="false" loading="eager" />
 			<img class="layer layer-frame" src={frameUrl} alt="" draggable="false" loading="eager" />
 
-			<div class="board-content">
-				<div class="content-safe">
-					<div class="rule-line-slot" bind:this={catSlotEl}>
-						<p
-							class="rule-line"
-							bind:this={catEl}
-							style:transform="scale({catFitScale})"
-						>
-							{ruleCat}
-						</p>
-					</div>
-					<div class="rule-line-slot" bind:this={dogSlotEl}>
-						<p
-							class="rule-line"
-							bind:this={dogEl}
-							style:transform="scale({dogFitScale})"
-						>
-							{ruleDog}
-						</p>
-					</div>
-					<div class="rule-divider" aria-hidden="true"></div>
-					<div class="rule-line-slot rule-line-slot--winner" bind:this={winnerSlotEl}>
-						<p
-							class="rule-line rule-line--winner"
-							bind:this={winnerEl}
-							style:transform="scale({winnerFitScale})"
-						>
-							{ruleWinner}
-						</p>
-					</div>
-				</div>
+			<div class="copy" role="dialog" aria-modal="true" aria-label={ruleWinner}>
+				<p class="rule-line" bind:this={catEl} style={ruleCatStyle}>{ruleCat}</p>
+				<p class="rule-line" bind:this={dogEl} style={ruleDogStyle}>{ruleDog}</p>
+				<div class="rule-divider" style={dividerStyle} aria-hidden="true"></div>
+				<p
+					class="rule-line rule-line--winner"
+					bind:this={winnerEl}
+					style={ruleWinnerStyle}
+				>
+					{ruleWinner}
+				</p>
 			</div>
 		</div>
 
@@ -186,20 +241,20 @@
 		inset: 0;
 		z-index: 60;
 		cursor: pointer;
-		background: rgba(0, 0, 0, 0.62);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: clamp(0.75rem, 2vh, 1.5rem);
-		box-sizing: border-box;
+		background: transparent;
 	}
 
-	.board {
-		--panel-width: min(860px, 98vw);
-		position: relative;
-		width: var(--panel-width);
-		aspect-ratio: calc(2000 / 1500);
-		max-height: 82vh;
+	.dim {
+		position: absolute;
+		inset: 0;
+		background: rgba(0, 0, 0, 0.62);
+		pointer-events: none;
+	}
+
+	/* Same panel mount as FreeSpinIntro — fixed + translate(-50%, -50%). */
+	.panel {
+		position: fixed;
+		transform: translate(-50%, -50%);
 		pointer-events: none;
 		filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.75));
 	}
@@ -223,79 +278,49 @@
 		z-index: 1;
 	}
 
-	.board-content {
+	.copy {
 		position: absolute;
 		inset: 0;
 		z-index: 2;
 	}
 
-	/* Keep clear of gold frame + bottom paw medallion. */
-	.content-safe {
-		position: absolute;
-		top: 26%;
-		left: 27%;
-		right: 27%;
-		bottom: 28%;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: calc(var(--panel-width) * 0.01);
-		box-sizing: border-box;
-		text-align: center;
-		overflow: hidden;
-	}
-
-	.rule-line-slot {
-		width: 100%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		overflow: hidden;
-		box-sizing: border-box;
-	}
-
-	/* Nudge the first rule line slightly above the centered stack. */
-	.rule-line-slot:first-child {
-		margin-top: calc(var(--panel-width) * -0.032);
-	}
-
-	/* Same face as FreeSpinIntro CONGRATULATIONS (proxima-nova + gold gradient). */
+	/* Same face + fit pattern as FreeSpinIntro YOU WON / FREE SPINS. */
 	.rule-line {
+		position: absolute;
+		left: 50%;
 		margin: 0;
-		width: max-content;
-		max-width: none;
 		padding: 0;
+		width: max-content;
+		text-align: center;
 		font-family: 'proxima-nova', sans-serif;
-		font-size: calc(var(--panel-width) * 0.044);
 		font-weight: 800;
-		line-height: 1.25;
+		line-height: 1.15;
 		letter-spacing: 0.02em;
-		transform-origin: center center;
 		white-space: nowrap;
+		transform-origin: center center;
+		user-select: none;
+		pointer-events: none;
 		color: #ffe28a;
 		background: linear-gradient(180deg, #fff6c8 0%, #ffd56a 38%, #e8a020 72%, #b8730f 100%);
 		-webkit-background-clip: text;
 		background-clip: text;
 		-webkit-text-fill-color: transparent;
-		filter: drop-shadow(0 1px 0 #fff3b0);
+		filter: drop-shadow(0 1px 0 #fff3b0) drop-shadow(0 3px 0 #5a3a0e)
+			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
 	}
 
 	.rule-line--winner {
-		font-size: calc(var(--panel-width) * 0.042);
-		line-height: 1.12;
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
-	}
-
-	.rule-line-slot--winner {
-		margin-top: calc(var(--panel-width) * 0.018);
+		line-height: 1.1;
 	}
 
 	.rule-divider {
-		width: min(58%, 220px);
+		position: absolute;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: 36%;
 		height: 2px;
-		margin: calc(var(--panel-width) * 0.008) 0 calc(var(--panel-width) * 0.012);
 		border-radius: 999px;
 		background: linear-gradient(
 			90deg,
@@ -306,53 +331,6 @@
 			transparent 100%
 		);
 		box-shadow: 0 0 12px rgba(255, 190, 60, 0.35);
-	}
-
-	.board.portrait:not(.popout-l):not(.popout-s) {
-		--panel-width: min(920px, 100vw);
-		transform: scale(1.12);
-		transform-origin: center center;
-
-		.content-safe {
-			top: 26%;
-			left: 27%;
-			right: 27%;
-			bottom: 28%;
-		}
-
-		.rule-line {
-			font-size: calc(var(--panel-width) * 0.046);
-		}
-
-		.rule-line--winner {
-			font-size: calc(var(--panel-width) * 0.046);
-		}
-	}
-
-	.board.popout-l {
-		--panel-width: min(520px, 94vw);
-	}
-
-	.board.popout-s {
-		--panel-width: min(480px, 99vw);
-
-		.content-safe {
-			top: 26%;
-			left: 25%;
-			right: 25%;
-			bottom: 28%;
-		}
-
-		.rule-line {
-			font-size: calc(var(--panel-width) * 0.046);
-		}
-
-		.rule-line--winner {
-			font-size: calc(var(--panel-width) * 0.044);
-		}
-	}
-
-	.overlay.popout-s .board {
-		max-height: 70vh;
+		pointer-events: none;
 	}
 </style>

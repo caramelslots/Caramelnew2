@@ -12,7 +12,7 @@
 		resolveWinCountUpFormat,
 	} from 'utils-shared/amount';
 
-	import { WIN_HUD_COUNT_UP_MS } from '../game/constants';
+	import { WIN_HUD_COUNT_UP_MS, isPopoutSmallViewport } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { amountToLayoutParts } from '../game/currencyTextSegments';
 	import { computeDuelScreenLayout, getDuelPixiBoardLayout } from '../game/duelLayout';
@@ -27,6 +27,8 @@
 	const context = getContext();
 
 	const LETTER_SPACING_EM = 0.08;
+	const isPopoutSmall = $derived(isPopoutSmallViewport(context.stateLayoutDerived.canvasSizes()));
+	const winFontMinPx = $derived(isPopoutSmall ? 1 : 10);
 
 	/**
 	 * While counting up, lock to the target's significant digit count so tween
@@ -104,6 +106,7 @@
 		targetBook: number,
 		prefix: string,
 		lockedDigits: number | null = null,
+		minFontPx = 10,
 	) => {
 		if (baseFontSize <= 0 || maxWidth <= 0) return 0;
 		const parts = formatWinParts(Math.max(liveBook, targetBook), prefix, lockedDigits);
@@ -113,7 +116,7 @@
 		const total = prefixW + gapW + amountW;
 		if (total <= 0) return baseFontSize;
 		const scale = Math.min(1, maxWidth / total);
-		return Math.max(10, baseFontSize * scale);
+		return Math.max(minFontPx, baseFontSize * scale);
 	};
 
 	let uiVisible = $state(true);
@@ -154,16 +157,25 @@
 		getWinHudScreenBox({
 			mainLayout: ml,
 			boardLayout: context.stateGameDerived.boardLayout(),
+			isPopoutSmall,
 		}),
 	);
 	const dogBox = $derived(
 		duelLayouts
-			? getWinHudScreenBox({ mainLayout: ml, boardLayout: duelLayouts.dog })
+			? getWinHudScreenBox({
+					mainLayout: ml,
+					boardLayout: duelLayouts.dog,
+					isPopoutSmall,
+				})
 			: null,
 	);
 	const catBox = $derived(
 		duelLayouts
-			? getWinHudScreenBox({ mainLayout: ml, boardLayout: duelLayouts.cat })
+			? getWinHudScreenBox({
+					mainLayout: ml,
+					boardLayout: duelLayouts.cat,
+					isPopoutSmall,
+				})
 			: null,
 	);
 
@@ -329,6 +341,7 @@
 					winTweenTarget ?? stateBet.winBookEventAmount,
 					winPrefix,
 					countUpFractionDigits,
+					winFontMinPx,
 				)
 			: 0,
 	);
@@ -341,6 +354,7 @@
 					dogTweenTarget ?? stateDuel.dogTotal,
 					winPrefix,
 					dogCountUpDigits,
+					winFontMinPx,
 				)
 			: 0,
 	);
@@ -353,6 +367,7 @@
 					catTweenTarget ?? stateDuel.catTotal,
 					winPrefix,
 					catCountUpDigits,
+					winFontMinPx,
 				)
 			: 0,
 	);
