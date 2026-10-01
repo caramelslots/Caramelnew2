@@ -37,6 +37,7 @@
 		MASCOT_SPINE_VIEWPORT,
 		nextMascotIdleVariantDelayMs,
 		pickMascotIdleVariant,
+		sealMascotHatBrimSeam,
 		type MascotDevPreview,
 		type MascotPose,
 		type MascotSpineAnimation,
@@ -465,6 +466,7 @@
 				if (player !== created) return;
 				if (phoneDprCap != null) capPlayerCanvasDpr(spinePlayer, phoneDprCap);
 				spinePlayer.skeleton!.scaleY = -1;
+				sealMascotHatBrimSeam(spinePlayer.skeleton);
 
 				// Clear after every apply so smile can't flash back before render.
 				const state = spinePlayer.animationState;

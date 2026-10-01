@@ -181,8 +181,12 @@
 					// dividers, then remount above for the rest.
 					reelSymbol.symbolState = 'winLift';
 					await tick();
+					// Spotlight/paylines may clear while we yield — do not revive
+					// postWinStatic after resetBoardCelebrateToIdle snapped to idle.
+					if (reelSymbol.symbolState !== 'winLift') return;
 					reelSymbol.symbolState = 'win';
 					await waitForResolve((resolve) => (reelSymbol.oncomplete = resolve));
+					if (reelSymbol.symbolState !== 'win') return;
 					reelSymbol.symbolState = 'postWinStatic';
 				});
 

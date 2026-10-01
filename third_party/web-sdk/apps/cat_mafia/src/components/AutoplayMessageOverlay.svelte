@@ -300,24 +300,9 @@
 		--panel-width: min(520px, 94vw);
 	}
 
+	/* Same ratios as popout L — panel width scales with the 400×225 canvas
+	   (520 × 400/800). Do not bump font-size fracs here or text looks oversized. */
 	.message-panel.popout-s {
-		--panel-width: min(480px, 99vw);
-
-		.content-safe {
-			left: 19%;
-			right: 19%;
-		}
-
-		.message-title {
-			font-size: calc(var(--panel-width) * 0.046);
-		}
-
-		.message-text {
-			font-size: calc(var(--panel-width) * 0.029);
-		}
-
-		.ok-btn-label {
-			font-size: calc(var(--panel-width) * 0.032);
-		}
+		--panel-width: min(260px, 94vw);
 	}
 </style>

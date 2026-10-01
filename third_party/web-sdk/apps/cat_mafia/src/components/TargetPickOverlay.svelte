@@ -6,18 +6,21 @@
 				chosenIndex: number;
 				awardedFs: number;
 		  }
-		| { type: 'targetPickDismiss' };
+		| { type: 'targetPickDismiss' }
+		/** Slide gallery off-screen, then clear UI (before FS steam — no tir/transition overlap). */
+		| { type: 'targetPickRetreat' };
 </script>
 
 <script lang="ts">
 	/**
 	 * Target pick on base: board slides in → shot → Spine flip.
-	 * Board stays up until steam covers (`targetPickDismiss`); then symbols.
+	 * After the shot settles the gallery stays up until `targetPickRetreat`
+	 * (freeSpinTrigger slides it off, then unloads TIR, then starts steam).
+	 * `targetPickDismiss` still snaps closed when steam covers (safety / DEV).
 	 */
 	import { waitForResolve } from 'utils-shared/wait';
 
 	import { getContext } from '../game/context';
-	import { BOARD_LAYOUT_OFFSETS } from '../game/constants';
 	import {
 		MASCOT_GUN_SHOT_AIM_MS,
 		MASCOT_GUN_SHOT_END_MS,
@@ -97,12 +100,10 @@
 	/** Same inner-frame hole as the Pixi cabinet — seats stay on the wood. */
 	const gridStyle = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
-		const layoutType = context.stateLayoutDerived.layoutType();
-		const off = BOARD_LAYOUT_OFFSETS[layoutType] ?? { x: 0, y: 0 };
 		const board = context.stateGameDerived.boardLayout();
 		const hole = targetPickInnerClip();
-		const centerX = ml.x + off.x * ml.scale;
-		const centerY = ml.y + off.y * ml.scale;
+		const centerX = ml.x + (board.x - ml.width * 0.5) * ml.scale;
+		const centerY = ml.y + (board.y - ml.height * 0.5) * ml.scale;
 		const cell = board.scale * ml.scale;
 		const originX = centerX - board.width * 0.5 * cell;
 		const originY = centerY - board.height * 0.5 * cell;
@@ -268,14 +269,34 @@
 		await mascotAfterShot;
 		stateGame.mascotPose = 'idle';
 
-		// Keep the gallery up; freeSpinTrigger starts the cloud, and
-		// `targetPickDismiss` snaps to symbols while the screen is covered.
+		// Keep the gallery up; freeSpinTrigger retreats it (slide + unload) before steam.
 		oncomplete();
+	};
+
+	const clearPickUi = () => {
+		stateGame.targetShotFlight = null;
+		stateGame.targetShotFlips = [];
+		stateGame.targetShotFlipLabels = {};
+		stateGame.targetPickSlide = 0;
+		stateGame.targetPickOpen = false;
+		show = false;
+		phase = 'prep';
 	};
 
 	context.eventEmitter.subscribeOnMount({
 		targetPickDismiss: () => {
+			clearPickUi();
+		},
+		targetPickRetreat: async () => {
+			if (!show && !stateGame.targetPickOpen && stateGame.targetPickSlide < 0.001) {
+				clearPickUi();
+				return;
+			}
 			stateGame.targetShotFlight = null;
+			// Same beat as Stage E closeBoard — cabinet slides off, then GPU drop.
+			if (stateGame.targetPickSlide > 0.001 || show) {
+				await tweenSlide(0);
+			}
 			stateGame.targetShotFlips = [];
 			stateGame.targetShotFlipLabels = {};
 			stateGame.targetPickSlide = 0;
@@ -285,7 +306,7 @@
 		},
 		freeSpinTargetPick: async (event) => {
 			startShotBulletPreload();
-			startTargetBoardPreload();
+			startTargetBoardPreload('six');
 			// Warm in background — do not block the slide (decode hitch felt like lag).
 			void ensureTirPixiInApp(context.stateApp, 'six');
 			targets = event.targets.length === 6 ? [...event.targets] : [...TARGET_BOARD_DEV_VALUES];

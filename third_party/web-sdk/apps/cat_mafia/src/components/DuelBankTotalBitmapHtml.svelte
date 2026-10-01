@@ -22,6 +22,8 @@
 		prefix: string;
 		maxWidth: number;
 		maxHeight: number;
+		/** Popout S — gold face nudged a touch darker. */
+		darker?: boolean;
 	};
 
 	const props: Props = $props();
@@ -72,6 +74,12 @@
 
 	const amountTween = new Tween(props.amount);
 	let tweenTarget: number | null = null;
+	/**
+	 * Same count-up digit lock as under-board WIN (`WinHudHtmlOverlay`):
+	 * plan once from settled book amounts. Re-planning mid-tween (e.g. turbo /
+	 * gameSpeed change re-entering this effect) uses a float interpolant and
+	 * invents excess zeros (9.600000).
+	 */
 	$effect(() => {
 		const target = props.amount;
 		const from = untrack(() => amountTween.current);
@@ -82,6 +90,8 @@
 			return;
 		}
 		if (target > from + 0.01) {
+			// Already counting toward this target — ignore turbo re-entry.
+			if (tweenTarget != null && Math.abs(target - tweenTarget) < 0.01) return;
 			const plan = planCountUp(from, target);
 			if (!plan.canAnimate) {
 				tweenTarget = null;
@@ -96,6 +106,7 @@
 			});
 			return;
 		}
+		if (tweenTarget != null && Math.abs(target - tweenTarget) < 0.01) return;
 		tweenTarget = null;
 		countUpFractionDigits = null;
 		amountTween.set(target, { duration: 0 });
@@ -106,7 +117,9 @@
 	const fitH = $derived(Math.max(0, Math.floor(props.maxHeight)));
 	/** Gap between prefix and amount — must match `.duel-bank-total` CSS gap. */
 	const PREFIX_AMOUNT_GAP_EM = 0.35;
-	const baseFontSize = $derived(Math.max(10, Math.floor(fitH * 0.62)));
+	/** Tiny plaques (Popout S) — don't force 10px or TOTAL overflows the scale. */
+	const minFontPx = $derived(fitH < 16 ? 1 : 10);
+	const baseFontSize = $derived(Math.max(minFontPx, Math.floor(fitH * 0.62)));
 	/**
 	 * Uniform fit: shrink prefix + amount together (same font-size) so the full
 	 * string stays inside the plaque without clipping either side.
@@ -125,7 +138,7 @@
 		const total = prefixW + gapW + amountW;
 		if (total <= 0) return base;
 		const scale = Math.min(1, fitW / total);
-		return Math.max(10, Math.floor(base * scale));
+		return Math.max(minFontPx, Math.floor(base * scale));
 	});
 	const amountMinW = $derived(
 		Math.max(
@@ -136,7 +149,7 @@
 	const rowStyle = $derived(`max-width:${fitW}px;font-size:${fontSize}px;`);
 </script>
 
-<span class="duel-bank-total" style={rowStyle}>
+<span class="duel-bank-total" class:darker={props.darker} style={rowStyle}>
 	{#if parts.prefix}
 		<span class="duel-bank-prefix">{parts.prefix}</span>
 	{/if}
@@ -168,6 +181,21 @@
 		line-height: 1;
 		color: #e8b84a;
 		background: linear-gradient(180deg, #f0d070 0%, #e0a838 38%, #c07014 72%, #8a4e0c 100%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+
+	/* Popout S — same gold stack, ~1–2 steps darker so it reads on the tiny plaque. */
+	.duel-bank-total.darker {
+		filter: drop-shadow(0 1px 0 #d4b060) drop-shadow(0 3px 0 #3a2806)
+			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
+	}
+
+	.duel-bank-total.darker .duel-bank-prefix,
+	.duel-bank-total.darker .duel-bank-amount {
+		color: #d4a43a;
+		background: linear-gradient(180deg, #e0c060 0%, #d09830 38%, #b06010 72%, #7a4208 100%);
 		-webkit-background-clip: text;
 		background-clip: text;
 		-webkit-text-fill-color: transparent;

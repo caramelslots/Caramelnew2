@@ -61,6 +61,46 @@ export const MASCOT_COIN_FLY_WAIT_MS = 1400;
 /** Resume hat from hold → end (~1.1s remaining). */
 export const MASCOT_HAT_ON_MS = Math.round((MASCOT_HAT_DURATION_S - MASCOT_HAT_HOLD_TIME_S) * 1000);
 
+/**
+ * Hat art is split into crown (`purple`/`gray`) + thin brim strip (`*_back`).
+ * Both share ~−86° rotation so the join reads as a horizontal screen-space
+ * seam — linear filtering + subpixel pose opens a 1px transparent line
+ * (diamond shows through during `hat`). Thicken the brim strip slightly so
+ * the pieces overlap. Applied once per RegionAttachment instance.
+ */
+export const MASCOT_HAT_BRIM_SEAL_SCALE_Y = 1.14;
+const MASCOT_HAT_BRIM_ATTACHMENT_NAMES = new Set(['purple_back', 'gray_back']);
+const sealedHatBrimAttachments = new WeakSet<object>();
+
+type HatBrimSkeletonLike = {
+	data?: {
+		skins?: Array<{
+			getAttachments: () => Array<{ name: string; attachment: unknown }>;
+		}>;
+	};
+};
+
+export const sealMascotHatBrimSeam = (skeleton: HatBrimSkeletonLike | null | undefined) => {
+	const skins = skeleton?.data?.skins;
+	if (!skins?.length) return;
+	for (const skin of skins) {
+		for (const entry of skin.getAttachments()) {
+			const att = entry.attachment as {
+				name?: string;
+				scaleY?: number;
+				updateRegion?: () => void;
+			} | null;
+			if (!att || sealedHatBrimAttachments.has(att)) continue;
+			const name = att.name ?? entry.name;
+			if (!MASCOT_HAT_BRIM_ATTACHMENT_NAMES.has(name)) continue;
+			if (typeof att.scaleY !== 'number' || typeof att.updateRegion !== 'function') continue;
+			sealedHatBrimAttachments.add(att);
+			att.scaleY *= MASCOT_HAT_BRIM_SEAL_SCALE_Y;
+			att.updateRegion();
+		}
+	}
+};
+
 /** Gun / load clip lengths (designer `cat_render`, wall-clock @ 1×). */
 export const MASCOT_GUN_START_MS = 2530;
 export const MASCOT_LOAD_MS = 670;

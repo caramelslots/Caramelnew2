@@ -428,8 +428,8 @@
 	};
 
 	/**
-	 * Production freeSpinTargetPick path: board stays until steam covers
-	 * (solo preview dismisses immediately after pick).
+	 * Production freeSpinTargetPick path: gallery retreats (slide + unload)
+	 * before steam (solo preview dismisses immediately after pick).
 	 */
 	const playTargetPickPreview = () =>
 		guard(async () => {

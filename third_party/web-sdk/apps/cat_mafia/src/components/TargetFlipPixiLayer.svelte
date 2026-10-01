@@ -14,7 +14,6 @@
 	import * as PIXI from 'pixi.js';
 
 	import { getContext } from '../game/context';
-	import { BOARD_LAYOUT_OFFSETS } from '../game/constants';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
 	import {
@@ -51,12 +50,10 @@
 	 */
 	const holeScreen = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
-		const layoutType = context.stateLayoutDerived.layoutType();
-		const off = BOARD_LAYOUT_OFFSETS[layoutType] ?? { x: 0, y: 0 };
 		const board = context.stateGameDerived.boardLayout();
 		const hole = targetPickInnerClip();
-		const centerX = ml.x + off.x * ml.scale;
-		const centerY = ml.y + off.y * ml.scale;
+		const centerX = ml.x + (board.x - ml.width * 0.5) * ml.scale;
+		const centerY = ml.y + (board.y - ml.height * 0.5) * ml.scale;
 		const cell = board.scale * ml.scale;
 		const originX = centerX - board.width * 0.5 * cell;
 		const originY = centerY - board.height * 0.5 * cell;

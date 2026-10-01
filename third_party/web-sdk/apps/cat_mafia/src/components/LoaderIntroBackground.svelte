@@ -47,9 +47,7 @@
 	});
 
 	const box = $derived(getLoaderIntroLayerBox(canvasSize));
-	const roofsBox = $derived(
-		getLoaderIntroRoofsBox(canvasSize, context.stateLayoutDerived.canvasSizeType()),
-	);
+	const roofsBox = $derived(getLoaderIntroRoofsBox(canvasSize));
 	const sceneBox = $derived.by(() => {
 		const top = Math.min(box.top, roofsBox.top);
 		const bottom = Math.max(box.top + box.height, roofsBox.top + roofsBox.height);

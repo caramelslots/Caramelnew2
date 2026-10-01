@@ -1,7 +1,7 @@
 <!--
 	Shared blur backdrop for buy-bonus menu + confirm.
-	Keep card SpinePlayers warm while basegame allows — park the buy panel off-screen
-	so open does not wait on WebGL compile.
+	Buy panel mounts only when the menu/confirm is open — no off-screen WebGL warm
+	park on base (atlases + fb:buyBonus were ~30MB+ with CPU twins).
 -->
 <script lang="ts">
 	import { stateModal } from 'state-shared';
@@ -9,16 +9,11 @@
 	import BuyBonusOverlay from './BuyBonusOverlay.svelte';
 	import BuyBonusConfirmOverlay from './BuyBonusConfirmOverlay.svelte';
 	import BuyDuelPickOverlay from './BuyDuelPickOverlay.svelte';
-	import {
-		clearBuyBonusFeatureEvictLock,
-		shouldKeepBuyBonusWarm,
-	} from '../game/buyBonusSharedPixi';
+	import { clearBuyBonusFeatureEvictLock } from '../game/buyBonusSharedPixi';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
 	import { releaseAllBuyBonusCardSpinePlayers } from '../game/buyBonusCardGpu';
 	import { releaseAllDuelPickSpinePlayers } from '../game/duelPickGpu';
-	import { stateDuel } from '../game/stateDuel.svelte';
-	import { stateGame } from '../game/stateGame.svelte';
 
 	const shellMounted = $derived(gameEntrance.showContent);
 	const showBuyPanel = $derived(stateModal.modal?.name === 'buyBonus');
@@ -26,31 +21,17 @@
 	const showDuelPickPanel = $derived(stateModal.modal?.name === 'buyDuelPick');
 	const isBuyFlowOpen = $derived(showBuyPanel || showConfirmPanel || showDuelPickPanel);
 
-	/** Park buy-panel DOM (+ SpinePlayers) as soon as content shows — don't wait for lift end. */
-	const keepBuyWarm = $derived(
-		gameEntrance.showContent &&
-			(() => {
-				void stateGame.gameType;
-				void stateGame.freeSpinIntroActive;
-				void stateGame.transitionActive;
-				void stateGame.targetPickOpen;
-				void stateGame.targetPickSlide;
-				void stateGame.drumShootActive;
-				void stateDuel.active;
-				void gameEntrance.buyBonusFeatureEvictLock;
-				return shouldKeepBuyBonusWarm();
-			})(),
-	);
-	const mountBuyPanel = $derived(showBuyPanel || showConfirmPanel || keepBuyWarm);
-	/** Confirm has no own spines — only mounts when open and reparents the menu portal. */
+	/** Confirm reparents menu portal — keep buy overlay mounted while confirm is open. */
+	const mountBuyPanel = $derived(showBuyPanel || showConfirmPanel);
 	const mountConfirmPanel = $derived(showConfirmPanel);
 
-	/** Show shell as soon as buy flow opens — board HTML must not wait on spine warm. */
-	const isVisible = $derived(showBuyPanel || showConfirmPanel || showDuelPickPanel);
-	/** Dim while first open waits for spines (warm miss). */
+	/** Dim while spines flush; reveal board + cards together when ready. */
 	const isPreparingBuy = $derived(showBuyPanel && !gameEntrance.buyBonusPanelReady);
-	/** Park warm hosts off-screen with real layout size so WebGL can compile. */
-	const isWarmParked = $derived(mountBuyPanel && !showBuyPanel);
+	const isVisible = $derived(
+		(showBuyPanel && gameEntrance.buyBonusPanelReady) ||
+			showConfirmPanel ||
+			showDuelPickPanel,
+	);
 
 	/** Opening buy flow after a feature must drop the eviction lock or warm never returns. */
 	$effect(() => {
@@ -59,12 +40,12 @@
 	});
 
 	$effect(() => {
-		if (isBuyFlowOpen || keepBuyWarm) {
+		if (isBuyFlowOpen) {
 			startBuyBonusFlowPreload();
+			return;
 		}
-		if (isBuyFlowOpen) return;
 		releaseAllDuelPickSpinePlayers();
-		if (!keepBuyWarm) releaseAllBuyBonusCardSpinePlayers();
+		releaseAllBuyBonusCardSpinePlayers();
 	});
 </script>
 
@@ -73,20 +54,18 @@
 		class="buy-bonus-modal-shell"
 		class:active={isVisible}
 		class:preparing={isPreparingBuy}
-		class:warm={isWarmParked}
 		aria-hidden={!isVisible}
 		inert={!isVisible && !isPreparingBuy}
-		data-buy-bonus-prepare={isPreparingBuy || isWarmParked ? '' : undefined}
+		data-buy-bonus-prepare={isPreparingBuy ? '' : undefined}
 		data-test="buy-bonus-modal-shell"
 	>
 		<div
 			class="panel-slot"
-			class:active={showBuyPanel}
+			class:active={showBuyPanel && gameEntrance.buyBonusPanelReady}
 			class:preparing={isPreparingBuy}
-			class:warm-park={isWarmParked}
-			aria-hidden={!showBuyPanel}
-			inert={!showBuyPanel}
-			data-buy-bonus-prepare={isPreparingBuy || isWarmParked ? '' : undefined}
+			aria-hidden={!showBuyPanel || !gameEntrance.buyBonusPanelReady}
+			inert={!showBuyPanel || !gameEntrance.buyBonusPanelReady}
+			data-buy-bonus-prepare={isPreparingBuy ? '' : undefined}
 		>
 			{#if mountBuyPanel}
 				<BuyBonusOverlay />
@@ -137,14 +116,14 @@
 			-webkit-backdrop-filter: blur(30px);
 		}
 
-		/* Instant feedback on tap: dim while spines flush, then reveal cards. */
+		/* Tap feedback: dim only while spines flush — board stays hidden until ready. */
 		&.preparing:not(.active) {
 			opacity: 1;
 			visibility: visible;
 			pointer-events: auto;
 			background: rgba(0, 0, 0, 0.5);
-			backdrop-filter: none;
-			-webkit-backdrop-filter: none;
+			backdrop-filter: blur(30px);
+			-webkit-backdrop-filter: blur(30px);
 		}
 
 		/* Park card WebGL off-screen after lift — keep layout size, no paint. */

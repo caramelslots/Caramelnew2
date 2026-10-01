@@ -138,8 +138,12 @@
 					}
 					reelSymbol.symbolState = 'winLift';
 					await tick();
+					// Paylines/spotlight may clear while we yield — resetBoardCelebrateToIdle
+					// snaps to static and fires oncomplete; do not revive celebrate after that.
+					if (reelSymbol.symbolState !== 'winLift') return;
 					reelSymbol.symbolState = 'win';
 					await waitForWinComplete(reelSymbol);
+					if (reelSymbol.symbolState !== 'win') return;
 					reelSymbol.symbolState = 'postWinStatic';
 				}),
 			);

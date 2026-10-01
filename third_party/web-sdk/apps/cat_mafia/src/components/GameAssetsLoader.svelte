@@ -10,6 +10,7 @@
 	import {
 		BATCH4_HTML_ONLY_KEYS,
 		LOADER_ASSET_BATCHES,
+		getBatch2KeysForLocale,
 		getBatch3KeysForLocale,
 		getEntryLoadKeyCount,
 	} from '../game/assetLoadPlan';
@@ -90,13 +91,12 @@
 				loadedCount = 0;
 				context.stateApp.loadingProgress = 0;
 
-				const [batch1, batch2] = LOADER_ASSET_BATCHES;
+				const [batch1] = LOADER_ASSET_BATCHES;
 
-				// Batch 3 is filtered to the active locale — locale-specific font keys
-				// for other scripts (hi / vi / cjk) are skipped, saving 0.8–3 MB for
-				// most users. LOADER_ASSET_KEY_COUNT still includes all locale font keys
-				// so the progress bar slightly undershoots 100% before we force it below.
+				// Batches 2–3 skip fonts for inactive locales (ru / hi / vi / cjk).
+				// LOADER_ASSET_KEY_COUNT still lists every key for the assets map check.
 				const locale = stateUrlDerived.lang();
+				const batch2 = getBatch2KeysForLocale(locale);
 				const batch3 = getBatch3KeysForLocale(locale);
 				entryTotal = getEntryLoadKeyCount(locale);
 
@@ -115,6 +115,9 @@
 				context.stateApp.loadingProgress = ENTRY_PROGRESS_CAP;
 
 				context.stateApp.loaded = true;
+				// Do NOT releaseCpuTextureTwins here — board/bg spines often have not
+				// drawn yet under the loader HTML. Dropping ImageBitmap before the
+				// first GPU upload leaves solid-black street/board after Continue.
 			})();
 		}
 	});
@@ -135,6 +138,7 @@
 				shouldSkipDeferredTirMerge() ? omitParkedTirAssets(batch4Assets) : batch4Assets,
 			);
 			downscalePhoneSpineAtlases();
+			// CPU twin release is disabled for main app (texture GC + spin WebPs).
 			gameEntrance.postLiftAssetsReady = true;
 			if (!shouldSkipDeferredTirMerge()) void ensureTargetBoardSpritesInPixi('six');
 		})();

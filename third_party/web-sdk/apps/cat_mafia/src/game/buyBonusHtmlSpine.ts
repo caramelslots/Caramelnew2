@@ -1,7 +1,5 @@
 /** designer_assets buy-bonus card spines — HTML SpinePlayer (same path as duel pick). */
 
-import { isPhoneForAtlasDownscale } from './phoneSpineAtlasDownscale';
-
 export type BuyBonusSpineVariant = 'normal' | 'super' | 'duel';
 
 export type BuyBonusSpineViewport = {
@@ -35,7 +33,8 @@ export const BUY_BONUS_SPINE_VIEWPORTS = {
 } as const satisfies Record<BuyBonusSpineVariant, BuyBonusSpineViewport>;
 
 export const BUY_BONUS_SPINE_ANIM: Record<BuyBonusSpineVariant, string> = {
-	normal: 'idle_bonusnormal',
+	/** Full cat+frame export from designer_assets/normal. */
+	normal: 'idle_bonus',
 	super: 'idle_bonus',
 	duel: 'idle_duel',
 };
@@ -45,9 +44,9 @@ export const BUY_BONUS_SPINE_FILES: Record<
 	{ json: string; atlas: string; images: readonly string[] }
 > = {
 	normal: {
-		json: 'bonus_normal.json',
-		atlas: 'bonus_normal.atlas',
-		images: ['bonus_normal.webp'],
+		json: 'mascot_cat.json',
+		atlas: 'mascot_cat.atlas',
+		images: ['mascot_cat.webp', 'mascot_cat_2.webp'],
 	},
 	super: {
 		json: 'WILD_F_1.json',
@@ -97,7 +96,7 @@ export const BUY_BONUS_SPINE_IMAGE_URLS = (
 
 /** Designer reference stills baked into the export — hide at runtime. */
 export const BUY_BONUS_HIDDEN_SLOTS: Record<BuyBonusSpineVariant, readonly string[]> = {
-	/** New normal export is frame-only — mascot comes from shared white spine. */
+	/** Self-contained cat+frame — no separate white mascot / street still. */
 	normal: [],
 	/** New wild_superbonus export is self-contained — no reference still. */
 	super: [],
@@ -134,101 +133,5 @@ export const preloadBuyBonusSpines = async () => {
 		const files = buyBonusSpineUrls(variant);
 		return [files.atlas, files.skeleton, ...files.images];
 	});
-	const normalMascot = buyBonusNormalMascotUrls();
-	urls.push(normalMascot.atlas, normalMascot.skeleton, ...normalMascot.images);
 	await Promise.all(urls.map((url) => fetch(url).catch(() => null)));
-};
-
-const buyBonusSpineBitmaps = new Map<string, ImageBitmap>();
-let bitmapDecodePromise: Promise<void> | null = null;
-let bitmapDecodeEpoch = 0;
-/** Feature / tir must not re-decode 4K pages into RAM. */
-let bitmapDecodeAllowed = true;
-
-const uniqueBuyBonusSpineImageUrls = () => [...new Set(BUY_BONUS_SPINE_IMAGE_URLS)];
-
-const yieldFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-
-const decodeBuyBonusSpineBitmap = async (url: string, epoch: number) => {
-	if (epoch !== bitmapDecodeEpoch || buyBonusSpineBitmaps.has(url)) return;
-	const response = await fetch(url);
-	if (!response.ok) return;
-	const blob = await response.blob();
-	if (epoch !== bitmapDecodeEpoch) return;
-	const bitmap = await createImageBitmap(blob);
-	if (epoch !== bitmapDecodeEpoch) {
-		bitmap.close();
-		return;
-	}
-	const previous = buyBonusSpineBitmaps.get(url);
-	if (previous && previous !== bitmap) previous.close();
-	buyBonusSpineBitmaps.set(url, bitmap);
-};
-
-/**
- * CPU-decode atlas pages during the loader cards idle screen.
- * No WebGL — overlay `loadSpine` only uploads after `ensureApp`.
- * Fire-and-forget: do not await from Continue / `startBuyBonusFlowPreload`.
- */
-export const startBuyBonusSpineBitmapDecode = (): Promise<void> => {
-	if (typeof window === 'undefined' || typeof createImageBitmap !== 'function') {
-		return Promise.resolve();
-	}
-	if (!bitmapDecodeAllowed) return Promise.resolve();
-	if (bitmapDecodePromise) return bitmapDecodePromise;
-
-	const urls = uniqueBuyBonusSpineImageUrls();
-	if (urls.every((url) => buyBonusSpineBitmaps.has(url))) return Promise.resolve();
-
-	const epoch = bitmapDecodeEpoch;
-	bitmapDecodePromise = (async () => {
-		if (isPhoneForAtlasDownscale()) {
-			for (const url of urls) {
-				if (epoch !== bitmapDecodeEpoch) return;
-				try {
-					await decodeBuyBonusSpineBitmap(url, epoch);
-				} catch {
-					/* keep going — overlay loadSpine falls back to Assets.load */
-				}
-				await yieldFrame();
-			}
-			return;
-		}
-		await Promise.all(
-			urls.map((url) => decodeBuyBonusSpineBitmap(url, epoch).catch(() => undefined)),
-		);
-	})();
-
-	return bitmapDecodePromise;
-};
-
-export const getBuyBonusSpineBitmap = (url: string) => buyBonusSpineBitmaps.get(url);
-
-/** Drop decoded pages after GPU upload (phone compact) or overlay teardown. */
-export const releaseBuyBonusSpineBitmaps = (urls?: readonly string[]) => {
-	const targets = urls ?? [...buyBonusSpineBitmaps.keys()];
-	for (const url of targets) {
-		const bitmap = buyBonusSpineBitmaps.get(url);
-		buyBonusSpineBitmaps.delete(url);
-		if (!bitmap) continue;
-		try {
-			bitmap.close();
-		} catch {
-			/* already closed */
-		}
-	}
-	if (!urls) {
-		bitmapDecodeEpoch += 1;
-		bitmapDecodePromise = null;
-	}
-};
-
-export const resumeBuyBonusSpineBitmapDecode = () => {
-	bitmapDecodeAllowed = true;
-};
-
-/** Stop CPU decode and drop bitmaps while a feature owns VRAM. */
-export const suspendBuyBonusSpineBitmapDecode = () => {
-	bitmapDecodeAllowed = false;
-	releaseBuyBonusSpineBitmaps();
 };

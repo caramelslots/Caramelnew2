@@ -20,8 +20,9 @@
 
 	import {
 		BOARD_DIMENSIONS,
-		BOARD_LAYOUT_OFFSETS,
 		SYMBOL_SIZE,
+		isPopoutSmallViewport,
+		resolveBoardLayoutOffset,
 	} from '../game/constants';
 	import assets from '../game/assets';
 	import { getFsOutroCongratulationsText, getFsOutroYouWonText } from '../game/fsOutroBannerText';
@@ -80,10 +81,12 @@
 	const panelLayout = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
 		const layoutType = context.stateLayoutDerived.layoutType();
-		const off = BOARD_LAYOUT_OFFSETS[layoutType] ?? { x: 0, y: 0 };
+		const canvas = context.stateLayoutDerived.canvasSizes();
+		const off = resolveBoardLayoutOffset(layoutType, canvas);
 		const centerX = ml.x + off.x * ml.scale;
 		const centerY = ml.y + off.y * ml.scale;
 		const isPortrait = layoutType === 'portrait';
+		const popoutS = isPopoutSmallViewport(canvas);
 
 		const panelWidth =
 			SYMBOL_SIZE *
@@ -93,6 +96,12 @@
 		const panelHeight = panelWidth / BOARD_RATIO;
 		const numberFontRatio = isPortrait ? NUMBER_FONT_RATIO_PORTRAIT : NUMBER_FONT_RATIO;
 		const numberFontPx = Math.max(20, Math.round(panelWidth * numberFontRatio));
+		/**
+		 * Popout S: never floor font px — a 14px min on a ~200px plaque
+		 * inflates Congrats/YOU WON vs the arc and looks crushed / oversized.
+		 * Popout L and everything else keep the readable desktop floor.
+		 */
+		const textMinPx = popoutS ? 1 : 14;
 
 		return {
 			centerX,
@@ -101,6 +110,8 @@
 			panelHeight,
 			layoutScale: ml.scale,
 			isPortrait,
+			popoutS,
+			textMinPx,
 			numberFontPx,
 			numberTop: panelHeight * (isPortrait ? NUMBER_Y_RATIO_PORTRAIT : NUMBER_Y_RATIO),
 		};
@@ -142,7 +153,7 @@
 
 	const freeSpinsStyle = $derived.by(() => {
 		const p = panelLayout;
-		const fontPx = Math.max(14, Math.round(p.panelWidth * FREE_SPINS_SIZE_RATIO));
+		const fontPx = Math.max(p.textMinPx, Math.round(p.panelWidth * FREE_SPINS_SIZE_RATIO));
 		return [
 			`top:${p.panelHeight * FREE_SPINS_Y_RATIO}px`,
 			`font-size:${fontPx}px`,
@@ -152,7 +163,7 @@
 
 	const youWonStyle = $derived.by(() => {
 		const p = panelLayout;
-		const fontPx = Math.max(14, Math.round(p.panelWidth * YOU_WON_SIZE_RATIO));
+		const fontPx = Math.max(p.textMinPx, Math.round(p.panelWidth * YOU_WON_SIZE_RATIO));
 		return [
 			`top:${p.panelHeight * YOU_WON_Y_RATIO}px`,
 			`font-size:${fontPx}px`,
@@ -175,15 +186,15 @@
 		return total;
 	};
 
-	/** Font size after locale fit — never above EN design size. */
+	/** Font size after locale fit — never above EN design size. Same ratios as Popout L. */
 	const congratulationsFontPx = $derived.by(() => {
 		const p = panelLayout;
-		const basePx = Math.max(14, Math.round(p.panelWidth * CONGRATULATIONS_SIZE_RATIO));
+		const basePx = Math.max(p.textMinPx, Math.round(p.panelWidth * CONGRATULATIONS_SIZE_RATIO));
 		const refW = measureCongratsAdvance(CONGRATULATIONS_FIT_REF, basePx);
 		const textW = measureCongratsAdvance(congratulationsText, basePx);
 		if (textW <= refW || refW <= 0) return basePx;
 		const scale = Math.max(CONGRATULATIONS_MIN_SCALE, refW / textW);
-		return Math.max(12, Math.round(basePx * scale));
+		return Math.max(p.textMinPx, Math.round(basePx * scale));
 	});
 
 	const congratulationsStyle = $derived.by(() => {
@@ -574,6 +585,7 @@
 		width: 0;
 		height: 0;
 		transform: translate(-50%, -50%);
+		transform-origin: center center;
 		font-family: 'proxima-nova', sans-serif;
 		font-weight: 800;
 		letter-spacing: 0;

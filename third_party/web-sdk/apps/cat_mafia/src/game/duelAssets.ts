@@ -11,6 +11,10 @@ export const DUEL_CAT_FACE_AVATAR_SRC = assetUrl('assets/sprites/duel/cat_face_a
 /** Phone duel corner portrait (dog face). */
 export const DUEL_DOG_FACE_AVATAR_SRC = assetUrl('assets/sprites/duel/dog_face_avatar.webp');
 
+/** Buy / in-round duel side-pick — first idle frame stills (no Spine). */
+export const DUEL_PICK_MASCOT_CAT_IDLE_SRC = assetUrl('assets/sprites/duel/pick_mascot_cat_idle.webp');
+export const DUEL_PICK_MASCOT_DOG_IDLE_SRC = assetUrl('assets/sprites/duel/pick_mascot_dog_idle.webp');
+
 /** Landscape duel header wordmark (replaces PC “DUEL” text). */
 export const DUEL_LOGO_SRC = assetUrl('assets/sprites/duel/logo.webp');
 

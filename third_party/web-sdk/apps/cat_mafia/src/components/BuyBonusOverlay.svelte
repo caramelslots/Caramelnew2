@@ -187,9 +187,9 @@
 	class:portrait={isPortrait}
 	class:popout-l={isPopout}
 	class:popout-s={isPopoutSmall}
-	class:ready={isOpen}
+	class:ready={isOpen && gameEntrance.buyBonusPanelReady}
 	data-test="buy-bonus-overlay"
-	aria-hidden={!isOpen}
+	aria-hidden={!isOpen || !gameEntrance.buyBonusPanelReady}
 >
 	<img class="panel-bg" src={bgUrl} alt="" draggable="false" loading="eager" />
 
@@ -509,9 +509,13 @@
 		}
 
 		&:disabled {
-			opacity: 0.5;
 			cursor: not-allowed;
 			pointer-events: none;
+
+			/* Dim HTML only — Spine stays opaque (tint in buyBonusSharedPixi). */
+			.card-content {
+				opacity: 0.55;
+			}
 		}
 	}
 

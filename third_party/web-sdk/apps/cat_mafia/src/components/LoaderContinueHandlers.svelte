@@ -5,6 +5,12 @@
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { LOADER_INTRO_FADE_MS, LOADER_LIFT_DURATION_MS } from '../game/constants';
+	import {
+		LOADER_CARD_2_SOCIAL_IMAGE_URL,
+		LOADER_SCREEN_IMAGE_URLS,
+		loaderScreenImageUrls,
+	} from '../game/loaderCardAssets';
+	import { clearHtmlPreloadMemoryRegistry } from '../game/preloadHtmlImages';
 
 	type Props = {
 		onloaded?: () => void;
@@ -19,12 +25,22 @@
 		}
 	});
 
+	/** Drop loader-card Dev RAM rows once intro is gone (HTTP cache may still hold bytes). */
+	const releaseLoaderHtmlPreloads = () => {
+		clearHtmlPreloadMemoryRegistry([
+			...LOADER_SCREEN_IMAGE_URLS,
+			...loaderScreenImageUrls(),
+			LOADER_CARD_2_SOCIAL_IMAGE_URL,
+		]);
+	};
+
 	const onExitComplete = () => {
 		gameEntrance.loaderExitActive = false;
 		gameEntrance.introFading = false;
 		gameEntrance.loadingCardsVisible = false;
 		gameEntrance.liftComplete = true;
 		context.stateLayout.showLoadingScreen = false;
+		releaseLoaderHtmlPreloads();
 		props.onloaded?.();
 	};
 

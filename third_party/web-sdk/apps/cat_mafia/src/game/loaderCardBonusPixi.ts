@@ -8,9 +8,18 @@
  * height leaks under the BONUS bar.
  *
  * Canvas is a child of the card host so carousel translateX moves with it.
+ *
+ * Atlas pages are uploaded into THIS overlay renderer (canvas copy), not via
+ * shared `Assets.load` keys — those bind to the main-game GL and paint black here.
  */
 import * as PIXI from 'pixi.js';
-import { Spine } from '@esotericsoftware/spine-pixi-v8';
+import {
+	AtlasAttachmentLoader,
+	SkeletonJson,
+	Spine,
+	SpineTexture,
+	TextureAtlas,
+} from '@esotericsoftware/spine-pixi-v8';
 
 import assets from './assets';
 import { pickBonusIdleClip } from './constants';
@@ -54,6 +63,56 @@ const bonusSpineSrc = () => {
 	const src = assets.B.src;
 	if (typeof src === 'string') throw new Error('loaderCardBonusPixi: B is not a spine asset');
 	return src;
+};
+
+const atlasPageUrl = (atlasUrl: string, pageName: string) => {
+	const base = atlasUrl.replace(/[^/]+$/, '');
+	return `${base}${pageName}`;
+};
+
+/**
+ * Build B skeleton with atlas pages uploaded into the loader overlay GL.
+ * Shared Assets/Cache keys from the main slot app paint solid black here.
+ */
+const buildBonusSkeletonForRenderer = async (renderer: PIXI.Renderer) => {
+	const urls = bonusSpineSrc();
+	const atlasText = await (await fetch(urls.atlas)).text();
+	const atlas = new TextureAtlas(atlasText);
+
+	for (const page of atlas.pages) {
+		const imgUrl = atlasPageUrl(urls.atlas, page.name);
+		const response = await fetch(imgUrl);
+		if (!response.ok) throw new Error(`loaderCardBonusPixi: image fetch failed: ${imgUrl}`);
+		const bitmap = await createImageBitmap(await response.blob());
+		const canvas = document.createElement('canvas');
+		canvas.width = bitmap.width;
+		canvas.height = bitmap.height;
+		const ctx = canvas.getContext('2d', { alpha: true });
+		if (!ctx) {
+			bitmap.close();
+			throw new Error(`loaderCardBonusPixi: canvas 2d unavailable: ${page.name}`);
+		}
+		ctx.clearRect(0, 0, canvas.width, canvas.height);
+		ctx.drawImage(bitmap, 0, 0);
+		bitmap.close();
+
+		const texture = PIXI.Texture.from(canvas);
+		texture.source.alphaMode = 'premultiply-alpha-on-upload';
+		texture.source.autoGenerateMipmaps = true;
+		texture.source.label = `loader-bonus-${page.name}`;
+		if (texture.source.style) texture.source.style.scaleMode = 'linear';
+		try {
+			renderer.texture.bind(texture.source);
+		} catch {
+			/* first draw will upload */
+		}
+		page.setTexture(SpineTexture.from(texture.source));
+	}
+
+	const skeletonJson = await (await fetch(urls.skeleton)).json();
+	const parser = new SkeletonJson(new AtlasAttachmentLoader(atlas));
+	parser.scale = 1;
+	return parser.readSkeletonData(skeletonJson);
 };
 
 const hostDpr = () => Math.min(window.devicePixelRatio || 1, 2);
@@ -207,18 +266,22 @@ const loadSpine = () => {
 	spineLoading = true;
 	const gen = appGen;
 	spineReady = (async () => {
-		await ensureApp();
-		if (gen !== appGen) return null;
-		const urls = bonusSpineSrc();
-		await PIXI.Assets.load([urls.atlas, urls.skeleton]);
-		if (gen !== appGen || !app) return null;
+		const createdApp = await ensureApp();
+		if (gen !== appGen || !createdApp) return null;
 		if (views.size === 0) return null;
 		if (spine) return spine;
-		const created = Spine.from({
-			skeleton: urls.skeleton,
-			atlas: urls.atlas,
-			autoUpdate: false,
-		});
+
+		let skeletonData;
+		try {
+			skeletonData = await buildBonusSkeletonForRenderer(createdApp.renderer);
+		} catch (error) {
+			console.error('[loaderCardBonus] spine load failed', error);
+			return null;
+		}
+		if (gen !== appGen || !app || views.size === 0) return null;
+		if (spine) return spine;
+
+		const created = new Spine({ skeletonData, autoUpdate: false });
 		created.state.setAnimation(0, 'idle', true);
 		bindIdleCycle(created);
 		const previousBefore = created.beforeUpdateWorldTransforms;
@@ -340,14 +403,15 @@ const destroyIfIdle = () => {
 	spine = undefined;
 	spineReady = undefined;
 	tickerBound = false;
-	currentSpine?.destroy({ children: true });
+	currentSpine?.destroy({ children: true, texture: false });
 	hostObserver?.disconnect();
 	hostObserver = undefined;
 	if (resizeListening) {
 		window.removeEventListener('resize', requestSync);
 		resizeListening = false;
 	}
-	if (current) current.destroy(true);
+	// Destroy the overlay view/renderer only — do not touch shared Assets textures.
+	if (current) current.destroy(true, { children: true, texture: false });
 };
 
 /** Tear down overlay WebGL after Continue / unmount. Does not unload slot atlas B. */

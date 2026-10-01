@@ -30,6 +30,13 @@ const warmHttpCache = async (urls: readonly string[], concurrency: number) => {
 	);
 };
 
+const urlLocale = () => {
+	const params = new URLSearchParams(window.location.search);
+	return resolveLanguage(params.get('lang'), {
+		social: params.get('social') === 'true',
+	});
+};
+
 let batch1Started = false;
 let batch2Started = false;
 
@@ -51,7 +58,7 @@ export const startBatch2EarlyPreload = () => {
 	if (batch2Started || typeof window === 'undefined') return;
 	batch2Started = true;
 
-	void warmHttpCache(collectBatch2EarlyPreloadUrls(), 8);
+	void warmHttpCache(collectBatch2EarlyPreloadUrls(urlLocale()), 8);
 };
 
 let batch3Started = false;
@@ -70,10 +77,6 @@ export const startBatch3EarlyPreload = () => {
 	if (batch3Started || typeof window === 'undefined') return;
 	batch3Started = true;
 
-	const params = new URLSearchParams(window.location.search);
-	const locale = resolveLanguage(params.get('lang'), {
-		social: params.get('social') === 'true',
-	});
-	const batch3Keys = getBatch3KeysForLocale(locale);
+	const batch3Keys = getBatch3KeysForLocale(urlLocale());
 	void warmHttpCache(collectBatchHttpUrls(batch3Keys), 6);
 };

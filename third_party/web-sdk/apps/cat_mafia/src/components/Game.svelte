@@ -149,6 +149,7 @@
 >
 	<GameApp
 		maxResolution={3}
+		antialias={false}
 		tuneForMobilePortrait
 		webglOnIosAndroid
 		maxFps={phoneTickerMaxFps}

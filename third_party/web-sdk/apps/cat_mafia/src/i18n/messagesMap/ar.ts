@@ -47,6 +47,7 @@ export default {
 	FREE_SPINS_AWARDED_SUFFIX: 'دورات مجانية',
 	MAX_WIN: 'الحد الأقصى للفوز',
 	PRESS_TO_CONTINUE: 'اضغط للمتابعة',
+	LOADING_PROGRESS: 'جاري التحميل {percent}%',
 	LOADER_CARD_1_TITLE: 'لفات مجانية',
 	LOADER_CARD_1_LINE_1: 'احصل على 3+ scatters ثم اختر هدفًا',
 	LOADER_CARD_1_LINE_2: 'لـ 8 / 10 / 12 لفة مجانية',

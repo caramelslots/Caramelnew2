@@ -1,9 +1,9 @@
 /**
- * Duel pick HTML SpinePlayers (cat/dog). Drop WebGL on buy-bonus close.
+ * Duel pick GPU helpers.
+ * Pick mascots are static `<img>` now (no SpinePlayer WebGL).
+ * `loseWebglCanvas` remains for other HTML Spine teardown (buy-bonus legacy).
  */
 import type { SpinePlayer } from '@esotericsoftware/spine-player';
-
-const livePlayers = new Set<SpinePlayer>();
 
 export const loseWebglCanvas = (canvas: HTMLCanvasElement | null | undefined) => {
 	if (!canvas) return;
@@ -23,25 +23,20 @@ export const loseWebglCanvas = (canvas: HTMLCanvasElement | null | undefined) =>
 	}
 };
 
-export const disposeDuelPickSpinePlayer = (player: SpinePlayer | undefined) => {
-	if (!player) return;
-	livePlayers.delete(player);
-	loseWebglCanvas(player.canvas);
-	try {
-		player.dispose();
-	} catch {
-		/* already disposed */
-	}
+/** @deprecated Pick mascots no longer use SpinePlayer — kept for call-site no-ops. */
+export const disposeDuelPickSpinePlayer = (_player: SpinePlayer | undefined) => {
+	/* no-op */
 };
 
-export const trackDuelPickSpinePlayer = (player: SpinePlayer) => {
-	livePlayers.add(player);
+/** @deprecated */
+export const trackDuelPickSpinePlayer = (_player: SpinePlayer) => {
+	/* no-op */
 };
 
-/** Live HTML SpinePlayers for the debug memory bar (canvas + atlas VRAM). */
-export const getLiveDuelPickSpinePlayers = (): readonly SpinePlayer[] => [...livePlayers];
+/** Always empty — pick cards use static images. */
+export const getLiveDuelPickSpinePlayers = (): readonly SpinePlayer[] => [];
 
+/** @deprecated no SpinePlayers to release */
 export const releaseAllDuelPickSpinePlayers = () => {
-	for (const player of [...livePlayers]) disposeDuelPickSpinePlayer(player);
-	livePlayers.clear();
+	/* no-op */
 };

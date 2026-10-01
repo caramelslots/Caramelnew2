@@ -1,11 +1,12 @@
 spin_button.webp
-size:2048,1024
+size:1024,512
 filter:Linear,Linear
+scale:0.5
 arrow_bottom
-bounds:1261,402,550,305
+bounds:630,201,275,152
 rotate:90
 arrow_top
-bounds:954,402,550,305
+bounds:477,201,275,152
 rotate:90
 button_bg
-bounds:2,2,950,950
+bounds:1,1,475,475

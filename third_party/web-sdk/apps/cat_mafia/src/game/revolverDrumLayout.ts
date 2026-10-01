@@ -322,19 +322,17 @@ const getPortraitHangingDrumBox = (args: {
 };
 
 export const getDrumBoxScreenPos = (args: {
-	mainLayout: { x: number; y: number; scale: number };
+	mainLayout: { x: number; y: number; scale: number; width: number; height: number };
 	layoutType: keyof typeof BOARD_LAYOUT_OFFSETS | string;
-	board: { visualWidth: number; visualHeight: number; scale: number };
+	board: { x: number; y: number; visualWidth: number; visualHeight: number; scale: number };
 	isDesktop: boolean;
 	/** Kept for callers — portrait no longer uses the Buy Bonus slot. */
 	layoutDerived?: LayoutDerived;
 }) => {
-	const off = BOARD_LAYOUT_OFFSETS[args.layoutType as keyof typeof BOARD_LAYOUT_OFFSETS] ?? {
-		x: 0,
-		y: 0,
-	};
-	const boardCenterX = args.mainLayout.x + off.x * args.mainLayout.scale;
-	const boardCenterY = args.mainLayout.y + off.y * args.mainLayout.scale;
+	const boardCenterX =
+		args.mainLayout.x + (args.board.x - args.mainLayout.width * 0.5) * args.mainLayout.scale;
+	const boardCenterY =
+		args.mainLayout.y + (args.board.y - args.mainLayout.height * 0.5) * args.mainLayout.scale;
 	const boardScreenW = args.board.visualWidth * args.mainLayout.scale;
 	const boardScreenH = args.board.visualHeight * args.mainLayout.scale;
 	const halfW = boardScreenW * 0.5;

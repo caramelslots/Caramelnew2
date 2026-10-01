@@ -1,6 +1,10 @@
 /**
  * Drop tir (gallery + Stage E) GPU after the cabinet is off-screen.
  * Extra FS / Super curtains are never touched. Next tir reloads via ensureTirPixiLoaded.
+ *
+ * Do NOT release CPU texture twins for tir spines/sprites while the cabinet is live:
+ * shotBullet / targetBoardFlip are rarely drawn until the first shot — twin wipe
+ * blanks them the same way spin WebPs went blank after a global Cache sweep.
  */
 
 import { Assets } from 'pixi.js';
@@ -56,6 +60,20 @@ const spineSrcUrls = (key: TirSpineKey): string[] => {
 	if (!entry || entry.type !== 'spine') return [];
 	return Object.values(entry.src).filter((v): v is string => typeof v === 'string');
 };
+
+export const waitAnimationFrames = (n = 2) =>
+	new Promise<void>((resolve) => {
+		let left = Math.max(1, n);
+		const tick = () => {
+			left -= 1;
+			if (left <= 0) {
+				resolve();
+				return;
+			}
+			requestAnimationFrame(tick);
+		};
+		requestAnimationFrame(tick);
+	});
 
 /** Serialize unload ↔ Stage E reload so a late FS drop cannot wipe the cabinet. */
 let tirAssetGate: Promise<void> = Promise.resolve();
@@ -177,20 +195,6 @@ export const ensureTirPixiLoaded = async (
 		}
 		tirGpuParked = false;
 		return patch;
-	});
-
-export const waitAnimationFrames = (n = 2) =>
-	new Promise<void>((resolve) => {
-		let left = Math.max(1, n);
-		const tick = () => {
-			left -= 1;
-			if (left <= 0) {
-				resolve();
-				return;
-			}
-			requestAnimationFrame(tick);
-		};
-		requestAnimationFrame(tick);
 	});
 
 /**

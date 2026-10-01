@@ -47,6 +47,7 @@ export default {
 	FREE_SPINS_AWARDED_SUFFIX: '免费旋转',
 	MAX_WIN: '最大赢奖',
 	PRESS_TO_CONTINUE: '点击继续',
+	LOADING_PROGRESS: '加载中 {percent}%',
 	LOADER_CARD_1_TITLE: '免费旋转',
 	LOADER_CARD_1_LINE_1: '收集 3+ SCATTER，然后选择目标',
 	LOADER_CARD_1_LINE_2: '获得 8 / 10 / 12 次免费旋转',

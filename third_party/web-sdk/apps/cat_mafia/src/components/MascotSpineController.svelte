@@ -18,6 +18,7 @@
 		REVOLVER_IN_ATTACK_MS,
 		nextMascotIdleVariantDelayMs,
 		pickMascotIdleVariant,
+		sealMascotHatBrimSeam,
 		type MascotDevPreview,
 		type MascotPose,
 		type MascotSpineAnimation,
@@ -455,6 +456,7 @@
 		state.addListener(listener);
 		ready = true;
 		hideSmileSlot();
+		sealMascotHatBrimSeam(spine.skeleton);
 		return () => {
 			state.apply = apply;
 			state.removeListener(listener);

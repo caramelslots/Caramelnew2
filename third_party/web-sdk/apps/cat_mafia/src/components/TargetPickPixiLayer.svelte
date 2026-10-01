@@ -120,7 +120,7 @@
 		bg: PIXI.Texture,
 		h: PIXI.Texture,
 		f: PIXI.Texture,
-		native: { width: number; height: number },
+		_native: { width: number; height: number },
 		content: { left: number; top: number; width: number; height: number },
 		bgUrl: string,
 	) => {
@@ -131,11 +131,16 @@
 				/* previous frame */
 			}
 		}
+		// Crop in texture pixel space — not TARGET_BOARD_NATIVE. After atlas
+		// downscale the source is smaller; native coords would sample past the
+		// bitmap (black void on the right/bottom of the cabinet).
+		const srcW = bg.source.pixelWidth || bg.source.width || bg.width;
+		const srcH = bg.source.pixelHeight || bg.source.height || bg.height;
 		const frame = new PIXI.Rectangle(
-			Math.round(content.left * native.width),
-			Math.round(content.top * native.height),
-			Math.round(content.width * native.width),
-			Math.round(content.height * native.height),
+			Math.round(content.left * srcW),
+			Math.round(content.top * srcH),
+			Math.max(1, Math.round(content.width * srcW)),
+			Math.max(1, Math.round(content.height * srcH)),
 		);
 		wood = new PIXI.Texture({ source: bg.source, frame });
 		holder = h;

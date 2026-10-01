@@ -47,6 +47,7 @@ export default {
 	FREE_SPINS_AWARDED_SUFFIX: 'フリースピン',
 	MAX_WIN: '最大勝利',
 	PRESS_TO_CONTINUE: 'タップして続行',
+	LOADING_PROGRESS: '読み込み中 {percent}%',
 	LOADER_CARD_1_TITLE: 'フリースピン',
 	LOADER_CARD_1_LINE_1: '3+ SCATTERを集め、ターゲットを選択',
 	LOADER_CARD_1_LINE_2: '8 / 10 / 12 フリースピン',

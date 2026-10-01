@@ -37,7 +37,6 @@ import {
 	MYSTERY_REVEAL_POST_DELAY_MS,
 	WIN_SPOTLIGHT_CLEAR_DELAY_MS,
 	TRANSITION_THEME_SWITCH_DELAY_MS,
-	TRANSITION_TIR_DISMISS_DELAY_MS,
 	WIN_HUD_COUNT_UP_MS,
 } from './constants';
 import {
@@ -50,7 +49,8 @@ import { ensureSwCurtainsForBoard } from './swCurtainGuard';
 import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
 import { startFsCongPreload } from './uiHtmlAssetManifest';
 import { waitForTimeout } from 'utils-shared/wait';
-import { dismissTirAndUnloadGpu, waitAnimationFrames } from './tirGpuMemory';
+import { dismissTirAndUnloadGpu, TIR_UNLOAD_DELAY_FRAMES, waitAnimationFrames } from './tirGpuMemory';
+import { isPhoneForAtlasDownscale } from './phoneSpineAtlasDownscale';
 import {
 	getDrumLastFilledChamberIndex,
 	syncDrumBulletOrients,
@@ -1293,19 +1293,26 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateUi.freeSpinCounterCurrent = 0;
 		stateUi.freeSpinCounterTotal = bookEvent.totalFs;
 
-		// Steam covers the gallery, snap tir UI off, THEN night/mascot/drum.
-		// Wait past THEME_SWITCH so the animated flip target isn't visible
-		// popping out under a still-thin cloud.
-		const transitionPromise = eventEmitter.broadcastAsync({
+		// Extra-style sequencing: gallery slides off + TIR GPU gone BEFORE steam.
+		// Avoids tir atlases overlapping night/mascot/drum + fsPopup load under the cloud.
+		const tirVisible =
+			hadTargetPick ||
+			stateGame.targetPickOpen ||
+			stateGame.targetPickSlide > 0.001 ||
+			stateGame.targetShotFlips.length > 0 ||
+			stateGame.targetShotFlight != null;
+		if (tirVisible) {
+			await eventEmitter.broadcastAsync({ type: 'targetPickRetreat' });
+			await dismissTirAndUnloadGpu({ uiAlreadyDismissed: true });
+			await waitAnimationFrames(
+				isPhoneForAtlasDownscale() ? TIR_UNLOAD_DELAY_FRAMES : 3,
+			);
+		}
+
+		await eventEmitter.broadcastAsync({
 			type: 'transition',
 			gameType: 'freegame',
-			deferThemeSwitch: true,
 		});
-		await waitForTimeout(TRANSITION_TIR_DISMISS_DELAY_MS);
-		await dismissTirAndUnloadGpu();
-		await waitAnimationFrames(3);
-		eventEmitter.broadcast({ type: 'transitionApplyTheme' });
-		await transitionPromise;
 
 		await startFsCongPreload();
 		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
@@ -1916,14 +1923,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		// Snap win/activate off the unmasked above-rails layer before scroll —
 		// otherwise celebrate cells leak above the desk mask (base does this in
-		// clearWinSpotlight / reveal). Cancel the delayed spotlight clear so it
-		// cannot fire mid-spin.
-		if (spotlightClearTimer !== null) {
-			clearTimeout(spotlightClearTimer);
-			spotlightClearTimer = null;
-		}
-		clearDuelSideWinPresentation(side);
-		stateDuel.winSpotlightSide = null;
+		// clearWinSpotlight / reveal). Clear both desks: cancelling only the
+		// delayed timer left the idle desk looping win after paylines vanished.
+		clearWinSpotlight();
 		// Keep sticky curtains through the spin (same as FS). Clearing them left a
 		// blank column: board SW stays alpha-0 via sticky while Spine is gone.
 		const stickyReelSet = new Set(Object.keys(sticky).map(Number));
@@ -2055,7 +2057,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const totalWin = bookEvent.totalWin ?? bookEvent.spinWin;
 		const bankStarted = startDuelBankCountUpFromNext(bookEvents, bookEvent, side);
 		if (wins.length > 0 && totalWin > 0) {
-			eventEmitter.broadcast({ type: 'paylineClearAll', side });
+			// Drop phase-1 lines AND celebrate together — paylineClearAll alone
+			// left win/`activate` looping until phase-2 lines drew.
+			clearDuelSideWinPresentation(side);
 			// Same budget as normal duel wins — never gate the next desk on full spines.
 			await playDuelWinLines(side, wins, totalWin);
 		} else if (bankStarted) {

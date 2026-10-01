@@ -5,7 +5,6 @@
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import {
-		BOARD_LAYOUT_OFFSETS,
 		BULLET_FLY_MS,
 		BULLET_FLY_TOTAL_MS,
 		BULLET_INSERT_MS,
@@ -51,10 +50,9 @@
 	const buildFlyStyle = (active: NonNullable<typeof fly>) => {
 		const ml = context.stateLayoutDerived.mainLayout();
 		const layout = context.stateLayoutDerived.layoutType();
-		const off = BOARD_LAYOUT_OFFSETS[layout] ?? { x: 0, y: 0 };
 		const board = context.stateGameDerived.boardLayout();
-		const centerX = ml.x + off.x * ml.scale;
-		const centerY = ml.y + off.y * ml.scale;
+		const centerX = ml.x + (board.x - ml.width * 0.5) * ml.scale;
+		const centerY = ml.y + (board.y - ml.height * 0.5) * ml.scale;
 		const halfW = (board.visualWidth / 2) * ml.scale;
 		const halfH = (board.visualHeight / 2) * ml.scale;
 		const cell = SYMBOL_SIZE * ml.scale * board.scale;
