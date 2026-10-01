@@ -7,7 +7,6 @@ Writes to apps/daloniil_test/src/stories/data/:
   base_books.ts                         (from books_base.json)
   bonus_books.ts                        (from books_bonus_normal.json — для совместимости со stories)
   books_bonus_boost.ts                  (новый)
-  books_special_spins.ts                (новый)
   books_bonus_super.ts                  (новый)
 
 Каждый файл — `export default <array>;`, поэтому web-sdk не требует
@@ -34,7 +33,6 @@ MAPPINGS = [
     ("books_base.json",          "base_books.ts",           "MODE_BASE base game books"),
     ("books_bonus_normal.json",  "bonus_books.ts",          "MODE_BONUS_NORMAL freegame books (buy)"),
     ("books_bonus_boost.json",   "books_bonus_boost.ts",    "MODE_BONUS_BOOST basegame books (2x bet)"),
-    ("books_special_spins.json", "books_special_spins.ts",  "MODE_SPECIAL_SPINS forced-FS books (30x bet)"),
     ("books_bonus_super.json",   "books_bonus_super.ts",    "MODE_BONUS_SUPER freegame books (×4 mystery start)"),
 ]
 

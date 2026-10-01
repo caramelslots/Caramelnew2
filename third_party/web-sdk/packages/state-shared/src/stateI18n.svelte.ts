@@ -10,5 +10,11 @@ export const stateI18nDerived = {
 		stateI18n.i18n.load(lang, messages as Messages);
 		stateI18n.i18n.activate(lang);
 	},
-	translate: (value: string) => stateI18n.i18n._(stateI18n.i18n.t(value)),
+	/**
+	 * Look up by message id and interpolate ICU values.
+	 * Do NOT wrap with `i18n.t()` first — that evaluates placeholders with empty
+	 * values and returns a plain string that `_` can no longer interpolate.
+	 */
+	translate: (value: string, values?: Record<string, unknown>) =>
+		stateI18n.i18n._(value, values),
 };

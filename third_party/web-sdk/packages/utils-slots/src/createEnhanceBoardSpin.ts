@@ -34,7 +34,9 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 	}) {
 		if (stateSlots.isPreSpinning) {
 			await Promise.all(
-				board.map(async (reel) => {
+				board.map(async (reel, reelIndex) => {
+					// Frozen reels skip preSpin — do not wait for their readyToSpin.
+					if (frozenReelIndices.includes(reelIndex)) return;
 					await waitForResolve((resolve) => (reel.reelState.readyToSpin = resolve));
 				}),
 			);
@@ -89,31 +91,20 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 			return paddingSize;
 		}, 0);
 
-		// Kick off each reel on its own frame so updateSymbolsPool + symbolState
-		// flips don't land in one Svelte+GC frame (mobile traces: 80–200ms hitches).
-		// Hold-scroll games use parallel handoff — rAF stagger made each column
-		// freeze for a couple of frames in a left-to-right wave at RGS response.
-		const useParallelHandoff = board.some(
-			(reel) => reel.reelState.spinOptions().reelPreSpinHoldRotations !== undefined,
-		);
-		if (useParallelHandoff) {
-			await Promise.all(
-				board.map((reel, reelIndex) => {
-					if (frozenReelIndices.includes(reelIndex)) return Promise.resolve();
-					return reel.spin();
-				}),
-			);
-		} else {
-			const spinPromises: Promise<void>[] = [];
-			for (let reelIndex = 0; reelIndex < board.length; reelIndex++) {
-				if (frozenReelIndices.includes(reelIndex)) continue;
-				spinPromises.push(board[reelIndex].spin());
-				if (reelIndex < board.length - 1) {
-					await waitForAnimationFrame();
-				}
+		// Normal / turbo-1–2: kick off each reel on its own frame so
+		// updateSymbolsPool + symbolState flips don't land in one Svelte+GC hit.
+		// Each reel also awaits reelSpinDelay × index before its pool swap.
+		// Turbo 3 / slam-stop (`isTurbo`): start remaining columns together so
+		// they land as one board — staggered appearance looks wrong on a fast stop.
+		const spinPromises: Promise<void>[] = [];
+		for (let reelIndex = 0; reelIndex < board.length; reelIndex++) {
+			if (frozenReelIndices.includes(reelIndex)) continue;
+			spinPromises.push(board[reelIndex].spin());
+			if (!stateBet.isTurbo && reelIndex < board.length - 1) {
+				await waitForAnimationFrame();
 			}
-			await Promise.all(spinPromises);
 		}
+		await Promise.all(spinPromises);
 	}
 
 	return { spin };

@@ -1,0 +1,229 @@
+import type { Asset, Assets } from 'pixi-svelte';
+
+import assets from './assets';
+import { isCjkLocale } from './constants';
+import { LOADER_CARD_2_SOCIAL_IMAGE_URL, LOADER_SCREEN_IMAGE_URLS } from './loaderCardAssets';
+import { isSocialMode } from './devSocial';
+
+/** Stake GIF screen — animated day/night spine, audio manifest, transition, press font, high symbols. */
+export const LOADER_BATCH_1_KEYS = [
+	'mainBackground',
+	'boardFrame',
+	'sound',
+	'musicMain',
+	'musicBonus',
+	'transition',
+	'prostoiWhiteFont',
+	'H1',
+	'H2',
+	'H3',
+	'H4',
+	'H1Img',
+	'H2Img',
+	'H3Img',
+	'H3SpinImg',
+	'H4Img',
+] as const satisfies readonly (keyof typeof assets)[];
+
+/** Bootstrap splash — low/wild/bonus/paw symbols, core game fonts. */
+export const LOADER_BATCH_2_KEYS = [
+	'L1',
+	'L2',
+	'L3',
+	'L4',
+	'B',
+	'W',
+	'coinsPaw',
+	'L1Img',
+	'L2Img',
+	'L3Img',
+	'L4Img',
+	'BImg',
+	'WImg',
+	'SWImg',
+	'prostoiFont',
+	'prostoiFontRu',
+	'prostoiWhiteFontRu',
+	'krutoiFont',
+	'krutoiFontRu',
+	'meowfiaBigerFont',
+	'babloFont',
+] as const satisfies readonly (keyof typeof assets)[];
+
+/**
+ * Cyrillic bitmap fonts — only needed for `ru`.
+ * Digits / Big Win titles stay on latin prostoi/krutoi/meowfia even for Russian.
+ * Declared in batch 2 for the key-count check; filtered out for non-ru locales.
+ */
+export const RU_FONT_KEYS = [
+	'prostoiFontRu',
+	'prostoiWhiteFontRu',
+	'krutoiFontRu',
+] as const satisfies readonly (keyof typeof assets)[];
+
+/**
+ * All six locale-specific font keys. Always declared in batch 3 so the
+ * key-count check (loaded batches === Object.keys(assets).length)
+ * passes. Only the subset matching the active locale is actually loaded by
+ * GameAssetsLoader — the rest are intentionally skipped.
+ */
+export const LOCALE_FONT_KEYS = [
+	'prostoiFontHi',
+	'prostoiWhiteFontHi',
+	'prostoiFontVi',
+	'prostoiWhiteFontVi',
+	'prostoiFontCjk',
+	'prostoiWhiteFontCjk',
+] as const satisfies readonly (keyof typeof assets)[];
+
+/**
+ * Returns only the locale-specific font keys needed for the given locale.
+ * All other locales (en, ru, ar, …) use the base prostoi/krutoi atlases
+ * already in batch 1 & 2 and need no extra files here.
+ */
+export const getLocaleSpecificFontKeys = (locale: string): readonly (keyof typeof assets)[] => {
+	if (locale === 'hi') return ['prostoiFontHi', 'prostoiWhiteFontHi'];
+	if (locale === 'vi') return ['prostoiFontVi', 'prostoiWhiteFontVi'];
+	if (isCjkLocale(locale)) return ['prostoiFontCjk', 'prostoiWhiteFontCjk'];
+	return [];
+};
+
+/**
+ * Cards screen — locale fonts + HUD needed right after Continue.
+ * Must finish before "Press to continue".
+ */
+export const LOADER_BATCH_3_KEYS = [
+	...LOCALE_FONT_KEYS,
+	'mascotCatGray',
+	'betPlus',
+	'betMinus',
+	'autoplayButton',
+	'autoplayMobileButton',
+	'spin1',
+	'spin2',
+	'menuButton',
+	'infoButton',
+	'turbo1',
+	'turbo2',
+	'turbo3',
+	'superWildCurtain',
+] as const satisfies readonly (keyof typeof assets)[];
+
+	/**
+	 * Post-entry deferred batch — bonus / duel / FS / tir.
+	 * Loaded after entrance lift settles (not while reading cards / on Continue).
+	 * Night street is a skin on `mainBackground` (batch 1), not a separate key.
+	 */
+export const LOADER_BATCH_4_KEYS = [
+	'BD',
+	'BT',
+	'BDuelImg',
+	'BTImg',
+	'outlineReel',
+	'mascotCat',
+	'mascotDog',
+	'revolverBarrel',
+	'revolverBarrelRim',
+	'revolverBullet1',
+	'revolverBullet2',
+	'revolverOverlay',
+	'fsCongRays',
+	'fsCongBg',
+	'fsCongFrame',
+	'fsCongTextPaw',
+	'fsCongBoard',
+	'bigwin',
+	'fsPopup',
+	'fsLeftCounterSpinboard',
+	'shotBullet',
+	'targetBoardFlip',
+] as const satisfies readonly (keyof typeof assets)[];
+
+/**
+ * Declared in batch 4 for the key-count check, but never uploaded to Pixi.
+ * FreeSpinIntro / duel / autoplay paint these as HTML `<img>` after buy / FS.
+ */
+export const BATCH4_HTML_ONLY_KEYS = [
+	'fsCongRays',
+	'fsCongBg',
+	'fsCongFrame',
+	'fsCongTextPaw',
+	'fsCongBoard',
+	'fsLeftCounterSpinboard',
+] as const satisfies readonly (typeof LOADER_BATCH_4_KEYS)[number][];
+
+export const LOADER_ASSET_BATCHES = [
+	LOADER_BATCH_1_KEYS,
+	LOADER_BATCH_2_KEYS,
+	LOADER_BATCH_3_KEYS,
+	LOADER_BATCH_4_KEYS,
+] as const;
+
+export const LOADER_ASSET_KEY_COUNT = LOADER_ASSET_BATCHES.reduce(
+	(sum, batch) => sum + batch.length,
+	0,
+);
+
+if (LOADER_ASSET_KEY_COUNT !== Object.keys(assets).length) {
+	throw new Error(
+		`assetLoadPlan: expected ${Object.keys(assets).length} keys, got ${LOADER_ASSET_KEY_COUNT} loaded`,
+	);
+}
+
+export const collectAssetHttpUrls = (asset: Asset): string[] => {
+	if (typeof asset.src === 'string') return [asset.src];
+	return Object.values(asset.src).filter((value): value is string => typeof value === 'string');
+};
+
+export const collectBatchHttpUrls = (
+	batchKeys: readonly string[],
+	assetMap: Assets = assets,
+): string[] => {
+	const urls = new Set<string>();
+
+	for (const key of batchKeys) {
+		const asset = assetMap[key];
+		if (!asset) continue;
+		for (const url of collectAssetHttpUrls(asset)) urls.add(url);
+	}
+
+	return [...urls];
+};
+
+/**
+ * Returns batch-2 keys filtered to the active locale — skips Cyrillic font
+ * atlases (~6 MB GPU + CPU twins) when the player is not on `ru`.
+ */
+export const getBatch2KeysForLocale = (locale: string): readonly string[] => {
+	if (locale === 'ru') return LOADER_BATCH_2_KEYS;
+	const ruFontSet = new Set<string>(RU_FONT_KEYS);
+	return LOADER_BATCH_2_KEYS.filter((key) => !ruFontSet.has(key));
+};
+
+/**
+ * Returns batch-3 keys filtered to the active locale — skips the 4 locale
+ * font keys that don't apply (saves 0.8–3 MB of Pixi loads for most users).
+ */
+export const getBatch3KeysForLocale = (locale: string): readonly string[] => {
+	const activeFontKeys = new Set(getLocaleSpecificFontKeys(locale));
+	const localeFontSet = new Set<string>(LOCALE_FONT_KEYS);
+	return LOADER_BATCH_3_KEYS.filter((key) => !localeFontSet.has(key) || activeFontKeys.has(key));
+};
+
+/** Pixi keys that must finish before Continue (excludes batch 4). */
+export const getEntryLoadKeyCount = (locale: string) =>
+	LOADER_BATCH_1_KEYS.length +
+	getBatch2KeysForLocale(locale).length +
+	getBatch3KeysForLocale(locale).length;
+
+/** HTTP warm-up during the Stake GIF (before Pixi / auth may be ready). */
+export const collectBatch1EarlyPreloadUrls = (): string[] => {
+	const urls = new Set(collectBatchHttpUrls(LOADER_BATCH_1_KEYS));
+	for (const url of LOADER_SCREEN_IMAGE_URLS) urls.add(url);
+	if (isSocialMode()) urls.add(LOADER_CARD_2_SOCIAL_IMAGE_URL);
+	return [...urls];
+};
+
+/** HTTP warm-up during Bootstrap (parallel with batch 2 Pixi load). */
+export const collectBatch2EarlyPreloadUrls = (locale: string): string[] =>
+	collectBatchHttpUrls(getBatch2KeysForLocale(locale));

@@ -23,6 +23,13 @@
 		if (props.isMask !== undefined) {
 			parentContext.parent.mask = props.isMask ? graphics : null;
 		}
+		// Always detach before destroy — a stencil pointing at a torn-down
+		// GraphicsContext crashes updateGpuContext (uid) / containsPoint.
+		return () => {
+			if (parentContext.parent.mask === graphics) {
+				parentContext.parent.mask = null;
+			}
+		};
 	});
 
 	$effect(() => {

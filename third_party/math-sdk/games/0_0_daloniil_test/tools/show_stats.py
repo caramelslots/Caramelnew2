@@ -34,7 +34,7 @@ def main():
     print("=" * 90)
     sim_count = data.get("sim_count_summary", {})
     mode_fence = data.get("mode_fence_info", {})
-    for mode in ["base", "bonus_boost", "special_spins", "bonus_normal", "bonus_super"]:
+    for mode in ["base", "bonus_boost", "bonus_normal", "bonus_super"]:
         crit_rtps = mode_fence.get(mode, {})
         total_rtp = sum(c.get("rtp", 0) for c in crit_rtps.values())
         print(f"\n  [{mode}] sim_count = {sim_count.get(mode, '?')}, total_RTP = {total_rtp:.4f}")
@@ -71,7 +71,7 @@ def main():
     print("CUSTOM HRs (scatter B = FS trigger)")
     print("=" * 90)
     custom = data.get("custom_hr_summary", {})
-    for mode in ["base", "bonus_boost", "special_spins"]:
+    for mode in ["base", "bonus_boost"]:
         m = custom.get(mode, {})
         scatter_hr = m.get("{'symbol': 'scatter'}", "?")
         print(f"  [{mode}] scatter HR = 1 in {scatter_hr}")

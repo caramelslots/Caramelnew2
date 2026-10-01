@@ -30,12 +30,8 @@ export const lookupReplayCostMultiplier = (modeKey: string): number => {
 	return typeof cost === 'number' && cost > 0 ? cost : 1;
 };
 
+/** Cost / payout multipliers — exact value as received, no rounding. */
 export const formatReplayMultiplier = (value: number): string => {
 	if (!Number.isFinite(value)) return '0x';
-	if (Number.isInteger(value)) return `${value}x`;
-	const formatted = value
-		.toLocaleString('en', { maximumFractionDigits: 6, useGrouping: false })
-		.replace(/(\.\d*?[1-9])0+$/, '$1')
-		.replace(/\.0+$/, '');
-	return `${formatted}x`;
+	return `${String(value)}x`;
 };

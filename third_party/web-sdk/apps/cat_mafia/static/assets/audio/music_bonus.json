@@ -1,0 +1,13 @@
+{
+	"sprite": {
+		"bgm_freespin_intro": [500, 15000],
+		"bgm_freespin": [15500, 121000, true]
+	},
+	"src": [
+		"./assets/audio/meowfia_bonus_music_slot.mp3"
+	],
+	"config": {
+		"bgm_freespin_intro": { "volume": 1 },
+		"bgm_freespin": { "volume": 1 }
+	}
+}

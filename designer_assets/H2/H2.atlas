@@ -1,0 +1,42 @@
+H2.webp
+size:701,1018
+filter:Linear,Linear
+scale:0.5
+1
+bounds:2,540,425,476
+offsets:190,0,615,634
+1_00000
+bounds:429,363,261,249
+offsets:26,18,305,291
+1_00001
+bounds:2,185,385,353
+offsets:21,23,424,395
+Circle_rays_22
+bounds:2,2,180,181
+offsets:3,2,186,186
+Layer 1
+bounds:389,158,203,203
+offsets:20,21,243,244
+Layer 3 copy
+bounds:429,614,402,270
+offsets:0,0,402,271
+rotate:90
+cylinder 1
+bounds:342,17,145,139
+offsets:1,1,147,142
+ejector_rod
+bounds:184,39,156,144
+glow_line
+bounds:594,162,199,72
+offsets:6,7,211,86
+rotate:90
+hammer
+bounds:489,49,107,98
+offsets:0,1,107,99
+rotate:90
+triangle
+bounds:589,9,61,60
+offsets:5,5,70,69
+trigger
+bounds:589,71,78,85
+offsets:0,1,79,88

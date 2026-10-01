@@ -1,0 +1,36 @@
+H4.webp
+size:1024,512
+filter:Linear,Linear
+scale:0.2
+Circle_rays_22
+bounds:330,168,288,288
+offsets:4,4,298,296
+Layer 1
+bounds:1,130,328,327
+offsets:31,31,389,390
+LightSweep
+bounds:259,98,48,30
+curly_cord
+bounds:868,316,86,141
+curly_cord's Outer Glow
+bounds:837,51,110,162
+offsets:2,4,116,170
+dial
+bounds:868,216,98,104
+offsets:0,0,99,104
+rotate:90
+handset
+bounds:1,21,257,108
+handset's Outer Glow
+bounds:330,29,288,138
+light_01
+bounds:1,14,6,30
+offsets:4,6,14,45
+rotate:90
+phone
+bounds:619,1,217,212
+phone's Outer Glow
+bounds:619,214,248,242
+stop_pin
+bounds:837,18,30,32
+offsets:0,0,30,32

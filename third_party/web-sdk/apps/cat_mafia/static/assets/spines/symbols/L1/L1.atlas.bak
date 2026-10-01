@@ -1,0 +1,19 @@
+L1.webp
+size:1369,1103
+filter:Linear,Linear
+scale:0.4
+A
+bounds:2,710,396,391
+offsets:28,66,454,522
+A_glow
+bounds:400,660,445,441
+offsets:52,81,550,603
+Circle_rays_22
+bounds:2,81,577,577
+offsets:9,7,595,593
+Layer 1
+bounds:581,2,655,654
+offsets:62,62,778,779
+shadow_A
+bounds:847,658,443,520
+rotate:90

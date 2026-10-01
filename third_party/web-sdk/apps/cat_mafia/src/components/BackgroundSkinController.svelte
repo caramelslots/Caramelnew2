@@ -1,0 +1,49 @@
+<script lang="ts">
+	import { Skin } from '@esotericsoftware/spine-pixi-v8';
+	import { getContextSpine } from 'pixi-svelte';
+
+	import { getContext } from '../game/context';
+	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
+
+	type Props = {
+		/** `day` = basegame (light), `night` = freegame / FS (dark). */
+		skin: 'day' | 'night';
+	};
+
+	const { skin }: Props = $props();
+	const spine = getContextSpine();
+	const context = getContext();
+
+	const applySkin = (skinName: 'day' | 'night') => {
+		const combined = new Skin('catBackground');
+		const defaultSkin = spine.skeleton.data.findSkin('default');
+		const themeSkin = spine.skeleton.data.findSkin(skinName);
+		if (defaultSkin) combined.addSkin(defaultSkin);
+		if (themeSkin) combined.addSkin(themeSkin);
+		spine.skeleton.setSkin(combined);
+		spine.skeleton.setSlotsToSetupPose();
+	};
+
+	applySkin(skin);
+
+	$effect(() => {
+		applySkin(skin);
+	});
+
+	// Spine.autoUpdate=true adds a Pixi ticker listener with no duplicate guard.
+	// Passing it as a SpineProvider prop would register a second listener (2× speed).
+	// Phones + bootstrap logo: static street. Animate under HTML still once board preloads.
+	$effect(() => {
+		const phone = isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType());
+		const loading =
+			context.stateLayout.showLoadingScreen && !gameEntrance.preloadContent;
+		const holdFirstFrame = phone || loading || !gameEntrance.liftComplete;
+		const next = !holdFirstFrame && !context.stateGame.winOverlayActive;
+		if (spine.autoUpdate !== next) spine.autoUpdate = next;
+		if (holdFirstFrame) {
+			// First animation frame (dim light) for loader, lift, and phone.
+			spine.update(0);
+		}
+	});
+</script>

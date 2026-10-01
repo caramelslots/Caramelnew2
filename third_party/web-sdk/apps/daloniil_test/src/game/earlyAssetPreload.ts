@@ -34,7 +34,7 @@ let batch1Started = false;
 let batch2Started = false;
 
 /**
- * Start downloading batch-1 bytes during the Stake GIF, before Pixi / RGS auth.
+ * Start downloading batch-1 bytes during bootstrap, before Pixi / RGS auth.
  * Includes loader card PNGs so the cards screen can paint immediately.
  */
 export const startEarlyAssetPreload = () => {

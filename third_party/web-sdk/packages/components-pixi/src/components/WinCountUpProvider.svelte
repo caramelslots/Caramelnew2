@@ -7,6 +7,8 @@
 	type Props = {
 		amount: number;
 		duration: number;
+		/** Count-up start (default 0). Used for additive two-beat (phase1 → spin total). */
+		from?: number;
 		oncomplete: () => void;
 		children: Snippet<
 			[
@@ -21,6 +23,7 @@
 	};
 
 	const props: Props = $props();
+	const startFrom = $derived(Math.max(0, Math.min(props.from ?? 0, props.amount)));
 	const countUpAmount = new Tween(0);
 	const interruptible = createInterruptible();
 
@@ -43,6 +46,7 @@
 	const finishCountUp = () => interruptible.interrupt();
 	const startCountUp = async () => {
 		countUpCompleted = false;
+		countUpAmount.set(startFrom, { duration: 0 });
 		await interruptible.add(countUp);
 		resetCountUp();
 		countUpCompleted = true;

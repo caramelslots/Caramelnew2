@@ -27,9 +27,6 @@ export default {
 	BONUS_BOOST_DESC: 'खिलाड़ी ×2 के लिए बोनस बूस्ट सक्रिय कर सकते हैं।',
 	BONUS_BOOST_COST: '{cost} प्रति स्पिन',
 	PER_SPIN_SUFFIX: 'प्रति स्पिन',
-	SPECIAL_SPINS: 'विशेष स्पिन',
-	SPECIAL_SPINS_DESC: 'खिलाड़ी ×30 के लिए विशेष स्पिन सक्रिय कर सकते हैं।',
-	SPECIAL_SPINS_COST: '{cost} प्रति स्पिन',
 	RTP_LABEL: 'RTP',
 	FS_COUNTER_LABEL: 'मुफ़्त स्पिन',
 	FS_COUNTER_OF: '/',
@@ -64,30 +61,29 @@ export default {
 	GAME_INFO_SPECIAL_SYMBOLS_TITLE: 'SPECIAL SYMBOLS',
 	GAME_INFO_WILD_TITLE: 'WILD प्रतीक',
 	GAME_INFO_WILD_BODY:
-		'Wild प्रतीक Bonus प्रतीक को छोड़कर सभी भुगतान वाले प्रतीकों की जगह लेता है। Wild 5 मिलान पर 225× दांव देता है।',
+		'Wild प्रतीक Bonus प्रतीक को छोड़कर सभी भुगतान वाले प्रतीकों की जगह लेता है। Wild 5 मिलान पर 225× दांव देता है। During Free Spins, each Wild receives a multiplier of ×2, ×5, ×10, ×20, or ×50. If more than one Wild lands on a winning payline, their multipliers are added together and applied to that line win.',
 	GAME_INFO_BONUS_SYMBOL_TITLE: 'BONUS SYMBOL',
 	GAME_INFO_FS_TITLE: 'मुफ़्त स्पिन',
 	GAME_INFO_FS_BODY:
 		'बेस गेम में 3 Bonus प्रतीक लगाएँ और 10 मुफ़्त स्पिन वाला Normal Bonus पाएँ। 4 Bonus प्रतीक लगाएँ और 10 मुफ़्त स्पिन तथा शुरुआत से 1 Sticky Mystery Reel वाला Super Bonus पाएँ। फीचर के दौरान Bonus प्रतीक मिलने से मुफ़्त स्पिन फिर से ट्रिगर नहीं होते। अतिरिक्त मुफ़्त स्पिन केवल Progress Ladder के माध्यम से मिलते हैं।',
 	GAME_INFO_MYSTERY_TITLE: 'STICKY MYSTERY REEL',
-	GAME_INFO_MYSTERY_BODY:
-		'Mystery रील अपनी जगह रहती हैं और हर स्पिन पर एक ही प्रतीक दिखाती हैं।',
+	GAME_INFO_MYSTERY_BODY: 'Mystery रील अपनी जगह रहती हैं और हर स्पिन पर एक ही प्रतीक दिखाती हैं।',
 	GAME_INFO_PROGRESS_LADDER_TITLE: 'PROGRESS LADDER',
 	GAME_INFO_PROGRESS_LADDER_BODY:
 		'मुफ़्त स्पिन के दौरान आने वाला हर Bonus प्रतीक Progress Ladder में जुड़ता है। हर 4 एकत्रित Bonus प्रतीक एक स्तर बढ़ाते हैं। प्रत्येक स्तर 3 अतिरिक्त मुफ़्त स्पिन और 1 अतिरिक्त Sticky Mystery Reel देता है, अधिकतम 5 स्तर (15 अतिरिक्त मुफ़्त स्पिन)।',
 	GAME_INFO_BET_MODES_TITLE: 'दांव मोड',
 	GAME_INFO_BET_MODES_BODY:
-		'Base (1×): The default mode. Each spin costs 1× your base bet. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All wins are calculated as multiples of your base bet. RTP 96.03%. Maximum win 2,500× your base bet.\nBonus Boost (2×): Enable this mode to play at 2× your base bet per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All wins are calculated as multiples of your base bet, not the 2× mode cost. RTP 96.04%. Maximum win 2,355.2× your base bet.\nSpecial Spins (30×): Enable this mode to play at 30× your base bet per spin. Almost every spin triggers a free spins feature immediately. You usually enter Normal Bonus (10 free spins); sometimes Super Bonus (10 free spins with 1 Sticky Mystery Reel). All wins are calculated as multiples of your base bet, not the 30× mode cost. RTP 96.01%. Maximum win 2,500× your base bet.\nBuy Normal Bonus (100×): Purchase Normal Bonus for 100× your base bet to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.\nBuy Super Bonus (200×): Purchase Super Bonus for 200× your base bet to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.',
+		'Base (1×): The default mode. Each spin costs 1× your base bet. Land 3 Bonus symbols to trigger Normal Bonus (10 free spins), or 4 or more for Super Bonus (10 free spins with 1 Sticky Mystery Reel from the start). All wins are calculated as multiples of your base bet. RTP 96.03%. Maximum win 2,218.7× your base bet.\nBonus Boost (2×): Enable this mode to play at 2× your base bet per spin. Reels include more Bonus symbols, increasing the chance of triggering free spins. Free spins still trigger as in Base (3 Bonus = Normal Bonus, 4 or more = Super Bonus). All wins are calculated as multiples of your base bet, not the 2× mode cost. RTP 96.01%. Maximum win 2,500× your base bet.\nBuy Normal Bonus (100×): Purchase Normal Bonus for 100× your base bet to start the feature immediately. Awards 10 free spins with no Sticky Mystery Reel at the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.\nBuy Super Bonus (200×): Purchase Super Bonus for 200× your base bet to start the feature immediately. Awards 10 free spins with 1 Sticky Mystery Reel from the start. Extra free spins and Mystery Reels are earned only through the Progress Ladder. All wins are calculated as multiples of your base bet, not the purchase cost. RTP 96.01%. Maximum win 2,500× your base bet.',
 	GAME_INFO_PAYTABLE_TITLE: 'पेटेबल (× दांव)',
 	GAME_INFO_PAYTABLE_NOTE: 'सभी भुगतान मूल्य बेस बेट के गुणक हैं।',
 	GAME_INFO_PAYTABLE_BODY:
-		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1',
-		GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
+		'H1: 5 = 150, 4 = 15, 3 = 3\nH2: 5 = 75, 4 = 7.5, 3 = 1.8\nH3: 5 = 45, 4 = 4.5, 3 = 1.2\nH4: 5 = 30, 4 = 3, 3 = 0.7\nL1–L4: 5 = 3, 4 = 0.5, 3 = 0.1\nW: 5 = 225',
+	GAME_INFO_CONTROLS_TITLE: 'USER INTERACTION GUIDE',
 	GAME_INFO_CONTROLS_BODY:
 		'Spin: Press the Spin button to start a round. While a round is in progress, the same button can stop the reels or stop autoplay when available. A new round cannot start while another round or animation is already in progress, or if funds are insufficient.\nSpacebar: Press Space to perform the same action as the Spin button. Hold Space for continuous fast play. When the Autoplay panel is open, Space starts autoplay. Space can also continue screens that say Press to Continue.\nBet amount (−): Use the minus button to decrease your bet amount. Bet changes are only available while the game is idle.\nBet amount (+): Use the plus button to increase your bet amount. Bet changes are only available while the game is idle.\nBuy Bonus: Open Buy Bonus to purchase Normal Bonus or Super Bonus. Confirm a purchase to start the selected feature immediately.\nBonus Boost: Enable Bonus Boost to play at 2× your base bet with more Bonus symbols and a higher chance of triggering free spins. You can turn it on or off from the Buy Bonus panel or the Autoplay panel.\nAutoplay: Open Autoplay to choose the number of rounds and start automatic play. Press Autoplay again while it is running to stop it.\nTurbo: Press Turbo to cycle game speed through levels 1, 2, and 3 for faster animations. You can also set the speed in the Menu settings.\nInfo: Opens this Game Information screen.\nMenu: Opens Settings, where you can adjust game speed, master volume, and music volume.\nBalance: Shows your current balance. This is informational and is not a button.\nBet: Shows your selected bet amount. This is informational and is not a button.',
 	GAME_INFO_LEGAL_TITLE: 'सामान्य गेम अस्वीकरण',
 	GAME_INFO_LEGAL_BODY:
-		'खराबी से सभी जीत और खेल रद्द हो जाते हैं। स्थिर इंटरनेट कनेक्शन आवश्यक है। डिस्कनेक्शन होने पर अधूरे राउंड पूरे करने के लिए गेम रीलोड करें। अपेक्षित रिटर्न कई खेलों पर आधारित है। गेम डिस्प्ले किसी भौतिक उपकरण का प्रतिनिधित्व नहीं करता और केवल दिखावटी उद्देश्यों के लिए है। जीत Remote Game Server से प्राप्त राशि के अनुसार तय होती है, वेब ब्राउज़र की घटनाओं के अनुसार नहीं। TM और © 2026 Stake Engine.',
+		'खराबी से सभी जीत और खेल रद्द हो जाते हैं। स्थिर इंटरनेट कनेक्शन आवश्यक है। डिस्कनेक्शन होने पर अधूरे राउंड पूरे करने के लिए गेम रीलोड करें। अपेक्षित रिटर्न कई खेलों पर आधारित है। गेम डिस्प्ले किसी भौतिक उपकरण का प्रतिनिधित्व नहीं करता और केवल दिखावटी उद्देश्यों के लिए है। जीत Remote Game Server से प्राप्त राशि के अनुसार तय होती है, वेब ब्राउज़र की घटनाओं के अनुसार नहीं। TM और © 2026 Engine.',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_TITLE: 'अपर्याप्त धनराशि',
 	AUTOPLAY_MSG_INSUFFICIENT_FUNDS_BODY: 'खेल जारी रखने के लिए बैलेंस बढ़ाएँ या दांव कम करें।',
 	AUTOPLAY_MSG_LOSS_LIMIT_TITLE: 'हानि सीमा पहुँची',

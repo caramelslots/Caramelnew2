@@ -1,0 +1,72 @@
+{
+  "hash": "6955a97c",
+  "configHash": "6d6e61a3",
+  "lockfileHash": "dddf3cb0",
+  "browserHash": "12baffe1",
+  "optimized": {
+    "@esotericsoftware/spine-pixi-v8": {
+      "src": "../../node_modules/.pnpm/@esotericsoftware+spine-pixi-v8@4.2.74_pixi.js@8.8.1/node_modules/@esotericsoftware/spine-pixi-v8/dist/index.js",
+      "file": "@esotericsoftware_spine-pixi-v8.js",
+      "fileHash": "b3dbbb0b",
+      "needsInterop": false
+    },
+    "pixi.js": {
+      "src": "../../node_modules/.pnpm/pixi.js@8.8.1/node_modules/pixi.js/lib/index.mjs",
+      "file": "pixi__js.js",
+      "fileHash": "8c5811ca",
+      "needsInterop": false
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/.pnpm/react-dom@19.2.8_react@19.2.8/node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "c3b283f1",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/.pnpm/react@19.2.8/node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "a95f9311",
+      "needsInterop": true
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/.pnpm/react@19.2.8/node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "dbd4313a",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "CanvasPool-DpKbHx4S": {
+      "file": "CanvasPool-DpKbHx4S.js",
+      "isDynamicEntry": false
+    },
+    "SharedSystems-BJJ1IeNm": {
+      "file": "SharedSystems-BJJ1IeNm.js",
+      "isDynamicEntry": false
+    },
+    "browserAll-DjQAEno_": {
+      "file": "browserAll-DjQAEno_.js",
+      "isDynamicEntry": true
+    },
+    "colorToUniform-Ct0-d62f": {
+      "file": "colorToUniform-Ct0-d62f.js",
+      "isDynamicEntry": false
+    },
+    "init-BUMmcxFz": {
+      "file": "init-BUMmcxFz.js",
+      "isDynamicEntry": false
+    },
+    "lib-BScz-GdW": {
+      "file": "lib-BScz-GdW.js",
+      "isDynamicEntry": false
+    },
+    "rolldown-runtime-DC62tzP2": {
+      "file": "rolldown-runtime-DC62tzP2.js",
+      "isDynamicEntry": false
+    },
+    "webworkerAll-CU7MHt5a": {
+      "file": "webworkerAll-CU7MHt5a.js",
+      "isDynamicEntry": true
+    }
+  }
+}

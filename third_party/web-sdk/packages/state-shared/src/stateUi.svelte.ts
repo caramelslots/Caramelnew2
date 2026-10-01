@@ -56,9 +56,11 @@ export const AUTO_SPINS_SINGLE_WIN_LIMIT_MULTIPLIER_MAP = {
 export type UIConfigMode = 'default' | 'replay';
 
 export type ReplaySummary = {
-	/** Raw replay payload kept so the round can be started / replayed again. */
+	/** Normalized round (`state` array) for Start Replay / Replay Again. */
 	payload: unknown;
 	modeKey: string;
+	/** Currency code used for replay amounts (from `?currency=` / payload). */
+	currency: string;
 	baseBet: number;
 	costMultiplier: number;
 	totalBetCost: number;

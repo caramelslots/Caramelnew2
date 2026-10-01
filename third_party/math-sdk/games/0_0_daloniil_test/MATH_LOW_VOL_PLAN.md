@@ -279,11 +279,11 @@ bonus_boost:  30% = 37% × ~0.81×
 | --------------------------- | ----------------------------- |
 | `base`                      | ?                             |
 | `bonus_boost`               | ?                             |
-| `special_spins` / buy modes | только если меняем cluster FS |
+| buy modes                   | только если меняем cluster FS |
 
 **Draft recommendation:** только **base + bonus_boost** (как retention Stage 1).
 
-- [x] **Решение: draft** — только **`base` + `bonus_boost`**; buy / special_spins вне scope.
+- [x] **Решение: draft** — только **`base` + `bonus_boost`**; buy modes вне scope.
 
 ---
 

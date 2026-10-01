@@ -69,8 +69,10 @@
 	{console.log('loadedAssets', $state.snapshot(context.stateApp).loadedAssets)}
 {/if}
 
-{#key spineData}
-	<BaseSpineProvider {...baseSpineProps} {scale} {pivot} {spineData}>
-		{@render children()}
-	</BaseSpineProvider>
-{/key}
+{#if spineData}
+	{#key spineData}
+		<BaseSpineProvider {...baseSpineProps} {scale} {pivot} {spineData}>
+			{@render children()}
+		</BaseSpineProvider>
+	{/key}
+{/if}

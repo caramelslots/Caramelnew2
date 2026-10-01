@@ -196,10 +196,15 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	// Updates pool items in-place instead of replacing the array.
 	// Takes a flat layout of raw symbols — no intermediate ReelSymbol[] allocations.
 	//   - rawSymbol and symbolIndex are set directly from layout
-	//   - symbolState is NOT touched — managed by updateAllReelSymbolState
+	//   - optional prepend: new rows above the board are `spin` (WebP); the
+	//     on-screen tail keeps its Spine state so rest symbols scroll off
+	//     without snapping to static in place.
 	//   - pool items beyond layout.length get a large symbolIndex → inFrame = false
 	//   - pool grows (push) only when an anticipated spin exceeds pre-allocated size
-	const updateSymbolsPool = (layout: TRawSymbol[]) => {
+	const updateSymbolsPool = (
+		layout: TRawSymbol[],
+		prepend?: { spinHeadCount: number; tailStates: TSymbolState[] },
+	) => {
 		const newLen = layout.length;
 
 		// Grow only when needed (anticipated spin exceeds pre-allocated pool size)
@@ -232,6 +237,18 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			if (reelState.symbols[i].symbolIndex !== i) {
 				reelState.symbols[i].symbolIndex = i;
 			}
+			if (prepend) {
+				if (i < prepend.spinHeadCount) {
+					if (reelState.symbols[i].symbolState !== 'spin') {
+						reelState.symbols[i].symbolState = 'spin' as TSymbolState;
+					}
+				} else {
+					const kept = prepend.tailStates[i - prepend.spinHeadCount];
+					if (kept !== undefined && reelState.symbols[i].symbolState !== kept) {
+						reelState.symbols[i].symbolState = kept;
+					}
+				}
+			}
 		}
 
 		// Deactivate items beyond the new layout — but only those that are NOT
@@ -255,6 +272,14 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	// If an `await` sits between them, Svelte can flush a render with the new
 	// symbols still at the old reel position — i.e. symbols visibly "swap in
 	// place" on the board before the reel snaps offscreen.
+	const snapshotSymbolStates = (start: number, count: number) => {
+		const states: TSymbolState[] = [];
+		for (let i = 0; i < count; i++) {
+			states.push(reelState.symbols[start + i]?.symbolState ?? ('spin' as TSymbolState));
+		}
+		return states;
+	};
+
 	const addPadding = (paddingSizeValue: number) => {
 		const paddingRawSymbols = getPaddingRawSymbols({
 			paddingRawReel,
@@ -263,7 +288,11 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		});
 		// Build flat layout: [target, padding, prev] — all plain TRawSymbol[], no $state allocation
 		const layout: TRawSymbol[] = [...targetRawSymbols, ...paddingRawSymbols, ...prevRawSymbols];
-		updateSymbolsPool(layout);
+		const spinHeadCount = targetRawSymbols.length + paddingRawSymbols.length;
+		updateSymbolsPool(layout, {
+			spinHeadCount,
+			tailStates: snapshotSymbolStates(0, prevRawSymbols.length),
+		});
 
 		const topY =
 			defaultY -
@@ -455,7 +484,10 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		});
 		const currentContent = reelState.symbols.slice(0, count).map((reelSymbol) => reelSymbol.rawSymbol);
 		const layout: TRawSymbol[] = [newRow, ...currentContent.slice(0, -1)];
-		updateSymbolsPool(layout);
+		updateSymbolsPool(layout, {
+			spinHeadCount: 1,
+			tailStates: snapshotSymbolStates(0, count - 1),
+		});
 		placeY(reelY.current - h);
 	};
 
@@ -503,8 +535,6 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 				hasSignaledReady = true;
 				if (!started) {
 					reelState.motion = 'spinning';
-					// Don't block the next hold chunk on batched symbolState flips.
-					void updateAllReelSymbolState('spin');
 					started = true;
 				}
 				// Hold-phase: keep scrolling in fixed row chunks while RGS responds.
@@ -526,7 +556,23 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	};
 
 	const delaySpinByReelIndex = async () => {
-		await waitForTimeout(reelState.spinOptions().reelSpinDelay * reelOptions.reelIndex);
+		const total = reelState.spinOptions().reelSpinDelay * reelOptions.reelIndex;
+		if (total <= 0) return;
+		// Chunk the wait so slam-stop (`isTurbo`) can abort mid-stagger —
+		// otherwise right columns keep their full reelSpinDelay and land one-by-one.
+		const startedAt = performance.now();
+		while (performance.now() - startedAt < total) {
+			if (stateBet.isTurbo) return;
+			const remaining = total - (performance.now() - startedAt);
+			await waitForTimeout(Math.min(16, Math.max(0, remaining)));
+		}
+	};
+
+	const settleSpinMounts = async () => {
+		const frames = reelState.spinOptions().reelSpinMountSettleFrames ?? 0;
+		for (let i = 0; i < frames; i++) {
+			await waitForAnimationFrame();
+		}
 	};
 
 	const preSpin = async ({
@@ -541,25 +587,33 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		isPreSpinning = true;
 		hasSignaledReady = false;
 		reelState.spinType = isTurboBeforeAll ? 'fast' : 'normal';
+		// Atomic: new spin WebPs above + on-screen Spine/static tail stay put.
 		await preSpinPadding({ preSpinPaddingRawReel });
+		// Let off-screen spin sprites finish mounting before the first slide frame.
+		await settleSpinMounts();
 		if (!isTurboBeforeAll) await delaySpinByReelIndex();
 		preSpinSlideDownLoop({ isTurboBeforeAll, preSpinPaddingRawReel });
 	};
 
 	const generalSpinWith = async ({ slideDown }: { slideDown: () => Promise<void> }) => {
+		// Stagger the heavy pool swap (Spine→WebP mounts) per column so five
+		// reels do not hit the main thread in the same breath. preSpin already
+		// delayed; main spin previously only waited one rAF between starts.
+		if (!stateBet.isTurbo) await delaySpinByReelIndex();
+
 		const isSpinning = reelState.motion === 'spinning';
 		const symbolHeight = reelOptions.symbolHeight;
 
-		// Enter spin state BEFORE pool swap / placeY so per-symbol win offsets
-		// (bounce Y / scale / dim) are not baked into handoff reposition math.
+		// Keep currently-visible Spine on the tail; only prepended rows enter `spin`.
 		if (!isSpinning) {
 			reelState.motion = 'spinning';
-			void updateAllReelSymbolState('spin');
 		}
 
 		const applyLegacySeamlessPrepend = () => {
+			const count = reelState.activeSymbolCount;
+			const tailStates = snapshotSymbolStates(0, count);
 			const currentContent = reelState.symbols
-				.slice(0, reelState.activeSymbolCount)
+				.slice(0, count)
 				.map((reelSymbol) => reelSymbol.rawSymbol);
 			const paddingRawSymbols = getPaddingRawSymbols({
 				paddingRawReel,
@@ -572,7 +626,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 				...paddingRawSymbols,
 				...currentContent,
 			];
-			updateSymbolsPool(layout);
+			updateSymbolsPool(layout, { spinHeadCount: prependCount, tailStates });
 			placeY(reelY.current - prependCount * symbolHeight);
 		};
 
@@ -613,8 +667,13 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 					0,
 					Math.round((defaultY - reelY.current) / symbolHeight),
 				);
+				const visibleEnd = reelState.activeSymbolCount;
+				const tailStates = snapshotSymbolStates(
+					dropCount,
+					Math.max(0, visibleEnd - dropCount),
+				);
 				const visibleContent = reelState.symbols
-					.slice(dropCount, reelState.activeSymbolCount)
+					.slice(dropCount, visibleEnd)
 					.map((reelSymbol) => reelSymbol.rawSymbol);
 
 				// Filler rows between the result block and the still-visible symbols,
@@ -637,7 +696,10 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 					...fillerRawSymbols,
 					...visibleContent,
 				];
-				updateSymbolsPool(layout);
+				updateSymbolsPool(layout, {
+					spinHeadCount: targetRawSymbols.length + fillerCount,
+					tailStates,
+				});
 				// Exact seamless anchor: keep the first kept symbol (old index
 				// `dropCount`) at its current screen position — a whole-symbol shift,
 				// so the move is invisible.
@@ -666,17 +728,25 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			}
 		}
 
-		// Start slideDown in this sync turn (before interruptible's async executor
-		// yields) so main-spin motion begins in the same frame as prepend placeY.
-		const slideDownTask = slideDown();
+		// Same settle as preSpin: finish spin-sprite mounts before motion resumes.
+		// Turbo 3 / slam-stop skips the slide — don't burn settle frames per column
+		// or right reels (fresh off an aborted stagger) land visibly later.
+		if (!stateBet.isTurbo) await settleSpinMounts();
 
 		// Q: When to skip the slideDown?
-		// A: When it's preSpinning(isSpinning) and stop button is clicked(isTurbo) and is noStop is false
+		// A: Stop / Space set isTurbo — skip remaining travel when noStop is false.
+		// Do NOT require motion==='spinning': delayed reels (reelSpinDelay) may still
+		// be 'stopped' when a fast stop lands, and must slam with the rest.
+		// Do NOT start slideDown before the skip check — a kicked-off task kept
+		// scrolling after turbo skip / interrupt (left columns landed, right kept spinning).
 		if (noStop) {
-			await slideDownTask;
-		} else if (stateBet.isTurbo && isSpinning) {
+			await slideDown();
+		} else if (stateBet.isTurbo) {
 			// skip
 		} else {
+			// Start slide after mount settle so motion is not coupled to the
+			// same frame as a heavy Spine→WebP pool swap.
+			const slideDownTask = slideDown();
 			await interruptible.add(async () => {
 				await slideDownTask;
 			});
@@ -689,9 +759,13 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 		await updateAllReelSymbolState('land');
 	};
 
+	/** Abort in-flight slide helpers when Space/stop interrupts the reel. */
+	const isSlideAborted = () => reelState.motion !== 'spinning';
+
 	const fastSpin = () =>
 		generalSpinWith({
 			slideDown: async () => {
+				if (isSlideAborted()) return;
 				const bounceSize = reelOptions.symbolHeight * reelState.spinOptions().reelBounceSizeMulti;
 
 				await slideY({
@@ -724,6 +798,9 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 					getTargetY: getMainSpinTargetY,
 					getSpeed: () => reelState.spinOptions().reelSpinSpeed,
 				});
+				// stop() flips motion out of spinning — do not start the approach tween
+				// or it keeps the column scrolling after interrupt.
+				if (isSlideAborted()) return;
 				await slideY({
 					reelY: defaultY + bounceSize,
 					speed: reelState.spinOptions().reelSpinSpeedBeforeBounce,
@@ -734,12 +811,14 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	const anticipatedSpin = () =>
 		generalSpinWith({
 			slideDown: async () => {
+				if (isSlideAborted()) return;
 				const bounceSize = reelOptions.symbolHeight * reelState.spinOptions().reelBounceSizeMulti;
 
 				await slideY({
 					reelY: getMainSpinTargetY(),
 					speed: reelState.spinOptions().reelSpinSpeed,
 				});
+				if (isSlideAborted()) return;
 				await slideY({
 					reelY: defaultY + bounceSize,
 					speed: reelState.spinOptions().reelSpinSpeedBeforeBounce,
@@ -811,6 +890,13 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 	};
 
 	const stop = () => {
+		// Abort in-flight main-spin scroll before resolving interruptible waits —
+		// otherwise slideDynamic/slideY keep driving reelY after Space slam-stop.
+		// Skip during preSpin: isTurbo short-circuits the upcoming main slide instead.
+		if (reelState.motion === 'spinning' && !isPreSpinning) {
+			reelState.motion = 'bouncing';
+			reelY.set(reelY.current, { duration: 0 });
+		}
 		interruptible.interrupt();
 	};
 

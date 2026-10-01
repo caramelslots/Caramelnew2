@@ -1,0 +1,261 @@
+# Designer Docs — план платформы (V1)
+
+Документ для согласования. **Реализация не начинается**, пока план не подтверждён.
+
+---
+
+## 1. Цель V1
+
+Платформа для дизайнеров: загрузить ассеты символов и увидеть **итог как в реальном слоте** — барабан, механика отображения, окружение (desk / background / HUD), размер окна устройства и качество картинки на разных «разрешениях».
+
+Референс поведения и картинки: `third_party/web-sdk/apps/cat_mafia`.
+
+Критерий успеха V1: дизайнер может сказать «так это будет выглядеть в игре» без запуска полного билда слота.
+
+---
+
+## 2. Зафиксированные решения
+
+| # | Вопрос | Решение |
+|---|--------|---------|
+| 1 | Scope fidelity | **В V1 — всё**: барабан + символы + desk/frame + background + HUD-оболочка в духе cat_mafia (не урезанный «только клетки») |
+| 2 | Сетка | Свободная **C × R**, минимум **3×3**, по умолчанию **5×4** (как cat_mafia) |
+| 3 | Качество / resolution | Симуляция через **внутренний render scale** канваса (тот же фрейм устройства, разная «плотность» пикселей) |
+| 4 | Структура UI | Гайд «Символы» **сверху остаётся**; ниже — основной workspace (Reel Lab) |
+| 5 | Источник символов | Дизайнер **сам добавляет** (upload); каталог — опциональный демо-набор |
+| 6 | Референс UI | Отдельного Figma нет — ориентир = cat_mafia + текущий designer-docs |
+
+---
+
+## 3. Что входит в V1 (полный scope)
+
+### 3.1 Документация (уже есть — сохранить и чуть улучшить)
+
+- Внешний accordion **«Символы»**: формат WebP, нейминг H/L, размер 196×196.
+- Пример **H1**: Spine preview + полное меню Animations + блок **Статика**.
+- Тексты High / Low понятны дизайнеру.
+
+### 3.2 Библиотека ассетов
+
+- Загрузка **одного или нескольких** символов.
+- На символ обязательно:
+  - static WebP (идеал **196×196**);
+  - Spine pack: `.json` + `.atlas` + текстура атласа.
+- Валидации и понятные ошибки (формат, размер, отсутствие клипов `idle` / `stop|bounce` / `win|activation`).
+- Список символов с превью static и статусом готовности.
+- Назначение символов на барабан (на колонки / в strip / случайное заполнение из загруженных).
+
+### 3.3 Игровой стол (Reel Lab) — «как в cat_mafia»
+
+**Сетка и layout**
+
+- C×R, min 3×3, default 5×4.
+- Design-cell **100px**, fill символа **~0.85**, native static **196px** (константы как в игре).
+- Pad сверху/снизу у колонок (runway), маска доски с мягкими краями.
+
+**Отображение символов (механика)**
+
+| Состояние | Как в cat_mafia |
+|-----------|-----------------|
+| Spin / scroll | **Static WebP** |
+| Land | **Spine** `stop` (или согласованный bounce) |
+| Idle после остановки | **Spine** `idle` |
+| Win (демо) | **Spine** `win` / `activation` |
+
+**Прокрут**
+
+- Кнопка Spin / Stop / Replay.
+- Движение колонок, staggered stop, land → idle.
+- Тайминги и ощущение максимально близко к `SPIN_OPTIONS` / reel engine cat_mafia (порт логики или тонкая обёртка вокруг тех же идей, не «другая игрушка»).
+
+**Окружение (обязательно в V1)**
+
+- **Background** в духе cat_mafia (street / neon layout, cover-scale).
+- **Desk / board frame** (пергамент / рамка стола), символы внутри playfield.
+- **HUD-оболочка**: упрощённый, но узнаваемый каркас (верх/низ, зоны под кнопки), чтобы композиция читалась «как слот», а не «голая сетка на чёрном».
+  - Не требуется полный паритет всех игровых панелей Buy/Turbo/меню — требуется **визуальный контекст слота**.
+
+### 3.4 Device viewports (размер окна)
+
+Пресеты рамки (контент **scale-to-fit** как layout cat_mafia):
+
+| Пресет | Размер |
+|--------|--------|
+| Desktop | 1200×675 |
+| Laptop | 1024×576 |
+| Popout L | 800×450 |
+| Popout S | 400×225 |
+| Mobile L | 425×812 |
+| Mobile M | 375×667 |
+| Mobile S | 320×568 |
+
+- Mobile — **portrait** (как в таблице).
+- Desktop / Laptop / Popout — landscape.
+- Уменьшение рамки = уменьшение «экрана» + масштаб контента (contain + существующие идеи board scale / cap), не просто CSS zoom без пересчёта layout.
+
+### 3.5 Resolution / качество картинки
+
+Отдельно от размера фрейма:
+
+- Пресеты: **4K / 2K / 1080p / 720p**.
+- Смысл: например Desktop 1200×675, но внутренняя отрисовка как при разной плотности пикселей → видно, насколько **мылится / держится** 196px static и Spine.
+- Переключатель качества + по возможности **сравнение** (A/B или split) 720p vs 1080p в одном сценарии.
+
+### 3.6 UX платформы
+
+- Зоны: **Docs** | **Library** | **Stage (device frame)** | **Inspect / Controls**.
+- Inspect ячейки/символа: static vs spine, клипы, варнинги, метрики текстуры.
+- Удобная навигация, читаемые спеки, быстрый путь «загрузил → Spin → сменил device/quality».
+- Улучшение текущего Symbol Preview: не ломать, а встроить в общий workspace (одиночный preview может остаться для детального разбора клипа).
+
+---
+
+## 4. Что сознательно не является «полным клоном игры»
+
+Даже при scope «всё» V1 — это **designer preview platform**, а не форк cat_mafia:
+
+- Нет полного серверного раунда / баланса / реальных paylines как продукта.
+- Нет обязательного паритета всех specials (Mystery, paws, duel UI) в первой поставке окружения — **если** они мешают сроку; базовый стол + ordinary H/L символы + win demo обязательны.
+- Specials можно добавить в том же V1-эпике, если ассеты загружены дизайнером и мапятся на те же state-машины (sprite/spine), без уникальной cat_mafia-логики mystery — **отдельным подпунктом в конце Phase 5**.
+
+Иначе: визуально и по механике барабана/масштаб/качество — **максимально близко к cat_mafia**.
+
+---
+
+## 5. Технический подход
+
+| Тема | Подход |
+|------|--------|
+| Стек | Текущий **designer-docs**: React + Vite + Pixi + Spine 4.2 |
+| Референс | Константы и поведение из `apps/cat_mafia` (`SYMBOL_SIZE`, board, spin states, layout scale) |
+| Не делать | Полный iframe всего Svelte-приложения как единственный путь (ломкий для upload дизайнера) |
+| Делать | Reel Lab в Pixi внутри designer-docs + asset library на upload |
+| Переиспользование | Вынести/скопировать ключевые числа и правила отображения; при необходимости позже — shared package |
+
+### Ключевые модули (новые)
+
+1. `library/` — multi-symbol upload, validation, assignment  
+2. `reel/` — board, cells, spin/land/idle/win state machine  
+3. `stage/` — device frame, layout scale, background, desk, HUD shell  
+4. `quality/` — internal resolution / DPR simulation  
+5. `inspect/` — selection, warnings, metrics  
+
+Гайд (`DesignerGuideAccordion`) остаётся над workspace.
+
+---
+
+## 6. Этапы реализации (всё = V1, порядок поставки)
+
+Порядок нужен, чтобы платформа была рабочей на каждом шаге; **закрытие V1 = все фазы ниже**.
+
+### Phase 1 — Foundation & Library
+
+**Status: done (2026-08-24)**
+
+- Реорганизация layout workspace (Docs сверху, Lab ниже).
+- Multi-upload: static + spine на символ, список, валидации, статусы.
+- Улучшение читаемости спеков / ошибок.
+- Сохранить и не регрессировать гайд H1.
+
+**Done when:** дизайнер грузит несколько символов и видит их готовность в библиотеке.
+
+### Phase 2 — Reel board & spin mechanics
+
+**Status: done (static spin + Spine land→idle + win demo + pool assign)**
+
+- Сетка C×R (min 3×3, default 5×4).
+- Ячейки: **static на spin**; после стопа **Spine land (`stop`) → idle**; **Win demo**.
+- Spin / staggered stop / pad / mask.
+- Назначение символов: чипы pool All/Clear + Refill.
+- Тогл «Spine after stop».
+
+**Done when:** Spin на 5×4 выглядит и ощущается как слот cat_mafia по символам.
+
+### Phase 3 — Stage environment (desk, background, HUD)
+
+**Status: done (2026-08-24)**
+
+- Background cover (`day.webp`) + desk base/contour с `DESK_PARCHMENT`.
+- HUD shell: info / menu / buy / − spin + / balance·bet / auto / turbo.
+- Тогл «Stage (bg + desk + HUD)» в Reel Lab.
+- Ассеты в `designer_assets/stage/`.
+
+**Done when:** скрин Lab узнаваем как «слот», не как таблица спрайтов.
+
+### Phase 4 — Device viewports
+
+**Status: done (2026-08-24)**
+
+- Все 7 пресетов: chip picker Landscape / Portrait.
+- **Contain-fit** фрейма в wrap (логическое окно + `fit %` если меньше).
+- Layout kind: desktop / laptop / popout / popoutS / portrait — разные avail/scale для доски.
+- Portrait HUD + округлённый frame.
+
+**Done when:** переключение Desktop → Popout S → Mobile M меняет картинку осмысленно, как смена окна.
+
+### Phase 5 — Resolution quality lab
+
+**Status: done (2026-08-24)**
+
+- Пресеты 4K / 2K / 1080p / 720p через internal `resolutionScale`.
+- Quality picker + **Compare A/B** (два device frame рядом).
+- Quality lab: dens, glyph CSS px, texels/px от 196, verdict Sharp/OK/Soft/Mushy + текстовая подсказка.
+
+**Done when:** можно ответить на вопрос «насколько ухудшится качество» без экспорта в игру.
+
+### Phase 6 — UX polish & inspect (закрытие V1)
+
+**Status: done (2026-08-24)**
+
+- Inspect справа: how-to, быстрые сценарии, статус board/device/quality, selected + warnings.
+- Spine budget: max **16** live idle; overflow → static / freeze после land.
+- Гайд «Символы» + Symbol Preview без регресса.
+
+**Done when:** чеклист §7 проходит целиком.
+
+---
+
+## 7. Acceptance checklist V1
+
+- [x] Гайд «Символы» на месте (WebP, H/L, 196, пример H1 + static + animations).
+- [x] Дизайнер загружает свои символы (static + spine) пачкой.
+- [x] Сетка любая ≥ 3×3, default 5×4.
+- [x] Spin: static в движении; land/idle/win на Spine как в cat_mafia.
+- [x] Видны background, desk/frame, HUD-контекст.
+- [x] Работают все device-пресеты из таблицы §3.4.
+- [x] Работают quality-пресеты 4K / 2K / 1080p / 720p внутри фрейма.
+- [x] Можно оценить деградацию качества символов.
+- [x] Inspect/варнинги понятны без знания кодовой базы.
+- [x] Нет регресса текущего одиночного Spine preview для разбора клипа.
+
+---
+
+## 8. Риски
+
+| Риск | Митигация |
+|------|-----------|
+| Слишком большой объём «всего окружения» | Phase 3 режет HUD до shell; specials — в хвосте Phase 6 при нехватке времени только после обязательного барабана |
+| Perf при C×R Spine | Static на spin; лимит живых Spine; пауза offscreen |
+| Расхождение с cat_mafia после апдейтов игры | Явный список скопированных констант + комментарии «source: cat_mafia …» |
+| Ассеты desk/background лицензии/пути | Использовать копии/ссылки из `designer_assets` или согласованный static export из cat_mafia |
+
+---
+
+## 9. Вне scope после V1 (бэклог, не блокирует V1)
+
+- Полный payline / win celebration продукт-логики.
+- Онлайн шаринг сцен / сохранение пресетов в облаке.
+- Редактор атласа / автотрим.
+- Полный паритет всех minigame UI cat_mafia.
+
+---
+
+## 10. Следующий шаг
+
+1. Прочитать этот план.  
+2. Зафиксировать правки (если есть) прямо в этом файле или сообщением.  
+3. После явного «ок, к реализации» — начинать с **Phase 1**.
+
+---
+
+*Файл: `designer-docs/PLAN.md`*

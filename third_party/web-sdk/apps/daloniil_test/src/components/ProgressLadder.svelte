@@ -278,6 +278,7 @@
 		background-size: 100% 100%;
 		transform-origin: center center;
 		transition: filter 0.15s ease;
+		overflow: visible;
 	}
 
 	/* While cloud transition plays, Pixi canvas sits at z-index 50 — keep bar below it. */
@@ -300,6 +301,8 @@
 		align-items: center;
 		justify-content: center;
 		pointer-events: none;
+		/* Let CSS glow bleed past the silhouette box (esp. mobile WebKit). */
+		overflow: visible;
 	}
 
 	.kitty {
@@ -309,7 +312,16 @@
 		height: auto;
 		object-fit: contain;
 		opacity: 0;
-		filter: drop-shadow(0 0 4px rgba(255, 210, 60, 0.9));
+	}
+
+	/*
+		Glow on the wrap — NOT on .kitty. kitty-appear leaves `transform` via
+		`forwards`; on iOS Safari drop-shadow + transform on the same node
+		clips the glow to the box (hard top/bottom cut).
+	*/
+	.cat-wrap.filled {
+		filter: drop-shadow(0 0 5px rgba(255, 210, 60, 0.95))
+			drop-shadow(0 0 10px rgba(255, 190, 40, 0.45));
 	}
 
 	.cat-wrap.filled .kitty {

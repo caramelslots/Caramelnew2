@@ -8,10 +8,9 @@ Donor: `0_0_lines`. Wok Fury adds:
   - Bonus symbol `B` — scatter-like trigger в base, collectible в FS (Progress Ladder)
   - Mystery symbol `M` — Sticky Mystery Reels во FS, раскрываются в один обычный символ
   - Progress Ladder — каждые 4 собранных `B` в FS = новый tier (+3 spins, +1 mystery reel)
-  - 5 bet modes:
+  - 4 bet modes:
       base                ×1     (RTP 0.9601)
       bonus_boost         ×2     (RTP 0.9601, агрессивнее основной reelstrip)
-      special_spins       ×30    (RTP 0.9601, гарантированный FS trigger)
       bonus_normal (buy)  ×100   (10 FS, гарантированный bonus trigger)
       bonus_super (buy)   ×200   (10 FS, старт с ×3 sticky Mystery Reels)
 
@@ -23,7 +22,7 @@ Natural FS trigger из base (по числу B на trigger-доске):
 ```
 W      Wild      — wild + multiplier (×2..×50 в FS, см. padding_symbol_values)
 H1-H4  High      — H1=top, H4=lowest premium
-L1-L4  Low       — все равноценные (1.0 / 0.2 / 0.1 для 5/4/3-of-a-kind)
+L1-L4  Low       — все равноценные (3.0 / 0.5 / 0.1 для 5/4/3-of-a-kind)
 B      Bonus     — scatter, collectible, max 1 per reel / max 4 on board (enforce на draw + collect)
 M      Mystery   — appears only via Sticky Mystery Reel mechanic, не в reelstrip напрямую
 ```
@@ -32,7 +31,7 @@ Mystery reveal — **weighted random** pool (см. MATH_BLOCKERS.md M3/M10):
 
 ```python
 mystery_reveal_pool_weights = {
-    "W":  1,   # ~2.4% — rare, top-tier (×150 line, +multiplier ×2..×50 в FS)
+    "W":  1,   # ~2.4% — rare, top-tier (×225 line, +multiplier ×2..×50 в FS)
     "H1": 3,   # ~7%   — premium
     "H2": 4,   # ~10%
     "H3": 5,   # ~12%
@@ -98,13 +97,12 @@ game_override.py      — Wok Fury-specific hooks:
 game_executables.py   — evaluate_lines_board (использует Lines из SDK)
 game_calculations.py  — passthrough к SDK
 game_events.py        — Wok Fury events (bonusCollect, ladderTierUp, ...)
-game_optimization.py  — optimizer params для 5 bet-modes
+game_optimization.py  — optimizer params для 4 bet-modes
 run.py                — entry point
 sync_to_web_sdk.py    — копирует library/books/*.json → web-sdk stories
 reels/
   BR0.csv             — basegame default (для base, bonus_normal)
   BR1.csv             — basegame для bonus_boost (B-density выше)
-  BR2.csv             — basegame для special_spins (B-density максимум)
   FR0.csv             — freegame default
   FR1.csv             — freegame для bonus_super (W/H-density выше; M на ленте нет, см. MYSTERY_SINGLE_M_REMOVAL.md)
   FRWCAP.csv          — freegame wincap path (wild-heavy; M на ленте нет)

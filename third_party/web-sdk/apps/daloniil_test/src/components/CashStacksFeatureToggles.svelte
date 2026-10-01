@@ -1,5 +1,5 @@
 <!--
-	Общие строки Bonus Boost / Special Spins с тумблерами (Special Spins скрыт в UI по умолчанию).
+	Строки Bonus Boost с тумблером.
 	Используются в FeaturesAutoSpinOverlay и BuyBonusOverlay — одно состояние
 	через stateGame.activeFeature (см. game/activeFeature.ts).
 -->
@@ -7,11 +7,7 @@
 	import { stateBet } from 'state-shared';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
-	import {
-		bonusBoostCostMultiplier,
-		canAffordBonusBoost,
-		specialSpinsCostMultiplier,
-	} from '../game/buyBonusBalance';
+	import { bonusBoostCostMultiplier, canAffordBonusBoost } from '../game/buyBonusBalance';
 	import { getContext } from '../game/context';
 	import { toggleActiveFeature, type ActiveFeature } from '../game/activeFeature';
 	import { stateGame } from '../game/stateGame.svelte';
@@ -20,7 +16,7 @@
 	type Props = {
 		/** Заголовок секции «Функции» (только в меню автоигры). */
 		showSectionTitle?: boolean;
-		/** Какие фичи показывать (по умолчанию обе). */
+		/** Какие фичи показывать (по умолчанию Bonus Boost). */
 		features?: ActiveFeature[];
 		/** Компактная строка: название + тумблер, без cost. */
 		compact?: boolean;
@@ -64,9 +60,6 @@
 
 	const bonusBoostCost = $derived(
 		numberToCurrencyString(stateBet.betAmount * bonusBoostCostMultiplier()),
-	);
-	const specialSpinsCost = $derived(
-		numberToCurrencyString(stateBet.betAmount * specialSpinsCostMultiplier()),
 	);
 
 	const onToggle = (feature: ActiveFeature) => {
@@ -118,31 +111,6 @@
 			{/if}
 		</div>
 		<div class="feature-toggle" class:on={bonusBoostActive}>
-			<span class="knob"></span>
-		</div>
-	</button>
-{/if}
-
-{#if features.includes('special_spins')}
-	<button
-		type="button"
-		class="feature-row"
-		class:compact
-		class:no-hover-bg={noHoverBg}
-		class:active={stateGame.activeFeature === 'special_spins'}
-		{disabled}
-		onclick={() => onToggle('special_spins')}
-		data-test="feature-special-spins"
-	>
-		<div class="feature-info">
-			<div class="feature-name">{context.i18nDerived.specialSpins()}</div>
-			{#if !compact}
-				<div class="feature-cost">
-					{context.i18nDerived.featurePerSpinCost(specialSpinsCost)}
-				</div>
-			{/if}
-		</div>
-		<div class="feature-toggle" class:on={stateGame.activeFeature === 'special_spins'}>
 			<span class="knob"></span>
 		</div>
 	</button>

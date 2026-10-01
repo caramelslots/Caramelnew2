@@ -12,6 +12,7 @@
 	import { stateSlots } from 'utils-slots';
 
 	import { canAffordSpin } from '../game/buyBonusBalance';
+	import { isAnyMenuOpen } from '../game/isAnyMenuOpen';
 	import CashStacksButtonBetProvider from './CashStacksButtonBetProvider.svelte';
 	import { UI_BASE_SIZE } from 'components-ui-pixi/src/constants';
 	import { getContext } from '../game/context';
@@ -24,6 +25,7 @@
 		stateGame.gameType === 'freegame' || stateUi.freeSpinCounterShow,
 	);
 	const disabled = $derived(!canAffordSpin());
+	const spaceDisabled = $derived(disabled || isAnyMenuOpen());
 	const hasCounter = $derived(stateBetDerived.hasAutoBetCounter());
 	let manualSpinHeld = $state(false);
 	let reelsWereSpinning = $state(false);
@@ -78,7 +80,7 @@
 				if (key === 'spin_default' && !hasCounter) manualSpinHeld = true;
 				onpress();
 			}}
-			<OnHotkey hotkey="Space" {disabled} onpress={handlePress} />
+			<OnHotkey hotkey="Space" disabled={spaceDisabled} onpress={handlePress} />
 			<Button {...props} {sizes} onpress={handlePress} {disabled}>
 				{#snippet children({ center })}
 					{@const isDimmed =

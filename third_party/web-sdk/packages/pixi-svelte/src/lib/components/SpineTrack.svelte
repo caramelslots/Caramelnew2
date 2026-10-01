@@ -11,8 +11,6 @@
 </script>
 
 <script lang="ts">
-	import { onDestroy } from 'svelte';
-
 	import { propsSyncEffect } from '../utils.svelte';
 	import { getContextSpine } from '../context.svelte';
 
@@ -33,13 +31,14 @@
 					if (props.reverse) track.reverse = true;
 					if (props.animationEnd !== undefined) track.animationEnd = props.animationEnd;
 				}
-				// When the parent Spine is frozen (autoUpdate === false, e.g. a
-				// zero-movement idle pose), the Pixi ticker will not advance the
-				// skeleton, so the newly-set animation would never be applied.
-				// Pose it once here so the rest frame renders correctly.
-				if (spine.autoUpdate === false) {
-					spine.update(0);
-				}
+				// Always pose immediately. When autoUpdate is already false the
+				// ticker will not run; when it flips false in the same flush as
+				// this setAnimation (e.g. appear_flash → frozen main_coin_slow),
+				// skipping update(0) leaves the previous clip's last bright frame.
+				spine.update(0);
+				// Force a SpinePipe rebuild — clip swaps can introduce slots that
+				// were never batched, which 4.2.74 then crashes on `_batcher`.
+				spine.spineAttachmentsDirty = true;
 			} catch (error) {
 				console.error(error);
 				const animations = spine?.state?.data?.skeletonData?.animations;
@@ -54,8 +53,4 @@
 	});
 
 	propsSyncEffect({ props, target: () => track, ignore: ['trackIndex', 'animationName'] });
-
-	onDestroy(() => {
-		spine.state.setEmptyAnimation(props.trackIndex, 0);
-	});
 </script>
