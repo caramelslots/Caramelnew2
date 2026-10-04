@@ -12,6 +12,7 @@ import {
 	SpineTexture,
 	TextureAtlas,
 } from '@esotericsoftware/spine-pixi-v8';
+import { stateModal } from 'state-shared';
 
 import {
 	BUY_BONUS_HIDDEN_SLOTS,
@@ -23,6 +24,8 @@ import {
 import { isBuyBonusCardSpineGpuLive, releaseAllBuyBonusCardSpinePlayers } from './buyBonusCardGpu';
 import { isHtmlWebglPaused } from './htmlWebglPause';
 import { isBuyBonusFlowOpen } from './isAnyMenuOpen';
+import { startBuyBonusFlowPreload } from './uiHtmlAssetManifest';
+import { stateXstateDerived } from './stateXstate';
 import { isPhoneForAtlasDownscale } from './phoneSpineAtlasDownscale';
 import { gameEntrance } from './gameEntrance.svelte';
 import {
@@ -223,17 +226,19 @@ const prepareBuyBonusSpineDraw = (spine: Spine, variant: BuyBonusSpineVariant) =
 };
 
 /**
- * Formerly parked overlay GL + atlases on base for instant open.
- * Disabled: warm cost (~fb:buyBonus + card atlases + CPU twins) outweighed the UX.
- * HTTP preload still runs; WebGL loads on first menu open.
+ * After the entrance lift, keep the overlay GL and card atlases resident at 4×4
+ * so the first Buy Bonus open only resizes. Idle teardown would purge them and
+ * make the next open wait on decode again. Feature eviction still drops this.
  */
-export const shouldKeepBuyBonusWarm = () => false;
+let aheadGpuWarm = false;
 
-/** Own overlay GL for buy-flow + in-round duel side pick. */
+export const shouldKeepBuyBonusWarm = () => aheadGpuWarm && !getFeatureEvictLock();
+
+/** Own overlay GL for buy-flow + in-round duel side pick + the post-entrance warm. */
 const canOwnApp = () => {
 	if (isBuyBonusFlowOpen()) return true;
 	if (stateDuel.phase === 'pick') return true;
-	return false;
+	return aheadGpuWarm && !getFeatureEvictLock();
 };
 
 /** After FS cloud — brief pause so outro / tir GPU can drop before overlay WebGL returns. */
@@ -381,30 +386,75 @@ const hardEvictBuyBonusVariantAssets = async (variant: BuyBonusSpineVariant) => 
 	for (const url of all) evictCachedUrl(url);
 };
 
+const variantAssetsCached = (variant: BuyBonusSpineVariant) => {
+	const urls = buyBonusSpineUrls(variant);
+	return (
+		Cache.has(urls.atlas) &&
+		Cache.has(urls.skeleton) &&
+		urls.images.every((url) => Cache.has(url))
+	);
+};
+
+const loadVariantPage = async (url: string) => {
+	const texture = (await PIXI.Assets.load({
+		src: url,
+		data: { alphaMode: 'premultiply-alpha-on-upload' },
+	})) as PIXI.Texture;
+	const file = url.replace(/^.*\//, '');
+	texture.source.label = file;
+	texture.source.autoGenerateMipmaps = false;
+	if (texture.source.style) texture.source.style.scaleMode = 'linear';
+	return [file, texture.source] as const;
+};
+
 /**
  * Load atlas pages with explicit PMA-on-upload into THIS pass, then wire the atlas.
  * Avoids stale Cache TextureSources from a destroyed overlay WebGL (solid black cards).
+ * Desktop uploads every page of a variant at once. Phones stay serial (Jetsam).
  */
-const loadBuyBonusAtlasAndSkeleton = async (variant: BuyBonusSpineVariant) => {
+const uploadVariantPages = async (variant: BuyBonusSpineVariant, evict: boolean) => {
+	if (!atlasesDirty && variantAssetsCached(variant)) return;
 	const urls = buyBonusSpineUrls(variant);
+	if (evict) await hardEvictBuyBonusVariantAssets(variant);
+
+	const pairs: Array<readonly [string, PIXI.TextureSource]> = [];
+	if (isPhoneForAtlasDownscale()) {
+		for (const url of urls.images) pairs.push(await loadVariantPage(url));
+	} else {
+		pairs.push(...(await Promise.all(urls.images.map((url) => loadVariantPage(url)))));
+	}
+
+	const images: Record<string, PIXI.TextureSource> = {};
+	for (const [file, source] of pairs) images[file] = source;
+	await PIXI.Assets.load([{ src: urls.atlas, data: { images } }, urls.skeleton]);
+	atlasesDirty = false;
+};
+
+/**
+ * One gate for the whole menu. Evict first, then upload.
+ * Desktop decodes every card together; phones stay one variant at a time (Jetsam).
+ */
+const ensureMenuAtlasUploads = async (variants: readonly BuyBonusSpineVariant[]) => {
 	await withBuyBonusAssets(async () => {
-		await hardEvictBuyBonusVariantAssets(variant);
-
-		const images: Record<string, PIXI.TextureSource> = {};
-		for (const url of urls.images) {
-			const texture = (await PIXI.Assets.load({
-				src: url,
-				data: { alphaMode: 'premultiply-alpha-on-upload' },
-			})) as PIXI.Texture;
-			const file = url.replace(/^.*\//, '');
-			texture.source.label = file;
-			texture.source.autoGenerateMipmaps = false;
-			if (texture.source.style) texture.source.style.scaleMode = 'linear';
-			images[file] = texture.source;
+		const pending = variants.filter((variant) => atlasesDirty || !variantAssetsCached(variant));
+		if (pending.length === 0) return;
+		if (isPhoneForAtlasDownscale()) {
+			for (const variant of pending) await uploadVariantPages(variant, true);
+			return;
 		}
+		for (const variant of pending) await hardEvictBuyBonusVariantAssets(variant);
+		await Promise.all(pending.map((variant) => uploadVariantPages(variant, false)));
+	});
+};
 
-		await PIXI.Assets.load([{ src: urls.atlas, data: { images } }, urls.skeleton]);
-		atlasesDirty = false;
+/** Set while the menu batch upload is in flight so per-card loads wait instead of evicting it. */
+let menuAtlasUpload: Promise<void> | null = null;
+
+const loadBuyBonusAtlasAndSkeleton = async (variant: BuyBonusSpineVariant) => {
+	if (menuAtlasUpload) await menuAtlasUpload;
+	if (!atlasesDirty && variantAssetsCached(variant)) return;
+	await withBuyBonusAssets(async () => {
+		await uploadVariantPages(variant, true);
 	});
 };
 
@@ -782,6 +832,17 @@ export const ensureBuyBonusWarm = (): Promise<void> => {
 			}
 			const createdApp = await ensureApp();
 			if (!createdApp || !canOwnApp()) return;
+			let releaseMenuUpload: () => void = () => undefined;
+			menuAtlasUpload = new Promise<void>((resolve) => {
+				releaseMenuUpload = resolve;
+			});
+			try {
+				await ensureMenuAtlasUploads(MENU_VARIANTS);
+			} finally {
+				releaseMenuUpload();
+				menuAtlasUpload = null;
+			}
+			if (!app || !canOwnApp()) return;
 			await whenBuyBonusSpinesReady(MENU_VARIANTS);
 			await reloadRegisteredPickMascots();
 			if (!app || !canOwnApp()) return;
@@ -820,6 +881,62 @@ export const prepareBuyBonusMenu = async () => {
 	setFeatureEvictLock(false);
 	await ensureBuyBonusWarm();
 	flushBuyBonusSharedStage();
+};
+
+/**
+ * Decode and upload the three card atlases after the entrance, while the canvas
+ * stays 4×4. The first menu open then only attaches and resizes that context.
+ */
+export const startBuyBonusGpuWarm = (): Promise<void> => {
+	if (getFeatureEvictLock()) return Promise.resolve();
+	aheadGpuWarm = true;
+	return ensureBuyBonusWarm();
+};
+
+/**
+ * The intro panel sits above the game and lifts off on Continue.
+ * Buy Bonus must not cover that exit: wait until it is gone, then a bit longer.
+ */
+const BUY_BONUS_AFTER_INTRO_MS = 600;
+let introClearedAt = 0;
+
+export const noteBuyBonusIntroCleared = () => {
+	if (!gameEntrance.liftComplete || introClearedAt !== 0) return;
+	introClearedAt = performance.now();
+};
+
+/** Milliseconds still to wait after the intro panel has left. Null while it is on screen. */
+export const buyBonusOpenDelayMs = (): number | null => {
+	if (!gameEntrance.liftComplete || introClearedAt === 0) return null;
+	return Math.max(0, BUY_BONUS_AFTER_INTRO_MS - (performance.now() - introClearedAt));
+};
+
+/**
+ * Accept a Buy tap immediately. The modal opens only once card art and the
+ * board images can be shown together — a fast tap must not reveal a half-built panel.
+ */
+export const requestBuyBonusMenuOpen = (): boolean => {
+	if (isBuyBonusFlowOpen() || gameEntrance.buyBonusOpenPending) return false;
+	if (!stateXstateDerived.isIdle()) return false;
+	gameEntrance.buyBonusOpenPending = true;
+	void startBuyBonusFlowPreload();
+	void startBuyBonusGpuWarm();
+	return true;
+};
+
+/** Open the modal for a pending tap once the overlay can paint a full frame. */
+export const commitPendingBuyBonusMenuOpen = () => {
+	if (!gameEntrance.buyBonusOpenPending) return false;
+	if (getFeatureEvictLock() || !stateXstateDerived.isIdle()) {
+		gameEntrance.buyBonusOpenPending = false;
+		return false;
+	}
+	if (buyBonusOpenDelayMs() !== 0) return false;
+	if (!areBuyBonusSpinesReady()) return false;
+	gameEntrance.buyBonusOpenPending = false;
+	gameEntrance.buyBonusPanelReady = false;
+	stateModal.modal = { name: 'buyBonus' };
+	return true;
 };
 
 const observeLayer = (layer: HTMLElement) => {
@@ -921,7 +1038,10 @@ const layoutPickMascot = (
 		viewport,
 	);
 	const button = cardButton(host);
-	spine.alpha = button?.disabled ? 0.5 : 1;
+	// Full opacity. Alpha on a PMA spine punches a hole; confirm disables the
+	// button while the chosen mascot must stay solid.
+	spine.alpha = 1;
+	spine.tint = button?.disabled && !host.closest('.is-selected') ? 0x7a7a7a : 0xffffff;
 	spine.visible = true;
 	const layerRect = layer.getBoundingClientRect();
 	const sx = mirror ? -transform.scale : transform.scale;
@@ -1041,7 +1161,8 @@ const layoutAndDraw = (advance: boolean) => {
 			continue;
 		}
 		layoutPickMascot(spine, species, view.host, layer, view.mirror);
-		if (dt > 0 && (view.active || isDisplayed(view.host))) spine.update(dt);
+		// First frame of idle only. Advancing the pose made the choose-side
+		// screen a different picture from the card the user just tapped.
 	}
 
 	app.render();

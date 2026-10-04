@@ -2,6 +2,8 @@ type PreloadHtmlImagesOptions = {
 	/** Loaded sequentially before the rest (e.g. first carousel slide). */
 	priority?: readonly string[];
 	concurrency?: number;
+	/** Keep the decoded Image alive so a later `<img>` paints on the first frame. */
+	retain?: boolean;
 };
 
 export type HtmlPreloadMemoryEntry = {
@@ -18,6 +20,8 @@ const RGBA_BYTES = 4;
  * Metadata only — we do not retain the HTMLImageElement (browser cache may still hold pixels).
  */
 const htmlPreloadRegistry = new Map<string, HtmlPreloadMemoryEntry>();
+/** Decoded bitmaps pinned so settings / autoplay boards do not decode again on open. */
+const retainedImages = new Map<string, HTMLImageElement>();
 
 const shortPathLabel = (path: string) =>
 	path.replace(/^.*\//, '').slice(0, 28) || path.slice(0, 28);
@@ -34,14 +38,21 @@ const recordPreload = (url: string, img: HTMLImageElement) => {
 	});
 };
 
-const loadImage = (url: string): Promise<void> =>
+const loadImage = (url: string, retain = false): Promise<void> =>
 	new Promise((resolve, reject) => {
+		const cached = retainedImages.get(url);
+		if (cached && cached.complete && cached.naturalWidth > 0) {
+			recordPreload(url, cached);
+			resolve();
+			return;
+		}
 		const img = new Image();
+		const finish = () => {
+			recordPreload(url, img);
+			if (retain) retainedImages.set(url, img);
+			resolve();
+		};
 		img.onload = () => {
-			const finish = () => {
-				recordPreload(url, img);
-				resolve();
-			};
 			if (typeof img.decode === 'function') {
 				void img.decode().then(finish).catch(finish);
 				return;
@@ -51,6 +62,12 @@ const loadImage = (url: string): Promise<void> =>
 		img.onerror = () => reject(new Error(`Failed to preload image: ${url}`));
 		img.src = url;
 	});
+
+/** True when this URL was decoded ahead of time and the bitmap is still held. */
+export const isHtmlImageDecoded = (url: string) => {
+	const img = retainedImages.get(url);
+	return Boolean(img && img.complete && img.naturalWidth > 0);
+};
 
 const dedupeUrls = (urls: readonly string[]) => {
 	const seen = new Set<string>();
@@ -65,7 +82,11 @@ const dedupeUrls = (urls: readonly string[]) => {
 	return ordered;
 };
 
-const preloadWithConcurrency = async (urls: readonly string[], concurrency: number) => {
+const preloadWithConcurrency = async (
+	urls: readonly string[],
+	concurrency: number,
+	retain: boolean,
+) => {
 	if (urls.length === 0) return;
 
 	const queue = [...urls];
@@ -78,7 +99,7 @@ const preloadWithConcurrency = async (urls: readonly string[], concurrency: numb
 				if (!url) break;
 
 				try {
-					await loadImage(url);
+					await loadImage(url, retain);
 				} catch {
 					/* Best-effort warm-up; `<img>` will retry on render. */
 				}
@@ -90,7 +111,7 @@ const preloadWithConcurrency = async (urls: readonly string[], concurrency: numb
 /** Warm HTTP cache + decode HTML overlay sprites before first paint. */
 export const preloadHtmlImages = async (
 	urls: readonly string[],
-	{ priority = [], concurrency = 4 }: PreloadHtmlImagesOptions = {},
+	{ priority = [], concurrency = 4, retain = false }: PreloadHtmlImagesOptions = {},
 ) => {
 	const ordered = dedupeUrls([...priority, ...urls]);
 	const prioritySet = new Set(priority);
@@ -99,13 +120,13 @@ export const preloadHtmlImages = async (
 
 	for (const url of priorityUrls) {
 		try {
-			await loadImage(url);
+			await loadImage(url, retain);
 		} catch {
 			/* noop */
 		}
 	}
 
-	await preloadWithConcurrency(remainingUrls, concurrency);
+	await preloadWithConcurrency(remainingUrls, concurrency, retain);
 };
 
 /** All URLs recorded by preloadHtmlImages (for Dev RAM). */

@@ -23,8 +23,10 @@ export const gameEntrance = $state({
 	 * Distinguishes first-entry (GameAssetsLoader) from post-feature remount.
 	 */
 	buyBonusEverWarmed: false,
-	/** Buy-bonus board+cards painted — shell blur waits for this so user never sees empty cards. */
+	/** Buy-bonus board+cards painted — shell stays hidden until this so the menu appears whole. */
 	buyBonusPanelReady: false,
+	/** HUD tap arrived before the menu could be shown. Open once the cards are ready. */
+	buyBonusOpenPending: false,
 	/**
 	 * Set during bought-feature eviction; cleared when basegame settles so warm-park can remount.
 	 * Must live here (reactive) — a plain module `let` does not re-run shell `keepBuyWarm`.

@@ -1,9 +1,15 @@
 import { i18n, type Messages } from '@lingui/core';
+import { compileMessage } from '@lingui/message-utils/compileMessage';
 import { type Language } from './stateUrl.svelte';
 
 export const stateI18n = $state({
 	i18n
 });
+
+/** Catalogs are plain ICU strings (not lingui-compile output). Runtime compiler
+ *  is required in production — Lingui only auto-enables it when NODE_ENV !==
+ *  "production", otherwise `{percent}` / `{n}` stay literal in the UI. */
+stateI18n.i18n.setMessagesCompiler(compileMessage);
 
 export const stateI18nDerived = {
 	init: (lang: Language, messages: Messages) => {

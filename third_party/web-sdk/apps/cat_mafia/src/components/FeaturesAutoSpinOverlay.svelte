@@ -23,6 +23,7 @@
 		progressToRounds,
 		launchCashStacksAutoplay,
 	} from '../game/autoplay';
+	import { isHtmlImageDecoded } from '../game/preloadHtmlImages';
 	import { computeAutoplayPanelAnchor } from '../game/popupHudLayout';
 	import {
 		AUTOSPIN_ASSETS,
@@ -32,6 +33,7 @@
 	} from '../game/uiHtmlAssetManifest';
 
 	const context = getContext();
+	void startAutoplayPanelPreload();
 	const { stateLayoutDerived } = getContextLayout();
 
 	const bgUrl = AUTOSPIN_ASSETS.bg;
@@ -180,7 +182,13 @@
 			aria-modal="true"
 			aria-label={context.i18nDerived.autoplayTitle()}
 		>
-			<img class="panel-bg" src={bgUrl} alt="" draggable="false" />
+			<img
+				class="panel-bg"
+				src={bgUrl}
+				alt=""
+				draggable="false"
+				decoding={isHtmlImageDecoded(bgUrl) ? 'sync' : 'async'}
+			/>
 
 			<div class="panel-content">
 				<header class="panel-header">

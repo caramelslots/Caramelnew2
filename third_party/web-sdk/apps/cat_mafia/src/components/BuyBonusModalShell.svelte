@@ -1,7 +1,8 @@
 <!--
 	Shared blur backdrop for buy-bonus menu + confirm.
-	Buy panel mounts only when the menu/confirm is open — no off-screen WebGL warm
-	park on base (atlases + fb:buyBonus were ~30MB+ with CPU twins).
+	Buy panel mounts only when the menu/confirm is open.
+	Card atlases upload after the entrance into a 4×4 overlay GL so the first open
+	only resizes that canvas. The context is parked, never destroyed.
 -->
 <script lang="ts">
 	import { stateModal } from 'state-shared';
@@ -21,8 +22,8 @@
 	const showDuelPickPanel = $derived(stateModal.modal?.name === 'buyDuelPick');
 	const isBuyFlowOpen = $derived(showBuyPanel || showConfirmPanel || showDuelPickPanel);
 
-	/** Confirm reparents menu portal — keep buy overlay mounted while confirm is open. */
-	const mountBuyPanel = $derived(showBuyPanel || showConfirmPanel);
+	/** Confirm and duel pick reparent the shared canvas — keep the buy menu mounted. */
+	const mountBuyPanel = $derived(isBuyFlowOpen);
 	const mountConfirmPanel = $derived(showConfirmPanel);
 
 	/** Dim while spines flush; reveal board + cards together when ready. */
@@ -116,14 +117,14 @@
 			-webkit-backdrop-filter: blur(30px);
 		}
 
-		/* Tap feedback: dim only while spines flush — board stays hidden until ready. */
+		/* Hidden while cards flush. The menu appears only with .active, already drawn. */
 		&.preparing:not(.active) {
-			opacity: 1;
-			visibility: visible;
-			pointer-events: auto;
-			background: rgba(0, 0, 0, 0.5);
-			backdrop-filter: blur(30px);
-			-webkit-backdrop-filter: blur(30px);
+			opacity: 0;
+			visibility: hidden;
+			pointer-events: none;
+			background: transparent;
+			backdrop-filter: none;
+			-webkit-backdrop-filter: none;
 		}
 
 		/* Park card WebGL off-screen after lift — keep layout size, no paint. */

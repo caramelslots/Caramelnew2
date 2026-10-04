@@ -17,12 +17,14 @@
 		AUTOSPIN_ASSETS,
 		startSettingsPanelPreload,
 	} from '../game/uiHtmlAssetManifest';
+	import { isHtmlImageDecoded } from '../game/preloadHtmlImages';
 	import { computeDesktopHudLayout, resolveDesktopHudConfig } from '../game/desktopHudLayout';
 	import { computePortraitHudCanvas } from '../game/portraitHudLayout';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { isSdkTurboSpin } from '../game/gameSpeed';
 
 	const context = getContext();
+	void startSettingsPanelPreload();
 	const { stateLayoutDerived } = getContextLayout();
 	const layoutType = $derived(stateLayoutDerived.layoutType());
 	const canvasSizes = $derived(stateLayoutDerived.canvasSizes());
@@ -312,7 +314,13 @@
 				in:scale={{ duration: PANEL_IN_MS, easing: backOut, start: 0.86, opacity: 0 }}
 				out:scale={{ duration: PANEL_OUT_MS, easing: cubicOut, start: 0.95, opacity: 0 }}
 			>
-				<img class="panel-bg" src={bgUrl} alt="" draggable="false" />
+				<img
+					class="panel-bg"
+					src={bgUrl}
+					alt=""
+					draggable="false"
+					decoding={isHtmlImageDecoded(bgUrl) ? 'sync' : 'async'}
+				/>
 
 				<div class="panel-content">
 					<header class="panel-header">

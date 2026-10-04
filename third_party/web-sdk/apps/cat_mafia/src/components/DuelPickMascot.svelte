@@ -1,6 +1,6 @@
 <!--
-	Static mascot still for Duel side-pick (first frame of idle — no Spine / Pixi).
-	Generated via scripts/_mascotIdleStill.html → pick_mascot_*_idle.webp.
+	Static mascot still for Duel side-pick (decoded image, no Spine / Pixi).
+	pick_mascot_cat_idle.webp / pick_mascot_dog_idle.webp
 -->
 <script lang="ts">
 	import {

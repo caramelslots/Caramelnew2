@@ -57,17 +57,15 @@
 	const isOpen = $derived(stateModal.modal?.name === 'buyBonus');
 	const isConfirmOpen = $derived(stateModal.modal?.name === 'buyBonusConfirm');
 
-	/** Sync panel-ready from live shared Pixi — ignore stale HMR warm flags. */
+	/** Sync warm flags from live shared Pixi. The panel itself stays hidden until a flushed frame. */
 	$effect(() => {
 		void gameEntrance.buyBonusWarmReady;
 		const live = areBuyBonusSpinesReady();
 		if (live) {
 			gameEntrance.buyBonusWarmReady = true;
 			gameEntrance.buyBonusEverWarmed = true;
-			gameEntrance.buyBonusPanelReady = true;
 			return;
 		}
-		// Stale flag after HMR / eviction — force a remount path.
 		if (gameEntrance.buyBonusWarmReady && !live) {
 			gameEntrance.buyBonusWarmReady = false;
 		}
@@ -87,15 +85,25 @@
 		void ensureOutlineReelReady(context.stateApp);
 	});
 
-	/** Open must load + flush after the panel is actually laid out (opacity > 0). */
+	/** Open stays hidden until the shared canvas has drawn into the laid-out cards. */
 	$effect(() => {
 		if (!isOpen) return;
+		if (gameEntrance.buyBonusPanelReady && areBuyBonusSpinesReady()) {
+			flushBuyBonusSharedStage();
+			return;
+		}
 		let cancelled = false;
+		gameEntrance.buyBonusPanelReady = false;
 		void ensureBuyBonusMenuOpen().then(() => {
 			if (cancelled) return;
-			gameEntrance.buyBonusPanelReady = areBuyBonusSpinesReady();
 			requestAnimationFrame(() => {
-				if (!cancelled) flushBuyBonusSharedStage();
+				if (cancelled) return;
+				flushBuyBonusSharedStage();
+				requestAnimationFrame(() => {
+					if (cancelled) return;
+					flushBuyBonusSharedStage();
+					gameEntrance.buyBonusPanelReady = areBuyBonusSpinesReady();
+				});
 			});
 		});
 		return () => {

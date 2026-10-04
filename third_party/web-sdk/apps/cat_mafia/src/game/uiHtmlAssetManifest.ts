@@ -172,6 +172,7 @@ export const startSettingsPanelPreload = (): Promise<void> => {
 	if (settingsPanelPreload) return settingsPanelPreload;
 	settingsPanelPreload = preloadHtmlImages(SETTINGS_PANEL_IMAGE_URLS, {
 		concurrency: 4,
+		retain: true,
 	}).then(() => undefined);
 	return settingsPanelPreload;
 };
@@ -181,6 +182,7 @@ export const startAutoplayPanelPreload = (): Promise<void> => {
 	if (autoplayPanelPreload) return autoplayPanelPreload;
 	autoplayPanelPreload = preloadHtmlImages(AUTOPLAY_PANEL_IMAGE_URLS, {
 		concurrency: 4,
+		retain: true,
 	}).then(() => undefined);
 	return autoplayPanelPreload;
 };

@@ -126,12 +126,24 @@ export const getBuyBonusPixiTransform = (
 	};
 };
 
-/** HTTP warm-up only — do not PIXI.Assets.load here (textures must bind to the overlay renderer). */
+/**
+ * HTTP warm-up only — do not PIXI.Assets.load here (textures must bind to the overlay renderer).
+ * Read the body so the browser actually stores the response; a header-only fetch is aborted.
+ */
 export const preloadBuyBonusSpines = async () => {
 	if (typeof window === 'undefined') return;
 	const urls = (['normal', 'super', 'duel'] as const).flatMap((variant) => {
 		const files = buyBonusSpineUrls(variant);
 		return [files.atlas, files.skeleton, ...files.images];
 	});
-	await Promise.all(urls.map((url) => fetch(url).catch(() => null)));
+	await Promise.all(
+		urls.map(async (url) => {
+			try {
+				const response = await fetch(url);
+				await response.arrayBuffer();
+			} catch {
+				/* missing file — overlay load will surface it */
+			}
+		}),
+	);
 };

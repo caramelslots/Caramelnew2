@@ -887,6 +887,7 @@
 		.pick-card-mascot.mascot-cat :global(.pick-spine.fill) {
 			transform: scale(1.28) translate(10%, 2%);
 		}
+
 	}
 
 	@media (max-width: 600px) {

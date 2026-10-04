@@ -26,7 +26,8 @@
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
-	import { HUD_ASSETS, startBuyBonusFlowPreload } from '../game/uiHtmlAssetManifest';
+	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
+	import { requestBuyBonusMenuOpen } from '../game/buyBonusSharedPixi';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { isSdkTurboSpin } from '../game/gameSpeed';
 	import { hudWinDimStyle } from '../game/hudWinDim';
@@ -183,10 +184,8 @@
 
 	const onBuyBonusPress = () => {
 		if (buyDisabled || buyFlowOpen) return;
+		if (!requestBuyBonusMenuOpen()) return;
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
-		// Open immediately — shell shows dim while spines flush (no tap blocked on prepare).
-		stateModal.modal = { name: 'buyBonus' };
-		void startBuyBonusFlowPreload();
 	};
 
 	const onDecreasePress = () => {
