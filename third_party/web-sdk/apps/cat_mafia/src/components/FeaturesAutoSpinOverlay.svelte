@@ -598,14 +598,9 @@
 		user-select: none;
 		z-index: 1;
 
-		&:focus {
-			outline: none;
-		}
-
+		&:focus,
 		&:focus-visible {
-			outline: 2px solid rgba(212, 180, 74, 0.55);
-			outline-offset: 2px;
-			border-radius: 999px;
+			outline: none;
 		}
 	}
 

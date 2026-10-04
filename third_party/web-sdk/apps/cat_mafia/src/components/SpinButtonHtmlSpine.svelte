@@ -1,40 +1,78 @@
-<script lang="ts">
-	import { onMount } from 'svelte';
-	import '@esotericsoftware/spine-player/dist/spine-player.css';
+<script lang="ts" module>
 	import { SpinePlayer } from '@esotericsoftware/spine-player';
 
 	import {
 		SPIN_BUTTON_SPINE_VIEWPORT,
 		resolveSpinButtonSpineUrl,
 	} from '../game/spinButtonHtmlSpine';
+
+	let sharedPlayer: SpinePlayer | undefined;
+	let sharedRoot: HTMLElement | undefined;
+	let sharedReady = false;
+	let activeHost: HTMLDivElement | undefined;
+	let createStarted = false;
+	const readyListeners = new Set<(ready: boolean) => void>();
+
+	const notifyReady = () => {
+		for (const listener of readyListeners) listener(sharedReady);
+	};
+
+	const rememberRoot = (host: HTMLDivElement) => {
+		const root = host.querySelector('.spine-player');
+		if (root instanceof HTMLElement) sharedRoot = root;
+	};
+
+	const attachRoot = (host: HTMLDivElement) => {
+		activeHost = host;
+		if (!sharedRoot || sharedRoot.parentElement === host) return;
+		host.appendChild(sharedRoot);
+	};
+
+	/** Detach only. dispose() calls loseContext and can blank the main canvas. */
+	const releaseHost = (host: HTMLDivElement) => {
+		if (activeHost !== host) return;
+		activeHost = undefined;
+		const player = sharedPlayer;
+		if (player) {
+			try {
+				player.paused = true;
+			} catch {
+				/* not ready */
+			}
+		}
+		sharedRoot?.remove();
+	};
+</script>
+
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import '@esotericsoftware/spine-player/dist/spine-player.css';
+
 	import { isHtmlWebglPaused } from '../game/htmlWebglPause';
 
 	let container = $state<HTMLDivElement>();
 	let ready = $state(false);
-	let player: SpinePlayer | undefined;
-	let pressPlaying = false;
-
-	const pauseIfIdle = (spinePlayer: SpinePlayer) => {
-		if (isHtmlWebglPaused()) {
-			pressPlaying = false;
-			spinePlayer.animationState?.setEmptyAnimation(0, 0);
-			spinePlayer.paused = true;
-			return;
-		}
-		spinePlayer.paused = !pressPlaying;
-	};
 
 	export function playPress() {
-		if (!player || !ready || isHtmlWebglPaused()) return;
-		pressPlaying = true;
-		player.paused = false;
-		player.setAnimation('animation', false);
+		if (!container || !sharedPlayer || !sharedReady || isHtmlWebglPaused()) return;
+		attachRoot(container);
+		sharedPlayer.paused = false;
+		sharedPlayer.setAnimation('animation', false);
 	}
 
 	onMount(() => {
 		if (!container) return;
+		const host = container;
+		const onReady = (value: boolean) => {
+			ready = value;
+		};
+		readyListeners.add(onReady);
+		attachRoot(host);
+		if (sharedReady) ready = true;
 
-		player = new SpinePlayer(container, {
+		if (!createStarted) {
+			createStarted = true;
+			sharedPlayer = new SpinePlayer(host, {
 			jsonUrl: resolveSpinButtonSpineUrl('spin_button.json'),
 			atlasUrl: resolveSpinButtonSpineUrl('spin_button.atlas'),
 			showControls: false,
@@ -50,31 +88,36 @@
 				},
 			},
 			success: (spinePlayer) => {
+				sharedPlayer = spinePlayer;
+				rememberRoot(host);
+				if (activeHost) attachRoot(activeHost);
 				spinePlayer.skeleton!.scaleY = -1;
 				spinePlayer.animationState?.setEmptyAnimation(0, 0);
 				spinePlayer.animationState?.addListener({
 					complete: (entry) => {
-						if (entry.animation?.name === 'animation') {
-							spinePlayer.animationState?.setEmptyAnimation(0, 0);
-							pressPlaying = false;
-							pauseIfIdle(spinePlayer);
-						}
+						if (entry.animation?.name !== 'animation') return;
+						spinePlayer.animationState?.setEmptyAnimation(0, 0);
+						spinePlayer.paused = true;
 					},
 				});
 				spinePlayer.paused = true;
-				ready = true;
+				sharedReady = true;
+				notifyReady();
 			},
-		});
+			});
+		}
 
 		return () => {
-			player?.dispose();
-			player = undefined;
+			readyListeners.delete(onReady);
+			releaseHost(host);
+			ready = false;
 		};
 	});
 
 	$effect(() => {
-		if (!player || !ready) return;
-		pauseIfIdle(player);
+		if (!sharedPlayer || !ready || !isHtmlWebglPaused()) return;
+		sharedPlayer.animationState?.setEmptyAnimation(0, 0);
+		sharedPlayer.paused = true;
 	});
 </script>
 

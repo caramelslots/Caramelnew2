@@ -51,6 +51,12 @@ const views = new Map<LoaderCardBonusViewId, View>();
 let app: PIXI.Application | undefined;
 let appReady: Promise<PIXI.Application | undefined> | undefined;
 let appGen = 0;
+/**
+ * Parked overlay contexts. Never `Application.destroy()` — that calls
+ * `WEBGL_lose_context`, and on some GPUs the main game canvas dies with it.
+ * A parked app is ticker-stopped, detached, and resized to 1×1.
+ */
+const frozenApps: PIXI.Application[] = [];
 let spine: Spine | undefined;
 let spineReady: Promise<Spine | null> | undefined;
 let spineLoading = false;
@@ -219,9 +225,67 @@ const layoutLikeSlot = (target: Spine, boxWidth: number, boxHeight: number) => {
 	target.visible = true;
 };
 
+/** Drop the overlay's private atlas pages. These are canvas copies, not shared Assets. */
+const releasePrivateSpine = (target: Spine) => {
+	const atlas = target.skeleton?.data?.atlas;
+	target.removeFromParent();
+	try {
+		target.destroy({ children: true });
+	} catch {
+		/* already destroyed */
+	}
+	if (!atlas) return;
+	for (const page of atlas.pages) {
+		const spineTex = page.texture as { texture?: PIXI.Texture } | null;
+		try {
+			spineTex?.texture?.destroy(true);
+		} catch {
+			/* GPU resource already released */
+		}
+	}
+	try {
+		atlas.dispose();
+	} catch {
+		/* pages already disposed */
+	}
+};
+
+/**
+ * Stop the card WebGL without losing the GL context.
+ * Frame cost is zero: ticker stopped, canvas detached, backbuffer is 1×1,
+ * spine textures destroyed. The context itself stays allocated.
+ */
+const parkOverlayApplication = (current: PIXI.Application) => {
+	current.ticker.stop();
+	current.ticker.remove(syncStage);
+	current.canvas.parentElement?.removeChild(current.canvas);
+	try {
+		current.renderer.resize(1, 1);
+	} catch {
+		/* context already unusable */
+	}
+	if (!frozenApps.includes(current)) frozenApps.push(current);
+};
+
+const thawOverlayApplication = (): PIXI.Application | undefined => {
+	const parked = frozenApps.pop();
+	if (!parked) return undefined;
+	if (!tickerBound) {
+		parked.ticker.add(syncStage);
+		tickerBound = true;
+	}
+	return parked;
+};
+
 const ensureApp = () => {
 	if (app) return Promise.resolve(app);
 	if (appReady) return appReady;
+
+	const thawed = thawOverlayApplication();
+	if (thawed) {
+		app = thawed;
+		return Promise.resolve(thawed);
+	}
 
 	const gen = appGen;
 	appReady = (async () => {
@@ -238,7 +302,7 @@ const ensureApp = () => {
 			autoStart: false,
 		});
 		if (gen !== appGen) {
-			next.destroy(true);
+			parkOverlayApplication(next);
 			return undefined;
 		}
 		next.canvas.className = CANVAS_CLASS;
@@ -403,18 +467,18 @@ const destroyIfIdle = () => {
 	spine = undefined;
 	spineReady = undefined;
 	tickerBound = false;
-	currentSpine?.destroy({ children: true, texture: false });
+	if (currentSpine) releasePrivateSpine(currentSpine);
 	hostObserver?.disconnect();
 	hostObserver = undefined;
 	if (resizeListening) {
 		window.removeEventListener('resize', requestSync);
 		resizeListening = false;
 	}
-	// Destroy the overlay view/renderer only — do not touch shared Assets textures.
-	if (current) current.destroy(true, { children: true, texture: false });
+	// Park, do not destroy: loseContext on this canvas blanks the main game on some GPUs.
+	if (current) parkOverlayApplication(current);
 };
 
-/** Tear down overlay WebGL after Continue / unmount. Does not unload slot atlas B. */
+/** Park overlay WebGL after Continue / unmount. Does not unload slot atlas B. */
 export const destroyLoaderCardBonusPixi = () => {
 	views.clear();
 	spineLoading = false;

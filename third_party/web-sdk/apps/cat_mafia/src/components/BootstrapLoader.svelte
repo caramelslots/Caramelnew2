@@ -1,7 +1,52 @@
+<script lang="ts" module>
+	import { SpinePlayer } from '@esotericsoftware/spine-player';
+
+	let splashPlayer: SpinePlayer | undefined;
+	let splashRoot: HTMLElement | undefined;
+	let splashPark: HTMLDivElement | undefined;
+
+	const splashParkHost = () => {
+		if (splashPark) return splashPark;
+		const host = document.createElement('div');
+		host.setAttribute('aria-hidden', 'true');
+		host.style.cssText =
+			'position:fixed;left:0;top:0;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none';
+		document.body.appendChild(host);
+		splashPark = host;
+		return host;
+	};
+
+	const splashPlayerRoot = (spinePlayer: SpinePlayer) => {
+		if (splashRoot) return splashRoot;
+		const canvas = (spinePlayer as { canvas?: HTMLCanvasElement }).canvas;
+		const root = canvas?.closest('.spine-player');
+		if (root instanceof HTMLElement) splashRoot = root;
+		return splashRoot;
+	};
+
+	/** Pause and detach. dispose() calls loseContext and can blank the main canvas. */
+	const retainSplashPlayer = (spinePlayer: SpinePlayer | undefined) => {
+		if (!spinePlayer) return;
+		try {
+			spinePlayer.paused = true;
+		} catch {
+			/* not ready */
+		}
+		splashPlayer = spinePlayer;
+		const root = splashPlayerRoot(spinePlayer);
+		if (root) splashParkHost().appendChild(root);
+		const canvas = (spinePlayer as { canvas?: HTMLCanvasElement }).canvas;
+		if (canvas) {
+			canvas.width = 1;
+			canvas.height = 1;
+		}
+	};
+</script>
+
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
-	import { SpinePlayer } from '@esotericsoftware/spine-player';
+	import type { SpinePlayer } from '@esotericsoftware/spine-player';
 	import { waitForTimeout } from 'utils-shared/wait';
 
 	import { getContext } from '../game/context';
@@ -88,6 +133,21 @@
 	onMount(() => {
 		if (!playerContainer) return;
 
+		if (splashPlayer) {
+			player = splashPlayer;
+			const root = splashPlayerRoot(splashPlayer);
+			if (root) playerContainer.appendChild(root);
+			try {
+				splashPlayer.paused = false;
+			} catch {
+				/* not ready */
+			}
+			return () => {
+				retainSplashPlayer(splashPlayer);
+				player = undefined;
+			};
+		}
+
 		player = new SpinePlayer(playerContainer, {
 			jsonUrl: resolveStaticUrl('logo-loader/skeleton.json'),
 			atlasUrl: resolveStaticUrl('logo-loader/skeleton.atlas'),
@@ -105,6 +165,9 @@
 				},
 			},
 			success: (spinePlayer) => {
+				splashPlayer = spinePlayer;
+				const root = playerContainer?.querySelector('.spine-player');
+				if (root instanceof HTMLElement) splashRoot = root;
 				spinePlayer.skeleton!.scaleY = -1;
 				spinePlayer.setAnimation('appear', false);
 				spinePlayer.addAnimation('static', true, 0);
@@ -131,14 +194,14 @@
 		})();
 
 		return () => {
-			player?.dispose();
+			retainSplashPlayer(player ?? splashPlayer);
 			player = undefined;
 		};
 	});
 
 	$effect(() => {
 		if (show) return;
-		player?.dispose();
+		retainSplashPlayer(player);
 		player = undefined;
 	});
 </script>

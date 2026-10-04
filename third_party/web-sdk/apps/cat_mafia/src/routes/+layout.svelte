@@ -94,4 +94,16 @@
 		touch-action: pan-x pan-y;
 		overscroll-behavior: none;
 	}
+
+	/* Slot UI is pointer/touch-first; hide focus rings that appear after click + keypress. */
+	:global(button:focus),
+	:global(button:focus-visible),
+	:global([role='button']:focus),
+	:global([role='button']:focus-visible),
+	:global(a:focus),
+	:global(a:focus-visible),
+	:global([tabindex]:focus),
+	:global([tabindex]:focus-visible) {
+		outline: none;
+	}
 </style>

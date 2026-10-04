@@ -58,7 +58,7 @@
 	import TargetPickOverlay from './TargetPickOverlay.svelte';
 	import TargetPickPixiLayer from './TargetPickPixiLayer.svelte';
 	import TargetShootOverlay from './TargetShootOverlay.svelte';
-	import TargetShootDevOverlay from './TargetShootDevOverlay.svelte';
+	// import TargetShootDevOverlay from './TargetShootDevOverlay.svelte';
 	import TargetShotTrailHtml from './TargetShotTrailHtml.svelte';
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
@@ -76,14 +76,14 @@
 	import CashStacksDesktopHudOverlay from './CashStacksDesktopHudOverlay.svelte';
 	import CashStacksPortraitHudOverlay from './CashStacksPortraitHudOverlay.svelte';
 	import MascotPressHtmlOverlay from './MascotPressHtmlOverlay.svelte';
-	import DevCheats from './DevCheats.svelte';
-	import DevButtons from './DevButtons.svelte';
-	import PixiTextureMemoryOverlay from './PixiTextureMemoryOverlay.svelte';
-	import PixiFpsOverlay from './PixiFpsOverlay.svelte';
+	// import DevCheats from './DevCheats.svelte';
+	// import DevButtons from './DevButtons.svelte';
+	// import PixiTextureMemoryOverlay from './PixiTextureMemoryOverlay.svelte';
+	// import PixiFpsOverlay from './PixiFpsOverlay.svelte';
 	import { FadeContainer } from 'components-pixi';
 
 	/** Flip to `false` and comment the dev imports + markup below to hide the dev menu. */
-	const SHOW_DEV_UI = true;
+	// const SHOW_DEV_UI = true;
 
 	const context = getContext();
 	const phoneTickerMaxFps = isPhoneForAtlasDownscale() ? PHONE_TICKER_MAX_FPS : undefined;
@@ -323,17 +323,21 @@
 <TargetBoardOverlay />
 <TargetPickOverlay />
 <TargetShootOverlay />
+<!--
 {#if SHOW_DEV_UI}
 	<TargetShootDevOverlay />
 {/if}
+-->
 <TargetShotTrailHtml />
 <FreeSpinIntro />
+<!--
 {#if SHOW_DEV_UI}
 	<DevCheats />
 	<DevButtons />
 	<PixiTextureMemoryOverlay />
 	<PixiFpsOverlay />
 {/if}
+-->
 
 <style lang="scss">
 	.pixi-stage {

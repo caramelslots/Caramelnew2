@@ -76,6 +76,12 @@ const setFeatureEvictLock = (locked: boolean) => {
 let app: PIXI.Application | undefined;
 let appReady: Promise<PIXI.Application | undefined> | undefined;
 let appGen = 0;
+/**
+ * Parked menu contexts. Never `Application.destroy()` — `WEBGL_lose_context`
+ * blanks the main game canvas on some GPUs. A parked app is ticker-stopped,
+ * detached, and resized to 1×1.
+ */
+const frozenApps: PIXI.Application[] = [];
 
 /** Dev RAM: buy-bonus overlay WebGL backbuffer (if warm). */
 export const getBuyBonusSharedPixiApp = () => app;
@@ -233,9 +239,6 @@ const canOwnApp = () => {
 /** After FS cloud — brief pause so outro / tir GPU can drop before overlay WebGL returns. */
 export const buyBonusWarmAfterFeatureMs = () => (isPhoneForAtlasDownscale() ? 900 : 450);
 
-/** Live overlay Application for Dev RAM framebuffer estimates (may be undefined). */
-export const getBuyBonusSharedPixiApp = () => app;
-
 const visualZoom = () =>
 	typeof window === 'undefined' ? 1 : Math.max(1, window.visualViewport?.scale ?? 1);
 
@@ -245,9 +248,37 @@ const buyBonusHostResolution = () => {
 	return Math.min(Math.max(dpr, 2), 3) / visualZoom();
 };
 
+const parkBuyBonusApplication = (current: PIXI.Application) => {
+	current.ticker.stop();
+	current.ticker.remove(tickSharedStage);
+	current.canvas.parentElement?.removeChild(current.canvas);
+	try {
+		current.renderer.resize(1, 1);
+	} catch {
+		/* context already unusable */
+	}
+	if (!frozenApps.includes(current)) frozenApps.push(current);
+};
+
+const thawBuyBonusApplication = (): PIXI.Application | undefined => {
+	const parked = frozenApps.pop();
+	if (!parked) return undefined;
+	if (!tickerBound) {
+		parked.ticker.add(tickSharedStage);
+		tickerBound = true;
+	}
+	return parked;
+};
+
 const ensureApp = (): Promise<PIXI.Application | undefined> => {
 	if (app) return Promise.resolve(app);
 	if (appReady) return appReady;
+
+	const thawed = thawBuyBonusApplication();
+	if (thawed) {
+		app = thawed;
+		return Promise.resolve(thawed);
+	}
 
 	const gen = ++appGen;
 	const pending = (async () => {
@@ -264,7 +295,7 @@ const ensureApp = (): Promise<PIXI.Application | undefined> => {
 			autoStart: false,
 		});
 		if (gen !== appGen || !canOwnApp()) {
-			next.destroy(true);
+			parkBuyBonusApplication(next);
 			return undefined;
 		}
 		next.canvas.className = CANVAS_CLASS;
@@ -744,17 +775,9 @@ export const ensureBuyBonusWarm = (): Promise<void> => {
 				needsAtlasPmaRebuild = false;
 				for (const variant of MENU_VARIANTS) forceDropSpine(variant);
 				dropAllPickSpines();
-				// Recreate GL app (new resolution / AA) but keep registered HTML hosts.
-				appGen += 1;
+				// Reload atlases into the same GL. A new context would mean destroy(),
+				// and loseContext blanks the main canvas on some GPUs.
 				atlasesDirty = true;
-				const current = app;
-				app = undefined;
-				appReady = undefined;
-				tickerBound = false;
-				if (current) {
-					current.ticker.remove(tickSharedStage);
-					current.destroy(true);
-				}
 				await purgeBuyBonusAssetCache();
 			}
 			const createdApp = await ensureApp();
@@ -1105,7 +1128,7 @@ const teardownSharedStageSync = () => {
 	cancelScheduledDestroy();
 	appGen += 1;
 	atlasesDirty = true;
-	// Next warm must rebuild GL + atlases (PMA upload into the new context).
+	// Next warm reloads atlases into the parked GL (PMA upload into the same context).
 	needsAtlasPmaRebuild = true;
 	evictBuyBonusSpineFromCache();
 	const inflight = [...loading.values(), ...pickLoading.values()];
@@ -1144,7 +1167,7 @@ const teardownSharedStageSync = () => {
 	}
 	if (current) {
 		current.ticker.remove(tickSharedStage);
-		current.destroy(true);
+		parkBuyBonusApplication(current);
 	}
 	return inflight;
 };

@@ -494,7 +494,8 @@
 		);
 		transform-origin: 12% 100%;
 
-		&:focus {
+		&:focus,
+		&:focus-visible {
 			outline: none;
 		}
 	}
@@ -783,14 +784,9 @@
 		user-select: none;
 		z-index: 1;
 
-		&:focus {
-			outline: none;
-		}
-
+		&:focus,
 		&:focus-visible {
-			outline: calc(var(--panel-width) * 0.005) solid rgba(240, 208, 96, 0.55);
-			outline-offset: calc(var(--panel-width) * 0.005);
-			border-radius: 999px;
+			outline: none;
 		}
 	}
 
