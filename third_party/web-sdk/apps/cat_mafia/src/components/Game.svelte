@@ -16,7 +16,7 @@
 	import { stateGame } from '../game/stateGame.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { startLoadingIdleUiPreload } from '../game/uiHtmlAssetManifest';
-	import { GAME_ENTRANCE_MS } from '../game/constants';
+	import { GAME_ENTRANCE_MS, TRANSITION_THEME_SWITCH_DELAY_MS } from '../game/constants';
 	import { PHONE_TICKER_MAX_FPS } from '../game/duelPhoneDpr';
 	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
 	import { stateDuel } from '../game/stateDuel.svelte';
@@ -144,7 +144,7 @@
 -->
 <div
 	class="pixi-stage"
-	class:above-html-ui={context.stateGame.transitionActive ||
+	class:above-html-ui={context.stateGame.transitionCoversUi ||
 		context.stateGame.fsOutroActive}
 >
 	<GameApp
@@ -190,84 +190,113 @@
 				persistent
 				sortableChildren
 			>
-				{#if stateDuel.active}
+				{#if stateDuel.active || stateDuel.prebuild || stateDuel.linger}
 					<!-- Paint order matches base: bases → reels → gold rails →
-					     win pops → SW curtains → nameplate → paylines → win text. -->
-					<DuelPixiBoard side="dog" layer="base" />
-					<DuelPixiBoard side="cat" layer="base" />
-					<DuelPixiBoard side="dog" layer="board" />
-					<DuelPixiBoard side="cat" layer="board" />
-					<DuelPixiBoard side="dog" layer="overlay" />
-					<DuelPixiBoard side="cat" layer="overlay" />
-					<DuelPixiBoard side="dog" layer="idleBounce" />
-					<DuelPixiBoard side="cat" layer="idleBounce" />
-					<DuelPixiBoard side="dog" layer="superWild" />
-					<DuelPixiBoard side="cat" layer="superWild" />
-					<DuelPixiBoard side="dog" layer="nameplate" />
-					<DuelPixiBoard side="cat" layer="nameplate" />
-					<DuelPixiBoard side="dog" layer="paylines" />
-					<DuelPixiBoard side="cat" layer="paylines" />
-				{:else}
-					<Container zIndex={-3}>
-						<MainContainer>
-							<BoardFrame layer="base" />
-						</MainContainer>
+					     win pops → SW curtains → nameplate → paylines → win text.
+					     Phone prebuild draws this off-screen so the steam clip
+					     only slides it into place. -->
+					<Container
+						x={stateDuel.active ? 0 : -40000}
+						visible={stateDuel.active || stateDuel.prebuild}
+					>
+					{#if stateDuel.visualTier >= 1}
+						<DuelPixiBoard side="dog" layer="base" />
+						<DuelPixiBoard side="cat" layer="base" />
+						<DuelPixiBoard side="dog" layer="board" />
+						<DuelPixiBoard side="cat" layer="board" />
+					{/if}
+					{#if stateDuel.visualTier >= 2}
+						<DuelPixiBoard side="dog" layer="idleBounce" />
+						<DuelPixiBoard side="cat" layer="idleBounce" />
+					{/if}
+					{#if stateDuel.visualTier >= 3}
+						<DuelPixiBoard side="dog" layer="overlay" />
+						<DuelPixiBoard side="cat" layer="overlay" />
+					{/if}
+					{#if stateDuel.visualTier >= 4}
+						<DuelPixiBoard side="dog" layer="nameplate" />
+						<DuelPixiBoard side="cat" layer="nameplate" />
+					{/if}
+					{#if stateDuel.visualTier >= 5}
+						<DuelPixiBoard side="dog" layer="superWild" />
+						<DuelPixiBoard side="cat" layer="superWild" />
+						<DuelPixiBoard side="dog" layer="paylines" />
+						<DuelPixiBoard side="cat" layer="paylines" />
+					{/if}
 					</Container>
+				{/if}
+				{#if !stateDuel.active || stateGame.baseLinger}
+					<Container
+						x={stateDuel.active ? -40000 : 0}
+						visible={!stateDuel.active || stateGame.baseWarm}
+					>
+					{#if stateGame.baseVisualTier >= 1}
+						<Container zIndex={-3}>
+							<MainContainer>
+								<BoardFrame layer="base" />
+							</MainContainer>
+						</Container>
 
-					<Container zIndex={-2}>
-						<MainContainer>
-							<Board />
-						</MainContainer>
-					</Container>
+						<Container zIndex={-2}>
+							<MainContainer>
+								<Board />
+							</MainContainer>
+						</Container>
+					{/if}
 
-					<!-- Full slot spine (frame + gold lines). -->
-					<Container zIndex={-1}>
-						<MainContainer>
-							<BoardFrame layer="overlay" />
-						</MainContainer>
-					</Container>
+					{#if stateGame.baseVisualTier >= 2}
+						<!-- Full slot spine (frame + gold lines). -->
+						<Container zIndex={-1}>
+							<MainContainer>
+								<BoardFrame layer="overlay" />
+							</MainContainer>
+						</Container>
 
-					<!-- Target cabinet above the spine, clipped to the inner window. -->
-					<Container zIndex={-0.85}>
-						<MainContainer>
-							<TargetPickPixiLayer />
-						</MainContainer>
-					</Container>
+						<!-- Target cabinet above the spine, clipped to the inner window. -->
+						<Container zIndex={-0.85}>
+							<MainContainer>
+								<TargetPickPixiLayer />
+							</MainContainer>
+						</Container>
 
-					<Container zIndex={-0.5}>
-						<MainContainer>
-							<BoardIdleBounceLayer />
-							<BoardPawCoinLayer />
-							<BoardFullColumnLayer />
-						</MainContainer>
-					</Container>
+						<Container zIndex={-0.5}>
+							<MainContainer>
+								<BoardIdleBounceLayer />
+								<BoardPawCoinLayer />
+								<BoardFullColumnLayer />
+							</MainContainer>
+						</Container>
+					{/if}
 
-					<!-- SW curtain above reels/rails; under nameplate so the WIN plate covers curtain feet.
-					     During target-pick drop → z -2 (under desk overlay / фон). -->
-					<Container zIndex={superWildCurtainZ}>
-						<MainContainer>
-							<BoardContainer>
-								<SuperWildCurtainPixi />
-							</BoardContainer>
-						</MainContainer>
-					</Container>
+					{#if stateGame.baseVisualTier >= 3}
+						<!-- SW curtain above reels/rails; under nameplate so the WIN plate covers curtain feet.
+						     During target-pick drop → z -2 (under desk overlay / фон). -->
+						<Container zIndex={superWildCurtainZ}>
+							<MainContainer>
+								<BoardContainer>
+									<SuperWildCurtainPixi />
+								</BoardContainer>
+							</MainContainer>
+						</Container>
 
-					<!-- WIN sum plate — above SW curtains (slot `below`), under paylines / WIN $. -->
-					<Container zIndex={-0.1}>
-						<MainContainer>
-							<BoardFrame layer="nameplate" />
-						</MainContainer>
-					</Container>
+						<!-- WIN sum plate — above SW curtains (slot `below`), under paylines / WIN $. -->
+						<Container zIndex={-0.1}>
+							<MainContainer>
+								<BoardFrame layer="nameplate" />
+							</MainContainer>
+						</Container>
 
-					<Container zIndex={0}>
-						<MainContainer>
-							<PaylineLayer />
-						</MainContainer>
-					</Container>
+						<Container zIndex={0}>
+							<MainContainer>
+								<PaylineLayer />
+							</MainContainer>
+						</Container>
 
-					<!-- WIN $ text above the nameplate art. -->
-					<Container zIndex={1}>
-						<UiCashStacksLayout />
+						<!-- WIN $ text above the nameplate art. -->
+						<Container zIndex={1}>
+							<UiCashStacksLayout />
+						</Container>
+					{/if}
 					</Container>
 				{/if}
 				<!-- Paw coins under mascot so the hat / hand occlude the fly. -->

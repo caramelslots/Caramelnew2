@@ -42,8 +42,9 @@ export type FeatureGpuKey =
  */
 export const areDuelBoardMascotsParked = (isPortrait: boolean) => {
 	if (!isPortrait) return false;
-	if (stateDuel.active) return true;
-	return stateGame.transitionActive && isDuelBetMode(stateBet.activeBetModeKey);
+	// Park only once the duel scene is actually up. Parking on the first
+	// transition frame removed the base cat before the steam was visible.
+	return stateDuel.active;
 };
 
 /** Load dog before the cloud reveal — skip portrait, where flanking mascots never mount. */

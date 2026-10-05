@@ -49,11 +49,29 @@
 		(context.stateGame.gameType === 'freegame' || showDuelBackground) && !hidePixiStreet,
 	);
 	const isPhone = $derived(isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType()));
+	/** Invisible night spine, constructed before the steam so the clip doesn't hitch. */
+	const nightPrewarm = $derived(context.stateGame.duelNightArmed && !showFeatureBackground);
+	/**
+	 * Keep the day spine resident across the duel swap on phone. Dropping and
+	 * recreating it under the steam was part of the remaining transition hitch.
+	 */
+	const keepDayMounted = $derived(
+		isPhone &&
+			(context.stateGame.transitionActive ||
+				context.stateGame.duelNightArmed ||
+				showDuelBackground),
+	);
 	/** First frame during lift / phone; play only after the slot has opened. */
 	const playStreetIdle = $derived(!isPhone && gameEntrance.liftComplete);
 	const streetTimeScale = $derived(playStreetIdle ? 1 : 0);
-	/** Full alpha under HTML cover; normal fade for in-game day/night swaps. */
-	const bgFadeMs = $derived(context.stateLayout.showLoadingScreen ? 0 : SECOND);
+	/**
+	 * Under the steam the crossfade is invisible, and a 1s overlap kept two
+	 * full street spines alive on the same frames as the duel mount.
+	 * Outside a transition, day/night still crossfade.
+	 */
+	const bgFadeMs = $derived(
+		context.stateLayout.showLoadingScreen || context.stateGame.transitionActive ? 0 : SECOND,
+	);
 
 	const canvasCenter = $derived.by(() => {
 		const canvas = context.stateLayoutDerived.canvasSizes();
@@ -67,7 +85,7 @@
 	<Rectangle {...context.stateLayoutDerived.canvasSizes()} backgroundColor={0x000000} zIndex={-3} />
 {/if}
 
-<FadeContainer show={showBaseBackground} duration={bgFadeMs} zIndex={-2}>
+<FadeContainer show={showBaseBackground} persistent={keepDayMounted} duration={bgFadeMs} zIndex={-2}>
 	<Container x={canvasCenter.x} y={canvasCenter.y} scale={backgroundZoom}>
 		<Container x={-canvasCenter.x} y={-canvasCenter.y}>
 			<SpineProvider key="mainBackground" {...spineProps}>
@@ -84,7 +102,12 @@
 	</Container>
 </FadeContainer>
 
-<FadeContainer show={showFeatureBackground} duration={bgFadeMs} zIndex={-1}>
+<FadeContainer
+	show={showFeatureBackground}
+	persistent={nightPrewarm || showFeatureBackground}
+	duration={nightPrewarm ? 0 : bgFadeMs}
+	zIndex={-1}
+>
 	<Container x={canvasCenter.x} y={canvasCenter.y} scale={backgroundZoom}>
 		<Container x={-canvasCenter.x} y={-canvasCenter.y}>
 			<SpineProvider key="mainBackground" {...spineProps}>

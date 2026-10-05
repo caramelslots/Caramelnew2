@@ -284,6 +284,29 @@ export const stateGame = $state({
 	livingIdleActive: false,
 	// Cloud transition covers HTML overlays while active.
 	transitionActive: false,
+	/**
+	 * True once the steam has had time to cover the board. Canvas z-lift and
+	 * HUD hide wait for this so the mascot and HUD don't vanish before the clip.
+	 */
+	transitionCoversUi: false,
+	/**
+	 * Phone duel cloud: peel the base desk down (0) then bring it back (3)
+	 * across frames so the steam spine is not blocked on one giant mount.
+	 * Desktop / settled play stays at 3.
+	 */
+	baseVisualTier: 3,
+	/**
+	 * Phone: keep the base desk mounted but hidden while steam plays, and
+	 * build it off-screen before the exit clip. Destroy happens after the spine.
+	 */
+	baseLinger: false,
+	/** While true, the lingering base desk is rendered off-screen so GPUs upload it. */
+	baseWarm: false,
+	/**
+	 * Phone: mount the night street at alpha 0 before the duel steam starts,
+	 * so that spine is not constructed mid-clip.
+	 */
+	duelNightArmed: false,
 	/** Target mode for the in-flight cloud transition (set for the whole anim). */
 	transitionGameType: undefined as GameType | undefined,
 	/**

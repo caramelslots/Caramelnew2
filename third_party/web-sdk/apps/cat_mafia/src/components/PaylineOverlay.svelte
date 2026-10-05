@@ -82,11 +82,8 @@
 		for (const line of activeLines) {
 			line.progress = Math.min(1, (now - line.startTime) / PAYLINE_DRAW_DURATION_MS);
 		}
-		if (activeLines.length > 0) {
-			raf = requestAnimationFrame(tick);
-		} else {
-			raf = 0;
-		}
+		if (activeLines.length > 0) raf = requestAnimationFrame(tick);
+		else raf = 0;
 	};
 	const ensureLoop = () => {
 		if (raf === 0 && activeLines.length > 0) {
@@ -463,13 +460,7 @@
 
 		const basePoints = buildSmoothPath(anchors);
 		const wiggleStrength = progress < 1 ? 0.2 + 0.8 * progress : 1;
-		const points = applyWiggle(
-			basePoints,
-			anchors.length,
-			line.lineIndex,
-			animTime,
-			wiggleStrength,
-		);
+		const points = applyWiggle(basePoints, anchors.length, line.lineIndex, animTime, wiggleStrength);
 		const { segLens, total } = buildSegLens(points);
 		const target = total * easeInOutCubic(progress);
 

@@ -46,7 +46,7 @@ import {
 	SUPER_WILD_STICKY_PRESENT_MS,
 } from './superWildHtmlSpine';
 import { ensureSwCurtainsForBoard } from './swCurtainGuard';
-import { scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
+import { isSdkTurboSpin, scaleMsByGameSpeed, waitForGameSpeed } from './gameSpeed';
 import { startFsCongPreload } from './uiHtmlAssetManifest';
 import { waitForTimeout } from 'utils-shared/wait';
 import { dismissTirAndUnloadGpu, TIR_UNLOAD_DELAY_FRAMES, waitAnimationFrames } from './tirGpuMemory';
@@ -111,6 +111,12 @@ const FS_POST_SPIN_MS = 280;
 /** Beat after a no-win spin before the other desk scrolls. */
 const DUEL_BETWEEN_SPINS_MS = 180;
 /**
+ * Extra hold before the other duel desk starts.
+ * Turbo 3 slams the reels (same as base / super), which made the two boards
+ * chain with almost no air. This beat is wall-clock — turbo does not shrink it.
+ */
+const DUEL_DESK_HANDOFF_MS = 450;
+/**
  * When bank count-up already started with paylines, only a short handoff before
  * the next book event (do not re-wait the full WIN_HUD tween).
  */
@@ -163,6 +169,12 @@ const startDuelBankCountUpFromNext = (
 	stateDuel.dogTotal = nextBank.dogTotal;
 	stateDuel.catTotal = nextBank.catTotal;
 	return true;
+};
+
+/** Pause so the settled desk can be read before the other one scrolls. */
+const waitDuelDeskHandoff = () => {
+	if (!isSdkTurboSpin(stateGame.gameSpeed)) return waitForTimeout(0);
+	return waitForTimeout(DUEL_DESK_HANDOFF_MS);
 };
 
 const duelSwRowsOnReel = (side: DuelSide, reelIndex: number) => {
@@ -325,6 +337,73 @@ const clearDuelSideWinPresentation = (side: DuelSide) => {
 	if (stateDuel.winSpotlightSide === side) {
 		stateDuel.winSpotlightSide = null;
 	}
+};
+
+/**
+ * Phone: construct both desks and the night street while the base board is
+ * still showing (desks stay invisible). This work used to run inside the
+ * steam clip and froze it.
+ */
+const warmPhoneDuelDesks = async () => {
+	if (!isPhoneForAtlasDownscale() || stateDuel.prebuild || stateDuel.active) return;
+	stateGame.duelNightArmed = true;
+	stateDuel.prebuild = true;
+	stateDuel.visualTier = 1;
+	await waitAnimationFrames(1);
+	stateDuel.visualTier = 2;
+	await waitAnimationFrames(1);
+	stateDuel.visualTier = 3;
+	await waitAnimationFrames(1);
+	stateDuel.visualTier = 4;
+	await waitAnimationFrames(1);
+	stateDuel.visualTier = 5;
+	await waitAnimationFrames(2);
+};
+
+/**
+ * Under the steam, once it covers the board. Phone desks were already drawn
+ * off-screen, so this only shows them. The base desk stays mounted (hidden)
+ * until the clip ends — destroying it here was the remaining hitch.
+ */
+const rampPhoneDuelIn = async () => {
+	stateDuel.visualTier = 5;
+	stateDuel.prebuild = false;
+	stateGame.mascotCatSpineKey = MASCOT_CAT_SPINE_WHITE;
+	stateDuel.active = true;
+	stateDuel.phase = 'playing';
+	stateGame.duelNightArmed = false;
+	stateGame.baseVisualTier = 3;
+	if (isPhoneForAtlasDownscale()) stateGame.baseLinger = true;
+	await waitAnimationFrames(2);
+};
+
+/**
+ * Phone exit: build the base desk off-screen while the duel scene is still up,
+ * so the steam clip does not construct it.
+ */
+const warmPhoneBaseOffscreen = async () => {
+	if (!isPhoneForAtlasDownscale() || !stateDuel.active) return;
+	stateGame.baseVisualTier = 1;
+	stateGame.baseLinger = true;
+	stateGame.baseWarm = true;
+	await waitAnimationFrames(1);
+	stateGame.baseVisualTier = 2;
+	await waitAnimationFrames(1);
+	stateGame.baseVisualTier = 3;
+	await waitAnimationFrames(2);
+	stateGame.baseWarm = false;
+};
+
+const rampPhoneDuelOut = async () => {
+	eventEmitter.broadcast({ type: 'duelOutroHide' });
+	if (isPhoneForAtlasDownscale()) stateDuel.linger = true;
+	resetDuelState();
+	if (isPhoneForAtlasDownscale()) stateDuel.linger = true;
+	stateBet.activeBetModeKey = 'BASE';
+	stateGame.baseVisualTier = 3;
+	stateGame.baseWarm = false;
+	stateGame.baseLinger = false;
+	await waitAnimationFrames(1);
 };
 
 /**
@@ -1904,24 +1983,35 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		} else {
 			eventEmitter.broadcast({ type: 'duelPickShow' });
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
+			// Build both desks while the player is choosing, off the steam clip.
+			const warmDesks = warmPhoneDuelDesks();
 			await eventEmitter.broadcastAsync({ type: 'duelPickUpdate' });
+			await warmDesks;
 			eventEmitter.broadcast({ type: 'duelPickHide' });
 		}
 
 		// Both atlases ready before steam — MascotPixi shares one alpha for the pair.
 		if (needsDuelMascot) await duelMascotGpuPromise;
 
-		// Cloud first — HUD hides under the cover; night duel scene reveals like FS.
-		const transitionPromise = eventEmitter.broadcastAsync({ type: 'transition' });
-		await eventEmitter.broadcastAsync({ type: 'uiHide' });
-		await waitForTimeout(TRANSITION_THEME_SWITCH_DELAY_MS);
-		stateGame.mascotCatSpineKey = MASCOT_CAT_SPINE_WHITE;
-		stateDuel.active = true;
-		stateDuel.phase = 'playing';
-		// Let MascotPixi mount the dog Spine under cover before steam clears.
-		await waitAnimationFrames(2);
-		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin', withIntro: true });
-		await transitionPromise;
+		// Side already chosen: build the hidden desks now, day street still up.
+		if (!stateDuel.prebuild) await warmPhoneDuelDesks();
+
+		try {
+			const transitionPromise = eventEmitter.broadcastAsync({ type: 'transition' });
+			await waitForTimeout(TRANSITION_THEME_SWITCH_DELAY_MS);
+			await eventEmitter.broadcastAsync({ type: 'uiHide' });
+			eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin', withIntro: true });
+			await rampPhoneDuelIn();
+			await transitionPromise;
+			await waitAnimationFrames(2);
+			stateGame.baseLinger = false;
+			stateGame.baseWarm = false;
+		} finally {
+			stateDuel.prebuild = false;
+			stateGame.duelNightArmed = false;
+			stateGame.baseLinger = false;
+			stateGame.baseWarm = false;
+		}
 
 		// Rules splash after transition (same beat as freeSpinIntro after cloud).
 		await startFsCongPreload();
@@ -1938,6 +2028,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 	duelSpin: async (bookEvent: BookEventOfType<'duelSpin'>, { bookEvents }: BookEventContext) => {
 		const side = bookEvent.side;
+		// Turbo 3 slams like base / super. Hold before the other desk so the
+		// two boards don't chain with no air.
+		if (stateDuel.activeSide != null) {
+			await waitDuelDeskHandoff();
+		}
 		const stack = getDuelBoardStack(side);
 		const sticky = stateDuel.stickySwByReel[side];
 		const twoBeat = bookEvent.swTwoBeat === true;
@@ -2157,42 +2252,52 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Same units as setTotalWin / LabelWin (book cents).
 		stateBet.winBookEventAmount = payout;
 
-		if (playerWon) {
-			// Win: same fsEnd / total_win panel as free-spin outro — amount only, no compare.
-			const winLevelData =
-				winLevelMap[(stateDuel.winLevel ?? 1) as WinLevel] ?? winLevelMap[1];
-			eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
-			winLevelSoundsPlay({ winLevelData });
-			await eventEmitter.broadcastAsync({
-				type: 'freeSpinOutroCountUp',
-				amount: payout,
-				winLevelData,
-			});
-			winLevelSoundsStop({ music: 'bgm_main' });
-			eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
-		} else {
-			// Loss: fsCong board with opponent vs player totals (see DuelModeOverlay).
-			eventEmitter.broadcast({ type: 'duelOutroShow' });
-			await eventEmitter.broadcastAsync({
-				type: 'duelOutroUpdate',
-				dogTotal: bookEvent.dogTotal,
-				catTotal: bookEvent.catTotal,
-				winner: bookEvent.winner,
-				playerSide,
-				playerWon,
-				payout,
-			});
-		}
+		// Build the base desk off-screen during the outro, not inside the steam.
+		const warmBase = warmPhoneBaseOffscreen();
+		try {
+			if (playerWon) {
+				// Win: same fsEnd / total_win panel as free-spin outro — amount only, no compare.
+				const winLevelData =
+					winLevelMap[(stateDuel.winLevel ?? 1) as WinLevel] ?? winLevelMap[1];
+				eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
+				winLevelSoundsPlay({ winLevelData });
+				await eventEmitter.broadcastAsync({
+					type: 'freeSpinOutroCountUp',
+					amount: payout,
+					winLevelData,
+				});
+				winLevelSoundsStop({ music: 'bgm_main' });
+				eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
+			} else {
+				// Loss: fsCong board with opponent vs player totals (see DuelModeOverlay).
+				eventEmitter.broadcast({ type: 'duelOutroShow' });
+				await eventEmitter.broadcastAsync({
+					type: 'duelOutroUpdate',
+					dogTotal: bookEvent.dogTotal,
+					catTotal: bookEvent.catTotal,
+					winner: bookEvent.winner,
+					playerSide,
+					playerWon,
+					payout,
+				});
+			}
 
-		// Cloud cover — then tear down duel chrome.
-		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
-		const transitionPromise = eventEmitter.broadcastAsync({ type: 'transition' });
-		await eventEmitter.broadcastAsync({ type: 'uiHide' });
-		await waitForTimeout(TRANSITION_THEME_SWITCH_DELAY_MS);
-		eventEmitter.broadcast({ type: 'duelOutroHide' });
-		resetDuelState();
-		stateBet.activeBetModeKey = 'BASE';
-		await transitionPromise;
+			await warmBase;
+
+			eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
+			const transitionPromise = eventEmitter.broadcastAsync({ type: 'transition' });
+			await waitForTimeout(TRANSITION_THEME_SWITCH_DELAY_MS);
+			await eventEmitter.broadcastAsync({ type: 'uiHide' });
+			await rampPhoneDuelOut();
+			await transitionPromise;
+			await waitAnimationFrames(2);
+		} finally {
+			await warmBase;
+			stateDuel.linger = false;
+			stateGame.baseLinger = false;
+			stateGame.baseWarm = false;
+			stateGame.baseVisualTier = 3;
+		}
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 	},
 

@@ -2,8 +2,8 @@
 	Toggles living spine idle for visible symbols (every mode / device).
 	Desktop duel: both desks keep the global gate on while one side celebrates —
 	per-desk freeze lives in SymbolSpineMain (other desk keeps breathing).
-	Phone: freeze living idle on BOTH desks for the whole win spotlight hold
-	(perf — two boards of spine idle during lines is too heavy).
+	Phone: no living idle for the whole duel. Two desks of idle spines during
+	turbo spins, line holds, and triggers were hitching the ticker.
 -->
 <script lang="ts">
 	import { onMount } from 'svelte';
@@ -13,17 +13,17 @@
 	import { getContext } from '../game/context';
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import { stateGame, stateGameDerived } from '../game/stateGame.svelte';
-	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
+	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
 
 	const context = getContext();
 
 	const canRunLivingIdle = () => {
-		const phone = isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType());
+		const phone = isPhoneForAtlasDownscale();
 		if (
 			stateGame.targetPickOpen ||
 			stateGame.winSpotlightActive ||
-			// Phone duel: any desk celebrating → freeze idle everywhere.
-			(phone && stateDuel.winSpotlightSide != null) ||
+			// Phone duel: idle spines on both desks hitch turbo land / lines / triggers.
+			(phone && stateDuel.active) ||
 			stateGame.winOverlayActive ||
 			stateGame.transitionActive ||
 			stateGame.freeSpinIntroActive ||

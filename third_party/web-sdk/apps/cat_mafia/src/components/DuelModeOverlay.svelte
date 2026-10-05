@@ -60,7 +60,8 @@
 	const isPortrait = $derived(layoutType === 'portrait');
 	const isPopoutSmall = $derived(isPopoutSmallViewport(canvasSizes));
 	const isPopout = $derived(isPopoutViewport(canvasSizes));
-	const show = $derived(stateDuel.active && !stateGame.duelIntroActive);
+	/** Stay up under the rules card — avatars must not wait for press-to-continue. */
+	const show = $derived(stateDuel.active);
 
 	const duelLayout = $derived(
 		computeDuelScreenLayout({
@@ -106,8 +107,8 @@
 	const lossEnemyAmount = $derived(money(outroEnemyTotal));
 	const lossYouAmount = $derived(money(outroPlayerTotal));
 
-	/** Cloud spine sits in Pixi (z50) — hide HTML chrome/modals so they stay under it. */
-	const underCloud = $derived(stateGame.transitionActive);
+	/** Cloud spine sits in Pixi — hide HTML chrome only once steam covers the board. */
+	const underCloud = $derived(stateGame.transitionCoversUi);
 	const portraitAvatarSize = $derived(Math.round(Math.min(88, duelLayout.boardWidth * 0.28)));
 	const pickOpen = $derived(pickShow && !underCloud);
 	const PORTRAIT_VOCAL_COOLDOWN_MS = 1000;

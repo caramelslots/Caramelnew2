@@ -239,7 +239,7 @@
 	.overlay {
 		position: fixed;
 		inset: 0;
-		z-index: 60;
+		z-index: 70;
 		cursor: pointer;
 		background: transparent;
 	}
@@ -247,6 +247,7 @@
 	.dim {
 		position: absolute;
 		inset: 0;
+		z-index: 0;
 		background: rgba(0, 0, 0, 0.62);
 		pointer-events: none;
 	}
@@ -254,6 +255,7 @@
 	/* Same panel mount as FreeSpinIntro — fixed + translate(-50%, -50%). */
 	.panel {
 		position: fixed;
+		z-index: 1;
 		transform: translate(-50%, -50%);
 		pointer-events: none;
 		filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.75));

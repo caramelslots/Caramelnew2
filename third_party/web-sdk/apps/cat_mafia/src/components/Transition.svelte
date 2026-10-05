@@ -20,6 +20,7 @@
 
 	import TransitionAnimation from './TransitionAnimation.svelte';
 	import { getContext } from '../game/context';
+	import { TRANSITION_THEME_SWITCH_DELAY_MS } from '../game/constants';
 	import { wantedMascotCatSpineKey } from '../game/mascotCatSkinMemory';
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
@@ -31,6 +32,22 @@
 	let oncomplete = $state(() => {});
 	let pendingGameType = $state<GameType | undefined>(undefined);
 	let themeApplied = false;
+	let coverTimer: ReturnType<typeof setTimeout> | undefined;
+
+	const armUiCover = () => {
+		if (coverTimer !== undefined) clearTimeout(coverTimer);
+		stateGame.transitionCoversUi = false;
+		coverTimer = setTimeout(() => {
+			coverTimer = undefined;
+			stateGame.transitionCoversUi = true;
+		}, TRANSITION_THEME_SWITCH_DELAY_MS);
+	};
+
+	const clearUiCover = () => {
+		if (coverTimer !== undefined) clearTimeout(coverTimer);
+		coverTimer = undefined;
+		stateGame.transitionCoversUi = false;
+	};
 
 	const applyThemeSwitch = () => {
 		if (themeApplied) return;
@@ -71,6 +88,7 @@
 			themeApplied = false;
 			deferThemeSwitch = Boolean(event.deferThemeSwitch);
 			stateGame.transitionActive = true;
+			armUiCover();
 			pendingGameType = event.gameType;
 			// Defer destination skin preload until theme apply.
 			if (!deferThemeSwitch) {
@@ -95,6 +113,7 @@
 			transitioning = false;
 			deferThemeSwitch = false;
 			stateGame.transitionActive = false;
+			clearUiCover();
 			stateGame.transitionGameType = undefined;
 			pendingGameType = undefined;
 		}}
