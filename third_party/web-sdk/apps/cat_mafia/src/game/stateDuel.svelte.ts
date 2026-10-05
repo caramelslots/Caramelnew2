@@ -67,6 +67,12 @@ export const stateDuel = $state({
 	 * Cleared when the under-desk WIN HUD consumes it.
 	 */
 	winHudCountUpPendingBySide: { cat: false, dog: false },
+	/**
+	 * True once the left-side dog Spine is actually mounted (assets + transform).
+	 * Cat stays hidden in duel until this flips — otherwise the resident cat
+	 * pops in alone while the dog SpineProvider is still spinning up.
+	 */
+	dogMascotReady: false,
 	/** Side waiting for post-curtain bank count-up (set on duelSpin swTwoBeat). */
 	pendingSwBankCountUpSide: null as DuelSide | null,
 });
@@ -97,6 +103,7 @@ export const resetDuelState = () => {
 	stateDuel.stickySwOpened = { cat: false, dog: false };
 	stateDuel.superWildCurtains = [];
 	stateDuel.winHudCountUpPendingBySide = { cat: false, dog: false };
+	stateDuel.dogMascotReady = false;
 	stateDuel.pendingSwBankCountUpSide = null;
 };
 

@@ -1,7 +1,7 @@
 <!--
-	Pixi mascot — same screen box / viewport framing as the former HTML SpinePlayer.
-	Hat-catch coin fly stays HTML (PawCoinOverlay) using the same box math.
-	`duelDog` uses the dog skeleton on the left desk (faces right toward the boards).
+	Pixi mascots — cat (always) + dog (duel flanking only when stateDuel.active).
+	Both share one alpha so they reveal together after the cat skin swap under steam.
+	Dog faces the same way as before (no CSS/Pixi mirror — spine art already oriented).
 -->
 <script lang="ts">
 	import { Circle, Polygon } from 'pixi.js';
@@ -48,13 +48,10 @@
 	import BulletFlySpineLayer from './BulletFlySpineLayer.svelte';
 
 	type Props = {
-		variant?: 'primary' | 'duelDog';
 		zIndex?: number;
 	};
 
 	const props: Props = $props();
-	const variant = $derived(props.variant ?? 'primary');
-	const isDuelDog = $derived(variant === 'duelDog');
 
 	const pixiApp = getContextApp();
 	const context = getContext();
@@ -63,75 +60,64 @@
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
 	const isPopout = $derived(isPopoutViewport(canvasSizes));
 	const isPortrait = $derived(layoutType === 'portrait');
-
-	const showMascotLayout = $derived(
-		isDuelDog
-			? stateDuel.active &&
-					!isPortrait &&
-					(layoutType === 'desktop' ||
-						layoutType === 'tablet' ||
-						layoutType === 'landscape' ||
-						isPopout)
-			: (layoutType === 'desktop' ||
-					layoutType === 'tablet' ||
-					layoutType === 'landscape' ||
-					isPopout ||
-					isPortrait) &&
-					!(stateDuel.active && isPortrait),
+	const landscapeSlot = $derived(
+		layoutType === 'desktop' ||
+			layoutType === 'tablet' ||
+			layoutType === 'landscape' ||
+			isPopout,
 	);
 
-	const forceCatAnim = $derived(isDuelDog ? null : devPreview.mascotAnimation);
-	/** DEV: preview dog clips on the primary (cat) slot — replaces the cat. */
-	const forceDogAnim = $derived(isDuelDog ? null : devPreview.mascotDogAnimation);
-	const previewDogOnPrimary = $derived(!isDuelDog && forceDogAnim !== null);
-	const useDogSpine = $derived(isDuelDog || previewDogOnPrimary);
-	/** Gray = basegame; white = freegame / duel — key from EnableMascotCatSkinMemory. */
+	/**
+	 * Dog + duel cat seat — only when duel is live (same beat as white-cat skin swap).
+	 * Do NOT key off transitionActive alone — that moved the cat too early.
+	 */
+	const duelFlanking = $derived(stateDuel.active && !isPortrait && landscapeSlot);
+
+	const showCatLayout = $derived(
+		(landscapeSlot || isPortrait) && !(stateDuel.active && isPortrait),
+	);
+
+	const forceCatAnim = $derived(devPreview.mascotAnimation);
+	const forceDogAnim = $derived(devPreview.mascotDogAnimation);
+	const previewDogOnPrimary = $derived(forceDogAnim !== null && !duelFlanking);
+
 	const catSpineKey = $derived(context.stateGame.mascotCatSpineKey);
-	const spineKey = $derived(useDogSpine ? 'mascotDog' : catSpineKey);
-	const spineReady = $derived(Boolean(pixiApp.stateApp.loadedAssets?.[spineKey]));
-	const forceAnim = $derived(forceCatAnim ?? forceDogAnim);
-	const mascotAnimToken = $derived(context.stateGame.mascotAnimToken);
-	const mounted = $derived(
-		gameEntrance.preloadContent &&
-			(isDuelDog
-				? stateDuel.active &&
-					(layoutType === 'desktop' ||
-						layoutType === 'tablet' ||
-						layoutType === 'landscape' ||
-						isPopout)
-				: showMascotLayout || forceAnim !== null),
-	);
+	const primarySpineKey = $derived(previewDogOnPrimary ? 'mascotDog' : catSpineKey);
+	const catAssetsReady = $derived(Boolean(pixiApp.stateApp.loadedAssets?.[primarySpineKey]));
+	const dogAssetsReady = $derived(Boolean(pixiApp.stateApp.loadedAssets?.mascotDog));
 
-	const pose = $derived.by((): MascotPose => {
-		// Duel dog stays on idle flavour (incl. angry_final as a random beat).
-		if (isDuelDog) return 'idle';
-		return (context.stateGame.mascotPose || 'idle') as MascotPose;
-	});
-	/** Always 1× — turbo must not speed up mascot clips. */
+	const mascotAnimToken = $derived(context.stateGame.mascotAnimToken);
+	const mounted = $derived(gameEntrance.preloadContent && (showCatLayout || forceCatAnim !== null));
+
+	const pose = $derived((context.stateGame.mascotPose || 'idle') as MascotPose);
 	const spineTimeScale = 1;
 	const idlePaused = $derived(isBuyBonusFlowOpen());
 	const mascotAutoUpdate = $derived(!idlePaused);
 	const mascotTimeScale = $derived(idlePaused ? 0 : spineTimeScale);
 
-	const box = $derived.by((): MascotScreenBox | null => {
-		if (!mounted || !showMascotLayout) {
-			if (isDuelDog) return null;
-			if (!forceAnim) return null;
-		}
+	const duelLayoutBoxes = $derived.by(() => {
+		if (!duelFlanking) return null;
 		const canvas = canvasSizes;
-		if (stateDuel.active && !isPortrait) {
-			const ml = context.stateLayoutDerived.mainLayout();
-			const board = context.stateGameDerived.baseBoardLayout();
-			const duel = computeDuelScreenLayout({
-				canvasWidth: canvas.width,
-				canvasHeight: canvas.height,
-				layoutType,
-				mainLayout: ml,
-				boardLayout: board,
-			});
-			return isDuelDog ? getDuelDogMascotBox(duel) : getDuelCatMascotBox(duel);
+		const ml = context.stateLayoutDerived.mainLayout();
+		const board = context.stateGameDerived.baseBoardLayout();
+		const duel = computeDuelScreenLayout({
+			canvasWidth: canvas.width,
+			canvasHeight: canvas.height,
+			layoutType,
+			mainLayout: ml,
+			boardLayout: board,
+		});
+		return {
+			cat: getDuelCatMascotBox(duel),
+			dog: getDuelDogMascotBox(duel),
+		};
+	});
+
+	const catBox = $derived.by((): MascotScreenBox | null => {
+		if (!mounted || !showCatLayout) {
+			if (!forceCatAnim && !previewDogOnPrimary) return null;
 		}
-		if (isDuelDog) return null;
+		if (duelLayoutBoxes) return duelLayoutBoxes.cat;
 
 		const ml = context.stateLayoutDerived.mainLayout();
 		const board = context.stateGameDerived.boardLayout();
@@ -142,7 +128,7 @@
 
 		if (isPortrait) {
 			return getMascotPortraitScreenBox({
-				canvasWidth: canvas.width,
+				canvasWidth: canvasSizes.width,
 				boardCenterY: centerY,
 				halfH,
 				buyPanelTop: portraitBuyPanelCanvasTop(context.stateLayoutDerived),
@@ -152,49 +138,81 @@
 		return getMascotScreenBox({ centerX, centerY, halfW, halfH });
 	});
 
-	const transform = $derived(
-		box
-			? getMascotPixiTransform(box, useDogSpine ? MASCOT_DOG_SPINE_VIEWPORT : MASCOT_SPINE_VIEWPORT)
+	const dogBox = $derived.by((): MascotScreenBox | null => {
+		if (!duelFlanking || !dogAssetsReady) return null;
+		return duelLayoutBoxes?.dog ?? null;
+	});
+
+	const catTransform = $derived(
+		catBox
+			? getMascotPixiTransform(
+					catBox,
+					previewDogOnPrimary ? MASCOT_DOG_SPINE_VIEWPORT : MASCOT_SPINE_VIEWPORT,
+				)
 			: null,
 	);
+	const dogTransform = $derived(
+		dogBox ? getMascotPixiTransform(dogBox, MASCOT_DOG_SPINE_VIEWPORT) : null,
+	);
 
-	/** Ignore repeat presses so meows and barks cannot stack. */
+	/** In duel, hide both until dog + white cat are drawable — then one shared fade. */
+	const duelPairReady = $derived(
+		!duelFlanking ||
+			(Boolean(catAssetsReady) &&
+				Boolean(dogAssetsReady) &&
+				catTransform != null &&
+				dogTransform != null),
+	);
+
 	const PRESS_COOLDOWN_MS = 1000;
 
-	const pressHit = $derived.by(() => {
-		if (!box) return null;
-		if (useDogSpine) {
-			const circle = spinePressToLocal(box, MASCOT_DOG_SPINE_VIEWPORT, MASCOT_DOG_PRESS);
-			return {
-				kind: 'circle' as const,
-				x: circle.x,
-				y: circle.y,
-				width: circle.width,
-				height: circle.height,
-				radius: circle.radius,
-				hitArea: new Circle(circle.radius, circle.radius, circle.radius),
-			};
-		}
-		const poly = spinePressPolyToLocal(box, MASCOT_SPINE_VIEWPORT, MASCOT_CAT_PRESS_POLY);
+	const catPressHit = $derived.by(() => {
+		if (!catBox || previewDogOnPrimary) return null;
+		const poly = spinePressPolyToLocal(catBox, MASCOT_SPINE_VIEWPORT, MASCOT_CAT_PRESS_POLY);
 		return {
-			kind: 'poly' as const,
 			x: poly.x,
 			y: poly.y,
 			width: poly.width,
 			height: poly.height,
-			radius: 0,
+			borderRadius: 0,
 			hitArea: new Polygon(poly.hitFlat),
+		};
+	});
+
+	const dogPressHit = $derived.by(() => {
+		if (!dogBox) return null;
+		const circle = spinePressToLocal(dogBox, MASCOT_DOG_SPINE_VIEWPORT, MASCOT_DOG_PRESS);
+		return {
+			x: circle.x,
+			y: circle.y,
+			width: circle.width,
+			height: circle.height,
+			borderRadius: circle.radius,
+			hitArea: new Circle(circle.radius, circle.radius, circle.radius),
+		};
+	});
+
+	const previewDogPressHit = $derived.by(() => {
+		if (!catBox || !previewDogOnPrimary) return null;
+		const circle = spinePressToLocal(catBox, MASCOT_DOG_SPINE_VIEWPORT, MASCOT_DOG_PRESS);
+		return {
+			x: circle.x,
+			y: circle.y,
+			width: circle.width,
+			height: circle.height,
+			borderRadius: circle.radius,
+			hitArea: new Circle(circle.radius, circle.radius, circle.radius),
 		};
 	});
 
 	let vocalIndex = 0;
 	let vocalLockedUntil = 0;
 
-	const onMascotPress = () => {
+	const onVocalPress = (dog: boolean) => {
 		const now = performance.now();
 		if (now < vocalLockedUntil) return;
 		vocalLockedUntil = now + PRESS_COOLDOWN_MS;
-		const bank = useDogSpine ? DOG_BARK_SOUNDS : CAT_MEOW_SOUNDS;
+		const bank = dog ? DOG_BARK_SOUNDS : CAT_MEOW_SOUNDS;
 		const name = bank[vocalIndex % bank.length];
 		vocalIndex += 1;
 		context.eventEmitter.broadcast({ type: 'soundOnce', name, forcePlay: true });
@@ -230,8 +248,8 @@
 			const t = Math.min(1, elapsed / fadeDur);
 			const eased =
 				fadeTo < fadeFrom
-					? t * t // ease-in out
-					: 1 - Math.pow(1 - t, 3); // cubic-out in
+					? t * t
+					: 1 - Math.pow(1 - t, 3);
 			alpha = fadeFrom + (fadeTo - fadeFrom) * eased;
 			if (t < 1) fadeRaf = requestAnimationFrame(tick);
 			else fadeRaf = 0;
@@ -239,60 +257,79 @@
 		fadeRaf = requestAnimationFrame(tick);
 	};
 
-	const revealed = $derived(
-		Boolean(transform) && show && (!isDuelDog || showMascotLayout),
-	);
+	const revealed = $derived(Boolean(catTransform) && show && showCatLayout);
 	const hiding = $derived(context.stateGame.transitionActive);
-	const shown = $derived(revealed && !hiding);
+	const shown = $derived(revealed && !hiding && duelPairReady);
 
 	$effect(() => {
 		if (revealed) entranceDone = true;
 	});
 
 	$effect(() => {
+		stateDuel.dogMascotReady = Boolean(duelFlanking && dogAssetsReady && dogTransform);
+		return () => {
+			stateDuel.dogMascotReady = false;
+		};
+	});
+
+	$effect(() => {
 		if (shown) {
 			runFade(1, GAME_ENTRANCE_MS, entranceDone ? 0 : MASCOT_ENTRANCE_DELAY_MS);
-		} else if (hiding || !revealed) {
+		} else {
 			runFade(0, hiding ? MASCOT_TRANSITION_FADE_MS : GAME_ENTRANCE_MS);
 		}
 		return () => cancelFade();
 	});
 </script>
 
-{#if mounted && transform && (showMascotLayout || forceAnim) && spineReady}
+{#if mounted && catTransform && (showCatLayout || forceCatAnim) && catAssetsReady && duelPairReady}
 	<Container
-		x={transform.x}
-		y={transform.y}
+		x={catTransform.x}
+		y={catTransform.y}
 		alpha={alpha}
 		zIndex={props.zIndex ?? 5}
 		sortableChildren
 	>
-		{#if pressHit}
+		{#if catPressHit}
 			<Rectangle
-				x={pressHit.x}
-				y={pressHit.y}
-				width={pressHit.width}
-				height={pressHit.height}
-				borderRadius={pressHit.kind === 'circle' ? pressHit.radius : 0}
+				x={catPressHit.x}
+				y={catPressHit.y}
+				width={catPressHit.width}
+				height={catPressHit.height}
+				borderRadius={catPressHit.borderRadius}
 				backgroundAlpha={0.001}
-				hitArea={pressHit.hitArea}
+				hitArea={catPressHit.hitArea}
 				eventMode="static"
 				cursor="pointer"
 				zIndex={2}
-				onpointertap={onMascotPress}
+				onpointertap={() => onVocalPress(false)}
+			/>
+		{:else if previewDogPressHit}
+			<Rectangle
+				x={previewDogPressHit.x}
+				y={previewDogPressHit.y}
+				width={previewDogPressHit.width}
+				height={previewDogPressHit.height}
+				borderRadius={previewDogPressHit.borderRadius}
+				backgroundAlpha={0.001}
+				hitArea={previewDogPressHit.hitArea}
+				eventMode="static"
+				cursor="pointer"
+				zIndex={2}
+				onpointertap={() => onVocalPress(true)}
 			/>
 		{/if}
 		<SpineProvider
-			key={spineKey}
-			x={transform.spineX}
-			y={transform.spineY}
-			scale={transform.scale}
+			key={primarySpineKey}
+			x={catTransform.spineX}
+			y={catTransform.spineY}
+			scale={catTransform.scale}
 			zIndex={0}
 			autoUpdate={mascotAutoUpdate}
 		>
-			{#if useDogSpine}
+			{#if previewDogOnPrimary}
 				<MascotDogSpineController
-					pose={pose}
+					pose="idle"
 					forceAnim={forceDogAnim}
 					timeScale={mascotTimeScale}
 					paused={idlePaused}
@@ -305,12 +342,53 @@
 					animToken={mascotAnimToken}
 					paused={idlePaused}
 				/>
-				{#if box}
-					<MascotGunMuzzleTracker {box} />
+				{#if catBox}
+					<MascotGunMuzzleTracker box={catBox} />
 				{/if}
-				<!-- Mid draw-order: above body, under catching hand. -->
 				<BulletFlySpineLayer />
 			{/if}
+		</SpineProvider>
+	</Container>
+{/if}
+
+{#if mounted && dogTransform && dogAssetsReady && duelPairReady}
+	<!-- Same alpha as cat; no mirror — matches prior Pixi orientation. -->
+	<Container
+		x={dogTransform.x}
+		y={dogTransform.y}
+		alpha={alpha}
+		zIndex={props.zIndex ?? 5}
+		sortableChildren
+	>
+		{#if dogPressHit}
+			<Rectangle
+				x={dogPressHit.x}
+				y={dogPressHit.y}
+				width={dogPressHit.width}
+				height={dogPressHit.height}
+				borderRadius={dogPressHit.borderRadius}
+				backgroundAlpha={0.001}
+				hitArea={dogPressHit.hitArea}
+				eventMode="static"
+				cursor="pointer"
+				zIndex={2}
+				onpointertap={() => onVocalPress(true)}
+			/>
+		{/if}
+		<SpineProvider
+			key="mascotDog"
+			x={dogTransform.spineX}
+			y={dogTransform.spineY}
+			scale={dogTransform.scale}
+			zIndex={0}
+			autoUpdate={mascotAutoUpdate}
+		>
+			<MascotDogSpineController
+				pose="idle"
+				forceAnim={null}
+				timeScale={mascotTimeScale}
+				paused={idlePaused}
+			/>
 		</SpineProvider>
 	</Container>
 {/if}

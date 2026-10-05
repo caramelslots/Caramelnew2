@@ -243,5 +243,17 @@ export const ensureFsPopupReady = async (stateApp: LoadedAssetsBag) => {
 	stateApp.loadedAssets = { ...(stateApp.loadedAssets ?? {}), ...patch };
 };
 
+/**
+ * Ensure duel dog atlas is in loadedAssets before the cloud reveal.
+ * Without this, the cat (already resident) pops in first and the dog fades in late.
+ */
+export const ensureDuelMascotReady = async (stateApp: LoadedAssetsBag) => {
+	const loaded = (stateApp.loadedAssets ?? {}) as Record<string, unknown>;
+	if (loaded.mascotDog) return;
+	const patch = await ensureFeatureKeysLoaded(DUEL_MASCOT_KEYS, loaded);
+	if (!patch) return;
+	stateApp.loadedAssets = { ...(stateApp.loadedAssets ?? {}), ...patch };
+};
+
 /** Frames to wait after keep→false before unloading fsPopup (outro unmount). */
 export const FS_POPUP_UNLOAD_DELAY_FRAMES = 8;

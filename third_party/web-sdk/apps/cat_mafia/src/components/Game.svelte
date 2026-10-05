@@ -272,12 +272,8 @@
 				{/if}
 				<!-- Paw coins under mascot so the hat / hand occlude the fly. -->
 				<PawCoinPixiLayer zIndex={5} />
-				<!-- Pixi mascot above boards + coins; under Win / Transition. -->
+				<!-- Cat + dog share one alpha — both appear together on duel entry. -->
 				<MascotPixi zIndex={6} />
-				<!-- Dog atlas is heavy — mount only while duel is live (not portrait). -->
-				{#if stateDuel.active}
-					<MascotPixi variant="duelDog" zIndex={6} />
-				{/if}
 				<!-- Tir FX above target holders + flip discs. -->
 				<TargetShotBulletPixiLayer zIndex={93} />
 				<TargetFlipPixiLayer zIndex={91} />

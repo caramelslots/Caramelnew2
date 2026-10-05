@@ -63,6 +63,13 @@ import {
 	getDuelInitialVisibleBoard,
 	resolveDuelPlayerPayout,
 } from './stateDuel.svelte';
+import { stateLayoutDerived } from './stateLayout';
+import { stateApp } from './stateApp';
+import { ensureDuelMascotReady } from './featureGpuMemory';
+import {
+	ensureMascotCatSpineLoaded,
+	MASCOT_CAT_SPINE_WHITE,
+} from './mascotCatSkinMemory';
 import {
 	getDuelBoardStack,
 	getDuelPaddingBoard,
@@ -1869,6 +1876,20 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 					: 'bonus_duel';
 		stateGame.activeFeature = null;
 
+		// Kick dog + white-cat atlas load early (parallel with pick / board settle)
+		// so both flanking mascots are GPU-ready when the cloud reveals the desks.
+		const needsDuelMascot = stateLayoutDerived.layoutType() !== 'portrait';
+		const duelMascotGpuPromise = needsDuelMascot
+			? (async () => {
+					await ensureDuelMascotReady(stateApp);
+					const loaded = (stateApp.loadedAssets ?? {}) as Record<string, unknown>;
+					const patch = await ensureMascotCatSpineLoaded(MASCOT_CAT_SPINE_WHITE, loaded);
+					if (patch) {
+						stateApp.loadedAssets = { ...(stateApp.loadedAssets ?? {}), ...patch };
+					}
+				})()
+			: Promise.resolve();
+
 		const pad = getDuelPaddingBoard(config.paddingReels.basegame);
 		stateDuel.dogBoard = getDuelInitialVisibleBoard();
 		stateDuel.catBoard = getDuelInitialVisibleBoard();
@@ -1887,12 +1908,18 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			eventEmitter.broadcast({ type: 'duelPickHide' });
 		}
 
+		// Both atlases ready before steam — MascotPixi shares one alpha for the pair.
+		if (needsDuelMascot) await duelMascotGpuPromise;
+
 		// Cloud first — HUD hides under the cover; night duel scene reveals like FS.
 		const transitionPromise = eventEmitter.broadcastAsync({ type: 'transition' });
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		await waitForTimeout(TRANSITION_THEME_SWITCH_DELAY_MS);
+		stateGame.mascotCatSpineKey = MASCOT_CAT_SPINE_WHITE;
 		stateDuel.active = true;
 		stateDuel.phase = 'playing';
+		// Let MascotPixi mount the dog Spine under cover before steam clears.
+		await waitAnimationFrames(2);
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin', withIntro: true });
 		await transitionPromise;
 
