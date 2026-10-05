@@ -2076,6 +2076,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				})),
 			];
 		}
+		// FS clears slam-stop on every reveal. Duel desks are not reveals, so one
+		// tap left isTurbo set and every later desk slammed like turbo 3.
+		eventEmitter.broadcast({ type: 'stopButtonEnable' });
 		await stack.enhancedBoard.spin({
 			revealEvent: {
 				type: 'reveal',
