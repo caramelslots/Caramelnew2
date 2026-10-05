@@ -340,13 +340,14 @@ const clearDuelSideWinPresentation = (side: DuelSide) => {
 };
 
 /**
- * Phone: construct both desks and the night street while the base board is
- * still showing (desks stay invisible). This work used to run inside the
- * steam clip and froze it.
+ * Construct both desks and the night street while the base board is still
+ * showing (desks stay off-screen). One frame used to do all of this inside
+ * the steam clip and hitch it — on phone and on desktop.
  */
-const warmPhoneDuelDesks = async () => {
-	if (!isPhoneForAtlasDownscale() || stateDuel.prebuild || stateDuel.active) return;
+const warmDuelDesks = async () => {
+	if (stateDuel.prebuild || stateDuel.active) return;
 	stateGame.duelNightArmed = true;
+	await waitAnimationFrames(1);
 	stateDuel.prebuild = true;
 	stateDuel.visualTier = 1;
 	await waitAnimationFrames(1);
@@ -373,7 +374,9 @@ const rampPhoneDuelIn = async () => {
 	stateDuel.phase = 'playing';
 	stateGame.duelNightArmed = false;
 	stateGame.baseVisualTier = 3;
-	if (isPhoneForAtlasDownscale()) stateGame.baseLinger = true;
+	// Keep the base desk mounted (hidden) until the clip ends. Destroying it
+	// on the same frame as the duel reveal was the remaining hitch.
+	stateGame.baseLinger = true;
 	await waitAnimationFrames(2);
 };
 
@@ -899,14 +902,20 @@ const resumeLoopBgm = () => {
 	}
 };
 
-const winLevelSoundsStop = (options?: { music?: 'bgm_main' | 'bgm_freespin' }) => {
+const winLevelSoundsStop = (options?: {
+	music?: 'bgm_main' | 'bgm_freespin';
+	/** Exit transition keeps whatever total win already hid. */
+	restoreUi?: boolean;
+}) => {
 	eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_bigwin_coinloop' });
 	if (options?.music) {
 		eventEmitter.broadcast({ type: 'soundMusic', name: options.music });
 	} else {
 		resumeLoopBgm();
 	}
-	eventEmitter.broadcastAsync({ type: 'uiShow' });
+	if (options?.restoreUi !== false) {
+		eventEmitter.broadcastAsync({ type: 'uiShow' });
+	}
 };
 
 /** Stops looping count-up audio (coin SFX + win-level BGM) and resumes paused loop BGM. */
@@ -1466,7 +1475,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			winLevelData,
 		});
 		// gameType is still `freegame` until the transition animation — force main BGM.
-		winLevelSoundsStop({ music: 'bgm_main' });
+		// Total win already hid the HUD. Leave it hidden through the steam.
+		winLevelSoundsStop({ music: 'bgm_main', restoreUi: false });
 		eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
 		stateGame.mascotPose = 'idle';
 		// Drop drum after outro so it can sit through the celebration.
@@ -1478,6 +1488,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.drumSpentChambers = {};
 		stateGame.drumShakeKey = 0;
 		await eventEmitter.broadcastAsync({ type: 'transition', gameType: 'basegame' });
+		stateGame.fsOutroActive = false;
+		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 	},
 	setWin: async (bookEvent: BookEventOfType<'setWin'>, { bookEvents }: BookEventContext) => {
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
@@ -1984,7 +1996,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			eventEmitter.broadcast({ type: 'duelPickShow' });
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 			// Build both desks while the player is choosing, off the steam clip.
-			const warmDesks = warmPhoneDuelDesks();
+			const warmDesks = warmDuelDesks();
 			await eventEmitter.broadcastAsync({ type: 'duelPickUpdate' });
 			await warmDesks;
 			eventEmitter.broadcast({ type: 'duelPickHide' });
@@ -1994,7 +2006,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (needsDuelMascot) await duelMascotGpuPromise;
 
 		// Side already chosen: build the hidden desks now, day street still up.
-		if (!stateDuel.prebuild) await warmPhoneDuelDesks();
+		if (!stateDuel.prebuild) await warmDuelDesks();
 
 		try {
 			const transitionPromise = eventEmitter.broadcastAsync({ type: 'transition' });
@@ -2269,7 +2281,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 					amount: payout,
 					winLevelData,
 				});
-				winLevelSoundsStop({ music: 'bgm_main' });
+				// Total win already hid the HUD. Do not bring it back for the steam.
+				winLevelSoundsStop({ music: 'bgm_main', restoreUi: false });
 				eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
 			} else {
 				// Loss: fsCong board with opponent vs player totals (see DuelModeOverlay).
@@ -2300,6 +2313,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			stateGame.baseLinger = false;
 			stateGame.baseWarm = false;
 			stateGame.baseVisualTier = 3;
+			stateGame.fsOutroActive = false;
 		}
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 	},

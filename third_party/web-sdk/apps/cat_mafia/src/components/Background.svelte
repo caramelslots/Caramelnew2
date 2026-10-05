@@ -52,14 +52,20 @@
 	/** Invisible night spine, constructed before the steam so the clip doesn't hitch. */
 	const nightPrewarm = $derived(context.stateGame.duelNightArmed && !showFeatureBackground);
 	/**
-	 * Keep the day spine resident across the duel swap on phone. Dropping and
+	 * Keep the day spine resident across the duel swap. Dropping and
 	 * recreating it under the steam was part of the remaining transition hitch.
+	 * Phone holds it for the whole duel; desktop only through the clip, so a
+	 * hidden street is not drawn for the rest of the mode.
 	 */
 	const keepDayMounted = $derived(
-		isPhone &&
+		(isPhone &&
 			(context.stateGame.transitionActive ||
 				context.stateGame.duelNightArmed ||
-				showDuelBackground),
+				showDuelBackground)) ||
+			(!isPhone &&
+				(context.stateGame.duelNightArmed ||
+					stateDuel.prebuild ||
+					(context.stateGame.transitionActive && stateDuel.phase !== 'idle'))),
 	);
 	/** First frame during lift / phone; play only after the slot has opened. */
 	const playStreetIdle = $derived(!isPhone && gameEntrance.liftComplete);
@@ -95,7 +101,7 @@
 					trackIndex={0}
 					animationName={BG_IDLE_ANIMATION}
 					loop
-					timeScale={streetTimeScale}
+					timeScale={showBaseBackground ? streetTimeScale : 0}
 				/>
 			</SpineProvider>
 		</Container>
@@ -117,7 +123,7 @@
 					trackIndex={0}
 					animationName={BG_IDLE_ANIMATION}
 					loop
-					timeScale={streetTimeScale}
+					timeScale={showFeatureBackground ? streetTimeScale : 0}
 				/>
 			</SpineProvider>
 		</Container>

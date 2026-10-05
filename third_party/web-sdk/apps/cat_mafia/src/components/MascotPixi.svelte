@@ -70,8 +70,12 @@
 	/**
 	 * Dog + duel cat seat — only when duel is live (same beat as white-cat skin swap).
 	 * Do NOT key off transitionActive alone — that moved the cat too early.
+	 * Prebuild mounts the dog off-alpha so the steam clip does not construct it.
 	 */
 	const duelFlanking = $derived(stateDuel.active && !isPortrait && landscapeSlot);
+	const duelDogWarm = $derived(
+		(stateDuel.active || stateDuel.prebuild) && !isPortrait && landscapeSlot,
+	);
 
 	const showCatLayout = $derived(
 		(landscapeSlot || isPortrait) && !(stateDuel.active && isPortrait),
@@ -96,7 +100,7 @@
 	const mascotTimeScale = $derived(idlePaused ? 0 : spineTimeScale);
 
 	const duelLayoutBoxes = $derived.by(() => {
-		if (!duelFlanking) return null;
+		if (!duelDogWarm) return null;
 		const canvas = canvasSizes;
 		const ml = context.stateLayoutDerived.mainLayout();
 		const board = context.stateGameDerived.baseBoardLayout();
@@ -117,7 +121,7 @@
 		if (!mounted || !showCatLayout) {
 			if (!forceCatAnim && !previewDogOnPrimary) return null;
 		}
-		if (duelLayoutBoxes) return duelLayoutBoxes.cat;
+		if (duelFlanking && duelLayoutBoxes) return duelLayoutBoxes.cat;
 
 		const ml = context.stateLayoutDerived.mainLayout();
 		const board = context.stateGameDerived.boardLayout();
@@ -139,7 +143,7 @@
 	});
 
 	const dogBox = $derived.by((): MascotScreenBox | null => {
-		if (!duelFlanking || !dogAssetsReady) return null;
+		if (!duelDogWarm || !dogAssetsReady) return null;
 		return duelLayoutBoxes?.dog ?? null;
 	});
 
@@ -180,7 +184,7 @@
 	});
 
 	const dogPressHit = $derived.by(() => {
-		if (!dogBox) return null;
+		if (!duelFlanking || !dogBox) return null;
 		const circle = spinePressToLocal(dogBox, MASCOT_DOG_SPINE_VIEWPORT, MASCOT_DOG_PRESS);
 		return {
 			x: circle.x,
@@ -351,12 +355,13 @@
 	</Container>
 {/if}
 
-{#if mounted && dogTransform && dogAssetsReady && duelPairReady}
-	<!-- Same alpha as cat; no mirror — matches prior Pixi orientation. -->
+{#if mounted && dogTransform && dogAssetsReady && (duelFlanking ? duelPairReady : stateDuel.prebuild)}
+	<!-- Same alpha as cat once the duel is live; invisible while prebuilding.
+	     No mirror — matches prior Pixi orientation. -->
 	<Container
-		x={dogTransform.x}
+		x={dogTransform.x + (duelFlanking ? 0 : -40000)}
 		y={dogTransform.y}
-		alpha={alpha}
+		alpha={duelFlanking ? alpha : 0}
 		zIndex={props.zIndex ?? 5}
 		sortableChildren
 	>

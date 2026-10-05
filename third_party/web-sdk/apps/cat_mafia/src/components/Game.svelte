@@ -193,11 +193,12 @@
 				{#if stateDuel.active || stateDuel.prebuild || stateDuel.linger}
 					<!-- Paint order matches base: bases → reels → gold rails →
 					     win pops → SW curtains → nameplate → paylines → win text.
-					     Phone prebuild draws this off-screen so the steam clip
+					     Prebuild draws this off-screen so the steam clip
 					     only slides it into place. -->
 					<Container
 						x={stateDuel.active ? 0 : -40000}
-						visible={stateDuel.active || stateDuel.prebuild}
+						visible={stateDuel.active ||
+							(stateDuel.prebuild && !context.stateGame.transitionActive)}
 					>
 					{#if stateDuel.visualTier >= 1}
 						<DuelPixiBoard side="dog" layer="base" />

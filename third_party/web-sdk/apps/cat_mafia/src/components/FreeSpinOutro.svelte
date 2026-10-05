@@ -52,7 +52,8 @@
 		await fsAnimation?.playDisappear();
 		show = false;
 		stateGame.winOverlayActive = false;
-		stateGame.fsOutroActive = false;
+		// HUD stays down until the exit transition finishes. Clearing this here
+		// popped balance / bet / duel chrome back in before the steam.
 		stateGame.overlayDimAlpha = 0;
 		oncomplete();
 	};
@@ -69,7 +70,6 @@
 			show = false;
 			closing = false;
 			stateGame.winOverlayActive = false;
-			stateGame.fsOutroActive = false;
 			stateGame.overlayDimAlpha = 0;
 		},
 		freeSpinOutroCountUp: async (emitterEvent) => {

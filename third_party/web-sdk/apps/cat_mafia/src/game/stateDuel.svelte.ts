@@ -20,15 +20,15 @@ export const getDuelInitialVisibleBoard = (): DuelBoardCell[][] =>
 export const stateDuel = $state({
 	active: false,
 	/**
-	 * Phone: mount both desks while the base board is still up, hidden,
+	 * Mount both desks while the base board is still up, off-screen,
 	 * so the steam clip does not construct them.
 	 */
 	prebuild: false,
 	/** Phone exit: desks stay mounted (hidden) until the steam clip has finished. */
 	linger: false,
 	/**
-	 * Phone cloud swap. 0 = duel desks unmounted, 5 = full scene.
-	 * Desktop stays at 5 so entry is one mount.
+	 * Cloud swap. 0 = duel desks unmounted, 5 = full scene.
+	 * Entry ramps 1→5 across frames; settled play stays at 5.
 	 */
 	visualTier: 5,
 	phase: 'idle' as DuelPhase,

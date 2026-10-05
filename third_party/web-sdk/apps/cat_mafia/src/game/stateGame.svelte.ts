@@ -296,14 +296,14 @@ export const stateGame = $state({
 	 */
 	baseVisualTier: 3,
 	/**
-	 * Phone: keep the base desk mounted but hidden while steam plays, and
-	 * build it off-screen before the exit clip. Destroy happens after the spine.
+	 * Keep the base desk mounted but hidden while steam plays, and
+	 * build it off-screen before the phone exit clip. Destroy happens after the spine.
 	 */
 	baseLinger: false,
 	/** While true, the lingering base desk is rendered off-screen so GPUs upload it. */
 	baseWarm: false,
 	/**
-	 * Phone: mount the night street at alpha 0 before the duel steam starts,
+	 * Mount the night street at alpha 0 before the duel steam starts,
 	 * so that spine is not constructed mid-clip.
 	 */
 	duelNightArmed: false,

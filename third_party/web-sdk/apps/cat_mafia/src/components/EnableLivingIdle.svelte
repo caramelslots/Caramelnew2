@@ -25,7 +25,11 @@
 			// Phone duel: idle spines on both desks hitch turbo land / lines / triggers.
 			(phone && stateDuel.active) ||
 			stateGame.winOverlayActive ||
-			stateGame.transitionActive ||
+			// Keep desktop duel spines ticking through the steam. They were
+			// already started off-screen; stopping here made the reveal
+			// start every idle clip on the frame the cloud opened.
+			(stateGame.transitionActive &&
+				(phone || (!stateDuel.prebuild && !stateDuel.active))) ||
 			stateGame.freeSpinIntroActive ||
 			stateGame.duelIntroActive ||
 			stateModal.modal != null
@@ -34,7 +38,8 @@
 		}
 		// Duel (desktop): keep living idle on both desks even while one side
 		// spins / holds spotlight — SymbolSpineMain freezes only that desk.
-		if (stateDuel.active) {
+		// Prebuild too, so the reveal frame does not start every spine at once.
+		if (stateDuel.active || (!phone && stateDuel.prebuild)) {
 			return true;
 		}
 		return (
