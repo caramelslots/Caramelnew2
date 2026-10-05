@@ -215,14 +215,10 @@ export type TargetShotFlipLabelFx = {
 };
 
 /** Same formulas as TargetFlipPixiLayer — keep HTML fallback in sync if used. */
-export const targetFaceNumFontPx = (seatSize: number) =>
-	Math.round(Math.max(14, seatSize * 0.42));
-export const targetFaceFsFontPx = (seatSize: number) =>
-	Math.round(Math.max(8, seatSize * 0.16));
-export const targetFaceNumStrokePx = (seatSize: number) =>
-	Math.max(2, Math.round(seatSize * 0.04));
-export const targetFaceFsStrokePx = (seatSize: number) =>
-	Math.max(1, Math.round(seatSize * 0.02));
+export const targetFaceNumFontPx = (seatSize: number) => Math.round(Math.max(14, seatSize * 0.42));
+export const targetFaceFsFontPx = (seatSize: number) => Math.round(Math.max(8, seatSize * 0.16));
+export const targetFaceNumStrokePx = (seatSize: number) => Math.max(2, Math.round(seatSize * 0.04));
+export const targetFaceFsStrokePx = (seatSize: number) => Math.max(1, Math.round(seatSize * 0.02));
 
 /**
  * Fit flip viewport into a seat-sized box; disc center at local origin.
@@ -248,11 +244,11 @@ export const TARGET_BOARD_FLIP_VISIBLE_SLOTS = ['front', 'back', 'edge'] as cons
  * Tuned against designer_assets/target/images/background.png.
  */
 export const TARGET_BOARD_SLOTS = [
-	{ x: 0.24, y: 0.42 },
-	{ x: 0.5, y: 0.42 },
+	{ x: 0.26, y: 0.42 },
+	{ x: 0.51, y: 0.42 },
 	{ x: 0.76, y: 0.42 },
 	{ x: 0.26, y: 0.78 },
-	{ x: 0.5, y: 0.78 },
+	{ x: 0.51, y: 0.78 },
 	{ x: 0.76, y: 0.78 },
 ] as const;
 
