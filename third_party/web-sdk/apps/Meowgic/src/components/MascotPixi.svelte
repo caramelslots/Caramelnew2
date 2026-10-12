@@ -85,9 +85,18 @@
 	const forceCatAnim = $derived(devPreview.mascotAnimation);
 	const forceDogAnim = $derived(devPreview.mascotDogAnimation);
 	const forceWizardAnim = $derived(devPreview.mascotWizardAnimation);
+	const wizardAssetsReady = $derived(Boolean(pixiApp.stateApp.loadedAssets?.mascotCatWizard));
 	const previewDogOnPrimary = $derived(forceDogAnim !== null && !duelFlanking);
+	/**
+	 * Only swap the primary seat once the wizard atlas is in `loadedAssets`.
+	 * Otherwise the cat vanishes while EnableFeatureGpuMemory is still fetching —
+	 * Meow Magic / wizard DEV toggles looked flaky every other click.
+	 */
 	const previewWizardOnPrimary = $derived(
-		forceWizardAnim !== null && !duelFlanking && !previewDogOnPrimary,
+		forceWizardAnim !== null &&
+			!duelFlanking &&
+			!previewDogOnPrimary &&
+			wizardAssetsReady,
 	);
 
 	const catSpineKey = $derived(context.stateGame.mascotCatSpineKey);

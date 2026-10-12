@@ -69,6 +69,7 @@
 	import { pixiFpsHud, setFpsOverlayVisible } from '../game/pixiFpsHud.svelte';
 	import { getContextApp } from 'pixi-svelte';
 	import { ensureDemoStageArtInPixi, evictDemoStageArtFromPixi } from '../game/demoStageArt';
+	import { ensureWizardMascotReady } from '../game/featureGpuMemory';
 	import DevAccordion from './DevAccordion.svelte';
 
 	import baseEvents from '../stories/data/base_events';
@@ -456,6 +457,20 @@
 		}
 	};
 
+	/** Pin wizard keep-flag, then await atlas so the primary seat never blanks. */
+	const selectWizardPreview = async (anim: (typeof MASCOT_WIZARD_DEV_PREVIEW_ITEMS)[number]['id']) => {
+		devPreview.mascotAnimation = null;
+		devPreview.mascotDogAnimation = null;
+		devPreview.mascotWizardAnimation = anim;
+		try {
+			await ensureWizardMascotReady(appContext.stateApp);
+		} catch (error) {
+			// eslint-disable-next-line no-console
+			console.error('[DEV] wizard mascot failed to load:', error);
+			devPreview.mascotWizardAnimation = null;
+		}
+	};
+
 	/** Combo: wizard idle mascot + demo stage stills (quick Meowgic look). */
 	const meowMagicOn = $derived(
 		devPreview.forceShowDemoStageArt && devPreview.mascotWizardAnimation === 'idle_wizard',
@@ -472,9 +487,16 @@
 		try {
 			devPreview.mascotAnimation = null;
 			devPreview.mascotDogAnimation = null;
+			// Pin keep-flag first so EnableFeatureGpuMemory won't unload mid-load,
+			// then await atlas before the seat swaps (MascotPixi waits on loadedAssets).
 			devPreview.mascotWizardAnimation = 'idle_wizard';
-			await evictDemoStageArtFromPixi(appContext.stateApp);
-			await ensureDemoStageArtInPixi(appContext.stateApp);
+			await Promise.all([
+				ensureWizardMascotReady(appContext.stateApp),
+				(async () => {
+					await evictDemoStageArtFromPixi(appContext.stateApp);
+					await ensureDemoStageArtInPixi(appContext.stateApp);
+				})(),
+			]);
 			devPreview.forceShowDemoStageArt = true;
 		} catch (error) {
 			// eslint-disable-next-line no-console
@@ -2530,9 +2552,7 @@
 							class:active={devPreview.mascotWizardAnimation === item.id}
 							title={item.title}
 							onclick={() => {
-								devPreview.mascotAnimation = null;
-								devPreview.mascotDogAnimation = null;
-								devPreview.mascotWizardAnimation = item.id;
+								void selectWizardPreview(item.id);
 							}}
 						>
 							{item.label}

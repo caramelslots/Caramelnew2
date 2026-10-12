@@ -263,5 +263,14 @@ export const ensureDuelMascotReady = async (stateApp: LoadedAssetsBag) => {
 	stateApp.loadedAssets = { ...(stateApp.loadedAssets ?? {}), ...patch };
 };
 
+/** Ensure wizard atlas is in loadedAssets before DEV swaps the primary mascot seat. */
+export const ensureWizardMascotReady = async (stateApp: LoadedAssetsBag) => {
+	const loaded = (stateApp.loadedAssets ?? {}) as Record<string, unknown>;
+	if (loaded.mascotCatWizard) return;
+	const patch = await ensureFeatureKeysLoaded(WIZARD_MASCOT_KEYS, loaded);
+	if (!patch) return;
+	stateApp.loadedAssets = { ...(stateApp.loadedAssets ?? {}), ...patch };
+};
+
 /** Frames to wait after keep→false before unloading fsPopup (outro unmount). */
 export const FS_POPUP_UNLOAD_DELAY_FRAMES = 8;
