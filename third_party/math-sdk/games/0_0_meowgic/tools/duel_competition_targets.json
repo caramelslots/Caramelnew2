@@ -1,0 +1,26 @@
+{
+  "shares": {
+    "CLOSE": 0.3,
+    "MEDIUM": 0.45,
+    "BLOWOUT": 0.25
+  },
+  "close_gap_frac": 0.2,
+  "medium_gap_frac": 0.5,
+  "lead_then_lose_of_loses": 0.4,
+  "modes": {
+    "bonus_duel_cat": {
+      "win": { "player": 277.0, "opp": 180.0 },
+      "lose": { "player": 180.0, "opp": 277.0 }
+    },
+    "bonus_duel_dog": {
+      "win": { "player": 564.0, "opp": 350.0 },
+      "lose": { "player": 350.0, "opp": 564.0 }
+    }
+  },
+  "sim": {
+    "comment": "Anti-empty floors on BR_DUEL natural banks (honest path). Soft bank TARGET means are §3c only — do NOT use TARGET×frac here (that hung M5).",
+    "win_opp_min": 5.0,
+    "lose_player_min": 2.0,
+    "lose_opp_min": 50.0
+  }
+}

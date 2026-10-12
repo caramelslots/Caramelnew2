@@ -2,14 +2,15 @@
 
 Шпаргалка по основным командам разработки.
 
-- **Cat Mafia (активная):** `games/0_0_cat_mafia`
+- **Meowgic (активная):** `games/0_0_meowgic` → sync в `apps/Meowgic`
+- **Cat Mafia (donor):** `games/0_0_cat_mafia` → sync в `apps/cat_mafia`
 - **Wok Fury (donor):** `games/0_0_daloniil_test`
 
 Все команды запускаются из директории игры и предполагают, что venv
 лежит в `/tmp/csmath_venv/`.
 
-Для Cat Mafia замени путь игры на `0_0_cat_mafia` и web sync target —
-`apps/cat_mafia` (уже в `sync_to_web_sdk.py` этой игры).
+Для Meowgic путь игры — `0_0_meowgic`, web sync target — `apps/Meowgic`
+(уже в `sync_to_web_sdk.py` этой игры).
 
 ## 0. Venv (один раз, если `ModuleNotFoundError`)
 
@@ -25,8 +26,8 @@
 ## Общие переменные окружения
 
 ```bash
-# Cat Mafia (default). For Wok Fury: …/games/0_0_daloniil_test
-cd /Users/danylolepetynskyi/Desktop/Caramelnew2/third_party/math-sdk/games/0_0_cat_mafia
+# Meowgic (default). Cat Mafia: …/games/0_0_cat_mafia · Wok Fury: …/games/0_0_daloniil_test
+cd /Users/danylolepetynskyi/Desktop/Caramelnew2/third_party/math-sdk/games/0_0_meowgic
 export PATH="$HOME/.cargo/bin:$PATH"
 export PYTHONPATH=../..:.
 PY=/tmp/csmath_venv/bin/python
@@ -39,7 +40,7 @@ PY=/tmp/csmath_venv/bin/python
 Один скрипт = sim+opt → backup → **joint §3b+§3c** (SMOOTH · VH + Intrigue + RTP) → resample → assert/metrics/MD report → storybook sync.
 
 ```bash
-cd third_party/math-sdk/games/0_0_cat_mafia
+cd third_party/math-sdk/games/0_0_meowgic
 
 # M5 — 1e5 sims/mode, resample 100k
 SKIP_VENV=1 bash run_m5_full.sh    # лог: /tmp/m5_full.log

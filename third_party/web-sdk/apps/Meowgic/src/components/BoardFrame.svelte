@@ -16,7 +16,7 @@
 	 * / the spine when the asset changes; the slot stays put.
 	 */
 	import { onDestroy } from 'svelte';
-	import { Container, SpineProvider } from 'pixi-svelte';
+	import { Container, SpineProvider, Sprite } from 'pixi-svelte';
 	import { stateBetDerived } from 'state-shared';
 
 	import {
@@ -29,6 +29,8 @@
 	} from '../game/constants';
 	import { getContext } from '../game/context';
 	import { catBoardZoom } from '../game/catAnticipationBoardZoom.svelte';
+	import { DEMO_BOARD_FIT } from '../game/demoStageArt';
+	import { devPreview } from '../game/devPreview.svelte';
 	import BoardFrameSlotFilter from './BoardFrameSlotFilter.svelte';
 	import BoardFrameRailsMask from './BoardFrameRailsMask.svelte';
 	import BoardFramePulseTrack from './BoardFramePulseTrack.svelte';
@@ -97,6 +99,7 @@
 	const maskVariant = $derived(
 		props.maskVariant ?? (layer === 'rails' ? 'rails' : 'all'),
 	);
+	const showDemoArt = $derived(devPreview.forceShowDemoStageArt);
 
 	const context = getContext();
 
@@ -121,6 +124,7 @@
 	/**
 	 * Stretch desk art to fill the slot (object-fit: fill), then top-anchor a Y
 	 * compress so DESK_BOTTOM_PULL_PX lifts only the bottom rail.
+	 * Demo still uses the same BOARD_DESK_CONTENT box as the Spine `board` slot.
 	 */
 	const contentScale = $derived({
 		x: slotSize.width / BOARD_DESK_CONTENT.width,
@@ -136,6 +140,25 @@
 	const contentRootY = $derived(
 		BOARD_DESK_CONTENT.centerY * contentScale.y - DESK_BOTTOM_PULL_PX / 2,
 	);
+
+	/** Exact on-screen rect of the Spine `board` attachment (same as SpineProvider). */
+	const spineBoardRect = $derived({
+		x: contentRootX + BOARD_DESK_CONTENT.centerX * contentScale.x,
+		y: contentRootY - BOARD_DESK_CONTENT.centerY * contentScale.y,
+		width: BOARD_DESK_CONTENT.width * contentScale.x,
+		height: BOARD_DESK_CONTENT.height * contentScale.y,
+	});
+
+	/**
+	 * Demo still — same slot as Spine, but scaled/offset so its painted playfield
+	 * lands on the Spine playfield (book chrome sits above the reels).
+	 */
+	const demoBoardRect = $derived({
+		x: spineBoardRect.x + DEMO_BOARD_FIT.offsetX * spineBoardRect.width,
+		y: spineBoardRect.y + DEMO_BOARD_FIT.offsetY * spineBoardRect.height,
+		width: spineBoardRect.width * DEMO_BOARD_FIT.scaleX,
+		height: spineBoardRect.height * DEMO_BOARD_FIT.scaleY,
+	});
 
 	/** Bump to force-replay the one-shot glow clip (even if already complete). */
 	let pulseToken = $state(0);
@@ -184,23 +207,36 @@
 					variant={maskVariant}
 				/>
 			{/if}
-			<SpineProvider key="boardFrame" x={contentRootX} y={contentRootY} scale={contentScale}>
-				<BoardFrameSlotFilter
-					hiddenSlots={layer === 'base'
-						? BASE_HIDDEN_SLOTS
-						: layer === 'nameplate'
-							? NAMEPLATE_HIDDEN_SLOTS
-							: OVERLAY_HIDDEN_SLOTS}
-					zeroAlphaSlots={layer === 'overlay' ? GLOW_ZERO_ALPHA_SLOTS : undefined}
-				/>
-				{#if layer === 'overlay'}
-					<BoardFramePulseTrack
-						playToken={pulseToken}
-						animationName={BOARD_PULSE_ANIMATION}
-						timeScale={stateBetDerived.timeScale()}
+			{#if showDemoArt}
+				{#if layer === 'base' || layer === 'overlay' || layer === 'rails'}
+					<Sprite
+						key="demoBoard"
+						x={demoBoardRect.x}
+						y={demoBoardRect.y}
+						width={demoBoardRect.width}
+						height={demoBoardRect.height}
+						anchor={0.5}
 					/>
 				{/if}
-			</SpineProvider>
+			{:else}
+				<SpineProvider key="boardFrame" x={contentRootX} y={contentRootY} scale={contentScale}>
+					<BoardFrameSlotFilter
+						hiddenSlots={layer === 'base'
+							? BASE_HIDDEN_SLOTS
+							: layer === 'nameplate'
+								? NAMEPLATE_HIDDEN_SLOTS
+								: OVERLAY_HIDDEN_SLOTS}
+						zeroAlphaSlots={layer === 'overlay' ? GLOW_ZERO_ALPHA_SLOTS : undefined}
+					/>
+					{#if layer === 'overlay'}
+						<BoardFramePulseTrack
+							playToken={pulseToken}
+							animationName={BOARD_PULSE_ANIMATION}
+							timeScale={stateBetDerived.timeScale()}
+						/>
+					{/if}
+				</SpineProvider>
+			{/if}
 		</Container>
 	</Container>
 </Container>

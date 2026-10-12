@@ -68,7 +68,9 @@
 	import { dumpPixiTextureMemoryToConsole } from '../game/pixiTextureMemory';
 	import { pixiFpsHud, setFpsOverlayVisible } from '../game/pixiFpsHud.svelte';
 	import { getContextApp } from 'pixi-svelte';
+	import { ensureDemoStageArtInPixi, evictDemoStageArtFromPixi } from '../game/demoStageArt';
 	import DevAccordion from './DevAccordion.svelte';
+
 	import baseEvents from '../stories/data/base_events';
 	import baseBooks from '../stories/data/base_books';
 	import bonusBooks from '../stories/data/bonus_books';
@@ -97,6 +99,9 @@
 		padDuelBoardForPixi,
 	} from '../game/stateDuelBoards.svelte';
 
+	/** Capture during init — `getContext` is illegal inside click handlers. */
+	const appContext = getContextApp();
+
 	let open = $state(false);
 	let busy = $state(false);
 	let menuQuery = $state('');
@@ -120,7 +125,7 @@
 		{ id: 'superwild', title: 'Super Wild', keys: 'sw curtain sticky wild column drum' },
 		{ id: 'board', title: 'Board', keys: 'reel speed bonus outline' },
 		{ id: 'characters', title: 'Characters', keys: 'cat dog mascot symbol anim clip' },
-		{ id: 'stage', title: 'Stage', keys: 'frame chrome duel target shoot cabinet bullet fly drum' },
+		{ id: 'stage', title: 'Stage', keys: 'frame chrome duel target shoot cabinet bullet fly drum demo art background board' },
 		{ id: 'wins', title: 'Wins', keys: 'win level precision hud stack payline coin' },
 		{ id: 'ui', title: 'UI & loading', keys: 'loading cards progress fs intro outro duel modal funds transition' },
 	];
@@ -425,6 +430,59 @@
 		if (next) {
 			if (devPreview.forceShowDuelLayout) toggleDuelLayoutPreview(false);
 			if (devPreview.forceShowTargetBoard) toggleTargetBoardPreview(false);
+		}
+	};
+
+	/** Designer demo street + desk stills — art QA vs live spines. */
+	let demoStageArtBusy = $state(false);
+	const toggleDemoStageArt = async () => {
+		if (demoStageArtBusy) return;
+		if (devPreview.forceShowDemoStageArt) {
+			devPreview.forceShowDemoStageArt = false;
+			return;
+		}
+		demoStageArtBusy = true;
+		try {
+			// Always reload board still (crop / export may change under the same path).
+			await evictDemoStageArtFromPixi(appContext.stateApp);
+			await ensureDemoStageArtInPixi(appContext.stateApp);
+			devPreview.forceShowDemoStageArt = true;
+		} catch (error) {
+			// eslint-disable-next-line no-console
+			console.error('[DEV] demo stage art failed to load:', error);
+			devPreview.forceShowDemoStageArt = false;
+		} finally {
+			demoStageArtBusy = false;
+		}
+	};
+
+	/** Combo: wizard idle mascot + demo stage stills (quick Meowgic look). */
+	const meowMagicOn = $derived(
+		devPreview.forceShowDemoStageArt && devPreview.mascotWizardAnimation === 'idle_wizard',
+	);
+	let meowMagicBusy = $state(false);
+	const toggleMeowMagic = async () => {
+		if (meowMagicBusy || demoStageArtBusy) return;
+		if (meowMagicOn) {
+			devPreview.mascotWizardAnimation = null;
+			devPreview.forceShowDemoStageArt = false;
+			return;
+		}
+		meowMagicBusy = true;
+		try {
+			devPreview.mascotAnimation = null;
+			devPreview.mascotDogAnimation = null;
+			devPreview.mascotWizardAnimation = 'idle_wizard';
+			await evictDemoStageArtFromPixi(appContext.stateApp);
+			await ensureDemoStageArtInPixi(appContext.stateApp);
+			devPreview.forceShowDemoStageArt = true;
+		} catch (error) {
+			// eslint-disable-next-line no-console
+			console.error('[DEV] Meow Magic preview failed:', error);
+			devPreview.mascotWizardAnimation = null;
+			devPreview.forceShowDemoStageArt = false;
+		} finally {
+			meowMagicBusy = false;
 		}
 	};
 
@@ -1941,26 +1999,42 @@
 </script>
 
 <div class="dev-panel" class:dev-panel--open={open} class:dev-panel--hidden={!SHOW_DEV_PANEL}>
-	<button
-		class="dev-toggle"
-		onclick={() => (open = !open)}
-		type="button"
-		title="Shift+D"
-		aria-expanded={open}
-	>
-		<span>DEV {open ? '▴' : '▾'}</span>
-		<span class="dev-toggle__meta">
-			{currentLangLabel}
-			·
-			{socialOn ? 'SOC' : 'CASH'}
-			{#if pixiFpsHud.overlay}
-				· FPS
-			{/if}
-			{#if pixiMemoryHud.overlay}
-				· RAM
-			{/if}
-		</span>
-	</button>
+	<div class="dev-panel__bar">
+		<button
+			class="dev-toggle"
+			onclick={() => (open = !open)}
+			type="button"
+			title="Shift+D"
+			aria-expanded={open}
+		>
+			<span>DEV {open ? '▴' : '▾'}</span>
+			<span class="dev-toggle__meta">
+				{currentLangLabel}
+				·
+				{socialOn ? 'SOC' : 'CASH'}
+				{#if pixiFpsHud.overlay}
+					· FPS
+				{/if}
+				{#if pixiMemoryHud.overlay}
+					· RAM
+				{/if}
+			</span>
+		</button>
+		<button
+			type="button"
+			class="dev-meow-magic"
+			class:active={meowMagicOn}
+			disabled={meowMagicBusy || demoStageArtBusy}
+			title="Wizard idle mascot + demo street/desk stills"
+			onclick={toggleMeowMagic}
+		>
+			{meowMagicBusy
+				? 'Loading…'
+				: meowMagicOn
+					? 'Hide Meow Magic'
+					: 'Show Meow Magic'}
+		</button>
+	</div>
 
 	{#if open}
 		<div class="dev-body" onwheel={(e) => e.stopPropagation()}>
@@ -1986,8 +2060,7 @@
 					type="button"
 					title="Dump full GPU / Cache / HTML Spine / FB / CPU twins / HTML preload list to the browser console (for before/after compare)."
 					onclick={() => {
-						const app = getContextApp().stateApp.pixiApplication ?? null;
-						dumpPixiTextureMemoryToConsole(app);
+						dumpPixiTextureMemoryToConsole(appContext.stateApp.pixiApplication ?? null);
 					}}
 				>
 					RAM dump
@@ -2550,6 +2623,26 @@
 			</section>
 
 			<section>
+				<h4>Demo Art</h4>
+				<p class="subhint">Swap street + desk spines for designer stills (`демо фон` / `board демо`).</p>
+				<div class="grid">
+					<button
+						type="button"
+						class:active={devPreview.forceShowDemoStageArt}
+						disabled={demoStageArtBusy}
+						title="Replace background + board with designer demo PNGs"
+						onclick={toggleDemoStageArt}
+					>
+						{demoStageArtBusy
+							? 'Loading…'
+							: devPreview.forceShowDemoStageArt
+								? 'Hide Demo Art'
+								: 'Show Demo Art'}
+					</button>
+				</div>
+			</section>
+
+			<section>
 				<h4>FS Board Chrome</h4>
 				<p class="subhint">Desktop: spinboard (left) + barrel rim/drum (right). Phone: autoplay plaque top-centre, drum bottom-left.</p>
 				<div class="grid">
@@ -2898,6 +2991,13 @@
 		display: none;
 	}
 
+	.dev-panel__bar {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px;
+	}
+
 	.dev-toggle {
 		display: inline-flex;
 		align-items: baseline;
@@ -2922,6 +3022,31 @@
 		font-weight: 600;
 		letter-spacing: 0.04em;
 		opacity: 0.8;
+	}
+
+	.dev-meow-magic {
+		background: rgba(88, 28, 135, 0.92);
+		color: #fff;
+		padding: 5px 10px;
+		border: 1px solid rgba(192, 132, 252, 0.55);
+		font-family: inherit;
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+		border-radius: 6px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+		cursor: pointer;
+	}
+	.dev-meow-magic:hover:not(:disabled) {
+		background: rgba(107, 33, 168, 0.95);
+	}
+	.dev-meow-magic.active {
+		background: rgba(34, 197, 94, 0.55);
+		border-color: rgba(74, 222, 128, 0.9);
+	}
+	.dev-meow-magic:disabled {
+		opacity: 0.55;
+		cursor: wait;
 	}
 
 	.sr-only {

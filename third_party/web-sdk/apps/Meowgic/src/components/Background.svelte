@@ -1,13 +1,15 @@
 <script lang="ts">
-	import { Container, Rectangle, SpineProvider, SpineTrack } from 'pixi-svelte';
+	import { Container, Rectangle, SpineProvider, SpineTrack, Sprite } from 'pixi-svelte';
 	import { FadeContainer } from 'components-pixi';
 	import { SECOND } from 'constants-shared/time';
 
 	import { getContext } from '../game/context';
+	import { devPreview } from '../game/devPreview.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { catBackgroundZoom } from '../game/catAnticipationBoardZoom.svelte';
 	import {
 		BG_IDLE_ANIMATION,
+		getBackgroundPixiCoverScreenBox,
 		getBackgroundPixiScale,
 		getLoaderLiftGameSpineY,
 	} from '../game/neonBackgroundLayout';
@@ -17,6 +19,8 @@
 	import StreetOffscreenCull from './StreetOffscreenCull.svelte';
 
 	const context = getContext();
+
+	const showDemoArt = $derived(devPreview.forceShowDemoStageArt);
 
 	/**
 	 * Spine origin (0,0) is scene center — no anchor / width / height.
@@ -29,6 +33,18 @@
 			// Same Y during lift and after — plate top on the panel (seam + no end snap).
 			y: getLoaderLiftGameSpineY(canvas),
 			scale: getBackgroundPixiScale(canvas),
+		};
+	});
+
+	/** Demo still plate — same screen box as the Spine street. */
+	const demoPlate = $derived.by(() => {
+		const canvas = context.stateLayoutDerived.canvasSizes();
+		const box = getBackgroundPixiCoverScreenBox(canvas);
+		return {
+			x: spineProps.x,
+			y: spineProps.y,
+			width: box.width,
+			height: box.height,
 		};
 	});
 
@@ -91,41 +107,56 @@
 	<Rectangle {...context.stateLayoutDerived.canvasSizes()} backgroundColor={0x000000} zIndex={-3} />
 {/if}
 
-<FadeContainer show={showBaseBackground} persistent={keepDayMounted} duration={bgFadeMs} zIndex={-2}>
-	<Container x={canvasCenter.x} y={canvasCenter.y} scale={backgroundZoom}>
+{#if showDemoArt && !hidePixiStreet}
+	<Container x={canvasCenter.x} y={canvasCenter.y} scale={backgroundZoom} zIndex={-2}>
 		<Container x={-canvasCenter.x} y={-canvasCenter.y}>
-			<SpineProvider key="mainBackground" {...spineProps}>
-				<BackgroundSkinController skin="day" />
-				<StreetOffscreenCull />
-				<SpineTrack
-					trackIndex={0}
-					animationName={BG_IDLE_ANIMATION}
-					loop
-					timeScale={showBaseBackground ? streetTimeScale : 0}
-				/>
-			</SpineProvider>
+			<Sprite
+				key="demoBackground"
+				x={demoPlate.x}
+				y={demoPlate.y}
+				width={demoPlate.width}
+				height={demoPlate.height}
+				anchor={0.5}
+			/>
 		</Container>
 	</Container>
-</FadeContainer>
+{:else}
+	<FadeContainer show={showBaseBackground} persistent={keepDayMounted} duration={bgFadeMs} zIndex={-2}>
+		<Container x={canvasCenter.x} y={canvasCenter.y} scale={backgroundZoom}>
+			<Container x={-canvasCenter.x} y={-canvasCenter.y}>
+				<SpineProvider key="mainBackground" {...spineProps}>
+					<BackgroundSkinController skin="day" />
+					<StreetOffscreenCull />
+					<SpineTrack
+						trackIndex={0}
+						animationName={BG_IDLE_ANIMATION}
+						loop
+						timeScale={showBaseBackground ? streetTimeScale : 0}
+					/>
+				</SpineProvider>
+			</Container>
+		</Container>
+	</FadeContainer>
 
-<FadeContainer
-	show={showFeatureBackground}
-	persistent={nightPrewarm || showFeatureBackground}
-	duration={nightPrewarm ? 0 : bgFadeMs}
-	zIndex={-1}
->
-	<Container x={canvasCenter.x} y={canvasCenter.y} scale={backgroundZoom}>
-		<Container x={-canvasCenter.x} y={-canvasCenter.y}>
-			<SpineProvider key="mainBackground" {...spineProps}>
-				<BackgroundSkinController skin="night" />
-				<StreetOffscreenCull />
-				<SpineTrack
-					trackIndex={0}
-					animationName={BG_IDLE_ANIMATION}
-					loop
-					timeScale={showFeatureBackground ? streetTimeScale : 0}
-				/>
-			</SpineProvider>
+	<FadeContainer
+		show={showFeatureBackground}
+		persistent={nightPrewarm || showFeatureBackground}
+		duration={nightPrewarm ? 0 : bgFadeMs}
+		zIndex={-1}
+	>
+		<Container x={canvasCenter.x} y={canvasCenter.y} scale={backgroundZoom}>
+			<Container x={-canvasCenter.x} y={-canvasCenter.y}>
+				<SpineProvider key="mainBackground" {...spineProps}>
+					<BackgroundSkinController skin="night" />
+					<StreetOffscreenCull />
+					<SpineTrack
+						trackIndex={0}
+						animationName={BG_IDLE_ANIMATION}
+						loop
+						timeScale={showFeatureBackground ? streetTimeScale : 0}
+					/>
+				</SpineProvider>
+			</Container>
 		</Container>
-	</Container>
-</FadeContainer>
+	</FadeContainer>
+{/if}

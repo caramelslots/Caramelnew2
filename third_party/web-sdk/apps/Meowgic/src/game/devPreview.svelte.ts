@@ -65,6 +65,11 @@ export const devPreview = $state({
 	 */
 	forceShowBonusReelAllColumns: false,
 	/**
+	 * Swap street + desk spines for designer demo stills
+	 * (`assets/sprites/demo/background.webp` + `board.webp`).
+	 */
+	forceShowDemoStageArt: false,
+	/**
 	 * Force under-board / bitmap WIN fraction digits (null = currency default, e.g. USD 2).
 	 * DevButtons "WIN Stack · 3dp" sets 3 to QA count-up with millicents visible.
 	 */
