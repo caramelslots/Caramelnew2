@@ -477,7 +477,7 @@
 	);
 	let meowMagicBusy = $state(false);
 	const toggleMeowMagic = async () => {
-		if (meowMagicBusy || demoStageArtBusy) return;
+		if (meowMagicBusy) return;
 		if (meowMagicOn) {
 			devPreview.mascotWizardAnimation = null;
 			devPreview.forceShowDemoStageArt = false;
@@ -487,15 +487,13 @@
 		try {
 			devPreview.mascotAnimation = null;
 			devPreview.mascotDogAnimation = null;
-			// Pin keep-flag first so EnableFeatureGpuMemory won't unload mid-load,
-			// then await atlas before the seat swaps (MascotPixi waits on loadedAssets).
+			// Pin keep-flag first; await atlas only on cold load (stays resident after).
+			// Reuse demo stills if already in loadedAssets — full evict+reload made
+			// Hide→Show feel like a 10s hang with the button dead.
 			devPreview.mascotWizardAnimation = 'idle_wizard';
 			await Promise.all([
 				ensureWizardMascotReady(appContext.stateApp),
-				(async () => {
-					await evictDemoStageArtFromPixi(appContext.stateApp);
-					await ensureDemoStageArtInPixi(appContext.stateApp);
-				})(),
+				ensureDemoStageArtInPixi(appContext.stateApp),
 			]);
 			devPreview.forceShowDemoStageArt = true;
 		} catch (error) {
@@ -2046,7 +2044,7 @@
 			type="button"
 			class="dev-meow-magic"
 			class:active={meowMagicOn}
-			disabled={meowMagicBusy || demoStageArtBusy}
+			disabled={meowMagicBusy}
 			title="Wizard idle mascot + demo street/desk stills"
 			onclick={toggleMeowMagic}
 		>

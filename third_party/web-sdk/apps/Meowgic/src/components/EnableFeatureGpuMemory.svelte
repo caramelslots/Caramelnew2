@@ -117,23 +117,10 @@
 				if (patch) {
 					app.stateApp.loadedAssets = { ...app.stateApp.loadedAssets, ...patch };
 				}
-			} else {
-				const loaded = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
-				if (WIZARD_MASCOT_KEYS.some((key) => key in loaded)) {
-					await waitAnimationFrames(FS_POPUP_UNLOAD_DELAY_FRAMES);
-					if (gen !== syncGen) return;
-					const latest = (app.stateApp.loadedAssets ?? {}) as Record<string, unknown>;
-					if (
-						WIZARD_MASCOT_KEYS.some((key) => key in latest) &&
-						!shouldKeepWizardMascotGpu()
-					) {
-						app.stateApp.loadedAssets = await unloadFeatureKeysAsync(
-							WIZARD_MASCOT_KEYS,
-							latest,
-						);
-					}
-				}
 			}
+			// Wizard is DEV-only and multi-page — do not Assets.unload on hide.
+			// Rapid Meow Magic toggles were racing unload vs reload (10s+ hangs,
+			// button stuck on meowMagicBusy). Atlas stays resident after first load.
 
 			if (gen !== syncGen) return;
 			if (wantFsPopup) {
