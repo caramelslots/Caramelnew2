@@ -1,0 +1,17 @@
+cartridge.webp
+size:1024,1024
+filter:Linear,Linear
+scale:0.25
+Layer 1
+bounds:1,328,370,372
+offsets:33,34,436,438
+cartridge
+bounds:1,20,305,308
+cartridge's Outer Glow
+bounds:372,338,362,358
+offsets:2,0,364,360
+rotate:90
+cartridge_1
+bounds:307,159,152,168
+shadow
+bounds:460,1,344,336

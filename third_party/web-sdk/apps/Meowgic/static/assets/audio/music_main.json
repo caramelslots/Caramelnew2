@@ -1,0 +1,13 @@
+{
+	"sprite": {
+		"bgm_main_intro": [1000, 13130],
+		"bgm_main": [14130, 78810, true]
+	},
+	"src": [
+		"./assets/audio/meowfia_main_music_slot.mp3"
+	],
+	"config": {
+		"bgm_main_intro": { "volume": 1 },
+		"bgm_main": { "volume": 1 }
+	}
+}

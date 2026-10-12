@@ -1,0 +1,15 @@
+target_board.webp
+size:1024,1024
+filter:Linear,Linear
+scale:0.33
+back
+bounds:875,511,96,96
+background
+bounds:2,2,677,553
+edge
+bounds:2,557,658,50
+front
+bounds:777,511,96,96
+holder
+bounds:681,435,172,94
+rotate:90

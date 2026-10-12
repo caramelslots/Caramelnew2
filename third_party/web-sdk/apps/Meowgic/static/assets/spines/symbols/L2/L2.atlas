@@ -1,0 +1,22 @@
+L2.webp
+size:1024,398
+filter:Linear,Linear
+scale:0.206127
+Circle_rays_22
+bounds:339,100,297,297
+offsets:5,4,306,306
+K
+bounds:850,223,174,173
+offsets:21,53,224,269
+rotate:90
+K_1
+bounds:638,1,184,184
+K_glow
+bounds:638,186,211,211
+offsets:16,38,243,288
+Layer 1
+bounds:1,60,337,337
+offsets:32,32,401,402
+shadow_K
+bounds:823,1,183,184
+offsets:19,43,221,269
