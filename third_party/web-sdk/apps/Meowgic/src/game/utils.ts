@@ -185,6 +185,11 @@ export const getSymbolInfo = ({
 				...('offsetY' in spineSizing && typeof spineSizing.offsetY === 'number'
 					? { offsetY: spineSizing.offsetY }
 					: {}),
+				...('overlayAnimationName' in spineSizing &&
+				typeof spineSizing.overlayAnimationName === 'string' &&
+				resolved.assetKey === spineSizing.assetKey
+					? { overlayAnimationName: spineSizing.overlayAnimationName }
+					: {}),
 			};
 		}
 	}

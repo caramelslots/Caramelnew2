@@ -471,41 +471,6 @@
 		}
 	};
 
-	/** Combo: wizard idle mascot + demo stage stills (quick Meowgic look). */
-	const meowMagicOn = $derived(
-		devPreview.forceShowDemoStageArt && devPreview.mascotWizardAnimation === 'idle_wizard',
-	);
-	let meowMagicBusy = $state(false);
-	const toggleMeowMagic = async () => {
-		if (meowMagicBusy) return;
-		if (meowMagicOn) {
-			devPreview.mascotWizardAnimation = null;
-			devPreview.forceShowDemoStageArt = false;
-			return;
-		}
-		meowMagicBusy = true;
-		try {
-			devPreview.mascotAnimation = null;
-			devPreview.mascotDogAnimation = null;
-			// Pin keep-flag first; await atlas only on cold load (stays resident after).
-			// Reuse demo stills if already in loadedAssets — full evict+reload made
-			// Hide→Show feel like a 10s hang with the button dead.
-			devPreview.mascotWizardAnimation = 'idle_wizard';
-			await Promise.all([
-				ensureWizardMascotReady(appContext.stateApp),
-				ensureDemoStageArtInPixi(appContext.stateApp),
-			]);
-			devPreview.forceShowDemoStageArt = true;
-		} catch (error) {
-			// eslint-disable-next-line no-console
-			console.error('[DEV] Meow Magic preview failed:', error);
-			devPreview.mascotWizardAnimation = null;
-			devPreview.forceShowDemoStageArt = false;
-		} finally {
-			meowMagicBusy = false;
-		}
-	};
-
 	/**
 	 * Production freeSpinTargetPick path: gallery retreats (slide + unload)
 	 * before steam (solo preview dismisses immediately after pick).
@@ -2040,20 +2005,6 @@
 				{/if}
 			</span>
 		</button>
-		<button
-			type="button"
-			class="dev-meow-magic"
-			class:active={meowMagicOn}
-			disabled={meowMagicBusy}
-			title="Wizard idle mascot + demo street/desk stills"
-			onclick={toggleMeowMagic}
-		>
-			{meowMagicBusy
-				? 'Loading…'
-				: meowMagicOn
-					? 'Hide Meow Magic'
-					: 'Show Meow Magic'}
-		</button>
 	</div>
 
 	{#if open}
@@ -3040,31 +2991,6 @@
 		font-weight: 600;
 		letter-spacing: 0.04em;
 		opacity: 0.8;
-	}
-
-	.dev-meow-magic {
-		background: rgba(88, 28, 135, 0.92);
-		color: #fff;
-		padding: 5px 10px;
-		border: 1px solid rgba(192, 132, 252, 0.55);
-		font-family: inherit;
-		font-size: 11px;
-		font-weight: 700;
-		letter-spacing: 0.04em;
-		border-radius: 6px;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-		cursor: pointer;
-	}
-	.dev-meow-magic:hover:not(:disabled) {
-		background: rgba(107, 33, 168, 0.95);
-	}
-	.dev-meow-magic.active {
-		background: rgba(34, 197, 94, 0.55);
-		border-color: rgba(74, 222, 128, 0.9);
-	}
-	.dev-meow-magic:disabled {
-		opacity: 0.55;
-		cursor: wait;
 	}
 
 	.sr-only {

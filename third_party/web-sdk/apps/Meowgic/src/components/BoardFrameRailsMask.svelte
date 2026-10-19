@@ -71,13 +71,20 @@
 		const holeLeft = pfLeft - BOARD_OUTER_MASK_SLACK_PX;
 		const holeRight = pfRight + BOARD_OUTER_MASK_SLACK_PX;
 
+		// Desk art (books, open book, smoke) overflows the slot — keep the outer
+		// strips open well past it so the overlay is not cut at the slot edge.
+		const outerL = -sw / 2 - sw;
+		const outerR = sw / 2 + sw;
+		const outerT = -sh / 2 - sh;
+		const outerB = sh / 2 + sh;
+
 		g.clear();
 
 		if (variant !== 'rails') {
-			g.rect(-sw / 2, -sh / 2, sw, pfTop + sh / 2);
-			g.rect(-sw / 2, pfBottom, sw, sh / 2 - pfBottom);
-			g.rect(-sw / 2, pfTop, holeLeft + sw / 2, pfH);
-			g.rect(holeRight, pfTop, sw / 2 - holeRight, pfH);
+			g.rect(outerL, outerT, outerR - outerL, pfTop - outerT);
+			g.rect(outerL, pfBottom, outerR - outerL, outerB - pfBottom);
+			g.rect(outerL, pfTop, holeLeft - outerL, pfH);
+			g.rect(holeRight, pfTop, outerR - holeRight, pfH);
 		}
 
 		if (variant !== 'frame') {

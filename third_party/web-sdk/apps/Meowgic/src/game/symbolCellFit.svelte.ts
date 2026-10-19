@@ -7,8 +7,12 @@ import type { SkeletonData } from '@esotericsoftware/spine-pixi-v8';
 
 import { sizeRatioForSilhouette } from './spineSilhouetteFit';
 
-/** Letter lows — auto-equalize regardless of packed art size. */
-export const AUTO_CELL_FIT_KEYS = ['L1', 'L2', 'L3', 'L4'] as const;
+/**
+ * Auto-equalize regardless of packed art size. L1 (A) / L2 (K) are excluded:
+ * their shadow attachments carry a soft near-transparent tail that inflates
+ * the AABB — static sizeRatios in constants.ts fit the solid glyph instead.
+ */
+export const AUTO_CELL_FIT_KEYS = ['H1', 'H2', 'H3', 'H4', 'L3', 'L4'] as const;
 
 export type AutoCellFitKey = (typeof AUTO_CELL_FIT_KEYS)[number];
 

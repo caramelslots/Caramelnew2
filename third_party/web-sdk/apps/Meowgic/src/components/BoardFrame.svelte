@@ -1,6 +1,9 @@
 <script lang="ts" module>
 	export type EmitterEventBoardFrame = {
-		/** Crest glow pulse — lines, FS bullet collect, or paw resolve. */
+		/**
+		 * Crest glow pulse — lines, FS bullet collect, or paw resolve.
+		 * The library-book board ships no pulse clip, so BoardFrame ignores it.
+		 */
 		type: 'boardFramePulse';
 		/** Duel: pulse only this desk. Omit for base (single board). */
 		side?: 'cat' | 'dog';
@@ -15,9 +18,7 @@
 	 * desk box). Board art is fitted into that slot — swap BOARD_DESK_CONTENT
 	 * / the spine when the asset changes; the slot stays put.
 	 */
-	import { onDestroy } from 'svelte';
-	import { Container, SpineProvider, Sprite } from 'pixi-svelte';
-	import { stateBetDerived } from 'state-shared';
+	import { Container, SpineProvider, SpineTrack, Sprite } from 'pixi-svelte';
 
 	import {
 		BOARD_DESK_CONTENT,
@@ -33,7 +34,6 @@
 	import { devPreview } from '../game/devPreview.svelte';
 	import BoardFrameSlotFilter from './BoardFrameSlotFilter.svelte';
 	import BoardFrameRailsMask from './BoardFrameRailsMask.svelte';
-	import BoardFramePulseTrack from './BoardFramePulseTrack.svelte';
 
 	type BoardLayout = {
 		x: number;
@@ -50,49 +50,31 @@
 		 * `overlay` — frame + vertical gold grids above resting symbols
 		 * (column holes masked). Idle/win pops render above this layer.
 		 * `rails` — column grids only (under the target-pick cabinet).
-		 * `nameplate` — WIN bank plate under the desk, above SW curtains so
-		 * curtain feet tuck under the bottom gold rail.
+		 * `nameplate` — legacy WIN plate layer; the library-book board has no
+		 * separate plate, so it renders nothing.
 		 */
 		layer?: 'base' | 'overlay' | 'rails' | 'nameplate';
 		/** Overlay mask: hide rails while the target cabinet covers them. */
 		maskVariant?: 'all' | 'frame' | 'rails';
 		layout?: BoardLayout;
 		disableCatZoom?: boolean;
-		/** Duel desk — filters `boardFramePulse` to this side only. */
-		side?: 'cat' | 'dog';
 	};
 
-	/** Desk body under the reel window (dark playfield + frame fill). */
-	const BASE_HIDDEN_SLOTS = [
-		'glow2',
-		'glow3',
-		'gold_lines2',
-		'gold_lines',
-		'back',
-		'dark_outlines',
-		'paw',
-		// Drawn on `nameplate` above the overlay frame.
-		'below',
-	] as const;
 	/**
-	 * Rails / crest above resting symbols. Keep `board` visible and mask out
-	 * the five reel columns so only the frame + vertical gold grids remain.
+	 * Under the reels: dark playfield + the few props that hang into the
+	 * column holes (fabrics, key, crest jewel). Everything else lives on the
+	 * overlay so additive smoke / multiply shadows are not drawn twice.
 	 */
-	const OVERLAY_HIDDEN_SLOTS = ['below'] as const;
-	/** Only the under-desk WIN plate — everything else stays on base/overlay. */
-	const NAMEPLATE_HIDDEN_SLOTS = [
-		'glow2',
-		'glow3',
-		'gold_lines2',
-		'gold_lines',
-		'back',
-		'dark_outlines',
-		'paw',
+	const BASE_VISIBLE_SLOTS = [
 		'board',
+		'right_fabric',
+		'left_fabric',
+		'key2',
+		'base',
+		'little',
 	] as const;
-	const GLOW_ZERO_ALPHA_SLOTS = ['glow2', 'glow3'] as const;
 
-	const BOARD_PULSE_ANIMATION = 'animation';
+	const BOARD_IDLE_ANIMATION = 'idle/idle_board';
 
 	const props: Props = $props();
 	const layer = $derived(props.layer ?? 'base');
@@ -159,39 +141,6 @@
 		width: spineBoardRect.width * DEMO_BOARD_FIT.scaleX,
 		height: spineBoardRect.height * DEMO_BOARD_FIT.scaleY,
 	});
-
-	/** Bump to force-replay the one-shot glow clip (even if already complete). */
-	let pulseToken = $state(0);
-	/** Pending ×N pulse timeouts — cleared on unmount / new burst. */
-	let pulseTimers: ReturnType<typeof setTimeout>[] = [];
-
-	const clearPulseTimers = () => {
-		for (const timer of pulseTimers) clearTimeout(timer);
-		pulseTimers = [];
-	};
-
-	onDestroy(clearPulseTimers);
-
-	context.eventEmitter.subscribeOnMount({
-		boardFramePulse: (event) => {
-			if ((props.layer ?? 'base') !== 'overlay') return;
-			if (event.side && props.side && event.side !== props.side) return;
-			const times = Math.max(1, Math.floor(event.times ?? 1));
-			const gapMs = 400 / stateBetDerived.timeScale();
-			clearPulseTimers();
-			for (let i = 0; i < times; i++) {
-				if (i === 0) {
-					pulseToken += 1;
-					continue;
-				}
-				pulseTimers.push(
-					setTimeout(() => {
-						pulseToken += 1;
-					}, gapMs * i),
-				);
-			}
-		},
-	});
 </script>
 
 <Container x={boardLayout.x} y={boardLayout.y} scale={boardScale}>
@@ -218,23 +167,12 @@
 						anchor={0.5}
 					/>
 				{/if}
-			{:else}
+			{:else if layer !== 'nameplate'}
 				<SpineProvider key="boardFrame" x={contentRootX} y={contentRootY} scale={contentScale}>
-					<BoardFrameSlotFilter
-						hiddenSlots={layer === 'base'
-							? BASE_HIDDEN_SLOTS
-							: layer === 'nameplate'
-								? NAMEPLATE_HIDDEN_SLOTS
-								: OVERLAY_HIDDEN_SLOTS}
-						zeroAlphaSlots={layer === 'overlay' ? GLOW_ZERO_ALPHA_SLOTS : undefined}
-					/>
-					{#if layer === 'overlay'}
-						<BoardFramePulseTrack
-							playToken={pulseToken}
-							animationName={BOARD_PULSE_ANIMATION}
-							timeScale={stateBetDerived.timeScale()}
-						/>
+					{#if layer === 'base'}
+						<BoardFrameSlotFilter visibleSlots={BASE_VISIBLE_SLOTS} />
 					{/if}
+					<SpineTrack trackIndex={0} animationName={BOARD_IDLE_ANIMATION} loop />
 				</SpineProvider>
 			{/if}
 		</Container>

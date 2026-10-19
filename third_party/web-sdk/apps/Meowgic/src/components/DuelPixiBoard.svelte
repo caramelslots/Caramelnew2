@@ -153,7 +153,7 @@
 
 {#if props.layer === 'base'}
 	<MainContainer>
-		<BoardFrame layer="base" {layout} disableCatZoom side={props.side} />
+		<BoardFrame layer="base" {layout} disableCatZoom />
 	</MainContainer>
 {:else if props.layer === 'board'}
 	<MainContainer>
@@ -167,12 +167,12 @@
 	</MainContainer>
 {:else if props.layer === 'overlay'}
 	<MainContainer>
-		<BoardFrame layer="overlay" {layout} disableCatZoom side={props.side} />
+		<BoardFrame layer="overlay" {layout} disableCatZoom />
 	</MainContainer>
 {:else if props.layer === 'nameplate'}
 	<!-- Under-desk WIN plate above the overlay bottom rail. -->
 	<MainContainer>
-		<BoardFrame layer="nameplate" {layout} disableCatZoom side={props.side} />
+		<BoardFrame layer="nameplate" {layout} disableCatZoom />
 	</MainContainer>
 {:else if props.layer === 'idleBounce'}
 	<!-- Win / idle pops + all resting tiles above gold rails (same as base game).

@@ -8,7 +8,9 @@
 
 	type Props = {
 		/** Slot names to clear (no attachment) while this layer is mounted. */
-		hiddenSlots: readonly string[];
+		hiddenSlots?: readonly string[];
+		/** Inverse of `hiddenSlots`: clear every slot not listed here. */
+		visibleSlots?: readonly string[];
 		/**
 		 * Additive glow slots that are fully opaque in setup pose — force
 		 * alpha 0 until the celebrate clip keys them.
@@ -19,9 +21,11 @@
 	const props: Props = $props();
 	const spine = getContextSpine();
 
-	const hidden = props.hiddenSlots
-		.map((name) => spine.skeleton.findSlot(name))
-		.filter((slot) => slot != null);
+	const hidden = props.visibleSlots
+		? spine.skeleton.slots.filter((slot) => !props.visibleSlots!.includes(slot.data.name))
+		: (props.hiddenSlots ?? [])
+				.map((name) => spine.skeleton.findSlot(name))
+				.filter((slot) => slot != null);
 
 	const zeroAlpha = (props.zeroAlphaSlots ?? [])
 		.map((name) => spine.skeleton.findSlot(name))

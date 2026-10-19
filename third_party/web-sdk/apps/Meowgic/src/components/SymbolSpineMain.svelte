@@ -165,6 +165,12 @@
 		(props.symbolName === 'W' || props.symbolName === 'SW') &&
 			(trackAnimationName === 'static' || trackAnimationName === 'land'),
 	);
+	const overlayAnimationName = $derived(
+		'overlayAnimationName' in props.symbolInfo &&
+			typeof props.symbolInfo.overlayAnimationName === 'string'
+			? props.symbolInfo.overlayAnimationName
+			: undefined,
+	);
 	const spineX = $derived((props.x ?? 0) + offsetX);
 	const spineY = $derived((props.y ?? 0) + offsetY);
 	const wildTilePx = $derived(SYMBOL_SIZE * WILD_TILE_FILL);
@@ -201,6 +207,14 @@
 				{listener}
 			/>
 		{/key}
+		{#if overlayAnimationName}
+			<SpineTrack
+				loop
+				trackIndex={1}
+				animationName={overlayAnimationName}
+				timeScale={SYMBOL_SPINE_TIME_SCALE}
+			/>
+		{/if}
 	</SpineProvider>
 {/snippet}
 

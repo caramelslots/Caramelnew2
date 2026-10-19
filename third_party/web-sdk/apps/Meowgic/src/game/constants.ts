@@ -435,8 +435,8 @@ export const BOARD_SIZE_TRIM = { right: 0, bottom: 0 } as const;
 
 /**
  * Per-symbol win animation — used when `win` shows a frozen idle spine
- * (M) with a container scale tween. W, B, H1 (diamond activation),
- * H2 (revolver), H3 (lighter), H4 (telephone) and letter lows (L1–L4)
+ * (M) with a container scale tween. W, B, H1 (amethyst), H2 (wand),
+ * H3 (candle), H4 (book) and letter lows (L1–L4)
  * play dedicated spine win clips and skip this bounce.
  *
  * Flow (ReelSymbol.svelte): on `state === 'win'`
@@ -589,44 +589,44 @@ export const CELL_SYMBOL_SIZE = 0.85;
 const HIGH_SYMBOL_SIZE = CELL_SYMBOL_SIZE;
 const LOW_SYMBOL_SIZE = CELL_SYMBOL_SIZE;
 /**
- * Art spans = dominant idle silhouette in skeleton units (atlas offsets /
- * atlas scale). Exclude full-bleed `Layer 1` / ray discs — those are FX
- * pads, not the symbol body.
+ * Magic-library symbols (`designer_assets/symbols`): H1 amethyst, H2 wand,
+ * H3 candle, H4 book, L1–L4 = A / K / Q / J.
  *
- * Letter L1–L4: static fallback only. Runtime `symbolCellFit` remeasures the
- * idle body AABB and overrides sizeRatios so every letter fills the cell
- * equally regardless of how large the designer packed the glyph.
+ * Size = CELL_SYMBOL_SIZE × skeletonHeight / bodySpan, where bodySpan is the
+ * max edge of the slots visible on `idle` frame 0 (backlight / stars / FX are
+ * keyed off there). These are static fallbacks — runtime `symbolCellFit`
+ * remeasures the same AABB for every key in AUTO_CELL_FIT_KEYS.
+ *
+ * Offsets (cell px) recentre that body on the cell: skeleton origin is the
+ * cell centre, but the wand / K / J / candle / book bodies sit off-origin.
+ * Spin WebPs are alpha-trimmed + centred, so land/rest must match them.
  */
-const LETTER_SKELETON_HEIGHT = 2603.14;
-const LETTER_ART_HEIGHT = 1306; // A/K/Q/J attachment pad (~522 @ scale 0.4)
-const LETTER_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * LETTER_SKELETON_HEIGHT) / LETTER_ART_HEIGHT;
-/** Telephone — handset width is the widest idle silhouette. */
-const TELEPHONE_SKELETON_HEIGHT = 2603.14;
-const TELEPHONE_ART_SPAN = 1286; // handset ~514 @ 0.4
-const TELEPHONE_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * TELEPHONE_SKELETON_HEIGHT) / TELEPHONE_ART_SPAN;
+const symbolFit = (skeletonHeight: number, bodySpan: number) => {
+	const ratio = (CELL_SYMBOL_SIZE * skeletonHeight) / bodySpan;
+	return { width: ratio, height: ratio };
+};
+const H1_SIZE_RATIOS = symbolFit(232, 232);
+const H2_SIZE_RATIOS = symbolFit(167, 179.8);
+const H2_OFFSET = { offsetX: -8, offsetY: -7 };
+const H3_SIZE_RATIOS = symbolFit(204, 255.1);
+/** Candle flame lives only in the `fire` flipbook — setup pose has no flame. */
+const H3_OFFSET = { offsetX: 2, offsetY: -3, overlayAnimationName: 'fire' };
+const H4_SIZE_RATIOS = symbolFit(227.22, 234);
+const H4_OFFSET = { offsetY: -5 };
 /**
- * Lighter — case + closed lid / flame stack taller than `case` alone
- * (~882); composite span so height matches other symbols.
+ * A / K — `a_shadow` / `k_shadow` carry a near-transparent soft tail
+ * (alpha < 40) below / right of the glyph, so their attachment AABB
+ * overstates the visible letter. Fit by the solid glyph + hard shadow
+ * instead (A 224 wide, K 208 tall); L1 / L2 stay out of AUTO_CELL_FIT_KEYS.
  */
-const LIGHTER_SKELETON_HEIGHT = 2104.8;
-const LIGHTER_ART_SPAN = 1000;
-const LIGHTER_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * LIGHTER_SKELETON_HEIGHT) / LIGHTER_ART_SPAN;
-/** No Y nudge — shared cell fill already centers props with letters. */
-/** Lift H3 (lighter) a few px in the cell — rest pose sits slightly low. */
-const LIGHTER_OFFSET_Y = -6;
-/** Drop L3 (Q) a few px — glyph sits slightly high in the cell. */
-const L3_OFFSET_Y = 5;
-/**
- * Diamond (H1) — fit by outer glow (~752 @ 0.5 → 1504), not body-only;
- * body-only made the gem read larger than letters on the board.
- */
-const DIAMOND_SKELETON_HEIGHT = 1915.07;
-const DIAMOND_ART_SPAN = 1504;
-const DIAMOND_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * DIAMOND_SKELETON_HEIGHT) / DIAMOND_ART_SPAN;
-/** Revolver (H2) — paired guns `1` att ~634 @ 0.5 → 1268. */
-const REVOLVER_SKELETON_HEIGHT = 2050.44;
-const REVOLVER_ART_SPAN = 1267;
-const REVOLVER_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * REVOLVER_SKELETON_HEIGHT) / REVOLVER_ART_SPAN;
+const L1_SIZE_RATIOS = symbolFit(254, 224);
+const L1_OFFSET = { offsetY: 8 };
+const L2_SIZE_RATIOS = symbolFit(240.56, 208);
+const L2_OFFSET = { offsetX: -8, offsetY: 10 };
+const L3_SIZE_RATIOS = symbolFit(245.5, 245.5);
+const L3_OFFSET = { offsetY: 2 };
+const L4_SIZE_RATIOS = symbolFit(219.85, 219.85);
+const L4_OFFSET = { offsetX: 2, offsetY: 7 };
 /**
  * Cartridge (BT) — designer spine ~3157 tall; body/glow ~1220–1450 logical.
  * Only ships a `stop` land clip (no idle/win) — rest/spin use WebP.
@@ -642,7 +642,7 @@ const CARTRIDGE_SYMBOL_SIZE = (CELL_SYMBOL_SIZE * CARTRIDGE_SKELETON_HEIGHT) / C
  *
  * AABB is also shifted (`skeleton.x` ≈ −1954 → centre ≈ −109; `skeleton.y`
  * ≈ −510 → centre ≈ +1266). spine-pixi draws that off-cell — BONUS_OFFSET_X/Y
- * nudge back to column centre (same idea as LIGHTER_OFFSET_Y / L3_OFFSET_Y).
+ * nudge back to column centre (same idea as the H/L symbol offsets above).
  * Scales with sizeRatio so land/win stay centred.
  *
  * SPECIAL_SYMBOL_SIZE / BONUS_*_SIZE / BONUS_OFFSET_* are computed below
@@ -778,18 +778,20 @@ export const DESK_PARCHMENT = {
 } as const;
 
 /**
- * Current desk art content bounds (Spine `board` attachment, skeleton Y-up).
- * Fitted into the desk slot via scale = slotSize / contentSize.
- * `centerY` matches the board attachment's y (board.json) so the dark
- * playfield sits on the reel grid the same way the old Sprite desk did.
+ * Current desk art content box (skeleton space, Y-up), fitted into the desk
+ * slot via scale = slotSize / contentSize.
+ * Library-book board: the box is solved so the painted playfield of the
+ * `board` attachment lands where DEMO_BOARD_FIT puts the same art still
+ * (rails line up with the reel columns). Books / open book / smoke overflow
+ * the box on purpose.
  * Swap these when the board asset changes — slot size/position stay fixed.
  */
 export const BOARD_DESK_CONTENT = {
-	width: 2050,
-	height: 1993,
+	width: 707.06,
+	height: 678.02,
 	/** Content center in skeleton space (Y-up). spine-pixi uses `Skeleton.yDown`. */
-	centerX: 0,
-	centerY: 28.5,
+	centerX: -16.031,
+	centerY: -9.857,
 } as const;
 
 /**
@@ -800,11 +802,12 @@ export const BOARD_DESK_CONTENT = {
 export const DESK_PARCHMENT_PADDING = { width: 1.02, height: 1.02 } as const;
 
 /**
- * Gold rail stroke width in desk-content pixels — BoardFrameRailsMask.
- * Keep close to the painted divider (was 26 and over-ate Bonus/Wild frames).
- * H/L still tuck via REEL_SYMBOL_X_NUDGE_PX under the visible gold art.
+ * Rail stroke width in desk-content units (BOARD_DESK_CONTENT space) —
+ * BoardFrameRailsMask. Keep close to the painted divider incl. its dark
+ * outline (oversizing eats Bonus/Wild frames).
+ * H/L still tuck via REEL_SYMBOL_X_NUDGE_PX under the visible rail art.
  */
-export const BOARD_RAIL_DIVIDER_CONTENT_PX = 14;
+export const BOARD_RAIL_DIVIDER_CONTENT_PX = 9;
 
 /**
  * Widen left/right playfield holes in BoardFrameRailsMask (desk overlay only).
@@ -894,9 +897,12 @@ export const getFullColumnBayCenterX = (reelIndex: number) => {
  * Portrait (800×1422):             drawer ~144 px → game-area centre ≈ y 350 → offset -150
  */
 export const BOARD_LAYOUT_OFFSETS = {
-	/** Desktop / tablet — board raised; phone portrait/landscape unchanged. */
-	desktop: { x: -20, y: -36 },
-	tablet: { x: -16, y: -26 },
+	/**
+	 * Desktop / tablet — sits lower than phone so the library-board crest
+	 * (open book + gem above the frame) clears the canvas top.
+	 */
+	desktop: { x: -20, y: 14 },
+	tablet: { x: -16, y: 24 },
 	landscape: { x: -12, y: -4 },
 	/**
 	 * Portrait x = 0: board is near full-width on phones, any shift reads as
@@ -928,10 +934,10 @@ export const BOARD_LAYOUT_SCALE = {
 export const BOARD_LAYOUT_SCALE_POPOUT = BOARD_LAYOUT_SCALE.desktop * (900 / 800);
 /**
  * Popout L/S board center offset (landscape design space 1600×900, −y = up).
- * Same x as phone landscape; y lifted so the desk sits a bit higher in the
- * 800×450 / 400×225 embeds (phone landscape keeps BOARD_LAYOUT_OFFSETS.landscape).
+ * Same x as phone landscape; y lowered so the library-board crest clears the
+ * top of the 800×450 / 400×225 embeds (phone landscape keeps BOARD_LAYOUT_OFFSETS.landscape).
  */
-export const BOARD_LAYOUT_OFFSET_POPOUT = { x: -12, y: -32 } as const;
+export const BOARD_LAYOUT_OFFSET_POPOUT = { x: -12, y: 8 } as const;
 /** Frame bezel + glow offset from board center (px): +x right, +y down. */
 export const BOARD_FRAME_OFFSET = { x: 0, y: 0 } as const;
 /** Vertical nudge (game px, +y = down) applied to all desk artwork layers (base / contour)
@@ -1339,11 +1345,6 @@ const bounceSizeRatios = { width: HIGH_SYMBOL_SIZE, height: HIGH_SYMBOL_SIZE };
  * Spine recreate on every padding swap was hitching phones mid-spin.
  * Land/win stay on spine for bounce/celebration.
  */
-const letterSizeRatios = { width: LETTER_SYMBOL_SIZE, height: LETTER_SYMBOL_SIZE };
-const telephoneSizeRatios = { width: TELEPHONE_SYMBOL_SIZE, height: TELEPHONE_SYMBOL_SIZE };
-const lighterSizeRatios = { width: LIGHTER_SYMBOL_SIZE, height: LIGHTER_SYMBOL_SIZE };
-const diamondSizeRatios = { width: DIAMOND_SYMBOL_SIZE, height: DIAMOND_SYMBOL_SIZE };
-const revolverSizeRatios = { width: REVOLVER_SYMBOL_SIZE, height: REVOLVER_SYMBOL_SIZE };
 const cartridgeSizeRatios = { width: CARTRIDGE_SYMBOL_SIZE, height: CARTRIDGE_SYMBOL_SIZE };
 const bonusSizeRatios = { width: BONUS_SYMBOL_SIZE, height: BONUS_SYMBOL_SIZE };
 
@@ -1355,7 +1356,14 @@ type RenderOpts = {
 	winAnimationName?: string;
 	landAnimationName?: string;
 	loop?: boolean;
+	/** Looping clip on track 1 over every state (e.g. H3 candle `fire` flipbook). */
+	overlayAnimationName?: string;
 };
+
+const overlayOf = (opts?: RenderOpts) =>
+	opts?.overlayAnimationName !== undefined
+		? { overlayAnimationName: opts.overlayAnimationName }
+		: {};
 
 /** Designer render clips — flat names idle / stop / win (or activation). */
 const makeRenderStatic = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) => ({
@@ -1365,6 +1373,7 @@ const makeRenderStatic = (assetKey: string, sizeRatios: RenderSizeRatios, opts?:
 	sizeRatios,
 	...(opts?.offsetX !== undefined ? { offsetX: opts.offsetX } : {}),
 	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
+	...overlayOf(opts),
 });
 const makeRenderLand = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) => ({
 	type: 'spine' as const,
@@ -1373,6 +1382,7 @@ const makeRenderLand = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: R
 	sizeRatios,
 	...(opts?.offsetX !== undefined ? { offsetX: opts.offsetX } : {}),
 	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
+	...overlayOf(opts),
 });
 /**
  * One-shot celebrate for `win` — `loop: false` so Spine `complete` resolves
@@ -1386,6 +1396,7 @@ const makeRenderWin = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: Re
 	loop: opts?.loop ?? false,
 	...(opts?.offsetX !== undefined ? { offsetX: opts.offsetX } : {}),
 	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
+	...overlayOf(opts),
 });
 /** Looping celebrate for `postWinStatic` during payline spotlight hold. */
 const makeRenderPostWin = (assetKey: string, sizeRatios: RenderSizeRatios, opts?: RenderOpts) =>
@@ -1398,10 +1409,6 @@ const makeRenderSpinSprite = (imgKey: string, sizeRatios: RenderSizeRatios, opts
 	...(opts?.offsetY !== undefined ? { offsetY: opts.offsetY } : {}),
 });
 
-const lighterOpts = { offsetY: LIGHTER_OFFSET_Y };
-const l3Opts = { offsetY: L3_OFFSET_Y };
-/** Diamond celebrate clip is named `activation` (no `win` track). */
-const diamondOpts = { winAnimationName: 'activation' };
 /** Bonus — designer clips are `land` / `activate`; XY nudge centres the AABB. */
 const bonusOpts = {
 	landAnimationName: 'land',
@@ -1410,42 +1417,42 @@ const bonusOpts = {
 	offsetY: BONUS_OFFSET_Y,
 };
 
-const h1Static = makeRenderStatic('H1', diamondSizeRatios);
-const h1Land = makeRenderLand('H1', diamondSizeRatios);
-const h1Win = makeRenderWin('H1', diamondSizeRatios, diamondOpts);
-const h1PostWin = makeRenderPostWin('H1', diamondSizeRatios, diamondOpts);
+const h1Static = makeRenderStatic('H1', H1_SIZE_RATIOS);
+const h1Land = makeRenderLand('H1', H1_SIZE_RATIOS);
+const h1Win = makeRenderWin('H1', H1_SIZE_RATIOS);
+const h1PostWin = makeRenderPostWin('H1', H1_SIZE_RATIOS);
 
-const h2Static = makeRenderStatic('H2', revolverSizeRatios);
-const h2Land = makeRenderLand('H2', revolverSizeRatios);
-const h2Win = makeRenderWin('H2', revolverSizeRatios);
-const h2PostWin = makeRenderPostWin('H2', revolverSizeRatios);
+const h2Static = makeRenderStatic('H2', H2_SIZE_RATIOS, H2_OFFSET);
+const h2Land = makeRenderLand('H2', H2_SIZE_RATIOS, H2_OFFSET);
+const h2Win = makeRenderWin('H2', H2_SIZE_RATIOS, H2_OFFSET);
+const h2PostWin = makeRenderPostWin('H2', H2_SIZE_RATIOS, H2_OFFSET);
 
-const h3Static = makeRenderStatic('H3', lighterSizeRatios, lighterOpts);
-const h3Land = makeRenderLand('H3', lighterSizeRatios, lighterOpts);
-const h3Win = makeRenderWin('H3', lighterSizeRatios, lighterOpts);
-const h3PostWin = makeRenderPostWin('H3', lighterSizeRatios, lighterOpts);
+const h3Static = makeRenderStatic('H3', H3_SIZE_RATIOS, H3_OFFSET);
+const h3Land = makeRenderLand('H3', H3_SIZE_RATIOS, H3_OFFSET);
+const h3Win = makeRenderWin('H3', H3_SIZE_RATIOS, H3_OFFSET);
+const h3PostWin = makeRenderPostWin('H3', H3_SIZE_RATIOS, H3_OFFSET);
 
-const h4Static = makeRenderStatic('H4', telephoneSizeRatios);
-const h4Land = makeRenderLand('H4', telephoneSizeRatios);
-const h4Win = makeRenderWin('H4', telephoneSizeRatios);
-const h4PostWin = makeRenderPostWin('H4', telephoneSizeRatios);
+const h4Static = makeRenderStatic('H4', H4_SIZE_RATIOS, H4_OFFSET);
+const h4Land = makeRenderLand('H4', H4_SIZE_RATIOS, H4_OFFSET);
+const h4Win = makeRenderWin('H4', H4_SIZE_RATIOS, H4_OFFSET);
+const h4PostWin = makeRenderPostWin('H4', H4_SIZE_RATIOS, H4_OFFSET);
 
-const l1Static = makeRenderStatic('L1', letterSizeRatios);
-const l2Static = makeRenderStatic('L2', letterSizeRatios);
-const l3Static = makeRenderStatic('L3', letterSizeRatios, l3Opts);
-const l4Static = makeRenderStatic('L4', letterSizeRatios);
-const l1Land = makeRenderLand('L1', letterSizeRatios);
-const l2Land = makeRenderLand('L2', letterSizeRatios);
-const l3Land = makeRenderLand('L3', letterSizeRatios, l3Opts);
-const l4Land = makeRenderLand('L4', letterSizeRatios);
-const l1Win = makeRenderWin('L1', letterSizeRatios);
-const l2Win = makeRenderWin('L2', letterSizeRatios);
-const l3Win = makeRenderWin('L3', letterSizeRatios, l3Opts);
-const l4Win = makeRenderWin('L4', letterSizeRatios);
-const l1PostWin = makeRenderPostWin('L1', letterSizeRatios);
-const l2PostWin = makeRenderPostWin('L2', letterSizeRatios);
-const l3PostWin = makeRenderPostWin('L3', letterSizeRatios, l3Opts);
-const l4PostWin = makeRenderPostWin('L4', letterSizeRatios);
+const l1Static = makeRenderStatic('L1', L1_SIZE_RATIOS, L1_OFFSET);
+const l2Static = makeRenderStatic('L2', L2_SIZE_RATIOS, L2_OFFSET);
+const l3Static = makeRenderStatic('L3', L3_SIZE_RATIOS, L3_OFFSET);
+const l4Static = makeRenderStatic('L4', L4_SIZE_RATIOS, L4_OFFSET);
+const l1Land = makeRenderLand('L1', L1_SIZE_RATIOS, L1_OFFSET);
+const l2Land = makeRenderLand('L2', L2_SIZE_RATIOS, L2_OFFSET);
+const l3Land = makeRenderLand('L3', L3_SIZE_RATIOS, L3_OFFSET);
+const l4Land = makeRenderLand('L4', L4_SIZE_RATIOS, L4_OFFSET);
+const l1Win = makeRenderWin('L1', L1_SIZE_RATIOS, L1_OFFSET);
+const l2Win = makeRenderWin('L2', L2_SIZE_RATIOS, L2_OFFSET);
+const l3Win = makeRenderWin('L3', L3_SIZE_RATIOS, L3_OFFSET);
+const l4Win = makeRenderWin('L4', L4_SIZE_RATIOS, L4_OFFSET);
+const l1PostWin = makeRenderPostWin('L1', L1_SIZE_RATIOS, L1_OFFSET);
+const l2PostWin = makeRenderPostWin('L2', L2_SIZE_RATIOS, L2_OFFSET);
+const l3PostWin = makeRenderPostWin('L3', L3_SIZE_RATIOS, L3_OFFSET);
+const l4PostWin = makeRenderPostWin('L4', L4_SIZE_RATIOS, L4_OFFSET);
 
 // Spin WebPs are letterboxed into 196² (`extractSymbolSprites.fit_square`).
 // Spine contain-fits the idle silhouette max-edge to CELL_SYMBOL_SIZE.
@@ -1465,14 +1472,14 @@ const spinSizeRatiosForContent = (contentWidthPx: number, contentHeightPx: numbe
 /** Wild / Super Wild — full parchment column. Bonus spin matches inset spine. */
 const wildSizeRatios = { width: WILD_SYMBOL_SIZE, height: WILD_SYMBOL_SIZE };
 const bonusSpinSizeRatios = { width: BONUS_BAY_FILL, height: BONUS_BAY_FILL };
-const h1Spin = makeRenderSpinSprite('H1Img', spinSizeRatiosForContent(188, 173));
-const h2Spin = makeRenderSpinSprite('H2Img', spinSizeRatiosForContent(188, 187));
-const h3Spin = makeRenderSpinSprite('H3SpinImg', spinSizeRatiosForContent(146, 188), lighterOpts);
-const h4Spin = makeRenderSpinSprite('H4Img', spinSizeRatiosForContent(188, 142));
-const l1Spin = makeRenderSpinSprite('L1Img', spinSizeRatiosForContent(188, 186));
-const l2Spin = makeRenderSpinSprite('L2Img', spinSizeRatiosForContent(188, 188));
-const l3Spin = makeRenderSpinSprite('L3Img', spinSizeRatiosForContent(161, 188), l3Opts);
-const l4Spin = makeRenderSpinSprite('L4Img', spinSizeRatiosForContent(146, 188));
+const h1Spin = makeRenderSpinSprite('H1Img', spinSizeRatiosForContent(167, 188));
+const h2Spin = makeRenderSpinSprite('H2Img', spinSizeRatiosForContent(188, 172));
+const h3Spin = makeRenderSpinSprite('H3SpinImg', spinSizeRatiosForContent(167, 188));
+const h4Spin = makeRenderSpinSprite('H4Img', spinSizeRatiosForContent(184, 188));
+const l1Spin = makeRenderSpinSprite('L1Img', spinSizeRatiosForContent(187, 181));
+const l2Spin = makeRenderSpinSprite('L2Img', spinSizeRatiosForContent(175, 187));
+const l3Spin = makeRenderSpinSprite('L3Img', spinSizeRatiosForContent(174, 187));
+const l4Spin = makeRenderSpinSprite('L4Img', spinSizeRatiosForContent(182, 187));
 const wSpin = makeRenderSpinSprite('WImg', wildSizeRatios);
 /**
  * Wild — WebP while scrolling; spine `static` idle at rest; spine `land` bounce
@@ -1509,7 +1516,7 @@ const btLand = makeRenderLand('BT', cartridgeSizeRatios);
 /**
  * Затемнение невыигрышных символов во время win-анимации.
  * Пока проигрываются paylines, все символы вне `win`/`postWinStatic`
- * получают пониженный alpha (H3/H4/B — tint, не alpha: additive glow иначе
+ * получают пониженный alpha (H/L/B — tint, не alpha: additive glow иначе
  * просвечивает доску). Флаг `winSpotlightActive` также расширяет BoardMask.
  */
 export const DIM_NON_WINNING = {
@@ -1843,8 +1850,7 @@ const mStatic = {
 const mRevealSizeRatios = { width: M_SIZE, height: M_SIZE };
 
 export const SYMBOL_INFO_MAP = {
-	// H1 (diamond): idle / stop / activation.
-	// H2 (revolver) / H3 (lighter) / H4 (telephone) / L1..L4 (A/K/Q/J): idle / stop / win.
+	// H1 (amethyst) / H2 (wand) / H3 (candle) / H4 (book) / L1..L4 (A/K/Q/J): idle / stop / win.
 	// `win` is one-shot (awaits complete); `postWinStatic` loops the same clip
 	// for the spotlight hold (remount via loop flag in ReelSymbol key).
 	H1: {

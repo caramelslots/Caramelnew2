@@ -12,15 +12,15 @@ import {
 export const LOADER_BG_PX = { width: 1920, height: 956 };
 
 /** Skeleton setup AABB from `spines/background/skeleton.json`. */
-export const SPINE_NATIVE = { width: 2079.9, height: 971.47 };
-export const SPINE_BOUNDS = { x: -1008.48, y: -492.37, width: 2079.9, height: 971.47 };
+export const SPINE_NATIVE = { width: 1922, height: 1024.69 };
+export const SPINE_BOUNDS = { x: -961, y: -470.19, width: 1922, height: 1024.69 };
 
 /**
- * Opaque street plate in world units (root × attachment scale).
+ * Opaque room plate (`background` slot) in world units (root × attachment scale).
  * Used for cover-fit so the painted plate fills the canvas (no letterbox).
  */
-const BG_ROOT_SCALE = 0.5082;
-const BG_PLATE_ATTACH_SCALE = 1.9974;
+const BG_ROOT_SCALE = 1;
+const BG_PLATE_ATTACH_SCALE = 1;
 const BG_PLATE_PX = { width: 1920, height: 940 };
 export const BG_NATIVE = {
 	width: BG_PLATE_PX.width * BG_PLATE_ATTACH_SCALE * BG_ROOT_SCALE,
@@ -28,7 +28,7 @@ export const BG_NATIVE = {
 };
 
 export const BG_Y_OFFSET = 0;
-export const BG_IDLE_ANIMATION = 'idle_final_delay2';
+export const BG_IDLE_ANIMATION = 'idle_bg';
 
 /**
  * < 1 zooms the street out horizontally so more of the scene fits.

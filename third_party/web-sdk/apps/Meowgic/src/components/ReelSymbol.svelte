@@ -66,9 +66,8 @@
 	const showMultiplier = $derived(false);
 
 	// Per-symbol win bounce. Runs for symbols whose win state shows a frozen
-	// idle spine + container scale tween (M). B (`activate`), H1 diamond
-	// (`activation`), H2 revolver / H3 lighter / H4 telephone / letter lows
-	// (`win`), W (`land` bounce) drive their own spine celebration — skip the bounce.
+	// idle spine + container scale tween (M). B (`activate`), H1–H4 / letter
+	// lows (`win`), W (`land` bounce) drive their own spine celebration — skip the bounce.
 	const usesDedicatedSpineWin = $derived(
 		symbolInfo.animationName === 'win' ||
 			symbolInfo.animationName === 'activation' ||
@@ -148,11 +147,10 @@
 	/** SW curtain open — slide this reel's symbols down under the board mask. */
 	const swDropY = new Tween(0);
 
-	/** H3/H4/B idle spines use additive glow slots — container alpha makes them
-	 *  see-through over the board. Dim via tint multiply instead (keep alpha 1). */
+	/** H/L/B idle spines use additive glow slots (backlight / stars) — container
+	 *  alpha makes them see-through over the board. Dim via tint multiply instead. */
 	const dimViaTint = $derived(
-		props.reelSymbol.rawSymbol.name === 'H3' ||
-			props.reelSymbol.rawSymbol.name === 'H4' ||
+		/^[HL][1-4]$/.test(props.reelSymbol.rawSymbol.name) ||
 			props.reelSymbol.rawSymbol.name === 'B' ||
 			props.reelSymbol.rawSymbol.name === 'BD',
 	);

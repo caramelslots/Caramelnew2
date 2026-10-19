@@ -6,7 +6,7 @@ const assetUrl = (path: string) =>
 	).href;
 
 export default {
-	/** Animated street scene — skins: day (basegame) / night (freegame). */
+	/** Animated magic-room scene (`idle_bg`) — single default skin for base + FS. */
 	mainBackground: {
 		type: 'spine',
 		src: {
@@ -14,7 +14,7 @@ export default {
 			skeleton: assetUrl('assets/spines/background/skeleton.json'),
 		},
 	},
-	/** Designer board spine — desk body + crest glow pulse (`animation`). */
+	/** Designer library-book board spine — looping `idle/idle_board` (2 atlas pages). */
 	boardFrame: {
 		type: 'spine',
 		src: {

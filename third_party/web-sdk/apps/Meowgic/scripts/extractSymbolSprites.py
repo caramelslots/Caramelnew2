@@ -34,30 +34,29 @@ SYMBOL_SIZE = 196
 # Keep in sync with `spinSizeRatiosForContent` in src/game/constants.ts
 # (alpha-bbox of each 196² WebP).
 FIT_PADDING = 0.02
+TRIM_ALPHA = 40
 
 # Atlas region name for the resting glyph inside each per-symbol skeleton.
 # Bonus (B) is a composed still — do NOT extract `frame_000` (empty gold frame only).
-ATLAS_REGION_BY_SYMBOL: dict[str, str] = {
-	"H1": "diamond",
-	"L1": "A",
-	"L2": "K",
-	"L3": "Q",
-	"L4": "J",
-}
+ATLAS_REGION_BY_SYMBOL: dict[str, str] = {}
 
 # Spin-sprite filename when it differs from the spine folder key.
 SPRITE_NAME_BY_SYMBOL: dict[str, str] = {}
 
-# Full composed stills when the atlas has no single idle glyph (H2 = crossed
-# revolvers). H1 designer still includes the sparkle star that sits on a
-# separate spine attachment. H3 = lighter idle from designer_assets/json.
+# Composed designer stills (`designer_assets/symbols/<name>/<name>.png`, with
+# glyph shadow). Atlases only hold split parts / FX, so stills always win.
+DESIGNER_SYMBOLS_ROOT = DESIGNER_ROOT / "symbols"
 DESIGNER_STILL_BY_SYMBOL: dict[str, Path] = {
-	"H1": DESIGNER_ROOT / "H1" / "H1_static.webp",
-	"H2": DESIGNER_ROOT / "H2" / "H2_static.webp",
-	"H3": DESIGNER_ROOT / "json" / "lighter-idle_0.png",
-	# Full composed J with under-hook shadow. Atlas `J` region is cropped;
-	# source already has transparency — do not black-flood (eats the shadow).
-	"L4": DESIGNER_ROOT / "L4" / "L4_static.webp",
+	"H1": DESIGNER_SYMBOLS_ROOT / "ametist" / "ametist.png",
+	"H2": DESIGNER_SYMBOLS_ROOT / "wand_fin" / "wand_fin.png",
+	"H3": DESIGNER_SYMBOLS_ROOT / "candle" / "candle.png",
+	# Spin still for H3 — same candle (key kept for SYMBOL_INFO_MAP).
+	"H3Spin": DESIGNER_SYMBOLS_ROOT / "candle" / "candle.png",
+	"H4": DESIGNER_SYMBOLS_ROOT / "book" / "book.png",
+	"L1": DESIGNER_SYMBOLS_ROOT / "a" / "a.png",
+	"L2": DESIGNER_SYMBOLS_ROOT / "k" / "k.png",
+	"L3": DESIGNER_SYMBOLS_ROOT / "q" / "q.png",
+	"L4": DESIGNER_SYMBOLS_ROOT / "j" / "j.png",
 }
 
 def parse_atlas(atlas_path: Path) -> tuple[str, dict[str, dict]]:
@@ -140,9 +139,13 @@ def fit_square(
 	padding: float = FIT_PADDING,
 	bg: tuple[int, int, int, int] = (0, 0, 0, 0),
 ) -> Image.Image:
-	"""Alpha-trim and center into a transparent square canvas."""
+	"""Alpha-trim and center into a transparent square canvas.
+
+	Trim ignores near-transparent pixels (alpha ≤ TRIM_ALPHA) — soft shadow
+	tails (A / K) otherwise inflate the box and shrink the glyph.
+	"""
 	im = im.convert("RGBA")
-	bbox = im.getbbox()
+	bbox = im.getchannel("A").point(lambda a: 255 if a > TRIM_ALPHA else 0).getbbox()
 	if not bbox:
 		return Image.new("RGBA", (size, size), bg)
 	cropped = im.crop(bbox)
@@ -231,26 +234,12 @@ def extract() -> None:
 			continue
 		save_sprite(extract_from_atlas(symbol, region), symbol)
 
-	# H4 is a composed still (atlas only has mesh parts) — strip baked black
-	# letterbox, then fit_square like every other paying spin sprite. Skipping
-	# the re-fit left vertical padding so H4 read smaller than idle Spine.
-	for symbol in ("H4",):
-		src = SPRITE_DIRS[0] / f"{symbol}.webp"
-		if not src.is_file():
-			print(f"  skip {symbol}: missing {src}")
-			continue
-		cleared = clear_letterbox_black(Image.open(src))
-		save_sprite(fit_square(cleared), symbol)
-		print(f"  {symbol}: cleared letterbox + fit_square")
-
-	# H3.webp is the open still. Do not overwrite it here.
-	spin_still = DESIGNER_ROOT / "render_lighter_new" / "lighter-stop_0.png"
-	if spin_still.is_file():
-		raw = clear_letterbox_black(Image.open(spin_still))
-		print(f"  H3Spin: Spine idle still {spin_still}")
-		save_sprite(fit_square(raw), "H3Spin")
-	else:
-		print(f"  skip H3Spin: missing {spin_still}")
+	# Content bbox inside each 196² sprite → `spinSizeRatiosForContent(w, h)`.
+	for symbol in DESIGNER_STILL_BY_SYMBOL:
+		out = SPRITE_DIRS[0] / f"{SPRITE_NAME_BY_SYMBOL.get(symbol, symbol)}.webp"
+		bbox = Image.open(out).getchannel("A").point(lambda a: 255 if a > TRIM_ALPHA else 0).getbbox()
+		if bbox:
+			print(f"  {symbol}: content {bbox[2] - bbox[0]}x{bbox[3] - bbox[1]}")
 
 	print("done.")
 

@@ -21,19 +21,15 @@ export type SymbolDevGroup = {
 	label: string;
 	title: string;
 	/**
-	 * SpineProvider fit height (main-layout px). Letter skeletons are ~2603 tall
-	 * with ~1306 glyph art — larger fit so the letter reads at ~board-symbol size.
+	 * SpineProvider fit height (main-layout px) — inflate when the glyph is a
+	 * small part of the skeleton AABB so it reads at ~board-symbol size.
 	 */
 	previewHeight: number;
 	clips: readonly SymbolDevClip[];
 };
 
-/** Letter / prop glyph ≪ skeleton height → inflate fit so art fills the preview. */
-const LETTER_PREVIEW_HEIGHT = 440;
-const TELEPHONE_PREVIEW_HEIGHT = 520;
-const LIGHTER_PREVIEW_HEIGHT = 480;
-const DIAMOND_PREVIEW_HEIGHT = 460;
-const REVOLVER_PREVIEW_HEIGHT = 480;
+/** Magic-library H/L skeletons are ≈ their art box — no inflate needed. */
+const HL_PREVIEW_HEIGHT = 240;
 
 const renderClips = (
 	assetKey: string,
@@ -47,58 +43,58 @@ const renderClips = (
 export const SYMBOL_DEV_PREVIEW_GROUPS: readonly SymbolDevGroup[] = [
 	{
 		id: 'H1',
-		label: 'H1 Dia',
-		title: 'High 1 — diamond (idle / stop / activation)',
-		previewHeight: DIAMOND_PREVIEW_HEIGHT,
-		clips: renderClips('H1', 'activation'),
+		label: 'H1 Ame',
+		title: 'High 1 — amethyst (idle / stop / win)',
+		previewHeight: HL_PREVIEW_HEIGHT,
+		clips: renderClips('H1'),
 	},
 	{
 		id: 'H2',
-		label: 'H2 Rev',
-		title: 'High 2 — revolver (idle / stop / win)',
-		previewHeight: REVOLVER_PREVIEW_HEIGHT,
+		label: 'H2 Wand',
+		title: 'High 2 — wand (idle / stop / win)',
+		previewHeight: HL_PREVIEW_HEIGHT,
 		clips: renderClips('H2'),
 	},
 	{
 		id: 'H3',
-		label: 'H3 Lit',
-		title: 'High 3 — lighter (idle / stop / win, render_lighter_new)',
-		previewHeight: LIGHTER_PREVIEW_HEIGHT,
+		label: 'H3 Cndl',
+		title: 'High 3 — candle (idle / stop / win)',
+		previewHeight: HL_PREVIEW_HEIGHT,
 		clips: renderClips('H3'),
 	},
 	{
 		id: 'H4',
-		label: 'H4 Tel',
-		title: 'High 4 — telephone (idle / stop / win)',
-		previewHeight: TELEPHONE_PREVIEW_HEIGHT,
+		label: 'H4 Book',
+		title: 'High 4 — book (idle / stop / win)',
+		previewHeight: HL_PREVIEW_HEIGHT,
 		clips: renderClips('H4'),
 	},
 	{
 		id: 'L1',
 		label: 'L1 A',
 		title: 'Low L1 — Ace (idle / stop / win)',
-		previewHeight: LETTER_PREVIEW_HEIGHT,
+		previewHeight: HL_PREVIEW_HEIGHT,
 		clips: renderClips('L1'),
 	},
 	{
 		id: 'L2',
 		label: 'L2 K',
 		title: 'Low L2 — King (idle / stop / win)',
-		previewHeight: LETTER_PREVIEW_HEIGHT,
+		previewHeight: HL_PREVIEW_HEIGHT,
 		clips: renderClips('L2'),
 	},
 	{
 		id: 'L3',
 		label: 'L3 Q',
 		title: 'Low L3 — Queen (idle / stop / win)',
-		previewHeight: LETTER_PREVIEW_HEIGHT,
+		previewHeight: HL_PREVIEW_HEIGHT,
 		clips: renderClips('L3'),
 	},
 	{
 		id: 'L4',
 		label: 'L4 J',
 		title: 'Low L4 — Jack (idle / stop / win)',
-		previewHeight: LETTER_PREVIEW_HEIGHT,
+		previewHeight: HL_PREVIEW_HEIGHT,
 		clips: renderClips('L4'),
 	},
 	{
