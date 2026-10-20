@@ -35,7 +35,7 @@ type MainLayoutLike = {
 };
 
 /** Fine optical nudge inside the plate (fraction of pulled nameplate height, + = down). */
-const WIN_IN_PLATE_Y_NUDGE_FRAC = 0.78;
+const WIN_IN_PLATE_Y_NUDGE_FRAC = 1.8;
 const WIN_IN_PLATE_X_NUDGE_FRAC = 0;
 
 /** Font size as a fraction of on-screen nameplate height (proxima-nova matches FS intro). */
