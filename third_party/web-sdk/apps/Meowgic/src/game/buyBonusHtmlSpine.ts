@@ -73,11 +73,17 @@ export const buyBonusSpineUrls = (variant: BuyBonusSpineVariant) => {
 	};
 };
 
-/** Shared white mascot (same files as main-screen `mascotCat`) — not under buyBonus/normal. */
+/** Same wizard cat as the main mascot — not under buyBonus/normal. */
 export const BUY_BONUS_NORMAL_MASCOT_FILES = {
-	json: 'white/mascot_cat.json',
-	atlas: 'white/mascot_cat.atlas',
-	images: ['white/mascot_cat.png'],
+	json: 'wizard/mascot_cat_baked_wand_particles.json',
+	atlas: 'wizard/mascot_cat_baked_wand_particles.atlas',
+	images: [
+		'wizard/mascot_cat_baked_wand_particles.webp',
+		'wizard/mascot_cat_baked_wand_particles_2.webp',
+		'wizard/mascot_cat_baked_wand_particles_3.webp',
+		'wizard/mascot_cat_baked_wand_particles_4.webp',
+		'wizard/mascot_cat_baked_wand_particles_5.webp',
+	],
 } as const;
 
 export const BUY_BONUS_NORMAL_MASCOT_ANIM = 'idle';

@@ -22,6 +22,8 @@ type AtlasCap = { assetKey: string; maxEdge: number };
 const PHONE_ATLAS_CAPS: readonly AtlasCap[] = [
 	{ assetKey: 'boardFrame', maxEdge: PHONE_SPINE_ATLAS_MAX_EDGE },
 	{ assetKey: 'mainBackground', maxEdge: PHONE_SPINE_ATLAS_MAX_EDGE },
+	{ assetKey: 'bgPlatform', maxEdge: PHONE_SPINE_ATLAS_MAX_EDGE },
+	{ assetKey: 'bgTable', maxEdge: PHONE_SPINE_ATLAS_MAX_EDGE },
 	/** Tir flip shares the 4K target_board atlas — cap before Stage E hit. */
 	{ assetKey: 'targetBoardFlip', maxEdge: PHONE_SPINE_ATLAS_MAX_EDGE },
 	{ assetKey: 'H1', maxEdge: PHONE_SPINE_ATLAS_MAX_EDGE_TIGHT },

@@ -1,0 +1,69 @@
+{
+"skeleton": { "hash": "Hto9J5KxfcI", "spine": "4.3.26", "x": 124, "y": -470.1877, "width": 837, "height": 320 },
+"bones": [
+	{ "name": "root", "y": 0.8123169 },
+	{ "name": "stage", "parent": "root", "x": 542.5, "y": -311 }
+],
+"slots": [
+	{ "name": "stage_shadow", "bone": "stage", "attachment": "stage_shadow", "blend": "multiply" },
+	{ "name": "stage", "bone": "stage", "attachment": "stage_purple" },
+	{ "name": "stage2", "bone": "stage", "attachment": "stage_green" }
+],
+"skins": [
+	{
+		"name": "default",
+		"attachments": {
+			"stage_shadow": {
+				"stage_shadow": { "x": -352, "y": -86, "width": 131, "height": 148 }
+			}
+		}
+	},
+	{
+		"name": "green",
+		"attachments": {
+			"stage2": {
+				"stage_green": {
+					"name": "stage",
+					"type": "mesh",
+					"path": "stage_green",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 1, 2, 3, 1, 3, 0 ],
+					"vertices": [ 418.5, -160.0, -418.5, -160.0, -418.5, 160.0, 418.5, 160.0 ],
+					"hull": 4
+				}
+			}
+		}
+	},
+	{
+		"name": "purple",
+		"attachments": {
+			"stage": {
+				"stage_purple": {
+					"name": "stage",
+					"type": "mesh",
+					"uvs": [ 1, 1, 0, 1, 0, 0, 1, 0 ],
+					"triangles": [ 1, 2, 3, 1, 3, 0 ],
+					"vertices": [ 418.5, -160.0, -418.5, -160.0, -418.5, 160.0, 418.5, 160.0 ],
+					"hull": 4
+				}
+			}
+		}
+	}
+],
+"animations": {
+	"idle/candle": {},
+	"idle/idle_bg": {},
+	"idle/lamps": {},
+	"idle/orb": {},
+	"idle/orb2": {},
+	"idle/particles": {},
+	"idle/pen": {},
+	"reaction/bg_reaction": {},
+	"reaction/bg_reaction2": {},
+	"reaction/candle": {},
+	"reaction/lamps": {},
+	"reaction/orb_reaction": {},
+	"reaction/particles_reaction": {},
+	"reaction/pen": {}
+}
+}

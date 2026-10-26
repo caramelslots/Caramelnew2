@@ -1,0 +1,11 @@
+bg_platform.webp
+size:1024,1024
+filter:Linear,Linear
+scale:0.75
+stage
+bounds:2,245,628,240
+stage_green
+bounds:100,487,626,239
+stage_shadow
+bounds:2,616,96,110
+offsets:0,0,98,111

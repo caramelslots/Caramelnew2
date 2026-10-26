@@ -43,7 +43,6 @@
 		type MascotScreenBox,
 	} from '../game/mascotHtmlSpine';
 	import MascotDogSpineController from './MascotDogSpineController.svelte';
-	import MascotWizardSpineController from './MascotWizardSpineController.svelte';
 	import MascotGunMuzzleTracker from './MascotGunMuzzleTracker.svelte';
 	import MascotSpineController from './MascotSpineController.svelte';
 	import BulletFlySpineLayer from './BulletFlySpineLayer.svelte';
@@ -84,36 +83,17 @@
 
 	const forceCatAnim = $derived(devPreview.mascotAnimation);
 	const forceDogAnim = $derived(devPreview.mascotDogAnimation);
-	const forceWizardAnim = $derived(devPreview.mascotWizardAnimation);
-	const wizardAssetsReady = $derived(Boolean(pixiApp.stateApp.loadedAssets?.mascotCatWizard));
 	const previewDogOnPrimary = $derived(forceDogAnim !== null && !duelFlanking);
-	/**
-	 * Only swap the primary seat once the wizard atlas is in `loadedAssets`.
-	 * Otherwise the cat vanishes while EnableFeatureGpuMemory is still fetching —
-	 * Meow Magic / wizard DEV toggles looked flaky every other click.
-	 */
-	const previewWizardOnPrimary = $derived(
-		forceWizardAnim !== null &&
-			!duelFlanking &&
-			!previewDogOnPrimary &&
-			wizardAssetsReady,
-	);
 
 	const catSpineKey = $derived(context.stateGame.mascotCatSpineKey);
-	const primarySpineKey = $derived(
-		previewDogOnPrimary
-			? 'mascotDog'
-			: previewWizardOnPrimary
-				? 'mascotCatWizard'
-				: catSpineKey,
-	);
+	const primarySpineKey = $derived(previewDogOnPrimary ? 'mascotDog' : catSpineKey);
 	const catAssetsReady = $derived(Boolean(pixiApp.stateApp.loadedAssets?.[primarySpineKey]));
 	const dogAssetsReady = $derived(Boolean(pixiApp.stateApp.loadedAssets?.mascotDog));
 
 	const mascotAnimToken = $derived(context.stateGame.mascotAnimToken);
 	const mounted = $derived(
 		gameEntrance.preloadContent &&
-			(showCatLayout || forceCatAnim !== null || previewWizardOnPrimary),
+			(showCatLayout || forceCatAnim !== null),
 	);
 
 	const pose = $derived((context.stateGame.mascotPose || 'idle') as MascotPose);
@@ -140,14 +120,13 @@
 		};
 	});
 
-	/** Wizard uses the same cat viewport so DEV preview sits on the cat seat. */
 	const primaryViewport = $derived(
 		previewDogOnPrimary ? MASCOT_DOG_SPINE_VIEWPORT : MASCOT_SPINE_VIEWPORT,
 	);
 
 	const catBox = $derived.by((): MascotScreenBox | null => {
 		if (!mounted || !showCatLayout) {
-			if (!forceCatAnim && !previewDogOnPrimary && !previewWizardOnPrimary) return null;
+			if (!forceCatAnim && !previewDogOnPrimary) return null;
 		}
 		if (duelFlanking && duelLayoutBoxes) return duelLayoutBoxes.cat;
 
@@ -194,20 +173,7 @@
 	const PRESS_COOLDOWN_MS = 1000;
 
 	const catPressHit = $derived.by(() => {
-		if (!catBox || previewDogOnPrimary || previewWizardOnPrimary) return null;
-		const poly = spinePressPolyToLocal(catBox, MASCOT_SPINE_VIEWPORT, MASCOT_CAT_PRESS_POLY);
-		return {
-			x: poly.x,
-			y: poly.y,
-			width: poly.width,
-			height: poly.height,
-			borderRadius: 0,
-			hitArea: new Polygon(poly.hitFlat),
-		};
-	});
-
-	const previewWizardPressHit = $derived.by(() => {
-		if (!catBox || !previewWizardOnPrimary) return null;
+		if (!catBox || previewDogOnPrimary) return null;
 		const poly = spinePressPolyToLocal(catBox, MASCOT_SPINE_VIEWPORT, MASCOT_CAT_PRESS_POLY);
 		return {
 			x: poly.x,
@@ -322,7 +288,7 @@
 	});
 </script>
 
-{#if mounted && catTransform && (showCatLayout || forceCatAnim || previewWizardOnPrimary) && catAssetsReady && duelPairReady}
+{#if mounted && catTransform && (showCatLayout || forceCatAnim) && catAssetsReady && duelPairReady}
 	<Container
 		x={catTransform.x}
 		y={catTransform.y}
@@ -339,20 +305,6 @@
 				borderRadius={catPressHit.borderRadius}
 				backgroundAlpha={0.001}
 				hitArea={catPressHit.hitArea}
-				eventMode="static"
-				cursor="pointer"
-				zIndex={2}
-				onpointertap={() => onVocalPress(false)}
-			/>
-		{:else if previewWizardPressHit}
-			<Rectangle
-				x={previewWizardPressHit.x}
-				y={previewWizardPressHit.y}
-				width={previewWizardPressHit.width}
-				height={previewWizardPressHit.height}
-				borderRadius={previewWizardPressHit.borderRadius}
-				backgroundAlpha={0.001}
-				hitArea={previewWizardPressHit.hitArea}
 				eventMode="static"
 				cursor="pointer"
 				zIndex={2}
@@ -385,12 +337,6 @@
 				<MascotDogSpineController
 					pose="idle"
 					forceAnim={forceDogAnim}
-					timeScale={mascotTimeScale}
-					paused={idlePaused}
-				/>
-			{:else if previewWizardOnPrimary}
-				<MascotWizardSpineController
-					forceAnim={forceWizardAnim}
 					timeScale={mascotTimeScale}
 					paused={idlePaused}
 				/>

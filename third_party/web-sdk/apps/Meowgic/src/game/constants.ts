@@ -606,8 +606,8 @@ const symbolFit = (skeletonHeight: number, bodySpan: number) => {
 	return { width: ratio, height: ratio };
 };
 const H1_SIZE_RATIOS = symbolFit(232, 232);
-const H2_SIZE_RATIOS = symbolFit(167, 179.8);
-const H2_OFFSET = { offsetX: -8, offsetY: -7 };
+const H2_SIZE_RATIOS = symbolFit(168.96, 178.1);
+const H2_OFFSET = { offsetX: -5, offsetY: -4 };
 const H3_SIZE_RATIOS = symbolFit(204, 255.1);
 /** Candle flame lives only in the `fire` flipbook — setup pose has no flame. */
 const H3_OFFSET = { offsetX: 2, offsetY: -3, overlayAnimationName: 'fire' };
@@ -901,8 +901,8 @@ export const BOARD_LAYOUT_OFFSETS = {
 	 * Desktop / tablet — sits lower than phone so the library-board crest
 	 * (open book + gem above the frame) clears the canvas top.
 	 */
-	desktop: { x: -20, y: 14 },
-	tablet: { x: -16, y: 24 },
+	desktop: { x: -20, y: 26 },
+	tablet: { x: -16, y: 36 },
 	landscape: { x: -12, y: -4 },
 	/**
 	 * Portrait x = 0: board is near full-width on phones, any shift reads as
@@ -920,8 +920,8 @@ export const BOARD_LAYOUT_OFFSETS = {
  * Applied in stateGame boardLayout() on top of mainLayout.scale.
  */
 export const BOARD_LAYOUT_SCALE = {
-	desktop: 1.22,
-	tablet: 1.14,
+	desktop: 1.19,
+	tablet: 1.11,
 	landscape: 1.16,
 } as const;
 
@@ -937,7 +937,7 @@ export const BOARD_LAYOUT_SCALE_POPOUT = BOARD_LAYOUT_SCALE.desktop * (900 / 800
  * Same x as phone landscape; y lowered so the library-board crest clears the
  * top of the 800×450 / 400×225 embeds (phone landscape keeps BOARD_LAYOUT_OFFSETS.landscape).
  */
-export const BOARD_LAYOUT_OFFSET_POPOUT = { x: -12, y: 8 } as const;
+export const BOARD_LAYOUT_OFFSET_POPOUT = { x: -12, y: 18 } as const;
 /** Frame bezel + glow offset from board center (px): +x right, +y down. */
 export const BOARD_FRAME_OFFSET = { x: 0, y: 0 } as const;
 /** Vertical nudge (game px, +y = down) applied to all desk artwork layers (base / contour)

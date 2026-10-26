@@ -309,11 +309,8 @@ export const stateGame = $state({
 	duelNightArmed: false,
 	/** Target mode for the in-flight cloud transition (set for the whole anim). */
 	transitionGameType: undefined as GameType | undefined,
-	/**
-	 * Active Pixi cat spine key (gray base / white FS|duel).
-	 * Portrait duel parks both skins — see EnableMascotCatSkinMemory.
-	 */
-	mascotCatSpineKey: 'mascotCatGray' as 'mascotCat' | 'mascotCatGray',
+	/** Active Pixi cat spine key. One wizard cat for base, FS, and duel. */
+	mascotCatSpineKey: 'mascotCat' as const,
 	// Big-win overlay — dim / idle gates. HUD stays above canvas (CSS-dimmed).
 	winOverlayActive: false,
 	// Matching CanvasSizeRectangle alpha (big win 0.5 / FS end 0.85).

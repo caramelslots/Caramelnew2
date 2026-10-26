@@ -11,12 +11,15 @@ import {
 
 export const LOADER_BG_PX = { width: 1920, height: 956 };
 
-/** Skeleton setup AABB from `spines/background/skeleton.json`. */
-export const SPINE_NATIVE = { width: 1922, height: 1024.69 };
-export const SPINE_BOUNDS = { x: -961, y: -470.19, width: 1922, height: 1024.69 };
+/**
+ * Combined scene AABB from the split designer export (`bg_only` plate is the
+ * cover reference; platform + table share the same root origin).
+ */
+export const SPINE_NATIVE = { width: 1920, height: 940 };
+export const SPINE_BOUNDS = { x: -960, y: -469.21, width: 1920, height: 940 };
 
 /**
- * Opaque room plate (`background` slot) in world units (root × attachment scale).
+ * Opaque room plate (`background` / `background2` skin slots) in world units.
  * Used for cover-fit so the painted plate fills the canvas (no letterbox).
  */
 const BG_ROOT_SCALE = 1;
@@ -28,7 +31,26 @@ export const BG_NATIVE = {
 };
 
 export const BG_Y_OFFSET = 0;
-export const BG_IDLE_ANIMATION = 'idle_bg';
+
+/** Basegame / bonus theme skins on each background piece. */
+export type BackgroundThemeSkin = 'purple' | 'green';
+
+/** Room plate idle (track 0 on `mainBackground` / `bgTable`). */
+export const BG_IDLE_ANIMATION = 'idle/idle_bg';
+
+/** Extra looping tracks on `mainBackground` (room lamps + particles). */
+export const BG_ONLY_IDLE_TRACKS = [
+	{ trackIndex: 1, animationName: 'idle/lamps' },
+	{ trackIndex: 2, animationName: 'idle/particles' },
+] as const;
+
+/** Extra looping tracks on `bgTable` (desk props). */
+export const BG_TABLE_IDLE_TRACKS = [
+	{ trackIndex: 1, animationName: 'idle/candle' },
+	{ trackIndex: 2, animationName: 'idle/orb' },
+	{ trackIndex: 3, animationName: 'idle/pen' },
+	{ trackIndex: 4, animationName: 'idle/lamps' },
+] as const;
 
 /**
  * < 1 zooms the street out horizontally so more of the scene fits.

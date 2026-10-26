@@ -509,14 +509,24 @@ const pickSkeletonDataCacheKey = (species: BuyBonusPickSpecies) =>
 const pickMascotUrls = (species: BuyBonusPickSpecies) => {
 	const isDog = species === 'dog';
 	return {
-		skeleton: resolveMascotSpineUrl(isDog ? 'dog/mascot_dog.json' : 'white/mascot_cat.json'),
-		atlas: resolveMascotSpineUrl(isDog ? 'dog/mascot_dog.atlas' : 'white/mascot_cat.atlas'),
+		skeleton: resolveMascotSpineUrl(
+			isDog ? 'dog/mascot_dog.json' : 'wizard/mascot_cat_baked_wand_particles.json',
+		),
+		atlas: resolveMascotSpineUrl(
+			isDog ? 'dog/mascot_dog.atlas' : 'wizard/mascot_cat_baked_wand_particles.atlas',
+		),
 		images: isDog
 			? [
 					resolveMascotSpineUrl('dog/mascot_dog.png'),
 					resolveMascotSpineUrl('dog/mascot_dog_2.png'),
 				]
-			: [resolveMascotSpineUrl('white/mascot_cat.png')],
+			: [
+					resolveMascotSpineUrl('wizard/mascot_cat_baked_wand_particles.webp'),
+					resolveMascotSpineUrl('wizard/mascot_cat_baked_wand_particles_2.webp'),
+					resolveMascotSpineUrl('wizard/mascot_cat_baked_wand_particles_3.webp'),
+					resolveMascotSpineUrl('wizard/mascot_cat_baked_wand_particles_4.webp'),
+					resolveMascotSpineUrl('wizard/mascot_cat_baked_wand_particles_5.webp'),
+				],
 	};
 };
 
@@ -656,8 +666,10 @@ const loadPickMascot = (species: BuyBonusPickSpecies) => {
 			if (species === 'cat') {
 				try {
 					spine.skeleton.setAttachment('smile', null);
+					spine.skeleton.setAttachment('board', null);
 				} catch {
 					spine.skeleton.findSlot('smile')?.setAttachment(null);
+					spine.skeleton.findSlot('board')?.setAttachment(null);
 				}
 			}
 			spine.update(0);

@@ -17,8 +17,6 @@ import { evictSpineAssetUrls, evictSpineAtlasAndPages } from './spineAtlasEvict'
 
 export const FS_CARTRIDGE_KEYS = ['BT', 'BTImg'] as const;
 export const DUEL_MASCOT_KEYS = ['mascotDog'] as const;
-/** Wizard cat — DEV preview only (not used in normal gameplay yet). */
-export const WIZARD_MASCOT_KEYS = ['mascotCatWizard'] as const;
 /** Column anticipation VFX — basegame B/BD slow only. */
 export const FS_OUTLINE_KEYS = ['outlineReel'] as const;
 /** FS / duel outro panel (`total_win` / fs total) — not base VRAM. */
@@ -28,9 +26,7 @@ export const FS_POPUP_KEYS = ['fsPopup'] as const;
 export const BATCH4_DEFERRED_KEYS = [
 	...FS_CARTRIDGE_KEYS,
 	...DUEL_MASCOT_KEYS,
-	...WIZARD_MASCOT_KEYS,
 	...FS_POPUP_KEYS,
-	'mascotCat',
 	'shotBullet',
 	'targetBoardFlip',
 ] as const;
@@ -63,10 +59,6 @@ export const shouldKeepDuelMascotGpu = (isPortrait = false) => {
 		stateModal.modal?.name === 'buyDuelPick'
 	);
 };
-
-/** Keep wizard atlas resident while DEV force-plays a wizard clip. */
-export const shouldKeepWizardMascotGpu = () =>
-	devPreview.mascotWizardAnimation !== null;
 
 /** bonusReel outline — drop in FS, keep on base (and DEV pin). */
 export const shouldKeepOutlineReelGpu = () =>
@@ -259,15 +251,6 @@ export const ensureDuelMascotReady = async (stateApp: LoadedAssetsBag) => {
 	const loaded = (stateApp.loadedAssets ?? {}) as Record<string, unknown>;
 	if (loaded.mascotDog) return;
 	const patch = await ensureFeatureKeysLoaded(DUEL_MASCOT_KEYS, loaded);
-	if (!patch) return;
-	stateApp.loadedAssets = { ...(stateApp.loadedAssets ?? {}), ...patch };
-};
-
-/** Ensure wizard atlas is in loadedAssets before DEV swaps the primary mascot seat. */
-export const ensureWizardMascotReady = async (stateApp: LoadedAssetsBag) => {
-	const loaded = (stateApp.loadedAssets ?? {}) as Record<string, unknown>;
-	if (loaded.mascotCatWizard) return;
-	const patch = await ensureFeatureKeysLoaded(WIZARD_MASCOT_KEYS, loaded);
 	if (!patch) return;
 	stateApp.loadedAssets = { ...(stateApp.loadedAssets ?? {}), ...patch };
 };

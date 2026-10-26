@@ -4,18 +4,19 @@
 
 	import { getContext } from '../game/context';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
+	import type { BackgroundThemeSkin } from '../game/neonBackgroundLayout';
 	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
 
 	type Props = {
-		/** `day` = basegame (light), `night` = freegame / FS (dark). */
-		skin: 'day' | 'night';
+		/** `purple` = basegame, `green` = freegame / FS / duel bonus room. */
+		skin: BackgroundThemeSkin;
 	};
 
 	const { skin }: Props = $props();
 	const spine = getContextSpine();
 	const context = getContext();
 
-	const applySkin = (skinName: 'day' | 'night') => {
+	const applySkin = (skinName: BackgroundThemeSkin) => {
 		const combined = new Skin('catBackground');
 		const defaultSkin = spine.skeleton.data.findSkin('default');
 		const themeSkin = spine.skeleton.data.findSkin(skinName);

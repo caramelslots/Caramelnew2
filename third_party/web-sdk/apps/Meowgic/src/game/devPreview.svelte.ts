@@ -1,8 +1,5 @@
-import type {
-	MascotDevPreview,
-	MascotDogSpineAnimation,
-	MascotWizardSpineAnimation,
-} from './mascotHtmlSpine';
+import type { BoardDevSelection } from './boardDevPreview';
+import type { MascotDevPreview, MascotDogSpineAnimation } from './mascotHtmlSpine';
 import type { SymbolDevSelection } from './symbolDevPreview';
 
 /*
@@ -20,19 +17,19 @@ export const devPreview = $state({
 	mascotAnimation: null as MascotDevPreview | null,
 	/**
 	 * Force a dog Spine clip on the primary mascot slot (replaces the cat).
-	 * Mutually exclusive with `mascotAnimation` / `mascotWizardAnimation` in DevButtons.
+	 * Mutually exclusive with `mascotAnimation` in DevButtons.
 	 */
 	mascotDogAnimation: null as MascotDogSpineAnimation | null,
-	/**
-	 * Force a wizard Spine clip on the primary mascot slot (replaces the cat).
-	 * Mutually exclusive with `mascotAnimation` / `mascotDogAnimation` in DevButtons.
-	 */
-	mascotWizardAnimation: null as MascotWizardSpineAnimation | null,
 	/**
 	 * Force a spine clip onto matching board cells (null = normal SYMBOL_INFO_MAP).
 	 * DevButtons paints the board with the symbol, then getSymbolInfo reads this.
 	 */
 	symbolAnim: null as SymbolDevSelection | null,
+	/**
+	 * Force one board-frame Spine clip on track 0 (null = stacked production idles).
+	 * Re-click bumps `nonce` so one-shots (reaction) replay.
+	 */
+	boardAnim: null as BoardDevSelection | null,
 	/** Keep revolver drum HTML overlay visible (FS-only UI) for bullet-fly QA. */
 	forceShowDrum: false,
 	/**

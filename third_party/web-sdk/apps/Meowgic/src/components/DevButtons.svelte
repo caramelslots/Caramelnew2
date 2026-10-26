@@ -38,8 +38,8 @@
 		MASCOT_GUN_START_MS,
 		MASCOT_GUN_STAT_IDLE_MS,
 		MASCOT_LOAD_MS,
-		MASCOT_WIZARD_DEV_PREVIEW_ITEMS,
 	} from '../game/mascotHtmlSpine';
+	import { BOARD_DEV_PREVIEW_CLIPS } from '../game/boardDevPreview';
 	import { SYMBOL_DEV_PREVIEW_GROUPS } from '../game/symbolDevPreview';
 	import {
 		BOARD_DIMENSIONS,
@@ -68,8 +68,6 @@
 	import { dumpPixiTextureMemoryToConsole } from '../game/pixiTextureMemory';
 	import { pixiFpsHud, setFpsOverlayVisible } from '../game/pixiFpsHud.svelte';
 	import { getContextApp } from 'pixi-svelte';
-	import { ensureDemoStageArtInPixi, evictDemoStageArtFromPixi } from '../game/demoStageArt';
-	import { ensureWizardMascotReady } from '../game/featureGpuMemory';
 	import DevAccordion from './DevAccordion.svelte';
 
 	import baseEvents from '../stories/data/base_events';
@@ -114,8 +112,7 @@
 		| 'books'
 		| 'paws'
 		| 'superwild'
-		| 'board'
-		| 'characters'
+		| 'animations'
 		| 'stage'
 		| 'wins'
 		| 'ui';
@@ -124,9 +121,12 @@
 		{ id: 'books', title: 'Math books', keys: 'book spin bonus duel boost bullet shoot fs tour' },
 		{ id: 'paws', title: 'Paw coins', keys: 'paw pb ps pg coin hat' },
 		{ id: 'superwild', title: 'Super Wild', keys: 'sw curtain sticky wild column drum' },
-		{ id: 'board', title: 'Board', keys: 'reel speed bonus outline' },
-		{ id: 'characters', title: 'Characters', keys: 'cat dog mascot symbol anim clip' },
-		{ id: 'stage', title: 'Stage', keys: 'frame chrome duel target shoot cabinet bullet fly drum demo art background board' },
+		{
+			id: 'animations',
+			title: 'Animations',
+			keys: 'cat dog mascot symbol anim clip board idle bookmarks clothes key pages reaction characters slow reel columns bonus outline',
+		},
+		{ id: 'stage', title: 'Stage', keys: 'chrome duel target shoot cabinet bullet fly drum background board fs' },
 		{ id: 'wins', title: 'Wins', keys: 'win level precision hud stack payline coin' },
 		{ id: 'ui', title: 'UI & loading', keys: 'loading cards progress fs intro outro duel modal funds transition' },
 	];
@@ -138,7 +138,9 @@
 			const parsed = JSON.parse(raw) as unknown;
 			if (!Array.isArray(parsed)) return new Set(DEFAULT_OPEN_ACCORDIONS);
 			const allowed = new Set(ACCORDION_META.map((m) => m.id));
-			const next = parsed.filter((id): id is AccordionId => allowed.has(id as AccordionId));
+			const next = parsed
+				.map((id) => (id === 'characters' ? 'animations' : id))
+				.filter((id): id is AccordionId => allowed.has(id as AccordionId));
 			return new Set(next);
 		} catch {
 			return new Set(DEFAULT_OPEN_ACCORDIONS);
@@ -237,13 +239,25 @@
 		devPreview.symbolAnim = null;
 	};
 
+	const playBoardClip = (clipId: string) => {
+		const clip = BOARD_DEV_PREVIEW_CLIPS.find((c) => c.id === clipId);
+		if (!clip) return;
+		const current = devPreview.boardAnim;
+		devPreview.boardAnim = {
+			clipId: clip.id,
+			animationName: clip.animationName,
+			loop: clip.loop,
+			nonce: current?.clipId === clip.id ? current.nonce + 1 : 0,
+		};
+	};
+
+	const closeBoardAnimPreview = () => {
+		devPreview.boardAnim = null;
+	};
+
 	/** Desktop fly: N cartridges → cat hand → gun_start (same as bulletCollect). */
 	const DRUM_MAX_PREVIEW = 6;
 	let bulletFlyBusy = $state(false);
-
-	const previewBoardFramePulse = () => {
-		eventEmitter.broadcast({ type: 'boardFramePulse' });
-	};
 
 	const previewBulletFly = async (count = 1) => {
 		if (bulletFlyBusy) return;
@@ -431,43 +445,6 @@
 		if (next) {
 			if (devPreview.forceShowDuelLayout) toggleDuelLayoutPreview(false);
 			if (devPreview.forceShowTargetBoard) toggleTargetBoardPreview(false);
-		}
-	};
-
-	/** Designer demo street + desk stills — art QA vs live spines. */
-	let demoStageArtBusy = $state(false);
-	const toggleDemoStageArt = async () => {
-		if (demoStageArtBusy) return;
-		if (devPreview.forceShowDemoStageArt) {
-			devPreview.forceShowDemoStageArt = false;
-			return;
-		}
-		demoStageArtBusy = true;
-		try {
-			// Always reload board still (crop / export may change under the same path).
-			await evictDemoStageArtFromPixi(appContext.stateApp);
-			await ensureDemoStageArtInPixi(appContext.stateApp);
-			devPreview.forceShowDemoStageArt = true;
-		} catch (error) {
-			// eslint-disable-next-line no-console
-			console.error('[DEV] demo stage art failed to load:', error);
-			devPreview.forceShowDemoStageArt = false;
-		} finally {
-			demoStageArtBusy = false;
-		}
-	};
-
-	/** Pin wizard keep-flag, then await atlas so the primary seat never blanks. */
-	const selectWizardPreview = async (anim: (typeof MASCOT_WIZARD_DEV_PREVIEW_ITEMS)[number]['id']) => {
-		devPreview.mascotAnimation = null;
-		devPreview.mascotDogAnimation = null;
-		devPreview.mascotWizardAnimation = anim;
-		try {
-			await ensureWizardMascotReady(appContext.stateApp);
-		} catch (error) {
-			// eslint-disable-next-line no-console
-			console.error('[DEV] wizard mascot failed to load:', error);
-			devPreview.mascotWizardAnimation = null;
 		}
 	};
 
@@ -2374,15 +2351,37 @@
 				</DevAccordion>
 			{/if}
 
-			{#if showAccordion('board')}
+			{#if showAccordion('animations')}
 				<DevAccordion
-					title="Board"
-					open={accordionForcedOpen || isAccOpen('board')}
-					onToggle={() => toggleAccordion('board')}
+					title="Animations"
+					open={accordionForcedOpen || isAccOpen('animations')}
+					onToggle={() => toggleAccordion('animations')}
 				>
 			<section>
-				<h4>Reel Speed</h4>
+				<h4>Board Anims</h4>
+				<p class="subhint">
+					Force one desk clip (track 0). Reset restores stacked production idles.
+					Re-click replays one-shots. Slow Reels / All Columns stay board QA helpers.
+				</p>
 				<div class="grid">
+					{#each BOARD_DEV_PREVIEW_CLIPS as clip (clip.id)}
+						<button
+							type="button"
+							class:active={devPreview.boardAnim?.clipId === clip.id}
+							title={clip.title}
+							onclick={() => playBoardClip(clip.id)}
+						>
+							{clip.label}
+						</button>
+					{/each}
+					<button
+						type="button"
+						class:active={devPreview.boardAnim === null}
+						title="Restore stacked idle/idle_board + bookmarks/clothes/key/pages"
+						onclick={closeBoardAnimPreview}
+					>
+						Reset Board
+					</button>
 					<button
 						type="button"
 						class:active={devPreview.slowReelScroll}
@@ -2391,15 +2390,6 @@
 					>
 						{devPreview.slowReelScroll ? 'Slow Reels: ON' : 'Slow Reels'}
 					</button>
-				</div>
-			</section>
-
-			<section>
-				<h4>Bonus Reel</h4>
-				<p class="subhint">
-					Spine <code>assets/spines/bonusReel</code> — outline VFX on every column (in → idle).
-				</p>
-				<div class="grid">
 					<button
 						type="button"
 						class:active={devPreview.forceShowBonusReelAllColumns}
@@ -2414,15 +2404,7 @@
 					</button>
 				</div>
 			</section>
-				</DevAccordion>
-			{/if}
 
-			{#if showAccordion('characters')}
-				<DevAccordion
-					title="Characters"
-					open={accordionForcedOpen || isAccOpen('characters')}
-					onToggle={() => toggleAccordion('characters')}
-				>
 			<section>
 				<h4>Cat Mascot Anims</h4>
 				<div class="grid">
@@ -2433,7 +2415,6 @@
 							title={item.title}
 							onclick={() => {
 								devPreview.mascotDogAnimation = null;
-								devPreview.mascotWizardAnimation = null;
 								devPreview.mascotAnimation = item.id;
 							}}
 						>
@@ -2443,13 +2424,11 @@
 					<button
 						type="button"
 						class:active={devPreview.mascotAnimation === null &&
-							devPreview.mascotDogAnimation === null &&
-							devPreview.mascotWizardAnimation === null}
+							devPreview.mascotDogAnimation === null}
 						title="Вернуть управление позами (idle/load/aim/…)"
 						onclick={() => {
 							devPreview.mascotAnimation = null;
 							devPreview.mascotDogAnimation = null;
-							devPreview.mascotWizardAnimation = null;
 						}}
 					>
 						Reset Pose
@@ -2468,7 +2447,6 @@
 							title={item.title}
 							onclick={() => {
 								devPreview.mascotAnimation = null;
-								devPreview.mascotWizardAnimation = null;
 								devPreview.mascotDogAnimation = item.id;
 							}}
 						>
@@ -2484,38 +2462,6 @@
 						}}
 					>
 						Reset Dog
-					</button>
-				</div>
-			</section>
-
-			<section>
-				<h4>Wizard Mascot Anims</h4>
-				<p class="subhint">
-					New wizard cat (`mascot_cat_baked_wand_particles`). Replaces the cat on the
-					primary slot — gameplay still uses the normal cat.
-				</p>
-				<div class="grid">
-					{#each MASCOT_WIZARD_DEV_PREVIEW_ITEMS as item (item.id)}
-						<button
-							type="button"
-							class:active={devPreview.mascotWizardAnimation === item.id}
-							title={item.title}
-							onclick={() => {
-								void selectWizardPreview(item.id);
-							}}
-						>
-							{item.label}
-						</button>
-					{/each}
-					<button
-						type="button"
-						class:active={devPreview.mascotWizardAnimation === null}
-						title="Hide wizard preview — restore cat pose control"
-						onclick={() => {
-							devPreview.mascotWizardAnimation = null;
-						}}
-					>
-						Reset Wizard
 					</button>
 				</div>
 			</section>
@@ -2568,49 +2514,6 @@
 					open={accordionForcedOpen || isAccOpen('stage')}
 					onToggle={() => toggleAccordion('stage')}
 				>
-			<section>
-				<h4>Board Frame</h4>
-				<p class="subhint">Desk crest glow (`animation`) — same pulse as lines / BT / paw.</p>
-				<div class="grid">
-					<button
-						type="button"
-						title="Play boardFramePulse once"
-						onclick={previewBoardFramePulse}
-					>
-						Pulse Once
-					</button>
-					<button
-						type="button"
-						title="Play boardFramePulse three times with a short gap"
-						onclick={() => {
-							eventEmitter.broadcast({ type: 'boardFramePulse', times: 3 });
-						}}
-					>
-						Pulse ×3
-					</button>
-				</div>
-			</section>
-
-			<section>
-				<h4>Demo Art</h4>
-				<p class="subhint">Swap street + desk spines for designer stills (`демо фон` / `board демо`).</p>
-				<div class="grid">
-					<button
-						type="button"
-						class:active={devPreview.forceShowDemoStageArt}
-						disabled={demoStageArtBusy}
-						title="Replace background + board with designer demo PNGs"
-						onclick={toggleDemoStageArt}
-					>
-						{demoStageArtBusy
-							? 'Loading…'
-							: devPreview.forceShowDemoStageArt
-								? 'Hide Demo Art'
-								: 'Show Demo Art'}
-					</button>
-				</div>
-			</section>
-
 			<section>
 				<h4>FS Board Chrome</h4>
 				<p class="subhint">Desktop: spinboard (left) + barrel rim/drum (right). Phone: autoplay plaque top-centre, drum bottom-left.</p>

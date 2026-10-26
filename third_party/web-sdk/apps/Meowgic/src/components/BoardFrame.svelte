@@ -2,7 +2,7 @@
 	export type EmitterEventBoardFrame = {
 		/**
 		 * Crest glow pulse — lines, FS bullet collect, or paw resolve.
-		 * The library-book board ships no pulse clip, so BoardFrame ignores it.
+		 * Board ships `reaction/reaction`, but BoardFrame does not play it yet.
 		 */
 		type: 'boardFramePulse';
 		/** Duel: pulse only this desk. Omit for base (single board). */
@@ -34,6 +34,9 @@
 	import { devPreview } from '../game/devPreview.svelte';
 	import BoardFrameSlotFilter from './BoardFrameSlotFilter.svelte';
 	import BoardFrameRailsMask from './BoardFrameRailsMask.svelte';
+
+	/** DEV: force a single board clip instead of the stacked production idles. */
+	const forcedBoardAnim = $derived(devPreview.boardAnim);
 
 	type BoardLayout = {
 		x: number;
@@ -74,7 +77,14 @@
 		'little',
 	] as const;
 
+	/** Main desk breathe + layered prop idles from the designer export. */
 	const BOARD_IDLE_ANIMATION = 'idle/idle_board';
+	const BOARD_IDLE_EXTRA_TRACKS = [
+		{ trackIndex: 1, animationName: 'idle/bookmarks' },
+		{ trackIndex: 2, animationName: 'idle/clothes' },
+		{ trackIndex: 3, animationName: 'idle/key' },
+		{ trackIndex: 4, animationName: 'idle/pages' },
+	] as const;
 
 	const props: Props = $props();
 	const layer = $derived(props.layer ?? 'base');
@@ -172,7 +182,24 @@
 					{#if layer === 'base'}
 						<BoardFrameSlotFilter visibleSlots={BASE_VISIBLE_SLOTS} />
 					{/if}
-					<SpineTrack trackIndex={0} animationName={BOARD_IDLE_ANIMATION} loop />
+					{#if forcedBoardAnim}
+						{#key `${forcedBoardAnim.clipId}:${forcedBoardAnim.nonce}`}
+							<SpineTrack
+								trackIndex={0}
+								animationName={forcedBoardAnim.animationName}
+								loop={forcedBoardAnim.loop}
+							/>
+						{/key}
+					{:else}
+						<SpineTrack trackIndex={0} animationName={BOARD_IDLE_ANIMATION} loop />
+						{#each BOARD_IDLE_EXTRA_TRACKS as track (track.trackIndex)}
+							<SpineTrack
+								trackIndex={track.trackIndex}
+								animationName={track.animationName}
+								loop
+							/>
+						{/each}
+					{/if}
 				</SpineProvider>
 			{/if}
 		</Container>

@@ -378,7 +378,7 @@
 			current === 'idle' || current === 'idle_blink' || current === 'idle_ears';
 		// Short mix — hand_palm fade-in in hat is ~0.45s and must stay visible.
 		// Hard-cut from idle_gyn: gun slots would otherwise wipe the hand before hat keys in.
-		playClip('hat', false, { holdEnd: true, soft, mix: soft ? 0.08 : undefined });
+		playClip('idle', false, { holdEnd: true, soft, mix: soft ? 0.08 : undefined });
 	};
 
 	const applyForceAnimation = (animation: MascotDevPreview) => {
@@ -390,7 +390,7 @@
 		resetIdleVariants();
 		clearForceIdle3();
 
-		if (animation === 'hat') {
+		if ((animation as string) === 'hat') {
 			playForceIdle3Sequence();
 			return;
 		}
@@ -409,6 +409,7 @@
 		resetIdleVariants();
 
 		const playback = MASCOT_POSE_PLAYBACK[next];
+		if (!playback.animation) return;
 		const current = player.animationState?.getCurrent(0)?.animation?.name;
 		const fromSafeIdle =
 			prev === 'idle' &&
@@ -488,15 +489,15 @@
 						const name = entry.animation?.name as MascotSpineAnimation | undefined;
 
 						// DEV: hat mirrors in-game hatCatch → hold → hatOn.
-						if (activeForceAnim === 'hat') {
-							if (name !== 'hat') return;
+						if ((activeForceAnim as string | null) === 'hat') {
+							if ((name as string | undefined) !== 'hat') return;
 							if (forceIdle3Phase === 'catch') {
 								holdCurrentClipEnd();
 								forceIdle3Phase = 'hold';
 								forceIdle3HoldTimer = setTimeout(() => {
-									if (activeForceAnim !== 'hat' || !player) return;
+									if ((activeForceAnim as string | null) !== 'hat' || !player) return;
 									forceIdle3Phase = 'on';
-									playClip('hat', false, { reverse: true });
+									playClip('idle', false, { reverse: true });
 								}, MASCOT_COIN_FLY_WAIT_MS);
 								return;
 							}

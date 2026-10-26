@@ -19,13 +19,17 @@ export const LOADER_INTRO_CLOUDS_URL = resolveGameStaticUrl(
 /** @deprecated Replaced by intro sky + roofs — kept for Pixi layout reference. */
 export const LOADER_STATIC_DAY_URL = resolveGameStaticUrl('assets/sprites/background/day.webp');
 
-/** Street background Spine for Pixi `mainBackground` (batch 1 + early HTTP warm). */
+/** Street background spines for Pixi (batch 1 + early HTTP warm). */
 export const LOADER_BG_SPINE_URLS = [
-	resolveGameStaticUrl('assets/spines/background/skeleton.json'),
-	resolveGameStaticUrl('assets/spines/background/skeleton.atlas'),
-	resolveGameStaticUrl('assets/spines/background/skeleton.webp'),
-	resolveGameStaticUrl('assets/spines/background/skeleton_2.webp'),
-	resolveGameStaticUrl('assets/spines/background/skeleton_3.webp'),
+	resolveGameStaticUrl('assets/spines/background/only/bg_only.json'),
+	resolveGameStaticUrl('assets/spines/background/only/bg_only.atlas'),
+	resolveGameStaticUrl('assets/spines/background/only/bg_only.webp'),
+	resolveGameStaticUrl('assets/spines/background/platform/bg_platform.json'),
+	resolveGameStaticUrl('assets/spines/background/platform/bg_platform.atlas'),
+	resolveGameStaticUrl('assets/spines/background/platform/bg_platform.webp'),
+	resolveGameStaticUrl('assets/spines/background/table/bg_table.json'),
+	resolveGameStaticUrl('assets/spines/background/table/bg_table.atlas'),
+	resolveGameStaticUrl('assets/spines/background/table/bg_table.webp'),
 ] as const;
 
 let backgroundPreloadStarted = false;

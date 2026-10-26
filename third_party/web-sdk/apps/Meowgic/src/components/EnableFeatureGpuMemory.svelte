@@ -17,9 +17,7 @@
 		shouldKeepDuelMascotGpu,
 		shouldKeepFsPopupGpu,
 		shouldKeepOutlineReelGpu,
-		shouldKeepWizardMascotGpu,
 		unloadFeatureKeysAsync,
-		WIZARD_MASCOT_KEYS,
 	} from '../game/featureGpuMemory';
 	import assets from '../game/assets';
 	import { spineAssetsPossiblyCached } from '../game/spineAtlasEvict';
@@ -41,7 +39,6 @@
 			upcoming === 'freegame' ||
 			context.stateGame.freeSpinIntroActive;
 		const wantDog = shouldKeepDuelMascotGpu(isPortrait);
-		const wantWizard = shouldKeepWizardMascotGpu();
 		const wantOutline = shouldKeepOutlineReelGpu();
 		const wantFsPopup = shouldKeepFsPopupGpu();
 		void context.stateGame.winOverlayActive;
@@ -106,21 +103,6 @@
 					}
 				}
 			}
-
-			if (gen !== syncGen) return;
-			if (wantWizard) {
-				const patch = await ensureFeatureKeysLoaded(
-					WIZARD_MASCOT_KEYS,
-					(app.stateApp.loadedAssets ?? {}) as Record<string, unknown>,
-				);
-				if (gen !== syncGen) return;
-				if (patch) {
-					app.stateApp.loadedAssets = { ...app.stateApp.loadedAssets, ...patch };
-				}
-			}
-			// Wizard is DEV-only and multi-page — do not Assets.unload on hide.
-			// Rapid Meow Magic toggles were racing unload vs reload (10s+ hangs,
-			// button stuck on meowMagicBusy). Atlas stays resident after first load.
 
 			if (gen !== syncGen) return;
 			if (wantFsPopup) {

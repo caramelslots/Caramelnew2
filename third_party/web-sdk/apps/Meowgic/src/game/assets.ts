@@ -6,15 +6,38 @@ const assetUrl = (path: string) =>
 	).href;
 
 export default {
-	/** Animated magic-room scene (`idle_bg`) — single default skin for base + FS. */
+	/**
+	 * Magic-room back plate + lamps + particles (`idle/idle_bg` + lamps/particles).
+	 * Skins: `default` + `purple` (base) / `green` (bonus / FS / duel).
+	 * Composited with `bgPlatform` + `bgTable` at the same spine origin.
+	 */
 	mainBackground: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/background/skeleton.atlas'),
-			skeleton: assetUrl('assets/spines/background/skeleton.json'),
+			atlas: assetUrl('assets/spines/background/only/bg_only.atlas'),
+			skeleton: assetUrl('assets/spines/background/only/bg_only.json'),
 		},
 	},
-	/** Designer library-book board spine — looping `idle/idle_board` (2 atlas pages). */
+	/** Stage under the board — purple/green skins, static (no idle motion). */
+	bgPlatform: {
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/background/platform/bg_platform.atlas'),
+			skeleton: assetUrl('assets/spines/background/platform/bg_platform.json'),
+		},
+	},
+	/** Left desk props (candle, orb, pen) — purple/green + living idle tracks. */
+	bgTable: {
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/background/table/bg_table.atlas'),
+			skeleton: assetUrl('assets/spines/background/table/bg_table.json'),
+		},
+	},
+	/**
+	 * Designer library-book board — `idle/idle_board` + bookmarks/clothes/key/pages
+	 * (single atlas page). `reaction/reaction` is available but not wired yet.
+	 */
 	boardFrame: {
 		type: 'spine',
 		src: {
@@ -332,21 +355,16 @@ export default {
 			scale: 0.1,
 		},
 	},
-	/** Full-body cat — white (freegame / duel). Ref. designer_assets/cat_render/white. */
+	/** Wizard cat (`designer_assets/export_cat_wizard_v2`). Only cat mascot. */
 	mascotCat: {
 		type: 'spine',
 		src: {
-			atlas: assetUrl('assets/spines/mascot/white/mascot_cat.atlas'),
-			skeleton: assetUrl('assets/spines/mascot/white/mascot_cat.json'),
-			scale: 1,
-		},
-	},
-	/** Full-body cat — gray (basegame). Ref. designer_assets/gray. */
-	mascotCatGray: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl('assets/spines/mascot/gray/mascot_cat.atlas'),
-			skeleton: assetUrl('assets/spines/mascot/gray/mascot_cat.json'),
+			atlas: assetUrl(
+				'assets/spines/mascot/wizard/mascot_cat_baked_wand_particles.atlas',
+			),
+			skeleton: assetUrl(
+				'assets/spines/mascot/wizard/mascot_cat_baked_wand_particles.json',
+			),
 			scale: 1,
 		},
 	},
@@ -356,19 +374,6 @@ export default {
 		src: {
 			atlas: assetUrl('assets/spines/mascot/dog/mascot_dog.atlas'),
 			skeleton: assetUrl('assets/spines/mascot/dog/mascot_dog.json'),
-			scale: 1,
-		},
-	},
-	/** Wizard cat mascot (`designer_assets/export` → wand / particles). DEV preview only for now. */
-	mascotCatWizard: {
-		type: 'spine',
-		src: {
-			atlas: assetUrl(
-				'assets/spines/mascot/wizard/mascot_cat_baked_wand_particles.atlas',
-			),
-			skeleton: assetUrl(
-				'assets/spines/mascot/wizard/mascot_cat_baked_wand_particles.json',
-			),
 			scale: 1,
 		},
 	},

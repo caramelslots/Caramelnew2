@@ -9,9 +9,12 @@
 	import { catBackgroundZoom } from '../game/catAnticipationBoardZoom.svelte';
 	import {
 		BG_IDLE_ANIMATION,
+		BG_ONLY_IDLE_TRACKS,
+		BG_TABLE_IDLE_TRACKS,
 		getBackgroundPixiCoverScreenBox,
 		getBackgroundPixiScale,
 		getLoaderLiftGameSpineY,
+		type BackgroundThemeSkin,
 	} from '../game/neonBackgroundLayout';
 	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
 	import { stateDuel } from '../game/stateDuel.svelte';
@@ -25,6 +28,7 @@
 	/**
 	 * Spine origin (0,0) is scene center — no anchor / width / height.
 	 * Cover-fit scale so the street fills the canvas (object-fit: cover).
+	 * All three pieces share this transform (designer world positions).
 	 */
 	const spineProps = $derived.by(() => {
 		const canvas = context.stateLayoutDerived.canvasSizes();
@@ -65,10 +69,10 @@
 		(context.stateGame.gameType === 'freegame' || showDuelBackground) && !hidePixiStreet,
 	);
 	const isPhone = $derived(isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType()));
-	/** Invisible night spine, constructed before the steam so the clip doesn't hitch. */
+	/** Invisible green spine, constructed before the steam so the clip doesn't hitch. */
 	const nightPrewarm = $derived(context.stateGame.duelNightArmed && !showFeatureBackground);
 	/**
-	 * Keep the day spine resident across the duel swap. Dropping and
+	 * Keep the purple spine resident across the duel swap. Dropping and
 	 * recreating it under the steam was part of the remaining transition hitch.
 	 * Phone holds it for the whole duel; desktop only through the clip, so a
 	 * hidden street is not drawn for the rest of the mode.
@@ -89,7 +93,7 @@
 	/**
 	 * Under the steam the crossfade is invisible, and a 1s overlap kept two
 	 * full street spines alive on the same frames as the duel mount.
-	 * Outside a transition, day/night still crossfade.
+	 * Outside a transition, purple/green still crossfade.
 	 */
 	const bgFadeMs = $derived(
 		context.stateLayout.showLoadingScreen || context.stateGame.transitionActive ? 0 : SECOND,
@@ -102,6 +106,49 @@
 
 	const backgroundZoom = $derived(catBackgroundZoom.current);
 </script>
+
+{#snippet streetPieces(theme: BackgroundThemeSkin, timeScale: number)}
+	<!-- Draw order: room plate → stage → desk (matches designer layering). -->
+	<SpineProvider key="mainBackground" {...spineProps}>
+		<BackgroundSkinController skin={theme} />
+		<StreetOffscreenCull />
+		<SpineTrack
+			trackIndex={0}
+			animationName={BG_IDLE_ANIMATION}
+			loop
+			timeScale={timeScale}
+		/>
+		{#each BG_ONLY_IDLE_TRACKS as track (track.trackIndex)}
+			<SpineTrack
+				trackIndex={track.trackIndex}
+				animationName={track.animationName}
+				loop
+				timeScale={timeScale}
+			/>
+		{/each}
+	</SpineProvider>
+	<SpineProvider key="bgPlatform" {...spineProps}>
+		<BackgroundSkinController skin={theme} />
+	</SpineProvider>
+	<SpineProvider key="bgTable" {...spineProps}>
+		<BackgroundSkinController skin={theme} />
+		<StreetOffscreenCull />
+		<SpineTrack
+			trackIndex={0}
+			animationName={BG_IDLE_ANIMATION}
+			loop
+			timeScale={timeScale}
+		/>
+		{#each BG_TABLE_IDLE_TRACKS as track (track.trackIndex)}
+			<SpineTrack
+				trackIndex={track.trackIndex}
+				animationName={track.animationName}
+				loop
+				timeScale={timeScale}
+			/>
+		{/each}
+	</SpineProvider>
+{/snippet}
 
 {#if !hidePixiStreet}
 	<Rectangle {...context.stateLayoutDerived.canvasSizes()} backgroundColor={0x000000} zIndex={-3} />
@@ -124,16 +171,7 @@
 	<FadeContainer show={showBaseBackground} persistent={keepDayMounted} duration={bgFadeMs} zIndex={-2}>
 		<Container x={canvasCenter.x} y={canvasCenter.y} scale={backgroundZoom}>
 			<Container x={-canvasCenter.x} y={-canvasCenter.y}>
-				<SpineProvider key="mainBackground" {...spineProps}>
-					<BackgroundSkinController skin="day" />
-					<StreetOffscreenCull />
-					<SpineTrack
-						trackIndex={0}
-						animationName={BG_IDLE_ANIMATION}
-						loop
-						timeScale={showBaseBackground ? streetTimeScale : 0}
-					/>
-				</SpineProvider>
+				{@render streetPieces('purple', showBaseBackground ? streetTimeScale : 0)}
 			</Container>
 		</Container>
 	</FadeContainer>
@@ -146,16 +184,7 @@
 	>
 		<Container x={canvasCenter.x} y={canvasCenter.y} scale={backgroundZoom}>
 			<Container x={-canvasCenter.x} y={-canvasCenter.y}>
-				<SpineProvider key="mainBackground" {...spineProps}>
-					<BackgroundSkinController skin="night" />
-					<StreetOffscreenCull />
-					<SpineTrack
-						trackIndex={0}
-						animationName={BG_IDLE_ANIMATION}
-						loop
-						timeScale={showFeatureBackground ? streetTimeScale : 0}
-					/>
-				</SpineProvider>
+				{@render streetPieces('green', showFeatureBackground ? streetTimeScale : 0)}
 			</Container>
 		</Container>
 	</FadeContainer>

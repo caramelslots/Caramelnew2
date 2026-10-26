@@ -7,24 +7,16 @@
 	import { getContextSpine } from 'pixi-svelte';
 
 	import {
-		MASCOT_COIN_FLY_WAIT_MS,
-		MASCOT_GUN_DRAW_SWING_MS,
-		MASCOT_GUN_HOLSTER_MS,
-		MASCOT_HAT_DURATION_S,
-		MASCOT_HAT_HOLD_TIME_S,
-		MASCOT_IDLE_GYN_FLIP_MS,
 		MASCOT_IDLE_VARIANTS,
 		MASCOT_POSE_PLAYBACK,
-		REVOLVER_IN_ATTACK_MS,
 		nextMascotIdleVariantDelayMs,
 		pickMascotIdleVariant,
+		resolveMascotSpineClip,
 		sealMascotHatBrimSeam,
 		type MascotDevPreview,
 		type MascotPose,
 		type MascotSpineAnimation,
 	} from '../game/mascotHtmlSpine';
-	import { eventEmitter } from '../game/eventEmitter';
-	import { stateGame } from '../game/stateGame.svelte';
 
 	type Props = {
 		pose: MascotPose;
@@ -46,11 +38,8 @@
 	let idleVariantTimer: ReturnType<typeof setTimeout> | undefined;
 	let idleVariantArmed = false;
 	let idleVariantPlaying = false;
-	let forceIdle3Phase: 'catch' | 'hold' | 'on' | null = null;
-	let forceIdle3HoldTimer: ReturnType<typeof setTimeout> | undefined;
 	/** Win like/applause already played for this pose — don't restart after idle return. */
 	let settledWinReaction: MascotPose | undefined;
-	let revolverWhooshTimers: ReturnType<typeof setTimeout>[] = [];
 
 	const hideSmileSlot = () => {
 		const skeleton = spine.skeleton;
@@ -62,14 +51,14 @@
 		}
 	};
 
-	/** Spine `gun_start` embeds a cartridge @~0.73s — hide it; Pixi fly owns the bullet. */
-	const hideGunStartCartridge = () => {
+	/** Designer reference board baked into the wizard export. Not part of the slot. */
+	const hideReferenceBoard = () => {
 		const skeleton = spine.skeleton;
 		if (!skeleton) return;
 		try {
-			skeleton.setAttachment('cartridge2', null);
+			skeleton.setAttachment('board', null);
 		} catch {
-			skeleton.findSlot('cartridge2')?.setAttachment(null);
+			skeleton.findSlot('board')?.setAttachment(null);
 		}
 	};
 
@@ -89,10 +78,13 @@
 		const state = spine.state;
 		if (!skeleton || !state) return;
 
+		const clip = resolveMascotSpineClip(animation);
+		if (!skeleton.data.findAnimation(clip)) return;
+
 		state.timeScale = props.timeScale;
 
 		if (opts?.reverse) {
-			const entry = state.setAnimation(0, animation, false);
+			const entry = state.setAnimation(0, clip, false);
 			if (!entry) return;
 			entry.reverse = true;
 			entry.timeScale = 1;
@@ -100,9 +92,9 @@
 			if (opts.animationEnd != null) entry.animationEnd = opts.animationEnd;
 			if (opts.mix != null) entry.mixDuration = opts.mix;
 			state.apply(skeleton);
-		hideSmileSlot();
-		if (animation === 'gun_start') hideGunStartCartridge();
-		return;
+			hideSmileSlot();
+			hideReferenceBoard();
+			return;
 		}
 
 		if (!opts?.soft) {
@@ -111,7 +103,7 @@
 			if (
 				loop &&
 				current?.loop &&
-				current.animation?.name === animation &&
+				current.animation?.name === clip &&
 				!opts?.reverse &&
 				opts?.animationEnd == null
 			) {
@@ -120,7 +112,7 @@
 			state.clearTracks();
 			skeleton.setToSetupPose();
 		}
-		const entry = state.setAnimation(0, animation, loop);
+		const entry = state.setAnimation(0, clip, loop);
 		if (!entry) return;
 		entry.timeScale = 1;
 		entry.reverse = false;
@@ -128,77 +120,7 @@
 		if (opts?.mix != null) entry.mixDuration = opts.mix;
 		state.apply(skeleton);
 		hideSmileSlot();
-		if (animation === 'gun_start') hideGunStartCartridge();
-		armRevolverWhooshes(animation);
-	};
-
-	const clearRevolverWhooshes = () => {
-		for (const timer of revolverWhooshTimers) clearTimeout(timer);
-		revolverWhooshTimers = [];
-	};
-
-	/** `sfx_revolver_in` on the flip itself, not on the earlier scale-up. */
-	const scheduleRevolverWhoosh = (atMs: number) => {
-		const delay = Math.max(0, atMs - REVOLVER_IN_ATTACK_MS);
-		revolverWhooshTimers.push(
-			setTimeout(() => {
-				eventEmitter.broadcast({
-					type: 'soundOnce',
-					name: 'sfx_revolver_in',
-					forcePlay: true,
-				});
-			}, delay),
-		);
-	};
-
-	const armRevolverWhooshes = (animation: MascotSpineAnimation) => {
-		clearRevolverWhooshes();
-		if (animation === 'gun_shot_stat_idle') {
-			// Target-shoot round: the whoosh is the holster, not the draw.
-			if (stateGame.drumShootActive) return;
-			scheduleRevolverWhoosh(MASCOT_GUN_DRAW_SWING_MS);
-			return;
-		}
-		if (animation === 'gun_shot_end' && stateGame.drumShootActive) {
-			scheduleRevolverWhoosh(MASCOT_GUN_HOLSTER_MS);
-			return;
-		}
-		if (animation === 'idle_gyn') {
-			scheduleRevolverWhoosh(MASCOT_IDLE_GYN_FLIP_MS);
-		}
-	};
-
-	const holdCurrentClipEnd = () => {
-		const entry = spine.state?.getCurrent(0);
-		if (!entry) return;
-		entry.trackTime = entry.animationEnd;
-		entry.timeScale = 0;
-		entry.reverse = false;
-	};
-
-	/** Unpause truncated `hat` and let it finish forward (return is in the clip). */
-	const resumeHatForward = () => {
-		const entry = spine.state?.getCurrent(0);
-		const fullEnd = entry?.animation?.duration ?? MASCOT_HAT_DURATION_S;
-		if (entry?.animation?.name === 'hat') {
-			entry.reverse = false;
-			entry.animationEnd = fullEnd;
-			entry.trackTime = Math.min(entry.trackTime, MASCOT_HAT_HOLD_TIME_S);
-			entry.timeScale = 1;
-			spine.state?.apply(spine.skeleton);
-			hideSmileSlot();
-			return;
-		}
-		// Fallback if the track was lost — seek to hold and play out.
-		playClip('hat', false, { soft: true });
-		const next = spine.state?.getCurrent(0);
-		if (!next) return;
-		next.trackTime = MASCOT_HAT_HOLD_TIME_S;
-		next.animationEnd = next.animation?.duration ?? MASCOT_HAT_DURATION_S;
-		next.timeScale = 1;
-		next.reverse = false;
-		spine.state?.apply(spine.skeleton);
-		hideSmileSlot();
+		hideReferenceBoard();
 	};
 
 	const clearIdleVariantTimer = () => {
@@ -211,16 +133,7 @@
 
 	const resetIdleVariants = () => {
 		clearIdleVariantTimer();
-		clearRevolverWhooshes();
 		idleVariantPlaying = false;
-	};
-
-	const clearForceIdle3 = () => {
-		if (forceIdle3HoldTimer !== undefined) {
-			clearTimeout(forceIdle3HoldTimer);
-			forceIdle3HoldTimer = undefined;
-		}
-		forceIdle3Phase = null;
 	};
 
 	const scheduleIdleVariant = () => {
@@ -272,7 +185,8 @@
 		spine.state?.addAnimation(0, 'idle', true, 0);
 	};
 
-	const onIdleFlavourComplete = (name: MascotSpineAnimation) => {
+	const onIdleFlavourComplete = (fileName: MascotSpineAnimation) => {
+		const name = resolveMascotSpineClip(fileName);
 		if (activeForceAnim || activePose !== 'idle') return false;
 		if (idleVariantPlaying && (MASCOT_IDLE_VARIANTS as readonly string[]).includes(name)) {
 			idleVariantPlaying = false;
@@ -286,38 +200,12 @@
 		return false;
 	};
 
-	/**
-	 * Soft-mix into `hat` only from rest idle (blink/ears ok).
-	 * Mid-`idle_gyn` leaves gun finger slots on / left-hand off — soft mix into
-	 * hat clears gun attachments before hat fingers key in (~0.5s) → missing hand.
-	 */
-	const canSoftMixIntoHat = () => {
-		const name = spine.state?.getCurrent(0)?.animation?.name;
-		return name === 'idle' || name === 'idle_blink' || name === 'idle_ears';
-	};
-
-	const playForceHatSequence = () => {
-		forceIdle3Phase = 'catch';
-		const soft = canSoftMixIntoHat();
-		playClip('hat', false, {
-			holdEnd: true,
-			soft,
-			mix: soft ? 0.08 : undefined,
-			animationEnd: MASCOT_HAT_HOLD_TIME_S,
-		});
-	};
-
 	const applyForceAnimation = (animation: MascotDevPreview) => {
 		if (animation === activeForceAnim) return;
 		activeForceAnim = animation;
 		activePose = undefined;
 		settledWinReaction = undefined;
 		resetIdleVariants();
-		clearForceIdle3();
-		if (animation === 'hat') {
-			playForceHatSequence();
-			return;
-		}
 		playClip(animation, true);
 	};
 
@@ -344,29 +232,19 @@
 		// Same pose already playing (e.g. clap during win ladder) — don't restart.
 		if (next === activePose && playback.animation === 'applause') return;
 
+		const clip = playback.animation;
+		// Gun / load / hat have no clip on this skeleton — leave the current track.
+		if (!clip) {
+			activePose = next;
+			return;
+		}
+
 		activePose = next;
 		if (next === 'idle') settledWinReaction = undefined;
 		resetIdleVariants();
 
-		// Hat: pause at hold, then resume the SAME track forward (no reverse / restart).
-		if (next === 'hatCatch') {
-			// Hard-cut from idle_gyn (gun hand) so hat finger attachments apply cleanly.
-			const soft = prev === 'idle' && canSoftMixIntoHat();
-			playClip('hat', false, {
-				holdEnd: true,
-				soft,
-				mix: soft ? 0.08 : undefined,
-				animationEnd: MASCOT_HAT_HOLD_TIME_S,
-			});
-			return;
-		}
-		if (next === 'hatOn') {
-			resumeHatForward();
-			return;
-		}
-
 		const fromHatToIdle = prev === 'hatOn' && next === 'idle';
-		playClip(playback.animation, playback.loop, {
+		playClip(clip, playback.loop, {
 			reverse: playback.reverse,
 			holdEnd: playback.holdEnd,
 			soft: fromHatToIdle,
@@ -381,35 +259,15 @@
 	};
 
 	const onComplete = (entry: { animation?: { name?: string } }) => {
-		const name = entry.animation?.name as MascotSpineAnimation | undefined;
-
-		if (activeForceAnim === 'hat') {
-			if (name !== 'hat') return;
-			if (forceIdle3Phase === 'catch') {
-				holdCurrentClipEnd();
-				forceIdle3Phase = 'hold';
-				forceIdle3HoldTimer = setTimeout(() => {
-					if (activeForceAnim !== 'hat') return;
-					forceIdle3Phase = 'on';
-					resumeHatForward();
-				}, MASCOT_COIN_FLY_WAIT_MS);
-				return;
-			}
-			// Finished put-on — one more cycle for DEV preview.
-			if (forceIdle3Phase === 'on') playForceHatSequence();
-			return;
-		}
+		const fileName = entry.animation?.name as MascotSpineAnimation | undefined;
+		const name = fileName ? resolveMascotSpineClip(fileName) : undefined;
 
 		if (activeForceAnim) return;
-		if (!name || !activePose) return;
-		if (onIdleFlavourComplete(name)) return;
+		if (!fileName || !activePose) return;
+		if (onIdleFlavourComplete(fileName)) return;
 
 		const playback = MASCOT_POSE_PLAYBACK[activePose];
 		if (name !== playback.animation) return;
-		if (playback.holdEnd) {
-			holdCurrentClipEnd();
-			return;
-		}
 		if (playback.returnTo) {
 			const back = playback.returnTo;
 			const currentName = spine.state?.getCurrent(0)?.animation?.name;
@@ -442,13 +300,10 @@
 			} catch {
 				skeleton.findSlot('smile')?.setAttachment(null);
 			}
-			const animName = state.getCurrent(0)?.animation?.name;
-			if (animName === 'gun_start') {
-				try {
-					skeleton.setAttachment('cartridge2', null);
-				} catch {
-					skeleton.findSlot('cartridge2')?.setAttachment(null);
-				}
+			try {
+				skeleton.setAttachment('board', null);
+			} catch {
+				skeleton.findSlot('board')?.setAttachment(null);
 			}
 			return result;
 		};
@@ -456,6 +311,7 @@
 		state.addListener(listener);
 		ready = true;
 		hideSmileSlot();
+		hideReferenceBoard();
 		sealMascotHatBrimSeam(spine.skeleton);
 		return () => {
 			state.apply = apply;
@@ -473,7 +329,6 @@
 			return;
 		}
 		if (activeForceAnim) {
-			clearForceIdle3();
 			resetIdleVariants();
 			activeForceAnim = null;
 			activePose = undefined;
@@ -499,6 +354,5 @@
 
 	onDestroy(() => {
 		resetIdleVariants();
-		clearForceIdle3();
 	});
 </script>

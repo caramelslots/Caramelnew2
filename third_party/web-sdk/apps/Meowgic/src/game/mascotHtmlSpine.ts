@@ -1,3 +1,7 @@
+import { isPopoutViewport } from './constants';
+import { stateLayoutDerived } from './stateLayout';
+import { isPhoneCanvasSizeType } from './streetOffscreenCull';
+
 /** Aspect reference for the HTML mascot box (wide enough for idle3 hat toss). */
 export const MASCOT_BASE_SIZE = { width: 520, height: 440 } as const;
 
@@ -14,6 +18,12 @@ export const MASCOT_PHONE_MAX_DPR = 2;
 export const MASCOT_BOARD_HEIGHT_FRAC = 1.25;
 /** Horizontal gap after board edge, as a fraction of board height. */
 export const MASCOT_GAP_FRAC = 0.07;
+/** Extra gap on PC / laptop / tablet / popout (not phones), fraction of board height. */
+export const MASCOT_NON_PHONE_EXTRA_GAP_FRAC = 0.02;
+
+const isNonPhoneMascotLayout = () =>
+	isPopoutViewport(stateLayoutDerived.canvasSizes()) ||
+	!isPhoneCanvasSizeType(stateLayoutDerived.canvasSizeType());
 /**
  * Feet Y relative to board center (+down), as a fraction of board half-height.
  * ~1.0 = board bottom; >1 sits on the street / HUD floor below the board.
@@ -200,7 +210,9 @@ export const getMascotScreenBox = (board: {
 	const width = Math.round(height * (MASCOT_BASE_SIZE.width / MASCOT_BASE_SIZE.height));
 	const overscan = Math.round(width * MASCOT_LEFT_OVERSCAN_FRAC);
 	const bodyWidth = width - overscan;
-	const bodyLeft = Math.round(board.centerX + board.halfW + boardH * MASCOT_GAP_FRAC);
+	const gapFrac =
+		MASCOT_GAP_FRAC + (isNonPhoneMascotLayout() ? MASCOT_NON_PHONE_EXTRA_GAP_FRAC : 0);
+	const bodyLeft = Math.round(board.centerX + board.halfW + boardH * gapFrac);
 	const left = bodyLeft - overscan;
 	const feetY = board.centerY + board.halfH * MASCOT_FEET_Y_FRAC;
 	const top = Math.round(feetY - height * MASCOT_FEET_IN_BOX);
@@ -297,7 +309,7 @@ export const MASCOT_DOG_SPINE_VIEWPORT = {
 } as const satisfies MascotSpineViewport;
 
 /**
- * Wizard cat (`designer_assets/export` / `mascot_cat_baked_wand_particles`).
+ * Wizard cat (`designer_assets/export_cat_wizard_v2` / `mascot_cat_baked_wand_particles`).
  * Same framing as the gray/white cat so DEV preview occupies the identical seat.
  */
 export const MASCOT_WIZARD_SPINE_VIEWPORT = MASCOT_SPINE_VIEWPORT;
@@ -518,42 +530,56 @@ export type MascotPose =
 	/** After coins land — settle back to idle (designer clip as-is for now). */
 	| 'hatOn';
 
-/** Spine animation names in `cat_render` white/gray `mascot_cat.json`. */
+/**
+ * Spine clips in `wizard/mascot_cat_baked_wand_particles.json` (`export_cat_wizard_v2`).
+ * `idle_blink` and `idle_ears` are inverted in the export — see `resolveMascotSpineClip`.
+ */
 export type MascotSpineAnimation =
 	| 'idle'
 	| 'idle_blink'
 	| 'idle_ears'
-	| 'idle_gyn'
-	| 'hat'
-	| 'load'
+	| 'idle_wand'
+	| 'idle_to_stir'
+	| 'stir_loop'
+	| 'stir_to_idle'
+	| 'hat_new'
 	| 'like'
 	| 'applause'
-	| 'gun_start'
-	| 'gun_shot_aim'
-	| 'gun_shot'
-	| 'gun_shot_end'
-	| 'gun_end_load'
-	| 'gun_shot_stat_idle'
-	| 'gun_shot_stat_load';
+	| 'wand_start'
+	| 'wand_attack'
+	| 'wand_attack_2'
+	| 'result_fail_PinkBubbles';
 
-/** All clips (viewport + runtime). */
+/** All clips (viewport + runtime + DEV list). */
 export const MASCOT_SPINE_ANIMATIONS: readonly MascotSpineAnimation[] = [
 	'idle',
 	'idle_blink',
 	'idle_ears',
-	'idle_gyn',
-	'hat',
-	'load',
+	'idle_wand',
+	'idle_to_stir',
+	'stir_loop',
+	'stir_to_idle',
+	'hat_new',
 	'like',
 	'applause',
-	'gun_start',
-	'gun_shot_aim',
-	'gun_shot',
-	'gun_shot_end',
-	'gun_end_load',
-	'gun_shot_stat_idle',
-	'gun_shot_stat_load',
+	'wand_start',
+	'wand_attack',
+	'wand_attack_2',
+	'result_fail_PinkBubbles',
 ] as const;
+
+/**
+ * `export_cat_wizard_v2` names `idle_blink` and `idle_ears` are swapped:
+ * the blink clip plays ears, the ears clip plays blink. Logical names stay
+ * (game + DEV buttons); this returns the file clip that matches the motion.
+ */
+export const resolveMascotSpineClip = (
+	animation: MascotSpineAnimation,
+): MascotSpineAnimation => {
+	if (animation === 'idle_blink') return 'idle_ears';
+	if (animation === 'idle_ears') return 'idle_blink';
+	return animation;
+};
 
 /** DEV-only preview ids (map 1:1 to Spine clips). */
 export type MascotDevPreview = MascotSpineAnimation;
@@ -567,17 +593,23 @@ export type MascotDevPreviewItem = {
 /** DEV panel — every cat Spine clip for QA. */
 export const MASCOT_DEV_PREVIEW_ITEMS: readonly MascotDevPreviewItem[] =
 	MASCOT_SPINE_ANIMATIONS.map((id) =>
-		id === 'hat'
+		id === 'idle_blink'
 			? {
 					id,
-					label: 'hat',
-					title: 'In-game hat sequence: out → pause → finish forward (loops)',
-				}
-			: {
-					id,
 					label: id,
-					title: `Play Spine clip "${id}" (loop)`,
-				},
+					title: 'Blink. File clip is idle_ears (export names are swapped).',
+				}
+			: id === 'idle_ears'
+				? {
+						id,
+						label: id,
+						title: 'Ears. File clip is idle_blink (export names are swapped).',
+					}
+				: {
+						id,
+						label: id,
+						title: `Play Spine clip "${id}" (loop)`,
+					},
 	);
 
 /** @deprecated use MASCOT_DEV_PREVIEW_ITEMS */
@@ -585,7 +617,8 @@ export const MASCOT_DEV_PREVIEW_ANIMATIONS: readonly MascotSpineAnimation[] =
 	MASCOT_SPINE_ANIMATIONS;
 
 type PosePlayback = {
-	animation: MascotSpineAnimation;
+	/** `null` — this pose has no clip on the wizard cat; leave the current track. */
+	animation: MascotSpineAnimation | null;
 	loop: boolean;
 	/** After a one-shot finishes, fall back to this pose animation (loop). */
 	returnTo?: MascotSpineAnimation;
@@ -596,52 +629,43 @@ type PosePlayback = {
 };
 
 /**
- * Pose → Spine mapping (`designer_assets/cat_render`):
- * - like (`react`) = Big / Super Win celebration (one-shot → idle)
- * - applause (`clap`) = Epic / Sensational celebration (one-shot → idle)
- * - hat = paw coin catch
- * - gun_start = catch BT fly at the hand; load / gun_end_load seat the drum after
- * - gun_shot_* = FS target pick (stat_idle → aim loop → shoot on tap → end)
- *   and Stage E drum shoot round (stat_idle → aim loop → shoot×N → end)
+ * Pose → Spine mapping (`export_cat_wizard_v2`).
+ * like (`react`) = Big / Super Win. applause (`clap`) = Epic / Sensational.
+ * Gun, load, and hat poses have no clip on this skeleton — playback is a no-op.
+ * `idle_blink` / `idle_ears` are swapped in the export; `resolveMascotSpineClip` fixes that.
  */
 export const MASCOT_POSE_PLAYBACK: Record<MascotPose, PosePlayback> = {
 	idle: { animation: 'idle', loop: true },
-	load: { animation: 'load', loop: false, holdEnd: true },
-	gunStart: { animation: 'gun_start', loop: false, holdEnd: true },
-	aim: { animation: 'gun_shot_aim', loop: true },
-	shoot: { animation: 'gun_shot', loop: false, holdEnd: true },
-	gunShotEnd: { animation: 'gun_shot_end', loop: false, returnTo: 'idle' },
-	gunEndLoad: { animation: 'gun_end_load', loop: false, returnTo: 'idle' },
-	gunStatIdle: { animation: 'gun_shot_stat_idle', loop: false, holdEnd: true },
-	gunStatLoad: { animation: 'gun_shot_stat_load', loop: false, holdEnd: true },
+	load: { animation: null, loop: false },
+	gunStart: { animation: null, loop: false },
+	aim: { animation: null, loop: false },
+	shoot: { animation: null, loop: false },
+	gunShotEnd: { animation: null, loop: false },
+	gunEndLoad: { animation: null, loop: false },
+	gunStatIdle: { animation: null, loop: false },
+	gunStatLoad: { animation: null, loop: false },
 	react: { animation: 'like', loop: false, returnTo: 'idle' },
 	/** @deprecated Prefer `clap` for big wins — kept as applause once for safety. */
 	wow: { animation: 'applause', loop: false, returnTo: 'idle' },
 	clap: { animation: 'applause', loop: false, returnTo: 'idle' },
-	hatCatch: { animation: 'hat', loop: false, holdEnd: true },
-	/** Resume `hat` forward from the pause (no reverse). */
-	hatOn: { animation: 'hat', loop: false, returnTo: 'idle' },
+	hatCatch: { animation: null, loop: false },
+	hatOn: { animation: null, loop: false },
 };
 
 /** Idle flavour clips randomly queued while pose stays `idle` (excludes base idle). */
-export const MASCOT_IDLE_VARIANTS: readonly MascotSpineAnimation[] = [
-	'idle_blink',
-	'idle_ears',
-	'idle_gyn',
-];
+export const MASCOT_IDLE_VARIANTS: readonly MascotSpineAnimation[] = ['idle_blink', 'idle_ears'];
 
 /**
  * Weighted idle roll — includes base `idle` (skip flavour).
- * 40% idle / 30% blink / 20% ears / 10% gyn.
+ * 50% idle / 30% blink / 20% ears. Logical names; files are swapped.
  */
 export const MASCOT_IDLE_VARIANT_WEIGHTS: ReadonlyArray<{
 	animation: MascotSpineAnimation;
 	weight: number;
 }> = [
-	{ animation: 'idle', weight: 0.4 },
+	{ animation: 'idle', weight: 0.5 },
 	{ animation: 'idle_blink', weight: 0.3 },
 	{ animation: 'idle_ears', weight: 0.2 },
-	{ animation: 'idle_gyn', weight: 0.1 },
 ] as const;
 
 export const pickMascotIdleVariant = (): MascotSpineAnimation => {
@@ -662,12 +686,13 @@ export const resolveMascotSpineUrl = (file: string) =>
 	new URL(`assets/spines/mascot/${file}`.replace(/^\//, ''), window.location.href).href;
 
 export const MASCOT_SPINE_FILES = [
-	'white/mascot_cat.json',
-	'white/mascot_cat.atlas',
-	'white/mascot_cat.png',
-	'gray/mascot_cat.json',
-	'gray/mascot_cat.atlas',
-	'gray/mascot_cat.png',
+	'wizard/mascot_cat_baked_wand_particles.json',
+	'wizard/mascot_cat_baked_wand_particles.atlas',
+	'wizard/mascot_cat_baked_wand_particles.webp',
+	'wizard/mascot_cat_baked_wand_particles_2.webp',
+	'wizard/mascot_cat_baked_wand_particles_3.webp',
+	'wizard/mascot_cat_baked_wand_particles_4.webp',
+	'wizard/mascot_cat_baked_wand_particles_5.webp',
 ] as const;
 
 export const MASCOT_DOG_SPINE_FILES = [
@@ -677,22 +702,13 @@ export const MASCOT_DOG_SPINE_FILES = [
 	'dog/mascot_dog_2.png',
 ] as const;
 
-export const MASCOT_WIZARD_SPINE_FILES = [
-	'wizard/mascot_cat_baked_wand_particles.json',
-	'wizard/mascot_cat_baked_wand_particles.atlas',
-	'wizard/mascot_cat_baked_wand_particles.webp',
-	'wizard/mascot_cat_baked_wand_particles_2.webp',
-	'wizard/mascot_cat_baked_wand_particles_3.webp',
-	'wizard/mascot_cat_baked_wand_particles_4.webp',
-] as const;
-
 export const MASCOT_SPINE_ASSET_URLS = MASCOT_SPINE_FILES.map(resolveMascotSpineUrl);
 export const MASCOT_DOG_SPINE_ASSET_URLS = MASCOT_DOG_SPINE_FILES.map(resolveMascotSpineUrl);
-export const MASCOT_WIZARD_SPINE_ASSET_URLS = MASCOT_WIZARD_SPINE_FILES.map(resolveMascotSpineUrl);
 
-/** Atlas image — keep PNG (lossy WebP breaks PMA mesh edges). White = freegame / duel. */
-export const MASCOT_SPINE_IMAGE_URL = resolveMascotSpineUrl('white/mascot_cat.png');
-export const MASCOT_SPINE_GRAY_IMAGE_URL = resolveMascotSpineUrl('gray/mascot_cat.png');
+/** First atlas page of the wizard cat. */
+export const MASCOT_SPINE_IMAGE_URL = resolveMascotSpineUrl(
+	'wizard/mascot_cat_baked_wand_particles.webp',
+);
 
 /** Spine clip names in `dog/mascot_dog.json`. */
 export type MascotDogSpineAnimation =
@@ -781,42 +797,6 @@ export const MASCOT_DOG_POSE_PLAYBACK: Record<
 	hatOn: { animation: 'idle', loop: true },
 };
 
-/** Spine clip names in `wizard/mascot_cat_baked_wand_particles.json`. */
-export type MascotWizardSpineAnimation =
-	| 'idle_wizard'
-	| 'idle_blink_wizard2'
-	| 'idle_ears_wizard'
-	| 'idle_wand'
-	| 'hat_new'
-	| 'like_new'
-	| 'applause_new'
-	| 'wand_start_particles';
-
-export const MASCOT_WIZARD_SPINE_ANIMATIONS: readonly MascotWizardSpineAnimation[] = [
-	'idle_wizard',
-	'idle_blink_wizard2',
-	'idle_ears_wizard',
-	'idle_wand',
-	'hat_new',
-	'like_new',
-	'applause_new',
-	'wand_start_particles',
-] as const;
-
-export type MascotWizardDevPreviewItem = {
-	id: MascotWizardSpineAnimation;
-	label: string;
-	title: string;
-};
-
-/** DEV panel — every wizard Spine clip for QA. */
-export const MASCOT_WIZARD_DEV_PREVIEW_ITEMS: readonly MascotWizardDevPreviewItem[] =
-	MASCOT_WIZARD_SPINE_ANIMATIONS.map((id) => ({
-		id,
-		label: id,
-		title: `Play wizard Spine clip "${id}" (loop)`,
-	}));
-
 let mascotSpinePreloadStarted = false;
 
 /** Warm HTTP cache for HTML mascot Spine during the loading-screen idle window. */
@@ -824,11 +804,7 @@ export const startMascotSpinePreload = () => {
 	if (mascotSpinePreloadStarted || typeof window === 'undefined') return;
 	mascotSpinePreloadStarted = true;
 
-	const queue = [
-		...MASCOT_SPINE_ASSET_URLS,
-		...MASCOT_DOG_SPINE_ASSET_URLS,
-		...MASCOT_WIZARD_SPINE_ASSET_URLS,
-	];
+	const queue = [...MASCOT_SPINE_ASSET_URLS, ...MASCOT_DOG_SPINE_ASSET_URLS];
 	const workerCount = Math.min(3, queue.length);
 
 	void Promise.all(

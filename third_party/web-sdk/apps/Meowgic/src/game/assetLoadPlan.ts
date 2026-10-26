@@ -5,9 +5,11 @@ import { isCjkLocale } from './constants';
 import { LOADER_CARD_2_SOCIAL_IMAGE_URL, LOADER_SCREEN_IMAGE_URLS } from './loaderCardAssets';
 import { isSocialMode } from './devSocial';
 
-/** Stake GIF screen — animated day/night spine, audio manifest, transition, press font, high symbols. */
+/** Stake GIF screen — room + stage + desk spines, audio, transition, press font, high symbols. */
 export const LOADER_BATCH_1_KEYS = [
 	'mainBackground',
+	'bgPlatform',
+	'bgTable',
 	'boardFrame',
 	'sound',
 	'musicMain',
@@ -94,7 +96,7 @@ export const getLocaleSpecificFontKeys = (locale: string): readonly (keyof typeo
  */
 export const LOADER_BATCH_3_KEYS = [
 	...LOCALE_FONT_KEYS,
-	'mascotCatGray',
+	'mascotCat',
 	'betPlus',
 	'betMinus',
 	'autoplayButton',
@@ -112,7 +114,8 @@ export const LOADER_BATCH_3_KEYS = [
 	/**
 	 * Post-entry deferred batch — bonus / duel / FS / tir.
 	 * Loaded after entrance lift settles (not while reading cards / on Continue).
-	 * Night street is a skin on `mainBackground` (batch 1), not a separate key.
+	 * Bonus room theme is the `green` skin on the batch-1 background pieces
+	 * (`mainBackground` / `bgPlatform` / `bgTable`), not a separate key.
 	 */
 export const LOADER_BATCH_4_KEYS = [
 	'BD',
@@ -120,9 +123,7 @@ export const LOADER_BATCH_4_KEYS = [
 	'BDuelImg',
 	'BTImg',
 	'outlineReel',
-	'mascotCat',
 	'mascotDog',
-	'mascotCatWizard',
 	'revolverBarrel',
 	'revolverBarrelRim',
 	'revolverBullet1',
