@@ -58,6 +58,11 @@ export const devPreview = $state({
 	 */
 	forceShowTargetShoot: false,
 	/**
+	 * Designer export cards (`designer_assets/export`) — three-card screen, layout / flip QA.
+	 * Not wired into gameplay yet.
+	 */
+	showExportCards: false,
+	/**
 	 * Pin `assets/spines/bonusReel` (`outlineReel`) on every board column — layout / VFX QA.
 	 */
 	forceShowBonusReelAllColumns: false,

@@ -128,7 +128,7 @@
 		},
 		{ id: 'stage', title: 'Stage', keys: 'chrome duel target shoot cabinet bullet fly drum background board fs' },
 		{ id: 'wins', title: 'Wins', keys: 'win level precision hud stack payline coin' },
-		{ id: 'ui', title: 'UI & loading', keys: 'loading cards progress fs intro outro duel modal funds transition' },
+		{ id: 'ui', title: 'UI & loading', keys: 'loading cards progress fs intro outro duel modal funds transition export' },
 	];
 
 	const readOpenAccordions = (): Set<AccordionId> => {
@@ -449,15 +449,15 @@
 	};
 
 	/**
-	 * Production freeSpinTargetPick path: gallery retreats (slide + unload)
-	 * before steam (solo preview dismisses immediately after pick).
+	 * Production freeSpinTargetPick path: export-card pick, then the screen fades
+	 * out (freeSpinTrigger does the same before steam).
 	 */
 	const playTargetPickPreview = () =>
 		guard(async () => {
 			if (devPreview.forceShowTargetBoard) toggleTargetBoardPreview(false);
 			if (devPreview.forceShowTargetShoot) toggleTargetShootPreview(false);
 			await playBookEvent(asEvent(freeSpinTargetPickDemo), { bookEvents: [] });
-			eventEmitter.broadcast({ type: 'targetPickDismiss' });
+			await eventEmitter.broadcastAsync({ type: 'exportCardsPickRetreat' });
 		});
 
 	/** Production Stage E path: 9-target board + drum shots. */
@@ -2567,10 +2567,10 @@
 					<button
 						type="button"
 						disabled={busy}
-						title="freeSpinTargetPick: aim → click → shot → flip"
+						title="freeSpinTargetPick: export cards → tap → flip → reveal"
 						onclick={playTargetPickPreview}
 					>
-						Play Target Pick
+						Play Card Pick
 					</button>
 					<button
 						type="button"
@@ -2758,6 +2758,21 @@
 					</button>
 					<button type="button" onclick={hideLoadingScreenPreview}>
 						Hide Loading
+					</button>
+				</div>
+			</section>
+
+			<section>
+				<h4>Export Cards</h4>
+				<p class="subhint">Three designer export cards (designer_assets/export). Tap to flip.</p>
+				<div class="grid">
+					<button
+						type="button"
+						class:active={devPreview.showExportCards}
+						title="Open the export cards screen (Esc closes)"
+						onclick={() => (devPreview.showExportCards = true)}
+					>
+						Export Cards
 					</button>
 				</div>
 			</section>

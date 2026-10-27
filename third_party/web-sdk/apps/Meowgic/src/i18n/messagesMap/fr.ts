@@ -106,6 +106,7 @@ export default {
 	GAME_INFO_BULLET_TITLE: 'BALLE',
 	GAME_INFO_BULLET_BODY: 'Pendant les free spins principaux, les symboles Bullet remplissent le barillet du revolver (maximum 6). Quand les tours principaux se terminent, le chat tire automatiquement sur les cibles. Chaque impact peut ne rien donner ou +1, +2 ou +3 free spins supplémentaires. Les balles n\'apparaissent pas sur ces tours supplémentaires et il n\'y a pas de seconde ronde de tir.',
 	TARGET_PICK_TITLE: 'CHOISISSEZ UNE CIBLE',
+	CARD_PICK_TITLE: 'CHOISISSEZ UNE CARTE',
 	TARGET_PICK_HINT_PICK: 'Touchez une cible — le chat tire',
 	TARGET_PICK_HINT_SHOOT: 'Bang !',
 	TARGET_PICK_HINT_WON: 'Vous avez gagné {n} free spins',

@@ -56,6 +56,7 @@
 	import { devPreview } from '../game/devPreview.svelte';
 	import TargetBoardOverlay from './TargetBoardOverlay.svelte';
 	import TargetPickOverlay from './TargetPickOverlay.svelte';
+	import ExportCardsPickOverlay from './ExportCardsPickOverlay.svelte';
 	import TargetPickPixiLayer from './TargetPickPixiLayer.svelte';
 	import TargetShootOverlay from './TargetShootOverlay.svelte';
 	import TargetShootDevOverlay from './TargetShootDevOverlay.svelte';
@@ -78,6 +79,7 @@
 	import MascotPressHtmlOverlay from './MascotPressHtmlOverlay.svelte';
 	import DevCheats from './DevCheats.svelte';
 	import DevButtons from './DevButtons.svelte';
+	import ExportCardsDevOverlay from './ExportCardsDevOverlay.svelte';
 	import PixiTextureMemoryOverlay from './PixiTextureMemoryOverlay.svelte';
 	import PixiFpsOverlay from './PixiFpsOverlay.svelte';
 	import { FadeContainer } from 'components-pixi';
@@ -347,6 +349,7 @@
 <DuelIntro />
 <TargetBoardOverlay />
 <TargetPickOverlay />
+<ExportCardsPickOverlay />
 <TargetShootOverlay />
 {#if SHOW_DEV_UI}
 	<TargetShootDevOverlay />
@@ -356,6 +359,7 @@
 {#if SHOW_DEV_UI}
 	<DevCheats />
 	<DevButtons />
+	<ExportCardsDevOverlay />
 	<PixiTextureMemoryOverlay />
 	<PixiFpsOverlay />
 {/if}

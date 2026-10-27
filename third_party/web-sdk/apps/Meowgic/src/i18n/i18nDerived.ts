@@ -128,6 +128,7 @@ export const i18nDerived = {
 	loaderCard3Line2: () => t('LOADER_CARD_3_LINE_2'),
 	// Cat Mafia target overlays (Stage F — EN copy; other locales fall back via key until translated)
 	targetPickTitle: () => t('TARGET_PICK_TITLE'),
+	cardPickTitle: () => t('CARD_PICK_TITLE'),
 	targetPickHintPick: () => t('TARGET_PICK_HINT_PICK'),
 	targetPickHintShoot: () => t('TARGET_PICK_HINT_SHOOT'),
 	targetPickHintWon: (n: number) => t('TARGET_PICK_HINT_WON', { n }),

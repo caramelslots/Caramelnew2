@@ -4,7 +4,7 @@ import { GAME_INFO_SYMBOL_IMAGE_URLS, GAME_INFO_SYMBOL_IMAGES } from './gameInfo
 import { startMascotSpinePreload } from './mascotHtmlSpine';
 import { startSpinButtonSpinePreload } from './spinButtonHtmlSpine';
 import { preloadBuyBonusSpines } from './buyBonusHtmlSpine';
-import { startTargetBoardPreload } from './targetBoardAssets';
+import { EXPORT_CARD_SPINE } from './exportCardAssets';
 import { startShotBulletPreload } from './shotBulletAssets';
 
 const UI_ASSET_BASE = `${import.meta.env.BASE_URL}assets/sprites/ui`;
@@ -219,8 +219,9 @@ export const startLoadingIdleUiPreload = () => {
 	startMascotSpinePreload();
 	// Coin paw is Pixi in production — do not spawn HTML SpinePlayers at load.
 	startSpinButtonSpinePreload();
-	startTargetBoardPreload();
 	startShotBulletPreload();
+	// FS entry card pick — decoded and pinned so the cards paint on the first frame.
+	void preloadHtmlImages([EXPORT_CARD_SPINE.page], { retain: true });
 
 	void preloadHtmlImages(LOADING_IDLE_UI_IMAGE_URLS, {
 		priority: LOADING_IDLE_UI_PRIORITY,

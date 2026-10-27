@@ -108,6 +108,7 @@ export default {
 	GAME_INFO_BULLET_TITLE: 'NABÓJ',
 	GAME_INFO_BULLET_BODY: 'W głównych darmowych spinach symbole Bullet wypełniają bęben rewolweru (maks. 6). Po zakończeniu głównych spinów kot automatycznie strzela do celów. Każde trafienie może dać nic lub +1, +2, +3 dodatkowych spinów. Naboje nie pojawiają się w dodatkowych spinach i nie ma drugiej rundy strzelania.',
 	TARGET_PICK_TITLE: 'WYBIERZ CEL',
+	CARD_PICK_TITLE: 'WYBIERZ KARTĘ',
 	TARGET_PICK_HINT_PICK: 'Dotknij celu — kot strzela',
 	TARGET_PICK_HINT_SHOOT: 'Bang!',
 	TARGET_PICK_HINT_WON: 'Wygrałeś {n} darmowych spinów',

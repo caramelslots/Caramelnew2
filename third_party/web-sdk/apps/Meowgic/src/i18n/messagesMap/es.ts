@@ -108,6 +108,7 @@ export default {
 	GAME_INFO_BULLET_TITLE: 'BALA',
 	GAME_INFO_BULLET_BODY: 'Durante los giros gratis principales, los símbolos Bullet llenan el tambor del revólver (máximo 6). Al terminar los giros principales, el gato dispara automáticamente a los objetivos. Cada impacto puede no dar nada o +1, +2 o +3 giros gratis extra. Las balas no aparecen en esos giros extra y no hay una segunda ronda de disparos.',
 	TARGET_PICK_TITLE: 'ELIGE UN OBJETIVO',
+	CARD_PICK_TITLE: 'ELIGE UNA CARTA',
 	TARGET_PICK_HINT_PICK: 'Toca un objetivo — el gato dispara',
 	TARGET_PICK_HINT_SHOOT: '¡Bang!',
 	TARGET_PICK_HINT_WON: 'Has ganado {n} giros gratis',

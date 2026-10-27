@@ -108,6 +108,7 @@ export default {
 	GAME_INFO_BULLET_TITLE: 'ĐẠN',
 	GAME_INFO_BULLET_BODY: 'Trong free spin chính, Bullet lấp trống revolver (tối đa 6). Hết vòng chính, mèo tự bắn mục tiêu. Mỗi trúng có thể không có gì hoặc +1/+2/+3 vòng thêm. Đạn không xuất hiện ở vòng thêm và không có vòng bắn thứ hai.',
 	TARGET_PICK_TITLE: 'CHỌN MỤC TIÊU',
+	CARD_PICK_TITLE: 'CHỌN MỘT LÁ BÀI',
 	TARGET_PICK_HINT_PICK: 'Chạm vào mục tiêu — mèo sẽ bắn',
 	TARGET_PICK_HINT_SHOOT: 'Bang!',
 	TARGET_PICK_HINT_WON: 'Bạn thắng {n} vòng quay miễn phí',

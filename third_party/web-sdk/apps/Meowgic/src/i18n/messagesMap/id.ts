@@ -108,6 +108,7 @@ export default {
 	GAME_INFO_BULLET_TITLE: 'PELURU',
 	GAME_INFO_BULLET_BODY: 'Selama free spin utama, simbol Bullet mengisi drum revolver (maks. 6). Setelah spin utama selesai, kucing otomatis menembak target. Setiap kena bisa nol atau +1/+2/+3 free spin extra. Peluru tidak muncul di spin extra dan tidak ada ronde tembak kedua.',
 	TARGET_PICK_TITLE: 'PILIH TARGET',
+	CARD_PICK_TITLE: 'PILIH KARTU',
 	TARGET_PICK_HINT_PICK: 'Ketuk target — kucing menembak',
 	TARGET_PICK_HINT_SHOOT: 'Bang!',
 	TARGET_PICK_HINT_WON: 'Anda memenangkan {n} Free Spin',

@@ -108,6 +108,7 @@ export default {
 	GAME_INFO_BULLET_TITLE: 'KUGEL',
 	GAME_INFO_BULLET_BODY: 'Während der Haupt-Freispiele füllen Kugel-Symbole die Revolvertrommel (maximal 6). Wenn die Hauptdrehs enden, schießt die Katze automatisch auf Ziele. Jeder Treffer kann nichts oder +1, +2 oder +3 Extra-Freispiele geben. Kugeln erscheinen in diesen Extra-Drehs nicht und es gibt keine zweite Schussrunde.',
 	TARGET_PICK_TITLE: 'ZIEL WÄHLEN',
+	CARD_PICK_TITLE: 'KARTE WÄHLEN',
 	TARGET_PICK_HINT_PICK: 'Tippe auf ein Ziel — die Katze schießt',
 	TARGET_PICK_HINT_SHOOT: 'Bang!',
 	TARGET_PICK_HINT_WON: 'Du hast {n} Freispiele gewonnen',

@@ -108,6 +108,7 @@ export default {
 	GAME_INFO_BULLET_TITLE: 'MERMİ',
 	GAME_INFO_BULLET_BODY: 'Ana ücretsiz spinler sırasında Bullet sembolleri revolver tamburunu doldurur (maksimum 6). Ana spinler bittiğinde kedi otomatik olarak hedeflere ateş eder. Her isabet hiçbir şey veya +1, +2, +3 ekstra ücretsiz spin verebilir. Mermiler bu ekstra spinlerde görünmez ve ikinci bir atış turu yoktur.',
 	TARGET_PICK_TITLE: 'HEDEF SEÇ',
+	CARD_PICK_TITLE: 'KART SEÇ',
 	TARGET_PICK_HINT_PICK: 'Bir hedefe dokun — kedi ateş eder',
 	TARGET_PICK_HINT_SHOOT: 'Bang!',
 	TARGET_PICK_HINT_WON: '{n} ücretsiz spin kazandınız',

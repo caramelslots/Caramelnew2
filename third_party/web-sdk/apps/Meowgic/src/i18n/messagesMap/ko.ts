@@ -108,6 +108,7 @@ export default {
 	GAME_INFO_BULLET_TITLE: '총알',
 	GAME_INFO_BULLET_BODY: '메인 프리 스핀 중 Bullet이 리볼버 드럼 채움(최대 6). 메인 스핀 종료 후 고양이가 자동 사격. 각 명중은 없음 또는 +1/+2/+3 추가 FS. 추가 스핀에 총알 없음, 두 번째 사격 라운드 없음.',
 	TARGET_PICK_TITLE: '목표 선택',
+	CARD_PICK_TITLE: '카드 선택',
 	TARGET_PICK_HINT_PICK: '목표를 탭하세요 — 고양이가 사격합니다',
 	TARGET_PICK_HINT_SHOOT: 'Bang!',
 	TARGET_PICK_HINT_WON: '{n} 프리 스핀 획득',

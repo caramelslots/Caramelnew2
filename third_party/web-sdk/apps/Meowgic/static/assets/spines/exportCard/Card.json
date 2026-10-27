@@ -1,0 +1,51 @@
+{
+"skeleton": { "hash": "yokySRwJONY", "spine": "4.3.26", "x": -276, "y": -427, "width": 553, "height": 853 },
+"bones": [
+	{ "name": "root" },
+	{ "name": "card_flip", "parent": "root", "x": 0.5, "y": -0.5 }
+],
+"slots": [
+	{ "name": "front", "bone": "card_flip", "attachment": "front" },
+	{ "name": "back", "bone": "card_flip", "attachment": "back" }
+],
+"skins": [
+	{
+		"name": "default",
+		"attachments": {
+			"back": {
+				"back": { "width": 553, "height": 853 }
+			},
+			"front": {
+				"front": { "width": 553, "height": 853 }
+			}
+		}
+	}
+],
+"animations": {
+	"rotate": {
+		"slots": {
+			"back": {
+				"attachment": [
+					{ "name": "back" },
+					{ "time": 0.16666667 }
+				]
+			}
+		},
+		"bones": {
+			"card_flip": {
+				"scale": [
+					{
+						"curve": [ 0.05555556, 1, 0.11111111, 0, 0.05555556, 1, 0.11111111, 1 ]
+					},
+					{
+						"time": 0.16666667,
+						"x": 1.0E-5,
+						"curve": [ 0.22222225, 0, 0.2777778, 1, 0.22222225, 1, 0.2777778, 1 ]
+					},
+					{ "time": 0.3333333 }
+				]
+			}
+		}
+	}
+}
+}

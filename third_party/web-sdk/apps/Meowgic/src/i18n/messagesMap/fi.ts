@@ -108,6 +108,7 @@ export default {
 	GAME_INFO_BULLET_TITLE: 'LUODI',
 	GAME_INFO_BULLET_BODY: 'Pääilmaiskierrosten aikana Bullet-symbolit täyttävät revolverin rummun (enintään 6). Pääkierrosten päätyttyä kissa ampuu automaattisesti kohteita. Jokainen osuma voi antaa ei mitään tai +1, +2, +3 extra-ilmaiskierrosta. Luodit eivät ilmesty näillä extrakierroksilla eikä toista ammuntakierrosta ole.',
 	TARGET_PICK_TITLE: 'VALITSE KOHDE',
+	CARD_PICK_TITLE: 'VALITSE KORTTI',
 	TARGET_PICK_HINT_PICK: 'Napauta kohdetta — kissa ampuu',
 	TARGET_PICK_HINT_SHOOT: 'Bang!',
 	TARGET_PICK_HINT_WON: 'Voitit {n} ilmaiskierrosta',

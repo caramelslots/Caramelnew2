@@ -1,0 +1,9 @@
+Card.webp
+size:2048,2048
+filter:Linear,Linear
+back
+bounds:2,255,551,851
+offsets:1,1,553,853
+front
+bounds:555,255,551,851
+offsets:1,1,553,853

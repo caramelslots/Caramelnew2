@@ -10,6 +10,7 @@ import type { EmitterEventPaylineOverlay } from '../components/PaylineOverlay.sv
 import type { EmitterEventPaylineWinAmount } from '../components/PaylineWinAmounts.svelte';
 import type { EmitterEventMysteryReelUnlockOverlay } from '../components/MysteryReelUnlockOverlay.svelte';
 import type { EmitterEventFreeSpinTargetPick } from '../components/TargetPickOverlay.svelte';
+import type { EmitterEventExportCardsPick } from '../components/ExportCardsPickOverlay.svelte';
 import type { EmitterEventTargetShootRound } from '../components/TargetShootOverlay.svelte';
 import type { EmitterEventDuel } from '../components/DuelModeOverlay.svelte';
 import type { EmitterEventDuelIntro } from '../components/DuelIntro.svelte';
@@ -29,6 +30,7 @@ export type EmitterEventGame =
 	| EmitterEventPaylineWinAmount
 	| EmitterEventMysteryReelUnlockOverlay
 	| EmitterEventFreeSpinTargetPick
+	| EmitterEventExportCardsPick
 	| EmitterEventTargetShootRound
 	| EmitterEventDuel
 	| EmitterEventDuelIntro

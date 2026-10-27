@@ -108,6 +108,7 @@ export default {
 	GAME_INFO_BULLET_TITLE: 'गोली',
 	GAME_INFO_BULLET_BODY: 'मुख्य फ्री स्पिन के दौरान Bullet सिंबल रेवॉल्वर ड्रम भरते हैं (अधिकतम 6)। मुख्य स्पिन समाप्त होने पर बिल्ली स्वचालित रूप से लक्ष्यों पर गोली चलाती है। प्रत्येक हिट कुछ नहीं या +1/+2/+3 extra FS दे सकती है। extra स्पिन पर गोली नहीं और दूसरा शूटिंग राउंड नहीं।',
 	TARGET_PICK_TITLE: 'लक्ष्य चुनें',
+	CARD_PICK_TITLE: 'एक कार्ड चुनें',
 	TARGET_PICK_HINT_PICK: 'लक्ष्य पर टैप करें — बिल्ली गोली चलाएगी',
 	TARGET_PICK_HINT_SHOOT: 'Bang!',
 	TARGET_PICK_HINT_WON: 'आपने {n} फ्री स्पिन जीते',

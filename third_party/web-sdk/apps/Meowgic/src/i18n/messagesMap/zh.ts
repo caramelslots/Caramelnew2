@@ -108,6 +108,7 @@ export default {
 	GAME_INFO_BULLET_TITLE: '子弹',
 	GAME_INFO_BULLET_BODY: '主要免费旋转期间，Bullet 符号填充左轮弹仓（最多 6）。主要旋转结束后，猫自动射击目标。每次命中可能无奖励或 +1、+2、+3 额外免费旋转。额外旋转不出现子弹，也没有第二轮射击。',
 	TARGET_PICK_TITLE: '选择目标',
+	CARD_PICK_TITLE: '选择卡牌',
 	TARGET_PICK_HINT_PICK: '点击目标 — 猫会射击',
 	TARGET_PICK_HINT_SHOOT: 'Bang!',
 	TARGET_PICK_HINT_WON: '你赢得了 {n} 次免费旋转',

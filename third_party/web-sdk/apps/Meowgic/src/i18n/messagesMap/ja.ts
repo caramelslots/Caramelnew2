@@ -108,6 +108,7 @@ export default {
 	GAME_INFO_BULLET_TITLE: '弾丸',
 	GAME_INFO_BULLET_BODY: 'メインフリースピン中、Bulletシンボルがリボルバー筒を満たす（最大6）。メインスピン終了後、猫が自動でターゲットを射撃。各命中でなしまたは+1/+2/+3追加FS。追加スピンに弾丸は出ず第二射撃ラウンドなし。',
 	TARGET_PICK_TITLE: 'ターゲットを選ぶ',
+	CARD_PICK_TITLE: 'カードを選ぶ',
 	TARGET_PICK_HINT_PICK: 'ターゲットをタップ — 猫が射撃',
 	TARGET_PICK_HINT_SHOOT: 'Bang!',
 	TARGET_PICK_HINT_WON: '{n}フリースピン獲得',

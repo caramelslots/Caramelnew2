@@ -108,6 +108,7 @@ export default {
 	GAME_INFO_BULLET_TITLE: 'BALA',
 	GAME_INFO_BULLET_BODY: 'Durante as rodadas grátis principais, os símbolos Bullet enchem o tambor do revólver (máximo 6). Quando as rodadas principais terminam, o gato dispara automaticamente aos alvos. Cada acerto pode não dar nada ou +1, +2 ou +3 rodadas grátis extra. As balas não aparecem nessas rodadas extra e não há segunda ronda de disparos.',
 	TARGET_PICK_TITLE: 'ESCOLHA UM ALVO',
+	CARD_PICK_TITLE: 'ESCOLHA UMA CARTA',
 	TARGET_PICK_HINT_PICK: 'Toque num alvo — o gato dispara',
 	TARGET_PICK_HINT_SHOOT: 'Bang!',
 	TARGET_PICK_HINT_WON: 'Ganhou {n} rodadas grátis',

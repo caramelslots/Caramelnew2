@@ -1293,13 +1293,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			await waitForGameSpeed(WIN_HUD_COUNT_UP_MS, stateGame.gameSpeed);
 		}
 	},
-	// Cat Mafia Stage C — gallery on base (HUD stays, spin-dimmed) → cloud + intro.
+	// Cat Mafia Stage C — export-card pick on base (HUD stays, spin-dimmed) → cloud + intro.
 	freeSpinTargetPick: async (
 		bookEvent: BookEventOfType<'freeSpinTargetPick'>,
 		{ bookEvents }: BookEventContext,
 	) => {
 		clearWinSpotlight();
-		// Celebrate Bonus tiles on the settled board before the target gallery
+		// Celebrate Bonus tiles on the settled board before the card pick
 		// opens — freeSpinTrigger skips this when a pick already ran.
 		const trigger = bookEvents.find(
 			(e): e is BookEventOfType<'freeSpinTrigger'> => e.type === 'freeSpinTrigger',
@@ -1307,12 +1307,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (trigger?.positions?.length) {
 			await animateBonusSymbols({ positions: trigger.positions });
 		}
-		// Drop Bonus off the unmasked idleBounce layer before the desk slides —
-		// otherwise postWinStatic+spotlight parks them in the street.
+		// Drop Bonus off the unmasked idleBounce layer before the cards cover the
+		// board — otherwise postWinStatic+spotlight parks them in the street.
 		clearWinSpotlight();
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		await eventEmitter.broadcastAsync({
-			type: 'freeSpinTargetPick',
+			type: 'exportCardsPick',
 			targets: bookEvent.targets,
 			chosenIndex: bookEvent.chosenIndex,
 			awardedFs: bookEvent.awardedFs,
@@ -1364,7 +1364,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			stateGameDerived.enhancedBoard.settle(stripped);
 		}
 		// Bonus `activate` already played in freeSpinTargetPick (board still
-		// visible). Skip here so we don't double-fire after the gallery.
+		// visible). Skip here so we don't double-fire after the card pick.
 		// Also skip if bonusCollect preceded us (same celebrate path).
 		const hadTargetPick = bookEvents.some((e) => e.type === 'freeSpinTargetPick');
 		const eventIdx = bookEvents.indexOf(bookEvent);
@@ -1388,10 +1388,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateUi.freeSpinCounterCurrent = 0;
 		stateUi.freeSpinCounterTotal = bookEvent.totalFs;
 
+		// Card pick fades out BEFORE steam (no blur backdrop over the transition).
+		if (hadTargetPick) {
+			await eventEmitter.broadcastAsync({ type: 'exportCardsPickRetreat' });
+		}
+
 		// Extra-style sequencing: gallery slides off + TIR GPU gone BEFORE steam.
 		// Avoids tir atlases overlapping night/mascot/drum + fsPopup load under the cloud.
 		const tirVisible =
-			hadTargetPick ||
 			stateGame.targetPickOpen ||
 			stateGame.targetPickSlide > 0.001 ||
 			stateGame.targetShotFlips.length > 0 ||
