@@ -47,6 +47,7 @@
 		clip={symbolInfo.clip}
 		sizeRatio={symbolInfo.sizeRatios.width}
 		offsetX={'offsetX' in symbolInfo ? symbolInfo.offsetX : undefined}
+		offsetY={'offsetY' in symbolInfo ? symbolInfo.offsetY : undefined}
 		inViewport={props.inViewport}
 		duelSide={props.duelSide}
 		oncomplete={props.oncomplete}

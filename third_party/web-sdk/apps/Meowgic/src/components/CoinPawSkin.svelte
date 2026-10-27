@@ -9,10 +9,9 @@
 	const { skin }: Props = $props();
 	const spine = getContextSpine();
 
+	/** Octagon rig: one `symbol` (x1/x2/x3) + one `paw` slot, art per `coin_*` skin. */
 	const TEXT_TO_PAW = {
-		x1_bronze: 'paw_bronze',
-		x2_silver: 'paw_silver',
-		x3_gold: 'paw_gold',
+		symbol: 'paw',
 	} as const;
 
 	/**

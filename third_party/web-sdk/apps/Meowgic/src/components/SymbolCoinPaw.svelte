@@ -17,6 +17,7 @@
 		clip: CoinPawClip;
 		sizeRatio: number;
 		offsetX?: number;
+		offsetY?: number;
 		inViewport?: boolean;
 		/** Duel desk — freeze living idle only while this side holds the win spotlight. */
 		duelSide?: DuelSide;
@@ -39,6 +40,7 @@
 	const playing = $derived(props.clip === 'appear' && !landed);
 	const animationName = $derived(playing ? 'appear_flash' : 'idle');
 	const spineX = $derived((props.x ?? 0) + (props.offsetX ?? 0));
+	const spineY = $derived((props.y ?? 0) + (props.offsetY ?? 0));
 	const autoUpdate = $derived.by(() => {
 		if (playing) return true;
 		if (props.inViewport === false) return false;
@@ -52,7 +54,7 @@
 
 <SpineProvider
 	x={spineX}
-	y={props.y}
+	y={spineY}
 	key="coinsPaw"
 	width={SYMBOL_SIZE * props.sizeRatio}
 	{autoUpdate}

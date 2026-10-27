@@ -1826,12 +1826,15 @@ export const MYSTERY_REVEAL_ANIMATION = 'Mystery/explosion';
 const PAW_COIN_SIZE_RATIOS = { width: 0.85 * (472 / 272), height: 0.85 * (485 / 295) };
 /** Nudge board paw disc left — Spine AABB sits slightly right of cell centre. */
 const PAW_COIN_OFFSET_X = -6;
+/** Octagon disc sits ~7 skeleton units below the skeleton centre — lift it back. */
+const PAW_COIN_OFFSET_Y = -2;
 const makePawCoinRender = (skin: 'bronze' | 'silver' | 'gold', clip: 'loop' | 'appear') => ({
 	type: 'coinPaw' as const,
 	skin,
 	clip,
 	sizeRatios: PAW_COIN_SIZE_RATIOS,
 	offsetX: PAW_COIN_OFFSET_X,
+	offsetY: PAW_COIN_OFFSET_Y,
 });
 const pawCoinBronze = makePawCoinRender('bronze', 'loop');
 const pawCoinSilver = makePawCoinRender('silver', 'loop');
