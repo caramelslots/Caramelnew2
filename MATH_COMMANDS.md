@@ -37,7 +37,7 @@ PY=/tmp/csmath_venv/bin/python
 
 ## Full pipeline (рекомендуется)
 
-Один скрипт = sim+opt → backup → **joint §3b+§3c** (SMOOTH · VH + Intrigue + RTP) → resample → assert/metrics/MD report → storybook sync.
+Один скрипт = sim+opt → backup → **§3a win-ladder** (base / boost / normal / super) → **joint §3b+§3c** (duel SMOOTH · VH + Intrigue + RTP) → resample → storybook sync.
 
 ```bash
 cd third_party/math-sdk/games/0_0_meowgic
@@ -50,8 +50,8 @@ SKIP_VENV=1 bash run_m6_full.sh    # лог: /tmp/m6_full.log
 ```
 
 По умолчанию: `DUEL_INTRIGUE=1`, `DUEL_COMP_QUOTAS=1`, `DUEL_LOSE_MIRROR=0`.  
-Параллелизм: sim/opt **20** потоков; §3b и §3c — cat+dog параллельно; resample `--jobs 6` (`RESAMPLE_JOBS`).  
-Опции: `SKIP_M5=1` / `SKIP_M6=1`, `SKIP_3B=1`, `SKIP_3C=1`, `SKIP_STORYBOOK=1`.
+Параллелизм: sim/opt **20** потоков; §3a ladder — 4 режима параллельно; §3b/§3c — cat+dog параллельно; resample `--jobs 6` (`RESAMPLE_JOBS`).  
+Опции: `SKIP_M5=1` / `SKIP_M6=1`, `SKIP_LADDER=1`, `SKIP_3B=1`, `SKIP_3C=1`, `SKIP_STORYBOOK=1`.
 
 Ниже — те же шаги вручную, если нужен кусок пайплайна.
 
@@ -65,13 +65,13 @@ SKIP_VENV=1 bash run_m6_full.sh    # лог: /tmp/m6_full.log
 NUM_SIMS=200 $PY run_small.py
 ```
 
-Или только sim+opt (без 3b/3c/resample):
+Или только sim+opt (без ladder / 3b/3c / resample):
 
 ```bash
 $PY run_m5.py 2>&1 | tee /tmp/m5.log
 ```
 
-Полный M5 publish: `bash run_m5_full.sh` (см. выше).
+Полный M5 publish: `bash run_m5_full.sh` (backup → §3a ladder → §3b+§3c → resample 100k → sync).
 
 ---
 
@@ -81,7 +81,7 @@ $PY run_m5.py 2>&1 | tee /tmp/m5.log
 $PY run_m6.py 2>&1 | tee /tmp/m6.log
 ```
 
-Полный M6 publish: `bash run_m6_full.sh` (backup → §3b → §3c → resample --1m → sync).
+Полный M6 publish: `bash run_m6_full.sh` (backup → §3a ladder → §3b+§3c → resample --1m → sync).
 
 ---
 
@@ -96,10 +96,49 @@ cp -r library/publish_files library/publish_files_backup_pre_resample
 
 ---
 
+## 3a. Win-ladder match (base / boost / normal / super)
+
+После backup, **до** resample. Крутит веса LUT под `tools/*_win_ladder_targets.json`
+(RTP 96%, cost из JSON). `--also-publish` обязателен — иначе resample
+`refresh_backup_from_publish` затрёт матч unmatched publish LUT.
+
+В `run_m5_full.sh` / `run_m6_full.sh` уже встроено (`SKIP_LADDER=1` чтобы пропустить).
+Вручную:
+
+```bash
+$PY tools/match_base_win_ladder.py --mode base \
+  --targets tools/base_win_ladder_targets.json \
+  --lut-dir library/publish_files_backup_pre_resample \
+  --also-publish --tol 0.0015 --rtp 0.96 --rtp-tol 0.005 --rounds 6
+
+$PY tools/match_base_win_ladder.py --mode bonus_boost \
+  --targets tools/bonus_boost_win_ladder_targets.json \
+  --lut-dir library/publish_files_backup_pre_resample \
+  --also-publish --tol 0.0015 --rtp 0.96 --rtp-tol 0.005 --rounds 6
+
+$PY tools/match_base_win_ladder.py --mode bonus_normal \
+  --targets tools/bonus_normal_win_ladder_targets.json \
+  --lut-dir library/publish_files_backup_pre_resample \
+  --also-publish --tol 0.0020 --rtp 0.96 --rtp-tol 0.005 --rounds 8
+
+$PY tools/match_base_win_ladder.py --mode bonus_super \
+  --targets tools/bonus_super_win_ladder_targets.json \
+  --lut-dir library/publish_files_backup_pre_resample \
+  --also-publish --tol 0.0020 --rtp 0.96 --rtp-tol 0.005 --rounds 8
+
+$PY tools/win_payout_histogram.py \
+  --lut-dir library/publish_files_backup_pre_resample \
+  --md-out library/win_payout_histogram.md
+```
+
+Отдельные `run_*_ladder.py` — только для точечной пересборки одного режима; full.sh их не зовёт.
+
+---
+
 ## 3b+3c. Joint SMOOTH · VH + Intrigue + RTP (обязательно)
 
-После backup, до resample. **Один** проход вместо старых §3b→§3c
-(последовательный §3c затирал win-body и ронял dog RTP до ~82%).
+После backup (+ §3a ladder), до resample. **Один** проход вместо старых §3b→§3c
+(последовательный §3c затирал win-body и ронял dog RTP до ~82%). Только **duel**.
 
 ```bash
 $PY tools/match_duel_joint_targets.py --mode bonus_duel_cat \
