@@ -1,6 +1,6 @@
 """Optimization-program setup для Wok Fury (5 bet-modes).
 
-MATH_LOW_VOL_PLAN Stage 3: line hit ~37%, low avg win per hit (~1.08× base),
+MATH_LOW_VOL_PLAN Stage 3 + ladder v2: line hit ~53%, body in 0.2–0.5×,
 RTP 96%. FS optimizer profile unchanged (Q2).
 """
 
@@ -44,28 +44,30 @@ def _bonus_parameters():
 
 
 def _basegame_scaling():
-    # Moderate A: keep meloch, fill mid 1–1.5×, soft-cut huge FS/SW tails.
-    # RTP budget moves from ≥50× into body; total RTP still ~96% via fences + enforce.
+    # Ladder v2: starve tiny 0.1–0.2×, fill 0.2–0.5× body, mild mid, soft high tail.
+    # Exact % all is finished by tools/match_base_win_ladder.py on the weighted LUT.
     return ConstructScaling(
         [
-            {"criteria": "basegame", "scale_factor": 1.9, "win_range": (0.1, 0.5), "probability": 1.0},
-            {"criteria": "basegame", "scale_factor": 1.8, "win_range": (0.5, 1.0), "probability": 1.0},
-            # Key band for 1 / 1.2 / 1.5× line hits (was starved).
-            {"criteria": "basegame", "scale_factor": 2.4, "win_range": (1.0, 2.0), "probability": 1.0},
-            {"criteria": "basegame", "scale_factor": 1.0, "win_range": (2.0, 5), "probability": 1.0},
-            {"criteria": "basegame", "scale_factor": 0.35, "win_range": (5, 20), "probability": 1.0},
-            {"criteria": "basegame", "scale_factor": 0.12, "win_range": (20, 50), "probability": 1.0},
-            # Prefer typical coin-row pays (~4–8×) so more paw hits fit in fence RTP.
-            {"criteria": "paw", "scale_factor": 2.2, "win_range": (3, 8), "probability": 1.0},
-            {"criteria": "paw", "scale_factor": 1.4, "win_range": (8, 15), "probability": 1.0},
+            # Crush pure meloch (0.1× line crumbs) — books still exist for thin drip.
+            {"criteria": "basegame", "scale_factor": 0.25, "win_range": (0.1, 0.2), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 3.2, "win_range": (0.2, 0.5), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 2.4, "win_range": (0.5, 1.0), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 2.0, "win_range": (1.0, 2.0), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 1.2, "win_range": (2.0, 5), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 0.55, "win_range": (5, 20), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 0.22, "win_range": (20, 50), "probability": 1.0},
+            {"criteria": "paw", "scale_factor": 2.0, "win_range": (3, 8), "probability": 1.0},
+            {"criteria": "paw", "scale_factor": 1.3, "win_range": (8, 15), "probability": 1.0},
             {"criteria": "paw", "scale_factor": 0.40, "win_range": (15, 50), "probability": 1.0},
-            {"criteria": "sw_expand", "scale_factor": 1.4, "win_range": (1, 10), "probability": 1.0},
-            {"criteria": "sw_expand", "scale_factor": 0.9, "win_range": (10, 30), "probability": 1.0},
+            {"criteria": "sw_expand", "scale_factor": 1.3, "win_range": (1, 10), "probability": 1.0},
+            {"criteria": "sw_expand", "scale_factor": 0.85, "win_range": (10, 30), "probability": 1.0},
             {"criteria": "sw_expand", "scale_factor": 0.28, "win_range": (30, 100), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 1.5, "win_range": (1, 40), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 1.0, "win_range": (40, 100), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 1.35, "win_range": (1, 40), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.95, "win_range": (40, 100), "probability": 1.0},
             {"criteria": "freegame", "scale_factor": 0.35, "win_range": (100, 300), "probability": 1.0},
             {"criteria": "freegame", "scale_factor": 0.12, "win_range": (300, 2500), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.05, "win_range": (2500, 25000), "probability": 1.0},
+            {"criteria": "wincap_max", "scale_factor": 1.0, "win_range": (25000, 25000), "probability": 1.0},
         ]
     ).return_dict()
 
@@ -86,42 +88,49 @@ def _bonus_boost_parameters():
 
 
 def _bonus_boost_scaling():
-    """Bonus Boost (cost 2×): same moderate-A body fill as base + ETL40-safe FS cut.
+    """Bonus Boost (cost 2×): ladder v1 — thin 0.5–1× pile, fill 1–5× body, soft mid/FS.
 
-    Lift meloch/mid 1–1.5×; soft-cut huge FS/SW. Keep RTP ≈96% via fences + enforce.
+    Exact % all finished by tools/match_base_win_ladder.py + bonus_boost targets.
     """
     return ConstructScaling(
         [
-            {"criteria": "basegame", "scale_factor": 1.85, "win_range": (0.1, 0.5), "probability": 1.0},
-            {"criteria": "basegame", "scale_factor": 1.75, "win_range": (0.5, 1.0), "probability": 1.0},
-            {"criteria": "basegame", "scale_factor": 2.3, "win_range": (1.0, 2.0), "probability": 1.0},
-            {"criteria": "basegame", "scale_factor": 1.0, "win_range": (2.0, 5), "probability": 1.0},
-            {"criteria": "basegame", "scale_factor": 0.30, "win_range": (5, 50), "probability": 1.0},
-            {"criteria": "paw", "scale_factor": 2.2, "win_range": (3, 8), "probability": 1.0},
-            {"criteria": "paw", "scale_factor": 1.4, "win_range": (8, 15), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 1.2, "win_range": (0.1, 0.5), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 0.85, "win_range": (0.5, 1.0), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 2.6, "win_range": (1.0, 2.0), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 2.0, "win_range": (2.0, 5), "probability": 1.0},
+            {"criteria": "basegame", "scale_factor": 0.45, "win_range": (5, 50), "probability": 1.0},
+            {"criteria": "paw", "scale_factor": 2.0, "win_range": (3, 8), "probability": 1.0},
+            {"criteria": "paw", "scale_factor": 1.3, "win_range": (8, 15), "probability": 1.0},
             {"criteria": "paw", "scale_factor": 0.40, "win_range": (15, 50), "probability": 1.0},
-            {"criteria": "sw_expand", "scale_factor": 1.4, "win_range": (1, 10), "probability": 1.0},
-            {"criteria": "sw_expand", "scale_factor": 0.9, "win_range": (10, 30), "probability": 1.0},
+            {"criteria": "sw_expand", "scale_factor": 1.3, "win_range": (1, 10), "probability": 1.0},
+            {"criteria": "sw_expand", "scale_factor": 0.85, "win_range": (10, 30), "probability": 1.0},
             {"criteria": "sw_expand", "scale_factor": 0.28, "win_range": (30, 100), "probability": 1.0},
-            # FS: 40× cost = 80× bet — prefer sessions below that band.
-            {"criteria": "freegame", "scale_factor": 1.55, "win_range": (1, 40), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 1.2, "win_range": (40, 80), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 0.55, "win_range": (80, 200), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 0.28, "win_range": (200, 500), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 1.45, "win_range": (1, 40), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 1.05, "win_range": (40, 80), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.50, "win_range": (80, 200), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.25, "win_range": (200, 500), "probability": 1.0},
             {"criteria": "freegame", "scale_factor": 0.12, "win_range": (500, 2500), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.05, "win_range": (2500, 25000), "probability": 1.0},
+            {"criteria": "wincap_max", "scale_factor": 1.0, "win_range": (25000, 25000), "probability": 1.0},
         ]
     ).return_dict()
 
 
 def _bonus_normal_scaling():
-    """Buy Normal (cost 100×): lift mid body, soften extreme tail; crush >2500 except max fence."""
+    """Buy Normal (cost 100×): ladder v6 — crush <40×, peak 60–100×, cascade 100–200, thin 200+.
+
+    Exact % all finished by tools/match_base_win_ladder.py + bonus_normal targets.
+    """
     return ConstructScaling(
         [
-            {"criteria": "freegame", "scale_factor": 1.35, "win_range": (1, 35), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 1.55, "win_range": (35, 100), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 1.25, "win_range": (100, 220), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 0.75, "win_range": (220, 700), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 0.4, "win_range": (700, 2500), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.20, "win_range": (1, 40), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.90, "win_range": (40, 60), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 2.40, "win_range": (60, 80), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 2.60, "win_range": (80, 100), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 1.80, "win_range": (100, 150), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 1.40, "win_range": (150, 200), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.55, "win_range": (200, 500), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.35, "win_range": (500, 2500), "probability": 1.0},
             # Natural FS must not fill 2500–25000; that band is wincap_max only.
             {"criteria": "freegame", "scale_factor": 0.05, "win_range": (2500, 25000), "probability": 1.0},
             {"criteria": "wincap_max", "scale_factor": 1.0, "win_range": (25000, 25000), "probability": 1.0},
@@ -130,14 +139,20 @@ def _bonus_normal_scaling():
 
 
 def _bonus_super_scaling():
-    """Buy Super (cost 200×): same shape, shifted up vs Normal."""
+    """Buy Super (cost 200×): ladder v1 — crush <100×, peak 150–200×, cascade 200–500, thin 500+.
+
+    Exact % all finished by tools/match_base_win_ladder.py + bonus_super targets.
+    """
     return ConstructScaling(
         [
-            {"criteria": "freegame", "scale_factor": 1.3, "win_range": (1, 70), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 1.5, "win_range": (70, 200), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 1.2, "win_range": (200, 400), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 0.75, "win_range": (400, 1000), "probability": 1.0},
-            {"criteria": "freegame", "scale_factor": 0.4, "win_range": (1000, 2500), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.35, "win_range": (1, 80), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.70, "win_range": (80, 100), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 1.90, "win_range": (100, 150), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 2.50, "win_range": (150, 200), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 1.80, "win_range": (200, 300), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 1.20, "win_range": (300, 500), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.55, "win_range": (500, 1000), "probability": 1.0},
+            {"criteria": "freegame", "scale_factor": 0.30, "win_range": (1000, 2500), "probability": 1.0},
             {"criteria": "freegame", "scale_factor": 0.05, "win_range": (2500, 25000), "probability": 1.0},
             {"criteria": "wincap_max", "scale_factor": 1.0, "win_range": (25000, 25000), "probability": 1.0},
         ]
@@ -214,49 +229,62 @@ class OptimizationSetup:
         self.game_config.opt_params = {
             "base": {
                 "conditions": {
+                    # Soft jackpot ×2500 (~1% RTP). Ultra-rare ×25000 is wincap_max.
                     "wincap": ConstructConditions(
-                        rtp=0.01, av_win=wincaps["base"], search_conditions=wincaps["base"]
+                        rtp=0.01, av_win=2500.0, search_conditions=2500.0
+                    ).return_dict(),
+                    "wincap_max": ConstructConditions(
+                        rtp=0.025,
+                        av_win=wincaps["base"],
+                        search_conditions=wincaps["base"],
                     ).return_dict(),
                     # 0_cluster shares optimizer fence with 0 (both rtp=0, win=0).
                     "0": ConstructConditions(rtp=0, av_win=0, search_conditions=0).return_dict(),
-                    # Paw ~3% hits (hr≈33), rtp≈0.18 → avg ~6×. Mid body in basegame.
-                    # Total fences ≈0.96 (wincap 0.01 + FS/paw/sw/basegame).
+                    # Ladder v2: fewer blanks → higher basegame hit (hr≈1.9 → ~53% fence).
+                    # Fence RTP sum ≈0.96 (wincap 0.01 + max 0.025 + FS/paw/sw/basegame).
                     "freegame": ConstructConditions(
-                        rtp=0.25, hr=300, search_conditions={"symbol": "scatter"}
+                        rtp=0.22, hr=300, search_conditions={"symbol": "scatter"}
                     ).return_dict(),
-                    "paw": ConstructConditions(hr=33, rtp=0.18).return_dict(),
-                    "sw_expand": ConstructConditions(hr=40, rtp=0.05).return_dict(),
-                    "basegame": ConstructConditions(hr=2.7, rtp=0.47).return_dict(),
+                    "paw": ConstructConditions(hr=33, rtp=0.16).return_dict(),
+                    "sw_expand": ConstructConditions(hr=40, rtp=0.045).return_dict(),
+                    "basegame": ConstructConditions(hr=1.9, rtp=0.50).return_dict(),
                 },
                 "scaling": _basegame_scaling(),
                 "parameters": _common_parameters(),
-                # Bias modest FS + typical paw coin-row band (keeps avg paw win down → more hits).
+                # Bias small-win body 0.3–0.5× (v3b main mass) + modest FS / paw.
                 "distribution_bias": ConstructFenceBias(
                     applied_criteria=["freegame", "paw", "basegame"],
-                    bias_ranges=[(20.0, 100.0), (3.0, 10.0), (1.0, 2.0)],
-                    bias_weights=[0.40, 0.65, 0.55],
+                    bias_ranges=[(20.0, 100.0), (3.0, 10.0), (0.3, 0.5)],
+                    bias_weights=[0.35, 0.55, 0.75],
                 ).return_dict(),
             },
             "bonus_boost": {
                 "conditions": {
+                    # Soft ×2500 + ultra-rare ×25000 (ladder v1 jackpot lock).
                     "wincap": ConstructConditions(
-                        rtp=0.01, av_win=wincaps["bonus_boost"], search_conditions=wincaps["bonus_boost"]
+                        rtp=0.01, av_win=2500.0, search_conditions=2500.0
+                    ).return_dict(),
+                    "wincap_max": ConstructConditions(
+                        rtp=0.0125,
+                        av_win=wincaps["bonus_boost"],
+                        search_conditions=wincaps["bonus_boost"],
                     ).return_dict(),
                     "0": ConstructConditions(rtp=0, av_win=0, search_conditions=0).return_dict(),
-                    # Same moderate-A split as base; FS still richer than base (hr 160).
+                    # Ladder v1: hit ~50.6% → basegame hr≈2.0; FS still richer than base.
+                    # Fence RTP ≈0.96 (0.01+0.0125+0.34+0.15+0.045+0.4025).
                     "freegame": ConstructConditions(
-                        rtp=0.38, hr=160, search_conditions={"symbol": "scatter"}
+                        rtp=0.34, hr=160, search_conditions={"symbol": "scatter"}
                     ).return_dict(),
-                    "paw": ConstructConditions(hr=33, rtp=0.16).return_dict(),
-                    "sw_expand": ConstructConditions(hr=40, rtp=0.05).return_dict(),
-                    "basegame": ConstructConditions(hr=2.8, rtp=0.36).return_dict(),
+                    "paw": ConstructConditions(hr=33, rtp=0.15).return_dict(),
+                    "sw_expand": ConstructConditions(hr=40, rtp=0.045).return_dict(),
+                    "basegame": ConstructConditions(hr=2.0, rtp=0.4025).return_dict(),
                 },
                 "scaling": _bonus_boost_scaling(),
                 "parameters": _bonus_boost_parameters(),
                 "distribution_bias": ConstructFenceBias(
                     applied_criteria=["freegame", "paw", "basegame"],
                     bias_ranges=[(15.0, 70.0), (3.0, 10.0), (1.0, 2.0)],
-                    bias_weights=[0.30, 0.65, 0.55],
+                    bias_weights=[0.30, 0.55, 0.70],
                 ).return_dict(),
             },
             "bonus_normal": {
@@ -273,11 +301,11 @@ class OptimizationSetup:
                 },
                 "scaling": _bonus_normal_scaling(),
                 "parameters": _bonus_parameters(),
-                # Bias toward mid band around ~0.5–1.2× buy price (not wincap).
+                # Bias toward ladder v6 peak (60–100×) then cascade into 100–200.
                 "distribution_bias": ConstructFenceBias(
-                    applied_criteria=["freegame"],
-                    bias_ranges=[(45.0, 130.0)],
-                    bias_weights=[0.35],
+                    applied_criteria=["freegame", "freegame"],
+                    bias_ranges=[(60.0, 100.0), (100.0, 200.0)],
+                    bias_weights=[0.45, 0.30],
                 ).return_dict(),
             },
             "bonus_super": {
@@ -292,10 +320,11 @@ class OptimizationSetup:
                 },
                 "scaling": _bonus_super_scaling(),
                 "parameters": _bonus_parameters(),
+                # Bias toward ladder v1 peak (150–200×) then cascade into 200–500.
                 "distribution_bias": ConstructFenceBias(
-                    applied_criteria=["freegame"],
-                    bias_ranges=[(90.0, 260.0)],
-                    bias_weights=[0.35],
+                    applied_criteria=["freegame", "freegame"],
+                    bias_ranges=[(150.0, 200.0), (200.0, 500.0)],
+                    bias_weights=[0.45, 0.30],
                 ).return_dict(),
             },
             "bonus_duel_cat": {

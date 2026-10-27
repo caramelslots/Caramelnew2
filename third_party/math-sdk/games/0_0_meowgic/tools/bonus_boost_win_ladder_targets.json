@@ -1,0 +1,30 @@
+{
+  "mode": "bonus_boost",
+  "cost": 2.0,
+  "target_rtp": 0.96,
+  "comment": "Mirrors library/bonus_boost_win_ladder_targets.md v2. Unimodal: rise to 0.5-0.75 peak, then strict fall. E[pay] target = cost * rtp = 1.92.",
+  "bands": [
+    {"label": "0 lose", "lo": 0.0, "hi": 0.0, "share": 0.4940, "lose": true},
+    {"label": "0.1-0.2", "lo": 0.1, "hi": 0.2, "share": 0.0070},
+    {"label": "0.2-0.3", "lo": 0.2, "hi": 0.3, "share": 0.0200},
+    {"label": "0.3-0.5", "lo": 0.3, "hi": 0.5, "share": 0.0500},
+    {"label": "0.5-0.75", "lo": 0.5, "hi": 0.75, "share": 0.1000},
+    {"label": "0.75-1", "lo": 0.75, "hi": 1.0, "share": 0.0820},
+    {"label": "1-1.5", "lo": 1.0, "hi": 1.5, "share": 0.0680},
+    {"label": "1.5-2", "lo": 1.5, "hi": 2.0, "share": 0.0520},
+    {"label": "2-3", "lo": 2.0, "hi": 3.0, "share": 0.0390},
+    {"label": "3-5", "lo": 3.0, "hi": 5.0, "share": 0.0290},
+    {"label": "5-7.5", "lo": 5.0, "hi": 7.5, "share": 0.0200},
+    {"label": "7.5-10", "lo": 7.5, "hi": 10.0, "share": 0.0130},
+    {"label": "10-15", "lo": 10.0, "hi": 15.0, "share": 0.0095},
+    {"label": "15-25", "lo": 15.0, "hi": 25.0, "share": 0.0065},
+    {"label": "25-40", "lo": 25.0, "hi": 40.0, "share": 0.0042},
+    {"label": "40-60", "lo": 40.0, "hi": 60.0, "share": 0.0028},
+    {"label": "60-100", "lo": 60.0, "hi": 100.0, "share": 0.0011},
+    {"label": "100-150", "lo": 100.0, "hi": 150.0, "share": 0.0009},
+    {"label": "150-250", "lo": 150.0, "hi": 250.0, "share": 0.0006},
+    {"label": "250-500", "lo": 250.0, "hi": 500.0, "share": 0.0003},
+    {"label": "500-5000", "lo": 500.0, "hi": 5000.0, "share": 0.0001},
+    {"label": "~25000", "lo": 5000.0, "hi": 25000.0, "share": 0.000001, "open_hi": true, "flexible": true}
+  ]
+}

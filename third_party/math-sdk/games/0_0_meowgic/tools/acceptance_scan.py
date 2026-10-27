@@ -38,8 +38,8 @@ FS_MARKERS = {"enterFreeSpin", "freeSpinTrigger", "freeSpinTargetPick", "startFr
 
 # mode -> (cost, baseline_rtp, baseline_hit, paw_target, sw_target)
 BASELINES = {
-    "base": (1.0, 0.9598, 0.3708, 0.03, 0.03),
-    "bonus_boost": (2.0, 0.9602, 0.4133, 0.03, 0.03),
+    "base": (1.0, 0.9598, 0.53044, 0.03, 0.03),
+    "bonus_boost": (2.0, 0.9602, 0.5060, 0.03, 0.03),
 }
 BUY_MODES = ("bonus_normal", "bonus_super")
 

@@ -1,0 +1,29 @@
+{
+  "mode": "bonus_normal",
+  "cost": 100.0,
+  "target_rtp": 0.96,
+  "comment": "Mirrors library/bonus_normal_win_ladder_targets.md v6. Buy: P(lose)=0. Poured 40-60 down to 12% into 60-80@30% and peak 80-100@~32%. Cascade 32→14→7→2.1 then steeper rare tail. E[pay] target = cost * rtp = 96.",
+  "bands": [
+    {"label": "0 lose", "lo": 0.0, "hi": 0.0, "share": 0.0, "lose": true},
+    {"label": "0.1-1", "lo": 0.1, "hi": 1.0, "share": 0.0005},
+    {"label": "1-5", "lo": 1.0, "hi": 5.0, "share": 0.001},
+    {"label": "5-10", "lo": 5.0, "hi": 10.0, "share": 0.0025},
+    {"label": "10-20", "lo": 10.0, "hi": 20.0, "share": 0.005},
+    {"label": "20-40", "lo": 20.0, "hi": 40.0, "share": 0.01},
+    {"label": "40-60", "lo": 40.0, "hi": 60.0, "share": 0.12},
+    {"label": "60-80", "lo": 60.0, "hi": 80.0, "share": 0.30},
+    {"label": "80-100", "lo": 80.0, "hi": 100.0, "share": 0.319987},
+    {"label": "100-150", "lo": 100.0, "hi": 150.0, "share": 0.1406},
+    {"label": "150-200", "lo": 150.0, "hi": 200.0, "share": 0.0703},
+    {"label": "200-300", "lo": 200.0, "hi": 300.0, "share": 0.0211},
+    {"label": "300-500", "lo": 300.0, "hi": 500.0, "share": 0.0063},
+    {"label": "500-750", "lo": 500.0, "hi": 750.0, "share": 0.0019},
+    {"label": "750-1000", "lo": 750.0, "hi": 1000.0, "share": 0.00057},
+    {"label": "1000-1500", "lo": 1000.0, "hi": 1500.0, "share": 0.00017},
+    {"label": "1500-2500", "lo": 1500.0, "hi": 2500.0, "share": 0.00005},
+    {"label": "2500-5000", "lo": 2500.0, "hi": 5000.0, "share": 0.000015},
+    {"label": "5000-10000", "lo": 5000.0, "hi": 10000.0, "share": 0.000005},
+    {"label": "10000-25000", "lo": 10000.0, "hi": 25000.0, "share": 0.000002},
+    {"label": "~25000", "lo": 25000.0, "hi": 25000.0, "share": 0.000001, "open_hi": true, "flexible": true}
+  ]
+}

@@ -297,10 +297,12 @@ class GameConfig(Config):
             "duel_mode": True,
         }
 
+        # Base: hard max ×25000 (ultra-rare); soft force-wincap fence stays ×2500.
+        # Boost stays soft-only for now (ladder work is base-only).
         # Buy bonuses: advertised/hard max ×25000; soft force-wincap fence stays ×2500.
         mode_maxwins = {
-            "base": self.soft_wincap,
-            "bonus_boost": self.soft_wincap,
+            "base": 25_000.0,
+            "bonus_boost": 25_000.0,
             "bonus_normal": 25_000.0,
             "bonus_super": 25_000.0,
             "bonus_duel_cat": 25_000.0,
@@ -308,17 +310,34 @@ class GameConfig(Config):
         }
         buy_soft = self.soft_wincap
         buy_hard = 25_000.0
-        # ~10 forced max books per 1e5 sims; opt keeps their LUT weight tiny.
+        # ~10 forced max books per 1e5 sims; opt keeps their LUT weight tiny (~1/1M).
         buy_wincap_max_quota = 0.0001
 
-        # Dead + basegame + paw + sw_expand + freegame + wincap = 1.0
+        # Dead + basegame + paw + sw_expand + freegame + wincap[+max] = 1.0
         # Equal feature rates: paw == sw_expand (~1/33 each).
+        # Base ladder v3b lose ~46.96%; boost ladder v1 lose ~49.40%.
         # bonus_boost = same BR0 mechanics as base; freegame quota ~2× (20% vs 10%).
         feature_quota = 0.03
         dead_cluster = 0.10
-        dead_plain = round(0.469 - dead_cluster, 4)
+        dead_total_base = 0.46956
+        dead_total_boost = 0.4940
+        dead_plain_base = round(dead_total_base - dead_cluster, 4)
+        dead_plain_boost = round(dead_total_boost - dead_cluster, 4)
         boost_freegame_quota = 0.20
-        boost_basegame_quota = 0.27  # base keeps 0.37; difference → freegame
+        # base: 1 - (wincap+max+fg+dead+paw+sw)
+        base_basegame_quota = round(
+            1.0 - 0.001 - buy_wincap_max_quota - 0.10 - dead_total_base - 2 * feature_quota, 6
+        )
+        # boost: soft wincap + max + fg 0.20 + dead + paw/sw
+        boost_basegame_quota = round(
+            1.0
+            - 0.001
+            - buy_wincap_max_quota
+            - boost_freegame_quota
+            - dead_total_boost
+            - 2 * feature_quota,
+            6,
+        )
 
         self.bet_modes = [
             BetMode(
@@ -333,11 +352,22 @@ class GameConfig(Config):
                     Distribution(
                         criteria="wincap",
                         quota=0.001,
+                        win_criteria=buy_soft,
+                        conditions=wincap_condition,
+                    ),
+                    Distribution(
+                        criteria="wincap_max",
+                        quota=buy_wincap_max_quota,
                         win_criteria=mode_maxwins["base"],
                         conditions=wincap_condition,
                     ),
                     Distribution(criteria="freegame", quota=0.10, conditions=freegame_condition),
-                    Distribution(criteria="0", quota=dead_plain, win_criteria=0.0, conditions=zerowin_condition),
+                    Distribution(
+                        criteria="0",
+                        quota=dead_plain_base,
+                        win_criteria=0.0,
+                        conditions=zerowin_condition,
+                    ),
                     Distribution(
                         criteria="0_cluster",
                         quota=dead_cluster,
@@ -350,7 +380,11 @@ class GameConfig(Config):
                         quota=feature_quota,
                         conditions=sw_expand_condition,
                     ),
-                    Distribution(criteria="basegame", quota=0.37, conditions=basegame_condition),
+                    Distribution(
+                        criteria="basegame",
+                        quota=base_basegame_quota,
+                        conditions=basegame_condition,
+                    ),
                 ],
             ),
             BetMode(
@@ -361,11 +395,17 @@ class GameConfig(Config):
                 auto_close_disabled=False,
                 is_feature=True,
                 is_buybonus=False,
-                # Same BR0 / paw / SW / dead as base — only freegame vs basegame mix differs.
+                # Same BR0 / paw / SW as base — freegame mix + dead/hit from boost ladder v1.
                 distributions=[
                     Distribution(
                         criteria="wincap",
                         quota=0.001,
+                        win_criteria=buy_soft,
+                        conditions=wincap_condition,
+                    ),
+                    Distribution(
+                        criteria="wincap_max",
+                        quota=buy_wincap_max_quota,
                         win_criteria=mode_maxwins["bonus_boost"],
                         conditions=wincap_condition,
                     ),
@@ -374,7 +414,12 @@ class GameConfig(Config):
                         quota=boost_freegame_quota,
                         conditions=freegame_condition,
                     ),
-                    Distribution(criteria="0", quota=dead_plain, win_criteria=0.0, conditions=zerowin_condition),
+                    Distribution(
+                        criteria="0",
+                        quota=dead_plain_boost,
+                        win_criteria=0.0,
+                        conditions=zerowin_condition,
+                    ),
                     Distribution(
                         criteria="0_cluster",
                         quota=dead_cluster,
