@@ -19,6 +19,7 @@
 </script>
 
 <script lang="ts">
+	import { Physics } from '@esotericsoftware/spine-pixi-v8';
 	import { getContextSpine } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
@@ -132,12 +133,30 @@
 		clearActivationTimer();
 	};
 
+	/**
+	 * Spine 4.3 `BonePose.updateWorldTransform` rebuilds local x/y from the world matrix when
+	 * `local === skeleton._update` (true before the first skeleton update) — with a zero matrix
+	 * that writes NaN into the bone forever (drum + labels vanish). Recompute the whole skeleton instead.
+	 */
+	const refreshWorld = (skeleton: NonNullable<typeof spine.skeleton>) => {
+		skeleton.updateWorldTransform(Physics.pose);
+	};
+
+	const repairNaNBone = (bone: NonNullable<ReturnType<NonNullable<typeof spine.skeleton>['findBone']>>) => {
+		const { pose } = bone;
+		if (Number.isFinite(pose.x) && Number.isFinite(pose.y)) return;
+		const rotation = pose.rotation;
+		pose.set(bone.data.setupPose);
+		pose.rotation = Number.isFinite(rotation) ? rotation : bone.data.setupPose.rotation;
+	};
+
 	const applyWheelBone = (deg: number) => {
-		const bone = spine.skeleton?.findBone('main16');
-		if (!bone) return;
+		const skeleton = spine.skeleton;
+		const bone = skeleton?.findBone('main16');
+		if (!skeleton || !bone) return;
+		repairNaNBone(bone);
 		bone.pose.rotation = deg;
-		bone.appliedPose.rotation = deg;
-		bone.appliedPose.updateWorldTransform(spine.skeleton);
+		refreshWorld(skeleton);
 	};
 
 	/**
@@ -293,10 +312,9 @@
 		} else {
 			pointerShakeLastMs = 0;
 		}
-		const rotation = POINTER_SETUP.rotation + kick;
-		bone.pose.rotation = rotation;
-		bone.appliedPose.rotation = rotation;
-		bone.appliedPose.updateWorldTransform(s.skeleton);
+		repairNaNBone(bone);
+		bone.pose.rotation = POINTER_SETUP.rotation + kick;
+		refreshWorld(s.skeleton);
 	};
 
 	const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
