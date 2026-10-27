@@ -27,6 +27,7 @@
 	import { getDuelBoardStack } from '../game/stateDuelBoards.svelte';
 	import {
 		SUPER_WILD_OPEN0_ALIGN_Y_PX,
+		SUPER_WILD_OFFSET_Y_PX,
 		SUPER_WILD_OPEN_LAND_MS,
 		SUPER_WILD_DISMISS_DIST,
 		SUPER_WILD_STICKY_DROP_IN_DIST,
@@ -149,7 +150,8 @@
 		getSuperWildOriginCellY(props.originRow) -
 			props.boxH * 0.5 -
 			open0LocalY +
-			SUPER_WILD_OPEN0_ALIGN_Y_PX,
+			SUPER_WILD_OPEN0_ALIGN_Y_PX -
+			SUPER_WILD_OFFSET_Y_PX,
 	);
 	const columnY = $derived(props.colY + alignShift0 * (1 - alignT.current) + dropInY.current);
 

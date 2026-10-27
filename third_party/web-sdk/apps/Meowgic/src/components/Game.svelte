@@ -214,13 +214,12 @@
 						<DuelPixiBoard side="dog" layer="overlay" />
 						<DuelPixiBoard side="cat" layer="overlay" />
 					{/if}
-					{#if stateDuel.visualTier >= 4}
-						<DuelPixiBoard side="dog" layer="nameplate" />
-						<DuelPixiBoard side="cat" layer="nameplate" />
-					{/if}
 					{#if stateDuel.visualTier >= 5}
 						<DuelPixiBoard side="dog" layer="superWild" />
 						<DuelPixiBoard side="cat" layer="superWild" />
+						<!-- Desk stamp above SW curtains / symbols, under paylines. -->
+						<DuelPixiBoard side="dog" layer="nameplate" />
+						<DuelPixiBoard side="cat" layer="nameplate" />
 						<DuelPixiBoard side="dog" layer="paylines" />
 						<DuelPixiBoard side="cat" layer="paylines" />
 					{/if}
@@ -280,7 +279,7 @@
 							</MainContainer>
 						</Container>
 
-						<!-- WIN sum plate — above SW curtains (slot `below`), under paylines / WIN $. -->
+						<!-- Desk wax stamp — above symbols / win pops / SW curtains, under paylines / WIN $. -->
 						<Container zIndex={-0.1}>
 							<MainContainer>
 								<BoardFrame layer="nameplate" />

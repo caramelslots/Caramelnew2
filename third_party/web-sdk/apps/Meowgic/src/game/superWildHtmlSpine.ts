@@ -184,14 +184,16 @@ export const getSuperWildOriginCellY = (paddedRow: number) => (paddedRow - 0.5) 
  * Y can be >1 to reach the gold bottom rail.
  */
 export const SUPER_WILD_COLUMN_COVER_X = 1.0;
-export const SUPER_WILD_COLUMN_COVER_Y = 1.0057;
+export const SUPER_WILD_COLUMN_COVER_Y = 1.0182;
 /** Bottom outer-corner radius for SW curtains on cols 1 & 5 (board-local px). */
 export const SUPER_WILD_OUTER_COLUMN_BOTTOM_RADIUS_PX = 15.5;
 /**
  * Extra board-local Y shift of the column box.
  * Positive = DOWN, negative = UP.
+ * The painted playfield starts ~3 px above the reel top — lift the box top
+ * there (COVER_Y grows by the same amount so the bottom stays on the rail).
  */
-export const SUPER_WILD_OFFSET_Y_PX = 0;
+export const SUPER_WILD_OFFSET_Y_PX = -5;
 /**
  * Extra X for curtain column centers (game-space px). Negative = LEFT.
  * Reels 0–2 (cols 1–3) stay left-nudged; col 4 right a bit; col 5 left.

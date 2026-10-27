@@ -53,8 +53,8 @@
 		 * `overlay` — frame + vertical gold grids above resting symbols
 		 * (column holes masked). Idle/win pops render above this layer.
 		 * `rails` — column grids only (under the target-pick cabinet).
-		 * `nameplate` — legacy WIN plate layer; the library-book board has no
-		 * separate plate, so it renders nothing.
+		 * `nameplate` — top crest crystal + bottom wax stamp, drawn above
+		 * symbols and the Super Wild curtain.
 		 */
 		layer?: 'base' | 'overlay' | 'rails' | 'nameplate';
 		/** Overlay mask: hide rails while the target cabinet covers them. */
@@ -65,16 +65,26 @@
 
 	/**
 	 * Under the reels: dark playfield + the few props that hang into the
-	 * column holes (fabrics, key, crest jewel). Everything else lives on the
-	 * overlay so additive smoke / multiply shadows are not drawn twice.
+	 * column holes (fabrics, key). Everything else lives on the overlay so
+	 * additive smoke / multiply shadows are not drawn twice.
 	 */
-	const BASE_VISIBLE_SLOTS = [
-		'board',
-		'right_fabric',
-		'left_fabric',
-		'key2',
+	const BASE_VISIBLE_SLOTS = ['board', 'right_fabric', 'left_fabric', 'key2'] as const;
+
+	/**
+	 * Top crest crystal + bottom wax stamp — live on the `nameplate` layer only
+	 * so they cover symbols and the Super Wild curtain.
+	 */
+	const ABOVE_SYMBOLS_SLOTS = [
+		'bg',
+		'white',
+		'outline',
+		'purple_diamond',
 		'base',
 		'little',
+		'little2',
+		'stamp',
+		'paw',
+		'paw2',
 	] as const;
 
 	/** Main desk breathe + layered prop idles from the designer export. */
@@ -177,10 +187,14 @@
 						anchor={0.5}
 					/>
 				{/if}
-			{:else if layer !== 'nameplate'}
+			{:else}
 				<SpineProvider key="boardFrame" x={contentRootX} y={contentRootY} scale={contentScale}>
 					{#if layer === 'base'}
 						<BoardFrameSlotFilter visibleSlots={BASE_VISIBLE_SLOTS} />
+					{:else if layer === 'nameplate'}
+						<BoardFrameSlotFilter visibleSlots={ABOVE_SYMBOLS_SLOTS} />
+					{:else}
+						<BoardFrameSlotFilter hiddenSlots={ABOVE_SYMBOLS_SLOTS} />
 					{/if}
 					{#if forcedBoardAnim}
 						{#key `${forcedBoardAnim.clipId}:${forcedBoardAnim.nonce}`}
