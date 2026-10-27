@@ -4,6 +4,8 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+packageExtensionsChecksum: sha256-qV6ON+ydh2FCCG5wolYEcWzqax/ePdp84rbebFExbgo=
+
 importers:
 
   .:
@@ -28,13 +30,13 @@ importers:
     dependencies:
       '@barvynkoa/particle-emitter':
         specifier: 0.0.1
-        version: 0.0.1(pixi.js@8.8.1)
+        version: 0.0.1(pixi.js@8.16.0)
       '@esotericsoftware/spine-pixi-v8':
-        specifier: 4.2.74
-        version: 4.2.74(pixi.js@8.8.1)
+        specifier: 4.3.13
+        version: 4.3.13(pixi.js@8.16.0)
       '@esotericsoftware/spine-player':
-        specifier: 4.2.74
-        version: 4.2.74
+        specifier: 4.3.13
+        version: 4.3.13
       '@lingui/core':
         specifier: 5.2.0
         version: 5.2.0(@lingui/babel-plugin-lingui-macro@5.2.0(babel-plugin-macros@3.1.0)(typescript@5.8.3))(babel-plugin-macros@3.1.0)
@@ -75,8 +77,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/pixi-svelte
       pixi.js:
-        specifier: 8.8.1
-        version: 8.8.1
+        specifier: 8.16.0
+        version: 8.16.0
       rgs-requests:
         specifier: workspace:*
         version: link:../../packages/rgs-requests
@@ -1111,8 +1113,8 @@ importers:
         specifier: workspace:*
         version: link:../pixi-svelte
       pixi.js:
-        specifier: 8.8.1
-        version: 8.8.1
+        specifier: 8.16.0
+        version: 8.16.0
       state-shared:
         specifier: workspace:*
         version: link:../state-shared
@@ -1254,8 +1256,8 @@ importers:
         specifier: workspace:*
         version: link:../pixi-svelte
       pixi.js:
-        specifier: 8.8.1
-        version: 8.8.1
+        specifier: 8.16.0
+        version: 8.16.0
       state-shared:
         specifier: workspace:*
         version: link:../state-shared
@@ -1608,22 +1610,22 @@ importers:
     dependencies:
       '@barvynkoa/particle-emitter':
         specifier: 0.0.1
-        version: 0.0.1(pixi.js@8.8.1)
+        version: 0.0.1(pixi.js@8.16.0)
       '@esotericsoftware/spine-core':
-        specifier: 4.2.74
-        version: 4.2.74
+        specifier: 4.3.13
+        version: 4.3.13
       '@esotericsoftware/spine-pixi-v8':
-        specifier: 4.2.74
-        version: 4.2.74(pixi.js@8.8.1)
+        specifier: 4.3.13
+        version: 4.3.13(pixi.js@8.16.0)
       '@types/webfontloader':
         specifier: 1.6.28
         version: 1.6.28
       pixi-filters:
         specifier: 6.1.0
-        version: 6.1.0(pixi.js@8.8.1)
+        version: 6.1.0(pixi.js@8.16.0)
       pixi.js:
-        specifier: 8.8.1
-        version: 8.8.1
+        specifier: 8.16.0
+        version: 8.16.0
       svelte:
         specifier: 5.20.5
         version: 5.20.5
@@ -1698,8 +1700,8 @@ importers:
         specifier: workspace:*
         version: link:../pixi-svelte
       pixi.js:
-        specifier: 8.8.1
-        version: 8.8.1
+        specifier: 8.16.0
+        version: 8.16.0
       storybook:
         specifier: 9.0.15
         version: 9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2)
@@ -2549,19 +2551,36 @@ packages:
     resolution: {integrity: sha512-1+WqvgNMhmlAambTvT3KPtCl/Ibr68VldY2XY40SL1CE0ZXiakFR/cbTspaF5HsnpDMvcYYoJHfl4980NBjGag==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
+  '@esotericsoftware/spine-canvas@4.3.13':
+    resolution: {integrity: sha512-L4iIkYUAYJxnzBfNqZTs5Be2HifgvaN2f/KM3aopIG0tbQYQQdAcgbjf5HsvwKgM65studN+/9gGIX3QoRLDIA==}
+
   '@esotericsoftware/spine-core@4.2.74':
     resolution: {integrity: sha512-HdEm7702yT7tZyBwX8CeB1+UhBLJRLW9+mffBQIEllr+XzwiawrRalV5RneKwhpygs8PYVqlZbpeWCPlZEH22A==}
+
+  '@esotericsoftware/spine-core@4.3.13':
+    resolution: {integrity: sha512-iGs/40qOWSQYicABebDzFSwFOS1Nsm0dCCS8sGqbpVuThRKdLYeI1cVJpmATSpEmtcetEABTmh97NoBnt7XLDw==}
 
   '@esotericsoftware/spine-pixi-v8@4.2.74':
     resolution: {integrity: sha512-f90lkQt0hcmSeQI7epIT8H22JsA9QZu5Vsv4Bb5Fop3sCfPItY8frN9qduWrMt/tmGl7E2OT3gjvQJULIjdnNQ==}
     peerDependencies:
       pixi.js: ^8.4.0
 
+  '@esotericsoftware/spine-pixi-v8@4.3.13':
+    resolution: {integrity: sha512-cL+UCgHmaT6UA3J63JScHbT8ttJAUMGnfUVSGUYhI5/jElMb0gECbDmeJLFTAhLFj6a8YphDzSy+Pvhe8326og==}
+    peerDependencies:
+      pixi.js: ^8.16.0
+
   '@esotericsoftware/spine-player@4.2.74':
     resolution: {integrity: sha512-nxLTDas1X8PHHdT2pVyb4+hR1jMWVGqyF3cNXNBw92yoMFe/PtFg0OHis8oJEo3IrO1q+Y8lenxnwgGQIhYoPw==}
 
+  '@esotericsoftware/spine-player@4.3.13':
+    resolution: {integrity: sha512-fPSb+Ha4wyQJ3TDCicdA3W3P95bFWk1c25ad3naaz1xmDuRVuqbx3yb060lKwDvyDVhuWoyN219GvYAmakfBlw==}
+
   '@esotericsoftware/spine-webgl@4.2.74':
     resolution: {integrity: sha512-itvcBDCBwkqps+vZ0gl1kcAJImDttSapW0xBtgrYpQsIdORKHWg80Rxbd1wIW2+6nPHkTS9IDO1fi3cocpBk3w==}
+
+  '@esotericsoftware/spine-webgl@4.3.13':
+    resolution: {integrity: sha512-VdMtDU03HcoUfLlt0FXBzSvh53nLS7Hej0ibJ3kCuDf5hftAsDAiwZhhS6Ze+5nDCGrkNzPmssZcT+96FoOjIQ==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -2934,6 +2953,10 @@ packages:
   '@types/earcut@2.1.4':
     resolution: {integrity: sha512-qp3m9PPz4gULB9MhjGID7wpo3gJ4bTGXm7ltNDsmOvsPduTeHp8wSW9YckBj3mljeOh4F0m2z/0JKAALRKbmLQ==}
 
+  '@types/earcut@3.2.4':
+    resolution: {integrity: sha512-I688mi107oflZOpzhs4EwasCN4ycLlZHf7XAGhM6EQIHEJkRTEuTL08lemIZOQ1YAACJoNoCzAiSDCJujpJLHA==}
+    deprecated: This is a stub types definition. earcut provides its own type definitions, so you do not need this installed.
+
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
@@ -3050,13 +3073,12 @@ packages:
   '@vitest/utils@3.2.4':
     resolution: {integrity: sha512-fB2V0JFrQSMsCo9HiSq3Ezpdv4iYaXRG1Sx8edX3MwxfyNn83mKiGzOcH+Fkxt4MHxr3y42fQi1oeAInqgX2QA==}
 
-  '@webgpu/types@0.1.63':
-    resolution: {integrity: sha512-s9Kuh0nE/2+nKrvmKNMB2fE5Zlr3DL2t3OFKM55v5jRcfCOxbkOHhQoshoFum5mmXIfEtRXtLCWmkeTJsVjE9w==}
+  '@webgpu/types@0.1.74':
+    resolution: {integrity: sha512-lgiI4hbuLcI9unnm2cL/tvCaQU45dp0xcLWJh5uB/9MBGvIA4F8XIk7nSiBeg+K4xWGYwgZKn80LmERI5CxoTA==}
 
-  '@xmldom/xmldom@0.8.10':
-    resolution: {integrity: sha512-2WALfTl4xo2SkGCYRt6rDTFfk9R1czmBvUQy12gK2KuRKIpWEhcbbzy8EZXtz/jkRqHX8bFEc6FC1HjX4TUWYw==}
+  '@xmldom/xmldom@0.8.15':
+    resolution: {integrity: sha512-/5NV/vDALVFDXgLmfsy9TRCBlKwO2LNBFzpzvb9iIj+jR+eSc6DLYYvVOdivT/jm7MtU6TebYuRmzEOI7w40UA==}
     engines: {node: '>=10.0.0'}
-    deprecated: this version has critical issues, please update to the latest version
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -3363,6 +3385,9 @@ packages:
 
   earcut@2.2.4:
     resolution: {integrity: sha512-/pjZsA1b4RPHbeWZQn66SWS8nZZWLQQ23oE3Eam7aroEFGEvwKAsJfZ9ytiEMycfzXWpca4FA9QIOehf7PocBQ==}
+
+  earcut@3.2.4:
+    resolution: {integrity: sha512-FHc6yNpnTORB0tM5kmZ03iD2mDuNakDE2lvf4Hw1XkfxtEHIGVi01B/GqUSwx+NcC1WGjidAfpTXzeALtPtfpg==}
 
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
@@ -4005,6 +4030,9 @@ packages:
     peerDependencies:
       pixi.js: '>=8.0.0-0'
 
+  pixi.js@8.16.0:
+    resolution: {integrity: sha512-gu2xw3sZGAn3cWBtk0HqTQT+v19YAfiaYXwUGgWoJl5NKz4cEZJUgWrwkmdfDszGyYBAGqOvJNbd2M9+vzLLMg==}
+
   pixi.js@8.8.1:
     resolution: {integrity: sha512-Zmox3Vy52Kl6X/uxknKlxJWPVEFiP63nsX8soqB4butTkIOK3y7c9C204wcDfAgkwO1OlwYxscWtHv+ef4gqgA==}
 
@@ -4536,6 +4564,10 @@ packages:
   tiny-invariant@1.3.3:
     resolution: {integrity: sha512-+FbBPE1o9QAYvviau/qC5SE3caw21q3xkvWKBtja5vgqOWIHHJ3ioaq1VPfn/Szqctz2bU/oYeKd9/z5BL+PVg==}
 
+  tiny-lru@11.4.7:
+    resolution: {integrity: sha512-w/Te7uMUVeH0CR8vZIjr+XiN41V+30lkDdK+NRIDCUYKKuL9VcmaUEmaPISuwGhLlrTGh5yu18lENtR9axSxYw==}
+    engines: {node: '>=12'}
+
   tinyglobby@0.2.16:
     resolution: {integrity: sha512-pn99VhoACYR8nFHhxqix+uvsbXineAasWm5ojXoN8xEwK5Kd3/TrhNn1wByuD52UxWRLy8pu+kRMniEi6Eq9Zg==}
     engines: {node: '>=12.0.0'}
@@ -4956,6 +4988,10 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.27.1
 
+  '@barvynkoa/particle-emitter@0.0.1(pixi.js@8.16.0)':
+    dependencies:
+      pixi.js: 8.16.0
+
   '@barvynkoa/particle-emitter@0.0.1(pixi.js@8.8.1)':
     dependencies:
       pixi.js: 8.8.1
@@ -5200,20 +5236,41 @@ snapshots:
       '@eslint/core': 0.15.1
       levn: 0.4.1
 
+  '@esotericsoftware/spine-canvas@4.3.13':
+    dependencies:
+      '@esotericsoftware/spine-core': 4.3.13
+
   '@esotericsoftware/spine-core@4.2.74': {}
+
+  '@esotericsoftware/spine-core@4.3.13': {}
 
   '@esotericsoftware/spine-pixi-v8@4.2.74(pixi.js@8.8.1)':
     dependencies:
       '@esotericsoftware/spine-core': 4.2.74
       pixi.js: 8.8.1
 
+  '@esotericsoftware/spine-pixi-v8@4.3.13(pixi.js@8.16.0)':
+    dependencies:
+      '@esotericsoftware/spine-canvas': 4.3.13
+      '@esotericsoftware/spine-core': 4.3.13
+      pixi.js: 8.16.0
+
   '@esotericsoftware/spine-player@4.2.74':
     dependencies:
       '@esotericsoftware/spine-webgl': 4.2.74
 
+  '@esotericsoftware/spine-player@4.3.13':
+    dependencies:
+      '@esotericsoftware/spine-core': 4.3.13
+      '@esotericsoftware/spine-webgl': 4.3.13
+
   '@esotericsoftware/spine-webgl@4.2.74':
     dependencies:
       '@esotericsoftware/spine-core': 4.2.74
+
+  '@esotericsoftware/spine-webgl@4.3.13':
+    dependencies:
+      '@esotericsoftware/spine-core': 4.3.13
 
   '@humanfs/core@0.19.1': {}
 
@@ -5854,6 +5911,10 @@ snapshots:
 
   '@types/earcut@2.1.4': {}
 
+  '@types/earcut@3.2.4':
+    dependencies:
+      earcut: 3.2.4
+
   '@types/estree@1.0.8': {}
 
   '@types/gradient-parser@0.1.5': {}
@@ -6007,9 +6068,9 @@ snapshots:
       loupe: 3.1.4
       tinyrainbow: 2.0.0
 
-  '@webgpu/types@0.1.63': {}
+  '@webgpu/types@0.1.74': {}
 
-  '@xmldom/xmldom@0.8.10': {}
+  '@xmldom/xmldom@0.8.15': {}
 
   acorn-jsx@5.3.2(acorn@8.15.0):
     dependencies:
@@ -6260,6 +6321,8 @@ snapshots:
   dotenv@16.0.3: {}
 
   earcut@2.2.4: {}
+
+  earcut@3.2.4: {}
 
   eastasianwidth@0.2.0: {}
 
@@ -6926,18 +6989,31 @@ snapshots:
 
   picomatch@4.0.4: {}
 
-  pixi-filters@6.1.0(pixi.js@8.8.1):
+  pixi-filters@6.1.0(pixi.js@8.16.0):
     dependencies:
       '@types/gradient-parser': 0.1.5
-      pixi.js: 8.8.1
+      pixi.js: 8.16.0
+
+  pixi.js@8.16.0:
+    dependencies:
+      '@pixi/colord': 2.9.6
+      '@types/earcut': 3.2.4
+      '@webgpu/types': 0.1.74
+      '@xmldom/xmldom': 0.8.15
+      earcut: 3.2.4
+      eventemitter3: 5.0.1
+      gifuct-js: 2.1.2
+      ismobilejs: 1.1.1
+      parse-svg-path: 0.1.2
+      tiny-lru: 11.4.7
 
   pixi.js@8.8.1:
     dependencies:
       '@pixi/colord': 2.9.6
       '@types/css-font-loading-module': 0.0.12
       '@types/earcut': 2.1.4
-      '@webgpu/types': 0.1.63
-      '@xmldom/xmldom': 0.8.10
+      '@webgpu/types': 0.1.74
+      '@xmldom/xmldom': 0.8.15
       earcut: 2.2.4
       eventemitter3: 5.0.1
       gifuct-js: 2.1.2
@@ -7456,6 +7532,8 @@ snapshots:
   through@2.3.8: {}
 
   tiny-invariant@1.3.3: {}
+
+  tiny-lru@11.4.7: {}
 
   tinyglobby@0.2.16:
     dependencies:

@@ -46,7 +46,7 @@
 
 		if (!opts?.soft) {
 			state.clearTracks();
-			skeleton.setToSetupPose();
+			skeleton.setupPose();
 		}
 		const entry = state.setAnimation(0, animation, loop);
 		if (!entry) return;
@@ -81,7 +81,7 @@
 	const playArmedIdleVariant = () => {
 		if (!idleVariantArmed || idleVariantPlaying) return;
 		if (props.paused || activeForceAnim || activePose !== 'idle') return;
-		const current = spine.state?.getCurrent(0);
+		const current = spine.state?.getTrack(0);
 		if (current?.animation?.name !== 'idle') return;
 
 		idleVariantArmed = false;

@@ -56,7 +56,8 @@
 			return;
 		}
 
-		const framed = spineWorldToMascotScreen(box, { x: bone.worldX, y: bone.worldY });
+		const world = bone.appliedPose;
+		const framed = spineWorldToMascotScreen(box, { x: world.worldX, y: world.worldY });
 		// `main4` origin sits above the visible flash/tip — nudge down to the barrel.
 		framed.y += box.height * 0.07;
 		stateGame.mascotGunMuzzleScreen = gunZoneOk(framed, box) ? framed : fallback;

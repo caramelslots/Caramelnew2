@@ -73,7 +73,7 @@
 		if (!createStarted) {
 			createStarted = true;
 			sharedPlayer = new SpinePlayer(host, {
-			jsonUrl: resolveSpinButtonSpineUrl('spin_button.json'),
+			skeleton: resolveSpinButtonSpineUrl('spin_button.json'),
 			atlasUrl: resolveSpinButtonSpineUrl('spin_button.atlas'),
 			showControls: false,
 			showLoading: false,

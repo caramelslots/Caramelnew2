@@ -135,8 +135,9 @@
 	const applyWheelBone = (deg: number) => {
 		const bone = spine.skeleton?.findBone('main16');
 		if (!bone) return;
-		bone.rotation = deg;
-		bone.updateWorldTransform();
+		bone.pose.rotation = deg;
+		bone.appliedPose.rotation = deg;
+		bone.appliedPose.updateWorldTransform(spine.skeleton);
 	};
 
 	/**
@@ -179,12 +180,17 @@
 		if (!skeleton) return;
 		for (const name of SUPPRESS_BEHIND_CAT_GLOW_SLOTS) {
 			const slot = skeleton.findSlot(name);
-			if (slot) slot.color.a = 0;
+			if (slot) {
+				slot.pose.color.a = 0;
+				slot.appliedPose.color.a = 0;
+			}
 		}
 		const vfx = skeleton.findBone('vfx');
 		if (vfx) {
-			vfx.scaleX = 1e-5;
-			vfx.scaleY = 1e-5;
+			vfx.pose.scaleX = 1e-5;
+			vfx.pose.scaleY = 1e-5;
+			vfx.appliedPose.scaleX = 1e-5;
+			vfx.appliedPose.scaleY = 1e-5;
 		}
 	};
 
@@ -195,7 +201,7 @@
 		// Above only while the cat is still winding / grabbing the rim.
 		let handsAbove = false;
 		if (catWinding) {
-			const entry = spine.state?.getCurrent?.(0);
+			const entry = spine.state?.getTrack(0);
 			if (
 				entry?.animation?.name === SUPER_WILD_WIN_ANIM &&
 				(entry.trackTime ?? 0) >= HAND_ABOVE_WHEEL_NATIVE_S
@@ -208,7 +214,8 @@
 		}
 		// wheelSpinning / landed idle / activation → hands under the disk.
 
-		const { slots, drawOrder } = skeleton;
+		const { slots } = skeleton;
+		const drawOrder = skeleton.drawOrder.pose;
 		const n = slots.length;
 		const hands: (typeof slots)[number][] = [];
 		const rest: (typeof slots)[number][] = [];
@@ -242,6 +249,10 @@
 		for (let i = 0; i < insertAt; i++) drawOrder[o++] = rest[i];
 		for (let i = 0; i < hands.length; i++) drawOrder[o++] = hands[i];
 		for (let i = insertAt; i < rest.length; i++) drawOrder[o++] = rest[i];
+		const applied = skeleton.drawOrder.appliedPose;
+		if (applied !== drawOrder) {
+			for (let i = 0; i < drawOrder.length; i++) applied[i] = drawOrder[i];
+		}
 	};
 
 	/**
@@ -254,14 +265,13 @@
 		const bone = spine.skeleton?.findBone('main17');
 		const data = bone?.data;
 		if (!bone || !data) return;
-		data.y = POINTER_SETUP.y + SUPER_WILD_POINTER_Y_NUDGE;
-		data.scaleX = POINTER_SETUP.scaleX * SUPER_WILD_POINTER_SCALE;
-		data.scaleY = POINTER_SETUP.scaleY * SUPER_WILD_POINTER_SCALE;
-		data.rotation = POINTER_SETUP.rotation;
-		bone.y = data.y;
-		bone.scaleX = data.scaleX;
-		bone.scaleY = data.scaleY;
-		bone.rotation = data.rotation;
+		const setup = data.setupPose;
+		setup.y = POINTER_SETUP.y + SUPER_WILD_POINTER_Y_NUDGE;
+		setup.scaleX = POINTER_SETUP.scaleX * SUPER_WILD_POINTER_SCALE;
+		setup.scaleY = POINTER_SETUP.scaleY * SUPER_WILD_POINTER_SCALE;
+		setup.rotation = POINTER_SETUP.rotation;
+		bone.pose.set(setup);
+		bone.appliedPose.set(setup);
 	};
 
 	/**
@@ -283,15 +293,17 @@
 		} else {
 			pointerShakeLastMs = 0;
 		}
-		bone.rotation = POINTER_SETUP.rotation + kick;
-		bone.updateWorldTransform();
+		const rotation = POINTER_SETUP.rotation + kick;
+		bone.pose.rotation = rotation;
+		bone.appliedPose.rotation = rotation;
+		bone.appliedPose.updateWorldTransform(s.skeleton);
 	};
 
 	const easeOutCubic = (t: number) => 1 - (1 - t) ** 3;
 
 	const holdIdlePose = (mixDuration = 0) => {
 		spine.state.timeScale = 1;
-		const cur = spine.state.getCurrent(0)?.animation?.name;
+		const cur = spine.state.getTrack(0)?.animation?.name;
 		if (cur !== SUPER_WILD_IDLE_ANIM) {
 			const idleEntry = spine.state.setAnimation(0, SUPER_WILD_IDLE_ANIM, true);
 			if (idleEntry) idleEntry.mixDuration = mixDuration;
@@ -544,7 +556,7 @@
 		spine.afterUpdateWorldTransforms = (s) => {
 			prevAfter?.(s);
 			if (opening && !openFinished && !openIdleStarted) {
-				const entry = s.state?.getCurrent?.(0);
+				const entry = s.state?.getTrack(0);
 				if (entry?.animation?.name === SUPER_WILD_OPEN_ANIM) {
 					const trackTime = entry.trackTime ?? 0;
 					// Fall is stretched; restore 1× for the authored bounce / tail.

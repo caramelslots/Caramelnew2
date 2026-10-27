@@ -149,7 +149,7 @@
 		}
 
 		player = new SpinePlayer(playerContainer, {
-			jsonUrl: resolveStaticUrl('logo-loader/skeleton.json'),
+			skeleton: resolveStaticUrl('logo-loader/skeleton.json'),
 			atlasUrl: resolveStaticUrl('logo-loader/skeleton.atlas'),
 			animation: 'appear',
 			showControls: false,

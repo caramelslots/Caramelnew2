@@ -50,7 +50,7 @@ export const measureIdleSilhouette = (
 	animationName = 'idle',
 ): SilhouetteBounds | null => {
 	const skeleton = new Skeleton(skeletonData);
-	skeleton.setToSetupPose();
+	skeleton.setupPose();
 
 	if (skeletonData.findAnimation(animationName)) {
 		const state = new AnimationState(new AnimationStateData(skeletonData));
@@ -68,14 +68,14 @@ export const measureIdleSilhouette = (
 	const verts: number[] = [];
 
 	for (const slot of skeleton.slots) {
-		const attachment = slot.getAttachment();
+		const attachment = slot.appliedPose.getAttachment();
 		if (!attachment) continue;
-		const a = slot.color.a * skeleton.color.a;
+		const a = slot.appliedPose.color.a * skeleton.color.a;
 		if (!isBodySlot(slot.data.name, a)) continue;
 
 		if (attachment instanceof RegionAttachment) {
 			verts.length = 8;
-			attachment.computeWorldVertices(slot, verts, 0, 2);
+			attachment.computeWorldVertices(slot, attachment.getOffsets(slot.appliedPose), verts, 0, 2);
 			for (let i = 0; i < 8; i += 2) {
 				minX = Math.min(minX, verts[i]);
 				maxX = Math.max(maxX, verts[i]);
@@ -89,7 +89,7 @@ export const measureIdleSilhouette = (
 			const count = attachment.worldVerticesLength;
 			if (count < 2) continue;
 			if (verts.length < count) verts.length = count;
-			attachment.computeWorldVertices(slot, 0, count, verts, 0, 2);
+			attachment.computeWorldVertices(skeleton, slot, 0, count, verts, 0, 2);
 			for (let i = 0; i < count; i += 2) {
 				minX = Math.min(minX, verts[i]);
 				maxX = Math.max(maxX, verts[i]);

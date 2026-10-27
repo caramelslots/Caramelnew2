@@ -31,6 +31,18 @@
     "onlyBuiltDependencies": [
       "esbuild",
       "svelte-preprocess"
-    ]
+    ],
+    "packageExtensions": {
+      "@esotericsoftware/spine-pixi-v8@4.3.13": {
+        "dependencies": {
+          "@esotericsoftware/spine-core": "4.3.13"
+        }
+      },
+      "@esotericsoftware/spine-player@4.3.13": {
+        "dependencies": {
+          "@esotericsoftware/spine-core": "4.3.13"
+        }
+      }
+    }
   }
 }

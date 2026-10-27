@@ -29,7 +29,8 @@
 			try {
 				skel.setAttachment(slot.data.name, null);
 			} catch {
-				slot.setAttachment(null);
+				slot.pose.setAttachment(null);
+				slot.appliedPose.setAttachment(null);
 			}
 		}
 	};
@@ -40,11 +41,11 @@
 		if (!bone || !skel) {
 			props.onFrame(1, 1, false);
 		} else {
-			const sx = bone.scaleX;
-			const sy = bone.scaleY;
+			const sx = bone.appliedPose.scaleX;
+			const sy = bone.appliedPose.scaleY;
 			const open = Math.abs(sy) >= props.backOpen && Math.abs(sx) >= props.backOpen;
 			// Live attachment — works for v3 and v4 without hardcoded time windows.
-			const onBack = skel.findSlot('back')?.getAttachment() != null;
+			const onBack = skel.findSlot('back')?.appliedPose.getAttachment() != null;
 			const visible = onBack && open;
 			props.onFrame(Math.abs(sx) || 1, Math.abs(sy) || 1, visible);
 		}

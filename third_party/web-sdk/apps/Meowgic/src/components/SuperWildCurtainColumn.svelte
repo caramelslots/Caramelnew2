@@ -12,11 +12,10 @@
 	while reels scroll (solid Spine, not Wild.webp tiles).
 -->
 <script lang="ts">
-	import type * as PIXI from 'pixi.js';
 	import { Tween } from 'svelte/motion';
 	import { cubicOut, linear } from 'svelte/easing';
 	import { untrack } from 'svelte';
-	import { Container, Graphics, SpineProvider } from 'pixi-svelte';
+	import { Container, SpineProvider } from 'pixi-svelte';
 	import { waitForAnimationFrame } from 'utils-shared/wait';
 
 	import { SPIN_OPTIONS_DEFAULT } from '../game/constants';
@@ -32,7 +31,6 @@
 		SUPER_WILD_DISMISS_DIST,
 		SUPER_WILD_STICKY_DROP_IN_DIST,
 		SUPER_WILD_STICKY_DROP_IN_MS,
-		drawSuperWildColumnMask,
 		getSuperWildColumnX,
 		getSuperWildOpen0TileCenterLocalY,
 		getSuperWildOriginCellY,
@@ -155,13 +153,6 @@
 	);
 	const columnY = $derived(props.colY + alignShift0 * (1 - alignT.current) + dropInY.current);
 
-	/** Full-column clip — reveal motion is Spine `open`, not a wipe.
-	 *  Keep mounted for the whole lifecycle: toggling `{#if}` destroys the
-	 *  Graphics while Pixi still references it as a stencil → uid crash. */
-	const drawColumnMask = $derived((g: PIXI.Graphics) => {
-		drawSuperWildColumnMask(g, props.boxW * 1.08, props.boxH, props.reel);
-	});
-
 	$effect(() => {
 		const phase = props.phase;
 		if (phase === 'expanding' && prevPhase !== 'expanding') {
@@ -220,7 +211,6 @@
 
 <Container x={colX} y={columnY} sortableChildren>
 	<Container>
-		<Graphics isMask draw={drawColumnMask} eventMode="none" />
 		<SpineProvider
 			key="superWildCurtain"
 			x={transform.spineX}

@@ -13,7 +13,7 @@
 		const skinData = spine.skeleton.data.findSkin(`coin_${name}`);
 		if (!skinData) return;
 		spine.skeleton.setSkin(skinData);
-		spine.skeleton.setSlotsToSetupPose();
+		spine.skeleton.setupPoseSlots();
 		if (spine.autoUpdate === false) spine.update(0);
 	};
 

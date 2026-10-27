@@ -188,7 +188,7 @@ const renderPose = (
 	const source = player.canvas;
 	if (!skeleton || !state || !renderer || !gl || !source) return;
 	if (isHtmlWebglPaused()) return;
-	const entry = state.getCurrent(0);
+	const entry = state.getTrack(0);
 	if (!entry) return;
 
 	const bg = player.bg;
@@ -217,7 +217,7 @@ const poseAndBlitAll = (runtime: SkinRuntime) => {
 	const skeleton = player.skeleton;
 	const state = player.animationState;
 	if (!skeleton || !state || runtime.targets.size === 0) return;
-	const entry = state.getCurrent(0);
+	const entry = state.getTrack(0);
 	if (!entry) return;
 
 	const now = performance.now();
@@ -241,7 +241,7 @@ const ensureClip = (runtime: SkinRuntime) => {
 	const state = player.animationState;
 	if (skeleton && state) {
 		state.clearTracks();
-		skeleton.setToSetupPose();
+		skeleton.setupPose();
 		const entry = state.setAnimation(0, clip, false);
 		if (entry) {
 			entry.trackTime = 0;
@@ -276,7 +276,7 @@ const ensureRuntime = (skin: CoinPawSkin, mode: CoinPawSpineMode): SkinRuntime =
 	const startClip = mode === 'flash' ? COIN_PAW_FLASH_CLIP : COIN_PAW_APPEAR_CLIP;
 
 	const player = new SpinePlayer(host, {
-		jsonUrl: resolveCoinPawSpineUrl('coins.json'),
+		skeleton: resolveCoinPawSpineUrl('coins.json'),
 		atlasUrl: resolveCoinPawSpineUrl('coins.atlas'),
 		showControls: false,
 		showLoading: false,
@@ -299,7 +299,7 @@ const ensureRuntime = (skin: CoinPawSkin, mode: CoinPawSpineMode): SkinRuntime =
 			const skeleton = spinePlayer.skeleton;
 			if (state && skeleton) {
 				state.clearTracks();
-				skeleton.setToSetupPose();
+				skeleton.setupPose();
 			}
 			runtime.ready = true;
 			if (runtime.targets.size > 0) {

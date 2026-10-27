@@ -12,7 +12,7 @@
 	const FRAME_SLOT_NAMES = new Set(['frame', 'frame2']);
 
 	onMount(() => {
-		const order = spine.skeleton.drawOrder;
+		const order = spine.skeleton.drawOrder.pose;
 		const frames: typeof order = [];
 		const others: typeof order = [];
 		for (let i = 0; i < order.length; i++) {
@@ -22,5 +22,9 @@
 		}
 		for (let i = 0; i < others.length; i++) order[i] = others[i];
 		for (let i = 0; i < frames.length; i++) order[others.length + i] = frames[i];
+		const applied = spine.skeleton.drawOrder.appliedPose;
+		if (applied !== order) {
+			for (let i = 0; i < order.length; i++) applied[i] = order[i];
+		}
 	});
 </script>

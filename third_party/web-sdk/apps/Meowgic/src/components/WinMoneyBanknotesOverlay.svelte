@@ -14,7 +14,9 @@
 	const spine = getContextSpine();
 
 	const clearWinSumm = () => {
-		spine.skeleton.findSlot('win_summ')?.setAttachment(null);
+		const slot = spine.skeleton.findSlot('win_summ');
+		slot?.pose.setAttachment(null);
+		slot?.appliedPose.setAttachment(null);
 		spine.spineAttachmentsDirty = true;
 	};
 

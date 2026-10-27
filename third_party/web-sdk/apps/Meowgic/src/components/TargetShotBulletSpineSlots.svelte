@@ -11,13 +11,14 @@
 		const keep = new Set(props.slots);
 		const skel = spine.skeleton;
 		if (!skel) return;
-		skel.setSlotsToSetupPose();
+		skel.setupPoseSlots();
 		for (const slot of skel.slots) {
 			if (keep.has(slot.data.name)) continue;
 			try {
 				skel.setAttachment(slot.data.name, null);
 			} catch {
-				slot.setAttachment(null);
+				slot.pose.setAttachment(null);
+				slot.appliedPose.setAttachment(null);
 			}
 		}
 	});

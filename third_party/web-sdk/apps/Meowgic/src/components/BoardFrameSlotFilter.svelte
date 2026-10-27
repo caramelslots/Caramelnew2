@@ -33,14 +33,16 @@
 
 	onMount(() => {
 		for (const slot of zeroAlpha) {
-			slot.color.a = 0;
+			slot.pose.color.a = 0;
+			slot.appliedPose.color.a = 0;
 		}
 
 		const previous = spine.beforeUpdateWorldTransforms;
 		spine.beforeUpdateWorldTransforms = (...args) => {
 			previous?.(...args);
 			for (const slot of hidden) {
-				slot.attachment = null;
+				slot.pose.setAttachment(null);
+				slot.appliedPose.setAttachment(null);
 			}
 		};
 

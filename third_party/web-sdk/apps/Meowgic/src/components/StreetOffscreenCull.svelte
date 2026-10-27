@@ -39,12 +39,14 @@
 			previous?.(...args);
 			if (cullActivePlain) {
 				for (const slot of offscreenSlots) {
-					slot.attachment = null;
+					slot.pose.setAttachment(null);
+					slot.appliedPose.setAttachment(null);
 				}
 			}
 			if (hideDuelCar) {
 				for (const slot of duelHiddenSlots) {
-					slot.attachment = null;
+					slot.pose.setAttachment(null);
+					slot.appliedPose.setAttachment(null);
 				}
 			}
 		};

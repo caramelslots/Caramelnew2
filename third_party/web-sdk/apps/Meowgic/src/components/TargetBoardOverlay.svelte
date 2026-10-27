@@ -153,7 +153,7 @@
 		);
 
 		const created = new SpinePlayer(el, {
-			jsonUrl: resolveTargetBoardSpineUrl('target_board.json'),
+			skeleton: resolveTargetBoardSpineUrl('target_board.json'),
 			atlasUrl: resolveTargetBoardSpineUrl('target_board.atlas'),
 			showControls: false,
 			showLoading: false,

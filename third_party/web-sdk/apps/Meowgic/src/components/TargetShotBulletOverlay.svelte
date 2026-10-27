@@ -70,14 +70,15 @@
 		if (!skel) return;
 		// Impact clears the bullet attachment — restore setup pose first so the
 		// next fly shot has a texture again.
-		skel.setSlotsToSetupPose();
+		skel.setupPoseSlots();
 		const keep = new Set(names);
 		for (const slot of skel.slots) {
 			if (keep.has(slot.data.name)) continue;
 			try {
 				skel.setAttachment(slot.data.name, null);
 			} catch {
-				slot.setAttachment(null);
+				slot.pose.setAttachment(null);
+				slot.appliedPose.setAttachment(null);
 			}
 		}
 	};
@@ -168,7 +169,7 @@
 		if (!el) return;
 
 		const created = new SpinePlayer(el, {
-			jsonUrl: resolveShotBulletSpineUrl('shot_bullet.json'),
+			skeleton: resolveShotBulletSpineUrl('shot_bullet.json'),
 			atlasUrl: resolveShotBulletSpineUrl('shot_bullet.atlas'),
 			showControls: false,
 			showLoading: false,

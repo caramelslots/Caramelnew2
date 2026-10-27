@@ -78,7 +78,12 @@
 	const hideSlots = () => {
 		for (const slot of spine.skeleton.slots) {
 			if (KEEP.has(slot.data.name)) continue;
-			slot.attachment = null;
+			const live = slot as {
+				pose: { setAttachment: (attachment: null) => void };
+				appliedPose: { setAttachment: (attachment: null) => void };
+			};
+			live.pose.setAttachment(null);
+			live.appliedPose.setAttachment(null);
 		}
 	};
 

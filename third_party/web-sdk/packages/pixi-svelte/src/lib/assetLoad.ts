@@ -1,4 +1,5 @@
 import * as SPINE_PIXI from '@esotericsoftware/spine-pixi-v8';
+import { upgradeLegacySpineJson } from './spineLegacyJson';
 import type { RawType, RawAsset, RawSpine, RawSprites, SpineSrc, RawAudio } from './types';
 
 const PROCESS_METHOD_MAP = {
@@ -12,7 +13,9 @@ const PROCESS_METHOD_MAP = {
 				: new SPINE_PIXI.SkeletonJson(attachmentLoader);
 		const scale = src?.scale ?? 1;
 		parser.scale = scale;
-		const skeletonData = parser.readSkeletonData(skeletonAsset);
+		const skeletonData = parser.readSkeletonData(
+			skeletonAsset instanceof Uint8Array ? skeletonAsset : upgradeLegacySpineJson(skeletonAsset),
+		);
 
 		return { [key]: skeletonData };
 	},

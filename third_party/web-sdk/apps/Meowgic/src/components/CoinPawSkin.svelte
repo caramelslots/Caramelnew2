@@ -52,7 +52,7 @@
 		const skinData = boardSkinFor(name);
 		if (!skinData) return;
 		spine.skeleton.setSkin(skinData);
-		spine.skeleton.setSlotsToSetupPose();
+		spine.skeleton.setupPoseSlots();
 		// A frozen parent (autoUpdate=false) never ticks, so re-apply the
 		// current track pose after the skin swap to render the new attachments.
 		if (spine.autoUpdate === false) spine.update(0);

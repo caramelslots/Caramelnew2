@@ -14,8 +14,11 @@
 	const spine = getContextSpine();
 	const bone = spine.skeleton.findBone(props.boneName);
 
-	propsSyncEffect({ props, target: bone, ignore: ['boneName', 'y'] });
+	propsSyncEffect({ props, target: bone?.pose, ignore: ['boneName', 'y'] });
 	$effect(() => {
-		if (bone && props.y !== undefined) bone.y = -props.y;
+		if (!bone || props.y === undefined) return;
+		const y = -props.y;
+		bone.pose.y = y;
+		bone.appliedPose.y = y;
 	});
 </script>

@@ -37,6 +37,7 @@
 		MASCOT_SPINE_VIEWPORT,
 		nextMascotIdleVariantDelayMs,
 		pickMascotIdleVariant,
+		hideMascotHandPalmSetup,
 		sealMascotHatBrimSeam,
 		type MascotDevPreview,
 		type MascotPose,
@@ -291,7 +292,7 @@
 		// Soft = keep bones (idle → hatCatch intro, or hatOn → idle).
 		if (!opts?.soft) {
 			state.clearTracks();
-			skeleton.setToSetupPose();
+			skeleton.setupPose();
 		}
 		const entry = state.setAnimation(0, animation, loop);
 		if (!entry) return;
@@ -304,7 +305,7 @@
 	};
 
 	const holdCurrentClipEnd = () => {
-		const entry = player?.animationState?.getCurrent(0);
+		const entry = player?.animationState?.getTrack(0);
 		if (!entry) return;
 		entry.trackTime = entry.animationEnd;
 		entry.timeScale = 0;
@@ -335,7 +336,7 @@
 		if (!idleVariantArmed || idleVariantPlaying) return;
 		if (activeForceAnim || activePose !== 'idle') return;
 
-		const current = player.animationState?.getCurrent(0);
+		const current = player.animationState?.getTrack(0);
 		if (current?.animation?.name !== 'idle') return;
 
 		idleVariantArmed = false;
@@ -373,7 +374,7 @@
 	/** Same beats as pawCoinResolve: hat out → hold → hat on (loops in DEV). */
 	const playForceIdle3Sequence = () => {
 		forceIdle3Phase = 'catch';
-		const current = player?.animationState?.getCurrent(0)?.animation?.name;
+		const current = player?.animationState?.getTrack(0)?.animation?.name;
 		const soft =
 			current === 'idle' || current === 'idle_blink' || current === 'idle_ears';
 		// Short mix — hand_palm fade-in in hat is ~0.45s and must stay visible.
@@ -410,7 +411,7 @@
 
 		const playback = MASCOT_POSE_PLAYBACK[next];
 		if (!playback.animation) return;
-		const current = player.animationState?.getCurrent(0)?.animation?.name;
+		const current = player.animationState?.getTrack(0)?.animation?.name;
 		const fromSafeIdle =
 			prev === 'idle' &&
 			(current === 'idle' || current === 'idle_blink' || current === 'idle_ears');
@@ -447,7 +448,7 @@
 		);
 
 		const created = new SpinePlayer(el, {
-			jsonUrl: resolveMascotSpineUrl('mascot_cat.json'),
+			skeleton: resolveMascotSpineUrl('mascot_cat.json'),
 			atlasUrl: resolveMascotSpineUrl('mascot_cat.atlas'),
 			showControls: false,
 			showLoading: false,
@@ -468,6 +469,7 @@
 				if (phoneDprCap != null) capPlayerCanvasDpr(spinePlayer, phoneDprCap);
 				spinePlayer.skeleton!.scaleY = -1;
 				sealMascotHatBrimSeam(spinePlayer.skeleton);
+				hideMascotHandPalmSetup(spinePlayer.skeleton);
 
 				// Clear after every apply so smile can't flash back before render.
 				const state = spinePlayer.animationState;

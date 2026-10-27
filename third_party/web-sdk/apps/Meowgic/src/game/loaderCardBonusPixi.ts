@@ -168,7 +168,7 @@ const isCardInView = (host: HTMLElement) => {
  * `BonusUnclipFrame.svelte`.
  */
 const orderBonusSlots = (target: Spine) => {
-	const order = target.skeleton.drawOrder;
+	const order = target.skeleton.drawOrder.pose;
 	const backs: typeof order = [];
 	const frames: typeof order = [];
 	const others: typeof order = [];
@@ -183,12 +183,19 @@ const orderBonusSlots = (target: Spine) => {
 	for (let n = 0; n < backs.length; n++) order[i++] = backs[n];
 	for (let n = 0; n < others.length; n++) order[i++] = others[n];
 	for (let n = 0; n < frames.length; n++) order[i++] = frames[n];
+	const applied = target.skeleton.drawOrder.appliedPose;
+	if (applied !== order) {
+		for (let n = 0; n < order.length; n++) applied[n] = order[n];
+	}
 };
 
 /** Outer glow square — reads as a second frame on the parchment card. */
 const hideOuterGlow = (target: Spine) => {
 	const slot = target.skeleton.findSlot('frame_000');
-	if (slot) slot.setAttachment(null);
+	if (slot) {
+		slot.pose.setAttachment(null);
+		slot.appliedPose.setAttachment(null);
+	}
 };
 
 const prepareSlotDraw = (target: Spine) => {

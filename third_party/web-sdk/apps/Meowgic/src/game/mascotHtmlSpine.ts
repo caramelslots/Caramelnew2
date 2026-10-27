@@ -16,10 +16,17 @@ export const MASCOT_PHONE_MAX_DPR = 2;
 
 /** Mascot height as a fraction of the board’s on-screen height. */
 export const MASCOT_BOARD_HEIGHT_FRAC = 1.25;
+/** Slight shrink on PC / laptop / tablet / popout (phones keep `MASCOT_BOARD_HEIGHT_FRAC`). */
+export const MASCOT_NON_PHONE_HEIGHT_SCALE = 0.9;
 /** Horizontal gap after board edge, as a fraction of board height. */
 export const MASCOT_GAP_FRAC = 0.07;
 /** Extra gap on PC / laptop / tablet / popout (not phones), fraction of board height. */
-export const MASCOT_NON_PHONE_EXTRA_GAP_FRAC = 0.02;
+export const MASCOT_NON_PHONE_EXTRA_GAP_FRAC = 0.15;
+/**
+ * Feet Y on PC / laptop / tablet / popout. Slightly above `MASCOT_FEET_Y_FRAC`
+ * so the smaller non-phone mascot sits a bit higher on the street.
+ */
+export const MASCOT_NON_PHONE_FEET_Y_FRAC = 1.18;
 
 const isNonPhoneMascotLayout = () =>
 	isPopoutViewport(stateLayoutDerived.canvasSizes()) ||
@@ -49,8 +56,8 @@ export type MascotScreenBox = {
 };
 
 /**
- * Designer `hat` clip (~3.0s): out → shake → return.
- * Pause at shake (~1.90s) while coins land, then resume forward to the end.
+ * Designer `hat_new` (~3.0s): hat flies out, shakes, returns.
+ * Pause inside the shake (~1.90s) while coins land, then resume forward.
  * (Do NOT reverse — the return is already in the second half of the clip.)
  */
 export const MASCOT_HAT_HOLD_TIME_S = 1.9;
@@ -85,7 +92,7 @@ const sealedHatBrimAttachments = new WeakSet<object>();
 type HatBrimSkeletonLike = {
 	data?: {
 		skins?: Array<{
-			getAttachments: () => Array<{ name: string; attachment: unknown }>;
+			getAttachments: () => Array<{ placeholder: string; attachment: unknown }>;
 		}>;
 	};
 };
@@ -98,17 +105,41 @@ export const sealMascotHatBrimSeam = (skeleton: HatBrimSkeletonLike | null | und
 			const att = entry.attachment as {
 				name?: string;
 				scaleY?: number;
+				updateSequence?: () => void;
 				updateRegion?: () => void;
 			} | null;
 			if (!att || sealedHatBrimAttachments.has(att)) continue;
-			const name = att.name ?? entry.name;
+			const name = att.name ?? entry.placeholder;
 			if (!MASCOT_HAT_BRIM_ATTACHMENT_NAMES.has(name)) continue;
-			if (typeof att.scaleY !== 'number' || typeof att.updateRegion !== 'function') continue;
+			if (typeof att.scaleY !== 'number') continue;
 			sealedHatBrimAttachments.add(att);
 			att.scaleY *= MASCOT_HAT_BRIM_SEAL_SCALE_Y;
-			att.updateRegion();
+			// 4.3 caches region offsets in the sequence; scaleY is read there.
+			if (att.updateSequence) att.updateSequence();
+			else att.updateRegion?.();
 		}
 	}
+};
+
+/**
+ * `hat_new` / `applause` attach `hand_palm` at t=0 keyed to alpha 0, but the
+ * slot's setup alpha is 1 and idle never keys its colour. During the idle →
+ * hat mix the colour fades 1→0 over the attached palm, flashing a phantom hand.
+ * Every clip that shows the palm keys its alpha, so a hidden setup is safe.
+ */
+const MASCOT_HAND_PALM_SLOT = 'hand_palm';
+
+type HandPalmSkeletonLike = {
+	data?: { findSlot: (name: string) => { setupPose?: { color: { a: number } } } | null };
+	findSlot: (name: string) => { pose?: { color: { a: number } } } | null;
+};
+
+export const hideMascotHandPalmSetup = (skeleton: HandPalmSkeletonLike | null | undefined) => {
+	if (!skeleton) return;
+	const setup = skeleton.data?.findSlot(MASCOT_HAND_PALM_SLOT)?.setupPose;
+	if (setup) setup.color.a = 0;
+	const live = skeleton.findSlot(MASCOT_HAND_PALM_SLOT)?.pose;
+	if (live) live.color.a = 0;
 };
 
 /** Gun / load clip lengths (designer `cat_render`, wall-clock @ 1×). */
@@ -137,18 +168,17 @@ export const MASCOT_GUN_SHOT_END_MS = 1500;
  */
 export const MASCOT_GUN_HOLSTER_MS = 400;
 /**
- * Where paw-coins land while the hat is held out (idle3 brim-out / shake pose).
+ * Where paw-coins land while the hat is held out (`hat_new` hold @ 1.9s).
  * Fractions of the full mascot HTML box (includes left overscan). Measured by
- * rendering the idle3 hold pose offline (spine-core) through the real
- * SpinePlayer camera (viewport -1700/-200/3200/2900 + pads, fit-height zoom):
- * the bowl's dark opening centers at ~(0.16, 0.72) of the box; its front rim
- * (where the overlay starts clipping the coin) sits at ~0.755 box height.
+ * posing the wizard cat offline (spine-core) through `MASCOT_SPINE_VIEWPORT`
+ * (fit-height + pads): the upturned brim (`hat_bottom2`) centers at ~0.575 box
+ * height; the crown hangs below it (~0.56–0.83), so aim at the brim opening.
  */
 export const getMascotHatCatchPoint = (box: MascotScreenBox) => ({
 	x: box.left + box.width * 0.16,
-	y: box.top + box.height * 0.72,
-	/** Front rim of the bowl opening (screen Y) — coins clip below it. */
-	brimY: box.top + box.height * 0.755,
+	y: box.top + box.height * 0.58,
+	/** Front rim of the brim opening (screen Y) — coins clip below it. */
+	brimY: box.top + box.height * 0.62,
 });
 
 /**
@@ -206,7 +236,8 @@ export const getMascotScreenBox = (board: {
 	halfH: number;
 }): MascotScreenBox => {
 	const boardH = board.halfH * 2;
-	const height = Math.round(boardH * MASCOT_BOARD_HEIGHT_FRAC);
+	const heightScale = isNonPhoneMascotLayout() ? MASCOT_NON_PHONE_HEIGHT_SCALE : 1;
+	const height = Math.round(boardH * MASCOT_BOARD_HEIGHT_FRAC * heightScale);
 	const width = Math.round(height * (MASCOT_BASE_SIZE.width / MASCOT_BASE_SIZE.height));
 	const overscan = Math.round(width * MASCOT_LEFT_OVERSCAN_FRAC);
 	const bodyWidth = width - overscan;
@@ -214,7 +245,8 @@ export const getMascotScreenBox = (board: {
 		MASCOT_GAP_FRAC + (isNonPhoneMascotLayout() ? MASCOT_NON_PHONE_EXTRA_GAP_FRAC : 0);
 	const bodyLeft = Math.round(board.centerX + board.halfW + boardH * gapFrac);
 	const left = bodyLeft - overscan;
-	const feetY = board.centerY + board.halfH * MASCOT_FEET_Y_FRAC;
+	const feetYFrac = isNonPhoneMascotLayout() ? MASCOT_NON_PHONE_FEET_Y_FRAC : MASCOT_FEET_Y_FRAC;
+	const feetY = board.centerY + board.halfH * feetYFrac;
 	const top = Math.round(feetY - height * MASCOT_FEET_IN_BOX);
 	return { left, top, width, height, bodyLeft, bodyWidth };
 };
@@ -443,10 +475,7 @@ export const MASCOT_PRESS_LIFT_MAX_SPINE = 480;
 export const getMascotPressRadiusMult = (boxHeight: number) => {
 	if (boxHeight <= 0) return MASCOT_PRESS_RADIUS_MULT_MIN;
 	const raw = boxHeight / MASCOT_PRESS_RADIUS_REF_BOX_H;
-	return Math.min(
-		MASCOT_PRESS_RADIUS_MULT_MAX,
-		Math.max(MASCOT_PRESS_RADIUS_MULT_MIN, raw),
-	);
+	return Math.min(MASCOT_PRESS_RADIUS_MULT_MAX, Math.max(MASCOT_PRESS_RADIUS_MULT_MIN, raw));
 };
 
 /** Spine-Y lift (higher = toward hat) that grows as the mascot box shrinks. */
@@ -573,9 +602,7 @@ export const MASCOT_SPINE_ANIMATIONS: readonly MascotSpineAnimation[] = [
  * the blink clip plays ears, the ears clip plays blink. Logical names stay
  * (game + DEV buttons); this returns the file clip that matches the motion.
  */
-export const resolveMascotSpineClip = (
-	animation: MascotSpineAnimation,
-): MascotSpineAnimation => {
+export const resolveMascotSpineClip = (animation: MascotSpineAnimation): MascotSpineAnimation => {
 	if (animation === 'idle_blink') return 'idle_ears';
 	if (animation === 'idle_ears') return 'idle_blink';
 	return animation;
@@ -624,14 +651,17 @@ type PosePlayback = {
 	returnTo?: MascotSpineAnimation;
 	/** Play clip backwards (legacy hat put-on — unused while designer hat is as-is). */
 	reverse?: boolean;
-	/** Freeze on the last frame instead of returning (hat held out). */
+	/** Freeze when `animationEnd` is reached (hat held out for coins). */
 	holdEnd?: boolean;
+	/** Truncate playback (hat catch pauses inside `hat_new`). */
+	animationEnd?: number;
 };
 
 /**
  * Pose → Spine mapping (`export_cat_wizard_v2`).
  * like (`react`) = Big / Super Win. applause (`clap`) = Epic / Sensational.
- * Gun, load, and hat poses have no clip on this skeleton — playback is a no-op.
+ * Gun and load poses have no clip on this skeleton — playback is a no-op.
+ * Coin catch uses `hat_new`: play to the shake hold, then resume to the end.
  * `idle_blink` / `idle_ears` are swapped in the export; `resolveMascotSpineClip` fixes that.
  */
 export const MASCOT_POSE_PLAYBACK: Record<MascotPose, PosePlayback> = {
@@ -648,24 +678,46 @@ export const MASCOT_POSE_PLAYBACK: Record<MascotPose, PosePlayback> = {
 	/** @deprecated Prefer `clap` for big wins — kept as applause once for safety. */
 	wow: { animation: 'applause', loop: false, returnTo: 'idle' },
 	clap: { animation: 'applause', loop: false, returnTo: 'idle' },
-	hatCatch: { animation: null, loop: false },
-	hatOn: { animation: null, loop: false },
+	/** Out to the shake, then freeze. `hatOn` resumes the same track. */
+	hatCatch: {
+		animation: 'hat_new',
+		loop: false,
+		holdEnd: true,
+		animationEnd: MASCOT_HAT_HOLD_TIME_S,
+	},
+	hatOn: { animation: 'hat_new', loop: false },
 };
 
 /** Idle flavour clips randomly queued while pose stays `idle` (excludes base idle). */
 export const MASCOT_IDLE_VARIANTS: readonly MascotSpineAnimation[] = ['idle_blink', 'idle_ears'];
 
 /**
+ * Rare idle: step to the cauldron, stir 1–4 cycles, step back.
+ * `stir_loop` is 2s per cycle.
+ */
+export const MASCOT_IDLE_STIR_LEAD = 'idle_to_stir' as const;
+export const MASCOT_IDLE_STIR_LOOP = 'stir_loop' as const;
+export const MASCOT_IDLE_STIR_RETURN = 'stir_to_idle' as const;
+export const MASCOT_IDLE_STIR_LOOPS_MIN = 1;
+export const MASCOT_IDLE_STIR_LOOPS_MAX = 4;
+
+export const pickMascotIdleStirLoops = () =>
+	MASCOT_IDLE_STIR_LOOPS_MIN +
+	Math.floor(Math.random() * (MASCOT_IDLE_STIR_LOOPS_MAX - MASCOT_IDLE_STIR_LOOPS_MIN + 1));
+
+/**
  * Weighted idle roll — includes base `idle` (skip flavour).
- * 50% idle / 30% blink / 20% ears. Logical names; files are swapped.
+ * 7% idle / 45% blink / 32% ears / 16% stir. Logical names; blink/ears files are swapped.
+ * Picking `idle_to_stir` plays the stir sequence, not that clip alone.
  */
 export const MASCOT_IDLE_VARIANT_WEIGHTS: ReadonlyArray<{
 	animation: MascotSpineAnimation;
 	weight: number;
 }> = [
-	{ animation: 'idle', weight: 0.5 },
-	{ animation: 'idle_blink', weight: 0.3 },
-	{ animation: 'idle_ears', weight: 0.2 },
+	{ animation: 'idle', weight: 0.07 },
+	{ animation: 'idle_blink', weight: 0.45 },
+	{ animation: 'idle_ears', weight: 0.32 },
+	{ animation: MASCOT_IDLE_STIR_LEAD, weight: 0.16 },
 ] as const;
 
 export const pickMascotIdleVariant = (): MascotSpineAnimation => {

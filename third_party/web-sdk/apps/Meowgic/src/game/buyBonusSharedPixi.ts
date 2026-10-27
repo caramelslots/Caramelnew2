@@ -215,7 +215,8 @@ const hideReferenceSlots = (spine: Spine, variant: BuyBonusSpineVariant) => {
 	for (const name of BUY_BONUS_HIDDEN_SLOTS[variant]) {
 		const slot = spine.skeleton.findSlot(name);
 		if (!slot) continue;
-		slot.setAttachment(null);
+		slot.pose.setAttachment(null);
+		slot.appliedPose.setAttachment(null);
 	}
 };
 
@@ -668,8 +669,8 @@ const loadPickMascot = (species: BuyBonusPickSpecies) => {
 					spine.skeleton.setAttachment('smile', null);
 					spine.skeleton.setAttachment('board', null);
 				} catch {
-					spine.skeleton.findSlot('smile')?.setAttachment(null);
-					spine.skeleton.findSlot('board')?.setAttachment(null);
+					spine.skeleton.findSlot('smile')?.pose.setAttachment(null);
+					spine.skeleton.findSlot('board')?.pose.setAttachment(null);
 				}
 			}
 			spine.update(0);

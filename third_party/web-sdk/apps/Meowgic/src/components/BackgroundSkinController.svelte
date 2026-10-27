@@ -23,7 +23,7 @@
 		if (defaultSkin) combined.addSkin(defaultSkin);
 		if (themeSkin) combined.addSkin(themeSkin);
 		spine.skeleton.setSkin(combined);
-		spine.skeleton.setSlotsToSetupPose();
+		spine.skeleton.setupPoseSlots();
 	};
 
 	applySkin(skin);

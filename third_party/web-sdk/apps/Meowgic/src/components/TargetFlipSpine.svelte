@@ -63,11 +63,11 @@
 			fsStyle = 'opacity:0';
 			return;
 		}
-		const sx = Math.abs(bone.scaleX) || 1;
-		const sy = Math.abs(bone.scaleY) || 1;
+		const sx = Math.abs(bone.appliedPose.scaleX) || 1;
+		const sy = Math.abs(bone.appliedPose.scaleY) || 1;
 		const open = sy >= BACK_OPEN && sx >= BACK_OPEN;
 		// Only on the wood `back` face — never on the bullseye `front`.
-		const onBack = skel.findSlot('back')?.getAttachment() != null;
+		const onBack = skel.findSlot('back')?.appliedPose.getAttachment() != null;
 		const visible = onBack && open;
 		fsStyle = [
 			`opacity:${visible ? 1 : 0}`,
@@ -91,7 +91,8 @@
 			try {
 				skel.setAttachment(slot.data.name, null);
 			} catch {
-				slot.setAttachment(null);
+				slot.pose.setAttachment(null);
+				slot.appliedPose.setAttachment(null);
 			}
 		}
 	};
@@ -117,7 +118,7 @@
 		if (!el) return;
 
 		const created = new SpinePlayer(el, {
-			jsonUrl: resolveTargetBoardSpineUrl('target_board.json'),
+			skeleton: resolveTargetBoardSpineUrl('target_board.json'),
 			atlasUrl: resolveTargetBoardSpineUrl('target_board.atlas'),
 			showControls: false,
 			showLoading: false,

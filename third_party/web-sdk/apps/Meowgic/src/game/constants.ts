@@ -481,11 +481,11 @@ export const LIVING_IDLE_TURN_MS = 3000;
 
 /**
  * Bonus rest flavour after land / activate — weighted roll each clip end.
- * idle 50% / blink 30% / ears 20%.
+ * idle 35% / blink 45% / ears 20%.
  */
 export const BONUS_IDLE_VARIANT_WEIGHTS = [
-	{ clip: 'idle' as const, weight: 0.5 },
-	{ clip: 'idle_blink' as const, weight: 0.3 },
+	{ clip: 'idle' as const, weight: 0.35 },
+	{ clip: 'idle_blink' as const, weight: 0.45 },
 	{ clip: 'idle_ears' as const, weight: 0.2 },
 ] as const;
 

@@ -26,7 +26,7 @@
 				const slot = spine.skeleton.findSlot(props.slotName);
 
 				if (slot) {
-					show = Boolean(slot?.attachment);
+					show = Boolean(slot.appliedPose.attachment);
 				}
 			});
 		}

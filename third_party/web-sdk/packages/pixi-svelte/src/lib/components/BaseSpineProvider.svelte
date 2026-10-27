@@ -19,9 +19,14 @@
 	// Start frozen: Spine.autoUpdate setter always Ticker.shared.add()'s with no
 	// dedupe. Constructing with the default true, then propsSyncEffect writing
 	// autoUpdate=true again, double-registers internalUpdate → ~2× playback.
+	// spine-pixi 4.3 sends the whole skeleton through the dark-tint batcher when
+	// any slot has a setup dark color. That shader does not draw on Pixi 8.16
+	// (the wizard is the only such spine, so the cat vanished while symbols
+	// stayed). Two-color tint is unused; the default batcher draws the mesh.
 	const spine = new SPINE_PIXI.Spine({
 		skeletonData: props.spineData,
 		autoUpdate: false,
+		darkTint: false,
 	});
 
 	propsSyncEffect({
