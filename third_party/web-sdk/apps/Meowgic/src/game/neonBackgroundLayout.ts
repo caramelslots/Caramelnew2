@@ -2,14 +2,14 @@
  * Street background cover-fit (Pixi `mainBackground` + BootstrapLoader).
  */
 import {
-	LOADER_GAME_LIFT_OFFSET_Y,
 	LOADER_HTML_BG_OFFSET_X,
 	LOADER_HTML_BG_OFFSET_Y,
 	LOADER_HTML_BG_SCALE_X,
 	LOADER_HTML_BG_SCALE_Y,
 } from './constants';
 
-export const LOADER_BG_PX = { width: 1920, height: 956 };
+/** Loader street still (`day.webp`) — same plate as the Spine street. */
+export const LOADER_BG_PX = { width: 1920, height: 940 };
 
 /**
  * Combined scene AABB from the split designer export (`bg_only` plate is the
@@ -59,8 +59,8 @@ export const BG_TABLE_IDLE_TRACKS = [
 export const BG_VIEW_ZOOM = 0.95;
 
 /**
- * day.webp loader still (1920×956) is slightly taller than the Spine plate (1920×940).
- * Pixi cover is multiplied by this so the animated street matches the still.
+ * Nudge Pixi cover vs the baked loader still (`day.webp`, 1920×940 = Spine plate).
+ * Keep in sync when re-baking `scripts/bake-street-still*`.
  */
 export const BG_STILL_MATCH_SCALE = 1.012;
 
@@ -146,32 +146,16 @@ export const getBackgroundHtmlStillStyle = (canvas: CanvasSize) =>
 	getBackgroundHtmlPlateStyle(canvas);
 
 /**
- * Pixi spine y during lift — same scale as in-game.
- * Cover-fit makes the plate slightly taller than the canvas (`BG_STILL_MATCH_SCALE`),
- * so a centered spine clips a few px of street off the top (the stitch row).
- * Shift down so the plate top sits on the game-panel top.
+ * Pixi street spine Y — cover-fit plate is slightly taller than the canvas,
+ * so center would clip the top stitch row; shift so the plate top sits on the panel.
  */
-export const getLoaderLiftGameSpineY = (canvas: CanvasSize) => {
+export const getBackgroundSpineY = (canvas: CanvasSize) => {
 	const plate = getBackgroundPixiCoverScreenBox(canvas);
-	return plate.height * 0.5 + LOADER_GAME_LIFT_OFFSET_Y;
+	return plate.height * 0.5;
 };
 
-/** @deprecated Use getLoaderLiftGameSpineY */
-export const getIntroPanelPlateTop = (canvas: CanvasSize) => {
-	const plate = getBackgroundPixiCoverScreenBox(canvas);
-	return (2 * canvas.height - plate.height) * 0.5;
-};
-
-/** @deprecated Use getLoaderLiftGameSpineY */
-export const getGamePanelPlateTop = (canvas: CanvasSize) =>
-	getIntroPanelPlateTop(canvas) - canvas.height;
-
-/** @deprecated Use getLoaderLiftGameSpineY */
-export const getLoaderLiftSpineYOffset = (canvas: CanvasSize) => {
-	const plate = getBackgroundPixiCoverScreenBox(canvas);
-	const centeredTop = (canvas.height - plate.height) * 0.5;
-	return getGamePanelPlateTop(canvas) - centeredTop;
-};
+/** @deprecated Use getBackgroundSpineY */
+export const getLoaderLiftGameSpineY = getBackgroundSpineY;
 
 /** @deprecated Use getBackgroundHtmlStillStyle — kept for callers expecting a box rect. */
 export const getBackgroundCoverScreenBox = getBackgroundPixiCoverScreenBox;

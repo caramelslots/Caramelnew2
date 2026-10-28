@@ -90,8 +90,8 @@
 	const hud = $derived.by(() => {
 		void hudLocked;
 		// Always use layout-space Y (same as buy-panel `top`). Never feed
-		// getBoundingClientRect viewport coords here — during EntranceLiftShell
-		// those are stale/out-of-panel and push spin/−/+ under overflow:hidden.
+		// getBoundingClientRect viewport coords here — they can disagree with
+		// the game panel and push spin/−/+ under overflow:hidden.
 		return computePortraitHudCanvas(stateLayoutDerived, {
 			hideAutoplay: hudLocked || isReplay,
 		});

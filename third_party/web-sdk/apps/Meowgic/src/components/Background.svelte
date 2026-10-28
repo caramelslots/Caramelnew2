@@ -13,7 +13,7 @@
 		BG_TABLE_IDLE_TRACKS,
 		getBackgroundPixiCoverScreenBox,
 		getBackgroundPixiScale,
-		getLoaderLiftGameSpineY,
+		getBackgroundSpineY,
 		type BackgroundThemeSkin,
 	} from '../game/neonBackgroundLayout';
 	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
@@ -34,8 +34,7 @@
 		const canvas = context.stateLayoutDerived.canvasSizes();
 		return {
 			x: canvas.width / 2,
-			// Same Y during lift and after — plate top on the panel (seam + no end snap).
-			y: getLoaderLiftGameSpineY(canvas),
+			y: getBackgroundSpineY(canvas),
 			scale: getBackgroundPixiScale(canvas),
 		};
 	});
@@ -53,11 +52,13 @@
 	});
 
 	/**
-	 * Keep Pixi street under the HTML still while cards are up.
-	 * Mount + animate as soon as board assets are preloading (invisible under layer 1).
+	 * HTML day.webp covers loading. On Continue, show Pixi street immediately
+	 * so the steam transition paints over the real room (not black).
 	 */
 	const hidePixiStreet = $derived(
-		context.stateLayout.showLoadingScreen && !gameEntrance.preloadContent,
+		context.stateLayout.showLoadingScreen &&
+			!gameEntrance.loaderExitActive &&
+			!gameEntrance.showContent,
 	);
 
 	/** Duel night street — same timing as FS (after cloud cover, not on pick screen). */
@@ -87,7 +88,7 @@
 					stateDuel.prebuild ||
 					(context.stateGame.transitionActive && stateDuel.phase !== 'idle'))),
 	);
-	/** First frame during lift / phone; play only after the slot has opened. */
+	/** Animate once the slot is in play; phones stay on first frame. */
 	const playStreetIdle = $derived(!isPhone && gameEntrance.liftComplete);
 	const streetTimeScale = $derived(playStreetIdle ? 1 : 0);
 	/**

@@ -907,7 +907,7 @@ export const startBuyBonusGpuWarm = (): Promise<void> => {
 };
 
 /**
- * The intro panel sits above the game and lifts off on Continue.
+ * Entrance steam + cards clear on Continue.
  * Buy Bonus must not cover that exit: wait until it is gone, then a bit longer.
  */
 const BUY_BONUS_AFTER_INTRO_MS = 600;

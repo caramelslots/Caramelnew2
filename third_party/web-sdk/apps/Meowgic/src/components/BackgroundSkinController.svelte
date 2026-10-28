@@ -34,16 +34,15 @@
 
 	// Spine.autoUpdate=true adds a Pixi ticker listener with no duplicate guard.
 	// Passing it as a SpineProvider prop would register a second listener (2× speed).
-	// Phones + bootstrap logo: static street. Animate under HTML still once board preloads.
+	// Phones + loading (HTML still): hold first frame until the slot is revealed.
 	$effect(() => {
 		const phone = isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType());
 		const loading =
-			context.stateLayout.showLoadingScreen && !gameEntrance.preloadContent;
-		const holdFirstFrame = phone || loading || !gameEntrance.liftComplete;
+			context.stateLayout.showLoadingScreen && !gameEntrance.showContent;
+		const holdFirstFrame = phone || loading;
 		const next = !holdFirstFrame && !context.stateGame.winOverlayActive;
 		if (spine.autoUpdate !== next) spine.autoUpdate = next;
 		if (holdFirstFrame) {
-			// First animation frame (dim light) for loader, lift, and phone.
 			spine.update(0);
 		}
 	});

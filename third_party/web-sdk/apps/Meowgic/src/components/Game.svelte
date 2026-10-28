@@ -16,9 +16,19 @@
 	import { stateGame } from '../game/stateGame.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { startLoadingIdleUiPreload } from '../game/uiHtmlAssetManifest';
-	import { GAME_ENTRANCE_MS, TRANSITION_THEME_SWITCH_DELAY_MS } from '../game/constants';
 	import { PHONE_TICKER_MAX_FPS } from '../game/duelPhoneDpr';
 	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
+	import {
+		LOADER_STREET_SWAP_DELAY_MS,
+		TRANSITION_THEME_SWITCH_DELAY_MS,
+	} from '../game/constants';
+	import {
+		LOADER_CARD_2_SOCIAL_IMAGE_URL,
+		LOADER_SCREEN_IMAGE_URLS,
+		loaderScreenImageUrls,
+	} from '../game/loaderCardAssets';
+	import { clearHtmlPreloadMemoryRegistry } from '../game/preloadHtmlImages';
+	import { waitForTimeout } from 'utils-shared/wait';
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import EnableSound from './EnableSound.svelte';
 	import EnableSymbolTextureOptimization from './EnableSymbolTextureOptimization.svelte';
@@ -68,6 +78,7 @@
 	import WinHudHtmlOverlay from './WinHudHtmlOverlay.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
+	import TransitionAnimation from './TransitionAnimation.svelte';
 	import DuelModeOverlay from './DuelModeOverlay.svelte';
 	import DuelIntro from './DuelIntro.svelte';
 	import DuelPixiBoard from './DuelPixiBoard.svelte';
@@ -91,6 +102,9 @@
 	const phoneTickerMaxFps = isPhoneForAtlasDownscale() ? PHONE_TICKER_MAX_FPS : undefined;
 
 	let BuyBonusModalShell = $state<Component | null>(null);
+	/** Mounts `<TransitionAnimation>` directly on Press to continue (no event hop). */
+	let entranceSteam = $state(false);
+	let entranceSteamStarted = false;
 
 	onMount(() => {
 		context.stateLayout.showLoadingScreen = true;
@@ -132,6 +146,45 @@
 		}
 	});
 
+	/**
+	 * Press to continue → steam. Reveal board/HUD/mascot under the cover
+	 * (do NOT set transitionActive — that would hide the mascot until steam ends).
+	 */
+	$effect(() => {
+		if (!gameEntrance.loaderExitActive || gameEntrance.liftComplete) return;
+		if (entranceSteamStarted) return;
+		entranceSteamStarted = true;
+		entranceSteam = true;
+
+		// Lift opaque Pixi over HTML once steam covers — same beat as FS transitions.
+		void waitForTimeout(TRANSITION_THEME_SWITCH_DELAY_MS).then(() => {
+			if (!entranceSteam) return;
+			stateGame.transitionCoversUi = true;
+		});
+
+		// Mount slot chrome under the cover so it is already there when steam clears.
+		void waitForTimeout(LOADER_STREET_SWAP_DELAY_MS).then(() => {
+			if (!entranceSteam) return;
+			gameEntrance.showContent = true;
+		});
+	});
+
+	const finishEntranceSteam = () => {
+		entranceSteam = false;
+		stateGame.transitionCoversUi = false;
+		gameEntrance.loaderExitActive = false;
+		gameEntrance.introFading = false;
+		gameEntrance.loadingCardsVisible = false;
+		gameEntrance.showContent = true;
+		gameEntrance.liftComplete = true;
+		context.stateLayout.showLoadingScreen = false;
+		clearHtmlPreloadMemoryRegistry([
+			...LOADER_SCREEN_IMAGE_URLS,
+			...loaderScreenImageUrls(),
+			LOADER_CARD_2_SOCIAL_IMAGE_URL,
+		]);
+	};
+
 	context.eventEmitter.subscribeOnMount({
 		buyBonusConfirm: () => {
 			stateModal.modal = { name: 'buyBonusConfirm' };
@@ -147,7 +200,8 @@
 <div
 	class="pixi-stage"
 	class:above-html-ui={context.stateGame.transitionCoversUi ||
-		context.stateGame.fsOutroActive}
+		context.stateGame.fsOutroActive ||
+		entranceSteam}
 >
 	<GameApp
 		maxResolution={3}
@@ -186,9 +240,14 @@
 				<Sound />
 			{/if}
 
+			<!--
+				Board stays mounted (persistent) under the cards at alpha 0.
+				Steam transition is outside so it can play while the board is still hidden;
+				showContent flips on once the cover is on.
+			-->
 			<FadeContainer
-				show={gameEntrance.preloadContent}
-				duration={gameEntrance.showContent ? GAME_ENTRANCE_MS : 0}
+				show={gameEntrance.showContent}
+				duration={0}
 				persistent
 				sortableChildren
 			>
@@ -316,8 +375,12 @@
 				<!-- Keep Win mounted during Duel so Big Win can play on Cat victory. -->
 				<Win />
 				<FreeSpinOutro />
-				<Transition />
 			</FadeContainer>
+			<!-- Outside FadeContainer so entrance steam can cover before the board fades in. -->
+			<Transition />
+			{#if entranceSteam}
+				<TransitionAnimation timedThemeSwitch={false} oncomplete={finishEntranceSteam} />
+			{/if}
 		{/if}
 	</GameApp>
 </div>

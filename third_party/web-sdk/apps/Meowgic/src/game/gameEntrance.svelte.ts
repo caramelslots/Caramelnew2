@@ -1,20 +1,20 @@
-/** First-open flow: slot preloads below intro panel, lift reveals it on continue. */
+/** First-open flow: street + cards, then steam transition reveals the slot. */
 export const gameEntrance = $state({
-	/** Mount board in the lower game panel while assets load. */
+	/** Mount board (hidden) while assets load under the cards. */
 	preloadContent: false,
-	/** Reveal HUD + mascot + sound when the user presses continue (lift starts). */
+	/** Reveal HUD + mascot + sound when steam covers on Continue. */
 	showContent: false,
 	/** Logo + progress splash dismissed — unlock cards + press to continue. */
 	bootstrapDismissed: false,
 	/** Loader info cards on the opening screen (hidden once exit starts). */
 	loadingCardsVisible: true,
-	/** Vertical lift animation is running. */
+	/** Steam exit is running after Continue. */
 	loaderExitActive: false,
-	/** Lift finished — intro sky/roofs are fading out. */
+	/** @deprecated Intro sky fade — kept for DevButtons reset compatibility. */
 	introFading: false,
-	/** Intro panel removed — game uses normal single-panel layout. */
+	/** Entrance finished — loading overlay gone, game uses normal layout. */
 	liftComplete: false,
-	/** Batch 4 finished after lift. */
+	/** Batch 4 finished after entrance. */
 	postLiftAssetsReady: false,
 	/** Overlay card spines warmed into the buy-bonus WebGL — safe to open the menu. */
 	buyBonusWarmReady: false,

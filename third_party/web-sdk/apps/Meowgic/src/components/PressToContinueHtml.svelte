@@ -11,7 +11,7 @@
 	import { getContext } from '../game/context';
 
 	type Props = {
-		/** Position inside the intro panel so the label moves with the lift. */
+		/** Position inside the cards overlay (absolute) instead of fixed to the viewport. */
 		contained?: boolean;
 	};
 

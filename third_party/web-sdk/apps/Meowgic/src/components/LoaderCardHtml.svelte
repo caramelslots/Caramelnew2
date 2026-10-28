@@ -4,7 +4,6 @@
 	import { Tween } from 'svelte/motion';
 
 	import ArchedRibbonTitle from './ArchedRibbonTitle.svelte';
-	import LoaderCardBonusSpine from './LoaderCardBonusSpine.svelte';
 	import { getContext } from '../game/context';
 	import { GAME_INFO_SYMBOL_IMAGES } from '../game/gameInfoSymbols';
 	import { loaderCardContentIndex, loaderCardImageUrl } from '../game/loaderCardAssets';
@@ -83,7 +82,6 @@
 		{#if contentIndex === 0}
 			<div class="card-bonus-symbol">
 				<img class="card-bonus-symbol-img" src={bonusSymbolUrl} alt="" draggable="false" />
-				<LoaderCardBonusSpine active={!props.carousel || props.isActive !== false} />
 			</div>
 			<div class="card-body card-body--1">
 				<div class="line-block line-block--1">
@@ -192,8 +190,8 @@
 		left: 50%;
 		top: calc(var(--card-height) * 0.33);
 		transform: translate(-50%, -50%);
-		width: calc(var(--card-width) * 0.76);
-		height: calc(var(--card-height) * 0.39);
+		width: calc(var(--card-width) * 0.70);
+		height: calc(var(--card-height) * 0.36);
 		z-index: 2;
 		overflow: hidden;
 		pointer-events: none;
@@ -206,10 +204,6 @@
 		object-fit: contain;
 		user-select: none;
 		pointer-events: none;
-	}
-
-	.card-bonus-symbol:has(:global([data-ready])) .card-bonus-symbol-img {
-		opacity: 0;
 	}
 
 	.card-body {

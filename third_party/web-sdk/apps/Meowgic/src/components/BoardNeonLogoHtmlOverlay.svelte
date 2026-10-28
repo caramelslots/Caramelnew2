@@ -26,7 +26,7 @@
 		},
 	});
 
-	// Warm cache while the board preloads under the intro panel.
+	// Warm cache while cards are up; paint only after the slot is revealed.
 	onMount(() => {
 		const img = new Image();
 		img.src = LOADER_NEON_LOGO_URL;
@@ -47,7 +47,7 @@
 			!stateDuel.active &&
 			!isFreeSpinsActive() &&
 			!stateGame.freeSpinIntroActive &&
-			gameEntrance.preloadContent,
+			gameEntrance.showContent,
 	);
 </script>
 
@@ -67,8 +67,7 @@
 
 <style lang="scss">
 	.board-neon-logo {
-		/* Absolute inside .game-panel so the logo rides the entrance lift with the board.
-		   Fixed would pin to the lift stack / viewport and only line up after settle. */
+		/* Absolute inside .game-panel so layout matches the board. */
 		position: absolute;
 		z-index: 41;
 		pointer-events: none;

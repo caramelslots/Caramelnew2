@@ -207,7 +207,7 @@
 </script>
 
 {#if show}
-	<!-- Transparent wrap: intro sky + roofs live in LoaderIntroBackground underneath. -->
+	<!-- Transparent wrap: baked day.webp street still shows through underneath. -->
 	<div
 		class="wrap"
 		class:popout-s={isPopoutS}

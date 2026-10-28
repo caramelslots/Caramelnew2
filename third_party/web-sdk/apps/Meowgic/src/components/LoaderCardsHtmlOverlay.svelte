@@ -14,11 +14,6 @@
 		loaderScreenImageUrls,
 	} from '../game/loaderCardAssets';
 	import {
-		destroyLoaderCardBonusPixi,
-		flushLoaderCardBonusStage,
-		whenLoaderCardBonusReady,
-	} from '../game/loaderCardBonusPixi';
-	import {
 		LOADER_CARD_COUNT,
 		computeLoaderCardsAnchor,
 		computeLoaderCarouselMetrics,
@@ -35,12 +30,12 @@
 
 	const context = getContext();
 
-	// Cards after bootstrap dismisses + assets load; stay mounted during lift.
+	// Cards after bootstrap dismisses + assets load; unmount as soon as Continue starts.
 	const show = $derived(
 		context.stateLayout.showLoadingScreen &&
 			context.stateApp.loaded &&
 			gameEntrance.bootstrapDismissed &&
-			(gameEntrance.loadingCardsVisible || gameEntrance.loaderExitActive),
+			gameEntrance.loadingCardsVisible,
 	);
 	const assetsReady = $derived(context.stateApp.loaded);
 	const useCarousel = $derived(shouldUseLoaderCarousel(context.stateLayoutDerived));
@@ -71,7 +66,7 @@
 
 	let activeIndex = $state(0);
 	let autoAdvanceTimer: ReturnType<typeof setTimeout> | undefined;
-	/** Hide logo+cards until WebPs and Spine B can paint together. */
+	/** Images warmed — used for press-to-continue + carousel, NOT for hiding cards. */
 	let contentReady = $state(false);
 
 	const trackOffset = new Tween(0);
@@ -138,37 +133,20 @@
 
 	onDestroy(() => {
 		clearAutoAdvance();
-		destroyLoaderCardBonusPixi();
 	});
 
 	$effect(() => {
 		if (!show) {
 			contentReady = false;
-			destroyLoaderCardBonusPixi();
 			return;
 		}
 
-		// During Continue lift the overlay stays mounted — keep cards + bonus
-		// spine as-is. Do not destroy WebGL or flip contentReady off.
-		const lifting =
-			gameEntrance.loaderExitActive ||
-			gameEntrance.introFading ||
-			!gameEntrance.loadingCardsVisible;
-		if (lifting) return;
-
-		if (contentReady) return;
+		contentReady = true;
 		let cancelled = false;
 		void (async () => {
-			// Mount card hosts first so Spine can bind while images finish.
 			await tick();
-			await Promise.all([
-				preloadHtmlImages([...screenImageUrls], { concurrency: 4 }),
-				whenLoaderCardBonusReady(),
-			]);
-			flushLoaderCardBonusStage();
-			await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+			await preloadHtmlImages([...screenImageUrls], { concurrency: 4 });
 			if (cancelled) return;
-			contentReady = true;
 		})();
 		return () => {
 			cancelled = true;
@@ -207,13 +185,7 @@
 </script>
 
 {#if show}
-	<div
-		class="loader-cards-overlay"
-		class:ready={contentReady}
-		data-loader-cards-prepare={contentReady ? undefined : ''}
-		style={overlayStyle}
-		aria-hidden={!show}
-	>
+	<div class="loader-cards-overlay" style={overlayStyle} aria-hidden={!show}>
 		<div class="loader-cards-stack">
 			<!-- daloniil_test: NeonForegroundOverlay (Spine). Here: same slot, HTML WebP. -->
 			<div class="loader-neon-logo-placeholder" style={logoStyle}>
@@ -300,11 +272,7 @@
 		pointer-events: none;
 		user-select: none;
 		overflow: visible;
-		opacity: 0;
-
-		&.ready {
-			opacity: 1;
-		}
+		opacity: 1;
 	}
 
 	.loader-press-to-continue {

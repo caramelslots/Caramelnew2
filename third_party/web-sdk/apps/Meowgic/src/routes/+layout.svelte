@@ -4,7 +4,7 @@
 	import { Authenticate, LoadI18n } from 'components-shared';
 	import BootstrapLoader from '../components/BootstrapLoader.svelte';
 	import EntranceLiftShell from '../components/EntranceLiftShell.svelte';
-	import LoaderIntroBackground from '../components/LoaderIntroBackground.svelte';
+	import LoaderStreetStill from '../components/LoaderStreetStill.svelte';
 	import LoaderCardsHtmlOverlay from '../components/LoaderCardsHtmlOverlay.svelte';
 	import LoaderContinueHandlers from '../components/LoaderContinueHandlers.svelte';
 	import { setContext } from '../game/context';
@@ -56,7 +56,7 @@
 		<LoadI18n {messagesMap}>
 			<EntranceLiftShell>
 				{#snippet intro()}
-					<LoaderIntroBackground />
+					<LoaderStreetStill />
 
 					{#if showYourLoader}
 						<BootstrapLoader

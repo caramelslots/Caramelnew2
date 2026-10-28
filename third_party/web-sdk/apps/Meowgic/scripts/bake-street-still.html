@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Bake street still</title>
+		<style>
+			html,
+			body {
+				margin: 0;
+				padding: 0;
+				background: #000;
+				overflow: hidden;
+			}
+			#stage {
+				position: relative;
+				width: 1920px;
+				height: 940px;
+				background: #000;
+			}
+			.layer {
+				position: absolute;
+				inset: 0;
+				width: 1920px;
+				height: 940px;
+			}
+			.layer .spine-player,
+			.layer .spine-player-canvas,
+			.layer canvas {
+				width: 1920px !important;
+				height: 940px !important;
+			}
+			.spine-player-controls,
+			.spine-player-button,
+			.spine-player-logo,
+			.spine-player-popup {
+				display: none !important;
+			}
+		</style>
+		<link rel="stylesheet" href="/vendor/spine-player.css" />
+		<script src="/vendor/spine-player.js"></script>
+	</head>
+	<body>
+		<div id="stage">
+			<div id="only" class="layer"></div>
+			<div id="platform" class="layer"></div>
+			<div id="table" class="layer"></div>
+		</div>
+		<script>
+			const VIEWPORT = {
+				x: -960,
+				y: -469.21,
+				width: 1920,
+				height: 940,
+				padLeft: '0%',
+				padRight: '0%',
+				padTop: '0%',
+				padBottom: '0%',
+			};
+
+			const layers = [
+				{
+					id: 'only',
+					skeleton: '/assets/spines/background/only/bg_only.json',
+					atlas: '/assets/spines/background/only/bg_only.atlas',
+					animation: 'idle/idle_bg',
+				},
+				{
+					id: 'platform',
+					skeleton: '/assets/spines/background/platform/bg_platform.json',
+					atlas: '/assets/spines/background/platform/bg_platform.atlas',
+					animation: null,
+				},
+				{
+					id: 'table',
+					skeleton: '/assets/spines/background/table/bg_table.json',
+					atlas: '/assets/spines/background/table/bg_table.atlas',
+					animation: 'idle/idle_bg',
+				},
+			];
+
+			const players = [];
+			let remaining = layers.length;
+			let posted = false;
+
+			const fail = (err) => {
+				if (posted) return;
+				posted = true;
+				const msg = String(err?.message || err || 'unknown');
+				console.error('[bake]', msg);
+				void fetch('/__bake_error__', {
+					method: 'POST',
+					headers: { 'Content-Type': 'text/plain' },
+					body: msg,
+				});
+			};
+
+			const findCanvas = (id) => {
+				const root = document.getElementById(id);
+				return root?.querySelector('canvas') || null;
+			};
+
+			const postStill = () => {
+				if (posted) return;
+				try {
+					const out = document.createElement('canvas');
+					out.width = 1920;
+					out.height = 940;
+					const ctx = out.getContext('2d', { alpha: false });
+					ctx.fillStyle = '#000';
+					ctx.fillRect(0, 0, 1920, 940);
+
+					const info = [];
+					for (const layer of layers) {
+						const canvas = findCanvas(layer.id);
+						if (!canvas) throw new Error(`missing canvas #${layer.id}`);
+						info.push(`${layer.id}:${canvas.width}x${canvas.height}`);
+						ctx.drawImage(canvas, 0, 0, 1920, 940);
+					}
+
+					// Reject near-empty bakes (all black).
+					const sample = ctx.getImageData(960, 470, 1, 1).data;
+					const corner = ctx.getImageData(40, 40, 1, 1).data;
+					const bright =
+						sample[0] + sample[1] + sample[2] + corner[0] + corner[1] + corner[2];
+					if (bright < 30) {
+						throw new Error(`bake looks empty (${info.join(', ')}); pixels too dark`);
+					}
+
+					posted = true;
+					void fetch('/__bake_result__', {
+						method: 'POST',
+						headers: { 'Content-Type': 'text/plain' },
+						body: out.toDataURL('image/png'),
+					});
+				} catch (err) {
+					fail(err);
+				}
+			};
+
+			const freezeAndCapture = () => {
+				for (const player of players) {
+					try {
+						player.paused = true;
+					} catch {
+						/* ignore */
+					}
+				}
+				requestAnimationFrame(() => {
+					requestAnimationFrame(() => {
+						setTimeout(postStill, 50);
+					});
+				});
+			};
+
+			const markDone = () => {
+				remaining -= 1;
+				if (remaining > 0) return;
+				// Let a couple of frames draw with preserveDrawingBuffer before pause.
+				requestAnimationFrame(() => {
+					requestAnimationFrame(() => {
+						setTimeout(freezeAndCapture, 120);
+					});
+				});
+			};
+
+			for (const layer of layers) {
+				const config = {
+					showControls: false,
+					showLoading: false,
+					backgroundColor: '#00000000',
+					premultipliedAlpha: false,
+					preserveDrawingBuffer: true,
+					alpha: true,
+					skins: ['default', 'purple'],
+					viewport: VIEWPORT,
+					skeleton: layer.skeleton,
+					atlasUrl: layer.atlas,
+					success: (player) => {
+						try {
+							players.push(player);
+							// Spine world Y is up; player canvas is down — match BootstrapLoader.
+							if (player.skeleton) player.skeleton.scaleY = -1;
+							if (layer.animation) {
+								player.setAnimation(layer.animation, true);
+							}
+							player.paused = false;
+							markDone();
+						} catch (err) {
+							fail(err);
+						}
+					},
+					error: (err) => fail(err),
+				};
+				if (layer.animation) config.animation = layer.animation;
+				new spine.SpinePlayer(layer.id, config);
+			}
+
+			setTimeout(() => fail('timeout waiting for spines'), 20000);
+		</script>
+	</body>
+</html>

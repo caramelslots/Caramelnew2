@@ -5,18 +5,12 @@ export const resolveGameStaticUrl = (path: string) =>
 		typeof window !== 'undefined' ? window.location.href : import.meta.url,
 	).href;
 
-/** Intro loader sky plate (1950×1339). */
-export const LOADER_INTRO_SKY_URL = resolveGameStaticUrl('assets/sprites/loader/intro_sky.png');
-
-/** Intro loader house roofs plate (1950×1339, alpha). */
-export const LOADER_INTRO_ROOFS_URL = resolveGameStaticUrl('assets/sprites/loader/intro_roofs.png');
-
-/** Intro loader clouds strip (1295×356, alpha) — scrolls over sky, under roofs. */
-export const LOADER_INTRO_CLOUDS_URL = resolveGameStaticUrl(
-	'assets/sprites/loader/intro_clouds.png',
-);
-
-/** @deprecated Replaced by intro sky + roofs — kept for Pixi layout reference. */
+/**
+ * Baked basegame street still — first paint during bootstrap + cards.
+ * Same scene as Pixi `mainBackground` + `bgPlatform` + `bgTable` (purple).
+ * Refresh via `node scripts/bake-street-still-serve.mjs` (or copy from
+ * `assets/sprites/demo/background.webp` after a designer re-export).
+ */
 export const LOADER_STATIC_DAY_URL = resolveGameStaticUrl('assets/sprites/background/day.webp');
 
 /** Street background spines for Pixi (batch 1 + early HTTP warm). */
@@ -34,18 +28,12 @@ export const LOADER_BG_SPINE_URLS = [
 
 let backgroundPreloadStarted = false;
 
-/** Warm intro loader plates during bootstrap. */
+/** Warm the baked street still as early as possible (first bundle / splash). */
 export const startEarlyLoaderBackgroundPreload = () => {
 	if (backgroundPreloadStarted || typeof window === 'undefined') return;
 	backgroundPreloadStarted = true;
 
-	void fetch(LOADER_INTRO_SKY_URL).catch(() => {
-		/* Best-effort — img will retry. */
-	});
-	void fetch(LOADER_INTRO_ROOFS_URL).catch(() => {
-		/* Best-effort — img will retry. */
-	});
-	void fetch(LOADER_INTRO_CLOUDS_URL).catch(() => {
+	void fetch(LOADER_STATIC_DAY_URL).catch(() => {
 		/* Best-effort — img will retry. */
 	});
 };

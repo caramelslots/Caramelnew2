@@ -1716,41 +1716,8 @@ export const BONUS_WIN_POST_DELAY_MS = 400;
 /** Full transition spine duration (`transition` anim ≈ 1.4667s). */
 export const TRANSITION_DURATION_MS = 1467;
 
-/** Duplicate street plate dissolve (front loader bg). */
+/** Entrance / mascot fade timing (ms). */
 export const LOADER_EXIT_BG_DURATION_MS = 300;
-/** Vertical lift: intro panel scrolls up to reveal the slot. */
-export const LOADER_LIFT_DURATION_MS = 800;
-/** Intro sky/roofs fade out after the lift has finished. */
-export const LOADER_INTRO_FADE_MS = 400;
-/** Overlap intro + game panels to hide the subpixel seam during lift. */
-export const LOADER_LIFT_SEAM_OVERLAP_PX = 1;
-/**
- * Intro PNG/canvas is typically a bit darker/more saturated than Pixi WebGL.
- * Tune so the lift seam doesn't read as a color step.
- */
-export const LOADER_INTRO_COLOR_MATCH = 'saturate(0.92) brightness(1.06)';
-/** Nudge intro HTML plate — translateY, negative = higher. Houses stay, scale unchanged. */
-export const LOADER_INTRO_PLATE_OFFSET_Y = 0;
-/** Nudge intro plate right (px) so roofs line up with Pixi street at the seam. */
-export const LOADER_INTRO_PLATE_OFFSET_X = 0;
-/**
- * Soft-fade hang onto the Pixi street, in intro_roofs source px.
- * Scaled by plate.height / 940 so tablet / narrow / popout keep the same
- * blend as a 1080p monitor (fixed CSS px used to overshoot on short viewports).
- */
-export const LOADER_INTRO_ROOFS_OVERLAP_NATIVE_PX = 18;
-/** Cloud strip Y as fraction of intro plate height (from top). */
-export const LOADER_INTRO_CLOUDS_Y_FRAC = 0.3;
-/** Cloud scroll speed in intro-native px per second (left → right). */
-export const LOADER_INTRO_CLOUDS_SPEED_PX_S = 18;
-/** Extra Pixi spine y (px) during lift scroll — fine-tune horizon vs intro PNG at seam. */
-export const LOADER_GAME_LIFT_OFFSET_Y = 0;
-/** @deprecated Cards no longer slide independently — lift handles exit. */
-export const LOADER_EXIT_CARDS_DURATION_MS = LOADER_LIFT_DURATION_MS;
-/** Peak blur on the duplicate street plate during dissolve. */
-export const LOADER_EXIT_BG_BLUR_PX = 10;
-/** @deprecated Cards no longer slide independently — lift handles exit. */
-export const LOADER_EXIT_CARDS_SLIDE_VH = 55;
 
 /**
  * HTML loader still (front bg) scale vs Pixi plate — CSS transform from center.
