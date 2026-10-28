@@ -53,7 +53,52 @@
 	let container = $state<HTMLDivElement>();
 	let ready = $state(false);
 
+	// TEMP DEBUG: spin button press after Spine 4.3 — remove once fixed.
+	const debugPress = (stage: string) => {
+		if (!import.meta.env.DEV) return;
+		try {
+			const p = sharedPlayer as unknown as Record<string, any> | undefined;
+			const canvas = p?.canvas as HTMLCanvasElement | undefined;
+			const gl = p?.context?.gl as WebGLRenderingContext | undefined;
+			const track = p?.animationState?.getTrack?.(0);
+			const rect = canvas?.getBoundingClientRect();
+			const style = container ? getComputedStyle(container) : undefined;
+			console.warn(
+				'[SPIN-DEBUG]',
+				stage,
+				JSON.stringify({
+					container: !!container,
+					player: !!p,
+					sharedReady,
+					ready,
+					webglPaused: isHtmlWebglPaused(),
+					error: p?.error,
+					errorText: (p?.dom as HTMLElement | undefined)?.querySelector('.spine-player-error')?.textContent ?? null,
+					paused: p?.paused,
+					stopRaf: p?.stopRequestAnimationFrame,
+					disposed: p?.disposed,
+					hasSkeleton: !!p?.skeleton,
+					track: track?.animation?.name ?? null,
+					trackTime: track?.trackTime,
+					spinRot: p?.skeleton?.findBone?.('spin')?.appliedPose?.rotation,
+					ctxLost: gl?.isContextLost?.(),
+					canvas: canvas ? [canvas.width, canvas.height] : null,
+					rect: rect ? [rect.x, rect.y, rect.width, rect.height].map(Math.round) : null,
+					rootInHost: !!sharedRoot && sharedRoot.parentElement === container,
+					rootConnected: sharedRoot?.isConnected,
+					opacity: style?.opacity,
+					display: style?.display,
+					visibility: style?.visibility,
+				}),
+			);
+		} catch (error) {
+			console.warn('[SPIN-DEBUG] failed', error);
+		}
+	};
+
 	export function playPress() {
+		debugPress('press');
+		setTimeout(() => debugPress('+400ms'), 400);
 		if (!container || !sharedPlayer || !sharedReady || isHtmlWebglPaused()) return;
 		attachRoot(container);
 		sharedPlayer.paused = false;

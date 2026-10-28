@@ -143,6 +143,51 @@
 		return true;
 	});
 
+	// TEMP DEBUG: Space spin after Spine 4.3 — remove once fixed.
+	$effect(() => {
+		if (!import.meta.env.DEV) return;
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key !== ' ') return;
+			const active = document.activeElement;
+			console.warn(
+				'[SPACE-DEBUG]',
+				JSON.stringify({
+					phase: e.eventPhase,
+					defaultPrevented: e.defaultPrevented,
+					target: (e.target as HTMLElement | null)?.tagName ?? null,
+					active: active ? `${active.tagName}.${(active as HTMLElement).className}`.slice(0, 120) : null,
+					hasFocus: document.hasFocus(),
+					spinDisabled,
+					show,
+					menuOpen: stateUi.menuOpen,
+					modal: stateModal.modal?.name ?? null,
+					loaderBlocks: loaderBlocksSpaceSpin,
+					hudLocked,
+					isReplay,
+					idle: context.stateXstateDerived.isIdle(),
+					canAfford: canAffordSpin(),
+					gameType: stateGame.gameType,
+				}),
+			);
+		};
+		const onKeyBubble = (e: KeyboardEvent) => {
+			if (e.key === ' ') console.warn('[SPACE-DEBUG] bubble reached window');
+		};
+		window.addEventListener('keydown', onKey, true);
+		window.addEventListener('keydown', onKeyBubble);
+		return () => {
+			window.removeEventListener('keydown', onKey, true);
+			window.removeEventListener('keydown', onKeyBubble);
+		};
+	});
+	context.eventEmitter.subscribeOnMount({
+		hotKey: (event) => {
+			if (import.meta.env.DEV && event.key === 'Space') {
+				console.warn('[SPACE-DEBUG] hotKey event', event.action);
+			}
+		},
+	});
+
 	const smallestBet = $derived(
 		stateConfig.minBet > 0 ? stateConfig.minBet : stateConfig.betAmountOptions[0],
 	);
