@@ -55,6 +55,7 @@
 
 	const pixiApp = getContextApp();
 	const context = getContext();
+	/** Hidden on the opening cards. Fades in as soon as the game entrance starts. */
 	const show = $derived(gameEntrance.showContent);
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
@@ -286,13 +287,15 @@
 		}
 		return () => cancelFade();
 	});
+
+	const poseAlpha = $derived(alpha);
 </script>
 
 {#if mounted && catTransform && (showCatLayout || forceCatAnim) && catAssetsReady && duelPairReady}
 	<Container
 		x={catTransform.x}
 		y={catTransform.y}
-		alpha={alpha}
+		alpha={poseAlpha}
 		zIndex={props.zIndex ?? 5}
 		sortableChildren
 	>

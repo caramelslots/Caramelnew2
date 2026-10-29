@@ -3,9 +3,7 @@
 	import { getContextSpine } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import type { BackgroundThemeSkin } from '../game/neonBackgroundLayout';
-	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
 
 	type Props = {
 		/** `purple` = basegame, `green` = freegame / FS / duel bonus room. */
@@ -34,16 +32,9 @@
 
 	// Spine.autoUpdate=true adds a Pixi ticker listener with no duplicate guard.
 	// Passing it as a SpineProvider prop would register a second listener (2× speed).
-	// Phones + loading (HTML still): hold first frame until the slot is revealed.
+	// The room keeps animating through the opening screen and the slot.
 	$effect(() => {
-		const phone = isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType());
-		const loading =
-			context.stateLayout.showLoadingScreen && !gameEntrance.showContent;
-		const holdFirstFrame = phone || loading;
-		const next = !holdFirstFrame && !context.stateGame.winOverlayActive;
+		const next = !context.stateGame.winOverlayActive;
 		if (spine.autoUpdate !== next) spine.autoUpdate = next;
-		if (holdFirstFrame) {
-			spine.update(0);
-		}
 	});
 </script>

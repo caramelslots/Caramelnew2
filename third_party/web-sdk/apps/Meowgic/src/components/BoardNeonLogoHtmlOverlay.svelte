@@ -6,6 +6,7 @@
 
 	import { computeBoardNeonLogoScreenBox } from '../game/boardNeonLogoLayout';
 	import { getContext } from '../game/context';
+	import { entranceReveal } from '../game/entranceReveal.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { LOADER_NEON_LOGO_URL } from '../game/loaderCardAssets';
 	import { isFreeSpinsActive } from '../game/activeFeature';
@@ -58,6 +59,7 @@
 		style:top="{box.top}px"
 		style:width="{box.width}px"
 		style:height="{box.height}px"
+		style:opacity={entranceReveal.driving ? entranceReveal.logoAlpha : undefined}
 		style={winDimStyle}
 		aria-hidden="true"
 	>

@@ -207,7 +207,7 @@
 </script>
 
 {#if show}
-	<!-- Transparent wrap: baked day.webp street still shows through underneath. -->
+	<!-- Transparent wrap: the WebGL room shows through underneath. -->
 	<div
 		class="wrap"
 		class:popout-s={isPopoutS}

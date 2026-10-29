@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, type Component } from 'svelte';
+	import { onMount, untrack, type Component } from 'svelte';
 
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
@@ -18,17 +18,14 @@
 	import { startLoadingIdleUiPreload } from '../game/uiHtmlAssetManifest';
 	import { PHONE_TICKER_MAX_FPS } from '../game/duelPhoneDpr';
 	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
-	import {
-		LOADER_STREET_SWAP_DELAY_MS,
-		TRANSITION_THEME_SWITCH_DELAY_MS,
-	} from '../game/constants';
+	import { entranceTimelineMs } from '../game/entranceReveal';
+	import { applyEntranceFrame, entranceReveal, restEntranceReveal } from '../game/entranceReveal.svelte';
 	import {
 		LOADER_CARD_2_SOCIAL_IMAGE_URL,
 		LOADER_SCREEN_IMAGE_URLS,
 		loaderScreenImageUrls,
 	} from '../game/loaderCardAssets';
 	import { clearHtmlPreloadMemoryRegistry } from '../game/preloadHtmlImages';
-	import { waitForTimeout } from 'utils-shared/wait';
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import EnableSound from './EnableSound.svelte';
 	import EnableSymbolTextureOptimization from './EnableSymbolTextureOptimization.svelte';
@@ -48,6 +45,7 @@
 	import ResumeBet from './ResumeBet.svelte';
 	import Sound from './Sound.svelte';
 	import Background from './Background.svelte';
+	import EntranceCameraShake from './EntranceCameraShake.svelte';
 	import BoardFrame from './BoardFrame.svelte';
 	import Board from './Board.svelte';
 	import BoardContainer from './BoardContainer.svelte';
@@ -78,7 +76,6 @@
 	import WinHudHtmlOverlay from './WinHudHtmlOverlay.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
-	import TransitionAnimation from './TransitionAnimation.svelte';
 	import DuelModeOverlay from './DuelModeOverlay.svelte';
 	import DuelIntro from './DuelIntro.svelte';
 	import DuelPixiBoard from './DuelPixiBoard.svelte';
@@ -102,9 +99,6 @@
 	const phoneTickerMaxFps = isPhoneForAtlasDownscale() ? PHONE_TICKER_MAX_FPS : undefined;
 
 	let BuyBonusModalShell = $state<Component | null>(null);
-	/** Mounts `<TransitionAnimation>` directly on Press to continue (no event hop). */
-	let entranceSteam = $state(false);
-	let entranceSteamStarted = false;
 
 	onMount(() => {
 		context.stateLayout.showLoadingScreen = true;
@@ -146,32 +140,12 @@
 		}
 	});
 
-	/**
-	 * Press to continue → steam. Reveal board/HUD/mascot under the cover
-	 * (do NOT set transitionActive — that would hide the mascot until steam ends).
-	 */
-	$effect(() => {
-		if (!gameEntrance.loaderExitActive || gameEntrance.liftComplete) return;
-		if (entranceSteamStarted) return;
-		entranceSteamStarted = true;
-		entranceSteam = true;
+	const canvasHeightNow = () =>
+		context.stateLayoutDerived.canvasSizes().height ||
+		(typeof window !== 'undefined' ? window.innerHeight : 720);
 
-		// Lift opaque Pixi over HTML once steam covers — same beat as FS transitions.
-		void waitForTimeout(TRANSITION_THEME_SWITCH_DELAY_MS).then(() => {
-			if (!entranceSteam) return;
-			stateGame.transitionCoversUi = true;
-		});
-
-		// Mount slot chrome under the cover so it is already there when steam clears.
-		void waitForTimeout(LOADER_STREET_SWAP_DELAY_MS).then(() => {
-			if (!entranceSteam) return;
-			gameEntrance.showContent = true;
-		});
-	});
-
-	const finishEntranceSteam = () => {
-		entranceSteam = false;
-		stateGame.transitionCoversUi = false;
+	const finishEntrance = () => {
+		restEntranceReveal();
 		gameEntrance.loaderExitActive = false;
 		gameEntrance.introFading = false;
 		gameEntrance.loadingCardsVisible = false;
@@ -184,6 +158,51 @@
 			LOADER_CARD_2_SOCIAL_IMAGE_URL,
 		]);
 	};
+
+	/**
+	 * Press to continue. The room spine is already on this stage and keeps
+	 * playing. Cards fade, chrome eases in, the board drops onto its pose.
+	 * Do NOT set transitionActive — that hides the mascot for feature steam.
+	 */
+	$effect(() => {
+		if (!gameEntrance.loaderExitActive || gameEntrance.liftComplete) return;
+
+		let cancelled = false;
+		let raf = 0;
+
+		untrack(() => {
+			gameEntrance.showContent = true;
+			entranceReveal.driving = true;
+			applyEntranceFrame(0, canvasHeightNow());
+		});
+
+		const start = performance.now();
+		const tick = (now: number) => {
+			if (cancelled || gameEntrance.liftComplete) return;
+			const elapsed = now - start;
+			const timelineMs = entranceTimelineMs();
+			if (elapsed >= timelineMs) {
+				applyEntranceFrame(timelineMs, canvasHeightNow());
+				// One frame at the rest pose so mascot alpha is copied before unlock.
+				raf = requestAnimationFrame(() => {
+					if (cancelled || gameEntrance.liftComplete) return;
+					finishEntrance();
+				});
+				return;
+			}
+			applyEntranceFrame(elapsed, canvasHeightNow());
+			raf = requestAnimationFrame(tick);
+		};
+		raf = requestAnimationFrame(tick);
+
+		return () => {
+			cancelled = true;
+			cancelAnimationFrame(raf);
+			// Finish already parks the pose before liftComplete. Any other exit
+			// (dev reset, remount) must not leave the board offset in mid-air.
+			if (entranceReveal.driving) restEntranceReveal();
+		};
+	});
 
 	context.eventEmitter.subscribeOnMount({
 		buyBonusConfirm: () => {
@@ -199,9 +218,7 @@
 -->
 <div
 	class="pixi-stage"
-	class:above-html-ui={context.stateGame.transitionCoversUi ||
-		context.stateGame.fsOutroActive ||
-		entranceSteam}
+	class:above-html-ui={context.stateGame.transitionCoversUi || context.stateGame.fsOutroActive}
 >
 	<GameApp
 		maxResolution={3}
@@ -210,6 +227,10 @@
 		webglOnIosAndroid
 		maxFps={phoneTickerMaxFps}
 	>
+		{#snippet early()}
+			<EntranceCameraShake />
+			<Background />
+		{/snippet}
 		<EnableSound />
 		<EnableSymbolTextureOptimization />
 		<EnableSymbolCellFit />
@@ -228,8 +249,6 @@
 		<EnablePixiExtension />
 		<EnableDuelPhoneDpr />
 
-		<Background />
-
 		{#if gameEntrance.preloadContent}
 			<ResumeBet />
 			{#if gameEntrance.showContent || gameEntrance.loaderExitActive}
@@ -242,8 +261,7 @@
 
 			<!--
 				Board stays mounted (persistent) under the cards at alpha 0.
-				Steam transition is outside so it can play while the board is still hidden;
-				showContent flips on once the cover is on.
+				On Continue it drops in from above; the room spine is not part of this fade.
 			-->
 			<FadeContainer
 				show={gameEntrance.showContent}
@@ -289,6 +307,7 @@
 				{#if !stateDuel.active || stateGame.baseLinger}
 					<Container
 						x={stateDuel.active ? -40000 : 0}
+						y={entranceReveal.boardOffsetY}
 						visible={!stateDuel.active || stateGame.baseWarm}
 					>
 					{#if stateGame.baseVisualTier >= 1}
@@ -362,8 +381,18 @@
 				{/if}
 				<!-- Paw coins under mascot so the hat / hand occlude the fly. -->
 				<PawCoinPixiLayer zIndex={5} />
-				<!-- Cat + dog share one alpha — both appear together on duel entry. -->
-				<MascotPixi zIndex={6} />
+			</FadeContainer>
+			<!--
+				Cat is outside the board fade: he is already on the opening screen
+				while the desk stays hidden, then stays put as the board drops.
+			-->
+			<MascotPixi zIndex={6} />
+			<FadeContainer
+				show={gameEntrance.showContent}
+				duration={0}
+				persistent
+				sortableChildren
+			>
 				<!-- Tir FX above target holders + flip discs. -->
 				<TargetShotBulletPixiLayer zIndex={93} />
 				<TargetFlipPixiLayer zIndex={91} />
@@ -376,15 +405,19 @@
 				<Win />
 				<FreeSpinOutro />
 			</FadeContainer>
-			<!-- Outside FadeContainer so entrance steam can cover before the board fades in. -->
 			<Transition />
-			{#if entranceSteam}
-				<TransitionAnimation timedThemeSwitch={false} oncomplete={finishEntranceSteam} />
-			{/if}
 		{/if}
 	</GameApp>
 </div>
 
+<div
+	class="scene-html"
+	style:translate={
+		Math.abs(entranceReveal.shakeX) > 0.05 || Math.abs(entranceReveal.shakeY) > 0.05
+			? `${entranceReveal.shakeX}px ${entranceReveal.shakeY}px`
+			: undefined
+	}
+>
 <CashStacksModals>
 	{#snippet version()}
 		<GameVersion version="0.0.0" />
@@ -426,10 +459,28 @@
 	<PixiTextureMemoryOverlay />
 	<PixiFpsOverlay />
 {/if}
+</div>
 
 <style lang="scss">
 	.pixi-stage {
 		position: relative;
+	}
+
+	/* Same camera offset as the WebGL stage. Translate is set only during the hit. */
+	.scene-html {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+
+	.scene-html :global(button),
+	.scene-html :global(a),
+	.scene-html :global(input),
+	.scene-html :global(select),
+	.scene-html :global(textarea),
+	.scene-html :global(label),
+	.scene-html :global(.dev-panel) {
+		pointer-events: auto;
 	}
 
 	/* HUD (z-index 40–48); FreeSpinIntro / tir HTML ~60–72; menus ~9998–10001.
@@ -448,17 +499,4 @@
 		background-color: #000;
 	}
 
-	:global(.daloniil-ui-enter) {
-		animation: daloniil-ui-enter 400ms cubic-bezier(0.22, 1, 0.36, 1) both;
-	}
-
-	@keyframes daloniil-ui-enter {
-		from {
-			opacity: 0;
-		}
-
-		to {
-			opacity: 1;
-		}
-	}
 </style>

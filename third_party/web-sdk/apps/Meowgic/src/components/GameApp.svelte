@@ -9,6 +9,8 @@
 
 	type Props = {
 		children: Snippet;
+		/** Drawn as soon as the room spines are uploaded. Stays mounted for the session. */
+		early?: Snippet;
 		maxResolution?: number;
 		antialias?: boolean;
 		tuneForMobilePortrait?: boolean;
@@ -33,7 +35,7 @@
 	maxFps={props.maxFps}
 >
 	<InitialiseParent>
-		<GameAssetsLoader>
+		<GameAssetsLoader early={props.early}>
 			{@render props.children()}
 		</GameAssetsLoader>
 	</InitialiseParent>

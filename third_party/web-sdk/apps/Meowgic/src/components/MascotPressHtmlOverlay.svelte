@@ -199,6 +199,10 @@
 
 		&.in-lift {
 			position: absolute;
+
+			.mascot-press-hit {
+				pointer-events: none;
+			}
 		}
 	}
 

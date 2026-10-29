@@ -13,6 +13,7 @@
 		portraitBuyPanelSizeCanvas,
 	} from '../game/portraitHudLayout';
 	import { getContext } from '../game/context';
+	import { entranceReveal } from '../game/entranceReveal.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { hudWinDimStyle } from '../game/hudWinDim';
 	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
@@ -58,12 +59,14 @@
 
 {#if show}
 	<aside
-		class="buy-bonus-panel daloniil-ui-enter portrait"
+		class="buy-bonus-panel portrait"
 		class:in-lift={!gameEntrance.liftComplete}
+		class:menu-reveal={entranceReveal.driving && entranceReveal.menuPhase}
 		data-test="buy-bonus-panel"
 		aria-label="buy bonus"
 		style={panelStyle}
 		style:width="{buyBonusSize}px"
+		style:visibility={entranceReveal.driving && !entranceReveal.menuPhase ? 'hidden' : undefined}
 	>
 		<button
 			type="button"
@@ -89,6 +92,11 @@
 
 		&.in-lift {
 			position: absolute;
+			pointer-events: none;
+
+			button {
+				pointer-events: none;
+			}
 		}
 	}
 
@@ -98,6 +106,24 @@
 		padding: 0;
 		background: transparent;
 		border: none;
+	}
+
+	.buy-bonus-panel.menu-reveal .buy-bonus-btn {
+		animation: hud-pop 440ms 80ms cubic-bezier(0.16, 0.84, 0.32, 1) both;
+	}
+
+	@keyframes hud-pop {
+		from {
+			opacity: 0;
+			translate: 0 14px;
+			scale: 0.92;
+		}
+
+		to {
+			opacity: 1;
+			translate: 0 0;
+			scale: 1;
+		}
 	}
 
 	.buy-bonus-btn {

@@ -1,4 +1,4 @@
-/** First-open flow: street + cards, then steam transition reveals the slot. */
+/** First-open flow: one WebGL room, then the board drops in over it. */
 export const gameEntrance = $state({
 	/** Mount board (hidden) while assets load under the cards. */
 	preloadContent: false,

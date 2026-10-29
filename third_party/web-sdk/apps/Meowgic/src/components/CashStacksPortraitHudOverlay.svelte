@@ -22,6 +22,7 @@
 	import { canAffordSpin, canIncreaseBet } from '../game/buyBonusBalance';
 	import { isLockedBonusHud } from '../game/activeFeature';
 	import { getContext } from '../game/context';
+	import { entranceReveal } from '../game/entranceReveal.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
 	import { stateGame } from '../game/stateGame.svelte';
@@ -260,11 +261,12 @@
 {#if overlayMounted}
 	<div
 		class="portrait-hud-overlay"
-		class:daloniil-ui-enter={show}
 		class:prewarm={!show}
 		class:in-lift={!gameEntrance.liftComplete}
+		class:menu-reveal={entranceReveal.driving && entranceReveal.menuPhase}
 		class:win-dimmed={winDimmed}
 		style={winDimStyle}
+		style:visibility={entranceReveal.driving && !entranceReveal.menuPhase ? 'hidden' : undefined}
 		aria-label="game controls"
 		aria-hidden={!show}
 	>
@@ -408,10 +410,42 @@
 
 		&.in-lift {
 			position: absolute;
+
+			button,
+			:global(button) {
+				pointer-events: none !important;
+			}
 		}
 
 		&.prewarm {
 			visibility: hidden;
+		}
+
+		&.menu-reveal {
+			> :global(button),
+			> :global(p) {
+				animation: hud-pop 440ms cubic-bezier(0.16, 0.84, 0.32, 1) both;
+			}
+
+			@for $i from 1 through 12 {
+				> :global(*:nth-child(#{$i})) {
+					animation-delay: #{($i - 1) * 42}ms;
+				}
+			}
+		}
+	}
+
+	@keyframes hud-pop {
+		from {
+			opacity: 0;
+			translate: 0 16px;
+			scale: 0.9;
+		}
+
+		to {
+			opacity: 1;
+			translate: 0 0;
+			scale: 1;
 		}
 	}
 

@@ -13,6 +13,7 @@
 		LOADER_NEON_LOGO_URL,
 		loaderScreenImageUrls,
 	} from '../game/loaderCardAssets';
+	import { ENTRANCE_CARDS_STAGGER_MS } from '../game/entranceReveal';
 	import {
 		LOADER_CARD_COUNT,
 		computeLoaderCardsAnchor,
@@ -30,7 +31,7 @@
 
 	const context = getContext();
 
-	// Cards after bootstrap dismisses + assets load; unmount as soon as Continue starts.
+	// Cards stay up through the Continue fade; the intro shell dissolves them.
 	const show = $derived(
 		context.stateLayout.showLoadingScreen &&
 			context.stateApp.loaded &&
@@ -185,7 +186,12 @@
 </script>
 
 {#if show}
-	<div class="loader-cards-overlay" style={overlayStyle} aria-hidden={!show}>
+	<div
+		class="loader-cards-overlay"
+		class:cards-exit={gameEntrance.loaderExitActive}
+		style={overlayStyle}
+		aria-hidden={!show}
+	>
 		<div class="loader-cards-stack">
 			<!-- daloniil_test: NeonForegroundOverlay (Spine). Here: same slot, HTML WebP. -->
 			<div class="loader-neon-logo-placeholder" style={logoStyle}>
@@ -207,6 +213,10 @@
 								carousel
 								isActive={index === activeIndex}
 								bounceKey={activeIndex}
+								exiting={gameEntrance.loaderExitActive}
+								pullX={0}
+								pullY={-carouselMetrics.cardHeight * 0.05}
+								exitDelay={ENTRANCE_CARDS_STAGGER_MS[index] ?? 0}
 							/>
 						</div>
 					{/each}
@@ -224,6 +234,10 @@
 						cardWidth={rowMetrics.cardWidth}
 						{index}
 						animate={contentReady}
+						exiting={gameEntrance.loaderExitActive}
+						pullX={(1 - index) * (rowMetrics.cardWidth + rowMetrics.gap) * 0.86}
+						pullY={-rowMetrics.cardHeight * 0.07}
+						exitDelay={ENTRANCE_CARDS_STAGGER_MS[index] ?? 0}
 					/>
 				{/each}
 			</div>
@@ -234,7 +248,7 @@
 		Sibling of the cards box — label must not sit under a transform ancestor.
 		Space / tap handlers live in LoaderContinueHandlers.
 	-->
-	<div class="loader-press-to-continue">
+	<div class="loader-press-to-continue" class:cards-exit={gameEntrance.loaderExitActive}>
 		{#if gameEntrance.loadingCardsVisible && assetsReady && contentReady}
 			<PressToContinueHtml contained />
 		{/if}
@@ -248,6 +262,39 @@
 		bottom: 100%;
 		display: block;
 		pointer-events: none;
+	}
+
+	.cards-exit .loader-neon-logo-placeholder {
+		animation:
+			logo-gather 620ms cubic-bezier(0.55, 0.02, 0.2, 1) forwards,
+			card-dissolve 340ms ease-in 180ms forwards;
+	}
+
+	.loader-press-to-continue.cards-exit {
+		animation: press-gather 580ms 50ms cubic-bezier(0.55, 0.02, 0.2, 1) forwards;
+	}
+
+	@keyframes logo-gather {
+		to {
+			transform: translateX(-50%) translateY(46%) scale(0.68);
+		}
+	}
+
+	@keyframes press-gather {
+		to {
+			opacity: 0;
+			transform: translateY(-22%) scale(0.84);
+		}
+	}
+
+	@keyframes card-dissolve {
+		from {
+			opacity: 1;
+		}
+
+		to {
+			opacity: 0;
+		}
 	}
 
 	.loader-neon-logo {

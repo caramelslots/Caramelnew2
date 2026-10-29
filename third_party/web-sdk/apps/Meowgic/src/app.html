@@ -11,14 +11,13 @@
 		<!--
 			Preload the heaviest Batch-1 visual assets so the browser starts
 			fetching them during HTML parse, before any JavaScript executes.
+			The room textures are the opening background and the slot background.
 			Paths are relative to the document so they work at any deploy subpath.
 		-->
-		<!-- Baked street still — first paint behind bootstrap / cards (before Pixi). -->
-		<link rel="preload" as="image" href="assets/sprites/background/day.webp" />
+		<link rel="preload" as="image" href="assets/spines/background/only/bg_only.webp" />
+		<link rel="preload" as="image" href="assets/spines/background/platform/bg_platform.webp" />
+		<link rel="preload" as="image" href="assets/spines/background/table/bg_table.webp" />
 		<link rel="preload" as="image" href="assets/sprites/symbols/Wild.webp" />
-		<link rel="preload" as="image" href="assets/spines/background/skeleton.webp" />
-		<link rel="preload" as="image" href="assets/spines/background/skeleton_2.webp" />
-		<link rel="preload" as="image" href="assets/spines/background/skeleton_3.webp" />
 		<link rel="preload" as="image" href="assets/spines/transition/transition.webp" />
 		%sveltekit.head%
 	</head>

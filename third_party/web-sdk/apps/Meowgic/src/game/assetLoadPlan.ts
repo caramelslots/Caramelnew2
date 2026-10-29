@@ -5,11 +5,26 @@ import { isCjkLocale } from './constants';
 import { LOADER_CARD_2_SOCIAL_IMAGE_URL, LOADER_SCREEN_IMAGE_URLS } from './loaderCardAssets';
 import { isSocialMode } from './devSocial';
 
-/** Stake GIF screen — room + stage + desk spines, audio, transition, press font, high symbols. */
-export const LOADER_BATCH_1_KEYS = [
+/**
+ * Room spines. Loaded and shown before the rest of batch 1 so the opening
+ * screen and the slot share one already-running background.
+ */
+export const LOADER_BACKGROUND_KEYS = [
 	'mainBackground',
 	'bgPlatform',
 	'bgTable',
+] as const satisfies readonly (keyof typeof assets)[];
+
+/** Atlas pages for the room spines — not listed on the Pixi asset src. */
+export const LOADER_BACKGROUND_TEXTURE_PATHS = [
+	'assets/spines/background/only/bg_only.webp',
+	'assets/spines/background/platform/bg_platform.webp',
+	'assets/spines/background/table/bg_table.webp',
+] as const;
+
+/** Stake GIF screen — room + stage + desk spines, audio, transition, press font, high symbols. */
+export const LOADER_BATCH_1_KEYS = [
+	...LOADER_BACKGROUND_KEYS,
 	'boardFrame',
 	'sound',
 	'musicMain',

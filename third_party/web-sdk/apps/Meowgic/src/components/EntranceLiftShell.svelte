@@ -1,11 +1,12 @@
 <!--
-	Single full-screen viewport: slot underneath, loader overlays on top.
-	Cards sit on the street still; Continue plays steam and reveals the board.
+	Single full-screen viewport: the WebGL slot (and its room) underneath,
+	loader cards on top. Continue fades the cards; the room is not swapped.
 -->
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
 	import { getContext } from '../game/context';
+	import { entranceReveal } from '../game/entranceReveal.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 
 	type Props = {
@@ -22,11 +23,15 @@
 		return typeof window !== 'undefined' ? window.innerHeight : 0;
 	});
 
-	/** Bootstrap + cards; drop on Continue so Pixi steam is not covered. */
+	/** Bootstrap + cards. Stay mounted through the fade so the room underneath is uninterrupted. */
 	const showIntroOverlay = $derived(
-		!gameEntrance.liftComplete &&
-			context.stateLayout.showLoadingScreen &&
-			!gameEntrance.loaderExitActive,
+		!gameEntrance.liftComplete && context.stateLayout.showLoadingScreen,
+	);
+
+	const shakeTranslate = $derived(
+		Math.abs(entranceReveal.shakeX) > 0.05 || Math.abs(entranceReveal.shakeY) > 0.05
+			? `${entranceReveal.shakeX}px ${entranceReveal.shakeY}px`
+			: undefined,
 	);
 </script>
 
@@ -37,8 +42,8 @@
 	{#if showIntroOverlay}
 		<section
 			class="intro-overlay"
-			class:intro-overlay--exiting={gameEntrance.loaderExitActive}
 			style:--panel-h="{panelHeight}px"
+			style:translate={shakeTranslate}
 		>
 			{@render props.intro()}
 		</section>
@@ -76,7 +81,4 @@
 		pointer-events: none;
 	}
 
-	.intro-overlay--exiting {
-		pointer-events: none;
-	}
 </style>

@@ -10,6 +10,7 @@
 	import {
 		BATCH4_HTML_ONLY_KEYS,
 		LOADER_ASSET_BATCHES,
+		LOADER_BACKGROUND_KEYS,
 		getBatch2KeysForLocale,
 		getBatch3KeysForLocale,
 		getEntryLoadKeyCount,
@@ -22,12 +23,17 @@
 	import { BATCH4_DEFERRED_KEYS } from '../game/featureGpuMemory';
 	import { stateUrlDerived } from 'state-shared';
 
-	type Props = { children: Snippet };
+	type Props = {
+		children: Snippet;
+		/** Room spines — mounted as soon as the background keys land, before the rest of batch 1. */
+		early?: Snippet;
+	};
 
 	const props: Props = $props();
 	const context = getContextApp();
 
 	let preLoaded = $state(false);
+	let backgroundReady = $state(false);
 	let batch4Started = false;
 
 	let loadedCount = 0;
@@ -92,6 +98,9 @@
 				context.stateApp.loadingProgress = 0;
 
 				const [batch1] = LOADER_ASSET_BATCHES;
+				const backgroundKeySet = new Set<string>(LOADER_BACKGROUND_KEYS);
+				const batch1Background = batch1.filter((key) => backgroundKeySet.has(key));
+				const batch1Rest = batch1.filter((key) => !backgroundKeySet.has(key));
 
 				// Batches 2–3 skip fonts for inactive locales (ru / hi / vi / cjk).
 				// LOADER_ASSET_KEY_COUNT still lists every key for the assets map check.
@@ -100,7 +109,13 @@
 				const batch3 = getBatch3KeysForLocale(locale);
 				entryTotal = getEntryLoadKeyCount(locale);
 
-				const batch1Assets = await loadAssetBatch(batch1);
+				// Street first, so the opening screen can use the same WebGL scene
+				// the slot will keep. The rest of batch 1 follows without remounting it.
+				const backgroundAssets = await loadAssetBatch(batch1Background);
+				mergeLoadedAssets(backgroundAssets);
+				backgroundReady = true;
+
+				const batch1Assets = await loadAssetBatch(batch1Rest);
 				mergeLoadedAssets(batch1Assets);
 				preLoaded = true;
 
@@ -145,6 +160,9 @@
 	});
 </script>
 
+{#if backgroundReady && props.early}
+	{@render props.early()}
+{/if}
 {#if preLoaded}
 	{@render props.children()}
 {/if}

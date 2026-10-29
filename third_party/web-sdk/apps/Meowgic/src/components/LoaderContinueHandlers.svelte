@@ -12,12 +12,13 @@
 		}
 	});
 
-	/** Press to continue — Game.svelte runs the steam transition from this flag. */
+	/** Press to continue — Game.svelte runs the board drop from this flag. */
 	const requestEntranceTransition = () => {
 		if (gameEntrance.loaderExitActive || gameEntrance.liftComplete) return;
 		if (!context.stateApp.loaded || !gameEntrance.bootstrapDismissed) return;
 
-		gameEntrance.loadingCardsVisible = false;
+		// Keep the cards mounted so the intro overlay can fade them out.
+		// They unmount when the entrance finishes.
 		gameEntrance.loaderExitActive = true;
 	};
 

@@ -1719,19 +1719,7 @@ export const TRANSITION_DURATION_MS = 1467;
 /** Entrance / mascot fade timing (ms). */
 export const LOADER_EXIT_BG_DURATION_MS = 300;
 
-/**
- * HTML loader still (front bg) scale vs Pixi plate — CSS transform from center.
- * 1 = same size as Pixi plate. <1 = zoom out (more L/R detail). >1 = zoom in.
- * Auto reference (plate ÷ spine bounds) ≈ 0.937 — start ~0.95–0.97 if 0.937 shows too much.
- */
-export const LOADER_HTML_BG_SCALE_X = 0.988;
-export const LOADER_HTML_BG_SCALE_Y = 1;
-
-/** Fine nudge in screen px after scale (HTML still only). */
-export const LOADER_HTML_BG_OFFSET_X = 0;
-export const LOADER_HTML_BG_OFFSET_Y = 0;
-
-/** Fade-in for board + UI — synced with front-bg dissolve. */
+/** Mascot fade used outside the opening drop (feature steam). */
 export const GAME_ENTRANCE_MS = LOADER_EXIT_BG_DURATION_MS;
 
 /** Mascot fades in on the same frame as the board, slightly behind it. */
@@ -1757,12 +1745,6 @@ export const TRANSITION_THEME_SWITCH_DELAY_MS = 193;
  * open target pop out before the cloud hid it.
  */
 export const TRANSITION_TIR_DISMISS_DELAY_MS = 480;
-
-/**
- * Loader still → Pixi street swap under the opening cover (later than theme
- * switch so the flyby is covering before the handoff).
- */
-export const LOADER_STREET_SWAP_DELAY_MS = 480;
 
 /**
  * Пауза после win-celebrate перед снятием spotlight / paylines.

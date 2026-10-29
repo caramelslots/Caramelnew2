@@ -5,7 +5,6 @@
 
 	import { getContext } from '../game/context';
 	import { devPreview } from '../game/devPreview.svelte';
-	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { catBackgroundZoom } from '../game/catAnticipationBoardZoom.svelte';
 	import {
 		BG_IDLE_ANIMATION,
@@ -51,23 +50,13 @@
 		};
 	});
 
-	/**
-	 * HTML day.webp covers loading. On Continue, show Pixi street immediately
-	 * so the steam transition paints over the real room (not black).
-	 */
-	const hidePixiStreet = $derived(
-		context.stateLayout.showLoadingScreen &&
-			!gameEntrance.loaderExitActive &&
-			!gameEntrance.showContent,
-	);
-
 	/** Duel night street — same timing as FS (after cloud cover, not on pick screen). */
 	const showDuelBackground = $derived(stateDuel.active || stateDuel.phase === 'outro');
 	const showBaseBackground = $derived(
-		context.stateGame.gameType === 'basegame' && !showDuelBackground && !hidePixiStreet,
+		context.stateGame.gameType === 'basegame' && !showDuelBackground,
 	);
 	const showFeatureBackground = $derived(
-		(context.stateGame.gameType === 'freegame' || showDuelBackground) && !hidePixiStreet,
+		context.stateGame.gameType === 'freegame' || showDuelBackground,
 	);
 	const isPhone = $derived(isPhoneCanvasSizeType(context.stateLayoutDerived.canvasSizeType()));
 	/** Invisible green spine, constructed before the steam so the clip doesn't hitch. */
@@ -88,9 +77,8 @@
 					stateDuel.prebuild ||
 					(context.stateGame.transitionActive && stateDuel.phase !== 'idle'))),
 	);
-	/** Animate once the slot is in play; phones stay on first frame. */
-	const playStreetIdle = $derived(!isPhone && gameEntrance.liftComplete);
-	const streetTimeScale = $derived(playStreetIdle ? 1 : 0);
+	/** Same idle loop on the opening screen and in the slot, including during the drop. */
+	const streetTimeScale = $derived(context.stateGame.winOverlayActive ? 0 : 1);
 	/**
 	 * Under the steam the crossfade is invisible, and a 1s overlap kept two
 	 * full street spines alive on the same frames as the duel mount.
@@ -151,11 +139,9 @@
 	</SpineProvider>
 {/snippet}
 
-{#if !hidePixiStreet}
-	<Rectangle {...context.stateLayoutDerived.canvasSizes()} backgroundColor={0x000000} zIndex={-3} />
-{/if}
+<Rectangle {...context.stateLayoutDerived.canvasSizes()} backgroundColor={0x000000} zIndex={-3} />
 
-{#if showDemoArt && !hidePixiStreet}
+{#if showDemoArt}
 	<Container x={canvasCenter.x} y={canvasCenter.y} scale={backgroundZoom} zIndex={-2}>
 		<Container x={-canvasCenter.x} y={-canvasCenter.y}>
 			<Sprite
