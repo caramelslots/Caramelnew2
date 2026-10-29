@@ -1,24 +1,33 @@
-/** Opening reveal after Press to Continue. One clock for cards, board, logo, and menu. */
+/** Opening reveal after Press to Continue. One clock for cards, board, logo, mascot, and menu. */
 
-/** Cards gather toward center, shrink, then dissolve. */
-export const ENTRANCE_CARDS_MS = 620;
-export const ENTRANCE_CARDS_STAGGER_MS = [70, 0, 120] as const;
+/** Logo + cards fade out as one layer, shrinking slightly in place. */
+export const ENTRANCE_CARDS_MS = 240;
 
-/** Board starts while the cards are still gathering, so the handoff has no gap. */
-export const ENTRANCE_BOARD_DELAY_MS = 160;
-export const ENTRANCE_BOARD_MS = 880;
-/** Sag inside the fall. Shake peaks on this beat. */
-export const ENTRANCE_BOARD_IMPACT_T = 0.68;
+/** Logo pops in as the cards finish, well before the board. */
+export const ENTRANCE_LOGO_DELAY_MS = 200;
+export const ENTRANCE_LOGO_MS = 70;
+/** Jelly pulse on the logo when the board hits. */
+export const ENTRANCE_LOGO_PULSE_MS = 420;
+const LOGO_PULSE_AMPLITUDE = 0.08;
 
-/** Logo fades in place once the board has hit. */
-export const ENTRANCE_LOGO_MS = 360;
+/** Mascot fades in together with the logo. */
+export const ENTRANCE_MASCOT_DELAY_MS = 220;
+export const ENTRANCE_MASCOT_MS = 200;
 
-/** Menu items start just after the hit, then stagger. */
-export const ENTRANCE_MENU_DELAY_AFTER_IMPACT_MS = 90;
-export const ENTRANCE_MENU_MS = 440;
-export const ENTRANCE_MENU_STAGGER_MS = 42;
-/** Enough slots for desktop HUD children (icons, labels, spin). */
-export const ENTRANCE_MENU_SLOTS = 12;
+/** Board falls from above the screen in a short, hard drop, then settles out of the sag. */
+export const ENTRANCE_BOARD_DELAY_MS = 380;
+export const ENTRANCE_BOARD_MS = 300;
+/** Sag inside the drop. Camera punch peaks on this beat. */
+export const ENTRANCE_BOARD_IMPACT_T = 0.33;
+
+/** Camera zoom punch on the hit: quick push in, slower release. */
+const CAMERA_PUNCH_ATTACK_MS = 60;
+const CAMERA_PUNCH_RELEASE_MS = 360;
+const CAMERA_PUNCH_SCALE = 0.04;
+
+/** The whole HUD fades in at once, a beat after the hit. */
+export const ENTRANCE_MENU_DELAY_AFTER_IMPACT_MS = 350;
+export const ENTRANCE_MENU_MS = 300;
 
 const easeOutCubic = (t: number) => {
 	const u = 1 - t;
@@ -27,13 +36,13 @@ const easeOutCubic = (t: number) => {
 
 /** Accelerate through most of the fall, then ease into the sag. */
 const fallEase = (u: number) => {
-	const split = 0.78;
+	const split = 0.82;
 	if (u <= split) {
 		const v = u / split;
-		return v * v * 0.88;
+		return v * v * 0.92;
 	}
 	const v = (u - split) / (1 - split);
-	return 0.88 + (1 - (1 - v) * (1 - v)) * 0.12;
+	return 0.92 + (1 - (1 - v) * (1 - v)) * 0.08;
 };
 
 /** Leave the sag quickly, then settle. One rebound, not a spring. */
@@ -42,20 +51,24 @@ const settleEase = (u: number) => 1 - Math.pow(1 - u, 2.6);
 export const entranceDropDistance = (canvasHeight: number) => Math.max(1, canvasHeight);
 
 export const entranceBoardOvershoot = (canvasHeight: number) =>
-	Math.min(26, Math.max(14, canvasHeight * 0.02));
+	Math.min(22, Math.max(12, canvasHeight * 0.018));
 
 export const entranceImpactMs = () =>
 	ENTRANCE_BOARD_DELAY_MS + ENTRANCE_BOARD_MS * ENTRANCE_BOARD_IMPACT_T;
 
+export const entranceMenuStartMs = () =>
+	entranceImpactMs() + ENTRANCE_MENU_DELAY_AFTER_IMPACT_MS;
+
 export const entranceTimelineMs = () => {
 	const impact = entranceImpactMs();
-	const menuStart = impact + ENTRANCE_MENU_DELAY_AFTER_IMPACT_MS;
-	const menuEnd =
-		menuStart + (ENTRANCE_MENU_SLOTS - 1) * ENTRANCE_MENU_STAGGER_MS + ENTRANCE_MENU_MS;
+	const menuEnd = entranceMenuStartMs() + ENTRANCE_MENU_MS;
 	const boardEnd = ENTRANCE_BOARD_DELAY_MS + ENTRANCE_BOARD_MS;
-	const logoEnd = impact + ENTRANCE_LOGO_MS;
-	const cardsEnd = ENTRANCE_CARDS_MS + Math.max(...ENTRANCE_CARDS_STAGGER_MS);
-	return Math.ceil(Math.max(menuEnd, boardEnd, logoEnd, cardsEnd));
+	const logoEnd = impact + ENTRANCE_LOGO_PULSE_MS;
+	const cameraEnd = impact + CAMERA_PUNCH_RELEASE_MS;
+	const mascotEnd = ENTRANCE_MASCOT_DELAY_MS + ENTRANCE_MASCOT_MS;
+	return Math.ceil(
+		Math.max(menuEnd, boardEnd, logoEnd, cameraEnd, mascotEnd, ENTRANCE_CARDS_MS),
+	);
 };
 
 /**
@@ -75,38 +88,38 @@ export const sampleBoardDropOffset = (elapsedMs: number, drop: number, overshoot
 	return overshoot * (1 - settleEase(u));
 };
 
-export const entranceShakeAmplitude = (canvasHeight: number) =>
-	Math.min(5.5, Math.max(4, canvasHeight * 0.005));
-
-const SHAKE_MS = 200;
-
-/** One camera impulse. Peaks on the board's sag. Positive Y is downward. */
-export const sampleScreenShake = (elapsedMs: number, amplitude: number) => {
+/** Whole-scene zoom around the screen center. 1 at rest. */
+export const sampleCameraScale = (elapsedMs: number) => {
 	const impact = entranceImpactMs();
-	const start = impact - SHAKE_MS / 2;
-	const u = (elapsedMs - start) / SHAKE_MS;
-	if (u <= 0 || u >= 1) return { x: 0, y: 0 };
-	const lobe = Math.sin(u * Math.PI);
-	const eased = lobe * lobe;
-	return {
-		x: Math.sin(u * Math.PI * 2) * amplitude * 0.42 * lobe,
-		y: eased * amplitude,
-	};
+	const attackStart = impact - CAMERA_PUNCH_ATTACK_MS;
+	if (elapsedMs <= attackStart) return 1;
+	if (elapsedMs <= impact) {
+		const t = (elapsedMs - attackStart) / CAMERA_PUNCH_ATTACK_MS;
+		return 1 + CAMERA_PUNCH_SCALE * easeOutCubic(t);
+	}
+	const t = (elapsedMs - impact) / CAMERA_PUNCH_RELEASE_MS;
+	if (t >= 1) return 1;
+	return 1 + CAMERA_PUNCH_SCALE * (1 - easeOutCubic(t));
 };
 
 export const sampleLogoReveal = (elapsedMs: number) => {
-	const t = (elapsedMs - entranceImpactMs()) / ENTRANCE_LOGO_MS;
+	const t = (elapsedMs - ENTRANCE_LOGO_DELAY_MS) / ENTRANCE_LOGO_MS;
 	if (t <= 0) return 0;
-	return easeOutCubic(Math.min(1, t));
+	return Math.min(1, t);
 };
 
-export const sampleMenuPhase = (elapsedMs: number) =>
-	elapsedMs >= entranceImpactMs() + ENTRANCE_MENU_DELAY_AFTER_IMPACT_MS;
+/** Logo scale on top of the camera: swell on the hit, one small undershoot, settle. */
+export const sampleLogoPulse = (elapsedMs: number) => {
+	const t = (elapsedMs - entranceImpactMs()) / ENTRANCE_LOGO_PULSE_MS;
+	if (t <= 0 || t >= 1) return 1;
+	const damp = Math.pow(1 - t, 1.6);
+	return 1 + LOGO_PULSE_AMPLITUDE * Math.sin(t * Math.PI * 2.2) * damp;
+};
 
-/** Mascot fades in with the menu, not on the click and not after the stagger ends. */
+export const sampleMenuPhase = (elapsedMs: number) => elapsedMs >= entranceMenuStartMs();
+
 export const sampleMascotReveal = (elapsedMs: number) => {
-	const start = entranceImpactMs() + ENTRANCE_MENU_DELAY_AFTER_IMPACT_MS;
-	const t = (elapsedMs - start) / ENTRANCE_MENU_MS;
+	const t = (elapsedMs - ENTRANCE_MASCOT_DELAY_MS) / ENTRANCE_MASCOT_MS;
 	if (t <= 0) return 0;
 	return easeOutCubic(Math.min(1, t));
 };

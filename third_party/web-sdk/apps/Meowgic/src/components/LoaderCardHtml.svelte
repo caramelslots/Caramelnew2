@@ -19,9 +19,6 @@
 		isActive?: boolean;
 		bounceKey?: number;
 		exiting?: boolean;
-		pullX?: number;
-		pullY?: number;
-		exitDelay?: number;
 	};
 
 	const props: Props = $props();
@@ -42,7 +39,7 @@
 	const animationIndex = $derived(props.animationIndex ?? props.cardIndex);
 	const cardStyle = $derived(
 		props.exiting
-			? `--card-width:${props.cardWidth}px;--pull-x:${props.pullX ?? 0}px;--pull-y:${props.pullY ?? 0}px;--exit-delay:${props.exitDelay ?? 0}ms;`
+			? `--card-width:${props.cardWidth}px;`
 			: `--card-width:${props.cardWidth}px;transform:scale(${scale.current});`,
 	);
 
@@ -67,7 +64,6 @@
 <article
 	class="loader-card"
 	class:animate-in={!props.carousel && props.animate !== false && !props.exiting}
-	class:is-exiting={props.exiting}
 	style={cardStyle}
 	style:--anim-index={animationIndex}
 	aria-label="loader card {contentIndex + 1}"
@@ -125,33 +121,6 @@
 		transform-origin: center center;
 		--card-height: calc(var(--card-width) * 1484 / 862);
 		--line-height: calc(var(--card-width) * 0.059);
-	}
-
-	.loader-card.is-exiting {
-		animation:
-			card-gather 620ms cubic-bezier(0.55, 0.02, 0.2, 1) forwards,
-			card-dissolve 360ms ease-in forwards;
-		animation-delay: var(--exit-delay, 0ms), calc(var(--exit-delay, 0ms) + 200ms);
-	}
-
-	@keyframes card-gather {
-		from {
-			transform: translate(0, 0) scale(1);
-		}
-
-		to {
-			transform: translate(var(--pull-x), var(--pull-y)) scale(0.56);
-		}
-	}
-
-	@keyframes card-dissolve {
-		from {
-			opacity: 1;
-		}
-
-		to {
-			opacity: 0;
-		}
 	}
 
 	.loader-card.animate-in {

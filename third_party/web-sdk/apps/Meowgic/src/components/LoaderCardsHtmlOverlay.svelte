@@ -13,7 +13,7 @@
 		LOADER_NEON_LOGO_URL,
 		loaderScreenImageUrls,
 	} from '../game/loaderCardAssets';
-	import { ENTRANCE_CARDS_STAGGER_MS } from '../game/entranceReveal';
+	import { ENTRANCE_CARDS_MS } from '../game/entranceReveal';
 	import {
 		LOADER_CARD_COUNT,
 		computeLoaderCardsAnchor,
@@ -85,7 +85,7 @@
 	const clampIndex = (index: number) => Math.max(0, Math.min(LOADER_CARD_COUNT - 1, index));
 
 	const overlayStyle = $derived(
-		`left:${screenPos.centerX}px;top:${screenPos.centerY}px;transform:translate(-50%,-50%);`,
+		`left:${screenPos.centerX}px;top:${screenPos.centerY}px;--cards-exit-ms:${ENTRANCE_CARDS_MS}ms;`,
 	);
 
 	const snapToIndex = (index: number, animate = true) => {
@@ -214,9 +214,6 @@
 								isActive={index === activeIndex}
 								bounceKey={activeIndex}
 								exiting={gameEntrance.loaderExitActive}
-								pullX={0}
-								pullY={-carouselMetrics.cardHeight * 0.05}
-								exitDelay={ENTRANCE_CARDS_STAGGER_MS[index] ?? 0}
 							/>
 						</div>
 					{/each}
@@ -235,9 +232,6 @@
 						{index}
 						animate={contentReady}
 						exiting={gameEntrance.loaderExitActive}
-						pullX={(1 - index) * (rowMetrics.cardWidth + rowMetrics.gap) * 0.86}
-						pullY={-rowMetrics.cardHeight * 0.07}
-						exitDelay={ENTRANCE_CARDS_STAGGER_MS[index] ?? 0}
 					/>
 				{/each}
 			</div>
@@ -248,7 +242,11 @@
 		Sibling of the cards box — label must not sit under a transform ancestor.
 		Space / tap handlers live in LoaderContinueHandlers.
 	-->
-	<div class="loader-press-to-continue" class:cards-exit={gameEntrance.loaderExitActive}>
+	<div
+		class="loader-press-to-continue"
+		class:cards-exit={gameEntrance.loaderExitActive}
+		style:--cards-exit-ms="{ENTRANCE_CARDS_MS}ms"
+	>
 		{#if gameEntrance.loadingCardsVisible && assetsReady && contentReady}
 			<PressToContinueHtml contained />
 		{/if}
@@ -264,36 +262,36 @@
 		pointer-events: none;
 	}
 
-	.cards-exit .loader-neon-logo-placeholder {
-		animation:
-			logo-gather 620ms cubic-bezier(0.55, 0.02, 0.2, 1) forwards,
-			card-dissolve 340ms ease-in 180ms forwards;
+	/* Logo + cards leave as one layer: short ease-in fade with a slight shrink. */
+	.loader-cards-overlay.cards-exit {
+		animation: cards-layer-out var(--cards-exit-ms, 260ms) cubic-bezier(0.5, 0, 0.75, 0) forwards;
 	}
 
 	.loader-press-to-continue.cards-exit {
-		animation: press-gather 580ms 50ms cubic-bezier(0.55, 0.02, 0.2, 1) forwards;
+		animation: press-layer-out var(--cards-exit-ms, 260ms) cubic-bezier(0.5, 0, 0.75, 0) forwards;
 	}
 
-	@keyframes logo-gather {
-		to {
-			transform: translateX(-50%) translateY(46%) scale(0.68);
-		}
-	}
-
-	@keyframes press-gather {
-		to {
-			opacity: 0;
-			transform: translateY(-22%) scale(0.84);
-		}
-	}
-
-	@keyframes card-dissolve {
+	@keyframes cards-layer-out {
 		from {
 			opacity: 1;
+			transform: translate(-50%, -50%) scale(1);
 		}
 
 		to {
 			opacity: 0;
+			transform: translate(-50%, -50%) scale(0.94);
+		}
+	}
+
+	@keyframes press-layer-out {
+		from {
+			opacity: 1;
+			transform: scale(1);
+		}
+
+		to {
+			opacity: 0;
+			transform: scale(0.94);
 		}
 	}
 
@@ -320,6 +318,8 @@
 		user-select: none;
 		overflow: visible;
 		opacity: 1;
+		transform: translate(-50%, -50%);
+		will-change: opacity, transform;
 	}
 
 	.loader-press-to-continue {

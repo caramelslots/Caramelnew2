@@ -109,20 +109,16 @@
 	}
 
 	.buy-bonus-panel.menu-reveal .buy-bonus-btn {
-		animation: hud-pop 440ms 80ms cubic-bezier(0.16, 0.84, 0.32, 1) both;
+		animation: hud-fade-in 300ms ease-out both;
 	}
 
-	@keyframes hud-pop {
+	@keyframes hud-fade-in {
 		from {
 			opacity: 0;
-			translate: 0 14px;
-			scale: 0.92;
 		}
 
 		to {
 			opacity: 1;
-			translate: 0 0;
-			scale: 1;
 		}
 	}
 

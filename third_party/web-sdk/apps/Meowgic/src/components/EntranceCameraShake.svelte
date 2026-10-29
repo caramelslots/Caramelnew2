@@ -9,15 +9,21 @@
 
 	const stage = () => app.stateApp.pixiApplication?.stage;
 
-	// Moves the whole WebGL scene (room + board) without shifting the canvas element,
-	// so the cover plate hides the edges of a few-pixel jolt.
+	// Zooms the whole WebGL scene (room + board + mascot) around the screen center
+	// without resizing the canvas element. Scale > 1 only, so the edges never show.
 	$effect(() => {
+		const pixi = app.stateApp.pixiApplication;
 		const root = stage();
-		if (!root) return;
-		root.position.set(entranceReveal.shakeX, entranceReveal.shakeY);
+		if (!pixi || !root) return;
+		const s = entranceReveal.cameraScale;
+		const { width, height } = pixi.screen;
+		root.scale.set(s);
+		root.position.set((width / 2) * (1 - s), (height / 2) * (1 - s));
 	});
 
 	onDestroy(() => {
-		stage()?.position.set(0, 0);
+		const root = stage();
+		root?.scale.set(1);
+		root?.position.set(0, 0);
 	});
 </script>

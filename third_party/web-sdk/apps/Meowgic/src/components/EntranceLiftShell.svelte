@@ -6,7 +6,6 @@
 	import type { Snippet } from 'svelte';
 
 	import { getContext } from '../game/context';
-	import { entranceReveal } from '../game/entranceReveal.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 
 	type Props = {
@@ -27,12 +26,6 @@
 	const showIntroOverlay = $derived(
 		!gameEntrance.liftComplete && context.stateLayout.showLoadingScreen,
 	);
-
-	const shakeTranslate = $derived(
-		Math.abs(entranceReveal.shakeX) > 0.05 || Math.abs(entranceReveal.shakeY) > 0.05
-			? `${entranceReveal.shakeX}px ${entranceReveal.shakeY}px`
-			: undefined,
-	);
 </script>
 
 <div class="entrance-viewport" class:entrance-viewport--settled={gameEntrance.liftComplete}>
@@ -40,11 +33,7 @@
 		{@render props.game()}
 	</section>
 	{#if showIntroOverlay}
-		<section
-			class="intro-overlay"
-			style:--panel-h="{panelHeight}px"
-			style:translate={shakeTranslate}
-		>
+		<section class="intro-overlay" style:--panel-h="{panelHeight}px">
 			{@render props.intro()}
 		</section>
 	{/if}

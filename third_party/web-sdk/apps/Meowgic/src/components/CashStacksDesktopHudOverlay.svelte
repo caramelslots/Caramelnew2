@@ -492,30 +492,17 @@
 		}
 
 		&.menu-reveal {
-			> :global(button),
-			> :global(p) {
-				animation: hud-pop 440ms cubic-bezier(0.16, 0.84, 0.32, 1) both;
-			}
-
-			@for $i from 1 through 12 {
-				> :global(*:nth-child(#{$i})) {
-					animation-delay: #{($i - 1) * 42}ms;
-				}
-			}
+			animation: hud-fade-in 300ms ease-out both;
 		}
 	}
 
-	@keyframes hud-pop {
+	@keyframes hud-fade-in {
 		from {
 			opacity: 0;
-			translate: 0 16px;
-			scale: 0.9;
 		}
 
 		to {
 			opacity: 1;
-			translate: 0 0;
-			scale: 1;
 		}
 	}
 

@@ -60,6 +60,9 @@
 		style:width="{box.width}px"
 		style:height="{box.height}px"
 		style:opacity={entranceReveal.driving ? entranceReveal.logoAlpha : undefined}
+		style:scale={entranceReveal.driving && entranceReveal.logoScale !== 1
+			? `${entranceReveal.logoScale}`
+			: undefined}
 		style={winDimStyle}
 		aria-hidden="true"
 	>
@@ -72,6 +75,7 @@
 		/* Absolute inside .game-panel so layout matches the board. */
 		position: absolute;
 		z-index: 41;
+		transform-origin: 50% 50%;
 		pointer-events: none;
 		user-select: none;
 	}

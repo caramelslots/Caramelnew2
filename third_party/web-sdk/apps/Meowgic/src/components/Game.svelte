@@ -19,7 +19,12 @@
 	import { PHONE_TICKER_MAX_FPS } from '../game/duelPhoneDpr';
 	import { isPhoneForAtlasDownscale } from '../game/phoneSpineAtlasDownscale';
 	import { entranceTimelineMs } from '../game/entranceReveal';
-	import { applyEntranceFrame, entranceReveal, restEntranceReveal } from '../game/entranceReveal.svelte';
+	import {
+		applyEntranceFrame,
+		entranceCameraCssScale,
+		entranceReveal,
+		restEntranceReveal,
+	} from '../game/entranceReveal.svelte';
 	import {
 		LOADER_CARD_2_SOCIAL_IMAGE_URL,
 		LOADER_SCREEN_IMAGE_URLS,
@@ -419,14 +424,7 @@
 	</GameApp>
 </div>
 
-<div
-	class="scene-html"
-	style:translate={
-		Math.abs(entranceReveal.shakeX) > 0.05 || Math.abs(entranceReveal.shakeY) > 0.05
-			? `${entranceReveal.shakeX}px ${entranceReveal.shakeY}px`
-			: undefined
-	}
->
+<div class="scene-html" style:scale={entranceCameraCssScale()}>
 <CashStacksModals>
 	{#snippet version()}
 		<GameVersion version="0.0.0" />
@@ -475,11 +473,12 @@
 		position: relative;
 	}
 
-	/* Same camera offset as the WebGL stage. Translate is set only during the hit. */
+	/* Same camera zoom as the WebGL stage. Scale is set only during the hit. */
 	.scene-html {
 		position: absolute;
 		inset: 0;
 		pointer-events: none;
+		transform-origin: 50% 50%;
 	}
 
 	.scene-html :global(button),
