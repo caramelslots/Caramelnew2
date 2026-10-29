@@ -102,3 +102,11 @@ export const sampleLogoReveal = (elapsedMs: number) => {
 
 export const sampleMenuPhase = (elapsedMs: number) =>
 	elapsedMs >= entranceImpactMs() + ENTRANCE_MENU_DELAY_AFTER_IMPACT_MS;
+
+/** Mascot fades in with the menu, not on the click and not after the stagger ends. */
+export const sampleMascotReveal = (elapsedMs: number) => {
+	const start = entranceImpactMs() + ENTRANCE_MENU_DELAY_AFTER_IMPACT_MS;
+	const t = (elapsedMs - start) / ENTRANCE_MENU_MS;
+	if (t <= 0) return 0;
+	return easeOutCubic(Math.min(1, t));
+};

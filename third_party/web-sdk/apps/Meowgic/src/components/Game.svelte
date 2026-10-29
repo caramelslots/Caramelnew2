@@ -250,6 +250,11 @@
 		<EnableDuelPhoneDpr />
 
 		{#if gameEntrance.preloadContent}
+			<!--
+				Sort stage siblings so remounting the cat (pose / skin) cannot climb
+				above Big Win / Total Win. Board < mascot(6) < overlays(10) < steam(1000).
+			-->
+			<Container sortableChildren>
 			<ResumeBet />
 			{#if gameEntrance.showContent || gameEntrance.loaderExitActive}
 				<!--
@@ -268,6 +273,7 @@
 				duration={0}
 				persistent
 				sortableChildren
+				zIndex={0}
 			>
 				{#if stateDuel.active || stateDuel.prebuild || stateDuel.linger}
 					<!-- Paint order matches base: bases → reels → gold rails →
@@ -385,6 +391,7 @@
 			<!--
 				Cat is outside the board fade: he is already on the opening screen
 				while the desk stays hidden, then stays put as the board drops.
+				Keep below Big Win / Total Win (overlays FadeContainer zIndex 10).
 			-->
 			<MascotPixi zIndex={6} />
 			<FadeContainer
@@ -392,11 +399,12 @@
 				duration={0}
 				persistent
 				sortableChildren
+				zIndex={10}
 			>
 				<!-- Tir FX above target holders + flip discs. -->
 				<TargetShotBulletPixiLayer zIndex={93} />
 				<TargetFlipPixiLayer zIndex={91} />
-				<!-- Under Transition (100) + FS outro / Win coins (10); above board. -->
+				<!-- Under Transition (1000) + FS outro / Win coins (10); above mascot (6). -->
 				<RevolverDrumPixi
 					zIndex={8}
 					forceShow={devPreview.forceShowDrum || devPreview.forceShowFsBoardChrome}
@@ -406,6 +414,7 @@
 				<FreeSpinOutro />
 			</FadeContainer>
 			<Transition />
+			</Container>
 		{/if}
 	</GameApp>
 </div>

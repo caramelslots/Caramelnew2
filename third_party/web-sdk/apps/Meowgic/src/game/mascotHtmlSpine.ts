@@ -707,7 +707,7 @@ export const pickMascotIdleStirLoops = () =>
 
 /**
  * Weighted idle roll — includes base `idle` (skip flavour).
- * 7% idle / 45% blink / 32% ears / 16% stir. Logical names; blink/ears files are swapped.
+ * 7% idle / 32% blink / 32% ears / 29% stir. Logical names; blink/ears files are swapped.
  * Picking `idle_to_stir` plays the stir sequence, not that clip alone.
  */
 export const MASCOT_IDLE_VARIANT_WEIGHTS: ReadonlyArray<{
@@ -715,9 +715,9 @@ export const MASCOT_IDLE_VARIANT_WEIGHTS: ReadonlyArray<{
 	weight: number;
 }> = [
 	{ animation: 'idle', weight: 0.07 },
-	{ animation: 'idle_blink', weight: 0.45 },
+	{ animation: 'idle_blink', weight: 0.32 },
 	{ animation: 'idle_ears', weight: 0.32 },
-	{ animation: MASCOT_IDLE_STIR_LEAD, weight: 0.16 },
+	{ animation: MASCOT_IDLE_STIR_LEAD, weight: 0.29 },
 ] as const;
 
 export const pickMascotIdleVariant = (): MascotSpineAnimation => {

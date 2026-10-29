@@ -5,6 +5,7 @@ import {
 	entranceTimelineMs,
 	sampleBoardDropOffset,
 	sampleLogoReveal,
+	sampleMascotReveal,
 	sampleMenuPhase,
 	sampleScreenShake,
 } from './entranceReveal';
@@ -19,6 +20,8 @@ export const entranceReveal = $state({
 	logoAlpha: 1,
 	/** HUD children start their stagger once this is true. */
 	menuPhase: false,
+	/** Mascot opacity during the entrance. 1 at rest. */
+	mascotAlpha: 1,
 	/** Camera impulse at the board hit. 0 at rest. */
 	shakeX: 0,
 	shakeY: 0,
@@ -34,6 +37,7 @@ export const applyEntranceFrame = (elapsedMs: number, canvasHeight: number) => {
 	);
 	entranceReveal.logoAlpha = sampleLogoReveal(elapsed);
 	entranceReveal.menuPhase = sampleMenuPhase(elapsed);
+	entranceReveal.mascotAlpha = sampleMascotReveal(elapsed);
 	const shake = sampleScreenShake(elapsed, entranceShakeAmplitude(height));
 	entranceReveal.shakeX = shake.x;
 	entranceReveal.shakeY = shake.y;
@@ -44,6 +48,7 @@ export const restEntranceReveal = () => {
 	entranceReveal.boardOffsetY = 0;
 	entranceReveal.logoAlpha = 1;
 	entranceReveal.menuPhase = false;
+	entranceReveal.mascotAlpha = 1;
 	entranceReveal.shakeX = 0;
 	entranceReveal.shakeY = 0;
 };

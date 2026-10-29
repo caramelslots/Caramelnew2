@@ -10,6 +10,7 @@
 	import { CAT_MEOW_SOUNDS, DOG_BARK_SOUNDS } from '../game/sound';
 
 	import { getContext } from '../game/context';
+	import { entranceReveal } from '../game/entranceReveal.svelte';
 	import { gameEntrance } from '../game/gameEntrance.svelte';
 	import { isBuyBonusFlowOpen } from '../game/isAnyMenuOpen';
 	import {
@@ -55,7 +56,7 @@
 
 	const pixiApp = getContextApp();
 	const context = getContext();
-	/** Hidden on the opening cards. Fades in as soon as the game entrance starts. */
+	/** Hidden on the opening cards. During the entrance he follows the menu fade. */
 	const show = $derived(gameEntrance.showContent);
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const canvasSizes = $derived(context.stateLayoutDerived.canvasSizes());
@@ -280,6 +281,11 @@
 	});
 
 	$effect(() => {
+		if (entranceReveal.driving) {
+			cancelFade();
+			alpha = entranceReveal.mascotAlpha;
+			return () => cancelFade();
+		}
 		if (shown) {
 			runFade(1, GAME_ENTRANCE_MS, entranceDone ? 0 : MASCOT_ENTRANCE_DELAY_MS);
 		} else {
