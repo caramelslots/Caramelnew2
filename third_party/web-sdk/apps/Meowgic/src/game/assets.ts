@@ -36,7 +36,7 @@ export default {
 	},
 	/**
 	 * Designer library-book board — `idle/idle_board` + bookmarks/clothes/key/pages
-	 * (single atlas page). `reaction/reaction` is available but not wired yet.
+	 * (single atlas page). `reaction/reaction` plays on Spin (`bet`).
 	 */
 	boardFrame: {
 		type: 'spine',

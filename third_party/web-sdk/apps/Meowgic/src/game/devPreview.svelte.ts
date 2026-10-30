@@ -1,3 +1,4 @@
+import type { BgDevSelection } from './bgDevPreview';
 import type { BoardDevSelection } from './boardDevPreview';
 import type { MascotDevPreview, MascotDogSpineAnimation } from './mascotHtmlSpine';
 import type { SymbolDevSelection } from './symbolDevPreview';
@@ -30,6 +31,11 @@ export const devPreview = $state({
 	 * Re-click bumps `nonce` so one-shots (reaction) replay.
 	 */
 	boardAnim: null as BoardDevSelection | null,
+	/**
+	 * Force one background Spine clip on track 0 of room and/or table
+	 * (null = stacked production idles). Re-click bumps `nonce` for one-shots.
+	 */
+	bgAnim: null as BgDevSelection | null,
 	/** Keep revolver drum HTML overlay visible (FS-only UI) for bullet-fly QA. */
 	forceShowDrum: false,
 	/**

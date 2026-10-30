@@ -44,6 +44,7 @@
 	import EnableBuyBonusWarmLifecycle from './EnableBuyBonusWarmLifecycle.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
 	import EnableBoardIdleBounce from './EnableBoardIdleBounce.svelte';
+	import EnableSpinSceneReaction from './EnableSpinSceneReaction.svelte';
 	import EnableLivingIdle from './EnableLivingIdle.svelte';
 	import EnablePauseMainPixiOnBuyBonus from './EnablePauseMainPixiOnBuyBonus.svelte';
 	import EnableDuelPhoneDpr from './EnableDuelPhoneDpr.svelte';
@@ -106,6 +107,18 @@
 	let BuyBonusModalShell = $state<Component | null>(null);
 
 	onMount(() => {
+		// HMR remounts this component. Heal interrupted entrance so Space-spin
+		// is not left gated on a stale `liftComplete === false`.
+		if (gameEntrance.liftComplete) {
+			context.stateLayout.showLoadingScreen = false;
+			return;
+		}
+		if (gameEntrance.showContent && !gameEntrance.loadingCardsVisible) {
+			gameEntrance.liftComplete = true;
+			gameEntrance.loaderExitActive = false;
+			context.stateLayout.showLoadingScreen = false;
+			return;
+		}
 		context.stateLayout.showLoadingScreen = true;
 	});
 
@@ -249,6 +262,7 @@
 		<EnableHotkey />
 		<EnableGameActor />
 		<EnableBoardIdleBounce />
+		<EnableSpinSceneReaction />
 		<EnableLivingIdle />
 		<EnablePauseMainPixiOnBuyBonus />
 		<EnablePixiExtension />

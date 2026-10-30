@@ -66,7 +66,12 @@
 		clearTierTimers();
 		postCountUpWait.interrupt();
 		postCountUpWait.clear();
-		await winAnimation?.playOutro({ instant: options?.instant === true });
+		// Dead bigwin spine outro must not block freeSpinEnd (common on last main FS
+		// when there are no extra spins after Stage E).
+		await Promise.race([
+			winAnimation?.playOutro({ instant: options?.instant === true }) ?? Promise.resolve(),
+			waitForTimeout(scaleMsByGameSpeed(2500, stateGame.gameSpeed)),
+		]);
 		oncomplete();
 	};
 

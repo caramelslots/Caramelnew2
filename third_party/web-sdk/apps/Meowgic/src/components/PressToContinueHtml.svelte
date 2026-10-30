@@ -9,6 +9,7 @@
 		PRESS_TO_CONTINUE_FONT_SIZE,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
+	import { stateGame } from '../game/stateGame.svelte';
 
 	type Props = {
 		/** Position inside the cards overlay (absolute) instead of fixed to the viewport. */
@@ -21,6 +22,8 @@
 	const text = $derived(context.i18nDerived.pressToContinue());
 	const locale = $derived(stateI18n.i18n.locale);
 	const textDirection = $derived(localeTextDirection(locale));
+	/** Total Win raises the Pixi stage above HTML (z 50000) — lift the label with it. */
+	const aboveFsOutro = $derived(stateGame.fsOutroActive);
 
 	const labelStyle = $derived.by(() => {
 		const ml = context.stateLayoutDerived.mainLayout();
@@ -40,6 +43,7 @@
 	class:press-label--contained={props.contained}
 	class:press-label--cjk={isCjkLocale(locale)}
 	class:press-label--arabic={isArabicLocale(locale)}
+	class:press-label--above-fs-outro={aboveFsOutro}
 	style={labelStyle}
 	dir={textDirection}
 	lang={locale}
@@ -67,6 +71,11 @@
 		text-transform: uppercase;
 		filter: drop-shadow(0 1px 0 #fff3b0) drop-shadow(0 3px 0 #5a3a0e)
 			drop-shadow(0 7px 10px rgba(0, 0, 0, 0.55));
+	}
+
+	.press-label--above-fs-outro {
+		/* Above `.pixi-stage.above-html-ui` (50000) during Total Win. */
+		z-index: 50001;
 	}
 
 	.press-label__line {

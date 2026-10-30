@@ -318,8 +318,11 @@
 
 	$effect(() => {
 		const state = props.reelSymbol.symbolState;
+		// Read outside untrack: if Stage E left targetPickOpen stuck true then cleared
+		// later while still on `win`, re-run so bounce (and oncomplete) can finish.
+		const parked = stateGame.targetPickOpen;
 		untrack(() => {
-			if (stateGame.targetPickOpen) return;
+			if (parked) return;
 			if (state === 'win' && !usesDedicatedSpineWin) {
 				runWinContainerBounce(finishWinBounce, () => props.reelSymbol.symbolState === 'win');
 			}
@@ -328,8 +331,9 @@
 
 	$effect(() => {
 		const state = props.reelSymbol.symbolState;
+		const parked = stateGame.targetPickOpen;
 		untrack(() => {
-			if (stateGame.targetPickOpen) return;
+			if (parked) return;
 			if (state === 'idleBounce') {
 				runIdlePopAnimation();
 			}

@@ -1,8 +1,8 @@
 <script lang="ts" module>
 	export type EmitterEventBoardFrame = {
 		/**
-		 * Crest glow pulse — lines, FS bullet collect, or paw resolve.
-		 * Board ships `reaction/reaction`, but BoardFrame does not play it yet.
+		 * Reserved for crest / win pulse. Spin scene reaction is driven by
+		 * `EnableSpinSceneReaction` + `spinSceneReaction`.
 		 */
 		type: 'boardFramePulse';
 		/** Duel: pulse only this desk. Omit for base (single board). */
@@ -19,6 +19,7 @@
 	 * / the spine when the asset changes; the slot stays put.
 	 */
 	import { Container, SpineProvider, SpineTrack, Sprite } from 'pixi-svelte';
+	import { stateBetDerived } from 'state-shared';
 
 	import {
 		BOARD_DESK_CONTENT,
@@ -32,8 +33,10 @@
 	import { catBoardZoom } from '../game/catAnticipationBoardZoom.svelte';
 	import { DEMO_BOARD_FIT } from '../game/demoStageArt';
 	import { devPreview } from '../game/devPreview.svelte';
+	import { spinSceneReaction } from '../game/spinSceneReaction.svelte';
 	import BoardFrameSlotFilter from './BoardFrameSlotFilter.svelte';
 	import BoardFrameRailsMask from './BoardFrameRailsMask.svelte';
+	import SpineTrackStackController from './SpineTrackStackController.svelte';
 
 	/** DEV: force a single board clip instead of the stacked production idles. */
 	const forcedBoardAnim = $derived(devPreview.boardAnim);
@@ -88,12 +91,16 @@
 	] as const;
 
 	/** Main desk breathe + layered prop idles from the designer export. */
-	const BOARD_IDLE_ANIMATION = 'idle/idle_board';
-	const BOARD_IDLE_EXTRA_TRACKS = [
+	const BOARD_IDLE_TRACKS = [
+		{ trackIndex: 0, animationName: 'idle/idle_board' },
 		{ trackIndex: 1, animationName: 'idle/bookmarks' },
 		{ trackIndex: 2, animationName: 'idle/clothes' },
 		{ trackIndex: 3, animationName: 'idle/key' },
 		{ trackIndex: 4, animationName: 'idle/pages' },
+	] as const;
+	/** Spin reaction — loops while reels move, mixes back to idle when they stop. */
+	const BOARD_REACTION_TRACKS = [
+		{ trackIndex: 0, animationName: 'reaction/reaction' },
 	] as const;
 
 	const props: Props = $props();
@@ -102,6 +109,10 @@
 		props.maskVariant ?? (layer === 'rails' ? 'rails' : 'all'),
 	);
 	const showDemoArt = $derived(devPreview.forceShowDemoStageArt);
+	/** Board plays one reaction per Spin token — no loop for the rest of the spin. */
+	const boardReactionToken = $derived(
+		forcedBoardAnim ? 0 : spinSceneReaction.token,
+	);
 
 	const context = getContext();
 
@@ -205,14 +216,13 @@
 							/>
 						{/key}
 					{:else}
-						<SpineTrack trackIndex={0} animationName={BOARD_IDLE_ANIMATION} loop />
-						{#each BOARD_IDLE_EXTRA_TRACKS as track (track.trackIndex)}
-							<SpineTrack
-								trackIndex={track.trackIndex}
-								animationName={track.animationName}
-								loop
-							/>
-						{/each}
+						<SpineTrackStackController
+							idleTracks={BOARD_IDLE_TRACKS}
+							reactionTracks={BOARD_REACTION_TRACKS}
+							oneShot
+							reactionToken={boardReactionToken}
+							timeScale={stateBetDerived.timeScale()}
+						/>
 					{/if}
 				</SpineProvider>
 			{/if}

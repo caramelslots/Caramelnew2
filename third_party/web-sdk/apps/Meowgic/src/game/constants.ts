@@ -127,14 +127,23 @@ export const WIN_HUD_COUNT_UP_MS = 1100;
 export const PAYLINE_WIN_AMOUNT_FONT_SIZE = 42;
 /** Vertical offset above the payline center (ref px). */
 export const PAYLINE_WIN_AMOUNT_ABOVE_LINE_OFFSET = 36;
-/** Drop onto the line (appear) / fall down (dismiss). */
-export const PAYLINE_WIN_AMOUNT_IN_MS = 340;
-export const PAYLINE_WIN_AMOUNT_OUT_MS = 260;
-/** Hold on the line after landing, before auto fall-out (independent of payline clear). */
-export const PAYLINE_WIN_AMOUNT_HOLD_MS = 500;
-export const PAYLINE_WIN_AMOUNT_DROP_PX = 32;
-/** Fall below the line on dismiss (positive = down in board space). */
-export const PAYLINE_WIN_AMOUNT_FALL_PX = 48;
+/** Appear: fade in fast while popping past full size, then settle back to 1. */
+export const PAYLINE_WIN_AMOUNT_FADE_IN_MS = 70;
+export const PAYLINE_WIN_AMOUNT_POP_UP_MS = 130;
+export const PAYLINE_WIN_AMOUNT_POP_SETTLE_MS = 270;
+export const PAYLINE_WIN_AMOUNT_POP_START_SCALE = 0.75;
+export const PAYLINE_WIN_AMOUNT_POP_PEAK_SCALE = 1.2;
+/** Hold after the pop settles, before auto fade-out (independent of payline clear). */
+export const PAYLINE_WIN_AMOUNT_HOLD_MS = 700;
+export const PAYLINE_WIN_AMOUNT_OUT_MS = 240;
+/** Constant upward drift for the whole lifetime, including fade-out (board px / s). */
+export const PAYLINE_WIN_AMOUNT_DRIFT_PX_PER_S = 28;
+/** Balloon sway: tilt leans into the side-to-side motion; tilt starts wide and calms to the rest amplitude. */
+export const PAYLINE_WIN_AMOUNT_SWAY_PERIOD_MS = 700;
+export const PAYLINE_WIN_AMOUNT_SWAY_TILT_START_DEG = 6;
+export const PAYLINE_WIN_AMOUNT_SWAY_TILT_REST_DEG = 2.5;
+export const PAYLINE_WIN_AMOUNT_SWAY_TILT_DECAY_MS = 450;
+export const PAYLINE_WIN_AMOUNT_SWAY_X_PX = 3;
 
 /** "Press to continue" HTML label (ref px at 1280×720, scaled by mainLayout.scale). */
 export const PRESS_TO_CONTINUE_FONT_SIZE = 38;
@@ -460,6 +469,17 @@ export const WIN_BOUNCE = {
 export const IDLE_BOUNCE_INITIAL_DELAY_MS = 10000;
 /** Pause between consecutive idle-bounce cycles on the same settled board. */
 export const IDLE_BOUNCE_CYCLE_DELAY_MS = 2000;
+/**
+ * Spin press → board + background reaction lead-in (divided by turbo timeScale).
+ */
+export const SPIN_SCENE_REACTION_DELAY_MS = 200;
+/** Overlay fade-in via track alpha — soft lamp ignition, synced with board. */
+export const SPIN_SCENE_REACTION_MIX_IN_SEC = 0.35;
+/**
+ * Overlay fade-out via track alpha (not empty-mix). Attachments/particles don't
+ * blend through setEmptyAnimation — alpha dissolve hides the pop.
+ */
+export const SPIN_SCENE_REACTION_MIX_OUT_SEC = 1.05;
 /** Safety timeout while waiting for an idle-bounce tween to finish. */
 export const IDLE_BOUNCE_ANIMATION_TIMEOUT_MS = 800;
 
@@ -1257,7 +1277,6 @@ export const DESKTOP_UI_LAYOUT = {
 		autoplayScale: 1.0,
 		/** Max autoplay pill height vs UI_BASE_SIZE (layout px, before canvas scale). */
 		autoplayMaxHeightScale: 0.62,
-		turboScale: 0.56,
 	},
 	/**
 	 * Popout S (400×225) only — label vs button height.
@@ -1324,11 +1343,6 @@ export const AUTOPLAY_PILL_BASE = {
 } as const;
 export const PORTRAIT_UTIL_ICON_BASE = 108;
 export const PORTRAIT_AUTOPLAY_PILL_BASE = AUTOPLAY_PILL_BASE;
-export const PORTRAIT_TURBO_ICON_BASE = 108;
-
-/** Turbo HUD sprite is denser than info/menu — scale inside the shared icon hit box. */
-export const HUD_TURBO_ICON_BG_FRAC =
-	DESKTOP_UI_LAYOUT.spinCluster.turboScale / DESKTOP_UI_LAYOUT.spinCluster.smallScale;
 
 // New designer artwork comes from `designer_assets/Symbols/export/` — a
 // single combined spine with bounce/win/explosion animations + per-symbol

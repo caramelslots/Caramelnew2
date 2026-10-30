@@ -1,28 +1,45 @@
 <script lang="ts">
-	import { Container, Rectangle, SpineProvider, SpineTrack, Sprite } from 'pixi-svelte';
+	import { Container, Rectangle, SpineProvider, Sprite } from 'pixi-svelte';
 	import { FadeContainer } from 'components-pixi';
 	import { SECOND } from 'constants-shared/time';
+	import { stateBetDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
 	import { devPreview } from '../game/devPreview.svelte';
 	import { catBackgroundZoom } from '../game/catAnticipationBoardZoom.svelte';
 	import {
-		BG_IDLE_ANIMATION,
-		BG_ONLY_IDLE_TRACKS,
-		BG_TABLE_IDLE_TRACKS,
+		bgDevTargetsRoom,
+		bgDevTargetsTable,
+	} from '../game/bgDevPreview';
+	import {
+		BG_ROOM_IDLE_TRACKS,
+		BG_ROOM_REACTION_TRACKS,
+		BG_TABLE_IDLE_STACK,
+		BG_TABLE_REACTION_TRACKS,
 		getBackgroundPixiCoverScreenBox,
 		getBackgroundPixiScale,
 		getBackgroundSpineY,
 		type BackgroundThemeSkin,
 	} from '../game/neonBackgroundLayout';
+	import { spinSceneReaction } from '../game/spinSceneReaction.svelte';
 	import { isPhoneCanvasSizeType } from '../game/streetOffscreenCull';
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import BackgroundSkinController from './BackgroundSkinController.svelte';
+	import BgDevForceClip from './BgDevForceClip.svelte';
+	import SpineTrackStackController from './SpineTrackStackController.svelte';
 	import StreetOffscreenCull from './StreetOffscreenCull.svelte';
 
 	const context = getContext();
 
 	const showDemoArt = $derived(devPreview.forceShowDemoStageArt);
+	/** DEV: force a single BG clip instead of the stacked production idles. */
+	const forcedBgAnim = $derived(devPreview.bgAnim);
+	const forceRoomClip = $derived(
+		forcedBgAnim ? bgDevTargetsRoom(forcedBgAnim.target) : false,
+	);
+	const forceTableClip = $derived(
+		forcedBgAnim ? bgDevTargetsTable(forcedBgAnim.target) : false,
+	);
 
 	/**
 	 * Spine origin (0,0) is scene center — no anchor / width / height.
@@ -97,24 +114,30 @@
 </script>
 
 {#snippet streetPieces(theme: BackgroundThemeSkin, timeScale: number)}
+	{@const stackTimeScale = timeScale * stateBetDerived.timeScale()}
+	{@const bgReactionToken =
+		timeScale > 0 && !forcedBgAnim ? spinSceneReaction.token : 0}
 	<!-- Draw order: room plate → stage → desk (matches designer layering). -->
 	<SpineProvider key="mainBackground" {...spineProps}>
 		<BackgroundSkinController skin={theme} />
 		<StreetOffscreenCull />
-		<SpineTrack
-			trackIndex={0}
-			animationName={BG_IDLE_ANIMATION}
-			loop
-			timeScale={timeScale}
-		/>
-		{#each BG_ONLY_IDLE_TRACKS as track (track.trackIndex)}
-			<SpineTrack
-				trackIndex={track.trackIndex}
-				animationName={track.animationName}
-				loop
+		{#if forceRoomClip && forcedBgAnim}
+			<BgDevForceClip
+				animationName={forcedBgAnim.animationName}
+				loop={forcedBgAnim.loop}
+				nonce={forcedBgAnim.nonce}
 				timeScale={timeScale}
 			/>
-		{/each}
+		{:else}
+			<SpineTrackStackController
+				idleTracks={BG_ROOM_IDLE_TRACKS}
+				reactionTracks={BG_ROOM_REACTION_TRACKS}
+				oneShot
+				alphaFade
+				reactionToken={bgReactionToken}
+				timeScale={stackTimeScale}
+			/>
+		{/if}
 	</SpineProvider>
 	<SpineProvider key="bgPlatform" {...spineProps}>
 		<BackgroundSkinController skin={theme} />
@@ -122,20 +145,23 @@
 	<SpineProvider key="bgTable" {...spineProps}>
 		<BackgroundSkinController skin={theme} />
 		<StreetOffscreenCull />
-		<SpineTrack
-			trackIndex={0}
-			animationName={BG_IDLE_ANIMATION}
-			loop
-			timeScale={timeScale}
-		/>
-		{#each BG_TABLE_IDLE_TRACKS as track (track.trackIndex)}
-			<SpineTrack
-				trackIndex={track.trackIndex}
-				animationName={track.animationName}
-				loop
+		{#if forceTableClip && forcedBgAnim}
+			<BgDevForceClip
+				animationName={forcedBgAnim.animationName}
+				loop={forcedBgAnim.loop}
+				nonce={forcedBgAnim.nonce}
 				timeScale={timeScale}
 			/>
-		{/each}
+		{:else}
+			<SpineTrackStackController
+				idleTracks={BG_TABLE_IDLE_STACK}
+				reactionTracks={BG_TABLE_REACTION_TRACKS}
+				oneShot
+				alphaFade
+				reactionToken={bgReactionToken}
+				timeScale={stackTimeScale}
+			/>
+		{/if}
 	</SpineProvider>
 {/snippet}
 

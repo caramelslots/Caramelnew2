@@ -35,12 +35,34 @@ export const BG_ONLY_IDLE_TRACKS = [
 	{ trackIndex: 2, animationName: 'idle/particles' },
 ] as const;
 
+/** Full idle stack for `mainBackground` (track 0 + extras). */
+export const BG_ROOM_IDLE_TRACKS = [
+	{ trackIndex: 0, animationName: BG_IDLE_ANIMATION },
+	...BG_ONLY_IDLE_TRACKS,
+] as const;
+
 /** Extra looping tracks on `bgTable` (desk props). */
 export const BG_TABLE_IDLE_TRACKS = [
 	{ trackIndex: 1, animationName: 'idle/candle' },
 	{ trackIndex: 2, animationName: 'idle/orb' },
 	{ trackIndex: 3, animationName: 'idle/pen' },
 	{ trackIndex: 4, animationName: 'idle/lamps' },
+] as const;
+
+/** Full idle stack for `bgTable` (track 0 + extras). */
+export const BG_TABLE_IDLE_STACK = [
+	{ trackIndex: 0, animationName: BG_IDLE_ANIMATION },
+	...BG_TABLE_IDLE_TRACKS,
+] as const;
+
+/** Spin: play `reaction/bg_reaction`, then restore room idle stack. */
+export const BG_ROOM_REACTION_TRACKS = [
+	{ trackIndex: 0, animationName: 'reaction/bg_reaction' },
+] as const;
+
+/** Spin: play `reaction/bg_reaction2`, then restore table idle stack. */
+export const BG_TABLE_REACTION_TRACKS = [
+	{ trackIndex: 0, animationName: 'reaction/bg_reaction2' },
 ] as const;
 
 /**

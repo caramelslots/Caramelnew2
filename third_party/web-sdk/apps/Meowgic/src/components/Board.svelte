@@ -67,6 +67,15 @@
 			waitForTimeout(timeoutMs),
 		]);
 
+	/** Spine win clips are ~1–2s; without a race the book hangs before freeSpinEnd. */
+	const WIN_ANIM_TIMEOUT_MS = 3500;
+
+	const waitForWinComplete = (reelSymbol: ReelSymbol) =>
+		waitForSymbolComplete(
+			reelSymbol,
+			Math.ceil(WIN_ANIM_TIMEOUT_MS / stateBetDerived.timeScale()),
+		);
+
 	const runMysteryCollapseReels = async (reelIndices: number[]) => {
 		const cells: { reelSymbol: ReelSymbol; reelIndex: number }[] = [];
 		for (const reelIndex of reelIndices) {
@@ -185,7 +194,7 @@
 					// postWinStatic after resetBoardCelebrateToIdle snapped to idle.
 					if (reelSymbol.symbolState !== 'winLift') return;
 					reelSymbol.symbolState = 'win';
-					await waitForResolve((resolve) => (reelSymbol.oncomplete = resolve));
+					await waitForWinComplete(reelSymbol);
 					if (reelSymbol.symbolState !== 'win') return;
 					reelSymbol.symbolState = 'postWinStatic';
 				});

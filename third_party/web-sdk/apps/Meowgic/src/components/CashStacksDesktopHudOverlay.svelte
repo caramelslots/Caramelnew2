@@ -18,7 +18,6 @@
 	import {
 		isPopoutSmallViewport,
 		BUY_BONUS_BUTTON_ASPECT,
-		HUD_TURBO_ICON_BG_FRAC,
 	} from '../game/constants';
 	import { computeDesktopHudLayout, resolveDesktopHudConfig } from '../game/desktopHudLayout';
 	import { getRoundsCounter } from '../game/autoplay';
@@ -33,7 +32,6 @@
 	import { isSdkTurboSpin } from '../game/gameSpeed';
 	import { hudWinDimStyle } from '../game/hudWinDim';
 	import { getContextLayout } from 'utils-layout';
-	import { OnHotkey } from 'components-shared';
 	import { isAnyMenuOpen } from '../game/isAnyMenuOpen';
 	import { isLoaderScreenBlockingSpin } from '../game/isLoaderScreenBlockingSpin';
 	import { isFreeSpinsActive, isLockedBonusHud } from '../game/activeFeature';
@@ -144,51 +142,6 @@
 		return true;
 	});
 
-	// TEMP DEBUG: Space spin after Spine 4.3 — remove once fixed.
-	$effect(() => {
-		if (!import.meta.env.DEV) return;
-		const onKey = (e: KeyboardEvent) => {
-			if (e.key !== ' ') return;
-			const active = document.activeElement;
-			console.warn(
-				'[SPACE-DEBUG]',
-				JSON.stringify({
-					phase: e.eventPhase,
-					defaultPrevented: e.defaultPrevented,
-					target: (e.target as HTMLElement | null)?.tagName ?? null,
-					active: active ? `${active.tagName}.${(active as HTMLElement).className}`.slice(0, 120) : null,
-					hasFocus: document.hasFocus(),
-					spinDisabled,
-					show,
-					menuOpen: stateUi.menuOpen,
-					modal: stateModal.modal?.name ?? null,
-					loaderBlocks: loaderBlocksSpaceSpin,
-					hudLocked,
-					isReplay,
-					idle: context.stateXstateDerived.isIdle(),
-					canAfford: canAffordSpin(),
-					gameType: stateGame.gameType,
-				}),
-			);
-		};
-		const onKeyBubble = (e: KeyboardEvent) => {
-			if (e.key === ' ') console.warn('[SPACE-DEBUG] bubble reached window');
-		};
-		window.addEventListener('keydown', onKey, true);
-		window.addEventListener('keydown', onKeyBubble);
-		return () => {
-			window.removeEventListener('keydown', onKey, true);
-			window.removeEventListener('keydown', onKeyBubble);
-		};
-	});
-	context.eventEmitter.subscribeOnMount({
-		hotKey: (event) => {
-			if (import.meta.env.DEV && event.key === 'Space') {
-				console.warn('[SPACE-DEBUG] hotKey event', event.action);
-			}
-		},
-	});
-
 	const smallestBet = $derived(
 		stateConfig.minBet > 0 ? stateConfig.minBet : stateConfig.betAmountOptions[0],
 	);
@@ -278,6 +231,28 @@
 			context.eventEmitter.broadcast({ type: 'stopButtonClick' });
 		}
 	};
+
+	/**
+	 * Direct window Space → spin. Avoids EnableHotkey/emitter OnHotkey, which
+	 * kept dying after HMR / entrance while click-spin still worked.
+	 */
+	$effect(() => {
+		const spaceEnabled =
+			show && !hudLocked && !isReplay && !spinDisabled && !menuBlocksSpaceSpin && !loaderBlocksSpaceSpin;
+		if (!spaceEnabled) return;
+
+		const onKeyDown = (e: KeyboardEvent) => {
+			if (e.code !== 'Space' && e.key !== ' ') return;
+			if (e.repeat) return;
+			const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
+			if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+			e.preventDefault();
+			onSpinPress();
+		};
+
+		window.addEventListener('keydown', onKeyDown);
+		return () => window.removeEventListener('keydown', onKeyDown);
+	});
 
 	const onAutoplayPress = () => {
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
@@ -434,13 +409,12 @@
 
 			<button
 				type="button"
-				class="hud-icon-btn hud-icon-btn--turbo"
+				class="hud-icon-btn"
 				class:dimmed={turboDisabled}
 				style:left="{pos.turbo.x}px"
 				style:top="{pos.turbo.y}px"
 				style:width="{pos.turbo.size}px"
 				style:height="{pos.turbo.size}px"
-				style:--hud-turbo-bg-frac={HUD_TURBO_ICON_BG_FRAC}
 				style:background-image="url('{turboUrl}')"
 				disabled={turboDisabled}
 				aria-label="turbo"
@@ -449,11 +423,6 @@
 		{/if}
 
 		{#if !hudLocked && !isReplay}
-			<OnHotkey
-				hotkey="Space"
-				disabled={spinDisabled || !show || menuBlocksSpaceSpin || loaderBlocksSpaceSpin}
-				onpress={onSpinPress}
-			/>
 			<SpinHudButton
 				bind:this={spinHudButton}
 				x={pos.spin.x}
@@ -543,10 +512,6 @@
 		&.dimmed {
 			opacity: 0.45;
 		}
-	}
-
-	.hud-icon-btn--turbo {
-		background-size: calc(var(--hud-turbo-bg-frac) * 100%);
 	}
 
 	.hud-icon-btn[data-test='buy-bonus-panel-button'] {

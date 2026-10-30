@@ -65,7 +65,7 @@ import {
 } from './stateDuel.svelte';
 import { stateLayoutDerived } from './stateLayout';
 import { stateApp } from './stateApp';
-import { ensureDuelMascotReady } from './featureGpuMemory';
+import { ensureDuelMascotReady, ensureFsPopupReady } from './featureGpuMemory';
 import {
 	ensureMascotCatSpineLoaded,
 	MASCOT_CAT_SPINE_WHITE,
@@ -1414,6 +1414,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 
 		await startFsCongPreload();
+		// Warm Total Win spine during FS — no-extra path hits freeSpinEnd with no
+		// Extra Spins intro buffer after Stage E / last main spin.
+		void ensureFsPopupReady(stateApp);
 		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
 		await eventEmitter.broadcastAsync({
 			type: 'freeSpinIntroUpdate',
@@ -1449,7 +1452,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			(stateBet.winBookEventAmount > 0 ? stateBet.winBookEventAmount : bookEvent.amount);
 		maybeRequestWinHudCountUp(outroAmount);
 		stateBet.winBookEventAmount = outroAmount;
-		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
+		// Missing / unknown winLevel must not leave FreeSpinOutro without panel data
+		// (PressToContinue never mounts → book hangs after the last FS).
+		const winLevelData =
+			winLevelMap[bookEvent.winLevel as WinLevel] ?? winLevelMap[2];
+
+		// Drop any leftover Stage E parking so win/outro layers remount normally.
+		stateGame.targetPickOpen = false;
+		stateGame.targetPickSlide = 0;
 
 		// Очистка FS state — drum kept through outro so casings stay visible.
 		stateGame.bonusCollected = 0;
@@ -1500,7 +1510,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		// Stake UX: small/medium wins are non-blocking — board amount + HUD WIN
 		// are raised during winInfo; skip duplicate increment here.
-		if (winLevelData.type !== 'big') {
+		// Missing winLevel must not throw — that aborted the book before freeSpinEnd.
+		if (!winLevelData || winLevelData.type !== 'big') {
 			return;
 		}
 
@@ -1554,6 +1565,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	finalWin: async (bookEvent: BookEventOfType<'finalWin'>) => {
 		// Do nothing
 	},
+	/** Math wincap marker — UI already handled via setTotalWin / freeSpinEnd. */
+	wincap: async () => {},
 	// === Wok Fury custom events (no-op — Cat Mafia has no ladder/mystery) ===
 	bonusCollect: async () => {},
 	ladderTierUp: async () => {},
@@ -1823,6 +1836,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.drumShootActive = false;
 		stateGame.drumShakeKey = 0;
 		stateGame.mascotPose = 'idle';
+		// Stage E always clears parking; don't leave flags that park win/outro layers.
+		stateGame.targetPickOpen = false;
+		stateGame.targetPickSlide = 0;
 
 		if (bookEvent.extraFs > 0) {
 			const newTotal = (stateUi.freeSpinCounterTotal || stateGame.fsMainTotal) + bookEvent.extraFs;
@@ -1833,6 +1849,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			});
 			stateUi.freeSpinCounterTotal = newTotal;
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
+		} else {
+			// No Extra Spins intro — freeSpinEnd is next. Warm Total Win spine now so
+			// tir-unload → outro doesn't race a cold fsPopup load.
+			void ensureFsPopupReady(stateApp);
 		}
 	},
 

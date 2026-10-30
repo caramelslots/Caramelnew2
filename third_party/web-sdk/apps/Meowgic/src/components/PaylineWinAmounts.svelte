@@ -2,7 +2,8 @@
 	PaylineWinAmounts.svelte — single compact total above one payline.
 	Stake small-win UX: one amount over any winning line, not per-line labels.
 	Font: proxima-nova (same face as FS Intro CONGRATULATIONS / under-board WIN).
-	Motion: drops onto the line, holds ~0.5s, then falls down (does not wait for payline clear).
+	Motion: fast fade-in with a scale pop (overshoot, then settle), steady upward drift for the
+	whole lifetime, then fades out while still drifting (does not wait for payline clear).
 -->
 <script lang="ts" module>
 	import type { Position } from '../game/types';
@@ -25,19 +26,27 @@
 <script lang="ts">
 	import { FillGradient } from 'pixi.js';
 	import { Tween } from 'svelte/motion';
-	import { backOut, cubicIn, cubicOut } from 'svelte/easing';
+	import { cubicInOut, cubicOut, linear, sineIn } from 'svelte/easing';
 	import { Container } from 'pixi-svelte';
 
 	import TightCanvasText from './TightCanvasText.svelte';
 
 	import {
 		PAYLINE_WIN_AMOUNT_ABOVE_LINE_OFFSET,
-		PAYLINE_WIN_AMOUNT_DROP_PX,
-		PAYLINE_WIN_AMOUNT_FALL_PX,
+		PAYLINE_WIN_AMOUNT_DRIFT_PX_PER_S,
+		PAYLINE_WIN_AMOUNT_FADE_IN_MS,
 		PAYLINE_WIN_AMOUNT_FONT_SIZE,
 		PAYLINE_WIN_AMOUNT_HOLD_MS,
-		PAYLINE_WIN_AMOUNT_IN_MS,
 		PAYLINE_WIN_AMOUNT_OUT_MS,
+		PAYLINE_WIN_AMOUNT_POP_PEAK_SCALE,
+		PAYLINE_WIN_AMOUNT_POP_SETTLE_MS,
+		PAYLINE_WIN_AMOUNT_POP_START_SCALE,
+		PAYLINE_WIN_AMOUNT_POP_UP_MS,
+		PAYLINE_WIN_AMOUNT_SWAY_PERIOD_MS,
+		PAYLINE_WIN_AMOUNT_SWAY_TILT_DECAY_MS,
+		PAYLINE_WIN_AMOUNT_SWAY_TILT_REST_DEG,
+		PAYLINE_WIN_AMOUNT_SWAY_TILT_START_DEG,
+		PAYLINE_WIN_AMOUNT_SWAY_X_PX,
 		SYMBOL_SIZE,
 	} from '../game/constants';
 	import { amountToLayoutParts } from '../game/currencyTextSegments';
@@ -136,32 +145,68 @@
 
 	const drawScale = $derived(fitScale * popScale.current);
 
-	const playDropIn = async () => {
+	/** Elapsed sway time in unscaled ms (game speed applied per frame). */
+	let swayMs = $state(0);
+
+	$effect(() => {
+		if (!mounted) return;
+		swayMs = 0;
+		let last = performance.now();
+		let raf = requestAnimationFrame(function tick(now) {
+			const speedFactor = PAYLINE_WIN_AMOUNT_SWAY_PERIOD_MS / Math.max(1, speedMs(PAYLINE_WIN_AMOUNT_SWAY_PERIOD_MS));
+			swayMs += (now - last) * speedFactor;
+			last = now;
+			raf = requestAnimationFrame(tick);
+		});
+		return () => cancelAnimationFrame(raf);
+	});
+
+	const swayPhase = $derived((swayMs / PAYLINE_WIN_AMOUNT_SWAY_PERIOD_MS) * Math.PI * 2);
+	const swayX = $derived(PAYLINE_WIN_AMOUNT_SWAY_X_PX * Math.sin(swayPhase));
+	const swayRotation = $derived.by(() => {
+		const decay = Math.exp(-swayMs / PAYLINE_WIN_AMOUNT_SWAY_TILT_DECAY_MS);
+		const deg =
+			PAYLINE_WIN_AMOUNT_SWAY_TILT_REST_DEG +
+			(PAYLINE_WIN_AMOUNT_SWAY_TILT_START_DEG - PAYLINE_WIN_AMOUNT_SWAY_TILT_REST_DEG) * decay;
+		return ((deg * Math.PI) / 180) * Math.cos(swayPhase);
+	});
+
+	const speedMs = (ms: number) => scaleMsByGameSpeed(ms, stateGame.gameSpeed);
+
+	/** Takes unscaled ms so the drift path is identical at every game speed. */
+	const driftPx = (ms: number) => (PAYLINE_WIN_AMOUNT_DRIFT_PX_PER_S * ms) / 1000;
+
+	const playAppear = async () => {
 		const gen = ++motionGen;
-		const ms = scaleMsByGameSpeed(PAYLINE_WIN_AMOUNT_IN_MS, stateGame.gameSpeed);
+		const lifeBaseMs =
+			PAYLINE_WIN_AMOUNT_POP_UP_MS + PAYLINE_WIN_AMOUNT_POP_SETTLE_MS + PAYLINE_WIN_AMOUNT_HOLD_MS;
+		const popUpMs = speedMs(PAYLINE_WIN_AMOUNT_POP_UP_MS);
+		const settleMs = speedMs(PAYLINE_WIN_AMOUNT_POP_SETTLE_MS);
+		const lifeMs = speedMs(lifeBaseMs);
 		await Promise.all([
-			yOff.set(-PAYLINE_WIN_AMOUNT_DROP_PX, { duration: 0 }),
-			popScale.set(0.7, { duration: 0 }),
+			yOff.set(0, { duration: 0 }),
+			popScale.set(PAYLINE_WIN_AMOUNT_POP_START_SCALE, { duration: 0 }),
 			alpha.set(0, { duration: 0 }),
 		]);
 		if (gen !== motionGen) return;
-		void alpha.set(1, { duration: Math.round(ms * 0.4), easing: cubicOut });
-		void popScale.set(1, { duration: ms, easing: backOut });
-		await yOff.set(0, { duration: ms, easing: backOut });
+		void yOff.set(-driftPx(lifeBaseMs), { duration: lifeMs, easing: linear });
+		void alpha.set(1, { duration: speedMs(PAYLINE_WIN_AMOUNT_FADE_IN_MS), easing: cubicOut });
+		await popScale.set(PAYLINE_WIN_AMOUNT_POP_PEAK_SCALE, { duration: popUpMs, easing: cubicOut });
 		if (gen !== motionGen) return;
-		// Rest on the line briefly, then leave on its own (don't wait for payline clear).
+		await popScale.set(1, { duration: settleMs, easing: cubicInOut });
+		if (gen !== motionGen) return;
+		// Leave on its own (don't wait for payline clear).
 		await waitForGameSpeed(PAYLINE_WIN_AMOUNT_HOLD_MS, stateGame.gameSpeed);
 		if (gen !== motionGen) return;
-		await playJumpOut(gen);
+		await playFadeOut(gen);
 	};
 
-	const playJumpOut = async (existingGen?: number) => {
+	const playFadeOut = async (existingGen?: number) => {
 		const gen = existingGen ?? ++motionGen;
 		if (existingGen == null) motionGen = gen;
-		const ms = scaleMsByGameSpeed(PAYLINE_WIN_AMOUNT_OUT_MS, stateGame.gameSpeed);
-		void alpha.set(0, { duration: Math.round(ms * 0.9), easing: cubicIn });
-		void popScale.set(0.82, { duration: ms, easing: cubicIn });
-		await yOff.set(PAYLINE_WIN_AMOUNT_FALL_PX, { duration: ms, easing: cubicIn });
+		const ms = speedMs(PAYLINE_WIN_AMOUNT_OUT_MS);
+		void yOff.set(yOff.current - driftPx(PAYLINE_WIN_AMOUNT_OUT_MS), { duration: ms, easing: linear });
+		await alpha.set(0, { duration: ms, easing: sineIn });
 		if (gen !== motionGen) return;
 		mounted = false;
 		activeAmount = null;
@@ -186,7 +231,7 @@
 			measuredWidth = 0;
 			return;
 		}
-		void playJumpOut();
+		void playFadeOut();
 	};
 
 	context.eventEmitter.subscribeOnMount({
@@ -197,10 +242,11 @@
 				return;
 			}
 			measuredWidth = 0;
+			swayMs = 0;
 			activeAmount = event.amount;
 			activeAnchor = event.anchor;
 			mounted = true;
-			void playDropIn();
+			void playAppear();
 		},
 		paylineWinAmountClear: (event) => {
 			const side = event && 'side' in event ? event.side : undefined;
@@ -220,13 +266,13 @@
 {#if mounted && activeAmount != null && activeAnchor && anchorLayout && displayText}
 	{#key displayText}
 		<Container
-			x={anchorLayout.x}
+			x={anchorLayout.x + swayX}
 			y={anchorLayout.y + yOff.current}
 			zIndex={amountZ}
 			alpha={alpha.current}
 			eventMode="none"
 		>
-			<Container scale={drawScale}>
+			<Container scale={drawScale} rotation={swayRotation}>
 				<TightCanvasText
 					text={displayText}
 					anchor={0.5}

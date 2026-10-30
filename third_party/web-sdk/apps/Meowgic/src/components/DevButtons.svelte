@@ -39,6 +39,7 @@
 		MASCOT_GUN_STAT_IDLE_MS,
 		MASCOT_LOAD_MS,
 	} from '../game/mascotHtmlSpine';
+	import { BG_DEV_PREVIEW_CLIPS } from '../game/bgDevPreview';
 	import { BOARD_DEV_PREVIEW_CLIPS } from '../game/boardDevPreview';
 	import { SYMBOL_DEV_PREVIEW_GROUPS } from '../game/symbolDevPreview';
 	import {
@@ -124,7 +125,7 @@
 		{
 			id: 'animations',
 			title: 'Animations',
-			keys: 'cat dog mascot symbol anim clip board idle bookmarks clothes key pages reaction characters slow reel columns bonus outline',
+			keys: 'cat dog mascot symbol anim clip board idle bookmarks clothes key pages reaction characters slow reel columns bonus outline background bg lamps particles candle orb pen',
 		},
 		{ id: 'stage', title: 'Stage', keys: 'chrome duel target shoot cabinet bullet fly drum background board fs' },
 		{ id: 'wins', title: 'Wins', keys: 'win level precision hud stack payline coin' },
@@ -253,6 +254,23 @@
 
 	const closeBoardAnimPreview = () => {
 		devPreview.boardAnim = null;
+	};
+
+	const playBgClip = (clipId: string) => {
+		const clip = BG_DEV_PREVIEW_CLIPS.find((c) => c.id === clipId);
+		if (!clip) return;
+		const current = devPreview.bgAnim;
+		devPreview.bgAnim = {
+			clipId: clip.id,
+			animationName: clip.animationName,
+			loop: clip.loop,
+			target: clip.target,
+			nonce: current?.clipId === clip.id ? current.nonce + 1 : 0,
+		};
+	};
+
+	const closeBgAnimPreview = () => {
+		devPreview.bgAnim = null;
 	};
 
 	/** Desktop fly: N cartridges → cat hand → gun_start (same as bulletCollect). */
@@ -2401,6 +2419,34 @@
 						{devPreview.forceShowBonusReelAllColumns
 							? 'Hide All Columns'
 							: 'Show All Columns'}
+					</button>
+				</div>
+			</section>
+			<section>
+				<h4>BG Anims</h4>
+				<p class="subhint">
+					Real Spine names on hover. Spin particles = reaction/bg_reaction (room).
+					Re-click always replays (clears leftover tracks). Reset = production
+					stacks.
+				</p>
+				<div class="grid">
+					{#each BG_DEV_PREVIEW_CLIPS as clip (clip.id)}
+						<button
+							type="button"
+							class:active={devPreview.bgAnim?.clipId === clip.id}
+							title={`${clip.animationName} · ${clip.title} · ${clip.target}`}
+							onclick={() => playBgClip(clip.id)}
+						>
+							{clip.label}
+						</button>
+					{/each}
+					<button
+						type="button"
+						class:active={devPreview.bgAnim === null}
+						title="Restore stacked room + table production idles"
+						onclick={closeBgAnimPreview}
+					>
+						Reset BG
 					</button>
 				</div>
 			</section>

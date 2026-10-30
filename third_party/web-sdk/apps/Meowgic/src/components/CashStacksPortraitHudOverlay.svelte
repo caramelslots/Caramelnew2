@@ -15,7 +15,6 @@
 	import { numberToBalanceCurrencyString, numberToCurrencyString } from 'utils-shared/amount';
 
 	import { computePortraitHudCanvas } from '../game/portraitHudLayout';
-	import { HUD_TURBO_ICON_BG_FRAC } from '../game/constants';
 	import HudBalanceBetLine from './HudBalanceBetLine.svelte';
 	import SpinHudButton from './SpinHudButton.svelte';
 	import { getRoundsCounter } from '../game/autoplay';
@@ -29,7 +28,6 @@
 	import { isSdkTurboSpin } from '../game/gameSpeed';
 	import { hudWinDimStyle } from '../game/hudWinDim';
 	import { getContextLayout } from 'utils-layout';
-	import { OnHotkey } from 'components-shared';
 	import { isAnyMenuOpen } from '../game/isAnyMenuOpen';
 	import { isLoaderScreenBlockingSpin } from '../game/isLoaderScreenBlockingSpin';
 
@@ -238,6 +236,25 @@
 		}
 	};
 
+	/** Direct window Space → spin (same as desktop HUD; skips fragile OnHotkey path). */
+	$effect(() => {
+		const spaceEnabled =
+			show && !hudLocked && !isReplay && !spinDisabled && !menuBlocksSpaceSpin && !loaderBlocksSpaceSpin;
+		if (!spaceEnabled) return;
+
+		const onKeyDown = (e: KeyboardEvent) => {
+			if (e.code !== 'Space' && e.key !== ' ') return;
+			if (e.repeat) return;
+			const tag = (e.target as HTMLElement | null)?.tagName?.toLowerCase();
+			if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+			e.preventDefault();
+			onSpinPress();
+		};
+
+		window.addEventListener('keydown', onKeyDown);
+		return () => window.removeEventListener('keydown', onKeyDown);
+	});
+
 	const onAutoplayPress = () => {
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		if (isAutoSpinModalOpen) {
@@ -363,13 +380,12 @@
 
 			<button
 				type="button"
-				class="hud-icon-btn hud-icon-btn--turbo"
+				class="hud-icon-btn"
 				class:dimmed={turboDisabled}
 				style:left="{hud.util.x.turbo}px"
 				style:top="{hud.util.centerY}px"
 				style:width="{hud.util.iconSize}px"
 				style:height="{hud.util.iconSize}px"
-				style:--hud-turbo-bg-frac={HUD_TURBO_ICON_BG_FRAC}
 				style:background-image="url('{turboUrl}')"
 				disabled={turboDisabled}
 				aria-label="turbo"
@@ -378,11 +394,6 @@
 		{/if}
 
 		{#if !hudLocked && !isReplay}
-			<OnHotkey
-				hotkey="Space"
-				disabled={spinDisabled || !show || menuBlocksSpaceSpin || loaderBlocksSpaceSpin}
-				onpress={onSpinPress}
-			/>
 			<SpinHudButton
 				bind:this={spinHudButton}
 				x={hud.spin.centerX}
@@ -467,10 +478,6 @@
 		&.dimmed {
 			opacity: 0.45;
 		}
-	}
-
-	.hud-icon-btn--turbo {
-		background-size: calc(var(--hud-turbo-bg-frac) * 100%);
 	}
 
 	.hud-balance-bet {

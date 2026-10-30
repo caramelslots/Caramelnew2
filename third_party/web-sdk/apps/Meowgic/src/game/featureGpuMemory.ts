@@ -122,11 +122,23 @@ const evictFeatureSpineKey = async (key: string) => {
 	if (urls.length > 0) await evictSpineAssetUrls(urls);
 };
 
+/** True when `loadedAssets[key]` still has live GPU pages (spine) or a usable entry. */
+const featureKeyStillLive = (key: FeatureGpuKey, loadedAssets: Record<string, unknown>) => {
+	if (!loadedAssets[key]) return false;
+	const entry = assets[key];
+	if (!entry) return false;
+	if (entry.type !== 'spine') return true;
+	const atlasUrl = spineAtlasUrl(key);
+	return !atlasUrl || atlasPagesLive(atlasUrl);
+};
+
 export const ensureFeatureKeyLoaded = async (
 	key: FeatureGpuKey,
 	loadedAssets: Record<string, unknown>,
 ): Promise<Record<string, unknown> | null> => {
-	if (loadedAssets[key]) return null;
+	// Stale key after VRAM evict (atlas pages destroyed, entry still in map) must reload —
+	// otherwise FreeSpinAnimation mounts a dead spine and Total Win never paints.
+	if (featureKeyStillLive(key, loadedAssets)) return null;
 	const entry = assets[key];
 	if (!entry) return null;
 
@@ -234,13 +246,46 @@ export const ensureOutlineReelReady = async (stateApp: LoadedAssetsBag) => {
 	stateApp.loadedAssets = { ...(stateApp.loadedAssets ?? {}), ...patch };
 };
 
+/** Cap so Total Win never soft-locks the book if Assets.load stalls after VRAM thrash. */
+const FS_POPUP_ENSURE_TIMEOUT_MS = 5000;
+
+let fsPopupEnsureInFlight: Promise<void> | null = null;
+
+/** True when `fsPopup` is in loadedAssets AND atlas pages are still on the GPU. */
+export const isFsPopupLive = (stateApp: LoadedAssetsBag) =>
+	featureKeyStillLive('fsPopup', (stateApp.loadedAssets ?? {}) as Record<string, unknown>);
+
 /** Ensure `fsPopup` is in loadedAssets before FreeSpinAnimation mounts. */
 export const ensureFsPopupReady = async (stateApp: LoadedAssetsBag) => {
 	const loaded = (stateApp.loadedAssets ?? {}) as Record<string, unknown>;
-	if (loaded.fsPopup) return;
-	const patch = await ensureFeatureKeysLoaded(FS_POPUP_KEYS, loaded);
-	if (!patch) return;
-	stateApp.loadedAssets = { ...(stateApp.loadedAssets ?? {}), ...patch };
+	if (featureKeyStillLive('fsPopup', loaded)) return;
+
+	// Drop a stale map entry so ensureFeatureKeyLoaded reloads instead of no-op.
+	if (loaded.fsPopup) {
+		const next = { ...loaded };
+		delete next.fsPopup;
+		stateApp.loadedAssets = next;
+	}
+
+	if (!fsPopupEnsureInFlight) {
+		fsPopupEnsureInFlight = (async () => {
+			try {
+				const latest = (stateApp.loadedAssets ?? {}) as Record<string, unknown>;
+				const patch = await Promise.race([
+					ensureFeatureKeysLoaded(FS_POPUP_KEYS, latest),
+					new Promise<null>((resolve) =>
+						setTimeout(() => resolve(null), FS_POPUP_ENSURE_TIMEOUT_MS),
+					),
+				]);
+				if (!patch) return;
+				stateApp.loadedAssets = { ...(stateApp.loadedAssets ?? {}), ...patch };
+			} finally {
+				fsPopupEnsureInFlight = null;
+			}
+		})();
+	}
+
+	await fsPopupEnsureInFlight;
 };
 
 /**
