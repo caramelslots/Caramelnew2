@@ -1506,6 +1506,24 @@
 			'Final Shoot book',
 		);
 
+	/** Bonus that ends without Extra Spins (no shoot, or shoot with extraFs=0). */
+	const playNoExtraFsBook = () =>
+		playMathBook(
+			pickBook(
+				normalPool,
+				(b) => {
+					const shoot = bookEvents(b).find((e) => e.type === 'targetShootRound') as
+						| { extraFs?: number }
+						| undefined;
+					if (!shoot) return bookHas(b, 'freeSpinEnd');
+					return (shoot.extraFs ?? 0) <= 0;
+				},
+				'No Extra FS',
+			),
+			'No Extra FS book',
+			'bonus_normal',
+		);
+
 	const playFsWithSwBook = () =>
 		playMathBook(
 			pickBook(allBooks, (b) => bookHasAll(b, ['freeSpinTrigger', 'superWildExpand']), 'FS + SW'),
@@ -2177,6 +2195,14 @@
 						onclick={playShootBook}
 					>
 						Final Shoot
+					</button>
+					<button
+						type="button"
+						disabled={busy}
+						title="Bonus ending with no Extra Spins → must show Total Win"
+						onclick={playNoExtraFsBook}
+					>
+						No Extra FS → Total Win
 					</button>
 					<button
 						type="button"
