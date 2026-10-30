@@ -3,6 +3,7 @@
 
 	import { Container } from 'pixi-svelte';
 
+	import { boardReactionPose, getBoardReactionPivot } from '../game/boardReactionPose.svelte';
 	import { getContext } from '../game/context';
 	import { catBoardZoom, startCatBoardZoomRamp, stopCatBoardZoomRamp } from '../game/catAnticipationBoardZoom.svelte';
 
@@ -28,6 +29,9 @@
 	const boardScale = $derived(
 		boardLayout.scale * (props.disableCatZoom ? 1 : catBoardZoom.current),
 	);
+	/** Same origin and factor as the desk spine's `main_board` reaction scale. */
+	const reactionScale = $derived(boardReactionPose.scale);
+	const reactionPivot = $derived(getBoardReactionPivot(boardLayout));
 
 	$effect(() => {
 		if (props.disableCatZoom) return;
@@ -42,6 +46,11 @@
 <!-- Scale from board center: outer = center point, inner = top-left origin -->
 <Container x={boardLayout.x} y={boardLayout.y} scale={boardScale}>
 	<Container x={-boardLayout.pivot.x} y={-boardLayout.pivot.y} sortableChildren={true}>
-		{@render props.children()}
+		<!-- Spin reaction: grow around the same bone the desk spine scales. -->
+		<Container x={reactionPivot.x} y={reactionPivot.y} scale={reactionScale}>
+			<Container x={-reactionPivot.x} y={-reactionPivot.y} sortableChildren={true}>
+				{@render props.children()}
+			</Container>
+		</Container>
 	</Container>
 </Container>

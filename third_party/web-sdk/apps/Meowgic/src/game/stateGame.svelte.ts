@@ -77,6 +77,7 @@ import { COIN_TURN_SOUNDS } from './sound';
 import {
 	SYMBOL_SIZE,
 	BOARD_SIZES,
+	BOARD_ASSEMBLY_SCALE,
 	BOARD_LAYOUT_SCALE,
 	BOARD_LAYOUT_SCALE_POPOUT,
 	getPortraitBoardScale,
@@ -458,7 +459,7 @@ const baseBoardLayout = () => {
 	const ml = stateLayoutDerived.mainLayout();
 	const parchment = layoutType === 'portrait' ? getPortraitParchmentSize() : null;
 	const isPopout = isPopoutViewport(canvasSizes);
-	const scale =
+	const layoutScale =
 		layoutType === 'portrait'
 			? getPortraitBoardScale(
 					ml.scale,
@@ -468,6 +469,7 @@ const baseBoardLayout = () => {
 			: isPopout
 				? BOARD_LAYOUT_SCALE_POPOUT
 				: (BOARD_LAYOUT_SCALE[layoutType as keyof typeof BOARD_LAYOUT_SCALE] ?? 1);
+	const scale = layoutScale * BOARD_ASSEMBLY_SCALE;
 
 	const visualWidth = parchment ? parchment.width * scale : BOARD_SIZES.width * scale;
 	const visualHeight = parchment ? parchment.height * scale : BOARD_SIZES.height * scale;

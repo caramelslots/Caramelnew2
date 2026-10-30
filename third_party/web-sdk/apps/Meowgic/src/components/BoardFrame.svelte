@@ -36,6 +36,7 @@
 	import { spinSceneReaction } from '../game/spinSceneReaction.svelte';
 	import BoardFrameSlotFilter from './BoardFrameSlotFilter.svelte';
 	import BoardFrameRailsMask from './BoardFrameRailsMask.svelte';
+	import BoardReactionPoseSampler from './BoardReactionPoseSampler.svelte';
 	import SpineTrackStackController from './SpineTrackStackController.svelte';
 
 	/** DEV: force a single board clip instead of the stacked production idles. */
@@ -201,6 +202,7 @@
 			{:else}
 				<SpineProvider key="boardFrame" x={contentRootX} y={contentRootY} scale={contentScale}>
 					{#if layer === 'base'}
+						<BoardReactionPoseSampler />
 						<BoardFrameSlotFilter visibleSlots={BASE_VISIBLE_SLOTS} />
 					{:else if layer === 'nameplate'}
 						<BoardFrameSlotFilter visibleSlots={ABOVE_SYMBOLS_SLOTS} />

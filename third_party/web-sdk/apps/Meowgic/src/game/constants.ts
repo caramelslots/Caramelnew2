@@ -921,9 +921,9 @@ export const BOARD_LAYOUT_OFFSETS = {
 	 * Desktop / tablet — sits lower than phone so the library-board crest
 	 * (open book + gem above the frame) clears the canvas top.
 	 */
-	desktop: { x: -20, y: 26 },
-	tablet: { x: -16, y: 36 },
-	landscape: { x: -12, y: -4 },
+	desktop: { x: -20, y: 4 },
+	tablet: { x: -16, y: 14 },
+	landscape: { x: -12, y: -26 },
 	/**
 	 * Portrait x = 0: board is near full-width on phones, any shift reads as
 	 * uneven side margins. y is lifted 60 design px (~28 px on screen) above the
@@ -932,7 +932,7 @@ export const BOARD_LAYOUT_OFFSETS = {
 	 * reels, overlays) rises. Short height-limited phone viewports already run
 	 * the desk close to the top edge — test before lifting further.
 	 */
-	portrait: { x: 0, y: -282 },
+	portrait: { x: 0, y: -304 },
 } as const;
 
 /**
@@ -946,6 +946,12 @@ export const BOARD_LAYOUT_SCALE = {
 } as const;
 
 /**
+ * Uniform shrink of the whole desk (frame + reel grid + symbols).
+ * Applied in `baseBoardLayout` on every layout, including portrait and popout.
+ */
+export const BOARD_ASSEMBLY_SCALE = 0.96;
+
+/**
  * Popout L/S classify as landscape + mobile (narrow canvas), so the default
  * landscape board scale reads smaller (~52% of canvas height vs ~61% on
  * desktop/laptop). Boost so on-screen board height matches PC/laptop.
@@ -957,7 +963,7 @@ export const BOARD_LAYOUT_SCALE_POPOUT = BOARD_LAYOUT_SCALE.desktop * (900 / 800
  * Same x as phone landscape; y lowered so the library-board crest clears the
  * top of the 800×450 / 400×225 embeds (phone landscape keeps BOARD_LAYOUT_OFFSETS.landscape).
  */
-export const BOARD_LAYOUT_OFFSET_POPOUT = { x: -12, y: 18 } as const;
+export const BOARD_LAYOUT_OFFSET_POPOUT = { x: -12, y: -4 } as const;
 /** Frame bezel + glow offset from board center (px): +x right, +y down. */
 export const BOARD_FRAME_OFFSET = { x: 0, y: 0 } as const;
 /** Vertical nudge (game px, +y = down) applied to all desk artwork layers (base / contour)
