@@ -241,9 +241,10 @@ class OptimizationSetup:
                     # 0_cluster shares optimizer fence with 0 (both rtp=0, win=0).
                     "0": ConstructConditions(rtp=0, av_win=0, search_conditions=0).return_dict(),
                     # Ladder v2: fewer blanks → higher basegame hit (hr≈1.9 → ~53% fence).
-                    # Fence RTP sum ≈0.96 (wincap 0.01 + max 0.025 + FS/paw/sw/basegame).
+                    # FS 1.5% (hr≈66.67) + freegame RTP 0.225 → avg FS ≈15× (was ~6% FS / thin).
+                    # Fence RTP sum ≈0.965 (wincap 0.01 + max 0.025 + FS/paw/sw/basegame).
                     "freegame": ConstructConditions(
-                        rtp=0.22, hr=300, search_conditions={"symbol": "scatter"}
+                        rtp=0.225, hr=66.6667, search_conditions={"symbol": "scatter"}
                     ).return_dict(),
                     "paw": ConstructConditions(hr=33, rtp=0.16).return_dict(),
                     "sw_expand": ConstructConditions(hr=40, rtp=0.045).return_dict(),
@@ -270,10 +271,11 @@ class OptimizationSetup:
                         search_conditions=wincaps["bonus_boost"],
                     ).return_dict(),
                     "0": ConstructConditions(rtp=0, av_win=0, search_conditions=0).return_dict(),
-                    # Ladder v1: hit ~50.6% → basegame hr≈2.0; FS still richer than base.
+                    # Ladder v1: hit ~50.6% → basegame hr≈2.0; FS 3% (hr≈33.33), richer than base.
                     # Fence RTP ≈0.96 (0.01+0.0125+0.34+0.15+0.045+0.4025).
+                    # av FS ≈ 0.34*33.33 ≈ 11.3× (was ~10% FS / thin).
                     "freegame": ConstructConditions(
-                        rtp=0.34, hr=160, search_conditions={"symbol": "scatter"}
+                        rtp=0.34, hr=33.3333, search_conditions={"symbol": "scatter"}
                     ).return_dict(),
                     "paw": ConstructConditions(hr=33, rtp=0.15).return_dict(),
                     "sw_expand": ConstructConditions(hr=40, rtp=0.045).return_dict(),

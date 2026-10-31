@@ -316,19 +316,26 @@ class GameConfig(Config):
         # Dead + basegame + paw + sw_expand + freegame + wincap[+max] = 1.0
         # Equal feature rates: paw == sw_expand (~1/33 each).
         # Base ladder v3b lose ~46.96%; boost ladder v1 lose ~49.40%.
-        # bonus_boost = same BR0 mechanics as base; freegame quota ~2× (20% vs 10%).
+        # Sim oversamples FS for opt stock; publish targets: base 1.5%, boost 3%.
         feature_quota = 0.03
         dead_cluster = 0.10
         dead_total_base = 0.46956
         dead_total_boost = 0.4940
         dead_plain_base = round(dead_total_base - dead_cluster, 4)
         dead_plain_boost = round(dead_total_boost - dead_cluster, 4)
-        boost_freegame_quota = 0.20
+        base_freegame_quota = 0.04
+        boost_freegame_quota = 0.08
         # base: 1 - (wincap+max+fg+dead+paw+sw)
         base_basegame_quota = round(
-            1.0 - 0.001 - buy_wincap_max_quota - 0.10 - dead_total_base - 2 * feature_quota, 6
+            1.0
+            - 0.001
+            - buy_wincap_max_quota
+            - base_freegame_quota
+            - dead_total_base
+            - 2 * feature_quota,
+            6,
         )
-        # boost: soft wincap + max + fg 0.20 + dead + paw/sw
+        # boost: soft wincap + max + fg + dead + paw/sw
         boost_basegame_quota = round(
             1.0
             - 0.001
@@ -343,7 +350,8 @@ class GameConfig(Config):
             BetMode(
                 name="base",
                 cost=1.0,
-                rtp=self.rtp,
+                # Fence sum 0.965 (freegame 0.225); post-opt/ladder also target ≥96.5%.
+                rtp=0.965,
                 max_win=mode_maxwins["base"],
                 auto_close_disabled=False,
                 is_feature=True,
@@ -361,7 +369,11 @@ class GameConfig(Config):
                         win_criteria=mode_maxwins["base"],
                         conditions=wincap_condition,
                     ),
-                    Distribution(criteria="freegame", quota=0.10, conditions=freegame_condition),
+                    Distribution(
+                        criteria="freegame",
+                        quota=base_freegame_quota,
+                        conditions=freegame_condition,
+                    ),
                     Distribution(
                         criteria="0",
                         quota=dead_plain_base,

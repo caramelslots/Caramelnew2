@@ -9,13 +9,15 @@
    curtains also appear inside basegame-segment books). Two-sided: floors from
    dead when below target, caps back to target when the optimizer over-weights
    curtain books (multiplied curtains pay well and get pumped past 3%).
-3) Match HIT rate (`--hit`, default off) — weight share of paying books
+3) Pin freegame criteria share (`--fs`, default off) — base 1.5% / boost 3%.
+   Over: drain LOW-pay freegame → dead (keeps juicy FS). Under: dead → HIGH-pay FS.
+4) Match HIT rate (`--hit`, default off) — weight share of paying books
    (pay > 0) via dead ↔ paying moves. Feature-floored books (paw segment,
    sw-event ids), freegame segment and wincap segments are protected so the
    floors and the FS rate survive.
-4) Match RTP (`--rtp`, default 0.9601) HIT-neutrally — moves weight INSIDE
+5) Match RTP (`--rtp`, default 0.9601) HIT-neutrally — moves weight INSIDE
    the adjustable paying pool (low-pay ↔ high-pay), so the hit rate from
-   step 3 is preserved. (The legacy dead ↔ paying RTP match fought the hit
+   step 4 is preserved. (The legacy dead ↔ paying RTP match fought the hit
    target: every dead ↔ paying leg moves hit and RTP together.)
 
 Important: run on the **weighted** LUT (optimizer output), then `resample_books.py`.
@@ -309,6 +311,43 @@ def match_sw_mult_mix(
     return rows
 
 
+def match_fs_rate(
+    rows,
+    crit: dict[int, str],
+    target: float,
+    tol: float = 0.0010,
+):
+    """Pin freegame criteria weight share. Prefer low→dead when cutting so
+    remaining FS books stay the richer ones (bigger average bonus wins)."""
+    total = sum(w for _, w, _ in rows)
+    for _ in range(8):
+        cur = _weight_pct(rows, crit, "freegame")
+        if abs(cur - target) <= tol:
+            break
+        by_id = {sid: (w, pay) for sid, w, pay in rows}
+        fs_ids = sorted(
+            (pay, sid)
+            for sid, (w, pay) in by_id.items()
+            if crit.get(sid) == "freegame" and w > 1
+        )
+        dead = [sid for sid, (w, pay) in by_id.items() if pay == 0]
+        if not fs_ids or not dead:
+            print(f"  WARN: FS match stalled at {100 * cur:.3f}% (target {100 * target:.2f}%)")
+            break
+        gap = abs(cur - target) * total
+        if cur > target:
+            # Drain poorest freegame first → keep high-pay FS weight.
+            donors = [sid for _, sid in fs_ids[: max(1, len(fs_ids) // 2)]]
+            print(f"  fs {100 * cur:.3f}% → {100 * target:.2f}% (low-pay freegame → dead)")
+            rows = _move_weight_core(rows, donors, dead, gap)
+        else:
+            # Feed richest freegame when under target.
+            recip = [sid for _, sid in fs_ids[-max(1, len(fs_ids) // 2) :]]
+            print(f"  fs {100 * cur:.3f}% → {100 * target:.2f}% (dead → high-pay freegame)")
+            rows = _move_weight_core(rows, dead, recip, gap)
+    return rows
+
+
 def match_hit_rate(rows, target: float, protect_ids: set[int], tol: float = 0.0025):
     """Match hit rate (weight share of paying books) via dead ↔ paying moves."""
     total = sum(w for _, w, _ in rows)
@@ -421,9 +460,11 @@ def process_file(
     hit_target: float | None,
     rtp_target: float,
     cost: float,
+    fs_target: float | None = None,
 ) -> None:
     rows = _load_lut(lut_path)
     before_paw = _weight_pct(rows, crit, "paw")
+    before_fs = _weight_pct(rows, crit, "freegame")
     before_avg = _rtp(rows)
     before_hit = _hit_rate(rows)
     target_avg = rtp_target * cost
@@ -453,11 +494,17 @@ def process_file(
 
     # sw cap first (sw → dead replenishes the dead pool), then the mult mix
     # (inside sw_ids — sw total and HIT untouched), then paw floor draws from
-    # dead, then HIT, then HIT-neutral RTP.
+    # dead, then FS pin, then HIT, then HIT-neutral RTP.
     if sw_target > 0:
         rows = enforce_sw(rows, sw_ids, dead_ids, sw_target)
         rows = match_sw_mult_mix(rows, sw_ids, mult_map, _base_sw_mult_shares())
     rows = enforce_paw(rows, crit, paw_target)
+    if fs_target is not None:
+        rows = match_fs_rate(rows, crit, fs_target)
+        # Refresh protect set after FS weight moves.
+        protect_ids = {
+            sid for sid, _, _ in rows if crit.get(sid) in PROTECTED_SEGMENTS
+        } | sw_ids
     if hit_target is not None:
         rows = match_hit_rate(rows, hit_target, protect_ids)
     fallback_donors = {
@@ -466,6 +513,7 @@ def process_file(
     rows = match_rtp(rows, target_avg, protect_ids, fallback_donors)
 
     after_paw = _weight_pct(rows, crit, "paw")
+    after_fs = _weight_pct(rows, crit, "freegame")
     after_avg = _rtp(rows)
     after_hit = _hit_rate(rows)
     total = sum(w for _, w, _ in rows)
@@ -480,6 +528,12 @@ def process_file(
         f"  final: hit {100 * after_hit:.3f}%"
         + (f" (target {100 * hit_target:.2f}%)" if hit_target is not None else "")
         + (f" | sw {100 * after_sw:.3f}% (target {100 * sw_target:.2f}%)" if sw_ids else "")
+        + (
+            f" | fs {100 * before_fs:.3f}% → {100 * after_fs:.3f}%"
+            f" (target {100 * fs_target:.2f}%)"
+            if fs_target is not None
+            else ""
+        )
     )
 
 
@@ -489,6 +543,12 @@ def main() -> None:
     ap.add_argument("--paw", type=float, default=0.03)
     ap.add_argument("--sw", type=float, default=0.0, help="base-part curtain event floor")
     ap.add_argument("--hit", type=float, default=None, help="target hit rate (pay>0 share)")
+    ap.add_argument(
+        "--fs",
+        type=float,
+        default=None,
+        help="target freegame criteria share (base=0.015, boost=0.03)",
+    )
     ap.add_argument("--rtp", type=float, default=0.9601, help="target RTP (return / cost)")
     ap.add_argument(
         "--cost",
@@ -526,6 +586,7 @@ def main() -> None:
         args.hit,
         args.rtp,
         cost,
+        fs_target=args.fs,
     )
 
 

@@ -37,7 +37,7 @@ PY=/tmp/csmath_venv/bin/python
 
 ## Full pipeline (рекомендуется)
 
-Один скрипт = sim+opt → backup → **§3a win-ladder** (base / boost / normal / super) → **joint §3b+§3c** (duel SMOOTH · VH + Intrigue + RTP) → resample → storybook sync.
+Один скрипт = sim+opt (base FS **1.5%**, boost FS **3%**, base RTP **≥96.5%**) → backup → **§3a win-ladder** (+ FS re-pin) → **joint §3b+§3c** (duel) → resample → storybook sync.
 
 ```bash
 cd third_party/math-sdk/games/0_0_meowgic

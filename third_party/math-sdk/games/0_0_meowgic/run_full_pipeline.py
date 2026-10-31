@@ -64,11 +64,17 @@ def run_full_pipeline(
 
     from tools.enforce_paw_hit_rate import main as enforce_lut_main
 
+    # Hit floors from ladder lose targets; FS publish targets: base 1.5%, boost 3%.
     hit_baseline = {"base": "0.3708", "bonus_boost": "0.4133"}
+    fs_target = {"base": "0.015", "bonus_boost": "0.03"}
+    rtp_target = {"base": "0.965", "bonus_boost": "0.9601"}
     for mode in ("base", "bonus_boost"):
         if mode not in target_modes:
             continue
-        print(f"\n=== Post-opt LUT fix: {mode} (paw≥3%, sw≥3%, HIT/RTP baseline) ===")
+        print(
+            f"\n=== Post-opt LUT fix: {mode} "
+            f"(paw≥3%, sw≥3%, fs={fs_target[mode]}, HIT/RTP) ==="
+        )
         sys.argv = [
             "enforce_paw_hit_rate.py",
             "--mode",
@@ -77,10 +83,12 @@ def run_full_pipeline(
             "0.03",
             "--sw",
             "0.03",
+            "--fs",
+            fs_target[mode],
             "--hit",
             hit_baseline[mode],
             "--rtp",
-            "0.9601",
+            rtp_target[mode],
             "--lut-dir",
             "library/publish_files",
         ]

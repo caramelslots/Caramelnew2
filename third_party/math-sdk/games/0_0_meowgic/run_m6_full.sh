@@ -103,7 +103,7 @@ else
     --targets tools/base_win_ladder_targets.json \
     --lut-dir library/publish_files_backup_pre_resample \
     --also-publish \
-    --tol 0.0015 --rtp 0.96 --rtp-tol 0.005 --rounds 6 &
+    --tol 0.0015 --rtp 0.965 --rtp-tol 0.005 --rounds 6 &
   pid_base=$!
   "$PY" tools/match_base_win_ladder.py \
     --mode bonus_boost \
@@ -132,7 +132,20 @@ else
   wait "$pid_super" || ladder_fail=1
   [[ "$ladder_fail" -eq 0 ]] || die "match_base_win_ladder failed (one or more modes)"
 
-  step "3a-hist/9 win_payout_histogram (pre-resample, matched)"
+  # Ladder moves weight by payout and can drift FS share — re-pin base 1.5% / boost 3%.
+  step "3a-fs/8 re-pin freegame share after ladder (base 1.5%, boost 3%)"
+  "$PY" tools/enforce_paw_hit_rate.py --mode base --paw 0.03 --sw 0.03 \
+    --fs 0.015 --rtp 0.965 \
+    --lut-dir library/publish_files_backup_pre_resample
+  cp library/publish_files_backup_pre_resample/lookUpTable_base_0.csv \
+     library/publish_files/lookUpTable_base_0.csv
+  "$PY" tools/enforce_paw_hit_rate.py --mode bonus_boost --paw 0.03 --sw 0.03 \
+    --fs 0.03 --rtp 0.9601 \
+    --lut-dir library/publish_files_backup_pre_resample
+  cp library/publish_files_backup_pre_resample/lookUpTable_bonus_boost_0.csv \
+     library/publish_files/lookUpTable_bonus_boost_0.csv
+
+  step "3a-hist/8 win_payout_histogram (pre-resample, matched)"
   "$PY" tools/win_payout_histogram.py \
     --lut-dir library/publish_files_backup_pre_resample \
     --md-out library/win_payout_histogram.md

@@ -1,7 +1,7 @@
 {
   "mode": "base",
   "cost": 1.0,
-  "target_rtp": 0.96,
+  "target_rtp": 0.965,
   "comment": "Mirrors library/base_win_ladder_targets.md v3b. share = TARGET % all / 100 of ALL spins. 0.1-0.3 combined = 10%.",
   "bands": [
     {"label": "0 lose", "lo": 0.0, "hi": 0.0, "share": 0.46956, "lose": true},
