@@ -22,20 +22,34 @@
 		FS_OUTRO_TOTAL_WIN_ARCH_DEG,
 		FS_OUTRO_TOTAL_WIN_TRACKING,
 		LOCALE_TEXT_FILL_GOLD,
+		WIN_SCREEN_POST_COUNT_UP_DELAY_MS,
 	} from '../game/constants';
 	import { getContext } from '../game/context';
+	import { eventEmitter } from '../game/eventEmitter';
 	import ArchedLocaleText from './ArchedLocaleText.svelte';
 	import ResponsiveCurrencyBitmapText from './ResponsiveCurrencyBitmapText.svelte';
 	import { scaleMsByGameSpeed } from '../game/gameSpeed';
 	import { ensureFsPopupReady, isFsPopupLive } from '../game/featureGpuMemory';
 	import { stateGame } from '../game/stateGame.svelte';
-	import { stopWinLevelCountUpSounds } from '../game/bookEventHandlerMap';
 	import FreeSpinAnimation from './FreeSpinAnimation.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 
 	const context = getContext();
 
-	let show = $state(true);
+	/** Same singleton bookEventHandlerMap broadcasts on — not context (HMR-safe). */
+	const stopWinLevelCountUpSounds = () => {
+		eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_bigwin_coinloop' });
+		for (const name of [
+			'bgm_winlevel_big',
+			'bgm_winlevel_superwin',
+			'bgm_winlevel_epic',
+			'bgm_winlevel_max',
+		] as const) {
+			eventEmitter.broadcast({ type: 'soundStop', name });
+		}
+	};
+
+	let show = $state(false);
 	let winAmount = $state(0);
 	let winLevelData = $state<WinLevelData>();
 	let oncomplete = $state(() => {});
@@ -43,7 +57,6 @@
 	let fsAnimation = $state<FreeSpinAnimation | undefined>();
 	let finishingOutro = $state(false);
 	let closing = $state(false);
-	/** Bumped after ensure so `{#if fsPopupReady}` re-checks live atlas pages. */
 	let fsPopupCheckNonce = $state(0);
 
 	const fsPopupReady = $derived.by(() => {
@@ -52,8 +65,15 @@
 		return isFsPopupLive(context.stateApp);
 	});
 
-	const preloadFsPopup = async () => {
-		await ensureFsPopupReady(context.stateApp);
+	const warmFsPopup = async () => {
+		try {
+			await Promise.race([
+				ensureFsPopupReady(context.stateApp),
+				waitForTimeout(scaleMsByGameSpeed(4000, stateGame.gameSpeed)),
+			]);
+		} catch {
+			/* keep fallback panel */
+		}
 		fsPopupCheckNonce += 1;
 	};
 
@@ -62,28 +82,32 @@
 		finishingOutro = true;
 		closing = true;
 		stateGame.overlayDimAlpha = 0;
-		// Dead / missing fsPopup spine must not block dismiss (out2 complete never fires).
-		await Promise.race([
-			fsAnimation?.playDisappear() ?? Promise.resolve(),
-			waitForTimeout(scaleMsByGameSpeed(1200, stateGame.gameSpeed)),
-		]);
+		try {
+			await Promise.race([
+				fsAnimation?.playDisappear() ?? Promise.resolve(),
+				waitForTimeout(scaleMsByGameSpeed(1200, stateGame.gameSpeed)),
+			]);
+		} catch {
+			/* still unblock freeSpinEnd */
+		}
 		show = false;
 		winLevelData = undefined;
 		stateGame.winOverlayActive = false;
-		// HUD stays down until the exit transition finishes. Clearing this here
-		// popped balance / bet / duel chrome back in before the steam.
 		stateGame.overlayDimAlpha = 0;
-		oncomplete();
+		const done = oncomplete;
+		oncomplete = () => {};
+		done();
 	};
 
-	context.eventEmitter.subscribeOnMount({
+	// Same module emitter bookEventHandlerMap broadcasts on (not context).
+	eventEmitter.subscribeOnMount({
 		freeSpinOutroShow: () => {
 			show = true;
 			closing = false;
+			finishingOutro = false;
 			stateGame.winOverlayActive = true;
 			stateGame.fsOutroActive = true;
-			// Preload in background — never block CountUp on this broadcast.
-			void preloadFsPopup();
+			void warmFsPopup();
 		},
 		freeSpinOutroHide: async () => {
 			show = false;
@@ -92,44 +116,44 @@
 			winLevelData = undefined;
 			winAmount = 0;
 			stateGame.winOverlayActive = false;
-			// Leave fsOutroActive to freeSpinEnd (keeps canvas over HUD through steam).
 			stateGame.overlayDimAlpha = 0;
+			const done = oncomplete;
+			oncomplete = () => {};
+			done();
 		},
 		freeSpinOutroCountUp: async (emitterEvent) => {
 			finishingOutro = false;
 			closing = false;
-			// Paint Total Win / PressToContinue FIRST. Awaiting ensureFsPopupReady
-			// before this left fsOutroActive=true (canvas over HUD, black plate)
-			// with no panel — looked like a frozen board after the last FS.
 			winAmount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
 			stateGame.overlayDimAlpha = FS_OUTRO_DIM_ALPHA;
 			stateGame.winOverlayActive = true;
 			stateGame.fsOutroActive = true;
 			show = true;
-			void preloadFsPopup();
+			void warmFsPopup();
 			waitForTimeout(scaleMsByGameSpeed(1000, stateGame.gameSpeed)).then(() => {
-				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });
+				eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });
 			});
+
+			const presentMs = Math.max(1500, Number(emitterEvent.winLevelData?.presentDuration) || 2000);
+			const autoMs = scaleMsByGameSpeed(
+				presentMs + WIN_SCREEN_POST_COUNT_UP_DELAY_MS,
+				stateGame.gameSpeed,
+			);
+			void waitForTimeout(autoMs).then(() => {
+				if (finishingOutro) return;
+				void finishOutro();
+			});
+
 			await waitForResolve((resolve) => (oncomplete = resolve));
 		},
 	});
 </script>
 
-<!--
-	`persistent` + duration 0: without extras, freeSpinEnd runs immediately after the
-	last FS / Stage E. A non-persistent FadeContainer unmounts children at alpha 0 and
-	can leave a raised black canvas (fsOutroActive) with no Total Win panel.
--->
-<!--
-	`persistent` + duration 0: without extras, freeSpinEnd runs immediately after the
-	last FS / Stage E. A non-persistent FadeContainer unmounts children at alpha 0 and
-	can leave a raised black canvas (fsOutroActive) with no Total Win panel.
--->
 <FadeContainer {show} persistent duration={0} zIndex={10}>
 	{#if winLevelData}
-		{@const duration = winLevelData.presentDuration}
-		{#key winAmount}
+		{@const duration = Math.max(600, winLevelData.presentDuration || 2000)}
+		{#key `${winAmount}:${duration}`}
 			<WinCountUpProvider
 				amount={winAmount}
 				{duration}
@@ -153,7 +177,6 @@
 						{#key winAmount}
 							<FreeSpinAnimation bind:this={fsAnimation}>
 								{#snippet title({ width })}
-									<!-- `total_win` slot — Meowfia Biger Latin atlas (same as Big Win titles). -->
 									<ArchedLocaleText
 										y={-width * 0.4}
 										text="TOTAL WIN"
@@ -172,8 +195,6 @@
 									/>
 								{/snippet}
 								{#snippet winAmount({ width })}
-									<!-- `sum` slot — empty gold plate; overlay currency count-up.
-									     Base size a bit larger; minScale lets huge amounts shrink to fit the plaque. -->
 									<ResponsiveCurrencyBitmapText
 										anchor={0.5}
 										y={-width * 0.1}
@@ -190,7 +211,6 @@
 							</FreeSpinAnimation>
 						{/key}
 					{:else if !closing}
-						<!-- Fallback when fsPopup never lands — keep Total Win dismissible. -->
 						{@const mainLayout = context.stateLayoutDerived.mainLayout()}
 						<MainContainer>
 							<Container
@@ -232,7 +252,7 @@
 						<PressToContinue
 							onpress={() => {
 								if (countUpCompleted) {
-									finishOutro();
+									void finishOutro();
 								} else {
 									stopWinLevelCountUpSounds();
 									finishCountUp();

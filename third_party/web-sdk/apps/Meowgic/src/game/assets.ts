@@ -423,6 +423,16 @@ export default {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/ui/spin/spin_2.webp'),
 	},
+	/** HUD spin press — main Pixi Spine (not HTML SpinePlayer). Clip: `spin`. */
+	spinButton: {
+		type: 'spine',
+		src: {
+			atlas: assetUrl('assets/spines/spinButton/spin_button.atlas'),
+			skeleton: assetUrl('assets/spines/spinButton/spin_button.json'),
+			scale: 1,
+		},
+	},
+
 	menuButton: {
 		type: 'sprite',
 		src: assetUrl('assets/sprites/ui/settings/menu.webp'),

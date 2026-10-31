@@ -118,6 +118,7 @@ export const LOADER_BATCH_3_KEYS = [
 	'autoplayMobileButton',
 	'spin1',
 	'spin2',
+	'spinButton',
 	'menuButton',
 	'infoButton',
 	'turbo1',

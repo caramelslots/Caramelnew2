@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { HUD_ASSETS } from '../game/uiHtmlAssetManifest';
-	import SpinButtonHtmlSpine from './SpinButtonHtmlSpine.svelte';
+	import {
+		spinButtonDimmed,
+		spinButtonPixiReady,
+		spinButtonSpineActive,
+		triggerSpinButtonPress,
+	} from '../game/spinButtonPixi.svelte';
 
 	type Props = {
 		x: number;
@@ -28,28 +33,39 @@
 		counterFontSize = 16,
 	}: Props = $props();
 
-	let spine = $state<SpinButtonHtmlSpine | undefined>();
 	let pressed = $state(false);
 	let pressTimer: ReturnType<typeof setTimeout> | undefined;
 
+	const pixiReady = $derived(spinButtonPixiReady.value);
+	/** Hide static art only while the spine clip is active — keeps appear from flashing. */
+	const hideStaticArt = $derived(spinButtonSpineActive.value);
+	/** Dim exactly one visible surface — never HTML opacity × Pixi alpha (looked like 3 shades). */
+	const dimHtml = $derived(dimmed && !hideStaticArt);
+	const dimPixi = $derived(dimmed && hideStaticArt);
+
+	$effect(() => {
+		spinButtonDimmed.value = dimPixi;
+	});
+
 	export function playAnimation() {
+		// Always drive Pixi from press/autoplay — sync must not auto-start on mount.
+		triggerSpinButtonPress();
 		if (hasCounter) {
 			pressed = true;
 			clearTimeout(pressTimer);
 			pressTimer = setTimeout(() => {
 				pressed = false;
 			}, 150);
-			return;
 		}
-		spine?.playPress();
 	}
 </script>
 
 <button
 	type="button"
 	class="spin-hud-btn"
-	class:dimmed
+	class:dimmed={dimHtml}
 	class:pressed
+	class:pixi-live={pixiReady}
 	style:left="{x}px"
 	style:top="{y}px"
 	style:width="{size}px"
@@ -57,14 +73,23 @@
 	{disabled}
 	aria-label={ariaLabel}
 	onclick={onpress}
+	data-spin-pixi-ready={pixiReady}
 >
+	<!-- Idle = static art (no HTML↔Pixi swap flash on enter). Hidden only during spine clip. -->
+	<img
+		class="spin-hud-btn__icon"
+		class:under-pixi={hideStaticArt}
+		src={hasCounter ? HUD_ASSETS.spin2 : HUD_ASSETS.spin1}
+		alt=""
+		draggable="false"
+	/>
 	{#if hasCounter}
-		<img class="spin-hud-btn__icon" src={HUD_ASSETS.spin2} alt="" draggable="false" />
-		<span class="spin-hud-btn__counter" style:font-size="{counterFontSize}px">{counterText}</span>
-	{:else}
-		<!-- Static idle art. Spine only overlays the press clip (idle track is empty). -->
-		<img class="spin-hud-btn__icon" src={HUD_ASSETS.spin1} alt="" draggable="false" />
-		<SpinButtonHtmlSpine bind:this={spine} />
+		<!-- Counter sits above Pixi spin (or fallback art) during autoplay. -->
+		<span
+			class="spin-hud-btn__counter"
+			class:dimmed={dimPixi}
+			style:font-size="{counterFontSize}px"
+		>{counterText}</span>
 	{/if}
 </button>
 
@@ -85,8 +110,7 @@
 		touch-action: manipulation;
 		transition:
 			transform 0.1s,
-			filter 0.15s,
-			opacity 0.15s;
+			filter 0.15s;
 
 		&:active:not(:disabled),
 		&.pressed {
@@ -105,17 +129,24 @@
 	}
 
 	.spin-hud-btn__icon {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
 		width: 100%;
 		height: 100%;
 		object-fit: contain;
 		pointer-events: none;
 		user-select: none;
+
+		&.under-pixi {
+			opacity: 0;
+		}
 	}
 
 	.spin-hud-btn__counter {
 		position: absolute;
 		inset: 0;
-		z-index: 1;
+		z-index: 2;
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -126,5 +157,10 @@
 		pointer-events: none;
 		user-select: none;
 		transform: translateY(-2%);
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+
+		&.dimmed {
+			opacity: 0.45;
+		}
 	}
 </style>

@@ -40,8 +40,10 @@
 			context.stateGame.freeSpinIntroActive;
 		const wantDog = shouldKeepDuelMascotGpu(isPortrait);
 		const wantOutline = shouldKeepOutlineReelGpu();
-		const wantFsPopup = shouldKeepFsPopupGpu();
 		void context.stateGame.winOverlayActive;
+		void context.stateGame.fsOutroActive;
+		void context.stateGame.fsPopupPinned;
+		const wantFsPopup = shouldKeepFsPopupGpu();
 
 		const gen = ++syncGen;
 		void (async () => {

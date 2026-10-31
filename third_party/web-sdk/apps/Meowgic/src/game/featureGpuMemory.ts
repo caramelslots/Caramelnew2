@@ -67,10 +67,12 @@ export const shouldKeepOutlineReelGpu = () =>
 
 /** total_win spine — load for FS / duel outro, drop on settled base. */
 export const shouldKeepFsPopupGpu = () =>
+	stateGame.fsPopupPinned ||
 	stateGame.gameType === 'freegame' ||
 	stateGame.transitionGameType === 'freegame' ||
 	stateGame.freeSpinIntroActive ||
 	stateGame.winOverlayActive ||
+	stateGame.fsOutroActive ||
 	stateDuel.active ||
 	stateDuel.phase !== 'idle';
 
@@ -255,7 +257,11 @@ let fsPopupEnsureInFlight: Promise<void> | null = null;
 export const isFsPopupLive = (stateApp: LoadedAssetsBag) =>
 	featureKeyStillLive('fsPopup', (stateApp.loadedAssets ?? {}) as Record<string, unknown>);
 
-/** Ensure `fsPopup` is in loadedAssets before FreeSpinAnimation mounts. */
+/**
+ * Ensure `fsPopup` is in loadedAssets before FreeSpinAnimation mounts.
+ * After Stage E tir unload, the map key can survive with destroyed atlas pages —
+ * treat that as missing and reload (otherwise Total Win mounts a dead spine).
+ */
 export const ensureFsPopupReady = async (stateApp: LoadedAssetsBag) => {
 	const loaded = (stateApp.loadedAssets ?? {}) as Record<string, unknown>;
 	if (featureKeyStillLive('fsPopup', loaded)) return;
@@ -279,6 +285,8 @@ export const ensureFsPopupReady = async (stateApp: LoadedAssetsBag) => {
 				]);
 				if (!patch) return;
 				stateApp.loadedAssets = { ...(stateApp.loadedAssets ?? {}), ...patch };
+			} catch {
+				/* Outro awaits this; never throw into freeSpinEnd */
 			} finally {
 				fsPopupEnsureInFlight = null;
 			}

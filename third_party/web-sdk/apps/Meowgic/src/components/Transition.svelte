@@ -19,13 +19,11 @@
 	import { stateUi } from 'state-shared';
 
 	import TransitionAnimation from './TransitionAnimation.svelte';
-	import { getContext } from '../game/context';
 	import { TRANSITION_THEME_SWITCH_DELAY_MS } from '../game/constants';
+	import { eventEmitter } from '../game/eventEmitter';
 	import { wantedMascotCatSpineKey } from '../game/mascotCatSkinMemory';
 	import { stateDuel } from '../game/stateDuel.svelte';
 	import { stateGame } from '../game/stateGame.svelte';
-
-	const context = getContext();
 
 	let transitioning = $state(false);
 	let deferThemeSwitch = $state(false);
@@ -64,25 +62,26 @@
 			});
 			if (next === 'freegame') {
 				stateGame.fsDrumWanted = true;
-				context.eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
+				eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 				stateUi.freeSpinCounterShow = true;
-				context.eventEmitter.broadcast({ type: 'drawerButtonShow' });
-				context.eventEmitter.broadcast({ type: 'drawerFold' });
+				eventEmitter.broadcast({ type: 'drawerButtonShow' });
+				eventEmitter.broadcast({ type: 'drawerFold' });
 			} else if (next === 'basegame') {
-				context.eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
+				eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
 				stateUi.freeSpinCounterShow = false;
-				context.eventEmitter.broadcast({ type: 'drawerUnfold' });
-				context.eventEmitter.broadcast({ type: 'drawerButtonHide' });
+				eventEmitter.broadcast({ type: 'drawerUnfold' });
+				eventEmitter.broadcast({ type: 'drawerButtonHide' });
 			}
 			pendingGameType = undefined;
 		}
 		// Swap gallery → symbols while steam fully covers the board.
 		if (stateGame.targetPickOpen) {
-			context.eventEmitter.broadcast({ type: 'targetPickDismiss' });
+			eventEmitter.broadcast({ type: 'targetPickDismiss' });
 		}
 	};
 
-	context.eventEmitter.subscribeOnMount({
+	// Same module emitter as bookEventHandlerMap / FreeSpinOutro (not context).
+	eventEmitter.subscribeOnMount({
 		transition: async (event) => {
 			transitioning = true;
 			themeApplied = false;

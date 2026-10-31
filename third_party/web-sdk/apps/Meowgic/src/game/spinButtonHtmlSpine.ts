@@ -1,14 +1,24 @@
-/** designer_assets/spin_button_new — HTML SpinePlayer viewport (skeleton bounds). */
+/** designer_assets/spin — HTML SpinePlayer viewport (skeleton bounds). */
 export const SPIN_BUTTON_SPINE_VIEWPORT = {
-	x: -475,
-	y: -475,
-	width: 950,
-	height: 950,
+	x: -511.0193,
+	y: -511.0193,
+	width: 1022.0385,
+	height: 1022.0385,
 	padLeft: '0%',
 	padRight: '0%',
 	padTop: '0%',
 	padBottom: '0%',
 } as const;
+
+/** New export renamed the press clip from `animation` to `spin`. */
+export const SPIN_BUTTON_SPIN_ANIMATION = 'spin';
+
+/**
+ * Hold frame inside `spin` where the square (`base`) is fully on and the
+ * arrow stack (`spin` bone) is scaled to ~0. After this the clip restores
+ * arrows — we pause here until reels settle, then snap idle (t=0).
+ */
+export const SPIN_BUTTON_SQUARE_HOLD_TIME = 0.5666666;
 
 /** static/ asset path relative to deployed index.html (Stake CDN subpath-safe). */
 export const resolveSpinButtonSpineUrl = (file: string) =>

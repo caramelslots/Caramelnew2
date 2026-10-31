@@ -40,6 +40,7 @@
 		MASCOT_LOAD_MS,
 	} from '../game/mascotHtmlSpine';
 	import { BG_DEV_PREVIEW_CLIPS } from '../game/bgDevPreview';
+	import { playSpinButtonDev, spinButtonDevMode } from '../game/spinButtonPixi.svelte';
 	import { BOARD_DEV_PREVIEW_CLIPS } from '../game/boardDevPreview';
 	import { SYMBOL_DEV_PREVIEW_GROUPS } from '../game/symbolDevPreview';
 	import {
@@ -125,7 +126,7 @@
 		{
 			id: 'animations',
 			title: 'Animations',
-			keys: 'cat dog mascot symbol anim clip board idle bookmarks clothes key pages reaction characters slow reel columns bonus outline background bg lamps particles candle orb pen',
+			keys: 'cat dog mascot symbol anim clip board idle bookmarks clothes key pages reaction characters slow reel columns bonus outline background bg lamps particles candle orb pen spin button hud',
 		},
 		{ id: 'stage', title: 'Stage', keys: 'chrome duel target shoot cabinet bullet fly drum background board fs' },
 		{ id: 'wins', title: 'Wins', keys: 'win level precision hud stack payline coin' },
@@ -2401,6 +2402,37 @@
 					open={accordionForcedOpen || isAccOpen('animations')}
 					onToggle={() => toggleAccordion('animations')}
 				>
+			<section>
+				<h4>Spin Button</h4>
+				<p class="subhint">HUD clip `spin`. Once plays it through. Loop holds it until Idle. Does not start a round.</p>
+				<div class="grid">
+					<button
+						type="button"
+						class:active={spinButtonDevMode.value === 'once'}
+						title="Play spin once on the HUD button, then settle on idle"
+						onclick={() => playSpinButtonDev('once')}
+					>
+						Spin once
+					</button>
+					<button
+						type="button"
+						class:active={spinButtonDevMode.value === 'loop'}
+						title="Loop spin on the HUD button until Idle"
+						onclick={() => playSpinButtonDev('loop')}
+					>
+						Spin loop
+					</button>
+					<button
+						type="button"
+						class:active={spinButtonDevMode.value === 'idle'}
+						title="Freeze the HUD button on the idle frame"
+						onclick={() => playSpinButtonDev('idle')}
+					>
+						Idle
+					</button>
+				</div>
+			</section>
+
 			<section>
 				<h4>Board Anims</h4>
 				<p class="subhint">

@@ -16,7 +16,7 @@
 	 * Shots pipeline: drum shake+advance starts only after `gun_shot` ends;
 	 * seat opens after its bullet hits (phone: max two Pixi flips at once).
 	 */
-	import { waitForResolve } from 'utils-shared/wait';
+	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 
 	import { getContext } from '../game/context';
 	import {
@@ -193,21 +193,31 @@
 		await waitAnimationFrames(1);
 		// Keep HTML drum until extra intro is gone — remounting Pixi drum
 		// under the 2K plaque still spikes phone memory.
-		await dismissTirAndUnloadGpu({ uiAlreadyDismissed: true });
+		await Promise.race([
+			dismissTirAndUnloadGpu({ uiAlreadyDismissed: true }),
+			waitForTimeout(5000),
+		]);
 		await waitAnimationFrames(isPhoneForAtlasDownscale() ? TIR_UNLOAD_DELAY_FRAMES : 3);
 
 		if (extraFs > 0) {
 			await startFsCongPreload();
 			context.eventEmitter.broadcast({ type: 'freeSpinIntroShow', mode: 'extra' });
 			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
-			await context.eventEmitter.broadcastAsync({
-				type: 'freeSpinIntroUpdate',
-				totalFreeSpins: extraFs,
-				mode: 'extra',
-			});
-			await context.eventEmitter.broadcastAsync({ type: 'freeSpinIntroHide' });
+			await Promise.race([
+				(async () => {
+					await context.eventEmitter.broadcastAsync({
+						type: 'freeSpinIntroUpdate',
+						totalFreeSpins: extraFs,
+						mode: 'extra',
+					});
+					await context.eventEmitter.broadcastAsync({ type: 'freeSpinIntroHide' });
+				})(),
+				waitForTimeout(20_000),
+			]);
 		}
 		stateGame.drumShootActive = false;
+		stateGame.targetPickOpen = false;
+		stateGame.targetPickSlide = 0;
 		await waitAnimationFrames(3);
 		oncomplete();
 	};
@@ -440,7 +450,11 @@
 			startShotBulletPreload();
 			startTargetBoardPreload('nine');
 			// Load 9-seat only and drop the 6-seat plate before the cabinet slides.
-			await ensureTirPixiInApp(context.stateApp, 'nine');
+			// Never soft-lock freeSpinEnd if tir Assets.load stalls after VRAM thrash.
+			await Promise.race([
+				ensureTirPixiInApp(context.stateApp, 'nine'),
+				waitForTimeout(8000),
+			]);
 			rewardQueue = event.shots.map((s) => s.reward as 0 | 1 | 2 | 3);
 			extraFs = event.extraFs;
 			faceValues = Array.from({ length: TARGET_SHOOT_SEAT_COUNT }, () => 0);
@@ -484,16 +498,26 @@
 			}
 
 			phase = 'pick';
-			await waitForResolve((resolve) => {
-				oncomplete = () => {
-					stateGame.targetPickSlide = 0;
-					stateGame.targetPickOpen = false;
-					stateGame.targetPickSeatMode = 'six';
-					stateGame.drumShootActive = false;
-					show = false;
-					resolve();
-				};
-			});
+			// If taps never arrive (overlay/GPU glitch), still close so freeSpinEnd can run.
+			const pickBudgetMs = 45_000 + rewardQueue.length * 8_000;
+			await Promise.race([
+				waitForResolve((resolve) => {
+					oncomplete = () => {
+						stateGame.targetPickSlide = 0;
+						stateGame.targetPickOpen = false;
+						stateGame.targetPickSeatMode = 'six';
+						stateGame.drumShootActive = false;
+						show = false;
+						resolve();
+					};
+				}),
+				waitForTimeout(pickBudgetMs).then(async () => {
+					if (phase === 'done') return;
+					rewardQueue = [];
+					pendingSeats = [];
+					await closeBoard();
+				}),
+			]);
 		},
 	});
 </script>

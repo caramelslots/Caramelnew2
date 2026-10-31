@@ -62,6 +62,7 @@
 	import SuperWildCurtainPixi from './SuperWildCurtainPixi.svelte';
 	import Win from './Win.svelte';
 	import MascotPixi from './MascotPixi.svelte';
+	import SpinButtonPixiLayer from './SpinButtonPixiLayer.svelte';
 	import PawCoinPixiLayer from './PawCoinPixiLayer.svelte';
 	import TargetShotBulletPixiLayer from './TargetShotBulletPixiLayer.svelte';
 	import TargetFlipPixiLayer from './TargetFlipPixiLayer.svelte';
@@ -413,6 +414,8 @@
 				Keep below Big Win / Total Win (overlays FadeContainer zIndex 10).
 			-->
 			<MascotPixi zIndex={6} />
+			<!-- HUD spin on main WebGL; HTML button is a transparent hit above. -->
+			<SpinButtonPixiLayer zIndex={7} />
 			<FadeContainer
 				show={gameEntrance.showContent}
 				duration={0}
@@ -430,11 +433,12 @@
 				/>
 				<!-- Keep Win mounted during Duel so Big Win can play on Cat victory. -->
 				<Win />
-				<FreeSpinOutro />
 			</FadeContainer>
-			<Transition />
 			</Container>
 		{/if}
+		<!-- Always mounted so freeSpinEnd Show/CountUp/transition always have handlers. -->
+		<FreeSpinOutro />
+		<Transition />
 	</GameApp>
 </div>
 

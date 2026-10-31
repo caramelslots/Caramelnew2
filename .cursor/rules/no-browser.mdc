@@ -1,0 +1,12 @@
+---
+description: Do not open or drive a browser for this project
+alwaysApply: true
+---
+
+# No browser
+
+Do not open, navigate, lock, screenshot, or otherwise drive a browser for this project. That includes the Cursor IDE browser, browser MCP, Playwright, Puppeteer, and any localhost tab.
+
+The user checks the running game themselves. Do not start a browser to "verify" UI, animations, or clicks.
+
+When a change needs proof, use the code, existing tests, or a local script. Say plainly what was not seen in the app.

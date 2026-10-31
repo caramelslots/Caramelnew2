@@ -3,6 +3,7 @@
 	import { SpineProvider, SpineTrack } from 'pixi-svelte';
 	import { getContext } from '../game/context';
 	import { TRANSITION_THEME_SWITCH_DELAY_MS } from '../game/constants';
+	import { eventEmitter } from '../game/eventEmitter';
 
 	type Props = {
 		oncomplete: () => void;
@@ -15,17 +16,31 @@
 	const props: Props = $props();
 	const context = getContext();
 
-	onMount(() => {
-		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_transition_steam' });
+	let completed = false;
+	const finish = () => {
+		if (completed) return;
+		completed = true;
+		props.oncomplete();
+	};
 
-		if (!props.onThemeSwitch || props.timedThemeSwitch === false) return;
+	onMount(() => {
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_transition_steam' });
+
+		const safety = setTimeout(finish, 8000);
+
+		if (!props.onThemeSwitch || props.timedThemeSwitch === false) {
+			return () => clearTimeout(safety);
+		}
 
 		const timer = setTimeout(
 			props.onThemeSwitch,
 			props.themeSwitchDelayMs ?? TRANSITION_THEME_SWITCH_DELAY_MS,
 		);
 
-		return () => clearTimeout(timer);
+		return () => {
+			clearTimeout(timer);
+			clearTimeout(safety);
+		};
 	});
 </script>
 
@@ -45,7 +60,7 @@
 		trackIndex={0}
 		animationName={'transition'}
 		listener={{
-			complete: props.oncomplete,
+			complete: finish,
 		}}
 	/>
 </SpineProvider>

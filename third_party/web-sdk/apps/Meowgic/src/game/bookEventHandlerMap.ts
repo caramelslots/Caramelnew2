@@ -38,6 +38,7 @@ import {
 	WIN_SPOTLIGHT_CLEAR_DELAY_MS,
 	TRANSITION_THEME_SWITCH_DELAY_MS,
 	WIN_HUD_COUNT_UP_MS,
+	WIN_SCREEN_POST_COUNT_UP_DELAY_MS,
 } from './constants';
 import {
 	SUPER_WILD_DROP_IN_SPIN_SOUND_DELAY_MS,
@@ -69,6 +70,7 @@ import { ensureDuelMascotReady, ensureFsPopupReady } from './featureGpuMemory';
 import {
 	ensureMascotCatSpineLoaded,
 	MASCOT_CAT_SPINE_WHITE,
+	wantedMascotCatSpineKey,
 } from './mascotCatSkinMemory';
 import {
 	getDuelBoardStack,
@@ -1341,10 +1343,23 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.fsExtraPhase = false;
 		stateGame.bulletFly = null;
 		stateGame.stickySwByReel = {};
-		stateGame.bonusMode =
-			stateBet.activeBetModeKey === 'bonus_super' || stateGame.bonusMode === 'super'
-				? 'super'
-				: 'normal'; // natural trigger / bonus_normal / bonus_boost → Normal rules
+		// Match math `apply_fs_profile_from_trigger`:
+		//   buy bonus_super → super
+		//   buy bonus_normal → normal
+		//   BASE / boost / else → super if 4+ B scatters, else normal
+		// Bug: treating natural 4×B as normal skipped Super SW expands (line-gate)
+		// and left sticky/win state desynced — last FS never reached Total Win.
+		{
+			const modeKey = stateBet.activeBetModeKey;
+			const scatterCount = bookEvent.positions?.length ?? 0;
+			if (modeKey === 'bonus_super' || stateGame.bonusMode === 'super') {
+				stateGame.bonusMode = 'super';
+			} else if (modeKey === 'bonus_normal') {
+				stateGame.bonusMode = 'normal';
+			} else {
+				stateGame.bonusMode = scatterCount >= 4 ? 'super' : 'normal';
+			}
+		}
 		// Super: at least one sticky SW from first FS. Normal: opens as SW lands (can be several).
 		stateGame.stickySwOpened = stateGame.bonusMode === 'super';
 		// Super: first reveal slides the pre-open curtain down from the top.
@@ -1414,8 +1429,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 
 		await startFsCongPreload();
-		// Warm Total Win spine during FS — no-extra path hits freeSpinEnd with no
-		// Extra Spins intro buffer after Stage E / last main spin.
+		// Warm in background — never await here (load reject must not abort FS entry).
+		stateGame.fsPopupPinned = true;
 		void ensureFsPopupReady(stateApp);
 		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
 		await eventEmitter.broadcastAsync({
@@ -1481,13 +1496,43 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// their Spine curtains — never four WILD tiles. First base spin dismisses.
 		ensureSwCurtainsForBoard();
 
+		// Meowfia flow: Show → await CountUp → Hide. Cap so a dead Outro cannot soft-lock.
+		stateGame.fsPopupPinned = true;
+		void ensureFsPopupReady(stateApp);
+
+		const forceExitBonusToBase = () => {
+			stateGame.gameType = 'basegame';
+			stateGame.transitionGameType = undefined;
+			stateGame.transitionActive = false;
+			stateGame.transitionCoversUi = false;
+			stateGame.fsOutroActive = false;
+			stateGame.fsPopupPinned = false;
+			stateGame.winOverlayActive = false;
+			stateGame.fsDrumWanted = false;
+			stateGame.mascotCatSpineKey = wantedMascotCatSpineKey({
+				gameType: 'basegame',
+				duelActive: stateDuel.active,
+			});
+			stateUi.freeSpinCounterShow = false;
+			eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
+			eventEmitter.broadcast({ type: 'drawerUnfold' });
+			eventEmitter.broadcast({ type: 'drawerButtonHide' });
+		};
+
 		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
 		winLevelSoundsPlay({ winLevelData });
-		await eventEmitter.broadcastAsync({
-			type: 'freeSpinOutroCountUp',
-			amount: outroAmount,
-			winLevelData,
-		});
+
+		const countUpStartedAt = performance.now();
+		await Promise.race([
+			eventEmitter.broadcastAsync({
+				type: 'freeSpinOutroCountUp',
+				amount: outroAmount,
+				winLevelData,
+			}),
+			waitForTimeout(scaleMsByGameSpeed(20_000, stateGame.gameSpeed)),
+		]);
+		const countUpMs = Math.round(performance.now() - countUpStartedAt);
+
 		// gameType is still `freegame` until the transition animation — force main BGM.
 		// Total win already hid the HUD. Leave it hidden through the steam.
 		winLevelSoundsStop({ music: 'bgm_main', restoreUi: false });
@@ -1501,8 +1546,22 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.drumSeatAnimKey = {};
 		stateGame.drumSpentChambers = {};
 		stateGame.drumShakeKey = 0;
-		await eventEmitter.broadcastAsync({ type: 'transition', gameType: 'basegame' });
-		stateGame.fsOutroActive = false;
+
+		const transitionStartedAt = performance.now();
+		await Promise.race([
+			eventEmitter.broadcastAsync({ type: 'transition', gameType: 'basegame' }),
+			waitForTimeout(scaleMsByGameSpeed(8_000, stateGame.gameSpeed)),
+		]);
+		const transitionMs = Math.round(performance.now() - transitionStartedAt);
+		// Always land on base — Transition no-op (0ms / no subscriber) used to leave freegame.
+		if (stateGame.gameType !== 'basegame' || transitionMs < 50 || countUpMs < 50) {
+			forceExitBonusToBase();
+		} else {
+			stateGame.fsOutroActive = false;
+			stateGame.fsPopupPinned = false;
+			stateGame.transitionActive = false;
+			stateGame.transitionCoversUi = false;
+		}
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 	},
 	setWin: async (bookEvent: BookEventOfType<'setWin'>, { bookEvents }: BookEventContext) => {
@@ -1552,12 +1611,20 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		eventEmitter.broadcast({ type: 'winShow' });
 		winLevelSoundsPlay({ winLevelData: firstTierData });
-		await eventEmitter.broadcastAsync({
-			type: 'winUpdate',
-			// Beat-local amount from the book (phase1 or phase2) — not spin total.
-			amount: bookEvent.amount,
-			winLevelData,
-		});
+		// Cap so a stuck Big Win (dead spine / missed auto-dismiss) cannot block freeSpinEnd.
+		const bigWinBudgetMs =
+			Math.max(3000, Number(winLevelData.presentDuration) || 3000) +
+			WIN_SCREEN_POST_COUNT_UP_DELAY_MS +
+			4000;
+		await Promise.race([
+			eventEmitter.broadcastAsync({
+				type: 'winUpdate',
+				// Beat-local amount from the book (phase1 or phase2) — not spin total.
+				amount: bookEvent.amount,
+				winLevelData,
+			}),
+			waitForTimeout(scaleMsByGameSpeed(bigWinBudgetMs, stateGame.gameSpeed)),
+		]);
 		winLevelSoundsStop();
 		eventEmitter.broadcast({ type: 'winHide' });
 		stateGame.mascotPose = 'idle';
@@ -1672,8 +1739,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			return;
 		}
 
-		// Normal FS gate (UI guard for stale books): new SW expands only after a
-		// phase-1 winInfo in this spin — SW must have played in a line.
+		// Normal FS gate: new SW expands only after a phase-1 winInfo in this spin.
+		// Super (incl. natural 4×B) must NOT use this gate — math opens sticky SW
+		// without a line beat; skipping expand desyncs board and can soft-lock before freeSpinEnd.
 		const isNormalFs = stateGame.gameType === 'freegame' && stateGame.bonusMode !== 'super';
 		if (isNormalFs && !hasWinInfoSinceLastReveal(bookEvents, bookEvent)) {
 			return;
@@ -1824,11 +1892,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Kill paylines / win celebrate before the cabinet slides over the mask.
 		clearWinSpotlight();
 
-		await eventEmitter.broadcastAsync({
-			type: 'targetShootRound',
-			shots: bookEvent.shots,
-			extraFs: bookEvent.extraFs,
-		});
+		const shootBudgetMs =
+			45_000 + Math.max(1, bookEvent.shots?.length ?? 1) * 8_000 + 10_000;
+		await Promise.race([
+			eventEmitter.broadcastAsync({
+				type: 'targetShootRound',
+				shots: bookEvent.shots,
+				extraFs: bookEvent.extraFs,
+			}),
+			waitForTimeout(scaleMsByGameSpeed(shootBudgetMs, stateGame.gameSpeed)),
+		]);
 
 		stateGame.fsExtraPhase = true;
 		// Keep spent casings in the drum through extra FS.
@@ -1850,8 +1923,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			stateUi.freeSpinCounterTotal = newTotal;
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		} else {
-			// No Extra Spins intro — freeSpinEnd is next. Warm Total Win spine now so
-			// tir-unload → outro doesn't race a cold fsPopup load.
+			// No Extra Spins — freeSpinEnd next. Warm only; never await (Meowfia).
+			stateGame.fsPopupPinned = true;
 			void ensureFsPopupReady(stateApp);
 		}
 	},
@@ -2298,13 +2371,18 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				// Win: same fsEnd / total_win panel as free-spin outro — amount only, no compare.
 				const winLevelData =
 					winLevelMap[(stateDuel.winLevel ?? 1) as WinLevel] ?? winLevelMap[1];
+				stateGame.fsPopupPinned = true;
+				void ensureFsPopupReady(stateApp);
 				eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
 				winLevelSoundsPlay({ winLevelData });
-				await eventEmitter.broadcastAsync({
-					type: 'freeSpinOutroCountUp',
-					amount: payout,
-					winLevelData,
-				});
+				await Promise.race([
+					eventEmitter.broadcastAsync({
+						type: 'freeSpinOutroCountUp',
+						amount: payout,
+						winLevelData,
+					}),
+					waitForTimeout(scaleMsByGameSpeed(20_000, stateGame.gameSpeed)),
+				]);
 				// Total win already hid the HUD. Do not bring it back for the steam.
 				winLevelSoundsStop({ music: 'bgm_main', restoreUi: false });
 				eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
@@ -2338,6 +2416,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			stateGame.baseWarm = false;
 			stateGame.baseVisualTier = 3;
 			stateGame.fsOutroActive = false;
+			stateGame.fsPopupPinned = false;
 		}
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
 	},
@@ -2376,6 +2455,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				stateGame.drumBulletOrientDeg,
 				stateGame.drumCount,
 			);
+		}
+		if (lastFreeSpinTriggerEvent || lastUpdateFreeSpinEvent) {
+			stateGame.fsPopupPinned = true;
+			void ensureFsPopupReady(stateApp);
 		}
 		if (lastTargetShootRoundEvent) {
 			stateGame.fsExtraPhase = true;

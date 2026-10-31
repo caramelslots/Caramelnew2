@@ -71,7 +71,7 @@ stateMeta.betModeMeta = {
 
 import type { GameType, RawSymbol, SymbolName, SymbolState } from './types';
 import { stateLayoutDerived } from './stateLayout';
-import { winLevelMap } from './winLevelMap';
+import { winLevelMap, type WinLevelData } from './winLevelMap';
 import { eventEmitter } from './eventEmitter';
 import { COIN_TURN_SOUNDS } from './sound';
 import {
@@ -318,6 +318,11 @@ export const stateGame = $state({
 	overlayDimAlpha: 0,
 	/** Total Win (FS outro): raise Pixi over HTML HUD — safest clean cover. */
 	fsOutroActive: false,
+	/**
+	 * Keep `fsPopup` GPU resident from freeSpinTrigger through freeSpinEnd.
+	 * Without this, Stage E tir unload can thrash VRAM and leave Total Win cold/dead.
+	 */
+	fsPopupPinned: false,
 	// FS intro board is an HTML overlay.
 	freeSpinIntroActive: false,
 	// Duel rules splash (Press to continue) before cloud transition.
